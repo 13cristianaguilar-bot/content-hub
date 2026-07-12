@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Content Hub</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    pre { font-family: inherit; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+
+<div id="app">
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="text-slate-400 text-sm">Loading...</div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+// CONFIG — paste your Supabase values here
+// ─────────────────────────────────────────────
+const SUPABASE_URL      = 'https://udkbnlpnfyjuwlstfxhr.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_lwmiHRxf1Hdf2Z4b_aJkjg_ck7u1ms4';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ─────────────────────────────────────────────
+// CLIENT CONFIG (add more clients here)
+// ─────────────────────────────────────────────
+const CLIENTS = {
+  andrew: { name: 'Andrew George',  label: 'Andrew' },
+  jan:    { name: 'Jan Zands',      label: 'Jan'    },
+};
+
+// ─────────────────────────────────────────────
+// STATUS / FORMAT STYLES
+// ─────────────────────────────────────────────
+const STATUS_STYLE = {
+  'Draft':        'bg-slate-100 text-slate-500',
+  'Needs Review': 'bg-yellow-100 text-yellow-700',
+  'Approved':     'bg-emerald-100 text-emerald-700',
+  'Filming':      'bg-orange-100 text-orange-700',
+  'Posted':       'bg-blue-100 text-blue-700',
+};
+const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted'];
+
+const FORMAT_STYLE = {
+  'Reaction':             'bg-blue-100 text-blue-700',
+  'F2 List':              'bg-teal-100 text-teal-700',
+  'F3 Perspective-Flip':  'bg-purple-100 text-purple-700',
+  'Format A':             'bg-blue-100 text-blue-700',
+  'List Drop':            'bg-teal-100 text-teal-700',
+  'Format C':             'bg-violet-100 text-violet-700',
+};
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+let user     = null;
+let role     = null;   // 'admin' | 'client'
+let mySlug   = null;   // 'andrew' | 'jan' (clients only)
+let scripts  = [];
+let viewSlug = 'andrew';
+let viewStatus = 'all';
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+async function init() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) await afterLogin(session.user);
+  else renderLogin();
+
+  sb.auth.onAuthStateChange(async (_e, session) => {
+    if (session) await afterLogin(session.user);
+    else { user = null; role = null; mySlug = null; renderLogin(); }
+  });
+}
+
+async function afterLogin(u) {
+  user   = u;
+  role   = u.user_metadata?.role || 'client';
+  mySlug = u.user_metadata?.client_slug || null;
+  if (role === 'client' && mySlug) viewSlug = mySlug;
+  await fetchScripts();
+  renderDash();
+}
+
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+async function fetchScripts() {
+  let q = sb.from('scripts').select('*').order('reel_number');
+  if (role === 'client' && mySlug) q = q.eq('client_slug', mySlug);
+  const { data, error } = await q;
+  if (error) console.error(error);
+  scripts = data || [];
+}
+
+async function setStatus(id, status) {
+  const { error } = await sb.from('scripts').update({ status }).eq('id', id);
+  if (!error) {
+    const s = scripts.find(s => s.id === id);
+    if (s) s.status = status;
+    renderDash();
+  }
+}
+
+// ─────────────────────────────────────────────
+// HTML HELPERS
+// ─────────────────────────────────────────────
+function pill(text, style) {
+  return `<span class="text-xs font-medium px-2 py-0.5 rounded-full ${style}">${text}</span>`;
+}
+
+function btn(label, onclick, style) {
+  return `<button onclick="${onclick}" class="${style} text-xs py-2.5 px-3 rounded-xl font-medium active:scale-95 transition-all">${label}</button>`;
+}
+
+function linkOrText(val) {
+  if (!val) return '';
+  const isUrl = val.startsWith('http');
+  if (isUrl) return `<a href="${val}" target="_blank" class="text-blue-500 text-xs underline break-all">${val}</a>`;
+  return `<span class="text-xs text-slate-500">${val}</span>`;
+}
+
+// ─────────────────────────────────────────────
+// RENDER LOGIN
+// ─────────────────────────────────────────────
+function renderLogin() {
+  document.getElementById('app').innerHTML = `
+    <div class="flex flex-col items-center justify-center min-h-screen px-5">
+      <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+          <div class="text-2xl font-bold text-slate-800 tracking-tight">Content Hub</div>
+          <div class="text-slate-400 text-sm mt-1">Sign in to view your scripts</div>
+        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+          <div id="err" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></div>
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Email</label>
+            <input id="em" type="email" autocomplete="email" placeholder="you@example.com"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600 block mb-1.5">Password</label>
+            <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"
+              onkeydown="if(event.key==='Enter')doLogin()"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <button id="lb" onclick="doLogin()"
+            class="w-full bg-slate-800 text-white rounded-xl py-3 text-sm font-medium hover:bg-slate-700 active:scale-95 transition-all">
+            Sign in
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+async function doLogin() {
+  const em = document.getElementById('em').value.trim();
+  const pw = document.getElementById('pw').value;
+  const lb = document.getElementById('lb');
+  const err = document.getElementById('err');
+  lb.textContent = 'Signing in…'; lb.disabled = true;
+  err.classList.add('hidden');
+  const { error } = await sb.auth.signInWithPassword({ email: em, password: pw });
+  if (error) {
+    err.textContent = error.message; err.classList.remove('hidden');
+    lb.textContent = 'Sign in'; lb.disabled = false;
+  }
+}
+
+// ─────────────────────────────────────────────
+// RENDER DASHBOARD
+// ─────────────────────────────────────────────
+function renderDash() {
+  const isAdmin  = role === 'admin';
+  const filtered = scripts
+    .filter(s => s.client_slug === viewSlug)
+    .filter(s => viewStatus === 'all' || s.status === viewStatus);
+
+  const countByStatus = {};
+  scripts.filter(s => s.client_slug === viewSlug).forEach(s => {
+    countByStatus[s.status] = (countByStatus[s.status] || 0) + 1;
+  });
+  const totalForView = scripts.filter(s => s.client_slug === viewSlug).length;
+
+  // Client tabs (admin only)
+  const clientTabs = isAdmin ? Object.entries(CLIENTS).map(([slug, c]) =>
+    `<button onclick="setClient('${slug}')"
+      class="px-4 py-2 rounded-full text-sm font-medium transition-all ${viewSlug === slug
+        ? 'bg-slate-800 text-white'
+        : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
+      ${c.label}
+    </button>`
+  ).join('') : '';
+
+  // Status tabs
+  const statusTabs = ['all', ...STATUS_ORDER].map(s => {
+    const count = s === 'all' ? totalForView : (countByStatus[s] || 0);
+    const label = s === 'all' ? 'All' : s;
+    const active = viewStatus === s;
+    return `<button onclick="setStatus2('${s}')"
+      class="flex-shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all ${active
+        ? 'bg-slate-800 text-white'
+        : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}">
+      ${label}${count ? ` <span class="opacity-60">${count}</span>` : ''}
+    </button>`;
+  }).join('');
+
+  // Script cards
+  const cards = filtered.length
+    ? filtered.map(renderCard).join('')
+    : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
+
+  const clientName = CLIENTS[viewSlug]?.name || viewSlug;
+
+  document.getElementById('app').innerHTML = `
+    <div class="max-w-xl mx-auto min-h-screen flex flex-col">
+
+      <!-- Sticky header -->
+      <div class="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 px-4 pb-3 pt-4">
+        <div class="flex items-center justify-between mb-3">
+          <div class="font-semibold text-slate-800 text-sm tracking-tight">
+            ${isAdmin ? 'Content Hub' : clientName}
+          </div>
+          <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">
+            Sign out
+          </button>
+        </div>
+        ${isAdmin ? `<div class="flex gap-2 mb-3">${clientTabs}</div>` : ''}
+        <div class="flex gap-2 overflow-x-auto no-scrollbar">${statusTabs}</div>
+      </div>
+
+      <!-- Cards -->
+      <div class="flex-1 px-4 py-4 space-y-3 pb-10">
+        ${cards}
+      </div>
+    </div>`;
+}
+
+function renderCard(s) {
+  const statusStyle = STATUS_STYLE[s.status] || STATUS_STYLE['Draft'];
+  const formatStyle = FORMAT_STYLE[s.format] || 'bg-slate-100 text-slate-500';
+  const si = STATUS_ORDER.indexOf(s.status);
+  const prev = STATUS_ORDER[si - 1];
+  const next = STATUS_ORDER[si + 1];
+  const isPosted = s.status === 'Posted';
+
+  const ctaClean = !s.cta || s.cta.toLowerCase().includes('none') || s.cta.toLowerCase().includes('clean');
+
+  return `
+  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+
+    <!-- Top: badges + title + hook -->
+    <div class="px-4 pt-4 pb-3">
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          ${s.reel_number ? `<span class="text-xs font-bold text-slate-300">#${s.reel_number}</span>` : ''}
+          ${pill(s.format || 'Script', formatStyle)}
+          ${pill(s.status || 'Draft', statusStyle)}
+        </div>
+        <span class="text-xs flex-shrink-0 ${ctaClean ? 'text-slate-300' : 'text-slate-400'}">
+          ${ctaClean ? 'clean' : '📲 CTA'}
+        </span>
+      </div>
+      <div class="font-semibold text-slate-800 text-[15px] leading-snug mb-2">${s.title}</div>
+      ${s.hook ? `<div class="text-xs text-slate-500 leading-relaxed italic line-clamp-2">"${s.hook}"</div>` : ''}
+    </div>
+
+    <!-- Meta: camera + ref -->
+    ${s.camera || s.reference_clip ? `
+    <div class="px-4 pb-3 pt-1 border-t border-slate-50 space-y-1">
+      ${s.camera ? `<div class="text-xs text-slate-400">🎥 ${s.camera}</div>` : ''}
+      ${s.reference_clip ? `<div class="flex items-start gap-1"><span class="text-xs text-slate-300 flex-shrink-0 mt-0.5">Ref</span><div>${linkOrText(s.reference_clip)}</div></div>` : ''}
+    </div>` : ''}
+
+    <!-- Expand toggle -->
+    <button onclick="toggle('${s.id}')"
+      class="w-full flex items-center justify-between px-4 py-2.5 border-t border-slate-50 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
+      <span>Full script + editor notes</span>
+      <span id="chev-${s.id}">▸</span>
+    </button>
+
+    <!-- Expanded content -->
+    <div id="exp-${s.id}" class="hidden border-t border-slate-50">
+      ${s.full_script ? `
+      <div class="px-4 pt-3 pb-2">
+        <div class="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Script</div>
+        <pre class="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
+      </div>` : ''}
+      ${s.editor_notes ? `
+      <div class="px-4 pb-4 pt-1">
+        <div class="bg-amber-50 rounded-xl p-3">
+          <div class="text-xs font-medium text-amber-700 mb-1 uppercase tracking-wide">Editor Notes</div>
+          <div class="text-xs text-amber-800 leading-relaxed">${escHtml(s.editor_notes)}</div>
+        </div>
+      </div>` : ''}
+    </div>
+
+    <!-- Status controls -->
+    <div class="flex gap-2 px-4 pb-4 pt-2 border-t border-slate-50">
+      ${prev
+        ? btn(`← ${prev}`, `moveStatus('${s.id}','${prev}')`, 'flex-1 border border-slate-200 text-slate-500 hover:bg-slate-50')
+        : `<div class="flex-1"></div>`}
+      ${isPosted
+        ? `<div class="flex-1 text-center text-xs text-slate-300 py-2.5">Posted ✓</div>`
+        : next
+          ? btn(`${next} →`, `moveStatus('${s.id}','${next}')`, 'flex-1 bg-slate-800 text-white hover:bg-slate-700')
+          : `<div class="flex-1"></div>`}
+    </div>
+  </div>`;
+}
+
+// ─────────────────────────────────────────────
+// ACTIONS (global so onclick= works)
+// ─────────────────────────────────────────────
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; renderDash(); };
+window.setStatus2  = s    => { viewStatus = s; renderDash(); };
+window.moveStatus  = (id, status) => setStatus(id, status);
+window.doLogout    = () => sb.auth.signOut();
+
+window.toggle = id => {
+  const el = document.getElementById(`exp-${id}`);
+  const ch = document.getElementById(`chev-${id}`);
+  el.classList.toggle('hidden');
+  ch.textContent = el.classList.contains('hidden') ? '▸' : '▾';
+};
+
+function escHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ─────────────────────────────────────────────
+// GO
+// ─────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

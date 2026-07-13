@@ -46,8 +46,9 @@ const STATUS_STYLE = {
   'Approved':     'bg-emerald-100 text-emerald-700',
   'Filming':      'bg-orange-100 text-orange-700',
   'Posted':       'bg-blue-100 text-blue-700',
+  'Passed':       'bg-red-50 text-red-400',
 };
-const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted'];
+const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];
 
 const FORMAT_STYLE = {
   'Reaction':             'bg-blue-100 text-blue-700',
@@ -248,72 +249,93 @@ function renderDash() {
 function renderCard(s) {
   const statusStyle = STATUS_STYLE[s.status] || STATUS_STYLE['Draft'];
   const formatStyle = FORMAT_STYLE[s.format] || 'bg-slate-100 text-slate-500';
-  const si = STATUS_ORDER.indexOf(s.status);
+  const needsReview = s.status === 'Needs Review';
+  const isPosted    = s.status === 'Posted';
+  const isPassed    = s.status === 'Passed';
+  const si   = STATUS_ORDER.indexOf(s.status);
   const prev = STATUS_ORDER[si - 1];
   const next = STATUS_ORDER[si + 1];
-  const isPosted = s.status === 'Posted';
 
   const ctaClean = !s.cta || s.cta.toLowerCase().includes('none') || s.cta.toLowerCase().includes('clean');
+  const ctaLabel = ctaClean ? null : s.cta.replace(/^comment\s*/i,'').split(/\s/)[0];
 
   return `
-  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+  <div class="bg-white rounded-2xl border ${needsReview ? 'border-yellow-200' : 'border-slate-100'} shadow-sm overflow-hidden">
 
-    <!-- Top: badges + title + hook -->
+    <!-- Header -->
     <div class="px-4 pt-4 pb-3">
-      <div class="flex items-start justify-between gap-2 mb-2">
+      <div class="flex items-center justify-between mb-2">
         <div class="flex items-center gap-1.5 flex-wrap">
           ${s.reel_number ? `<span class="text-xs font-bold text-slate-300">#${s.reel_number}</span>` : ''}
           ${pill(s.format || 'Script', formatStyle)}
-          ${pill(s.status || 'Draft', statusStyle)}
+          ${pill(s.status, statusStyle)}
+          ${ctaLabel ? `<span class="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-medium">Comment ${ctaLabel}</span>` : ''}
         </div>
-        <span class="text-xs flex-shrink-0 ${ctaClean ? 'text-slate-300' : 'text-slate-400'}">
-          ${ctaClean ? 'clean' : '📲 CTA'}
-        </span>
       </div>
-      <div class="font-semibold text-slate-800 text-[15px] leading-snug mb-2">${s.title}</div>
-      ${s.hook ? `<div class="text-xs text-slate-500 leading-relaxed italic line-clamp-2">"${s.hook}"</div>` : ''}
+      <div class="font-bold text-slate-800 text-base leading-snug mb-3">${s.title}</div>
+
+      <!-- Hook — the hero -->
+      ${s.hook ? `
+      <div class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
+        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">THE HOOK</div>
+        <div class="text-sm text-slate-800 font-medium leading-relaxed">"${escHtml(s.hook)}"</div>
+      </div>` : ''}
     </div>
 
-    <!-- Meta: camera + ref -->
-    ${s.camera || s.reference_clip ? `
-    <div class="px-4 pb-3 pt-1 border-t border-slate-50 space-y-1">
-      ${s.camera ? `<div class="text-xs text-slate-400">🎥 ${s.camera}</div>` : ''}
-      ${s.reference_clip ? `<div class="flex items-start gap-1"><span class="text-xs text-slate-300 flex-shrink-0 mt-0.5">Ref</span><div>${linkOrText(s.reference_clip)}</div></div>` : ''}
-    </div>` : ''}
+    <!-- Ref + Camera -->
+    <div class="px-4 pb-3 space-y-2 border-t border-slate-50 pt-3">
+      ${s.reference_clip ? `
+      <div class="flex items-start gap-2">
+        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex-shrink-0 mt-0.5">📹 Ref</span>
+        <div class="flex-1">${linkOrText(s.reference_clip)}</div>
+      </div>` : ''}
+      ${s.camera ? `
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">🎥 Cam</span>
+        <span class="text-xs text-slate-500">${s.camera}</span>
+      </div>` : ''}
+    </div>
 
     <!-- Expand toggle -->
     <button onclick="toggle('${s.id}')"
-      class="w-full flex items-center justify-between px-4 py-2.5 border-t border-slate-50 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
-      <span>Full script + editor notes</span>
-      <span id="chev-${s.id}">▸</span>
+      class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
+      <span class="font-medium">Full script + filming notes</span>
+      <span id="chev-${s.id}" class="text-slate-300">▸</span>
     </button>
 
-    <!-- Expanded content -->
-    <div id="exp-${s.id}" class="hidden border-t border-slate-50">
+    <!-- Expanded -->
+    <div id="exp-${s.id}" class="hidden border-t border-slate-100">
       ${s.full_script ? `
-      <div class="px-4 pt-3 pb-2">
-        <div class="text-xs font-medium text-slate-400 mb-2 uppercase tracking-wide">Script</div>
-        <pre class="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
+      <div class="px-4 pt-4 pb-3">
+        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Script</div>
+        <pre class="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
       </div>` : ''}
       ${s.editor_notes ? `
       <div class="px-4 pb-4 pt-1">
-        <div class="bg-amber-50 rounded-xl p-3">
-          <div class="text-xs font-medium text-amber-700 mb-1 uppercase tracking-wide">Editor Notes</div>
-          <div class="text-xs text-amber-800 leading-relaxed">${escHtml(s.editor_notes)}</div>
+        <div class="bg-amber-50 border border-amber-100 rounded-xl p-3">
+          <div class="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-1.5">Filming Notes</div>
+          <div class="text-xs text-amber-900 leading-relaxed">${escHtml(s.editor_notes)}</div>
         </div>
       </div>` : ''}
     </div>
 
-    <!-- Status controls -->
-    <div class="flex gap-2 px-4 pb-4 pt-2 border-t border-slate-50">
-      ${prev
-        ? btn(`← ${prev}`, `moveStatus('${s.id}','${prev}')`, 'flex-1 border border-slate-200 text-slate-500 hover:bg-slate-50')
-        : `<div class="flex-1"></div>`}
-      ${isPosted
-        ? `<div class="flex-1 text-center text-xs text-slate-300 py-2.5">Posted ✓</div>`
-        : next
-          ? btn(`${next} →`, `moveStatus('${s.id}','${next}')`, 'flex-1 bg-slate-800 text-white hover:bg-slate-700')
-          : `<div class="flex-1"></div>`}
+    <!-- Action buttons -->
+    <div class="px-4 pb-4 pt-3 border-t border-slate-100">
+      ${needsReview ? `
+        <div class="grid grid-cols-3 gap-2">
+          ${btn('✅ Film', `moveStatus('${s.id}','Filming')`, 'bg-emerald-500 text-white hover:bg-emerald-600 font-semibold')}
+          ${btn('✏️ Tweak', `moveStatus('${s.id}','Draft')`, 'border-2 border-orange-300 text-orange-500 hover:bg-orange-50')}
+          ${btn('✕ Pass', `moveStatus('${s.id}','Passed')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50')}
+        </div>` :
+      isPosted ? `<div class="text-center text-xs text-blue-400 font-medium py-1">✓ Posted</div>` :
+      isPassed ? `<div class="flex gap-2">
+        <div class="flex-1 text-center text-xs text-red-300 py-2">Passed</div>
+        ${btn('← Restore', `moveStatus('${s.id}','Needs Review')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50 text-xs')}
+      </div>` : `
+      <div class="flex gap-2">
+        ${prev && prev !== 'Passed' ? btn(`← ${prev}`, `moveStatus('${s.id}','${prev}')`, 'flex-1 border border-slate-200 text-slate-500 hover:bg-slate-50') : '<div class="flex-1"></div>'}
+        ${next && next !== 'Passed' ? btn(`${next} →`, `moveStatus('${s.id}','${next}')`, 'flex-1 bg-slate-800 text-white hover:bg-slate-700') : '<div class="flex-1"></div>'}
+      </div>`}
     </div>
   </div>`;
 }

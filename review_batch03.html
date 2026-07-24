@@ -1,0 +1,2130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Andrew · Batch 03 · 30-Day Review</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--surf:#161b22;--card:#1c2128;--bord:#30363d;
+  --txt:#e6edf3;--muted:#8b949e;--dim:#484f58;
+  --f1:#3b82f6;--f2:#f97316;--f3:#22c55e;--f4:#a855f7;--f5:#ef4444;
+  --tofu:#10b981;--mofu:#f59e0b;--bofu:#ec4899;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+
+.hdr{padding:28px 24px 20px;border-bottom:1px solid var(--bord);background:var(--surf)}
+.hdr h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.hdr p{color:var(--muted);font-size:12px;margin-top:3px}
+
+.banner{background:#1c1010;border-bottom:1px solid #ef444430;padding:11px 24px;font-size:13px;color:#fca5a5;display:flex;align-items:center;gap:8px}
+.banner.cleared{background:#0a1c10;border-bottom-color:#16a34a30;color:#4ade80}
+.deliver-btn{background:#7c3aed;color:#fff;border:none;font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;margin-right:4px;transition:background .12s}
+.deliver-btn:hover{background:#6d28d9}
+.dv-topbar{position:sticky;top:0;background:#fff;border-bottom:2px solid #e5e7eb;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.dv-topbar-left{display:flex;align-items:center;gap:12px}
+.dv-topbar-right{display:flex;gap:8px;align-items:center}
+.dv-logo{font-size:14px;font-weight:700;color:#111;letter-spacing:-.2px}
+.dv-count{font-size:12px;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:4px}
+.dv-btn{background:#f3f4f6;color:#374151;border:1px solid #e5e7eb;font-size:12px;font-weight:600;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.dv-btn:hover{background:#e5e7eb}
+.dv-close{background:#fee2e2;color:#991b1b;border-color:#fecaca}
+.dv-close:hover{background:#fecaca}
+.dv-script{background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:28px;overflow:hidden;page-break-inside:avoid}
+.dv-hdr{padding:16px 20px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
+.dv-hdr-left{}
+.dv-day{font-size:11px;font-weight:700;letter-spacing:.6px;color:#7c3aed;text-transform:uppercase;margin-bottom:3px}
+.dv-title{font-size:16px;font-weight:700;color:#111}
+.dv-meta{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+.dv-badge{font-size:11px;font-weight:600;padding:2px 8px;border-radius:4px}
+.dv-badge-fmt{background:#ede9fe;color:#5b21b6}
+.dv-badge-layer{background:#dcfce7;color:#166534}
+.dv-badge-cta{background:#fef9c3;color:#854d0e}
+.dv-badge-ver{background:#f3f4f6;color:#6b7280}
+.dv-copy-btn{background:#7c3aed;color:#fff;border:none;font-size:11px;font-weight:700;padding:5px 12px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;flex-shrink:0}
+.dv-copy-btn:hover{background:#6d28d9}
+.dv-section{padding:20px 20px 0}
+.dv-sec-hdr{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#9ca3af;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid #f3f4f6}
+.dv-line{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.dv-ts{font-size:11px;font-weight:700;color:#7c3aed;font-family:monospace;background:#ede9fe;padding:2px 6px;border-radius:3px;flex-shrink:0;margin-top:2px}
+.dv-lbl{font-size:11px;font-weight:700;color:#6b7280;min-width:100px;flex-shrink:0;margin-top:3px}
+.dv-txt{font-size:14px;color:#111;line-height:1.65}
+.dv-filming{padding:16px 20px;background:#f9fafb;border-top:1px solid #f3f4f6;margin-top:16px}
+.dv-filming-hdr{font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:#9ca3af;margin-bottom:10px}
+.dv-fn-row{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+.dv-fn-key{font-size:11px;font-weight:700;color:#374151;min-width:120px;flex-shrink:0}
+.dv-fn-val{font-size:13px;color:#374151;line-height:1.6}
+.dv-ref{padding:14px 20px;border-top:2px solid #ede9fe;background:#faf5ff;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dv-ref-lbl{font-size:11px;font-weight:600;color:#7c3aed;text-transform:uppercase;letter-spacing:.5px}
+.dv-ref-link{display:inline-flex;align-items:center;gap:6px;background:#7c3aed;color:#fff;font-size:12px;font-weight:700;padding:7px 14px;border-radius:6px;text-decoration:none;font-family:'Inter',sans-serif;transition:background .12s}
+.dv-ref-link:hover{background:#6d28d9;text-decoration:none}
+@media print{
+  .dv-topbar{display:none}
+  .dv-copy-btn{display:none}
+  #deliver-overlay{position:static}
+  .dv-script{page-break-inside:avoid;margin-bottom:20px}
+}
+.fill-panel{margin:0 15px 12px;padding:12px 14px;background:#1a0c00;border:1px solid #f59e0b40;border-radius:7px}
+.fill-hdr{font-size:10px;font-weight:700;letter-spacing:.6px;color:#f59e0b;text-transform:uppercase;margin-bottom:10px}
+.fill-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.fill-lbl{font-size:11px;font-weight:600;color:#fbbf24;min-width:130px;flex-shrink:0}
+.fill-inp{flex:1;background:#0d0a04;border:1px solid #78350f60;color:#fef3c7;font-size:12px;padding:5px 9px;border-radius:5px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s}
+.fill-inp:focus{border-color:#f59e0b}
+.fill-inp.filled{border-color:#16a34a60;color:#86efac}
+.fill-status{font-size:11px;color:#92400e;margin-top:6px}
+.fill-status.done{color:#4ade80}
+
+.filters{padding:14px 24px;border-bottom:1px solid var(--bord);background:var(--surf);display:flex;flex-wrap:wrap;gap:6px;position:sticky;top:0;z-index:10}
+.fb{border:1px solid var(--bord);background:transparent;color:var(--muted);padding:4px 11px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s}
+.fb:hover{color:var(--txt);border-color:var(--dim)}
+.fb.on{background:var(--txt);color:var(--bg);border-color:var(--txt)}
+.fb.f1{color:var(--f1);border-color:#1e3a5f}.fb.f1.on{background:var(--f1);color:#fff;border-color:var(--f1)}
+.fb.f2{color:var(--f2);border-color:#431407}.fb.f2.on{background:var(--f2);color:#fff;border-color:var(--f2)}
+.fb.f3{color:var(--f3);border-color:#052e16}.fb.f3.on{background:var(--f3);color:#000;border-color:var(--f3)}
+.fb.f4{color:var(--f4);border-color:#2e1065}.fb.f4.on{background:var(--f4);color:#fff;border-color:var(--f4)}
+.fb.f5{color:var(--f5);border-color:#450a0a}.fb.f5.on{background:var(--f5);color:#fff;border-color:var(--f5)}
+.fb.tofu{color:var(--tofu);border-color:#052e16}.fb.tofu.on{background:var(--tofu);color:#000}
+.fb.mofu{color:var(--mofu);border-color:#292524}.fb.mofu.on{background:var(--mofu);color:#000}
+.fb.bofu{color:var(--bofu);border-color:#500724}.fb.bofu.on{background:var(--bofu);color:#fff}
+.fb.blk{color:#fca5a5;border-color:#450a0a}.fb.blk.on{background:#ef4444;color:#fff}
+
+.sbar{padding:8px 24px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--bord)}
+
+.grid{padding:20px 24px;display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:14px}
+@media(max-width:580px){.grid{grid-template-columns:1fr;padding:12px}}
+
+.wk{grid-column:1/-1;padding:6px 0 2px;border-bottom:1px solid var(--bord);font-size:11px;font-weight:700;letter-spacing:.8px;color:var(--dim);text-transform:uppercase}
+
+.card{background:var(--card);border:1px solid var(--bord);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.card.blk{border-color:#ef444440;background:#180d0d}
+.card.hidden{display:none}
+
+.ctop{padding:13px 15px 9px;border-bottom:1px solid var(--bord);display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.cday{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--muted)}
+.cday b{color:var(--txt);font-style:normal}
+.ctitle{font-size:15px;font-weight:700;margin-top:2px;letter-spacing:-.2px;line-height:1.3}
+.creel{font-size:11px;color:var(--dim);white-space:nowrap;padding-top:2px}
+
+.badges{padding:9px 15px;display:flex;flex-wrap:wrap;gap:5px;border-bottom:1px solid var(--bord)}
+.bdg{font-size:11px;font-weight:600;padding:2px 7px;border-radius:4px;letter-spacing:.2px}
+.bdg-f1{background:#1e3a5f;color:var(--f1)}
+.bdg-f2{background:#431407;color:var(--f2)}
+.bdg-f3{background:#052e16;color:var(--f3)}
+.bdg-f4{background:#2e1065;color:var(--f4)}
+.bdg-f5{background:#450a0a;color:var(--f5)}
+.bdg-tofu{background:#022c22;color:var(--tofu)}
+.bdg-mofu{background:#1c1a05;color:var(--mofu)}
+.bdg-bofu{background:#2d0a1e;color:var(--bofu)}
+.bdg-cta{background:var(--surf);color:var(--muted);border:1px solid var(--bord)}
+.bdg-ask{background:#1e3a5f;color:#93c5fd}
+.bdg-blk{background:#450a0a;color:#fca5a5}
+.bdg-en{background:transparent;color:var(--dim);border:1px solid #30363d50}
+
+.hook-box{margin:13px 15px;padding:13px 15px;background:#060e1c;border-left:3px solid #2563eb;border-radius:0 6px 6px 0}
+.hook-lbl{font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.hook-txt{font-size:14px;font-weight:600;line-height:1.55;color:#dce8f7;letter-spacing:-.1px}
+
+.ref-row{margin:0 15px 4px;display:flex;align-items:center;gap:8px}
+.ref-h{font-size:12px;font-weight:600;color:var(--muted)}
+.ref-s{font-size:11px;color:#f59e0b;font-weight:700}
+.ref-btn{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:4px 11px;border-radius:6px;background:#1e3a5f;color:#60a5fa;border:1px solid #2563eb30;cursor:pointer;text-decoration:none;transition:all .12s}
+.ref-btn:hover{background:#1d4ed8;color:#fff}
+.ref-note{padding:4px 15px 13px;font-size:12px;color:var(--dim);border-bottom:1px solid var(--bord);font-style:italic;line-height:1.5}
+
+.acc{border-bottom:1px solid var(--bord)}
+.acc:last-of-type{border-bottom:0}
+.acc summary{padding:9px 15px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;list-style:none;display:flex;align-items:center;gap:6px;user-select:none}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary::before{content:"▸";font-size:10px;transition:transform .15s;display:inline-block}
+.acc[open] summary::before{transform:rotate(90deg)}
+.acc summary:hover{color:var(--txt)}
+.acc-body{padding:13px 15px;background:#0a0e13;border-top:1px solid var(--bord)}
+
+.ssec{margin-bottom:13px}
+.ssec:last-child{margin-bottom:0}
+.ssec-ts{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--dim);font-family:monospace}
+.ssec-lbl{font-size:10px;font-weight:700;color:#3b82f680;text-transform:uppercase;letter-spacing:.4px;margin:0 6px 0 4px}
+.ssec-txt{font-size:13px;color:#c9d1d9;line-height:1.7}
+
+.nf{margin-bottom:11px}
+.nf:last-child{margin-bottom:0}
+.nk{font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--muted);text-transform:uppercase;margin-bottom:3px}
+.nv{font-size:13px;color:#c9d1d9;line-height:1.7}
+.sub-tag{display:inline-block;background:#022c22;color:#34d399;font-size:11px;font-weight:700;padding:2px 7px;border-radius:4px;margin-top:5px}
+.fw{font-size:12px;color:var(--dim);font-style:italic}
+
+.cklist{padding:11px 15px;background:var(--surf);border-top:1px solid var(--bord)}
+.cklist-ttl{font-size:10px;font-weight:700;letter-spacing:.6px;color:var(--dim);text-transform:uppercase;margin-bottom:7px}
+.ck{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted);cursor:pointer;margin-bottom:4px}
+.ck input{accent-color:var(--f3);cursor:pointer;width:13px;height:13px;flex-shrink:0}
+.ck.done label{color:var(--dim);text-decoration:line-through;cursor:pointer}
+.nz{padding:14px 15px;border-top:1px solid var(--bord)}
+.nz-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.nz-lbl{font-size:11px;font-weight:700;letter-spacing:.6px;color:#60a5fa;text-transform:uppercase}
+.nz-allsaved{font-size:11px;color:#34d399;font-weight:600;opacity:0;transition:opacity .3s}
+.nz-clear{background:transparent;border:1px solid var(--bord);color:var(--dim);font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;transition:all .12s}
+.nz-clear:hover{border-color:var(--f5);color:var(--f5)}
+.nf-row{margin-bottom:10px}
+.nf-row:last-child{margin-bottom:0}
+.nf-label{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;display:flex;align-items:center;gap:5px;letter-spacing:.2px}
+.nf-area{width:100%;background:#050810;border:1px solid var(--bord);border-radius:6px;color:#dce8f7;font-size:13px;font-family:'Inter',sans-serif;padding:8px 11px;resize:vertical;min-height:52px;line-height:1.65;outline:none;transition:border-color .15s}
+.nf-area:focus{border-color:#2563eb;background:#060e1c}
+.nf-area::placeholder{color:#2a3040;font-size:12px;line-height:1.5}
+.nf-area.has-content{border-color:#1d4ed860;background:#060e1c}
+
+.exp-btn{background:#1e3a5f;color:#60a5fa;border:1px solid #2563eb40;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif}
+.exp-btn:hover{background:#1d4ed8;color:#fff}
+.prog{font-size:12px;color:var(--muted);padding:0 24px 8px;border-bottom:1px solid var(--bord)}
+.prog b{color:var(--f3)}
+
+.api-bar{background:#0a0b10;border-bottom:1px solid #2d1065;padding:9px 24px}
+.api-bar-inner{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.api-lbl{font-size:12px;font-weight:600;color:#7c3aed;white-space:nowrap}
+.api-input{flex:1;max-width:360px;background:#161b22;border:1px solid #2d1065;color:var(--txt);font-size:12px;padding:5px 10px;border-radius:6px;font-family:monospace;outline:none;transition:border-color .15s}
+.api-input:focus{border-color:#7c3aed}
+.api-save-btn{background:#2d1065;color:#a78bfa;border:1px solid #4c1d9540;font-size:12px;font-weight:600;padding:5px 13px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.api-save-btn:hover{background:#7c3aed;color:#fff}
+.api-status{font-size:12px;color:#34d399;font-weight:600}
+
+.rw-trigger{padding:12px 15px;border-top:1px solid var(--bord)}
+.rw-btn{width:100%;background:linear-gradient(135deg,#1a0a35,#0f1e3a);color:#a78bfa;border:1px solid #4c1d9540;font-size:13px;font-weight:700;padding:10px 16px;border-radius:8px;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;letter-spacing:-.1px}
+.rw-btn:hover{background:linear-gradient(135deg,#3b0764,#1d4ed8);color:#fff;border-color:#7c3aed60}
+.rw-btn.done{background:linear-gradient(135deg,#022c22,#0a1f0a);color:#34d399;border-color:#16a34a40}
+.rw-btn.done:hover{background:linear-gradient(135deg,#14532d,#166534);color:#fff}
+.rw-btn:disabled{opacity:.5;cursor:not-allowed}
+.rw-panel{border-top:1px solid var(--bord);background:#080910}
+.rw-loading{padding:14px 15px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.rw-spin{display:inline-block;animation:rwspin 1s linear infinite;font-size:15px}
+@keyframes rwspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.rw-body{padding:14px 15px}
+.rw-section{margin-bottom:13px;padding-bottom:13px;border-bottom:1px solid #ffffff08}
+.rw-section:last-of-type{margin-bottom:0;padding-bottom:0;border-bottom:0}
+.rw-sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.rw-sec-lbl{font-size:10px;font-weight:700;letter-spacing:.8px;color:#a78bfa;text-transform:uppercase}
+.rw-copy{background:transparent;border:1px solid var(--bord);color:var(--dim);font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.rw-copy:hover{border-color:#a78bfa;color:#a78bfa}
+.rw-copy.copied{border-color:#34d399;color:#34d399}
+.rw-content{font-size:13px;color:#dce8f7;line-height:1.8;white-space:pre-wrap;background:#050810;border:1px solid var(--bord);border-radius:6px;padding:10px 12px}
+.rw-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid #ffffff08}
+.rw-ts{font-size:11px;color:var(--dim)}
+.rw-rerun{background:transparent;border:1px solid var(--bord);color:var(--dim);font-size:11px;padding:4px 10px;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.rw-rerun:hover{border-color:#a78bfa;color:#a78bfa}
+.rw-revise{padding:12px 15px;border-top:1px solid #ffffff08;background:#06070d}
+.rw-rev-lbl{font-size:10px;font-weight:700;letter-spacing:.7px;color:var(--dim);text-transform:uppercase;margin-bottom:6px}
+.rw-rev-area{width:100%;background:#050810;border:1px solid var(--bord);border-radius:6px;color:#dce8f7;font-size:12px;font-family:'Inter',sans-serif;padding:8px 11px;resize:vertical;min-height:56px;line-height:1.6;outline:none;transition:border-color .15s}
+.rw-rev-area:focus{border-color:#7c3aed}
+.rw-rev-area::placeholder{color:#2a3040}
+.rw-rev-btn{margin-top:8px;background:#1a0a35;color:#a78bfa;border:1px solid #4c1d9540;font-size:12px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.rw-rev-btn:hover{background:#7c3aed;color:#fff}
+.rw-rev-btn:disabled{opacity:.5;cursor:not-allowed}
+.rw-accept-btn{background:#052e16;color:#4ade80;border:1px solid #16a34a50;font-size:12px;font-weight:700;padding:5px 13px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+.rw-accept-btn:hover{background:#14532d;color:#86efac;border-color:#22c55e80}
+.rw-accept-btn.accepted{background:#14532d;color:#86efac;border-color:#22c55e}
+.rw-hist-btn{background:transparent;border:1px solid var(--bord);color:var(--dim);font-size:12px;font-weight:600;padding:5px 11px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.rw-hist-btn:hover{border-color:#a78bfa;color:#a78bfa}
+.acc-bar{padding:9px 15px;background:#030f07;border-top:1px solid #16a34a30;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.acc-bar-left{display:flex;align-items:center;gap:7px}
+.acc-bar-badge{font-size:11px;font-weight:700;color:#4ade80;letter-spacing:.1px}
+.acc-bar-ver{font-size:11px;color:#166534}
+.acc-bar-right{display:flex;gap:6px}
+.acc-bar-hist{background:transparent;border:1px solid #16a34a40;color:#4ade80;font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.acc-bar-hist:hover{background:#14532d;color:#86efac}
+.acc-bar-rerun{background:transparent;border:1px solid var(--bord);color:var(--dim);font-size:11px;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.acc-bar-rerun:hover{border-color:#a78bfa;color:#a78bfa}
+.acc-bar-analyze{background:#1a0a35;color:#a78bfa;border:1px solid #4c1d9530;font-size:11px;font-weight:600;padding:3px 10px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.acc-bar-analyze:hover{background:#7c3aed;color:#fff}
+.analysis-panel{border-top:2px solid #2d106560}
+.ap-loading{padding:12px 15px;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.ap-body{padding:0}
+.ap-overall{padding:11px 15px;background:#08040f;border-bottom:1px solid #2d106540}
+.ap-overall-hdr{font-size:10px;font-weight:700;letter-spacing:.7px;color:#7c3aed;text-transform:uppercase;margin-bottom:8px}
+.ap-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+.ap-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}
+.ap-tag-kane{background:#2d1065;color:#a78bfa}
+.ap-tag-ava{background:#052e16;color:#4ade80}
+.ap-why{font-size:12px;color:#9ca3af;line-height:1.65;font-style:italic}
+.ap-sec{padding:10px 15px;border-bottom:1px solid #ffffff05}
+.ap-sec:last-child{border-bottom:0}
+.ap-sec-hdr{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.ap-ts{font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--dim);font-family:monospace;background:#0a0e13;padding:2px 6px;border-radius:3px}
+.ap-sec-lbl{font-size:11px;font-weight:700;color:var(--muted)}
+.ap-row{margin-bottom:6px}
+.ap-fw-lbl{font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px}
+.ap-fw-kane-lbl{color:#7c3aed}
+.ap-fw-ava-lbl{color:#16a34a}
+.ap-driver{font-size:12px;font-weight:700;color:#c4b5fd;margin-bottom:2px}
+.ap-mechanic{font-size:12px;font-weight:700;color:#86efac;margin-bottom:2px}
+.ap-how{font-size:12px;color:#9ca3af;line-height:1.65}
+.accepted-badge{display:inline-flex;align-items:center;gap:4px;background:#052e16;color:#4ade80;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;border:1px solid #16a34a40;margin-left:6px;letter-spacing:.2px}
+.rw-history{border-top:1px solid #ffffff08;background:#050710}
+.rw-hist-empty{padding:12px 15px;font-size:12px;color:var(--dim);font-style:italic}
+.rw-hist-entry{padding:10px 15px;border-bottom:1px solid #ffffff06}
+.rw-hist-entry:last-child{border-bottom:0}
+.rw-hist-hdr{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rw-hist-label{font-size:11px;font-weight:700;color:#a78bfa}
+.rw-hist-ver{font-size:10px;color:var(--dim)}
+.rw-hist-ts{font-size:10px;color:var(--dim);margin-left:auto}
+.rw-hist-restore{background:#1a0a35;color:#a78bfa;border:1px solid #4c1d9530;font-size:11px;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s}
+.rw-hist-restore:hover{background:#7c3aed;color:#fff}
+.rw-hist-content{font-size:12px;color:#9ca3af;line-height:1.7;white-space:pre-wrap;background:#030408;border:1px solid var(--bord);border-radius:5px;padding:8px 10px;margin-top:6px}
+details.rw-hist-details summary{font-size:11px;color:var(--dim);cursor:pointer;list-style:none;padding:2px 0}
+details.rw-hist-details summary::-webkit-details-marker{display:none}
+details.rw-hist-details[open] summary{color:#a78bfa}
+
+</style>
+</head>
+<body>
+
+<div class="hdr" style="display:flex;justify-content:space-between;align-items:flex-start">
+  <div>
+  <h1>Andrew George · Batch 03 · 30-Day Script Review</h1>
+  <p>Andrewpreneurship · GHL / SaaSuite · Jul 23, 2026 · 30 scripts · Sous chef pass required before SQL drop into Supabase</p>
+  </div>
+  <button class="exp-btn" onclick="exportNotes()" style="flex-shrink:0;margin-top:4px">📋 Export Notes</button>
+</div>
+
+<div class="banner">⚠️ <strong>1 script blocked — Day 28 only:</strong> Day 10 is unblocked ($30K MRR confirmed, goal = $100K). Day 28 films after Week 1 posts — fill [CURRENT MRR] and [DELTA] with real weekly data each episode.</div>
+
+<div class="api-bar">
+  <div class="api-bar-inner">
+    <span class="api-lbl">🔑 Claude API Key</span>
+    <input type="password" class="api-input" id="api-key-input" placeholder="sk-ant-api03-..." autocomplete="off">
+    <button class="api-save-btn" onclick="saveApiKey()">Save</button>
+    <span class="api-status" id="api-status"></span>
+  </div>
+</div>
+<div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 0">
+  <div class="filters" id="filters" style="flex:1"></div>
+  <button class="deliver-btn" onclick="openDeliverable()">📤 Andrew's Scripts</button>
+</div>
+<div class="prog" id="prog"></div>
+<div class="sbar" id="sbar"></div>
+<div class="grid" id="grid"></div>
+
+<!-- Deliverable overlay -->
+<div id="deliver-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#f8f8f5;overflow-y:auto">
+  <div class="dv-topbar">
+    <div class="dv-topbar-left">
+      <span class="dv-logo">Andrew George · Script Deliverable</span>
+      <span class="dv-count" id="dv-count"></span>
+    </div>
+    <div class="dv-topbar-right">
+      <button class="dv-btn" onclick="copyAllScripts()">📋 Copy All</button>
+      <button class="dv-btn" onclick="window.print()">🖨 Print / PDF</button>
+      <button class="dv-btn dv-close" onclick="closeDeliverable()">✕ Close</button>
+    </div>
+  </div>
+  <div id="dv-body" style="max-width:760px;margin:0 auto;padding:32px 24px 80px"></div>
+</div>
+
+<script>
+const D = [
+{n:1,w:1,d:"Monday",t:"GHL Foundation Setup",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@jacksonsbizzz",ru:"https://www.instagram.com/reel/DZ85NmwsH4s/",rs:"2344.9×",
+rn:"Borrow the generosity energy and informal pace — this is a friend giving you real information, not a tutorial host.",
+hook:"I'm putting you on the GHL setup I use for every single client. For free. Pay attention.",
+secs:[
+["0:00","HOOK","I'm putting you on the GHL setup I use for every single client. For free. Pay attention."],
+["0:04","CONTEXT","Most people launch GoHighLevel and immediately start connecting their domain, building funnels, and setting up automations. That's where they fall behind."],
+["0:13","CREDIBILITY","I've been on this platform for four and a half years. I'm certified by GHL to create their official content. And the first thing I do for every account is build the foundation correctly."],
+["0:22","THE SETUP","Company settings first. Business name, address, timezone. Then calendar availability. Then your pipeline stages. Then phone verification. Then email domain authentication."],
+["0:32","ANALOGY","The skyscraper analogy works perfectly here — if you put floors on a broken foundation, you're rebuilding later. I've seen it cost people three weeks."],
+["0:40","CTA","Don't let that be you. Follow me — I'm walking through every piece of this setup over the next 30 days."]
+],
+hp:"Relatability + Authority",
+hpd:'The hook mirrors the mistake most GHL users have already made. "For free. Pay attention." is a two-sentence pattern interrupt — the pause between them is where the viewer decides to stay.',
+vb:'"For free." — full stop, 1-beat pause before "Pay attention." Do not rush this. "I\'ve seen it cost people three weeks" — quiet empathy, not alarm. "Don\'t let that be you" — soft warning, not lecture.',
+vs:"Talking head, warm background. Hold steady on face for full hook (0:00–0:04), no cuts. At 0:22, cut to screen recording of GHL settings panel, back to face for analogy.",
+sub:true,subn:"⬜ Confirm whether @jacksonsbizzz uses face-only or screen overlays during this type of reveal. Match his energy, not necessarily his format.",
+to:'0:00 "I\'m giving you my full GHL setup. Free." | 0:40 "Follow for Day 2 →" | End: sassuite.ai',
+en:"5/10 — warm, grounded, unhurried. Knowledgeable friend, not a professor.",enN:5,
+fw:"Ava TOFU · Hook Point: Relatability + Authority · Hormozi: Give the value before the ask"},
+
+{n:2,w:1,d:"Tuesday",t:"Can't Compete With Big Agencies?",l:"BOFU",f:"F2",fn:"Myth / Wrong-Way",cta:"Comment SUITE ⚡",ask:1,blk:false,bn:null,
+rh:"@duncanrogoff",ru:"https://www.instagram.com/reel/DYnPUfru7aw/",rs:"3332.7×",
+rn:"Exact structure: \"Most people think X is unavoidable. They're not.\" Use it verbatim.",
+hook:"Most GHL affiliates think they can't compete with big agencies. They're wrong.",
+secs:[
+["0:00","HOOK","Most GHL affiliates think they can't compete with big agencies. They're wrong."],
+["0:05","REFRAME","The real problem isn't your skill level. It's what you're offering. Big agencies charge for their tech stack — the CRM, the email tool, the automations, the review management."],
+["0:14","MECHANISM","When you run GHL as white-label SaaS, that stack IS your product. You're not competing with them. You're undercutting the entire reason they exist."],
+["0:22","PROOF","The clients I've helped set this up are charging $97 to $500 a month per client for software they don't touch after month one. GHL handles the tech. SasSuite handles the onboarding and support layer. You just need to sign the clients."],
+["0:34","CTA","If you want to see how this actually works, comment SUITE below and I'll walk you through it."]
+],
+hp:"Pattern Interrupt + Aspiration",
+hpd:'"They\'re wrong." stops the scroll because viewers who hold this belief are suddenly challenged. Aspiration activates in the body: "$97 to $500 a month for software they don\'t touch after month one" is the dream outcome made specific.',
+vb:'"They\'re wrong." — let it land. One full beat of silence after this line. "You\'re not competing with them. You\'re undercutting the entire reason they exist." — calm confidence, not aggression. This is a perspective shift, not a fight.',
+vs:"Talking head, direct to camera. No screen recording needed — this is a mindset shift.",
+sub:true,subn:"⬜ Check @duncanrogoff's camera framing; he tends to use a tight crop and slight lean-in. Match the framing energy if it feels right for Andrew.",
+to:'0:00 "GHL affiliates CAN compete with big agencies." | 0:34 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5.5/10 — slightly more direct than baseline. The 'they're wrong' line should feel punchy; rest stays warm.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Pattern Interrupt + Aspiration · Hormozi: Reframe the real problem before selling the solution"},
+
+{n:3,w:1,d:"Wednesday",t:"Most Underutilized GHL Feature",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@ariacodez",ru:"https://www.instagram.com/reel/DaQdAivKQ2V/",rs:"118.4×",
+rn:"Aggregator energy — 'most powerful X, all in one place.' You're revealing something they didn't know existed.",
+hook:"The most underutilized feature in GoHighLevel — and most people have it completely turned off.",
+secs:[
+["0:00","HOOK","The most underutilized feature in GoHighLevel — and most people have it completely turned off."],
+["0:05","REVEAL","It's the Prospecting Tool."],
+["0:07","WHAT IT DOES","It pulls business contact info, website health, social presence, and Google review data from a single search. For agencies, this changes your first call with a prospect. You go in already knowing their review score, where they're losing leads, and exactly what's broken — before you ever pick up the phone."],
+["0:20","WHERE TO FIND IT","This isn't in the sub-account. It's on the Agency side. Go to Settings, then Business Services, then Prospecting Tool."],
+["0:28","DIRECTIVE","I'd highly recommend turning this on before your first client call this week. You're not generating leads from scratch. You're showing up knowing more than they do."],
+["0:37","CTA","Follow — I share underutilized GHL tools every week."]
+],
+hp:"Curiosity/Mystery + FOMO",
+hpd:"The hook withholds the name of the feature — 'most people have it turned off' creates the gap. FOMO activates when the viewer realizes they're probably one of those people.",
+vb:'"The most underutilized feature in GoHighLevel —" pause before payoff. "It\'s the Prospecting Tool." — quiet reveal, not a shout. "You\'re showing up knowing more than they do" — slight smile; it\'s a competitive advantage Andrew knows well.',
+vs:"Talking head for hook, then cut to screen recording of Agency Settings → Business Services → Prospecting Tool at 0:20. Return to face for the CTA.",
+sub:true,subn:"⬜ Check @ariacodez framing; note whether they overlay text labels on the screen recording or just narrate. Match that energy.",
+to:'0:00 "Most underutilized GHL feature (most have it OFF)" | 0:37 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — insider tone, like you're sharing something from the back room.",enN:5,
+fw:"Ava TOFU · Hook Point: Curiosity/Mystery + FOMO · Hormozi: Hidden value they already have access to"},
+
+{n:4,w:1,d:"Thursday",t:"5 AI Tools in GHL That Are Free",l:"BOFU",f:"F3",fn:"Rapid Listicle",cta:"Save + Follow",ask:0,blk:false,bn:null,
+rh:"@danvmartell",ru:"https://tiktok.com/@danvmartell/video/7634310832284830983",rs:"227.8×",
+rn:"Ranked list delivery — fast, opinionated, each item gets one sentence.",
+hook:"Five AI tools inside GoHighLevel. All free. Most people don't know they exist.",
+secs:[
+["0:00","HOOK","Five AI tools inside GoHighLevel. All free. Most people don't know they exist."],
+["0:05","ITEM 1","One — Conversation AI. Handles inbound DMs and texts automatically, no human needed."],
+["0:10","ITEM 2","Two — Voice AI. Books appointments over the phone without anyone on your team picking up."],
+["0:15","ITEM 3","Three — Review AI. Responds to your client's Google reviews on autopilot, in your voice."],
+["0:20","ITEM 4","Four — Content AI. Writes social captions, emails, and SMS messages directly inside the platform."],
+["0:25","ITEM 5","Five — Workflow AI. Suggests automation steps as you build — like a co-pilot inside the editor."],
+["0:31","DIRECTIVE","I'd highly recommend checking which of these are turned on in your sub-accounts right now. Most people are paying for third-party tools doing exactly this. Make sure you're not one of them."],
+["0:41","CTA","Save this and follow for more."]
+],
+hp:"Specificity + FOMO",
+hpd:'"Five" sets clear expectation (completeness contract). "Most people don\'t know they exist" is pure FOMO. Each numbered item is a specificity micro-hook.',
+vb:"Brisk but not robotic — each number (One, Two, Three…) gets slight emphasis before the tool name. Don't rush past Workflow AI — it's the least known. \"Make sure you're not one of them\" — slight pause before; this is the consequence line.",
+vs:"Fast-paced talking head. Consider small text counters (1/5, 2/5…) as graphic overlays for each item.",
+sub:true,subn:"⬜ Check @danvmartell's overlay style — does he use on-screen text for each item? If yes, build that into the edit brief for Andrew's editor.",
+to:'0:00 "5 free AI tools inside GoHighLevel" | 0:41 "Save this →" | End: sassuite.ai',
+en:"5.5/10 — brisk and confident. Picks up pace slightly with each item.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Specificity + FOMO · Hormozi: Give 5× more value than expected in the title"},
+
+{n:5,w:1,d:"Friday",t:"Unlimited Media Storage",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@kayvon.ai",ru:"https://www.instagram.com/reel/DaRSHTNKjwW/",rs:"56.2×",
+rn:"Specific-number format — 'free tool that does X.' Quantify the value clearly.",
+hook:"Fun fact: GoHighLevel gives you unlimited media storage. No cap. Most affiliates have no idea.",
+secs:[
+["0:00","HOOK","Fun fact: GoHighLevel gives you unlimited media storage. No cap. Most affiliates have no idea."],
+["0:06","COMPARISON","Every image, video, contract, and attachment your clients upload to GHL — unlimited. Compare that to what you'd pay Google Drive or Dropbox for an agency team. We're talking $10 to $20 a month per client, gone."],
+["0:16","WHERE TO FIND IT","Inside your sub-accounts, go to Marketing, then Media Storage. Your clients can upload everything there — logos, photos, documents. It syncs across all their automations and funnels automatically."],
+["0:26","WHY IT MATTERS FOR SALES","If you're running a white-label SaaS and charging a monthly fee, this is one of the 10 things that makes the sale easy. You're not selling software. You're giving them infrastructure they'd otherwise pay for separately."],
+["0:37","CTA","Follow — I share these every week."]
+],
+hp:"Surprise/Shock + Specificity",
+hpd:'"Fun fact:" signals genuine surprise without hype. "No cap." + the $10–$20 per client math ground it in real money. Specificity driver (exact dollar range) makes the claim feel auditable.',
+vb:'"Fun fact:" — light and slightly playful. "No cap." — very short, let it sit. "$10 to $20 a month per client, gone." — the word "gone" lands with slight emphasis. "You\'re not selling software. You\'re giving them infrastructure." — slow it down slightly.',
+vs:"Talking head for hook and comparison. At 0:16, cut to screen recording of Marketing → Media Storage in GHL. Return to face for the close.",
+sub:true,subn:"⬜ Check @kayvon.ai's screen overlay style and whether he labels the navigation path on screen. If yes, include in edit brief.",
+to:'0:00 "GHL has unlimited media storage. Most affiliates don\'t know." | 0:37 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — genuinely pleased to share this. Slightly lighter than baseline.",enN:5,
+fw:"Ava TOFU · Hook Point: Surprise/Shock + Specificity · Hormozi: Make the hidden value tangible with dollar comparison"},
+
+{n:6,w:1,d:"Saturday",t:"You're Setting Up GHL Wrong",l:"TOFU",f:"F2",fn:"Myth / Wrong-Way",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@jasperhighlevel",ru:"https://www.instagram.com/reel/C3lm0NOvgBY/",rs:"41.1×",
+rn:"Combine GHL niche credibility with the duncanrogoff structure. Saturday double-down slot.",
+hook:"You're setting up GoHighLevel in the wrong order. And it costs you weeks.",
+secs:[
+["0:00","HOOK","You're setting up GoHighLevel in the wrong order. And it costs you weeks."],
+["0:05","THE MISTAKE","I've seen this hundreds of times. Someone gets access, dives straight into funnels, connects their domain, starts building automations — then realizes their calendar doesn't sync, their phone isn't verified, and automations are firing in the wrong timezone."],
+["0:17","ROOT CAUSE","That's not a GHL problem. That's a setup order problem."],
+["0:21","ANALOGY","The skyscraper analogy: you don't build the floors before the foundation. In GHL, the foundation is company settings, business info, phone verification, and calendar configuration. Everything else depends on this."],
+["0:32","CONSEQUENCE","If you're starting a new account — yours or a client's — do it in order. It takes 2 hours to do it right. It takes weeks to undo it when you rush."],
+["0:41","CTA","Follow and I'll walk you through the exact order I use every time."]
+],
+hp:"Pattern Interrupt + Relatability",
+hpd:"'And it costs you weeks.' is a separate sentence with weight. The specific mistake list (calendar doesn't sync, wrong timezone) is highly relatable — the more specific, the more the viewer nods.",
+vb:'"And it costs you weeks." — deliver as a separate sentence, not tacked on. "That\'s not a GHL problem. That\'s a setup order problem." — pivot line; slight emphasis on "order." Consequence close should feel like something you\'ve personally witnessed.',
+vs:"Talking head throughout. Saturday double-down energy — slightly more urgent than weekday.",
+sub:true,subn:"⬜ Check @jasperhighlevel's camera style (close crop? standing or seated?). Note for Andrew's filming setup.",
+to:'0:00 "You\'re setting up GHL in the wrong order" | 0:41 "Follow for the correct order →" | End: sassuite.ai',
+en:"6/10 — slightly more urgent than baseline. Saturday double-down slot. 'I need to tell you this' feeling, not alarm.",enN:6,
+fw:"Ava TOFU · Hook Point: Pattern Interrupt + Relatability · Hormozi: Fix the root cause before selling the solution"},
+
+{n:7,w:1,d:"Sunday",t:"Trigger Links: 30-Day Results",l:"BOFU",f:"F4",fn:"Build-in-Public Result",cta:"Comment SUITE ⚡",ask:2,blk:false,bn:null,
+rh:"@theaustinschneider",ru:"https://www.instagram.com/reel/DWHgTmhgbub/",rs:"11.8×",
+rn:"Build-in-public founder authenticity — real numbers, real outcome. Let the data carry the video.",
+hook:"I turned on trigger links in three GHL email sequences 30 days ago. Here's what actually happened.",
+secs:[
+["0:00","HOOK","I turned on trigger links in three GHL email sequences 30 days ago. Here's what actually happened."],
+["0:07","CONTEXT","For context — trigger links fire a workflow automatically when someone clicks a specific link in an email, a text, or anywhere else you put it. I added them to a new-client welcome email, a re-engagement campaign, and a review request sequence."],
+["0:19","THE RESULT","In 30 days, the re-engagement campaign fired 47 times. Meaning 47 people clicked a link and automatically got tagged, moved to a pipeline stage, and put into the right follow-up sequence. No one on my team did anything. Zero manual tasks."],
+["0:33","SO WHAT","That's the power of this feature when it's set up right."],
+["0:37","CTA","If you want to see the exact sequences I built, comment SUITE below and I'll walk you through it."]
+],
+hp:"Social Proof + Specificity",
+hpd:'"30 days ago" creates a defined experiment. The number "47" is the entire argument — Specificity driver means this one data point is more compelling than any explanation. "Zero manual tasks." is the transformation statement.',
+vb:'Lead with "47" — say the number, let it sit for half a beat before explaining. "Zero manual tasks." — slight pause after; it\'s the payoff. Tone is genuinely surprised at your own results, not boastful.',
+vs:"Talking head, authentic setting. This is build-in-public — don't over-produce. Lean into the raw, real quality that @theaustinschneider uses.",
+sub:true,subn:"⬜ Check @theaustinschneider's filming quality; if intentionally raw, note that in the edit brief — no heavy color grade needed.",
+to:'0:00 "I added trigger links to 3 sequences. Here\'s 30-day data." | 0:37 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5/10 — genuine, slightly surprised by own results. This is honesty, not hype.",enN:5,
+fw:"Ava BOFU · Hook Point: Social Proof + Specificity · Hormozi: Document the transformation, not the process"},
+
+{n:8,w:2,d:"Monday",t:"$50/mo Branded App on the App Store",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@connorzarou",ru:"https://www.instagram.com/reel/C2csIwNrKDW/",rs:"165.8×",
+rn:"Aspirational proof hook — reveal something that sounds too good, then make it real.",
+hook:"For $50 a month on GoHighLevel, you can have a white-labeled app — live on the Apple App Store and Google Play. With your name. Your logo. Your colors.",
+secs:[
+["0:00","HOOK","For $50 a month on GoHighLevel, you can have a white-labeled app — live on the Apple App Store and Google Play. With your name. Your logo. Your colors."],
+["0:09","CLARIFY","Not a web app. A real mobile app your clients download from the App Store. It looks like you built it from scratch."],
+["0:14","WHAT IT IS","This is GHL's Branded Mobile App add-on. Your clients get access to their CRM, calendar, and conversations — all branded to you."],
+["0:22","THE BUSINESS CASE","For agencies running white-label SaaS, this is a $97 to $297 a month upgrade you can offer immediately. You pay $50. You charge whatever you want."],
+["0:30","HOW TO GET IT","The setup is in your Agency settings under the Mobile App section. I'd highly recommend adding it once you have your first few clients up and running — it's an easy upsell and it increases perceived value dramatically."],
+["0:41","CTA","Follow for more GHL revenue unlocks every week."]
+],
+hp:"Aspiration/Transformation + Surprise/Shock",
+hpd:'"$50/month for an App Store app" sounds impossible — that\'s why viewers stay. Aspiration kicks in at "You pay $50, you charge whatever you want." Specificity of $97–$297 makes the business model immediately real.',
+vb:'"With your name. Your logo. Your colors." — three short sentences, three separate beats. "Not a web app." — slight emphasis on "not." Pre-empting the objection. You pay $50. You charge whatever you want — two beats.',
+vs:"Talking head for hook. At 0:22, consider a quick screen recording of Agency Settings → Mobile App section. Show the branded app preview screen if possible.",
+sub:true,subn:"⬜ Check @connorzarou's format; he tends to use phone-in-hand demos. If Andrew can show the app on his phone during 0:09–0:14, that's a strong visual moment.",
+to:'0:00 "$50/mo gets you a branded App Store app in GHL" | 0:41 "Follow for more GHL unlocks →" | End: sassuite.ai',
+en:"5/10 — let the '$50/month' hook do the work. Deliver it matter-of-factly; the surprise is in the fact, not the delivery.",enN:5,
+fw:"Ava TOFU · Hook Point: Aspiration/Transformation + Surprise/Shock · Hormozi: Make the offer feel irresistible by showing the margin"},
+
+{n:9,w:2,d:"Tuesday",t:"Stop Paying for Email Tools",l:"BOFU",f:"F2",fn:"Myth / Wrong-Way",cta:"Comment SUITE ⚡",ask:3,blk:false,bn:null,
+rh:"@duncanrogoff",ru:"https://www.instagram.com/reel/DYnPUfru7aw/",rs:"3332.7×",
+rn:"Exact structure: 'Most people think X. They're not. The real problem is Y.'",
+hook:"Most GHL users are still paying for a separate email tool. Stop.",
+secs:[
+["0:00","HOOK","Most GHL users are still paying for a separate email tool. Stop."],
+["0:05","THE REAL PROBLEM","The real problem isn't that GHL's email doesn't work — it's that most people never configure it properly and assume the paid tool is better."],
+["0:14","WHAT GHL EMAIL ACTUALLY DOES","Here's what GHL's email system actually does: sequences, broadcasts, conditional logic, A/B testing, link click tracking, and email warm-up — so your deliverability hits 99% before a single campaign goes out. That warm-up tool alone is $15 to $30 a month at every dedicated email platform."],
+["0:27","PROOF","I've had clients cancel $200 a month in email subscriptions the week they set this up correctly. The setup takes about 90 minutes. The savings start immediately."],
+["0:36","CTA","If you want to see the exact migration steps to move your email over to GHL, comment SUITE and I'll walk you through it."]
+],
+hp:"Controversy/Taboo + FOMO",
+hpd:'"Stop." as the last word of the hook is a hard pattern interrupt — one word, period. The Taboo driver: calling out a behavior most people assume is correct. The warm-up stat is the FOMO moment — viewer calculates their own waste.',
+vb:'"Stop." — full stop. Do not explain immediately. Let the word land for a full beat. The "$200 a month" cancellation story: deliver like you still can\'t believe people were paying that. "The setup takes about 90 minutes. The savings start immediately." — clean, confident close.',
+vs:"Talking head, slightly incredulous expression at the hook. No screen recording needed — this is a mindset shift.",
+sub:true,subn:"⬜ Check @duncanrogoff's camera presence; he tends to hold very still and let the words do all the work. Andrew can do the same.",
+to:'0:00 "Stop paying for email tools if you have GHL" | 0:36 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5.5/10 — slightly incredulous. 'I can't believe people are still paying for this' energy throughout.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Controversy/Taboo + FOMO · Hormozi: Eliminate the real objection (it's the setup, not the tool)"},
+
+{n:10,w:2,d:"Wednesday",t:"Progress Series EP#1",l:"MOFU",f:"F4",fn:"Build-in-Public / Progress Series",cta:"Follow",ask:0,blk:false,
+bn:null,
+rh:"@madisonknowsbest",ru:"https://tiktok.com/@madisonknowsbest/video/7636531871836278046",rs:"2036.9×",
+rn:"Series format — each episode drives people to watch the rest. High return-viewer engine.",
+hook:"I'm going from $30K a month to $100K in GHL SaaS revenue. And I'm documenting every week until we get there.",
+secs:[
+["0:00","HOOK","I'm going from $30K a month to $100K in GHL SaaS revenue. And I'm documenting every week until we get there."],
+["0:08","CREDIBILITY","For context — I've been in GoHighLevel for four and a half years. I'm certified by the platform to create their official content. My YouTube, their blogs, their emails, their social. I ran my own agency to $150K a year using GHL. And I built SasSuite — used by over 500 agencies to onboard and support their GHL clients."],
+["0:22","THE REAL NUMBER","Right now, SasSuite is at $30K a month in recurring revenue. Starting today, I'm showing you exactly what I do week by week to get to $100K."],
+["0:31","WHAT THIS IS","Not a course. Not theory. Real numbers. Real actions. Episode one."],
+["0:36","CTA","Follow so you don't miss an episode."]
+],
+hp:"Authority/Credibility + Aspiration",
+hpd:"The real MRR number IS the hook. Transparency about where you currently are creates the 'I want to see if he makes it' viewer commitment that drives a series. The Credibility block (4.5 years, GHL-certified, 500 agencies) earns the right to be believed.",
+vb:'"And I\'m documenting every week until we get there." — deliver with real commitment, like you\'re making a promise. "Not a course. Not theory." — two-beat pause between sentences. "Episode one." — say it like it matters. "Real numbers." — calm, deliberate.',
+vs:"Talking head, direct and authentic. Do not over-produce this episode — the rawness is part of the trust signal.",
+sub:true,subn:"⬜ Check @madisonknowsbest's filming style; she often uses minimal setup, phone-selfie angle, natural light. If Andrew can film in a genuine setting (home office, not a studio), that matches the format.",
+to:'0:00 "I\'m going from $30K/mo to $100K in GHL SaaS. Documenting it." | 0:36 "Follow for Episode 2 →" | End: sassuite.ai · "#GHLSaaS EP1"',
+en:"4.5/10 — quiet resolve. Most vulnerable video in the batch. Understated delivery lands harder than excitement.",enN:4.5,
+fw:"Ava MOFU · Hook Point: Authority/Credibility + Aspiration · Hormozi: Radical transparency builds the audience you can't buy"},
+
+{n:11,w:2,d:"Thursday",t:"3 Automations for Every New Client",l:"BOFU",f:"F3",fn:"Rapid Listicle",cta:"Save + Follow",ask:0,blk:false,bn:null,
+rh:"@jake_ghl",ru:"https://www.instagram.com/reel/DUHxTgdlPFz/",rs:"363.7×",
+rn:"Simplicity and directness — practical, no-fluff setup that sounds doable immediately.",
+hook:"Three GHL automations I set up for every new client. Each one saves at least two hours a week.",
+secs:[
+["0:00","HOOK","Three GHL automations I set up for every new client. Each one saves at least two hours a week."],
+["0:06","AUTOMATION 1","Automation one: New lead arrives → immediate missed call text-back. Someone fills out a form or misses a call, they get a text in under 60 seconds. You never lose a lead to slow follow-up again."],
+["0:16","AUTOMATION 2","Automation two: Review request sequence. 48 hours after service, SMS goes out with a direct Google review link. If no response in three days, follow-up email. My clients average a full star improvement on Google within 90 days."],
+["0:27","AUTOMATION 3","Automation three: Appointment confirmation and reminder series. Booked, confirmed 24 hours out, reminder one hour before. No-show rates drop to near zero."],
+["0:36","CLOSE","These three alone replace tools most clients are paying for separately. Make sure you have all three running before you hand a client their login."],
+["0:43","CTA","Save this and follow for the setup tutorials."]
+],
+hp:"Specificity + Relatability",
+hpd:'"Three" sets the completion contract — viewers know exactly how long this takes. "Each one saves at least two hours a week" is the value promise in the hook, not the close.',
+vb:"Fast and confident. Each automation gets one sentence of what it does, one of the result. 'You never lose a lead to slow follow-up again.' / 'My clients average a full star improvement.' / 'No-show rates drop to near zero.' — let each result line land before moving to the next.",
+vs:"Talking head, brisk energy. Consider quick text overlays showing each automation number and name.",
+sub:true,subn:"⬜ Check @jake_ghl's analyzed video (full_screen_hybrid with screen recording). If Andrew has the GHL workflows already built, 2–3 seconds of screen recording per automation adds credibility.",
+to:'0:00 "3 GHL automations I build for every client (saves 2+ hrs/wk each)" | 0:43 "Save this →" | End: sassuite.ai',
+en:"5.5/10 — brisk and confident. Slightly more momentum than baseline.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Specificity + Relatability · Hormozi: Give the system upfront, sell the support layer"},
+
+{n:12,w:2,d:"Friday",t:"Trigger Links Deep Dive",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@commandtraffic",ru:"https://www.instagram.com/reel/DRIlqiEEuJY/",rs:"38.7×",
+rn:"'I'll send you the breakdown' teaching energy — technical but trust-building.",
+hook:"Trigger links in GoHighLevel — the most underrated automation tool on the entire platform. Let me explain exactly how they work.",
+secs:[
+["0:00","HOOK","Trigger links in GoHighLevel — the most underrated automation tool on the entire platform. Let me explain exactly how they work."],
+["0:08","MECHANISM","You create a special link inside GHL. When someone clicks it — in an email, a text, a document, anywhere — it fires a workflow you've already set up. Tag applied. Pipeline stage updated. Notification sent. Follow-up message goes out. All automatic."],
+["0:21","WHY IT MATTERS","Why this matters: you can track engagement without asking for it. A client clicks 'Download Your Welcome Guide' — and behind the scenes they're moved to the active-client pipeline stage, tagged 'onboarded,' and added to your check-in sequence. Nobody on your team did anything."],
+["0:33","DIRECTIVE","I'd highly recommend adding at least one trigger link to every welcome email you send. Set it up once. It runs forever."],
+["0:40","CTA","Follow — I share GHL automation setups every week."]
+],
+hp:"Curiosity/Mystery + Authority",
+hpd:'"Most underrated automation tool on the entire platform" creates a curiosity gap. The mechanism explanation builds credibility through precision. "Let me explain exactly how they work" — trust signal that rewards staying.',
+vb:'"Let me explain exactly how they work." — warm invitation, not a lecture. The mechanism list (Tag applied. Pipeline stage updated. etc.) — staccato delivery, slight pause between each. "Set it up once. It runs forever." — clean, memorable close. Say it slowly.',
+vs:"Talking head for hook. At 0:21, cut to screen recording of a GHL trigger link example — show the workflow it fires. Return to face for directive and CTA.",
+sub:true,subn:"⬜ @commandtraffic uses a mix of face cam and screen recording. Note the transition style and replicate.",
+to:'0:00 "Trigger links: the most underrated GHL automation tool" | 0:40 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — technically curious. You genuinely think this feature is underrated; that enthusiasm is the hook.",enN:5,
+fw:"Ava TOFU · Hook Point: Curiosity/Mystery + Authority · Hormozi: Teach the mechanism, earn the trust"},
+
+{n:13,w:2,d:"Saturday",t:"Light Theme vs. Dark Theme in GHL",l:"TOFU",f:"F2",fn:"Myth / Wrong-Way (Contrarian)",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@jasperhighlevel",ru:"https://www.instagram.com/reel/C4JJHpYPuhF/",rs:"25.3×",
+rn:"Contrarian take delivered without arrogance — you have a reason, you're sharing it.",
+hook:"I use Light theme in GoHighLevel. Not Dark. And there's a reason most people don't think about.",
+secs:[
+["0:00","HOOK","I use Light theme in GoHighLevel. Not Dark. And there's a reason most people don't think about."],
+["0:06","DISARM","I know — this sounds ridiculous. But hear me out."],
+["0:10","THE LOGIC","When you hand a new client their GHL account and it's in Dark mode, there's a subtle friction that builds. Dark theme feels unfamiliar to people who spend most of their time in Google Drive, Gmail, or their bank's portal. They open support tickets. They ask more questions. They take longer to adopt the platform. That's more time from you."],
+["0:25","THE ARGUMENT","Light theme matches what most business owners already see every day. Lower friction means faster adoption. And faster adoption means fewer support requests in month one."],
+["0:34","NUANCE","If your client specifically asks for dark mode — go for it, absolutely. But change it at the profile level, not the agency level, or it overrides everything."],
+["0:42","CLOSER","Small things at scale are systems."],
+["0:44","CTA","Follow for more GHL setup details that actually save you time."]
+],
+hp:"Controversy/Taboo + Pattern Interrupt",
+hpd:'"I use Light theme. Not Dark." is a micro-controversy in a community where Dark mode is the default identity. The reasoning is logical, not aesthetic — that\'s the surprise. Earned controversy: challenge the norm and justify with real logic.',
+vb:'"I know — this sounds ridiculous. But hear me out." — slight self-aware smile. Confident, not defensive. "Small things at scale are systems." — this is the quotable closer. Deliver it slowly. It should feel like a principle, not a tip.',
+vs:"Talking head. Light, bright background — subtle nod to the theme choice.",
+sub:true,subn:"⬜ Check @jasperhighlevel's contrarian video style; does he use any on-screen graphic comparing light vs dark? If yes, include a simple split-screen graphic in the edit brief.",
+to:'0:00 "I use light theme in GHL, not dark. Here\'s why." | 0:44 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — slightly self-aware, gently confident. The humor is in the premise, not the delivery.",enN:5,
+fw:"Ava TOFU · Hook Point: Controversy/Taboo + Pattern Interrupt · Hormozi: Challenge the conventional default with real downstream logic"},
+
+{n:14,w:2,d:"Sunday",t:"GHL vs. Paid Review Tools",l:"BOFU",f:"F5",fn:"Paid-vs-Free Comparison",cta:"Comment SUITE ⚡",ask:4,blk:false,bn:null,
+rh:"@kennydonnelldfw",ru:"https://www.instagram.com/reel/DXuNBcsE1pB/",rs:"—",
+rn:"Structured comparison — 'here's what they do, here's what GHL does, here's the difference.'",
+hook:"Agencies are paying $99 to $299 per location per month for review management tools. GoHighLevel has it built in. Let me do the comparison.",
+secs:[
+["0:00","HOOK","Agencies are paying $99 to $299 per location per month for review management tools. GoHighLevel has it built in. Let me do the comparison."],
+["0:09","PAID TOOLS","What dedicated tools like Birdeye or Podium do: send review requests, monitor Google and Facebook, respond to reviews, show you a dashboard. They do it well. It costs $1,200 to $3,600 per location per year."],
+["0:20","GHL","What GHL's review system does: automated review request sequences via SMS and email. Google and Facebook monitoring. AI-powered review responses within minutes of every new review. Dashboard per location. And it's already included in your GHL plan."],
+["0:32","THE CATCH","The catch: you have to set it up correctly. Most people turn on the review feature and never configure the automation sequence or the AI response settings. That's the difference between 'it kind of works' and 'it replaces a $200 subscription.'"],
+["0:43","CTA","Comment SUITE and I'll send you the exact setup I use for every client."]
+],
+hp:"Specificity + FOMO",
+hpd:'"$99 to $299 per location per month" opens with the cost the viewer is likely paying. Specificity makes it feel like you\'re talking directly to them. FOMO activates when they realize GHL already has this. The "catch" section earns trust.',
+vb:'"$1,200 to $3,600 per location per year" — slight incredulity on "per year" (annual number is the gut-punch vs. monthly). The catch section: honest, not alarming. "Most people turn it on and never configure it" — non-judgmental.',
+vs:"Talking head, factual delivery. Consider a simple side-by-side graphic (Birdeye/Podium price vs GHL cost = $0 extra) for the comparison section.",
+sub:true,subn:"⬜ Check @kennydonnelldfw's comparison format for graphic style. Does he use text graphics? If yes, build into edit brief.",
+to:'0:00 "Agencies pay $299/mo for review tools. GHL has it free." | 0:43 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5.5/10 — factual and slightly incredulous. 'I can't believe people are still paying for this' runs underneath.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Specificity + FOMO · Hormozi: Make the comparison undeniable with exact dollar figures"},
+
+{n:15,w:3,d:"Monday",t:"Email Warm-Up Is Built In",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@noevarner.ai",ru:"https://www.instagram.com/reel/DVrR71kEeNx/",rs:"56×",
+rn:"Technical reveal format — show how it connects, what it does, why it matters.",
+hook:"GoHighLevel has a built-in email warm-up tool. Turn it on before you send a single campaign.",
+secs:[
+["0:00","HOOK","GoHighLevel has a built-in email warm-up tool. Turn it on before you send a single campaign."],
+["0:06","WHAT WARM-UP DOES","Here's what email warm-up actually does: it gradually increases your sending reputation by exchanging low-volume, natural-looking emails with a network of other accounts before your real campaigns go out. Most dedicated warm-up tools cost $15 to $30 a month. GHL's is included with your subscription."],
+["0:19","THE RESULT","The result when you do this right — 99% deliverability and 40% to 60% open rates on campaigns."],
+["0:24","THE PROBLEM WITHOUT IT","I see people launch GHL email broadcasts cold and wonder why half their messages land in spam. It's not the copy. It's the sender reputation."],
+["0:31","HOW TO TURN IT ON","Go into your sub-account settings, then Email Services, and find the warm-up toggle. Turn it on at least two weeks before your first broadcast."],
+["0:39","CTA","Follow — I cover GHL settings most people skip right over."]
+],
+hp:"FOMO + Specificity",
+hpd:'The hook is a directive — "Turn it on before you send a single campaign" implies the viewer is about to make a costly mistake. Specificity of "99% deliverability and 40–60% open rates" is the proof driver.',
+vb:'"Turn it on before you send a single campaign." — quiet warning, not alarm. "It\'s not the copy. It\'s the sender reputation." — pause between; the second is the diagnosis. "Make sure you" energy throughout.',
+vs:"Talking head for hook and explanation. At 0:31, screen recording of Sub-Account Settings → Email Services → warm-up toggle. Return to face for CTA.",
+sub:true,subn:"⬜ Check @noevarner.ai's screen overlay style; he tends to highlight the specific setting with a cursor or callout. If so, note in edit brief.",
+to:'0:00 "Email warm-up is built into GHL. Turn it on before campaigns." | 0:39 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — 'Make sure you' energy. Calm warning from lived experience.",enN:5,
+fw:"Ava TOFU · Hook Point: FOMO + Specificity · Hormozi: Eliminate hidden failure before they experience it"},
+
+{n:16,w:3,d:"Tuesday",t:"The Wrong Way to Start GHL SaaS",l:"BOFU",f:"F2",fn:"Myth / Wrong-Way",cta:"Comment SUITE ⚡",ask:5,blk:false,bn:null,
+rh:"@duncanrogoff",ru:"https://www.instagram.com/reel/DYnPUfru7aw/",rs:"3332.7×",
+rn:"Classic duncanrogoff structure — 'most people think X. They don't. The real problem is Y.'",
+hook:"The wrong way to start selling GoHighLevel as a SaaS — and I see this every single week.",
+secs:[
+["0:00","HOOK","The wrong way to start selling GoHighLevel as a SaaS — and I see this every single week."],
+["0:06","THE MISTAKE","Most people get excited about the model, sign up for the $497 plan, white-label the platform, and immediately start selling sub-accounts — before they've actually used GHL themselves."],
+["0:16","THE REAL PROBLEM","The real problem isn't motivation. It's product knowledge. Your clients will ask you questions. They'll have problems. If you don't know the answers, you're not running a SaaS business — you're running a help desk you're not qualified to staff."],
+["0:27","THE FIX","I'd highly recommend learning the platform for 60 to 90 days before you onboard a single paying client. Build your own funnel inside it. Send a real campaign. Book an appointment. Use the automations on your own business first."],
+["0:38","THE PAYOFF","The confidence that comes from knowing the product is what closes deals and keeps clients long-term."],
+["0:43","CTA","Comment SUITE and I'll send you the GHL learning path I'd follow if I were starting over today."]
+],
+hp:"Pattern Interrupt + Relatability",
+hpd:'"I see this every single week" — you\'ve witnessed this mistake at scale. That observation is the credibility anchor. The fix is non-judgmental: "I\'d highly recommend learning the platform first" is permission, not a lecture.',
+vb:'"Every single week" — slight emphasis; you\'ve seen this enough to be certain. "You\'re not running a SaaS business — you\'re running a help desk you\'re not qualified to staff." — calm, not harsh. "I get the excitement." — genuine empathy beat.',
+vs:"Talking head, direct. No screen recording needed — this is a mindset video.",
+sub:true,subn:"⬜ Note @duncanrogoff's camera presence (very still, tight frame, intense but warm). Andrew can match by minimizing movement and holding eye contact with the lens.",
+to:'0:00 "The wrong way to start selling GHL SaaS (I see this weekly)" | 0:43 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5.5/10 — conversational and slightly disarming. The empathy ('I get the excitement') softens the correction.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Pattern Interrupt + Relatability · Hormozi: Reveal the real sequence (learn, then sell)"},
+
+{n:17,w:3,d:"Wednesday",t:"GHL Feature Tier List",l:"TOFU",f:"F3",fn:"Rapid Listicle / Tier List",cta:"Save + Follow",ask:0,blk:false,bn:null,
+rh:"@danvmartell",ru:"https://tiktok.com/@danvmartell/video/7634310832284830983",rs:"227.8×",
+rn:"Opinionated tier list — fast delivery, ranking is the entertainment.",
+hook:"GHL features ranked by how much money they actually make you. S-tier to skip-it-for-now.",
+secs:[
+["0:00","HOOK","GHL features ranked by how much money they actually make you. S-tier to skip-it-for-now."],
+["0:06","S-TIER","S-tier: Conversation AI and missed call text-back. These two features alone justify the platform for most businesses. Phone rings, no answer, they get a text in five seconds. Leads stop disappearing."],
+["0:16","A-TIER","A-tier: Pipeline automations, review request sequences, and trigger links. These run your client's business operations on autopilot. This is where the time savings live."],
+["0:24","B-TIER","B-tier: Email marketing, social media scheduler, and the courses tool. Solid features. Worth using. Not your highest-ROI starting point."],
+["0:31","C-TIER","C-tier: Website builder for brand-new sites, the podcasting tools, communities. Great when you need them. Set them up when you have clients asking for them."],
+["0:38","SKIP","And honestly — skip the full e-commerce suite until you have a client who specifically needs it. Don't configure what you're not managing yet."],
+["0:44","CLOSE + CTA","Start with S-tier. Master it. Then build down the list. Save this and follow for deep dives on each tier."]
+],
+hp:"Authority/Credibility + FOMO",
+hpd:'Tier lists work because they\'re opinionated — viewer wants to know if their mental model matches the expert\'s. "How much money they actually make you" is the value frame: this isn\'t a features list, it\'s a ROI ranking.',
+vb:'Confident and opinionated. "S-tier" gets slight emphasis — signals everything under this heading is critical. "Leads stop disappearing." — short, punchy close on first tier. "Don\'t configure what you\'re not managing yet" — the memorable takeaway.',
+vs:"On-screen tier graphic (S/A/B/C labels with feature names) is the ideal visual — matches Dan Martell's format exactly.",
+sub:true,subn:"⬜ Check @danvmartell's video for his graphic style. If Andrew's editing team can build a simple tier list card that appears on screen, that's a high-performing visual. Include in edit brief.",
+to:'0:00 "GHL features ranked by ROI: S-tier to skip-for-now" | 0:44 "Save this →" | End: sassuite.ai',
+en:"5.5/10 — confident and opinionated. Picks up pace slightly on B/C/skip tiers.",enN:5.5,
+fw:"Ava TOFU · Hook Point: Authority/Credibility + FOMO · Hormozi: Prioritize the highest-ROI actions before anything else"},
+
+{n:18,w:3,d:"Thursday",t:"Oscar HVAC: Before & After",l:"BOFU",f:"F4",fn:"Build-in-Public / Client B&A",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@theaustinschneider",ru:"https://www.instagram.com/reel/DWHgTmhgbub/",rs:"11.8×",
+rn:"Client transformation story — specific person, specific problem, specific result.",
+hook:"Oscar runs an HVAC company. When I first set up his GHL account, he had zero Google reviews, manual follow-up on every lead, and no system for onboarding new customers. Here's where he is now.",
+secs:[
+["0:00","HOOK","Oscar runs an HVAC company. When I first set up his GHL account, he had zero Google reviews, manual follow-up on every lead, and no system for onboarding new customers. Here's where he is now."],
+["0:13","THREE THINGS WE SET UP","We set up three things."],
+["0:15","SETUP 1","First: missed call text-back, so every unanswered call triggered a follow-up text within 60 seconds. No more lost leads because someone didn't pick up."],
+["0:23","SETUP 2","Second: a review request automation that fired 48 hours after every completed job. SMS first, follow-up email three days later if no response."],
+["0:31","SETUP 3","Third: a client onboarding pipeline so every new customer got a welcome message, their appointment confirmed, and a check-in call scheduled after the job."],
+["0:40","RESULTS","Within 90 days, his Google rating went from 3.8 to 4.7 stars. His lead follow-up rate hit 100%. His team stopped managing individual follow-ups manually entirely."],
+["0:50","CLOSE","GHL didn't change his trade. It changed everything that happened around it."],
+["0:55","CTA","Follow — I share real client setups every week."]
+],
+hp:"Social Proof + Specificity",
+hpd:"Oscar's name, his niche, and the specific before-state make this feel like a real story, not a case study. The three numbered setups mirror the listicle structure in narrative form. '3.8 to 4.7 stars in 90 days' is the anchor proof.",
+vb:'"Oscar runs an HVAC company." — say it like you\'re introducing a real person. Storytelling pace — noticeably slower than tutorial videos. "GHL didn\'t change his trade. It changed everything that happened around it." — deliver quietly. It\'s a principle.',
+vs:"Talking head, narrative delivery. No screen recording needed. If Andrew has a photo of Oscar or his business (with permission), that's an optional B-roll moment.",
+sub:true,subn:"⬜ Check @theaustinschneider's format; does he use B-roll of client business or is it face-only? Note for Andrew's edit brief.",
+to:'0:00 "Oscar HVAC: from 3.8 to 4.7 stars in 90 days with GHL" | 0:55 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — storytelling mode. Slightly slower pace. Speak about Oscar like someone you respect.",enN:5,
+fw:"Ava BOFU · Hook Point: Social Proof + Specificity · Hormozi: Show the transformation, not the tool"},
+
+{n:19,w:3,d:"Friday",t:"GHL Voice AI Books Appointments",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@startupsphereco",ru:"https://www.instagram.com/reel/DZaAm-1h2W9/",rs:"—",
+rn:"'Nobody talks about this' revelation for a feature hiding in plain sight.",
+hook:"GoHighLevel has a Voice AI that handles appointment booking over the phone. Full conversation. Real calendar sync. No human needed.",
+secs:[
+["0:00","HOOK","GoHighLevel has a Voice AI that handles appointment booking over the phone. Full conversation. Real calendar sync. No human needed."],
+["0:08","WHAT IT DOES","Here's what it actually does: a lead calls your client's business number, Voice AI answers, has a natural conversation, qualifies the lead, and books directly into GHL's calendar based on real availability. Then it sends a confirmation. That call can happen at 11 PM on a Saturday and someone gets booked."],
+["0:22","THE COST COMPARISON","The industry cost for AI phone agents like this — $100 to $500 a month depending on call volume. GHL includes it."],
+["0:28","HONEST CAVEAT","Now I want to be real with you — the setup matters. You have to configure the AI persona, the script, and the calendar connection. It doesn't just turn on and work. But once you set it up correctly for a service business? Their phone becomes a 24/7 booking machine."],
+["0:41","RECOMMENDATION","I'd highly recommend this for any home service, medical, or appointment-based business you're onboarding."],
+["0:46","CTA","Follow — I'll walk through the Voice AI setup in a dedicated video next week."]
+],
+hp:"Surprise/Shock + Specificity",
+hpd:'"Full conversation. Real calendar sync. No human needed." — three short punches at the open, each building on the last. The shock is that this exists at all inside GHL for no extra cost. The honest caveat makes everything else believable.',
+vb:'"That call can happen at 11 PM on a Saturday and someone gets booked." — this is the movie-trailer moment. Let it land. "I want to be real with you" — shift in tone, slightly softer. "Their phone becomes a 24/7 booking machine." — quiet confidence.',
+vs:"Talking head. If Andrew can show a 3–5 second clip of the GHL Voice AI settings panel at 0:22, that grounds the claim.",
+sub:true,subn:"⬜ Check @startupsphereco's format; they tend to use 'nobody talks about this' energy with a mix of face cam and screen. Include screen moment in edit brief if available.",
+to:'0:00 "GHL Voice AI books appointments. No human needed." | 0:46 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — genuine, slightly awed. The feature is impressive; let that come through without over-performing.",enN:5,
+fw:"Ava TOFU · Hook Point: Surprise/Shock + Specificity · Hormozi: Expand what's possible before revealing the mechanism"},
+
+{n:20,w:3,d:"Saturday",t:"7 Things I Turn On Before Client Gets Access",l:"TOFU",f:"F3",fn:"Rapid Listicle",cta:"Save + Follow",ask:0,blk:false,bn:null,
+rh:"@jake_ghl",ru:"https://www.instagram.com/reel/DUHxTgdlPFz/",rs:"363.7×",
+rn:"Practical, specific, fast. Each item sounds immediately actionable.",
+hook:"Seven things I turn on in every GHL account before a client touches it.",
+secs:[
+["0:00","HOOK","Seven things I turn on in every GHL account before a client touches it."],
+["0:04","ITEM 1","One: missed call text-back. Has to be on from day one — no exceptions."],
+["0:09","ITEM 2","Two: email warm-up. Minimum two weeks before the first campaign goes out."],
+["0:14","ITEM 3","Three: Review AI. Every incoming Google review gets responded to automatically, in your client's voice."],
+["0:19","ITEM 4","Four: Conversation AI — at minimum for after-hours. Their business doesn't go dark when nobody's online."],
+["0:24","ITEM 5","Five: trigger links in the welcome email. You'll know exactly who's actually engaging from day one."],
+["0:29","ITEM 6","Six: the prospecting tool at the agency level. Know your next lead before you ever dial them."],
+["0:34","ITEM 7","Seven: the branded mobile app add-on, if the client is ready for it. It's a clean upsell and makes the product feel premium."],
+["0:40","CLOSE","Make sure these are configured — not just toggled on. The toggle means it exists. The configuration means it works."],
+["0:46","CTA","Save this list. Follow for the setup tutorial on each one."]
+],
+hp:"Specificity + Authority",
+hpd:"Seven items is the completeness contract. 'Before a client touches it' frames Andrew as someone who has a system. The closer ('The toggle means it exists. The configuration means it works.') is a quotable principle that rewards saves.",
+vb:'Number each item with a slight pause before moving on. The closer is the most important delivery moment: "The toggle means it exists. The configuration means it works." — say it slowly, as a principle. Should feel like something worth writing down.',
+vs:"Fast-paced talking head. Consider numbered text overlays (1/7, 2/7…) per item.",
+sub:true,subn:"⬜ @jake_ghl's analyzed video uses full_screen_hybrid with screen recording for the walkthrough. If Andrew has the GHL account open, a quick screen pass on items 1–3 adds visual credibility.",
+to:'0:00 "7 things I turn on in GHL before a client gets access" | 0:46 "Save this →" | End: sassuite.ai',
+en:"5.5/10 — brisk. Saturday double-down energy. Move through the list with purpose.",enN:5.5,
+fw:"Ava TOFU · Hook Point: Specificity + Authority · Hormozi: Give the full system upfront; the completeness is the value"},
+
+{n:21,w:3,d:"Sunday",t:"Agency Stack vs. SaaS Suite Math",l:"BOFU",f:"F5",fn:"Paid-vs-Free Comparison",cta:"Comment SUITE ⚡",ask:6,blk:false,bn:null,
+rh:"@kennydonnelldfw",ru:"https://www.instagram.com/reel/DXuNBcsE1pB/",rs:"—",
+rn:"Structured math breakdown — let the numbers do the selling.",
+hook:"Let me show you what an agency actually spends on tools each month versus what they'd pay you for one GHL SaaS client.",
+secs:[
+["0:00","HOOK","Let me show you what an agency actually spends on tools each month versus what they'd pay you for one GHL SaaS client."],
+["0:08","THE AGENCY STACK","Typical agency tool stack: CRM at $99, email marketing at $79, review management at $149, scheduling software at $29, SMS platform at $49. That's $405 a month before they touch advertising — and those are conservative numbers."],
+["0:21","THE GHL CLIENT COST","Now here's what one SaaS Suite client pays you: $297 a month. GHL replaces every single one of those tools, plus adds AI features most of those tools don't have."],
+["0:31","THE MATH","So your client is paying you $108 less per month than they were spending before. You look like a hero. Your cost is your GHL plan — which you're splitting across all your clients."],
+["0:40","THE SCALE","At 10 clients you're profitable. At 25 you're replacing a full income."],
+["0:44","CTA","This is the model. Comment SUITE and I'll walk you through the pricing structure I'd use starting out."]
+],
+hp:"Specificity + Aspiration",
+hpd:'Every number in this video is load-bearing. "$405 a month" and "$297 a month" are the entire argument. "At 25 you\'re replacing a full income" is the dream state in one sentence.',
+vb:'Slow down at "$405 a month" and "$297 a month" — give the viewer a beat to process each before continuing. "You look like a hero." — slight smile; it\'s a genuine benefit. "At 10 clients you\'re profitable. At 25 you\'re replacing a full income." — two beats. Don\'t rush the second.',
+vs:"Consider a simple on-screen graphic showing the stack ($405) vs SaaS Suite ($297) at the comparison moment.",
+sub:true,subn:"⬜ Check @kennydonnelldfw's comparison format for graphic style. A clean side-by-side or running total graphic makes this shareable.",
+to:'0:00 "Agency tool stack = $405/mo. You can charge $297 and look like a hero." | 0:44 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5.5/10 — factual and confident. The math does the selling; Andrew stays calm and lets it.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Specificity + Aspiration · Hormozi: Make the math undeniable before revealing the offer"},
+
+{n:22,w:4,d:"Monday",t:"GHL API + AI Integration",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@noevarner.ai",ru:"https://www.instagram.com/reel/DVrR71kEeNx/",rs:"56×",
+rn:"Technical reveal for advanced users — 'here's what this unlocks.'",
+hook:"GHL's API lets any AI tool — Claude, ChatGPT, n8n, Make — plug directly into your CRM. Most affiliates haven't touched this yet.",
+secs:[
+["0:00","HOOK","GHL's API lets any AI tool — Claude, ChatGPT, n8n, Make — plug directly into your CRM. Most affiliates haven't touched this yet."],
+["0:08","WHAT IT MEANS","Any automation platform can pull contact records from GHL, update pipeline stages, trigger workflows, or create opportunities through the API. What's changing right now is that AI agents can do this directly — reading GHL contact history, responding based on conversation context, and updating fields automatically before any human on your team sees it."],
+["0:23","REAL EXAMPLE","I'm using this for intake right now. A lead fills out a form. AI reads their responses, scores the lead, creates a contact, adds tags, and assigns the right pipeline stage. No one on my team does anything until the lead is already qualified."],
+["0:35","THE BIG PICTURE","This is where GHL goes from a solid CRM to a smart business operating system."],
+["0:40","RECOMMENDATION","I'd highly recommend getting familiar with the API documentation if you're building any kind of custom automations."],
+["0:47","CTA","Follow — I post GHL plus AI integrations every week."]
+],
+hp:"Curiosity/Mystery + Authority",
+hpd:'Naming specific tools (Claude, ChatGPT, n8n, Make) signals insider knowledge. "Most affiliates haven\'t touched this yet" is the FOMO trigger. The live intake example converts the abstract into something auditable.',
+vb:'"Most affiliates haven\'t touched this yet." — slight pause before; hook within the hook. "Before any human on your team sees it." — wow-moment. Let it settle. "This is where GHL goes from a solid CRM to a smart business operating system." — say it slowly.',
+vs:"Talking head for hook. At 0:23, screen recording of the intake workflow in GHL — show the AI tagging/pipeline assignment in action if possible.",
+sub:true,subn:"⬜ @noevarner.ai uses a clean technical overlay style. If Andrew has this workflow running, screen recording of the live system is the highest-value visual.",
+to:'0:00 "GHL API + AI agents: what most affiliates haven\'t touched yet" | 0:47 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — slightly more technical than baseline. Warm but knowledgeable. 'Most affiliates haven't touched this yet' has a slight edge.",enN:5,
+fw:"Ava TOFU · Hook Point: Curiosity/Mystery + Authority · Hormozi: Show the future state before explaining the mechanism"},
+
+{n:23,w:4,d:"Tuesday",t:"Picking the Wrong GHL Plan",l:"BOFU",f:"F2",fn:"Myth / Wrong-Way",cta:"Comment SUITE ⚡",ask:7,blk:false,bn:null,
+rh:"@duncanrogoff",ru:"https://www.instagram.com/reel/DYnPUfru7aw/",rs:"3332.7×",
+rn:"'Most people think X. They're wrong. The real problem is Y.'",
+hook:"Most people start on the wrong GoHighLevel plan. And it costs them hundreds of dollars a month unnecessarily.",
+secs:[
+["0:00","HOOK","Most people start on the wrong GoHighLevel plan. And it costs them hundreds of dollars a month unnecessarily."],
+["0:07","THE MISTAKE","The plans: Starter at $97, Unlimited at $297, and SaaS Pro at $497. Here's where I see people get it wrong. Beginners buying the $497 plan before they have a single client — because they want the SaaS features. I get the excitement. But you're paying for a reseller model before you have anything to resell."],
+["0:20","THE RULE","Here's the rule I use: start at $97 if you're still learning the platform and have zero clients. Move to $297 when you're ready to serve clients and need unlimited sub-accounts. Upgrade to $497 when you have two or more paying clients whose subscriptions cover the monthly cost. At that point the math flips — every new client above that is pure margin."],
+["0:35","THE PRINCIPLE","The SaaS features don't make you money. Clients make you money. Get the clients first."],
+["0:40","CTA","Comment SUITE — I'll walk you through which plan fits your situation right now."]
+],
+hp:"Pattern Interrupt + Specificity",
+hpd:"The hook challenges a common assumption made at the excitement stage — before the viewer has data. Exact plan prices ($97/$297/$497) are the specificity anchors. The principle is contrarian relative to how the plans are marketed.",
+vb:'"I get the excitement." — genuine empathy; you\'ve been there. "But you\'re paying for a reseller model before you have anything to resell." — slight pause before this line; it\'s the reset. "The SaaS features don\'t make you money. Clients make you money." — two sentences, two beats.',
+vs:"Talking head. Consider a simple graphic showing the three plan tiers and the rule for each during 0:20–0:35.",
+sub:true,subn:"⬜ Check @duncanrogoff's visual style; he keeps it clean and face-driven. A simple text overlay during the 'rule' section helps without over-producing.",
+to:'0:00 "Most people start on the wrong GHL plan. Here\'s the fix." | 0:40 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5.5/10 — conversational and slightly disarming. The empathy ('I get the excitement') softens the correction.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Pattern Interrupt + Specificity · Hormozi: Fix the expensive mistake before they repeat it"},
+
+{n:24,w:4,d:"Wednesday",t:"Manual Actions: Most Underrated Tool",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@commandtraffic",ru:"https://www.instagram.com/reel/DRIlqiEEuJY/",rs:"38.7×",
+rn:"Depth-teaching energy — technical concept made intuitive.",
+hook:"Manual Actions in GoHighLevel — the most underrated follow-up tool on the entire platform. Let me explain exactly how they work.",
+secs:[
+["0:00","HOOK","Manual Actions in GoHighLevel — the most underrated follow-up tool on the entire platform. Let me explain exactly how they work."],
+["0:07","MECHANISM","Inside any workflow, you can add a step that says: create a manual task for a specific team member. That task shows up in a queue. The person sees it: 'Call this contact and check in on the proposal.' Or 'Confirm this appointment is still on.' Or 'Review this intake form before we respond.'"],
+["0:21","THE METAPHOR","It's your automation system raising its hand at exactly the right moment and saying — this one needs a human."],
+["0:27","WHY IT MATTERS","The genius of this is that your workflows don't have to do everything. They handle 90% of the process automatically. And then they hand off the right 10% to the right person at the right time. That's where the personal touch actually closes deals without you being in every step manually."],
+["0:40","DIRECTIVE","I'd highly recommend setting up at least one manual action checkpoint inside every pipeline stage."],
+["0:45","CTA","Follow — I do deep dives on GHL workflows every week."]
+],
+hp:"Curiosity/Mystery + Relatability",
+hpd:'"Most underrated follow-up tool on the entire platform" creates the curiosity gap. Every GHL user has had a moment where automation fails and a human should have stepped in — Manual Actions solve exactly that. The metaphor ("automation raising its hand") is the delivery vehicle.',
+vb:'Pace is slightly slower here — more nuanced concept. "It\'s your automation system raising its hand at exactly the right moment and saying — this one needs a human." — pause before "this one needs a human." That\'s the insight. The 90%/10% split gives the viewer a mental model.',
+vs:"Talking head for hook and metaphor. At 0:07, screen recording showing the Manual Action step inside a GHL workflow builder. Return to face for the principle.",
+sub:true,subn:"⬜ @commandtraffic uses a 'I'll walk you through it' teaching style with face cam + screen. Match that blend.",
+to:'0:00 "Manual Actions: the most underrated GHL follow-up tool" | 0:45 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"4.5/10 — slightly slower, more thoughtful. This is a nuanced concept; don't rush.",enN:4.5,
+fw:"Ava TOFU · Hook Point: Curiosity/Mystery + Relatability · Hormozi: Reveal the leverage point that makes the whole system smarter"},
+
+{n:25,w:4,d:"Thursday",t:"Google Review Automation: 3 Options",l:"BOFU",f:"F3",fn:"Rapid Listicle",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@jake_ghl",ru:"https://www.instagram.com/reel/DUHxTgdlPFz/",rs:"363.7×",
+rn:"Simple practical comparison — 'here are the options, here's which one I'd use.'",
+hook:"Three ways to automate Google reviews. One of them is free inside GHL and works better than the paid ones.",
+secs:[
+["0:00","HOOK","Three ways to automate Google reviews. One of them is free inside GHL and works better than the paid ones."],
+["0:06","OPTION 1","Option one: standalone tools like Birdeye or Podium. $99 to $299 per location per month. They send review requests, monitor responses, and show you a dashboard. They work well. They're expensive."],
+["0:17","OPTION 2","Option two: Zapier automation connected to your existing CRM. $50 to $150 a month depending on volume. Works if you're comfortable setting it up. Adds another tool to manage."],
+["0:25","OPTION 3","Option three: GHL's built-in review automation. Workflow fires 48 hours after a job is marked complete. SMS request with a direct link to the Google review page. Follow-up email if no response in three days. AI response enabled for every incoming review. One dashboard per location."],
+["0:38","SETUP TIME","Setup time the first time: about 90 minutes. Every new client after that: 15 minutes."],
+["0:43","CLOSE + CTA","I've built this for dozens of clients. It works. And you get paid for it. Follow — full setup video next week."]
+],
+hp:"Specificity + FOMO",
+hpd:'"One of them is free inside GHL and works better than the paid ones" is the hook within the hook — the viewer already knows they\'ll pick Option 3 but needs the comparison to feel validated. Setup time numbers (90 min first time, 15 min after) are the closing credibility.',
+vb:'Each option should feel like a fair assessment — not bashing Birdeye, explaining what it costs. "They work well. They\'re expensive." — two sentences, flat delivery; the contrast is self-evident. "And you get paid for it." — slight smile on the close. That\'s the payoff line.',
+vs:"Fast-paced talking head. Consider a simple numbered option graphic (1/3, 2/3, 3/3) as text overlays.",
+sub:true,subn:"⬜ @jake_ghl's format uses screen recording for the walkthrough. For this comparison video, a simple visual showing Option 1 ($$$) vs Option 3 ($0 extra) would be effective. Include in edit brief.",
+to:'0:00 "3 ways to automate Google reviews. 1 is free inside GHL." | 0:43 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5.5/10 — matter-of-fact. Ticking through a checklist, slightly faster pace.",enN:5.5,
+fw:"Ava BOFU · Hook Point: Specificity + FOMO · Hormozi: Make the comparison obvious so the choice makes itself"},
+
+{n:26,w:4,d:"Friday",t:"Foundation Hook / Skyscraper Order",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@jasperhighlevel",ru:"https://www.instagram.com/reel/C3lm0NOvgBY/",rs:"41.1×",
+rn:"'Most people do this wrong' structure with insider knowledge of setup order.",
+hook:"If you build your GoHighLevel setup wrong on Day 1, you'll spend months fixing it. Here's the order that actually works.",
+secs:[
+["0:00","HOOK","If you build your GoHighLevel setup wrong on Day 1, you'll spend months fixing it. Here's the order that actually works."],
+["0:08","ANALOGY","Think of GHL like a skyscraper. The floors — your funnels, automations, pipelines — all depend on what's beneath them. If the foundation is unstable, everything above it eventually breaks."],
+["0:17","THE ORDER","The foundation, in order: one, company information and business address. Two, timezone and confirmed business hours. Three, phone number verification and SMS compliance. Four, calendar setup with availability configured. Five, email domain authenticated with your DNS records."],
+["0:30","THE RULE","In that order. Every time. I don't skip steps on a new account regardless of how experienced the client is or how long they've been on the platform."],
+["0:37","THE CONSEQUENCE","I've seen people spend three weeks building automations and then realize their phone number was never verified and not a single message sent."],
+["0:43","CLOSER + CTA","Don't build the penthouse before you pour the concrete. I'll put the full setup checklist in the first comment. Follow — one of these every week."]
+],
+hp:"Relatability + Authority",
+hpd:'"Months fixing it" is the consequence the viewer wants to avoid. The skyscraper analogy makes the abstract (setup order) concrete. "I don\'t skip steps on a new account regardless of how experienced the client is" — even veterans don\'t skip this.',
+vb:'"I\'ve seen people spend three weeks building automations and then realize their phone number was never verified and not a single message sent." — witnessed, not hypothetical; say it like you have the specific person in mind. "Don\'t build the penthouse before you pour the concrete." — quiet callback, memorable close.',
+vs:"Talking head. Consider a simple numbered list graphic (1–5 setup steps) appearing during 0:17–0:30.",
+sub:true,subn:"⬜ Check @jasperhighlevel's setup video format; he tends to use face cam + text overlays for ordered lists. If yes, build into edit brief.",
+to:'0:00 "Wrong GHL setup order = months of fixing. Here\'s the right one." | 0:43 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — grounded and experienced. Quiet authority, not urgency.",enN:5,
+fw:"Ava TOFU · Hook Point: Relatability + Authority · Hormozi: Fix the root cause on Day 1 so they never need the repair"},
+
+{n:27,w:4,d:"Saturday",t:"Putting You on the Setup For Free",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
+rh:"@jacksonsbizzz",ru:"https://www.instagram.com/reel/DZ85NmwsH4s/",rs:"2344.9×",
+rn:"Highest outlier in the dataset. Informal, warm, genuine generosity. 'I'm giving you something valuable for free because I want to.'",
+hook:"I'm putting you on the GHL setup I use for every paying client. For free. Pay attention.",
+secs:[
+["0:00","HOOK","I'm putting you on the GHL setup I use for every paying client. For free. Pay attention."],
+["0:06","CREDIBILITY","I've been certified by GoHighLevel to create their official content — their YouTube, their blogs, their social. I built my agency to $150K a year on this platform. I've onboarded hundreds of businesses through SasSuite."],
+["0:16","THIS IS THE REAL THING","This setup is not a sample. It's the real thing."],
+["0:19","THE SEQUENCE","Foundation settings first. Then calendar. Then pipeline stages. Then your first automation — missed call text-back. Then email warm-up running at least two weeks before your first campaign. Then Conversation AI configured for after-hours. Then trigger links in your welcome emails. Then Voice AI if you're onboarding a service business."],
+["0:35","THE NUANCE","That's the core. The sequence matters. The configuration inside each step matters more than the toggle."],
+["0:41","THE PROMISE","I'm walking through each piece in depth this month. No lead magnet. No upsell. Just the setup."],
+["0:47","CTA","Follow. Make sure you don't miss any of it."]
+],
+hp:"Relatability + Authority",
+hpd:"Intentional Day 1 callback — viewer who's been following the series recognizes it; new viewer gets the full value. @jacksonsbizzz's 2344.9× outlier uses this exact generosity-hook structure.",
+vb:'This is the most informal delivery in the calendar — closest to a video you\'d send a friend. "This setup is not a sample. It\'s the real thing." — slight pause; addresses the implicit "is this a teaser?" objection. "No lead magnet. No upsell. Just the setup." — each phrase its own beat.',
+vs:"Talking head. Keep it slightly raw — authentic, not over-produced. This matches @jacksonsbizzz's format.",
+sub:true,subn:"⬜ Note @jacksonsbizzz's filming setup carefully. If he uses phone-selfie angle or natural light, this should match that authenticity. Saturday double-down: slightly higher energy than a weekday.",
+to:'0:00 "I\'m giving you my full GHL client setup. No upsell. For free." | 0:47 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"6/10 — the most informal and direct video in the batch. Genuine warmth, slightly more energy than baseline.",enN:6,
+fw:"Ava TOFU · Hook Point: Relatability + Authority · Hormozi: Give everything, ask nothing — the generosity IS the marketing"},
+
+{n:28,w:4,d:"Sunday",t:"Progress Series EP#2",l:"MOFU",f:"F4",fn:"Build-in-Public / Progress Series",cta:"Comment SUITE ⚡",ask:8,blk:true,
+bn:"⚠️ Film after Week 1 of the Progress Series posts. Replace ALL [BRACKETS] with real data from what actually happened. This script is a template — authenticity is the product.",
+rh:"@madisonknowsbest",ru:"https://tiktok.com/@madisonknowsbest/video/7636531871836278046",rs:"2036.9×",
+rn:"Series format. High return-viewer engine. Tension = 'will he hit $10K?'",
+hook:"Week two of going from $30K to $100K in GHL SaaS. Here's exactly what I did — and one thing that didn't work.",
+secs:[
+["0:00","HOOK","Week two of going from $30K to $100K in GHL SaaS. Here's exactly what I did — and one thing that didn't work."],
+["0:08","THE WIN","What moved the needle: [ACTION TAKEN — e.g., 'I added SasSuite as an upsell to three existing GHL clients who were already running the platform. Two of them upgraded within 48 hours.']"],
+["0:17","THE MISS","What didn't: [HONEST MISS — e.g., 'I tried to cold outreach five new prospects. Nobody responded. That's not the channel — I already knew that and tested it anyway.']"],
+["0:26","THE NUMBER","Where the number is right now: $[CURRENT MRR]. That's [DELTA] up from where we started."],
+["0:32","WHAT'S NEXT","One thing I'll do differently next week: [SPECIFIC CHANGE.]"],
+["0:36","THE COMMITMENT","I'm not editing this. The wins are real. So are the misses."],
+["0:40","CTA","Comment SUITE — I'll send you the SaaS model breakdown I'm using to get to $100K."]
+],
+hp:"Social Proof + Specificity",
+hpd:"Real numbers are the entire product. Progress series episodes live or die on transparency — the moment Andrew softens a miss or rounds a number, the viewer disengages. @madisonknowsbest builds her return-viewer engine on 'will she hit the goal?' tension.",
+vb:'"I\'m not editing this. The wins are real. So are the misses." — deliver this quietly, with real commitment. It\'s the most important line in the episode. The miss should sound like genuine reflection, not manufactured humility.',
+vs:"Same raw, minimal production as Episode 1. Consistency in format is part of the series identity.",
+sub:true,subn:"⬜ Note @madisonknowsbest's filming setup. If it's phone-selfie, low-production, natural light — Andrew should match exactly. Do NOT let this episode look more polished than Episode 1.",
+to:'0:00 "Week 2: $30K → $100K in GHL SaaS. What worked. What didn\'t." | 0:40 "Comment SUITE ⚡" | End: sassuite.ai · "#GHLSaaS EP2"',
+en:"4.5/10 — quiet resolve. Same as Episode 1. Do not let this become highlights-reel energy.",enN:4.5,
+fw:"Ava MOFU · Hook Point: Social Proof + Specificity · Hormozi: Radical transparency is the only currency that compounds"},
+
+{n:29,w:4,d:"Monday",t:"4.7 Stars in 90 Days",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal (social proof hook)",cta:"Save + Follow",ask:0,blk:false,bn:null,
+rh:"@charleshayes.png",ru:"https://www.instagram.com/reel/DSvpnGID7eN/",rs:"—",
+rn:"Social proof as the hook — real result, real timeline, then explain the mechanism.",
+hook:"A client I set up in GHL had a 3.8 Google rating. Ninety days later it was 4.7. Here's the only thing we changed.",
+secs:[
+["0:00","HOOK","A client I set up in GHL had a 3.8 Google rating. Ninety days later it was 4.7. Here's the only thing we changed."],
+["0:09","THE CLARIFICATION","We didn't change their service. We didn't change their pricing or their team. We changed when review requests go out and how."],
+["0:17","THE PROBLEM THEY HAD","Most businesses ask for reviews too early — right when the job is finished — or they never ask at all. The sweet spot is 48 hours after service completion. The customer has had time to experience the result. It's fresh, but not immediate. They're ready to reflect."],
+["0:28","WHAT WE BUILT","We set up a two-step GHL automation: SMS at 48 hours with a direct link to the Google review page. If no review in three days, a follow-up email. Then we turned on GHL's AI review response so every incoming review got a reply within minutes."],
+["0:40","THE RESULT","The rating went up because we were consistent. Not because we got lucky."],
+["0:45","DIRECTIVE","I'd highly recommend any service business running this exact sequence."],
+["0:49","CTA","Save this and follow — I share GHL setups like this every week."]
+],
+hp:"Social Proof + Specificity",
+hpd:'"3.8 to 4.7 in 90 days" is the hook — a real number with a real timeline. The Specificity driver: exact mechanism (48 hours, SMS first, follow-up email at day 3, AI response on) makes the claim feel reproducible. "Not because we got lucky" rules out randomness.',
+vb:'"Here\'s the only thing we changed." — let this sit before you pivot. "The sweet spot is 48 hours after service completion." — say this as a studied observation. "The rating went up because we were consistent. Not because we got lucky." — two sentences, two full beats between them.',
+vs:"Talking head. Lead with the number (3.8 → 4.7) — consider a simple graphic showing the star jump. At 0:28, brief screen recording of the GHL review automation workflow.",
+sub:true,subn:"⬜ Check @charleshayes.png's review management format. Note his graphic style for the star rating comparison.",
+to:'0:00 "3.8 → 4.7 Google stars in 90 days. Here\'s the only thing we changed." | 0:49 "Save this →" | End: sassuite.ai',
+en:"5/10 — calm and satisfied. You're reporting a result, not selling.",enN:5,
+fw:"Ava TOFU · Hook Point: Social Proof + Specificity · Hormozi: Lead with the transformation, then reveal the mechanism"},
+
+{n:30,w:4,d:"Tuesday",t:"If I Were Starting My GHL SaaS Today",l:"BOFU",f:"F2",fn:"Myth / Wrong-Way",cta:"Comment SUITE ⚡",ask:9,blk:false,bn:null,
+rh:"@theaustinschneider",ru:"https://www.instagram.com/reel/DWHgTmhgbub/",rs:"11.8×",
+rn:"Founder retrospective — 'what I'd do differently' drives high save and share rates.",
+hook:"If I were starting my GHL SaaS business today with everything I know now, here's the only five things I'd focus on.",
+secs:[
+["0:00","HOOK","If I were starting my GHL SaaS business today with everything I know now, here's the only five things I'd focus on."],
+["0:07","ONE","One: I'd learn the platform before I sold it. 60 days minimum using GHL on my own business before I onboarded a single paying client."],
+["0:14","TWO","Two: I'd start on the $297 plan, not $497. Upgrade the day two clients are covering the cost — not before."],
+["0:21","THREE","Three: I'd pick one vertical for my first five clients. Not 'any business.' One type — HVAC, dental, restaurants, whatever. Get exceptional at their specific GHL setup. Then expand."],
+["0:29","FOUR","Four: I'd bundle the onboarding. A one-time setup fee in addition to the monthly. It covers your time and it signals that what you're delivering has value."],
+["0:36","FIVE","Five: I'd use SasSuite for client support from day one. Don't try to answer every GHL question yourself. Let the support layer do its job so you can focus on growth."],
+["0:44","THE HONEST CLOSE","I've made most of these mistakes. I'm just telling you which ones I'd skip."],
+["0:49","CTA","Comment SUITE and I'll send you the starter setup I wish I'd had on day one."]
+],
+hp:"Aspiration/Transformation + Authority",
+hpd:'"Everything I know now" is the distillation promise — the viewer gets compressed years of experience. The five items are specific, sequential, and sequenced by importance. "I\'ve made most of these mistakes" earns every piece of advice that came before it.',
+vb:'Warm and slightly retrospective. Five items delivered crisply — one sentence the rule, one the why. "I\'ve made most of these mistakes. I\'m just telling you which ones I\'d skip." — say this quietly. Full stop between the two sentences. This is the emotional anchor of the entire 30-day calendar.',
+vs:"Talking head, stable. No screen recording needed — wisdom video. Consider simple numbered list overlay (1–5) for items.",
+sub:true,subn:"⬜ @theaustinschneider uses authentic founder energy, usually minimal setup. @jasperhighlevel adds text overlays for key points. A hybrid approach works: face cam + brief text cues for each number.",
+to:'0:00 "If I started GHL SaaS today: 5 things I\'d do differently" | 0:49 "Comment SUITE ⚡" | End: sassuite.ai',
+en:"5/10 — warm and retrospective. The 'I've made most of these mistakes' line should be the quietest moment. Understated earns the save and share.",enN:5,
+fw:"Ava BOFU · Hook Point: Aspiration/Transformation + Authority · Hormozi: Compress the learning curve — give the cheat code"}
+];
+
+const FC={'F1':'bdg-f1','F2':'bdg-f2','F3':'bdg-f3','F4':'bdg-f4','F5':'bdg-f5'};
+const LC={'TOFU':'bdg-tofu','MOFU':'bdg-mofu','BOFU':'bdg-bofu'};
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function energyDots(n){
+  const full=Math.floor(n),half=(n%1)>=.5?1:0,empty=10-full-half;
+  return '●'.repeat(full)+(half?'◐':'')+' '.repeat(empty).replace(/ /g,'○');
+}
+
+function cardHTML(s){
+  const isBlk=s.blk;
+  const ckId=`d${s.n}`;
+  const checks=isBlk?
+    ['Ref reel watched','All 6 fields completed','⚠️ Get real weekly data before filming','Approved for Andrew']:
+    ['Ref reel watched','All 6 fields completed','Approved for Andrew'];
+
+  const secsHTML=s.secs.map(([ts,lbl,txt])=>`
+    <div class="ssec">
+      <div><span class="ssec-ts">[${ts}]</span><span class="ssec-lbl">${esc(lbl)}</span></div>
+      <div class="ssec-txt" data-raw="${esc(txt)}" data-day="${s.n}">${esc(txt)}</div>
+    </div>`).join('');
+
+  // Collect bracket tokens for blocked cards
+  const allBrackets=isBlk?[...new Set(s.secs.flatMap(([,,txt])=>(txt.match(/\[[^\]]+\]/g)||[])))]:[];
+  const fillPanelHTML=isBlk&&allBrackets.length?`
+  <div class="fill-panel" id="fp-${s.n}">
+    <div class="fill-hdr">📋 Fill weekly data before filming</div>
+    ${allBrackets.map((tok,i)=>{
+      const label=tok.slice(1,-1).split(' — e.g.,')[0].split(' — e.g.')[0].replace(/\.$/,'').trim();
+      return `<div class="fill-row">
+        <label class="fill-lbl" for="fi-${s.n}-${i}">${esc(label)}</label>
+        <input class="fill-inp" id="fi-${s.n}-${i}" type="text" placeholder="${esc(tok)}" data-day="${s.n}" data-token="${esc(tok)}" oninput="saveFill(${s.n},this.dataset.token,this.value)">
+      </div>`;
+    }).join('')}
+    <div class="fill-status" id="fs-${s.n}">⚠️ Fill all fields to unblock this script</div>
+  </div>`:'';
+
+
+  const subHTML=s.sub?`<div class="sub-tag">⬜ Sous Chef Check Needed</div><div class="nv" style="margin-top:6px;color:#6ee7b7">${esc(s.subn)}</div>`:'';
+
+  return `<div class="card${isBlk?' blk':''}" data-day="${s.n}" data-week="${s.w}" data-layer="${s.l}" data-format="${s.f}" data-blocked="${isBlk}">
+  <div class="ctop" id="ctop-${s.n}">
+    <div>
+      <div class="cday">DAY <b>${s.n}</b> · ${s.d}${s.w===1&&[6].includes(s.n)||s.w===2&&[13,20,27].includes(s.n)?'':''}</div>
+      <div class="ctitle">${esc(s.t)}</div>
+    </div>
+    <div class="creel">Reel #${s.n}</div>
+  </div>
+  <div class="badges">
+    <span class="bdg ${FC[s.f]}">${s.f} — ${esc(s.fn)}</span>
+    <span class="bdg ${LC[s.l]}">${s.l}</span>
+    ${s.ask?`<span class="bdg bdg-ask">⚡ Ask #${s.ask}</span>`:''}
+    <span class="bdg bdg-cta">${esc(s.cta)}</span>
+    ${isBlk?'<span class="bdg bdg-blk">⚠️ BLOCKED</span>':''}
+    <span class="bdg bdg-en" style="margin-left:auto">${s.enN}/10 ${energyDots(s.enN)}</span>
+  </div>
+  ${isBlk?`<div style="margin:12px 15px;padding:10px 12px;background:#2d0a0a;border:1px solid #ef444440;border-radius:6px;font-size:12px;color:#fca5a5;line-height:1.6">${esc(s.bn)}</div>`:''}
+  ${fillPanelHTML}
+  <div class="hook-box">
+    <div class="hook-lbl">Hook</div>
+    <div class="hook-txt" id="htxt-${s.n}">${esc(s.hook)}</div>
+  </div>
+  <div class="ref-row">
+    <span class="ref-h">${esc(s.rh)}</span>
+    ${s.rs!=='—'?`<span class="ref-s">${s.rs}</span>`:''}
+    <a class="ref-btn" href="${s.ru}" target="_blank" rel="noopener">▶ Watch Ref</a>
+  </div>
+  <div class="ref-note">${esc(s.rn)}</div>
+  <details class="acc">
+    <summary>Full Script</summary>
+    <div class="acc-body" id="script-acc-${s.n}">${secsHTML}</div>
+  </details>
+  <details class="acc">
+    <summary>Filming Notes${s.sub?' · ⬜':''}</summary>
+    <div class="acc-body" id="filming-acc-${s.n}">
+      <div class="nf"><div class="nk">Hookpoint Spec</div><div class="nv"><strong>${esc(s.hp)}</strong> — ${esc(s.hpd)}</div></div>
+      <div class="nf"><div class="nk">Verbal</div><div class="nv">${esc(s.vb)}</div></div>
+      <div class="nf"><div class="nk">Visual</div><div class="nv">${esc(s.vs)}</div>${subHTML}</div>
+      <div class="nf"><div class="nk">Text Overlay</div><div class="nv" style="font-family:monospace;font-size:12px">${esc(s.to)}</div></div>
+      <div class="nf"><div class="nk">Energy</div><div class="nv">${esc(s.en)}</div></div>
+      <div class="nf"><div class="nk">Framework</div><div class="nv fw">${esc(s.fw)}</div></div>
+    </div>
+  </details>
+  <div class="nz">
+    <div class="nz-hdr">
+      <div class="nz-lbl">🎙 Sous Chef Pass · One field at a time</div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="nz-allsaved" id="nz-allsaved-${s.n}"></span>
+        <button class="nz-clear" onclick="clearNote(${s.n})">Clear All</button>
+      </div>
+    </div>
+    <div class="nf-fields" id="nf-${s.n}"></div>
+  </div>
+  <div class="cklist">
+    <div class="cklist-ttl">Sous Chef Pass</div>
+    <div>${checks.map((c,i)=>`<div class="ck" id="ck-${ckId}-${i}"><input type="checkbox" id="cb-${ckId}-${i}" onchange="toggleCk('${ckId}',${i})"><label for="cb-${ckId}-${i}">${c}</label></div>`).join('')}</div>
+  </div>
+  <div class="acc-bar" id="acc-bar-${s.n}" style="display:none">
+    <div class="acc-bar-left">
+      <span class="acc-bar-badge">✅ Script Accepted</span>
+      <span class="acc-bar-ver" id="acc-ver-${s.n}"></span>
+    </div>
+    <div class="acc-bar-right">
+      <button class="acc-bar-hist" onclick="openHistory(${s.n})">🕒 History</button>
+      <button class="acc-bar-rerun" onclick="reopenRewrite(${s.n})">↺ Re-run</button>
+      <button class="acc-bar-analyze" id="ap-btn-${s.n}" onclick="analyzeScript(${s.n})">🧠 Analyze</button>
+    </div>
+  </div>
+  <div class="analysis-panel" id="ap-${s.n}" style="display:none">
+    <div class="ap-loading" id="ap-load-${s.n}" style="display:none">
+      <span class="rw-spin">⟳</span>&nbsp; Analyzing with Kane + Ava...
+    </div>
+    <div class="ap-body" id="ap-body-${s.n}"></div>
+  </div>
+  <div class="rw-trigger">
+    <button class="rw-btn" id="rw-btn-${s.n}" onclick="rewriteScript(${s.n})">✨ Rewrite Script</button>
+  </div>
+  <div class="rw-panel" id="rw-panel-${s.n}" style="display:none">
+    <div class="rw-loading" id="rw-loading-${s.n}" style="display:none">
+      <span class="rw-spin">⟳</span>&nbsp; Claude is rewriting Day ${s.n}...
+    </div>
+    <div class="rw-body" id="rw-body-${s.n}"></div>
+    <div class="rw-revise" id="rw-revise-${s.n}" style="display:none">
+      <div class="rw-rev-lbl">Revision notes</div>
+      <textarea class="rw-rev-area" id="rw-rev-${s.n}" placeholder="What needs to change? e.g. the hook needs the stacked ✗/✅ contrast format from the ref reel, or the energy is too formal, or the script is too long..."></textarea>
+      <button class="rw-rev-btn" id="rw-revbtn-${s.n}" onclick="reviseScript(${s.n})">↺ Revise with Feedback</button>
+    </div>
+    <div class="rw-history" id="rw-hist-${s.n}" style="display:none"></div>
+  </div>
+</div>`;
+}
+
+function toggleCk(id,i){
+  const el=document.getElementById(`ck-${id}-${i}`);
+  const cb=document.getElementById(`cb-${id}-${i}`);
+  el.classList.toggle('done',cb.checked);
+  const state=JSON.parse(localStorage.getItem('batch03')||'{}');
+  if(!state[id])state[id]={};
+  state[id][i]=cb.checked;
+  localStorage.setItem('batch03',JSON.stringify(state));
+}
+
+function restoreCks(){
+  const state=JSON.parse(localStorage.getItem('batch03')||'{}');
+  Object.entries(state).forEach(([id,items])=>{
+    Object.entries(items).forEach(([i,checked])=>{
+      const cb=document.getElementById(`cb-${id}-${i}`);
+      const el=document.getElementById(`ck-${id}-${i}`);
+      if(cb&&checked){cb.checked=true;el.classList.add('done')}
+    });
+  });
+}
+
+let activeFilter='all';
+
+function applyFilter(f){
+  activeFilter=f;
+  document.querySelectorAll('.fb').forEach(b=>b.classList.toggle('on',b.dataset.f===f));
+  let vis=0;
+  document.querySelectorAll('.card').forEach(c=>{
+    let show=false;
+    if(f==='all')show=true;
+    else if(f==='w1')show=c.dataset.week==='1';
+    else if(f==='w2')show=c.dataset.week==='2';
+    else if(f==='w3')show=c.dataset.week==='3';
+    else if(f==='w4')show=c.dataset.week==='4';
+    else if(f==='tofu')show=c.dataset.layer==='TOFU';
+    else if(f==='mofu')show=c.dataset.layer==='MOFU';
+    else if(f==='bofu')show=c.dataset.layer==='BOFU';
+    else if(['f1','f2','f3','f4','f5'].includes(f))show=c.dataset.format===f.toUpperCase();
+    else if(f==='blk')show=c.dataset.blocked==='true';
+    c.classList.toggle('hidden',!show);
+    if(show)vis++;
+  });
+  document.getElementById('sbar').textContent=`Showing ${vis} of 30 scripts`;
+}
+
+function buildFilters(){
+  const filters=[
+    {f:'all',label:'All 30',cls:''},
+    {f:'w1',label:'Week 1',cls:''},
+    {f:'w2',label:'Week 2',cls:''},
+    {f:'w3',label:'Week 3',cls:''},
+    {f:'w4',label:'Week 4',cls:''},
+    {f:'tofu',label:'TOFU',cls:'tofu'},
+    {f:'mofu',label:'MOFU',cls:'mofu'},
+    {f:'bofu',label:'BOFU',cls:'bofu'},
+    {f:'f1',label:'F1 Reveal',cls:'f1'},
+    {f:'f2',label:'F2 Myth',cls:'f2'},
+    {f:'f3',label:'F3 List',cls:'f3'},
+    {f:'f4',label:'F4 Build',cls:'f4'},
+    {f:'f5',label:'F5 vs Paid',cls:'f5'},
+    {f:'blk',label:'⚠️ Blocked',cls:'blk'},
+  ];
+  document.getElementById('filters').innerHTML=filters.map(({f,label,cls})=>
+    `<button class="fb ${cls}${f==='all'?' on':''}" data-f="${f}" onclick="applyFilter('${f}')">${label}</button>`
+  ).join('');
+}
+
+function buildGrid(){
+  let html='';
+  let curWeek=0;
+  const weekNames=['','Week 1 · Days 1–7','Week 2 · Days 8–14','Week 3 · Days 15–21','Week 4 · Days 22–30'];
+  D.forEach(s=>{
+    if(s.w!==curWeek){
+      curWeek=s.w;
+      html+=`<div class="wk">${weekNames[curWeek]}</div>`;
+    }
+    html+=cardHTML(s);
+  });
+  document.getElementById('grid').innerHTML=html;
+}
+
+
+const FIELDS = [
+  {key:'hookfmt',    icon:'🎯', label:'Hook Visual Format', ph:'First 2-3 seconds ONLY: what appears on screen? Is there a stacked text contrast (wrong ✗ / right ✅)? Face or no face? Text placement? Describe exactly — Claude copies this structure for Andrew.'},
+  {key:'camera',     icon:'📹', label:'Camera Format',     ph:'What is the camera setup? Face-only / split screen / phone selfie / B-roll cuts? How is the creator framed?'},
+  {key:'energy',     icon:'⚡', label:'Energy Match',      ph:'Creator energy vs Andrew baseline (5/10): higher, lower, or same? What specific adjustment does he need to make?'},
+  {key:'sound',      icon:'🎵', label:'Sound / Music',     ph:'Describe the background music: genre, tempo, mood, any lyrics, or silence? Note enough detail to search for it on CapCut or TikTok.'},
+  {key:'overlays',   icon:'💬', label:'Text Overlays',     ph:'What text appears on screen? When does it appear, where is it placed, and what style (bold, subtitle, minimal)?'},
+  {key:'intonation', icon:'🗣', label:'Intonation Cues',  ph:'How does the creator deliver the hook? Which words get emphasis or pauses? Describe the rhythm and where the energy spikes.'},
+  {key:'visual',     icon:'👁', label:'Visual Fills (⬜)', ph:'Fill in the ⬜ placeholder from the filming notes. What is actually happening on screen at each key moment?'},
+];
+
+function renderFields(day) {
+  const container = document.getElementById('nf-' + day);
+  if (!container) return;
+  container.innerHTML = FIELDS.map(f =>
+    '<div class="nf-row">' +
+    '<div class="nf-label"><span>' + f.icon + '</span>' + f.label + '</div>' +
+    '<textarea class="nf-area" id="nf-' + day + '-' + f.key + '" rows="2" ' +
+    'placeholder="' + f.ph.replace(/"/g, '&quot;') + '" ' +
+    'oninput="saveField(' + day + ',\'' + f.key + '\',this.value)"></textarea>' +
+    '</div>'
+  ).join('');
+}
+
+function saveField(day, key, val) {
+  const state = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  if (!state[day]) state[day] = {};
+  state[day][key] = val;
+  localStorage.setItem('batch03notes', JSON.stringify(state));
+  const ta = document.getElementById('nf-' + day + '-' + key);
+  if (ta) ta.classList.toggle('has-content', val.trim().length > 0);
+  const el = document.getElementById('nz-allsaved-' + day);
+  if (el) { el.textContent = 'saved ✓'; el.style.opacity = '1'; setTimeout(() => { el.style.opacity = '0'; }, 1400); }
+  updateProg();
+}
+
+function clearNote(day) {
+  if (!confirm('Clear all sous chef notes for Day ' + day + '?')) return;
+  const state = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  delete state[day];
+  localStorage.setItem('batch03notes', JSON.stringify(state));
+  FIELDS.forEach(f => {
+    const ta = document.getElementById('nf-' + day + '-' + f.key);
+    if (ta) { ta.value = ''; ta.classList.remove('has-content'); }
+  });
+  updateProg();
+}
+
+function restoreNotes() {
+  const state = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  D.forEach(s => {
+    renderFields(s.n);
+    const dayData = state[s.n] || {};
+    FIELDS.forEach(f => {
+      const ta = document.getElementById('nf-' + s.n + '-' + f.key);
+      if (ta && dayData[f.key]) { ta.value = dayData[f.key]; ta.classList.add('has-content'); }
+    });
+  });
+  updateProg();
+}
+
+function saveNote(day, val) {}
+
+function updateProg() {
+  const state = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  let done = 0;
+  D.forEach(s => {
+    const d = state[s.n] || {};
+    const filled = FIELDS.filter(f => d[f.key] && d[f.key].trim().length > 0).length;
+    if (filled >= 3) done++;
+  });
+  const el = document.getElementById('prog');
+  if (el) el.innerHTML = 'Sous chef progress: <b>' + done + '/30</b> scripts reviewed' + (done === 30 ? ' · ✅ All done — ready to drop SQL into Supabase' : '');
+}
+
+function exportNotes() {
+  const state = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  const hasAny = Object.keys(state).length > 0;
+  if (!hasAny) { alert('No notes yet. Review some scripts first.'); return; }
+  let out = 'ANDREW GEORGE · BATCH 03 · SOUS CHEF NOTES\n';
+  out += '='.repeat(52) + '\n\n';
+  D.forEach(s => {
+    const d = state[s.n] || {};
+    const hasNote = FIELDS.some(f => d[f.key] && d[f.key].trim());
+    if (!hasNote) return;
+    out += '--- DAY ' + s.n + ': ' + s.t + ' [' + s.f + ' · ' + s.l + '] ---\n';
+    FIELDS.forEach(f => {
+      const v = (d[f.key] || '').trim();
+      if (v) out += f.icon + ' ' + f.label + ':\n' + v + '\n';
+    });
+    out += '\n';
+  });
+  const blob = new Blob([out], {type: 'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'andrew-batch03-sous-chef-notes.txt';
+  a.click();
+}
+
+// ── ACCEPT + HISTORY ─────────────────────────────────────────────────────────
+function acceptRewrite(day) {
+  const rewrites = JSON.parse(localStorage.getItem('batch03rewrites') || '{}');
+  const current = rewrites[day];
+  if (!current) return;
+
+  // Push previous accepted (or original on first accept) to history
+  const history = JSON.parse(localStorage.getItem('batch03history') || '{}');
+  if (!history[day]) history[day] = [];
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  if (accepted[day]) {
+    history[day].push(Object.assign({}, accepted[day], {label: 'Version ' + history[day].length}));
+  } else {
+    const s = D.find(d => d.n === day);
+    const origScript = s.secs.map(sec => '[' + sec[0] + '] ' + sec[1] + ': ' + sec[2]).join('\n');
+    history[day].push({hook: s.hook, script: origScript, filming: [s.vs, s.vb, s.to, s.en].filter(Boolean).join(' | '), ts: null, label: 'Original'});
+  }
+  localStorage.setItem('batch03history', JSON.stringify(history));
+
+  const vNum = history[day].length;
+  accepted[day] = Object.assign({}, current, {version: vNum});
+  localStorage.setItem('batch03accepted', JSON.stringify(accepted));
+
+  applyAcceptedToCard(day, current, vNum);
+
+  // Flash accept button, then close panel
+  const btn = document.getElementById('rw-accept-' + day);
+  if (btn) { btn.textContent = '✅ Accepted!'; btn.classList.add('accepted'); }
+  setTimeout(() => {
+    const panel = document.getElementById('rw-panel-' + day);
+    if (panel) panel.style.display = 'none';
+  }, 800);
+}
+
+function applyAcceptedToCard(day, data, vNum) {
+  // Update hook text + visually signal the change
+  // Update hook box to show the actual accepted hook (first 2 script sections)
+  const htxt = document.getElementById('htxt-' + day) ||
+               document.querySelector('[data-day="' + day + '"] .hook-txt');
+  if (htxt) {
+    const hookBox = htxt.parentElement;
+    if (data.script) {
+      const hookLines = data.script.split('\n')
+        .filter(l => l.trim().match(/^\[\d/))
+        .slice(0, 2)
+        .map(l => escH(l.trim()));
+      if (hookLines.length) htxt.innerHTML = hookLines.join('<br>');
+    }
+    if (hookBox) {
+      hookBox.style.borderLeftColor = '#22c55e';
+      hookBox.style.background = '#030f07';
+    }
+    const lbl = hookBox && hookBox.querySelector('.hook-lbl');
+    if (lbl) { lbl.textContent = 'HOOK · ✅ Accepted'; lbl.style.color = '#4ade80'; }
+  }
+
+  // Update Full Script accordion body
+  const scriptAcc = document.getElementById('script-acc-' + day);
+  if (scriptAcc && data.script) {
+    scriptAcc.innerHTML = '<div style="padding:4px 0 8px"><div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#4ade80;text-transform:uppercase;margin-bottom:8px">✅ Accepted Script</div>' +
+      '<pre style="font-size:13px;color:#c9d1d9;line-height:1.75;white-space:pre-wrap;font-family:Inter,sans-serif">' + escH(data.script) + '</pre></div>';
+  }
+
+  // Update Filming Notes accordion body
+  const filmingAcc = document.getElementById('filming-acc-' + day);
+  if (filmingAcc && data.filming) {
+    const sections = data.filming.split('|').map(s => s.trim()).filter(Boolean);
+    filmingAcc.innerHTML = '<div style="padding:4px 0 8px"><div style="font-size:10px;font-weight:700;letter-spacing:.6px;color:#4ade80;text-transform:uppercase;margin-bottom:8px">✅ Accepted Filming Notes</div>' +
+      sections.map(sec => {
+        const colonIdx = sec.indexOf(':');
+        if (colonIdx === -1) return '<div class="nf"><div class="nv">' + escH(sec) + '</div></div>';
+        const key = sec.slice(0, colonIdx).trim();
+        const val = sec.slice(colonIdx + 1).trim();
+        return '<div class="nf"><div class="nk">' + escH(key) + '</div><div class="nv">' + escH(val) + '</div></div>';
+      }).join('') + '</div>';
+  }
+
+  // Show accepted-bar, hide rw-trigger (the rewrite button row)
+  const bar = document.getElementById('acc-bar-' + day);
+  if (bar) {
+    bar.style.display = 'flex';
+    const ver = document.getElementById('acc-ver-' + day);
+    if (ver) ver.textContent = '(v' + vNum + ')';
+  }
+
+  // Add green accent to card header
+  const ctop = document.getElementById('ctop-' + day);
+  if (ctop) {
+    ctop.style.borderBottom = '1px solid #16a34a30';
+    if (!ctop.querySelector('.accepted-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'accepted-badge'; badge.id = 'badge-' + day;
+      badge.textContent = '✅ v' + vNum;
+      ctop.appendChild(badge);
+    } else {
+      const badge = document.getElementById('badge-' + day);
+      if (badge) badge.textContent = '✅ v' + vNum;
+    }
+  }
+}
+
+function openHistory(day) {
+  const panel = document.getElementById('rw-panel-' + day);
+  if (panel) panel.style.display = 'block';
+  const revzone = document.getElementById('rw-revise-' + day);
+  if (revzone) revzone.style.display = 'block';
+  renderHistory(day);
+  const hist = document.getElementById('rw-hist-' + day);
+  if (hist) hist.style.display = 'block';
+  panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+}
+
+function reopenRewrite(day) {
+  const rewrites = JSON.parse(localStorage.getItem('batch03rewrites') || '{}');
+  if (rewrites[day]) {
+    const panel = document.getElementById('rw-panel-' + day);
+    if (panel) panel.style.display = 'block';
+    renderRewrite(day, rewrites[day]);
+    panel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+  } else {
+    rewriteScript(day);
+  }
+}
+
+function restoreAccepted() {
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  Object.entries(accepted).forEach(([day, data]) => {
+    applyAcceptedToCard(Number(day), data, data.version || 1);
+  });
+}
+
+// ── REVISION LOOP ────────────────────────────────────────────────────────────
+async function reviseScript(day) {
+  const apiKey = localStorage.getItem('anthropic-api-key');
+  if (!apiKey) { alert('API key not found.'); return; }
+
+  const rewrites = JSON.parse(localStorage.getItem('batch03rewrites') || '{}');
+  const prev = rewrites[day];
+  if (!prev) { alert('Run the initial rewrite first.'); return; }
+
+  const feedback = (document.getElementById('rw-rev-' + day) || {}).value || '';
+  if (!feedback.trim()) { alert('Add revision notes first — what needs to change?'); return; }
+
+  const s = D.find(d => d.n === day);
+  const notes = (JSON.parse(localStorage.getItem('batch03notes') || '{}'))[day] || {};
+
+  const panel = document.getElementById('rw-panel-' + day);
+  const loading = document.getElementById('rw-loading-' + day);
+  const body = document.getElementById('rw-body-' + day);
+  const btn = document.getElementById('rw-revbtn-' + day);
+  const revzone = document.getElementById('rw-revise-' + day);
+
+  panel.style.display = 'block';
+  loading.style.display = 'flex';
+  body.innerHTML = '';
+  if (revzone) revzone.style.display = 'none';
+  if (btn) { btn.disabled = true; btn.textContent = '⟳ Revising...'; }
+
+  const revPrompt = `You previously rewrote a short-form video script for Andrew George (SaaSuite founder, $30K MRR).
+
+YOUR PREVIOUS REWRITE:
+Hook: ${prev.hook}
+
+Script:
+${prev.script}
+
+Filming Notes:
+${prev.filming}
+
+════ REVISION FEEDBACK FROM DIRECTOR ════
+${feedback.trim()}
+
+════ CONTEXT TO REAPPLY ════
+Day ${s.n}: ${s.t} | Format: ${s.f} (${s.fn}) | Layer: ${s.l} | Hook Driver: ${s.hp || 'Hook Point'}
+Original hook: ${s.hook}
+
+Sous Chef Pass:
+🎯 Hook Visual Format: ${notes.hookfmt || '(not filled)'}
+📹 Camera: ${notes.camera || '(not filled)'}
+⚡ Energy: ${notes.energy || '(not filled)'}
+🎵 Sound: ${notes.sound || '(not filled)'}
+💬 Overlays: ${notes.overlays || '(not filled)'}
+🗣 Intonation: ${notes.intonation || '(not filled)'}
+👁 Visual: ${notes.visual || '(not filled)'}
+
+Apply the revision feedback precisely. Never fabricate numbers or claims not in the original.
+
+Respond ONLY with valid JSON (no markdown):
+{
+  "revised_hook": "...",
+  "revised_script": "...",
+  "revised_filming_notes": "..."
+}`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 2048, messages: [{ role: 'user', content: revPrompt }] })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + res.status);
+    }
+
+    const data = await res.json();
+    let text = data.content[0].text.trim();
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '');
+    const result = JSON.parse(text);
+
+    rewrites[day] = { hook: result.revised_hook, script: result.revised_script, filming: result.revised_filming_notes, ts: new Date().toISOString() };
+    localStorage.setItem('batch03rewrites', JSON.stringify(rewrites));
+
+    loading.style.display = 'none';
+    renderRewrite(day, rewrites[day]);
+    if (btn) { btn.disabled = false; btn.textContent = '↺ Revise with Feedback'; }
+
+  } catch (e) {
+    loading.style.display = 'none';
+    body.innerHTML = '<div style="padding:10px;color:#fca5a5;font-size:13px;background:#1a0808;border-radius:6px;border:1px solid #ef444430">Revision error: ' + e.message + '</div>';
+    if (revzone) revzone.style.display = 'block';
+    if (btn) { btn.disabled = false; btn.textContent = '↺ Revise with Feedback'; }
+  }
+}
+
+// ── API KEY ─────────────────────────────────────────────────────────────────
+function saveApiKey() {
+  const key = document.getElementById('api-key-input').value.trim();
+  if (!key.startsWith('sk-')) { alert('Paste your Claude API key — it starts with sk-ant-...'); return; }
+  localStorage.setItem('anthropic-api-key', key);
+  document.getElementById('api-key-input').value = '';
+  const el = document.getElementById('api-status');
+  if (el) { el.textContent = '✓ Saved — ' + key.slice(0,16) + '...'; }
+}
+
+function loadApiKey() {
+  const key = localStorage.getItem('anthropic-api-key');
+  const el = document.getElementById('api-status');
+  if (el && key) el.textContent = '✓ Key saved — ' + key.slice(0,16) + '...';
+}
+
+// ── PROMPT BUILDER ───────────────────────────────────────────────────────────
+function buildPrompt(s, notes) {
+  const scriptText = s.secs.map(sec => '[' + sec[0] + '] ' + sec[1] + ': ' + sec[2]).join('\n');
+
+  const layerGuide = {
+    TOFU: 'New audience — no assumed knowledge. Lead with transformation/result first, mechanism second. Make them feel seen.',
+    MOFU: 'Warm audience — knows the problem. Lead with specific solution and show the proof it works.',
+    BOFU: 'Hot audience — knows SaaSuite. Lead with the conversion trigger: real result, direct proof, or clear next step.'
+  }[s.l] || '';
+
+  const formatGuide = {
+    F1: 'Reveal the free/overlooked tool or setup as the hook. The secret IS the value. Deliver it fast — do not gatekeep.',
+    F2: 'Open by naming the wrong belief most people hold. The correction IS the entire video.',
+    F3: 'Number every item. Each point is concrete and actionable. Maintain momentum — speed is the energy.',
+    F4: 'Show the real behind-the-scenes. Exact numbers, actual process steps. Transparency is the hook.',
+    F5: 'Contrast paid vs. free approach explicitly. The free path wins. Mention SaaSuite at the end only.'
+  }[s.f] || '';
+
+  const hn = notes.hookfmt || '(not filled)';
+  const cn = notes.camera || '(not filled)';
+  const en = notes.energy || '(not filled)';
+  const sn = notes.sound  || '(not filled)';
+  const on = notes.overlays || '(not filled)';
+  const inn = notes.intonation || '(not filled)';
+  const vn = notes.visual || '(not filled)';
+
+  return `You are rewriting a short-form video script for Andrew George (SaaSuite founder, $30K MRR → $100K/month goal).
+
+ABOUT ANDREW + SAASUITE:
+- SaaSuite: white-label GoHighLevel (GHL) platform for agency owners
+- Audience: agency owners and entrepreneurs building or scaling their business
+- Andrew brand energy baseline: 5.5/10 — calm confidence, direct, credible, no fluff
+- NEVER fabricate numbers, features, or claims not present in the original script
+
+TASK: Rewrite this script so it matches the reference reel's PROVEN FORMAT while keeping Andrew's message, real numbers, and SaaSuite context intact.
+
+════ ORIGINAL SCRIPT ════
+Day ${s.n}: ${s.t}
+Format: ${s.f} (${s.fn}) | Layer: ${s.l} | Hook Driver: ${s.hp || 'See framework'}
+CTA: ${s.cta}
+Framework: ${s.fw}
+
+HOOK:
+${s.hook}
+
+FULL SCRIPT:
+${scriptText}
+
+FILMING NOTES (original):
+Visual / Camera: ${s.vs || 'n/a'}
+Verbal cues: ${s.vb || 'n/a'}
+Text Overlay: ${s.to || 'n/a'}
+Energy: ${s.en || 'n/a'}
+
+🎯 HOOK VISUAL FORMAT (first 2-3 seconds): ${hn}
+📹 Camera Format: ${cn}
+⚡ Energy Match: ${en}
+🎵 Sound / Music: ${sn}
+💬 Text Overlays: ${on}
+🗣 Intonation Cues: ${inn}
+👁 Visual Notes: ${vn}
+
+════ REWRITE RULES ════
+0. CRITICAL HOOK FORMAT — The Hook Visual Format above is the STRUCTURAL TEMPLATE for Andrew's hook. Replicate it exactly. If it shows stacked contrast text (wrong ✗ / right ✅), Andrew's hook must use the same stacked contrast. Do not invent a different hook structure.
+1. STRUCTURE — Match the ref reel camera flow, text overlay rhythm, and editing pattern exactly
+2. HOOK — Apply "${s.hp || 'Hook Point'}" as the primary driver AND the visual format above. First 3 seconds must stop the scroll.
+3. LAYER (${s.l}) — ${layerGuide}
+4. FORMAT (${s.fn}) — ${formatGuide}
+5. HORMOZI — Lead with transformation/value. Give before you ask. Never open on the product.
+6. KEEP — Andrew's exact numbers ($30K MRR, $100K goal), SaaSuite product details, his brand voice
+7. MUSIC — Flag the sound from the sous chef pass in filming notes so the editor knows what to source
+
+Respond ONLY with valid JSON. No markdown fences. No explanation. Just the JSON object:
+{
+  "revised_hook": "One punchy sentence — the new hook, matching the ref reel energy and hook driver",
+  "revised_script": "Full revised script. Use [MM:SS] timestamps and SECTION LABELS. Stage directions in (parentheses). Match energy from intonation cues. Same length as original.",
+  "revised_filming_notes": "CAMERA: [exact setup from ref reel] | ENERGY: [specific direction for Andrew] | TONALITY: [intonation cues — which words get emphasis, pauses, rhythm] | TEXT OVERLAYS: [what text appears, when, placement, style] | MUSIC: [from sous chef pass — describe what to search for] | EDITING: [cuts, pacing, transition notes for editor]"
+}`;
+}
+
+// ── REWRITE ENGINE ───────────────────────────────────────────────────────────
+async function rewriteScript(day) {
+  const apiKey = localStorage.getItem('anthropic-api-key');
+  if (!apiKey) { alert('Add your Claude API key in the purple bar at the top of the page first.'); return; }
+
+  const s = D.find(d => d.n === day);
+  if (!s) return;
+
+  const notes = (JSON.parse(localStorage.getItem('batch03notes') || '{}'))[day] || {};
+  const filledCount = FIELDS.filter(f => notes[f.key] && notes[f.key].trim()).length;
+  if (filledCount < 2) { alert('Fill in at least 2 sous chef fields first — watch the ref reel, then speak into each field.'); return; }
+
+  const panel = document.getElementById('rw-panel-' + day);
+  const loading = document.getElementById('rw-loading-' + day);
+  const body = document.getElementById('rw-body-' + day);
+  const btn = document.getElementById('rw-btn-' + day);
+
+  panel.style.display = 'block';
+  loading.style.display = 'flex';
+  body.innerHTML = '';
+  btn.disabled = true;
+  btn.textContent = '⟳ Rewriting Day ' + day + '...';
+
+  try {
+    const prompt = buildPrompt(s, notes);
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 2048,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + res.status);
+    }
+
+    const data = await res.json();
+    let text = data.content[0].text.trim();
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '');
+    const result = JSON.parse(text);
+
+    const rewrites = JSON.parse(localStorage.getItem('batch03rewrites') || '{}');
+    rewrites[day] = { hook: result.revised_hook, script: result.revised_script, filming: result.revised_filming_notes, ts: new Date().toISOString() };
+    localStorage.setItem('batch03rewrites', JSON.stringify(rewrites));
+
+    loading.style.display = 'none';
+    renderRewrite(day, rewrites[day]);
+    btn.disabled = false;
+    btn.textContent = '✨ Re-run Rewrite';
+    btn.classList.add('done');
+
+  } catch (e) {
+    loading.style.display = 'none';
+    body.innerHTML = '<div style="padding:10px;color:#fca5a5;font-size:13px;background:#1a0808;border-radius:6px;border:1px solid #ef444430">Error: ' + e.message + '<br><small style="color:#6b7280">Check your API key or try again.</small></div>';
+    btn.disabled = false;
+    btn.textContent = '✨ Retry Rewrite';
+  }
+}
+
+function renderRewrite(day, data) {
+  const body = document.getElementById('rw-body-' + day);
+  if (!body) return;
+  const ts = data.ts ? new Date(data.ts).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+
+  function sec(label, id, content) {
+    return '<div class="rw-section">' +
+      '<div class="rw-sec-hdr">' +
+        '<div class="rw-sec-lbl">' + label + '</div>' +
+        '<button class="rw-copy" onclick="copyRw(this,\'' + id + '\')">Copy</button>' +
+      '</div>' +
+      '<div class="rw-content" id="' + id + '">' + escH(content) + '</div>' +
+    '</div>';
+  }
+
+  body.innerHTML =
+    sec('🎣 Revised Hook', 'rw-h-'+day, data.hook) +
+    sec('📝 Revised Script', 'rw-s-'+day, data.script) +
+    sec('🎬 Revised Filming Notes', 'rw-f-'+day, data.filming) +
+    '<div class="rw-footer">' +
+      '<span class="rw-ts">Generated at ' + ts + '</span>' +
+      '<div style="display:flex;gap:6px;flex-wrap:wrap">' +
+        '<button class="rw-accept-btn" id="rw-accept-' + day + '" onclick="acceptRewrite(' + day + ')">✅ Accept Script</button>' +
+        '<button class="rw-hist-btn" onclick="toggleHistory(' + day + ')">🕒 History</button>' +
+        '<button class="rw-rerun" onclick="rewriteScript(' + day + ')">↺ Re-run</button>' +
+      '</div>' +
+    '</div>';
+
+  const btn = document.getElementById('rw-btn-' + day);
+  if (btn) { btn.textContent = '✨ Re-run Rewrite'; btn.classList.add('done'); }
+  const revzone = document.getElementById('rw-revise-' + day);
+  if (revzone) revzone.style.display = 'block';
+}
+
+function escH(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function copyRw(btn, id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    btn.textContent = 'Copied ✓'; btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+function restoreRewrites() {
+  const rewrites = JSON.parse(localStorage.getItem('batch03rewrites') || '{}');
+  Object.entries(rewrites).forEach(([day, data]) => {
+    const panel = document.getElementById('rw-panel-' + day);
+    if (panel) { panel.style.display = 'block'; renderRewrite(Number(day), data); }
+  });
+}
+
+buildFilters();
+buildGrid();
+restoreCks();
+restoreNotes();
+// ── KANE + AVA ANALYSIS ──────────────────────────────────────────────────────
+function buildAnalysisPrompt(s, notes, acceptedScript) {
+  const cn = notes.hookfmt || '(not filled)';
+  const cam = notes.camera || '(not filled)';
+  const en = notes.energy || '(not filled)';
+  const sn = notes.sound || '(not filled)';
+  const on = notes.overlays || '(not filled)';
+  const inn = notes.intonation || '(not filled)';
+  const vn = notes.visual || '(not filled)';
+
+  return `You are a content strategist trained in Brendan Kane's Hook Point methodology and Ava's Personal Brand Launch funnel model. Analyze this short-form video script section by section.
+
+BRENDAN KANE — 10 HOOK DRIVERS:
+Curiosity/Mystery | FOMO | Aspiration/Transformation | Relatability | Surprise/Shock | Controversy/Taboo | Authority/Credibility | Specificity | Pattern Interrupt | Social Proof
+
+AVA — PERSONAL BRAND LAUNCH FUNNEL:
+TOFU: cold audience, no prior awareness, scroll-stopping is the only job
+MOFU: warm audience, problem-aware, building trust and presenting solution
+BOFU: hot audience, solution-aware, conversion-ready, proof and ask
+
+TASK: For EVERY timestamp section in the script, identify:
+1. KANE: which driver is firing at that exact moment and precisely HOW
+2. AVA: which funnel mechanic is at work and what job that moment does
+
+Be specific — use Kane's exact driver names. This is for building pattern recognition through repeated exposure.
+
+SCRIPT (Day ${s.n}: ${s.t} | ${s.f} | ${s.l}):
+${acceptedScript}
+
+SOUS CHEF CONTEXT (what was actually in the reference reel):
+🎯 Hook Visual Format: ${cn}
+📹 Camera: ${cam}
+⚡ Energy: ${en}
+🎵 Sound: ${sn}
+💬 Text Overlays: ${on}
+🗣 Intonation: ${inn}
+👁 Visual: ${vn}
+
+Respond ONLY with valid JSON (no markdown):
+{
+  "overall": {
+    "primary_driver": "exact Kane driver name",
+    "supporting_drivers": ["driver1", "driver2"],
+    "ava_layer": "TOFU or MOFU or BOFU",
+    "one_line_why": "one sentence in Kane/Ava language explaining why this script works"
+  },
+  "sections": [
+    {
+      "timestamp": "0:00",
+      "label": "SECTION NAME",
+      "kane_driver": "exact driver name",
+      "kane_how": "precisely how this driver fires at this moment — be specific to the script",
+      "ava_mechanic": "funnel mechanic name",
+      "ava_job": "exactly what job this moment does for the viewer in the funnel"
+    }
+  ]
+}`;
+}
+
+async function analyzeScript(day) {
+  const apiKey = localStorage.getItem('anthropic-api-key');
+  if (!apiKey) { alert('Add your Claude API key first.'); return; }
+
+  const accepted = (JSON.parse(localStorage.getItem('batch03accepted') || '{}'))[day];
+  if (!accepted) { alert('Accept a script version first, then analyze.'); return; }
+
+  const s = D.find(d => d.n === day);
+  const notes = (JSON.parse(localStorage.getItem('batch03notes') || '{}'))[day] || {};
+
+  const panel = document.getElementById('ap-' + day);
+  const loading = document.getElementById('ap-load-' + day);
+  const body = document.getElementById('ap-body-' + day);
+  const btn = document.getElementById('ap-btn-' + day);
+
+  panel.style.display = 'block';
+  loading.style.display = 'flex';
+  body.innerHTML = '';
+  if (btn) { btn.disabled = true; btn.textContent = '⟳ Analyzing...'; }
+
+  try {
+    const prompt = buildAnalysisPrompt(s, notes, accepted.script || '');
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 3000, messages: [{ role: 'user', content: prompt }] })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || 'API error ' + res.status);
+    }
+
+    const data = await res.json();
+    let text = data.content[0].text.trim();
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/, '');
+    const result = JSON.parse(text);
+
+    const analyses = JSON.parse(localStorage.getItem('batch03analysis') || '{}');
+    analyses[day] = Object.assign({}, result, { ts: new Date().toISOString() });
+    localStorage.setItem('batch03analysis', JSON.stringify(analyses));
+
+    loading.style.display = 'none';
+    renderAnalysis(day, analyses[day]);
+    if (btn) { btn.disabled = false; btn.textContent = '🧠 Re-analyze'; }
+
+  } catch (e) {
+    loading.style.display = 'none';
+    body.innerHTML = '<div style="padding:10px 15px;color:#fca5a5;font-size:13px">Error: ' + e.message + '</div>';
+    if (btn) { btn.disabled = false; btn.textContent = '🧠 Analyze'; }
+  }
+}
+
+function renderAnalysis(day, data) {
+  const body = document.getElementById('ap-body-' + day);
+  const panel = document.getElementById('ap-' + day);
+  if (!body) return;
+  if (panel) panel.style.display = 'block';
+
+  const overall = data.overall || {};
+  const sections = data.sections || [];
+
+  const overallHTML = '<div class="ap-overall">' +
+    '<div class="ap-overall-hdr">🧠 Kane + Ava Analysis</div>' +
+    '<div class="ap-tags">' +
+      (overall.primary_driver ? '<span class="ap-tag ap-tag-kane">Kane: ' + escH(overall.primary_driver) + '</span>' : '') +
+      (overall.ava_layer ? '<span class="ap-tag ap-tag-ava">Ava: ' + escH(overall.ava_layer) + '</span>' : '') +
+      (overall.supporting_drivers || []).map(d => '<span class="ap-tag ap-tag-kane" style="opacity:.65">' + escH(d) + '</span>').join('') +
+    '</div>' +
+    (overall.one_line_why ? '<div class="ap-why">' + escH(overall.one_line_why) + '</div>' : '') +
+  '</div>';
+
+  const sectionsHTML = sections.map(sec =>
+    '<div class="ap-sec">' +
+      '<div class="ap-sec-hdr">' +
+        '<span class="ap-ts">' + escH(sec.timestamp || '') + '</span>' +
+        '<span class="ap-sec-lbl">' + escH(sec.label || '') + '</span>' +
+      '</div>' +
+      '<div class="ap-row">' +
+        '<div class="ap-fw-lbl ap-fw-kane-lbl">Brendan Kane</div>' +
+        '<div class="ap-driver">' + escH(sec.kane_driver || '') + '</div>' +
+        '<div class="ap-how">' + escH(sec.kane_how || '') + '</div>' +
+      '</div>' +
+      '<div class="ap-row" style="margin-top:8px">' +
+        '<div class="ap-fw-lbl ap-fw-ava-lbl">Ava Funnel</div>' +
+        '<div class="ap-mechanic">' + escH(sec.ava_mechanic || '') + '</div>' +
+        '<div class="ap-how">' + escH(sec.ava_job || '') + '</div>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+
+  body.innerHTML = overallHTML + sectionsHTML;
+}
+
+function restoreAnalysis() {
+  const analyses = JSON.parse(localStorage.getItem('batch03analysis') || '{}');
+  Object.entries(analyses).forEach(([day, data]) => {
+    renderAnalysis(Number(day), data);
+  });
+}
+
+// ── DELIVERABLE EXPORT ───────────────────────────────────────────────────────
+function parseScript(text) {
+  if (!text) return [];
+  const lines = text.split('\n').filter(l => l.trim());
+  const sections = [];
+  let current = null;
+  lines.forEach(line => {
+    const m = line.match(/^\[?(\d{1,2}:\d{2})\]?\s*([^:—–\n]+?)[\s:—–]+(.+)?$/);
+    if (m) {
+      if (current) sections.push(current);
+      current = {ts: m[1], lbl: m[2].trim(), txt: (m[3]||'').trim()};
+    } else if (current) {
+      current.txt += (current.txt ? ' ' : '') + line.trim();
+    } else {
+      sections.push({ts:'', lbl:'', txt: line.trim()});
+    }
+  });
+  if (current) sections.push(current);
+  return sections;
+}
+
+function parseFilming(text) {
+  if (!text) return [];
+  return text.split('|').map(s => s.trim()).filter(Boolean).map(part => {
+    const colonIdx = part.indexOf(':');
+    if (colonIdx > 0 && colonIdx < 30) {
+      return {key: part.slice(0,colonIdx).trim(), val: part.slice(colonIdx+1).trim()};
+    }
+    return {key:'', val: part};
+  });
+}
+
+function scriptToText(s, accepted, notes) {
+  const sections = parseScript(accepted.script);
+  let out = `DAY ${s.n} · ${s.d.toUpperCase()} — ${s.t}\n`;
+  out += `Format: ${s.fn} · ${s.l} · CTA: ${s.cta}\n`;
+  out += `${'─'.repeat(50)}\n\nSCRIPT\n\n`;
+  sections.forEach(({ts, lbl, txt}) => {
+    out += ts ? `[${ts}] ${lbl}\n${txt}\n\n` : `${txt}\n\n`;
+  });
+  out += `${'─'.repeat(50)}\nFILMING NOTES\n\n`;
+  const filmParts = parseFilming(accepted.filming);
+  filmParts.forEach(({key, val}) => {
+    out += key ? `${key}: ${val}\n` : `${val}\n`;
+  });
+  if (notes) {
+    if (notes.camera) out += `Camera: ${notes.camera}\n`;
+    if (notes.energy) out += `Energy: ${notes.energy}\n`;
+    if (notes.intonation) out += `Intonation: ${notes.intonation}\n`;
+    if (notes.overlays) out += `Text Overlays: ${notes.overlays}\n`;
+  }
+  out += `\nRef: ${s.ru}\n`;
+  return out;
+}
+
+function openDeliverable() {
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  const notes = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  const days = Object.keys(accepted).map(Number).sort((a,b) => a-b);
+
+  if (!days.length) {
+    alert('No scripts accepted yet. Complete the review pass and accept scripts first.');
+    return;
+  }
+
+  document.getElementById('dv-count').textContent = days.length + ' script' + (days.length > 1 ? 's' : '') + ' ready';
+
+  const body = document.getElementById('dv-body');
+  body.innerHTML = days.map(day => {
+    const s = D.find(d => d.n === day);
+    const data = accepted[day];
+    const n = notes[day] || {};
+    if (!s || !data) return '';
+
+    const sections = parseScript(data.script);
+    const filmParts = parseFilming(data.filming);
+
+    const scriptHTML = sections.map(({ts, lbl, txt}) =>
+      ts ? `<div class="dv-line">
+        <span class="dv-ts">${escH(ts)}</span>
+        <span class="dv-lbl">${escH(lbl)}</span>
+        <span class="dv-txt">${escH(txt)}</span>
+      </div>` : `<div class="dv-txt" style="margin-bottom:10px">${escH(txt)}</div>`
+    ).join('');
+
+    const extraNotes = [];
+    if (n.camera) extraNotes.push({key:'📹 Camera', val: n.camera});
+    if (n.energy) extraNotes.push({key:'⚡ Energy', val: n.energy});
+    if (n.intonation) extraNotes.push({key:'🗣 Intonation', val: n.intonation});
+    if (n.overlays) extraNotes.push({key:'💬 Text Overlays', val: n.overlays});
+    if (n.sound) extraNotes.push({key:'🎵 Sound', val: n.sound});
+    if (n.hookfmt) extraNotes.push({key:'🎯 Hook Visual', val: n.hookfmt});
+
+    const filmHTML = [
+      ...filmParts.filter(p => p.key || p.val).map(({key,val}) =>
+        `<div class="dv-fn-row"><span class="dv-fn-key">${escH(key||'Note')}</span><span class="dv-fn-val">${escH(val)}</span></div>`
+      ),
+      ...extraNotes.map(({key,val}) =>
+        `<div class="dv-fn-row"><span class="dv-fn-key">${escH(key)}</span><span class="dv-fn-val">${escH(val)}</span></div>`
+      )
+    ].join('');
+
+    return `<div class="dv-script" id="dvs-${day}">
+      <div class="dv-hdr">
+        <div class="dv-hdr-left">
+          <div class="dv-day">Day ${day} · ${escH(s.d)}</div>
+          <div class="dv-title">${escH(s.t)}</div>
+          <div class="dv-meta">
+            <span class="dv-badge dv-badge-fmt">${escH(s.fn)}</span>
+            <span class="dv-badge dv-badge-layer">${escH(s.l)}</span>
+            <span class="dv-badge dv-badge-cta">CTA: ${escH(s.cta)}</span>
+            <span class="dv-badge dv-badge-ver">v${data.version||1}</span>
+          </div>
+        </div>
+        <button class="dv-copy-btn" onclick="copyScript(${day})">Copy</button>
+      </div>
+      <div class="dv-section">
+        <div class="dv-sec-hdr">Script</div>
+        ${scriptHTML}
+      </div>
+      ${filmHTML ? `<div class="dv-filming">
+        <div class="dv-filming-hdr">Filming Notes</div>
+        ${filmHTML}
+      </div>` : ''}
+      <div class="dv-ref">
+        <span class="dv-ref-lbl">▶ Reference Reel</span>
+        <a class="dv-ref-link" href="${escH(s.ru)}" target="_blank" rel="noopener">▶ Watch ${escH(s.rh)}</a>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('deliver-overlay').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeliverable() {
+  document.getElementById('deliver-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function copyScript(day) {
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  const notes = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  const s = D.find(d => d.n === day);
+  if (!s || !accepted[day]) return;
+  const text = scriptToText(s, accepted[day], notes[day]);
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`#dvs-${day} .dv-copy-btn`);
+    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1800); }
+  });
+}
+
+function copyAllScripts() {
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  const notes = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  const days = Object.keys(accepted).map(Number).sort((a,b) => a-b);
+  const text = days.map(day => {
+    const s = D.find(d => d.n === day);
+    return s && accepted[day] ? scriptToText(s, accepted[day], notes[day]) : '';
+  }).filter(Boolean).join('\n' + '═'.repeat(60) + '\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector('.dv-topbar .dv-btn');
+    if (btn) { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = '📋 Copy All', 1800); }
+  });
+}
+
+// ── FILL PLACEHOLDERS ────────────────────────────────────────────────────────
+function applyFills(day, fills) {
+  document.querySelectorAll(`.ssec-txt[data-day="${day}"]`).forEach(el => {
+    let txt = el.dataset.raw;
+    Object.entries(fills).forEach(([token, val]) => {
+      if (val) txt = txt.split(token).join(val);
+    });
+    el.innerHTML = escH(txt);
+  });
+}
+
+function checkAllFilled(day) {
+  const s = D.find(d => d.n === day);
+  if (!s || !s.blk) return;
+  const fills = (JSON.parse(localStorage.getItem('batch03fills') || '{}'))[day] || {};
+  const allTokens = [...new Set(s.secs.flatMap(([,,txt]) => (txt.match(/\[[^\]]+\]/g) || [])))];
+  const allDone = allTokens.every(tok => fills[tok] && fills[tok].trim());
+  const status = document.getElementById('fs-' + day);
+  if (allDone) {
+    if (status) { status.textContent = '✅ All data filled — ready to film'; status.className = 'fill-status done'; }
+    // Lift blocked styling
+    const card = document.querySelector(`.card[data-day="${day}"]`);
+    if (card) card.classList.remove('blk');
+    const badge = card && card.querySelector('.bdg-blk');
+    if (badge) { badge.textContent = '✅ Ready'; badge.className = 'bdg bdg-ask'; }
+    // Update banner
+    const banner = document.querySelector('.banner');
+    if (banner) { banner.classList.add('cleared'); banner.innerHTML = '✅ <strong>All scripts ready</strong> — Day 28 placeholder data filled.'; }
+  } else {
+    const remaining = allTokens.filter(tok => !fills[tok] || !fills[tok].trim()).length;
+    if (status) { status.textContent = `⚠️ ${remaining} field${remaining>1?'s':''} left`; status.className = 'fill-status'; }
+  }
+}
+
+function saveFill(day, token, val) {
+  const all = JSON.parse(localStorage.getItem('batch03fills') || '{}');
+  if (!all[day]) all[day] = {};
+  all[day][token] = val;
+  localStorage.setItem('batch03fills', JSON.stringify(all));
+  const inp = document.querySelector(`[data-day="${day}"][data-token="${CSS.escape(token)}"]`);
+  if (inp) inp.classList.toggle('filled', !!val.trim());
+  applyFills(day, all[day]);
+  checkAllFilled(day);
+}
+
+function restoreFills() {
+  const all = JSON.parse(localStorage.getItem('batch03fills') || '{}');
+  Object.entries(all).forEach(([day, fills]) => {
+    const d = Number(day);
+    // Restore input values
+    Object.entries(fills).forEach(([token, val]) => {
+      const inp = document.querySelector(`[data-day="${d}"][data-token="${CSS.escape(token)}"]`);
+      if (inp) { inp.value = val; inp.classList.toggle('filled', !!val.trim()); }
+    });
+    applyFills(d, fills);
+    checkAllFilled(d);
+  });
+}
+
+restoreRewrites();
+restoreAccepted();
+restoreAnalysis();
+restoreFills();
+loadApiKey();
+document.getElementById('sbar').textContent='Showing 30 of 30 scripts';
+</script>
+</body>
+</html>

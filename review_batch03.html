@@ -22,8 +22,25 @@ a{color:inherit;text-decoration:none}
 
 .banner{background:#1c1010;border-bottom:1px solid #ef444430;padding:11px 24px;font-size:13px;color:#fca5a5;display:flex;align-items:center;gap:8px}
 .banner.cleared{background:#0a1c10;border-bottom-color:#16a34a30;color:#4ade80}
-.deliver-btn{background:#7c3aed;color:#fff;border:none;font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;margin-right:4px;transition:background .12s}
+.deliver-btn{background:#7c3aed;color:#fff;border:none;font-size:12px;font-weight:700;padding:6px 14px;border-radius:6px;cursor:pointer;font-family:'Inter',sans-serif;white-space:nowrap;flex-shrink:0;transition:background .12s}
 .deliver-btn:hover{background:#6d28d9}
+.view-toggle{background:transparent;border:1px solid var(--bord);color:var(--dim);font-size:15px;padding:4px 9px;border-radius:5px;cursor:pointer;transition:all .12s;line-height:1}
+.view-toggle:hover{border-color:#a78bfa;color:#a78bfa}
+.view-toggle.active{background:#1a0a35;border-color:#7c3aed;color:#a78bfa}
+.cal-view{padding:20px 24px 40px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal-hdr{text-align:center;font-size:10px;font-weight:700;letter-spacing:.5px;color:var(--dim);text-transform:uppercase;padding:6px 0}
+.cal-cell{background:var(--card);border:1px solid var(--bord);border-radius:7px;padding:8px 9px;cursor:pointer;transition:all .15s;min-height:90px;display:flex;flex-direction:column;gap:4px;position:relative}
+.cal-cell:hover{border-color:#7c3aed;background:#0f0920}
+.cal-cell.accepted{border-color:#16a34a60;background:#030f07}
+.cal-cell.blk-cell{border-color:#ef444440;background:#180d0d;opacity:.8}
+.cal-cell.empty{background:transparent;border:1px solid #ffffff06;cursor:default;pointer-events:none}
+.cal-day-num{font-size:10px;font-weight:700;color:var(--dim);letter-spacing:.3px}
+.cal-title{font-size:11px;font-weight:600;color:var(--text);line-height:1.35;flex:1}
+.cal-badges{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px}
+.cal-fmt{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px}
+.cal-dot-ok{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:#22c55e}
+.cal-dot-blk{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:#ef4444}
 .dv-topbar{position:sticky;top:0;background:#fff;border-bottom:2px solid #e5e7eb;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .dv-topbar-left{display:flex;align-items:center;gap:12px}
 .dv-topbar-right{display:flex;gap:8px;align-items:center}
@@ -33,6 +50,8 @@ a{color:inherit;text-decoration:none}
 .dv-btn:hover{background:#e5e7eb}
 .dv-close{background:#fee2e2;color:#991b1b;border-color:#fecaca}
 .dv-close:hover{background:#fecaca}
+.dv-sync{background:#0d3349;color:#38bdf8;border-color:#0369a130}
+.dv-sync:hover{background:#0369a1;color:#fff}
 .dv-script{background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:28px;overflow:hidden;page-break-inside:avoid}
 .dv-hdr{padding:16px 20px;background:#f9fafb;border-bottom:1px solid #e5e7eb;display:flex;align-items:center;justify-content:space-between}
 .dv-hdr-left{}
@@ -298,11 +317,35 @@ details.rw-hist-details[open] summary{color:#a78bfa}
 </div>
 <div style="display:flex;align-items:center;justify-content:space-between;padding:0 24px 0 0">
   <div class="filters" id="filters" style="flex:1"></div>
-  <button class="deliver-btn" onclick="openDeliverable()">📤 Andrew's Scripts</button>
+  <div style="display:flex;gap:6px;flex-shrink:0;margin-right:4px">
+    <button class="view-toggle" id="vt-grid" onclick="setView('grid')" title="Grid view">▦</button>
+    <button class="view-toggle" id="vt-cal" onclick="setView('cal')" title="Calendar view">📅</button>
+    <button class="deliver-btn" onclick="openDeliverable()">📤 Andrew's Scripts</button>
+  </div>
 </div>
 <div class="prog" id="prog"></div>
 <div class="sbar" id="sbar"></div>
 <div class="grid" id="grid"></div>
+<div class="cal-view" id="cal-view" style="display:none">
+  <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+<!-- SQL Sync modal -->
+<div id="sql-modal" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.75);align-items:center;justify-content:center" onclick="if(event.target===this)closeSqlSync()">
+  <div style="background:#0d1117;border:1px solid #30363d;border-radius:10px;width:min(860px,95vw);max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:16px 20px;border-bottom:1px solid #21262d;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#e6edf3">🔄 Sync Accepted Scripts → Supabase</div>
+        <div style="font-size:11px;color:#8b949e;margin-top:3px">Paste this SQL into Supabase → SQL Editor → New query → Run</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="copySql()" style="background:#7c3aed;color:#fff;border:none;font-size:12px;font-weight:700;padding:6px 14px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif" id="sql-copy-btn">📋 Copy SQL</button>
+        <button onclick="closeSqlSync()" style="background:#21262d;color:#8b949e;border:1px solid #30363d;font-size:12px;padding:6px 12px;border-radius:5px;cursor:pointer;font-family:'Inter',sans-serif">✕</button>
+      </div>
+    </div>
+    <pre id="sql-body" style="flex:1;overflow-y:auto;padding:16px 20px;font-size:12px;font-family:'SF Mono',monospace;color:#e6edf3;line-height:1.7;white-space:pre-wrap;margin:0;user-select:all;-webkit-user-select:all" onclick="this.focus();document.execCommand('selectAll')"></pre>
+  </div>
+</div>
 
 <!-- Deliverable overlay -->
 <div id="deliver-overlay" style="display:none;position:fixed;inset:0;z-index:9999;background:#f8f8f5;overflow-y:auto">
@@ -314,6 +357,7 @@ details.rw-hist-details[open] summary{color:#a78bfa}
     <div class="dv-topbar-right">
       <button class="dv-btn" onclick="copyAllScripts()">📋 Copy All</button>
       <button class="dv-btn" onclick="window.print()">🖨 Print / PDF</button>
+      <button class="dv-btn dv-sync" onclick="openSqlSync()">🔄 Sync to App</button>
       <button class="dv-btn dv-close" onclick="closeDeliverable()">✕ Close</button>
     </div>
   </div>
@@ -677,27 +721,28 @@ to:'0:00 "GHL features ranked by ROI: S-tier to skip-for-now" | 0:44 "Save this 
 en:"5.5/10 — confident and opinionated. Picks up pace slightly on B/C/skip tiers.",enN:5.5,
 fw:"Ava TOFU · Hook Point: Authority/Credibility + FOMO · Hormozi: Prioritize the highest-ROI actions before anything else"},
 
-{n:18,w:3,d:"Thursday",t:"Oscar HVAC: Before & After",l:"BOFU",f:"F4",fn:"Build-in-Public / Client B&A",cta:"Follow",ask:0,blk:false,bn:null,
+{n:18,w:3,d:"Thursday",t:"Client B&A: [CLIENT NAME]",l:"BOFU",f:"F4",fn:"Build-in-Public / Client B&A",cta:"Follow",ask:0,blk:true,
+bn:"⚠️ NEEDS ANDREW'S OWN CLIENT STORY. The original 'Oscar HVAC' case study is an Agentic Society client — Andrew can't claim that setup. Ask Andrew: do you have a real client (any niche) whose GHL setup produced measurable results? Get their name, before-state, 3 things you set up, and specific results (reviews, follow-up rate, etc.). Replace all [BRACKETS] with that real story before filming.",
 rh:"@theaustinschneider",ru:"https://www.instagram.com/reel/DWHgTmhgbub/",rs:"11.8×",
-rn:"Client transformation story — specific person, specific problem, specific result.",
-hook:"Oscar runs an HVAC company. When I first set up his GHL account, he had zero Google reviews, manual follow-up on every lead, and no system for onboarding new customers. Here's where he is now.",
+rn:"Client transformation story — specific person, specific problem, specific result. THIS MUST BE ANDREW'S OWN CLIENT.",
+hook:"[CLIENT NAME] runs a [NICHE] company. When I first set up their GHL account, they had [BEFORE STATE]. Here's where they are now.",
 secs:[
-["0:00","HOOK","Oscar runs an HVAC company. When I first set up his GHL account, he had zero Google reviews, manual follow-up on every lead, and no system for onboarding new customers. Here's where he is now."],
+["0:00","HOOK","[CLIENT NAME] runs a [NICHE] company. When I first set up their GHL account, they had [BEFORE STATE — e.g., zero Google reviews, manual follow-up on every lead, no system for onboarding]. Here's where they are now."],
 ["0:13","THREE THINGS WE SET UP","We set up three things."],
-["0:15","SETUP 1","First: missed call text-back, so every unanswered call triggered a follow-up text within 60 seconds. No more lost leads because someone didn't pick up."],
-["0:23","SETUP 2","Second: a review request automation that fired 48 hours after every completed job. SMS first, follow-up email three days later if no response."],
-["0:31","SETUP 3","Third: a client onboarding pipeline so every new customer got a welcome message, their appointment confirmed, and a check-in call scheduled after the job."],
-["0:40","RESULTS","Within 90 days, his Google rating went from 3.8 to 4.7 stars. His lead follow-up rate hit 100%. His team stopped managing individual follow-ups manually entirely."],
-["0:50","CLOSE","GHL didn't change his trade. It changed everything that happened around it."],
+["0:15","SETUP 1","First: [FIRST THING ANDREW SET UP — e.g., missed call text-back so every unanswered call triggered a follow-up text within 60 seconds]."],
+["0:23","SETUP 2","Second: [SECOND THING — e.g., review request automation that fired 48 hours after every completed job]."],
+["0:31","SETUP 3","Third: [THIRD THING — e.g., client onboarding pipeline so every new customer got a welcome message and appointment confirmation]."],
+["0:40","RESULTS","[SPECIFIC RESULTS — e.g., Within 90 days, their Google rating went from X to Y. Lead follow-up rate hit Z%. Team stopped doing X manually.]"],
+["0:50","CLOSE","GHL didn't change their [TRADE/BUSINESS]. It changed everything that happened around it."],
 ["0:55","CTA","Follow — I share real client setups every week."]
 ],
 hp:"Social Proof + Specificity",
-hpd:"Oscar's name, his niche, and the specific before-state make this feel like a real story, not a case study. The three numbered setups mirror the listicle structure in narrative form. '3.8 to 4.7 stars in 90 days' is the anchor proof.",
-vb:'"Oscar runs an HVAC company." — say it like you\'re introducing a real person. Storytelling pace — noticeably slower than tutorial videos. "GHL didn\'t change his trade. It changed everything that happened around it." — deliver quietly. It\'s a principle.',
-vs:"Talking head, narrative delivery. No screen recording needed. If Andrew has a photo of Oscar or his business (with permission), that's an optional B-roll moment.",
+hpd:"Client's name, niche, and specific before-state make this feel like a real story, not a case study. The three numbered setups mirror the listicle structure in narrative form. Specific numbers (star ratings, % improvement) are the anchor proof. MUST be Andrew's own client story.",
+vb:'"[CLIENT NAME] runs a [NICHE] company." — say it like you\'re introducing a real person. Storytelling pace — noticeably slower than tutorial videos. "GHL didn\'t change their trade. It changed everything that happened around it." — deliver quietly.',
+vs:"Talking head, narrative delivery. No screen recording needed. If Andrew has a photo of the client or their business (with permission), that's an optional B-roll moment.",
 sub:true,subn:"⬜ Check @theaustinschneider's format; does he use B-roll of client business or is it face-only? Note for Andrew's edit brief.",
-to:'0:00 "Oscar HVAC: from 3.8 to 4.7 stars in 90 days with GHL" | 0:55 "Follow @andrewpreneurship →" | End: sassuite.ai',
-en:"5/10 — storytelling mode. Slightly slower pace. Speak about Oscar like someone you respect.",enN:5,
+to:'0:00 "[CLIENT NAME] [NICHE]: from [BEFORE] to [AFTER] in 90 days with GHL" | 0:55 "Follow @andrewpreneurship →" | End: sassuite.ai',
+en:"5/10 — storytelling mode. Slightly slower pace. Speak about the client like someone you respect.",enN:5,
 fw:"Ava BOFU · Hook Point: Social Proof + Specificity · Hormozi: Show the transformation, not the tool"},
 
 {n:19,w:3,d:"Friday",t:"GHL Voice AI Books Appointments",l:"TOFU",f:"F1",fn:"Free-Tool Secret Reveal",cta:"Follow",ask:0,blk:false,bn:null,
@@ -1727,6 +1772,7 @@ function restoreRewrites() {
 
 buildFilters();
 buildGrid();
+document.getElementById('vt-grid').classList.add('active');
 restoreCks();
 restoreNotes();
 // ── KANE + AVA ANALYSIS ──────────────────────────────────────────────────────
@@ -1892,6 +1938,168 @@ function restoreAnalysis() {
   Object.entries(analyses).forEach(([day, data]) => {
     renderAnalysis(Number(day), data);
   });
+}
+
+// ── CALENDAR VIEW ────────────────────────────────────────────────────────────
+function setView(v) {
+  const grid = document.getElementById('grid');
+  const cal = document.getElementById('cal-view');
+  const prog = document.getElementById('prog');
+  const sbar = document.getElementById('sbar');
+  const btnG = document.getElementById('vt-grid');
+  const btnC = document.getElementById('vt-cal');
+  if (v === 'cal') {
+    grid.style.display = 'none';
+    prog.style.display = 'none';
+    sbar.style.display = 'none';
+    cal.style.display = 'block';
+    btnG.classList.remove('active');
+    btnC.classList.add('active');
+    buildCal();
+  } else {
+    grid.style.display = '';
+    prog.style.display = '';
+    sbar.style.display = '';
+    cal.style.display = 'none';
+    btnG.classList.add('active');
+    btnC.classList.remove('active');
+  }
+}
+
+function buildCal() {
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const fc = {F1:'#1e3a5f',F2:'#2d1b4e',F3:'#1a3a2e',F4:'#3a2200',F5:'#1a2a3a'};
+  const lc = {TOFU:'#0d3349',MOFU:'#2d1b4e',BOFU:'#1a2e0d'};
+
+  let html = days.map(d => `<div class="cal-hdr">${d}</div>`).join('');
+
+  // Week 1 starts Monday — pad if needed (all weeks start Mon in this calendar)
+  // D array: n:1=Mon, n:7=Sun, n:8=Mon, etc.
+  const byDay = {};
+  D.forEach(s => { byDay[s.n] = s; });
+
+  // 5 rows × 7 cols = 35 cells; Days 1–30, cells 31–35 empty
+  for (let i = 1; i <= 35; i++) {
+    const s = byDay[i];
+    if (!s) { html += `<div class="cal-cell empty"></div>`; continue; }
+    const isAccepted = !!accepted[s.n];
+    const isBlk = s.blk;
+    const fmtColor = fc[s.f] || '#1a1a2e';
+    const layerColor = lc[s.l] || '#1a1a2e';
+    html += `<div class="cal-cell${isAccepted?' accepted':''}${isBlk?' blk-cell':''}" onclick="jumpToCard(${s.n})">
+      ${isAccepted ? '<div class="cal-dot-ok"></div>' : isBlk ? '<div class="cal-dot-blk"></div>' : ''}
+      <div class="cal-day-num">DAY ${s.n}</div>
+      <div class="cal-title">${escH(s.t)}</div>
+      <div class="cal-badges">
+        <span class="cal-fmt" style="background:${fmtColor};color:#9bb8d4">${s.f}</span>
+        <span class="cal-fmt" style="background:${layerColor};color:#9bb8d4">${s.l}</span>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function jumpToCard(day) {
+  setView('grid');
+  setTimeout(() => {
+    const card = document.querySelector(`.card[data-day="${day}"]`);
+    if (card) {
+      card.scrollIntoView({behavior:'smooth', block:'center'});
+      card.style.outline = '2px solid #7c3aed';
+      setTimeout(() => card.style.outline = '', 1800);
+    }
+  }, 80);
+}
+
+// ── SQL SYNC ─────────────────────────────────────────────────────────────────
+function sqlEsc(str) {
+  if (!str) return '';
+  return str.replace(/'/g, "''");
+}
+
+function buildSyncSQL() {
+  const accepted = JSON.parse(localStorage.getItem('batch03accepted') || '{}');
+  const notes = JSON.parse(localStorage.getItem('batch03notes') || '{}');
+  const days = Object.keys(accepted).map(Number).sort((a,b) => a-b);
+
+  if (!days.length) return '-- No accepted scripts found in localStorage.';
+
+  const BATCH = 'Andrew Batch-03 · 7.23.2026';
+  let sql = '-- Sync accepted scripts from review tool → Supabase\n';
+  sql += '-- Generated: ' + new Date().toLocaleString() + '\n';
+  sql += '-- Paste into: Supabase → SQL Editor → New query → Run\n\n';
+
+  days.forEach(day => {
+    const s = D.find(d => d.n === day);
+    const data = accepted[day];
+    const n = notes[day] || {};
+    if (!s || !data) return;
+
+    // Build filming notes block from accepted filming + sous chef fields
+    let filmingBlock = data.filming || '';
+
+    // Append sous chef fields if filled and not already in filming
+    const scFields = [
+      n.camera    ? '📹 Camera: ' + n.camera : '',
+      n.energy    ? '⚡ Energy: ' + n.energy : '',
+      n.intonation? '🗣 Intonation: ' + n.intonation : '',
+      n.overlays  ? '💬 Text Overlays: ' + n.overlays : '',
+      n.sound     ? '🎵 Sound/Music: ' + n.sound : '',
+      n.hookfmt   ? '🎯 Hook Visual Format: ' + n.hookfmt : '',
+    ].filter(Boolean);
+
+    if (scFields.length) {
+      filmingBlock += (filmingBlock ? '\n\n--- SOUS CHEF PASS ---\n' : '') + scFields.join('\n');
+    }
+
+    sql += `-- DAY ${day}: ${s.t}\n`;
+    sql += `UPDATE scripts SET\n`;
+    sql += `  full_script   = '${sqlEsc(data.script || '')}',\n`;
+    sql += `  editor_notes  = '${sqlEsc(filmingBlock)}',\n`;
+    sql += `  hook          = '${sqlEsc(data.hook || s.hook || '')}',\n`;
+    sql += `  status        = 'Approved'\n`;
+    sql += `WHERE batch = '${BATCH}' AND reel_number = ${day};\n\n`;
+  });
+
+  return sql;
+}
+
+function openSqlSync() {
+  const sql = buildSyncSQL();
+  document.getElementById('sql-body').textContent = sql;
+  document.getElementById('sql-modal').style.display = 'flex';
+}
+
+function closeSqlSync() {
+  document.getElementById('sql-modal').style.display = 'none';
+}
+
+function copySql() {
+  const sql = document.getElementById('sql-body').textContent;
+  if (!sql || sql.startsWith('-- No accepted')) {
+    alert('No accepted scripts found.\n\nMake sure you are running the review tool from the local file (not the GitHub Pages URL) — localStorage is origin-specific.');
+    return;
+  }
+  const btn = document.getElementById('sql-copy-btn');
+  const markCopied = () => { btn.textContent = '✅ Copied!'; setTimeout(() => btn.textContent = '📋 Copy SQL', 1800); };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(sql).then(markCopied).catch(() => fallbackCopySql(sql, markCopied));
+  } else {
+    fallbackCopySql(sql, markCopied);
+  }
+}
+function fallbackCopySql(text, done) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0;width:1px;height:1px';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.select();
+  try { document.execCommand('copy'); done(); }
+  catch(e) { alert('Auto-copy failed. Click inside the SQL box below and press Cmd+A then Cmd+C to copy manually.'); }
+  document.body.removeChild(ta);
 }
 
 // ── DELIVERABLE EXPORT ───────────────────────────────────────────────────────

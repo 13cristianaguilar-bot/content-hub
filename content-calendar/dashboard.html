@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>@agentic.society — Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070708;
+  --surface:#0E0F10;
+  --surface2:#141517;
+  --surface3:#1A1C1F;
+  --line:rgba(255,255,255,0.07);
+  --line2:rgba(255,255,255,0.12);
+  --ink:#F0EDE8;
+  --ink2:#B8B3AB;
+  --ink3:#6E6A64;
+  --blue:#5B8EF0;
+  --blue-glow:rgba(91,142,240,0.25);
+  --blue-dim:rgba(91,142,240,0.12);
+  --amber:#D4883A;
+  --amber-glow:rgba(212,136,58,0.2);
+  --amber-dim:rgba(212,136,58,0.1);
+  --green:#52AE96;
+  --green-glow:rgba(82,174,150,0.2);
+  --green-dim:rgba(82,174,150,0.1);
+  --red:#D95F58;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{font-size:16px;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Manrope',sans-serif;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.5;
+  overflow-x:hidden;
+}
+
+/* ─── HERO ─── */
+.hero{
+  position:relative;
+  padding:72px 48px 64px;
+  overflow:hidden;
+  border-bottom:1px solid var(--line);
+}
+.hero::before{
+  content:'';
+  position:absolute;
+  top:-120px; left:50%; transform:translateX(-50%);
+  width:900px; height:500px;
+  background:radial-gradient(ellipse at center, rgba(91,142,240,0.12) 0%, transparent 70%);
+  pointer-events:none;
+}
+.hero-grid{
+  max-width:1200px; margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:end;
+  gap:48px;
+}
+.hero-eyebrow{
+  font-family:'DM Mono',monospace;
+  font-size:11px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  color:var(--blue);
+  margin-bottom:18px;
+}
+.hero h1{
+  font-family:'Fraunces',serif;
+  font-weight:700;
+  font-size:clamp(40px,6vw,72px);
+  line-height:0.95;
+  letter-spacing:-0.03em;
+  background:linear-gradient(135deg,#F0EDE8 0%,#B8B3AB 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:14px;
+}
+.hero-sub{
+  font-size:15px;
+  color:var(--ink3);
+  font-family:'DM Mono',monospace;
+  letter-spacing:0.04em;
+}
+.hero-badges{
+  display:flex;
+  gap:8px;
+  margin-top:24px;
+  flex-wrap:wrap;
+}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:6px 14px;
+  border-radius:100px;
+  font-family:'DM Mono',monospace;
+  font-size:10.5px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  border:1px solid var(--line2);
+  color:var(--ink2);
+}
+.badge.blue{background:var(--blue-dim);border-color:rgba(91,142,240,0.25);color:var(--blue);}
+.badge.green{background:var(--green-dim);border-color:rgba(82,174,150,0.25);color:var(--green);}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+
+/* Hero stats cluster */
+.hero-stats{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  min-width:360px;
+}
+.hstat{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px 20px;
+  position:relative;
+  overflow:hidden;
+  transition:border-color 0.2s;
+}
+.hstat.featured{
+  grid-column:1/-1;
+  background:linear-gradient(135deg,rgba(91,142,240,0.12) 0%,rgba(91,142,240,0.04) 100%);
+  border-color:rgba(91,142,240,0.35);
+  box-shadow:0 0 40px rgba(91,142,240,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.hstat.featured::after{
+  content:'★  CLEAR WINNER';
+  position:absolute;
+  top:14px; right:16px;
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:0.2em;
+  color:var(--blue);
+  opacity:0.7;
+}
+.hstat-n{
+  font-family:'Fraunces',serif;
+  font-weight:700;
+  font-size:42px;
+  line-height:1;
+  letter-spacing:-0.03em;
+}
+.hstat.featured .hstat-n{
+  font-size:64px;
+  background:linear-gradient(135deg,var(--blue) 0%,#8EB8FF 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.hstat-l{font-size:12px;color:var(--ink3);margin-top:6px;}
+.hstat-d{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);margin-top:3px;}
+
+/* ─── LAYOUT ─── */
+.wrap{max-width:1200px;margin:0 auto;padding:52px 48px 100px;}
+
+/* ─── SECTION HEADERS ─── */
+.section-header{
+  display:flex;
+  align-items:baseline;
+  gap:14px;
+  margin:60px 0 6px;
+}
+.section-num{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:var(--blue);
+  opacity:0.7;
+}
+.section-title{
+  font-family:'Fraunces',serif;
+  font-weight:600;
+  font-size:26px;
+  letter-spacing:-0.02em;
+}
+.section-note{
+  font-size:13px;
+  color:var(--ink3);
+  margin-bottom:20px;
+  margin-top:4px;
+}
+
+/* ─── SPOTLIGHT CARD ─── */
+.spotlight{
+  background:linear-gradient(135deg,rgba(91,142,240,0.1) 0%,rgba(91,142,240,0.03) 60%,transparent 100%);
+  border:1px solid rgba(91,142,240,0.3);
+  border-radius:20px;
+  padding:32px 36px;
+  margin:24px 0 0;
+  position:relative;
+  overflow:hidden;
+}
+.spotlight::before{
+  content:'';
+  position:absolute;
+  top:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(91,142,240,0.5),transparent);
+}
+.spotlight-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:24px;
+  align-items:center;
+}
+.spot-num{
+  font-family:'Fraunces',serif;
+  font-weight:700;
+  font-size:52px;
+  line-height:1;
+  letter-spacing:-0.03em;
+  background:linear-gradient(135deg,var(--blue) 0%,#A8C8FF 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.spot-label{font-size:13px;color:var(--ink2);margin-top:6px;}
+.spot-caption{font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);margin-top:3px;letter-spacing:0.05em;}
+.spot-divider{width:1px;height:70px;background:var(--line2);}
+.spot-icp{
+  grid-column:span 1;
+}
+.icp-label{
+  font-family:'DM Mono',monospace;
+  font-size:10px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:var(--blue);
+  margin-bottom:12px;
+  opacity:0.8;
+}
+.icp-tag{
+  display:inline-block;
+  background:var(--blue-dim);
+  border:1px solid rgba(91,142,240,0.2);
+  border-radius:8px;
+  padding:6px 12px;
+  font-size:12px;
+  color:var(--ink2);
+  margin:3px 3px 3px 0;
+}
+
+/* ─── CARDS ─── */
+.card{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:26px 24px;
+}
+.card + .card{margin-top:12px;}
+
+/* ─── BAR CHARTS ─── */
+.bar-row{
+  display:grid;
+  grid-template-columns:200px 1fr;
+  align-items:center;
+  gap:16px;
+  margin:10px 0;
+}
+.bar-lbl{font-size:12.5px;color:var(--ink2);text-align:right;line-height:1.3;}
+.bar-lbl small{display:block;font-family:'DM Mono',monospace;font-size:10px;color:var(--ink3);margin-top:2px;}
+.track{position:relative;height:28px;display:flex;align-items:center;}
+.fill{
+  height:28px;
+  border-radius:6px;
+  min-width:3px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding-right:10px;
+  transition:width 0.8s cubic-bezier(0.16,1,0.3,1);
+  position:relative;
+}
+.fill.blue{background:linear-gradient(90deg,rgba(91,142,240,0.7),var(--blue));}
+.fill.blue.winner{
+  background:linear-gradient(90deg,rgba(91,142,240,0.8),var(--blue),#8EB8FF);
+  box-shadow:0 0 20px rgba(91,142,240,0.35);
+}
+.fill.amber{background:linear-gradient(90deg,rgba(212,136,58,0.7),var(--amber));}
+.fill .v{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:rgba(0,0,0,0.85);}
+.fill .v.out{position:absolute;left:100%;padding-left:10px;color:var(--ink2);}
+
+/* ─── TABLE ─── */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:700px;}
+th,td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap;}
+th{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink3);font-weight:500;padding-bottom:10px;}
+td:first-child,th:first-child{text-align:left;}
+tbody tr{transition:background 0.15s;}
+tbody tr:hover{background:var(--surface2);}
+tbody tr.winner-row{background:rgba(91,142,240,0.06);}
+tbody tr.winner-row:hover{background:rgba(91,142,240,0.1);}
+.tag{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  padding:3px 9px;
+  border-radius:100px;
+}
+.tag.car{background:var(--blue-dim);color:var(--blue);}
+.tag.reel{background:var(--amber-dim);color:var(--amber);}
+.win-num{
+  color:var(--blue);
+  font-weight:800;
+  font-size:13.5px;
+}
+.muted{color:var(--ink3);}
+.fresh-badge{
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:0.06em;
+  color:var(--ink3);
+  margin-left:6px;
+}
+
+/* ─── FORMAT COMPARE ─── */
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+
+/* ─── INSIGHT CARDS ─── */
+.insights{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-top:20px;}
+.ins{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:20px 22px;
+  position:relative;
+}
+.ins.highlight{
+  background:linear-gradient(135deg,rgba(91,142,240,0.08) 0%,transparent 100%);
+  border-color:rgba(91,142,240,0.25);
+}
+.ins.warn{
+  background:linear-gradient(135deg,rgba(212,136,58,0.06) 0%,transparent 100%);
+  border-color:rgba(212,136,58,0.2);
+}
+.ins.fix{
+  background:linear-gradient(135deg,rgba(217,95,88,0.06) 0%,transparent 100%);
+  border-color:rgba(217,95,88,0.2);
+}
+.ins h3{font-size:14px;font-weight:700;margin:0 0 8px;line-height:1.3;}
+.ins p{font-size:13px;color:var(--ink2);line-height:1.55;}
+.verdict{
+  display:inline-block;
+  font-family:'DM Mono',monospace;
+  font-size:9px;
+  letter-spacing:0.15em;
+  text-transform:uppercase;
+  padding:3px 10px;
+  border-radius:100px;
+  margin-bottom:10px;
+}
+.v-double{background:var(--green-dim);color:var(--green);}
+.v-exp{background:var(--amber-dim);color:var(--amber);}
+.v-fix{background:rgba(217,95,88,0.12);color:var(--red);}
+
+/* ─── LEGEND ─── */
+.legend{display:flex;gap:18px;margin-bottom:18px;font-size:12px;color:var(--ink2);}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:-1px;margin-right:6px;}
+
+/* ─── FOOTER ─── */
+.foot{
+  margin-top:60px;
+  color:var(--ink3);
+  font-size:11px;
+  font-family:'DM Mono',monospace;
+  border-top:1px solid var(--line);
+  padding-top:20px;
+  line-height:1.8;
+}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(16px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.hero{animation:fadeUp 0.5s ease both;}
+.spotlight{animation:fadeUp 0.6s 0.1s ease both;}
+.hstat{animation:fadeUp 0.5s ease both;}
+.hstat:nth-child(1){animation-delay:0.05s;}
+.hstat:nth-child(2){animation-delay:0.1s;}
+.hstat:nth-child(3){animation-delay:0.15s;}
+.hstat:nth-child(4){animation-delay:0.2s;}
+.hstat:nth-child(5){animation-delay:0.25s;}
+
+/* number counter */
+.count{display:inline-block;}
+
+@media(max-width:900px){
+  .hero-grid{grid-template-columns:1fr;gap:32px;}
+  .hero-stats{min-width:0;}
+  .spotlight-grid{grid-template-columns:1fr 1fr;gap:16px;}
+  .spot-divider{display:none;}
+  .cols2{grid-template-columns:1fr;}
+  .wrap{padding:40px 24px 80px;}
+  .hero{padding:48px 24px 44px;}
+  .bar-row{grid-template-columns:130px 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════ HERO ═══ -->
+<div class="hero">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-eyebrow">Instagram Analytics · Agentic Society · Jul 2026</div>
+      <h1>@agentic.society</h1>
+      <div class="hero-sub">173 followers · 9 posts · pulled Jul 15, 2026</div>
+      <div class="hero-badges">
+        <span class="badge blue"><span class="dot"></span>Carousel is the growth engine</span>
+        <span class="badge green"><span class="dot"></span>ICP confirmed · 35–44 Austin owner</span>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat featured">
+        <div class="hstat-n count" data-target="1157">0</div>
+        <div class="hstat-l">Best post reach — "40 Austin owners" carousel</div>
+        <div class="hstat-d">Jul 7 · 6 follows · 32 profile visits · 13 shares</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n count" data-target="6">0</div>
+        <div class="hstat-l">New follows from carousel</div>
+        <div class="hstat-d">Only format driving follower growth</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n count" data-target="82">0</div>
+        <div class="hstat-l">Total interactions</div>
+        <div class="hstat-d">Likes + comments + saves + shares</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n">86%</div>
+        <div class="hstat-l">US audience</div>
+        <div class="hstat-d">Austin = 34% of all reach</div>
+      </div>
+      <div class="hstat">
+        <div class="hstat-n">72%</div>
+        <div class="hstat-l">Male audience</div>
+        <div class="hstat-d">Across reach + follows</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- ═══ ICP SPOTLIGHT ═══ -->
+<div class="spotlight">
+  <div class="section-num" style="margin-bottom:16px;display:block;">ICP CONFIRMED</div>
+  <div class="spotlight-grid">
+    <div>
+      <div class="spot-num count" data-target="35">0</div><span class="spot-num">–44</span>
+      <div class="spot-label">Primary age bracket</div>
+      <div class="spot-caption">Highest follows + engagement rate</div>
+    </div>
+    <div class="spot-divider"></div>
+    <div>
+      <div class="spot-num">Austin</div>
+      <div class="spot-label">Top city by reach</div>
+      <div class="spot-caption">148 of 1,057 unique accounts</div>
+    </div>
+    <div class="spot-icp">
+      <div class="icp-label">Your buyer profile</div>
+      <span class="icp-tag">Male</span>
+      <span class="icp-tag">Business owner</span>
+      <span class="icp-tag">Austin, TX</span>
+      <span class="icp-tag">35–44</span>
+      <span class="icp-tag">AI-curious operator</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 01 · REACH ═══ -->
+<div class="section-header">
+  <span class="section-num">01</span>
+  <span class="section-title">Post Performance</span>
+</div>
+<p class="section-note">Unique accounts reached, sorted by impact. Fresh posts (Jul 14–15) are marked — numbers are age, not quality.</p>
+
+<div class="card">
+  <div id="reachChart"></div>
+</div>
+
+<div style="margin-top:16px;">
+  <div class="card scroll">
+    <table>
+      <thead><tr>
+        <th>Post</th><th>Type</th><th>Reach</th><th>Views</th><th>Likes</th><th>Cmt</th><th>Saves</th><th>Shares</th><th>Interactions</th><th>Profile visits</th><th>Follows</th><th>Watch avg</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ 02 · FORMAT ═══ -->
+<div class="section-header">
+  <span class="section-num">02</span>
+  <span class="section-title">Format Verdict</span>
+</div>
+<p class="section-note">Averages across posts with mature data. Carousels outperform on every axis that matters.</p>
+
+<div class="cols2">
+  <div class="card">
+    <div class="legend">
+      <span><i style="background:var(--blue)"></i>Carousel</span>
+      <span><i style="background:var(--amber)"></i>Reel</span>
+    </div>
+    <div id="formatChart"></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px;">
+    <div class="ins highlight">
+      <span class="verdict v-double">Double down</span>
+      <h3>Member-win carousels are the growth engine</h3>
+      <p>Avg reach 493, top 1,157. Only format that drives follows-from-post (7 total). Repeat monthly with fresh wins.</p>
+    </div>
+    <div class="ins highlight">
+      <span class="verdict v-double">Keep going</span>
+      <h3>Named member-build Reels</h3>
+      <p>Zoom-clone = 734 reach. Sagun = 32s avg watch. Person + build + number is the winning Reel formula.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 03 · AUDIENCE ═══ -->
+<div class="section-header">
+  <span class="section-num">03</span>
+  <span class="section-title">Who You Reach vs Who Follows</span>
+</div>
+<p class="section-note">25–34 sees you. 35–44 follows you. Write for the older, local operator — they convert.</p>
+
+<div class="card">
+  <div class="legend">
+    <span><i style="background:var(--blue)"></i>Reached this month</span>
+    <span><i style="background:var(--amber)"></i>Followers</span>
+  </div>
+  <div id="ageChart"></div>
+</div>
+
+<div class="cols2" style="margin-top:16px;">
+  <div>
+    <div class="card">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;">Top Cities (Reached)</div>
+      <div id="cityChart"></div>
+    </div>
+  </div>
+  <div>
+    <div class="card">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;">Country + Gender</div>
+      <div id="countryChart"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 04 · THE READ ═══ -->
+<div class="section-header">
+  <span class="section-num">04</span>
+  <span class="section-title">The Read</span>
+</div>
+
+<div class="insights">
+  <div class="ins highlight">
+    <h3>🏆 Winners carousel = follower engine</h3>
+    <p>"40 Austin owners" — 1,157 reach, 32 profile visits, <strong>6 follows</strong>, 13 shares. 2× everything else. Run this monthly with fresh wins.</p>
+  </div>
+  <div class="ins highlight">
+    <h3>🎯 Your buyer is a 35–44 Austin male owner</h3>
+    <p>Reach skews 25–34, but follows and engagement skew 35–44. Write to the local, established operator. They convert.</p>
+  </div>
+  <div class="ins fix">
+    <span class="verdict v-fix">Fix</span>
+    <h3>0 link-in-bio taps · 28 days</h3>
+    <p>DMs are flowing but web traffic is zero. Add a link-sticker in Stories or a "link in bio" CTA slide on the next carousel.</p>
+  </div>
+  <div class="ins warn">
+    <span class="verdict v-exp">Experiment</span>
+    <h3>Sagun reel — 32s watch, 139 reach</h3>
+    <p>Best watch time of any post. Weak distribution. Re-cut with a harder 2-second hook and repost to unlock the algorithm.</p>
+  </div>
+  <div class="ins warn">
+    <span class="verdict v-exp">Give it time</span>
+    <h3>5 Levels carousel</h3>
+    <p>Only 85 reach but strong per-view engagement. Posted Jul 14 — too fresh. Let it mature before judging.</p>
+  </div>
+  <div class="ins">
+    <h3>📅 The repeatable week</h3>
+    <p>Mon = member-win carousel · Wed = member-build Reel · Fri = explore slot. Two proven templates on rotation.</p>
+  </div>
+</div>
+
+<div class="foot">
+  Source: Instagram Graph API via Composio · @agentic.society (Business · ID 28530841119851283)<br>
+  Per-post = lifetime metrics · demographics = this-month · account activity = trailing 28 days · Refreshed Jul 15, 2026
+</div>
+</div>
+
+<script>
+const POSTS = [
+  {d:"07-07",t:"car",name:"40 Austin owners (winners lineup)",reach:1157,views:2060,likes:54,cmt:6,save:5,shr:13,int:84,pvis:32,fol:6,watch:null,fresh:false},
+  {d:"07-09",t:"reel",name:"He cloned Zoom (Justin)",reach:734,views:977,likes:29,cmt:3,save:7,shr:7,int:50,pvis:null,fol:null,watch:16.3,fresh:false},
+  {d:"07-04",t:"reel",name:"POV: the mastermind",reach:326,views:508,likes:18,cmt:3,save:2,shr:3,int:27,pvis:null,fol:null,watch:8.3,fresh:false},
+  {d:"07-14",t:"car",name:"He built one AI agent (Oscar)",reach:238,views:416,likes:9,cmt:1,save:0,shr:2,int:16,pvis:4,fol:1,watch:null,fresh:true},
+  {d:"07-14",t:"reel",name:"Follow @agentic.society",reach:151,views:190,likes:5,cmt:0,save:0,shr:0,int:6,pvis:null,fol:null,watch:5.5,fresh:true},
+  {d:"07-07",t:"reel",name:"He gets 3M views/mo (Sagun)",reach:139,views:223,likes:22,cmt:4,save:7,shr:8,int:43,pvis:null,fol:null,watch:32.1,fresh:false},
+  {d:"07-14",t:"car",name:"The 5 Levels of AI Building",reach:85,views:239,likes:17,cmt:1,save:2,shr:1,int:22,pvis:5,fol:0,watch:null,fresh:true},
+  {d:"07-15",t:"reel",name:"Being part of a room",reach:15,views:68,likes:1,cmt:0,save:0,shr:0,int:2,pvis:null,fol:null,watch:11.3,fresh:true},
+];
+
+const fmt = v => v == null ? "—" : v.toLocaleString();
+
+// ── animated counters ──
+function animateCount(el, target, duration=1200){
+  const start = performance.now();
+  const isInt = Number.isInteger(target);
+  const step = ts => {
+    const p = Math.min((ts - start) / duration, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = isInt
+      ? Math.round(ease * target).toLocaleString()
+      : (ease * target).toFixed(1);
+    if(p < 1) requestAnimationFrame(step);
+    else el.textContent = isInt ? target.toLocaleString() : target.toFixed(1);
+  };
+  requestAnimationFrame(step);
+}
+
+// ── reach chart ──
+(function(){
+  const max = Math.max(...POSTS.map(p=>p.reach));
+  document.getElementById("reachChart").innerHTML = POSTS.map(p=>{
+    const w = Math.max(2, p.reach/max*100);
+    const inside = w > 16;
+    const isWinner = p.reach === 1157;
+    return `<div class="bar-row">
+      <div class="bar-lbl">${p.name}<small>${p.d} · ${p.t==='car'?'Carousel':'Reel'}${p.fresh?' · fresh':''}</small></div>
+      <div class="track">
+        <div class="fill ${p.t==='car'?'blue':'amber'}${isWinner?' winner':''}" style="width:${w}%">
+          ${inside?`<span class="v">${fmt(p.reach)}</span>`:''}
+        </div>
+        ${!inside?`<span class="v out">${fmt(p.reach)}</span>`:''}
+      </div>
+    </div>`;
+  }).join("");
+})();
+
+// ── table ──
+document.getElementById("tbody").innerHTML = POSTS.map(p=>`<tr class="${p.reach===1157?'winner-row':''}">
+  <td>${p.name}${p.fresh?'<span class="fresh-badge">· fresh</span>':''}</td>
+  <td><span class="tag ${p.t}">${p.t==='car'?'Carousel':'Reel'}</span></td>
+  <td class="${p.reach===1157?'win-num':''}">${fmt(p.reach)}</td>
+  <td>${fmt(p.views)}</td><td>${fmt(p.likes)}</td><td>${fmt(p.cmt)}</td>
+  <td>${fmt(p.save)}</td><td>${fmt(p.shr)}</td><td>${fmt(p.int)}</td>
+  <td>${fmt(p.pvis)}</td><td>${fmt(p.fol)}</td>
+  <td>${p.watch?p.watch+'s':'—'}</td>
+</tr>`).join("");
+
+// ── format compare ──
+(function(){
+  const rows=[
+    ["Avg reach","493","273"],
+    ["Avg views","905","393"],
+    ["Avg interactions","41","26"],
+    ["Follows generated","7 total","n/a"]
+  ];
+  const max = 905;
+  document.getElementById("formatChart").innerHTML = rows.map(([lbl,c,r])=>{
+    const cval = parseFloat(c)||0, rval = parseFloat(r)||0;
+    const cw = Math.max(2, cval/max*100), rw = rval>0?Math.max(2,rval/max*100):0;
+    return `
+    <div style="font-size:12px;color:var(--ink3);margin:14px 0 6px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.05em;">${lbl}</div>
+    <div class="bar-row" style="grid-template-columns:1fr;margin:3px 0">
+      <div class="track"><div class="fill blue" style="width:${cw}%"><span class="v">${c}</span></div></div>
+    </div>
+    <div class="bar-row" style="grid-template-columns:1fr;margin:3px 0 10px">
+      <div class="track"><div class="fill amber" style="width:${rw}%">${rw>5?`<span class="v">${r}</span>`:''}</div>${rw<=5||isNaN(rval)?`<span class="v out">${r}</span>`:''}</div>
+    </div>`;
+  }).join("");
+})();
+
+// ── age chart ──
+(function(){
+  const data=[["25–34",499,59],["35–44",246,91],["18–24",151,2],["45–54",47,17],["55–64",9,1],["65+",6,1]];
+  const max = Math.max(...data.flatMap(d=>[d[1],d[2]]));
+  document.getElementById("ageChart").innerHTML = data.map(([a,reached,fol])=>{
+    const rw=Math.max(2,reached/max*100), fw=Math.max(2,fol/max*100);
+    const isICP = a === "35–44";
+    return `<div class="bar-row" style="${isICP?'opacity:1':'opacity:0.75'}">
+      <div class="bar-lbl">${a}${isICP?' <span style="color:var(--blue);font-size:10px;">★</span>':''}</div>
+      <div>
+        <div class="track" style="margin-bottom:3px">
+          <div class="fill blue" style="width:${rw}%"><span class="v">${reached}</span></div>
+        </div>
+        <div class="track">
+          <div class="fill amber" style="width:${fw}%">${fw>8?`<span class="v">${fol}</span>`:''}</div>
+          ${fw<=8?`<span class="v out">${fol}</span>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+})();
+
+// ── city chart ──
+(function(){
+  const data=[["Austin, TX",148],["Houston, TX",19],["Dallas, TX",16],["New York, NY",15],["Bangalore, IN",13],["Chennai, IN",12],["Melbourne, AU",11]];
+  const max = data[0][1];
+  document.getElementById("cityChart").innerHTML = data.map(([c,v])=>{
+    const w=Math.max(2,v/max*100), inside=w>16;
+    const isTop = c==="Austin, TX";
+    return `<div class="bar-row" style="grid-template-columns:130px 1fr;${isTop?'':'opacity:0.7'}">
+      <div class="bar-lbl">${c}</div>
+      <div class="track"><div class="fill blue" style="width:${w}%">${inside?`<span class="v">${v}</span>`:''}</div>${!inside?`<span class="v out">${v}</span>`:''}</div>
+    </div>`;
+  }).join("");
+})();
+
+// ── country + gender ──
+(function(){
+  const countries=[["🇺🇸 United States",641],["🇮🇳 India",90],["🇨🇦 Canada",46],["🇦🇺 Australia",25],["🇬🇧 United Kingdom",19]];
+  const max=countries[0][1];
+  let html=countries.map(([c,v])=>{
+    const w=Math.max(2,v/max*100),inside=w>14;
+    return `<div class="bar-row" style="grid-template-columns:130px 1fr">
+      <div class="bar-lbl">${c}</div>
+      <div class="track"><div class="fill blue" style="width:${w}%">${inside?`<span class="v">${v}</span>`:''}</div>${!inside?`<span class="v out">${v}</span>`:''}</div>
+    </div>`;
+  }).join("");
+  html+=`<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink3);margin:20px 0 10px;">Gender (reached)</div>`;
+  const g=[["Male",690],["Female",135],["Undisclosed",133]];
+  html+=g.map(([c,v])=>{
+    const w=Math.max(2,v/690*100),inside=w>16;
+    return `<div class="bar-row" style="grid-template-columns:130px 1fr">
+      <div class="bar-lbl">${c}</div>
+      <div class="track"><div class="fill ${c==='Male'?'blue':'amber'}" style="width:${w}%">${inside?`<span class="v">${v}</span>`:''}</div>${!inside?`<span class="v out">${v}</span>`:''}</div>
+    </div>`;
+  }).join("");
+  document.getElementById("countryChart").innerHTML = html;
+})();
+
+// ── run counters on load ──
+window.addEventListener('load', ()=>{
+  document.querySelectorAll('.count[data-target]').forEach(el=>{
+    const target = parseFloat(el.dataset.target);
+    animateCount(el, target, 1400);
+  });
+});
+</script>
+</body>
+</html>

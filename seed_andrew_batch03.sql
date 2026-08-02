@@ -392,30 +392,30 @@ $q$HOOKPOINT SPEC: Authority/Credibility + FOMO. Tier list is opinionated — vi
 'Andrew Batch-03 · 7.23.2026', 17),
 
 -- ─── DAY 18 ──────────────────────────────────────────────────────────────────
+-- ⚠️ BLOCKED — Oscar HVAC is an Agentic Society client, not Andrew's. Replace with Andrew's own client B&A before filming.
 ('andrew',
-'Oscar HVAC: Before and After',
+'Client B&A: [CLIENT NAME] — NEEDS ANDREW INPUT',
 'F4 — Build-in-Public',
-'Needs Review',
-$q$Oscar runs an HVAC company. When I first set up his GHL account, he had zero Google reviews, manual follow-up on every lead, and no system for onboarding new customers. Here's where he is now.$q$,
-$q$[0:00] Oscar runs an HVAC company. When I first set up his GHL account, he had zero Google reviews, manual follow-up on every lead, and no system for onboarding new customers. Here's where he is now.
+'Draft',
+$q$[CLIENT NAME] runs a [NICHE] company. When I first set up their GHL account, they had [BEFORE STATE]. Here's where they are now.$q$,
+$q$⚠️ BLOCKED — This script needs Andrew's own real client story.
 
+Ask Andrew: Do you have a client (any niche) whose GHL setup produced measurable results?
+Get: Client name + niche, before-state (what was broken), 3 things you set up, specific results (star ratings, follow-up rate, revenue, etc.)
+
+Template:
+[0:00] [CLIENT NAME] runs a [NICHE] company. When I first set up their GHL account, they had [BEFORE STATE]. Here's where they are now.
 [0:13] We set up three things.
-
-[0:15] First: missed call text-back, so every unanswered call triggered a follow-up text within 60 seconds. No more lost leads because someone didn't pick up.
-
-[0:23] Second: a review request automation that fired 48 hours after every completed job. SMS first, follow-up email three days later if no response.
-
-[0:31] Third: a client onboarding pipeline so every new customer got a welcome message, their appointment confirmed, and a check-in call scheduled after the job.
-
-[0:40] Within 90 days, his Google rating went from 3.8 to 4.7 stars. His lead follow-up rate hit 100%. His team stopped managing individual follow-ups manually entirely.
-
-[0:50] GHL didn't change his trade. It changed everything that happened around it.
-
+[0:15] First: [SETUP 1]
+[0:23] Second: [SETUP 2]
+[0:31] Third: [SETUP 3]
+[0:40] [SPECIFIC RESULTS]
+[0:50] GHL didn't change their [TRADE]. It changed everything that happened around it.
 [0:55] Follow — I share real client setups every week.$q$,
 'https://www.instagram.com/reel/DWHgTmhgbub/',
 'Camera A',
 'Follow',
-$q$HOOKPOINT SPEC: Social Proof + Specificity. Oscar's name, niche, and specific before-state make it feel real. VERBAL: Storytelling pace — noticeably slower than tutorial videos. "Oscar runs an HVAC company." — say it like introducing a real person. "GHL didn't change his trade. It changed everything that happened around it." — deliver quietly; it's a principle, not a stat. VISUAL: Talking head, narrative delivery. Optional: photo of Oscar's business if available (with permission). Check @theaustinschneider raw filming style. TEXT OVERLAY: 0:00 "Oscar HVAC: from 3.8 to 4.7 stars in 90 days with GHL" | 0:55 "Follow @andrewpreneurship →" | End: sassuite.ai. ENERGY: 5/10 — storytelling mode, slightly slower. FRAMEWORK: Ava BOFU · Hook Point: Social Proof + Specificity · Hormozi: Show the transformation, not the tool$q$,
+$q$HOOKPOINT SPEC: Social Proof + Specificity. BLOCKED until Andrew confirms a real client story. Oscar HVAC belongs to Agentic Society — do not film with that name. Format reference: @theaustinschneider. ENERGY: 5/10 storytelling pace.$q$,
 'Andrew Batch-03 · 7.23.2026', 18),
 
 -- ─── DAY 19 ──────────────────────────────────────────────────────────────────

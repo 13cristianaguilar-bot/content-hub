@@ -68,6 +68,11 @@ let mySlug   = null;   // 'andrew' | 'jan' (clients only)
 let scripts  = [];
 let viewSlug = 'andrew';
 let viewStatus = 'all';
+let viewMode = 'testing'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
+                           // to 'testing' so anyone logging in sees the active A/B/C tests
+                           // first, not buried in the backlog. Falls back to 'all' automatically
+                           // if a client has no multi-take groups yet.
+let activeTake = {};   // groupKey -> index of the currently-shown take within a group
 
 // ─────────────────────────────────────────────
 // INIT
@@ -178,19 +183,35 @@ async function doLogin() {
 }
 
 // ─────────────────────────────────────────────
+// TAKE GROUPING — rows sharing (client_slug, batch, reel_number) are "takes" of one
+// script, shown as one card with a tab-switcher. A group of 1 renders exactly like a
+// plain card always has — this is the backward-compatible default for every existing
+// row (Jan's cards, any Andrew day without multiple takes).
+// ─────────────────────────────────────────────
+function takeGroupKey(s) {
+  return `${s.client_slug}__${s.batch}__${s.reel_number}`;
+}
+
+function groupIntoTakes(list) {
+  const groups = {};
+  const order = [];
+  list.forEach(s => {
+    const key = takeGroupKey(s);
+    if (!groups[key]) { groups[key] = []; order.push(key); }
+    groups[key].push(s);
+  });
+  // Within a group, order by take_label so 'Take A' < 'Take B' < 'Take C' when present.
+  order.forEach(key => groups[key].sort((a, b) => (a.take_label || '').localeCompare(b.take_label || '')));
+  return order.map(key => groups[key]);
+}
+
+window.setTake = (groupKey, idx) => { activeTake[groupKey] = idx; renderDash(); };
+
+// ─────────────────────────────────────────────
 // RENDER DASHBOARD
 // ─────────────────────────────────────────────
 function renderDash() {
   const isAdmin  = role === 'admin';
-  const filtered = scripts
-    .filter(s => s.client_slug === viewSlug)
-    .filter(s => viewStatus === 'all' || s.status === viewStatus);
-
-  const countByStatus = {};
-  scripts.filter(s => s.client_slug === viewSlug).forEach(s => {
-    countByStatus[s.status] = (countByStatus[s.status] || 0) + 1;
-  });
-  const totalForView = scripts.filter(s => s.client_slug === viewSlug).length;
 
   // Client tabs (admin only)
   const clientTabs = isAdmin ? Object.entries(CLIENTS).map(([slug, c]) =>
@@ -201,6 +222,20 @@ function renderDash() {
       ${c.label}
     </button>`
   ).join('') : '';
+
+  // Script cards — group all of this client's scripts into takes FIRST (so a group is
+  // never split across the status filter), then apply the testing/all mode filter, then
+  // the status filter. Status-tab counts below are scoped to the CURRENT mode, so a
+  // "Needs Review 34" count doesn't show while looking at a 3-item testing view.
+  const allGroups = groupIntoTakes(scripts.filter(s => s.client_slug === viewSlug));
+  const testingGroups = allGroups.filter(g => g.length > 1);
+  const effectiveMode = (viewMode === 'testing' && testingGroups.length === 0) ? 'all' : viewMode;
+  const modeFilteredGroups = effectiveMode === 'testing' ? testingGroups : allGroups;
+  const modeFilteredRows = modeFilteredGroups.flat();
+
+  const countByStatus = {};
+  modeFilteredRows.forEach(s => { countByStatus[s.status] = (countByStatus[s.status] || 0) + 1; });
+  const totalForView = modeFilteredRows.length;
 
   // Status tabs
   const statusTabs = ['all', ...STATUS_ORDER].map(s => {
@@ -215,9 +250,30 @@ function renderDash() {
     </button>`;
   }).join('');
 
-  // Script cards
-  const cards = filtered.length
-    ? filtered.map(renderCard).join('')
+  const visibleGroups = modeFilteredGroups.filter(g =>
+    viewStatus === 'all' || g.some(s => s.status === viewStatus)
+  );
+
+  // Mode toggle — "In Testing" is the default landing view so the active A/B/C scripts
+  // are the first thing anyone sees, with the full backlog one click away, not mixed in.
+  const modeTabs = testingGroups.length ? `
+    <div class="flex gap-2 mb-3">
+      <button onclick="setMode('testing')"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'testing'
+          ? 'bg-violet-600 text-white'
+          : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
+        🧪 In Testing <span class="opacity-70">${testingGroups.length}</span>
+      </button>
+      <button onclick="setMode('all')"
+        class="px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'all'
+          ? 'bg-slate-800 text-white'
+          : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
+        📋 All Scripts <span class="opacity-70">${allGroups.length}</span>
+      </button>
+    </div>` : '';
+
+  const cards = visibleGroups.length
+    ? visibleGroups.map(renderCardGroup).join('')
     : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
 
   const clientName = CLIENTS[viewSlug]?.name || viewSlug;
@@ -236,6 +292,7 @@ function renderDash() {
           </button>
         </div>
         ${isAdmin ? `<div class="flex gap-2 mb-3">${clientTabs}</div>` : ''}
+        ${modeTabs}
         <div class="flex gap-2 overflow-x-auto no-scrollbar">${statusTabs}</div>
       </div>
 
@@ -246,7 +303,12 @@ function renderDash() {
     </div>`;
 }
 
-function renderCard(s) {
+function renderCardGroup(group) {
+  const hasTakes = group.length > 1;
+  const groupKey = takeGroupKey(group[0]);
+  const idx = hasTakes ? (activeTake[groupKey] ?? 0) % group.length : 0;
+  const s = group[idx];
+
   const statusStyle = STATUS_STYLE[s.status] || STATUS_STYLE['Draft'];
   const formatStyle = FORMAT_STYLE[s.format] || 'bg-slate-100 text-slate-500';
   const needsReview = s.status === 'Needs Review';
@@ -259,8 +321,28 @@ function renderCard(s) {
   const ctaClean = !s.cta || s.cta.toLowerCase().includes('none') || s.cta.toLowerCase().includes('clean');
   const ctaLabel = ctaClean ? null : s.cta.replace(/^comment\s*/i,'').split(/\s/)[0];
 
+  // Sous Chef Pass — the 7-field reference-reel breakdown. Stored once per take-group (not
+  // duplicated on every row), so look it up from whichever row actually has it.
+  const sousChefSource = group.find(g => g.sous_chef_pass);
+  const sousChef = sousChefSource ? sousChefSource.sous_chef_pass : null;
+  const sousChefGroupKey = `sc-${groupKey}`;
+
+  // Take tabs — only rendered when this group actually has more than one take. A group
+  // of 1 (every existing row today) renders with zero visual change from before.
+  const takeTabs = hasTakes ? `
+    <div class="flex gap-1.5 px-4 pt-4 pb-1 flex-wrap">
+      ${group.map((g, i) => `
+        <button onclick="window.setTake('${groupKey}', ${i})"
+          class="px-3 py-1 rounded-full text-xs font-semibold transition-all ${i === idx
+            ? 'bg-slate-800 text-white'
+            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
+          ${g.take_label || `Take ${String.fromCharCode(65 + i)}`}
+        </button>`).join('')}
+    </div>` : '';
+
   return `
   <div class="bg-white rounded-2xl border ${needsReview ? 'border-yellow-200' : 'border-slate-100'} shadow-sm overflow-hidden">
+    ${takeTabs}
 
     <!-- Header -->
     <div class="px-4 pt-4 pb-3">
@@ -319,6 +401,24 @@ function renderCard(s) {
       </div>` : ''}
     </div>
 
+    <!-- Sous Chef Pass — optional, collapsed by default. One per take-group, not per take,
+         since it's a breakdown of the reference reel, which is the same across all takes. -->
+    ${sousChef ? `
+    <button onclick="toggle('${sousChefGroupKey}')"
+      class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
+      <span class="font-medium">Sous Chef Pass — reference reel breakdown</span>
+      <span id="chev-${sousChefGroupKey}" class="text-slate-300">▸</span>
+    </button>
+    <div id="exp-${sousChefGroupKey}" class="hidden border-t border-slate-100 px-4 py-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        ${Object.entries(sousChef).map(([label, text]) => `
+        <div class="bg-violet-50 border border-violet-100 rounded-xl p-3">
+          <div class="text-[10px] font-semibold text-violet-500 uppercase tracking-widest mb-1.5">${escHtml(label)}</div>
+          <div class="text-xs text-violet-900 leading-relaxed">${escHtml(text)}</div>
+        </div>`).join('')}
+      </div>
+    </div>` : ''}
+
     <!-- Action buttons -->
     <div class="px-4 pb-4 pt-3 border-t border-slate-100">
       ${needsReview ? `
@@ -345,6 +445,7 @@ function renderCard(s) {
 // ─────────────────────────────────────────────
 window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; renderDash(); };
+window.setMode     = m    => { viewMode = m; viewStatus = 'all'; renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
 window.doLogout    = () => sb.auth.signOut();
 

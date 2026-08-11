@@ -457,6 +457,12 @@ window.toggle = id => {
 };
 
 function escHtml(str) {
+  // Defensive: a field value that isn't a plain string (e.g. a list/object from a jsonb
+  // column) must never crash the whole render. One bad field should degrade gracefully
+  // (shown as its JSON form) instead of taking down every card on the page -- this exact
+  // failure mode happened for real (Day 26's "overlays" field was a list, not a string).
+  if (str == null) return '';
+  if (typeof str !== 'string') { try { str = JSON.stringify(str); } catch (e) { str = String(str); } }
   return str
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')

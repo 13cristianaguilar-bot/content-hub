@@ -440,6 +440,18 @@ function renderCardGroup(group) {
         <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">THE HOOK</div>
         <div class="text-sm text-slate-800 font-medium leading-relaxed">"${escHtml(s.hook)}"</div>
       </div>` : ''}
+
+      <!-- Hook Direction — always visible, never collapsed, since this is what actually
+           matters most for filming (per direct client feedback: the hook is "so so so
+           important," the generic filming-notes section is not). -->
+      ${s.hook_direction ? `
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        ${Object.entries(s.hook_direction).map(([label, text]) => `
+        <div class="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
+          <div class="text-[9px] font-semibold text-emerald-600 uppercase tracking-widest mb-1">${escHtml(label)}</div>
+          <div class="text-[11px] text-emerald-900 leading-snug">${escHtml(text)}</div>
+        </div>`).join('')}
+      </div>` : ''}
     </div>
 
     <!-- Ref + Camera -->

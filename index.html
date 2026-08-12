@@ -441,16 +441,29 @@ function renderCardGroup(group) {
         <div class="text-sm text-slate-800 font-medium leading-relaxed">"${escHtml(s.hook)}"</div>
       </div>` : ''}
 
-      <!-- Hook Direction — always visible, never collapsed, since this is what actually
-           matters most for filming (per direct client feedback: the hook is "so so so
-           important," the generic filming-notes section is not). -->
-      ${s.hook_direction ? `
-      <div class="grid grid-cols-2 gap-2 mt-2">
-        ${Object.entries(s.hook_direction).map(([label, text]) => `
-        <div class="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
-          <div class="text-[9px] font-semibold text-emerald-600 uppercase tracking-widest mb-1">${escHtml(label)}</div>
-          <div class="text-[11px] text-emerald-900 leading-snug">${escHtml(text)}</div>
-        </div>`).join('')}
+      <!-- Filming Direction dashboard — always visible, never collapsed, since this is what
+           actually matters most for filming (per direct client feedback: the hook is "so so so
+           important," the generic filming-notes blob is not). Covers hook craft (Text Hook,
+           Visual Hook, Tonality, Pacing — emerald) AND production (Editing Style, Editing Notes
+           — sky) in one consumable panel, so Andrew never has to dig through the raw script to
+           find what he needs to actually shoot it. -->
+      ${s.filming_direction ? `
+      <div class="mt-3">
+        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">🎬 Filming Direction</div>
+        <div class="grid grid-cols-2 gap-2">
+          ${Object.entries(s.filming_direction).map(([label, text]) => {
+            const isEditing = label.startsWith('Editing');
+            const wide = isEditing ? 'col-span-2' : '';
+            const bg = isEditing ? 'bg-sky-50 border-sky-100' : 'bg-emerald-50 border-emerald-100';
+            const labelColor = isEditing ? 'text-sky-600' : 'text-emerald-600';
+            const textColor = isEditing ? 'text-sky-900' : 'text-emerald-900';
+            return `
+          <div class="${bg} border rounded-xl px-3 py-2 ${wide}">
+            <div class="text-[9px] font-semibold ${labelColor} uppercase tracking-widest mb-1">${escHtml(label)}</div>
+            <div class="text-[11px] ${textColor} leading-snug">${escHtml(text)}</div>
+          </div>`;
+          }).join('')}
+        </div>
       </div>` : ''}
     </div>
 

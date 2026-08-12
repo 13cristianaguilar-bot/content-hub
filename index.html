@@ -82,17 +82,38 @@ let showHelp = !helpDismissed();
 window.toggleHelp = () => { showHelp = !showHelp; if (!showHelp) { try { localStorage.setItem('hub_help_dismissed', '1'); } catch (e) {} } renderDash(); };
 
 // ─────────────────────────────────────────────
+// ERROR STATE — a real, visible failure with a way out, instead of the page silently
+// sticking on "Loading..." forever. This is the exact failure mode the Day 26 jsonb-field
+// bug caused for every user, every session, at once -- this doesn't prevent a bad field from
+// existing, it makes sure the NEXT unexpected error is recoverable instead of invisible.
+// ─────────────────────────────────────────────
+function renderError(e) {
+  console.error(e);
+  document.getElementById('app').innerHTML = `
+    <div class="flex flex-col items-center justify-center min-h-screen px-5 text-center">
+      <div class="text-3xl mb-3">⚠️</div>
+      <div class="font-semibold text-slate-700 mb-1">Something went wrong loading this page.</div>
+      <div class="text-xs text-slate-400 mb-4 max-w-xs break-words">${escHtml(e && e.message || String(e))}</div>
+      <button onclick="location.reload()" class="bg-slate-800 text-white rounded-xl px-5 py-2.5 text-sm font-medium">Reload</button>
+    </div>`;
+}
+
+// ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) await afterLogin(session.user);
-  else renderLogin();
-
-  sb.auth.onAuthStateChange(async (_e, session) => {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
     if (session) await afterLogin(session.user);
-    else { user = null; role = null; mySlug = null; renderLogin(); }
-  });
+    else renderLogin();
+
+    sb.auth.onAuthStateChange(async (_e, session) => {
+      try {
+        if (session) await afterLogin(session.user);
+        else { user = null; role = null; mySlug = null; unsubscribeLiveChanges(); renderLogin(); }
+      } catch (e) { renderError(e); }
+    });
+  } catch (e) { renderError(e); }
 }
 
 async function afterLogin(u) {
@@ -102,6 +123,29 @@ async function afterLogin(u) {
   if (role === 'client' && mySlug) viewSlug = mySlug;
   await fetchScripts();
   renderDash();
+  subscribeLiveChanges();
+}
+
+// ─────────────────────────────────────────────
+// LIVE SYNC — multiple people (Cristian + Andrew, multiple devices) can be logged in at
+// once. Without this, each session only sees the data it fetched at login -- someone else's
+// status change is invisible until a manual reload. Any change to the scripts table refetches
+// and re-renders for everyone currently connected, so a status update on one device shows up
+// on the others within ~1s, not "whenever they happen to refresh."
+// ─────────────────────────────────────────────
+let realtimeChannel = null;
+function subscribeLiveChanges() {
+  if (realtimeChannel) return; // already subscribed, don't double-subscribe on re-login
+  try {
+    realtimeChannel = sb.channel('scripts-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scripts' }, async () => {
+        try { await fetchScripts(); renderDash(); } catch (e) { renderError(e); }
+      })
+      .subscribe();
+  } catch (e) { console.error('Realtime subscription failed (non-fatal):', e); }
+}
+function unsubscribeLiveChanges() {
+  if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
 }
 
 // ─────────────────────────────────────────────
@@ -217,7 +261,14 @@ window.setTake = (groupKey, idx) => { activeTake[groupKey] = idx; renderDash(); 
 // ─────────────────────────────────────────────
 // RENDER DASHBOARD
 // ─────────────────────────────────────────────
+// Thin protective wrapper -- every caller (status buttons, tab switches, the realtime
+// subscription) goes through renderDash(), so wrapping it here protects all of them at once
+// instead of needing a try/catch at every call site.
 function renderDash() {
+  try { renderDashInner(); } catch (e) { renderError(e); }
+}
+
+function renderDashInner() {
   const isAdmin  = role === 'admin';
 
   // Client tabs (admin only)
@@ -474,7 +525,7 @@ window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; renderDash()
 window.setStatus2  = s    => { viewStatus = s; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
-window.doLogout    = () => sb.auth.signOut();
+window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
 
 window.toggle = id => {
   const el = document.getElementById(`exp-${id}`);

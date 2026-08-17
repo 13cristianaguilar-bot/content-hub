@@ -159,13 +159,25 @@ async function fetchScripts() {
   scripts = data || [];
 }
 
-async function setStatus(id, status) {
-  const { error } = await sb.from('scripts').update({ status }).eq('id', id);
+async function setStatus(id, status, extra) {
+  const payload = extra ? { status, ...extra } : { status };
+  const { error } = await sb.from('scripts').update(payload).eq('id', id);
   if (!error) {
     const s = scripts.find(s => s.id === id);
-    if (s) s.status = status;
+    if (s) Object.assign(s, payload);
     renderDash();
+  } else {
+    renderError(error);
   }
+}
+
+// Tweak now actually asks what needs to change, instead of silently moving the card to Draft
+// with zero information -- this was the real bug behind "the tweaking process doesn't work":
+// there was never a way to say WHAT to tweak, so the only option was texting Cristian directly.
+async function requestTweak(id) {
+  const note = window.prompt("What needs to change on this one?");
+  if (note === null) return; // cancelled -- don't move status, don't lose anything
+  await setStatus(id, 'Draft', { client_feedback: note || null });
 }
 
 // ─────────────────────────────────────────────
@@ -434,6 +446,14 @@ function renderCardGroup(group) {
       </div>
       <div class="font-bold text-slate-800 text-base leading-snug mb-3">${s.title}</div>
 
+      <!-- Tweak note — what got typed in when this was sent back to Draft. Shown up top,
+           impossible to miss, so a tweak request never has to travel by text message again. -->
+      ${s.client_feedback && s.status === 'Draft' ? `
+      <div class="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 mb-3">
+        <div class="text-[10px] font-semibold text-orange-500 uppercase tracking-widest mb-1">✏️ Tweak requested</div>
+        <div class="text-sm text-orange-900 leading-relaxed">${escHtml(s.client_feedback)}</div>
+      </div>` : ''}
+
       <!-- Hook — the hero -->
       ${s.hook ? `
       <div class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
@@ -527,7 +547,7 @@ function renderCardGroup(group) {
       ${needsReview ? `
         <div class="grid grid-cols-3 gap-2">
           ${btn('✅ Film', `moveStatus('${s.id}','Filming')`, 'bg-emerald-500 text-white hover:bg-emerald-600 font-semibold')}
-          ${btn('✏️ Tweak', `moveStatus('${s.id}','Draft')`, 'border-2 border-orange-300 text-orange-500 hover:bg-orange-50')}
+          ${btn('✏️ Tweak', `requestTweak('${s.id}')`, 'border-2 border-orange-300 text-orange-500 hover:bg-orange-50')}
           ${btn('✕ Pass', `moveStatus('${s.id}','Passed')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50')}
         </div>` :
       isPosted ? `<div class="text-center text-xs text-blue-400 font-medium py-1">✓ Posted</div>` :
@@ -550,6 +570,7 @@ window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; renderDash()
 window.setStatus2  = s    => { viewStatus = s; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
+window.requestTweak = (id) => requestTweak(id);
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
 
 window.toggle = id => {

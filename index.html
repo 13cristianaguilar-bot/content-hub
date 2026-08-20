@@ -126,6 +126,7 @@ async function afterLogin(u) {
   role   = u.user_metadata?.role || 'client';
   mySlug = u.user_metadata?.client_slug || null;
   if (role === 'client' && mySlug) viewSlug = mySlug;
+  if (role === 'client') viewMode = 'all'; // clients always land on full backlog, not testing-only view
   await fetchScripts();
   renderDash();
   subscribeLiveChanges();
@@ -387,7 +388,7 @@ function renderDashInner() {
   const nrCount = !isAdmin ? (countByStatus['Needs Review'] || 0) : 0;
   const newScriptsBanner = nrCount > 0 ? `
     <div class="px-4 pt-4">
-      <button onclick="setStatus2('Needs Review')"
+      <button onclick="viewMode='all'; setStatus2('Needs Review')"
         class="new-scripts-glow w-full rounded-2xl overflow-hidden text-left"
         style="background:linear-gradient(135deg,#16a34a 0%,#22c55e 100%);display:block;">
         <div class="px-5 py-4 flex items-center justify-between">

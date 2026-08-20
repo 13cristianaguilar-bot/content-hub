@@ -128,6 +128,12 @@ async function afterLogin(u) {
   if (role === 'client' && mySlug) viewSlug = mySlug;
   if (role === 'client') viewMode = 'all'; // clients always land on full backlog, not testing-only view
   await fetchScripts();
+  // Auto-route clients to their action queue. If they have new scripts, take them straight there.
+  // If everything is reviewed, show all so they can see their history.
+  if (role === 'client') {
+    const hasNR = scripts.some(s => s.status === 'Needs Review');
+    viewStatus = hasNR ? 'Needs Review' : 'all';
+  }
   renderDash();
   subscribeLiveChanges();
 }
@@ -158,7 +164,7 @@ function unsubscribeLiveChanges() {
 // DATA
 // ─────────────────────────────────────────────
 async function fetchScripts() {
-  let q = sb.from('scripts').select('*').order('reel_number');
+  let q = sb.from('scripts').select('*').order('reel_number', { ascending: false }); // newest first
   if (role === 'client' && mySlug) q = q.eq('client_slug', mySlug);
   const { data, error } = await q;
   if (error) console.error(error);
@@ -343,16 +349,21 @@ function renderDashInner() {
   modeFilteredRows.forEach(s => { countByStatus[s.status] = (countByStatus[s.status] || 0) + 1; });
   const totalForView = modeFilteredRows.length;
 
-  // Status tabs
+  // Status tabs — "Needs Review" gets a pulsing green dot for clients when not already active,
+  // so the action queue is always visible at a glance without requiring the banner.
   const statusTabs = ['all', ...STATUS_ORDER].map(s => {
     const count = s === 'all' ? totalForView : (countByStatus[s] || 0);
     const label = s === 'all' ? 'All' : s;
     const active = viewStatus === s;
+    const hasAlert = !isAdmin && s === 'Needs Review' && count > 0 && !active;
+    const alertDot = hasAlert
+      ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;animation:pulse-ring 2s ease-in-out infinite;opacity:1;box-shadow:none;"></span>`
+      : '';
     return `<button onclick="setStatus2('${s}')"
       class="flex-shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all ${active
         ? 'bg-slate-800 text-white'
         : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}">
-      ${label}${count ? ` <span class="opacity-60">${count}</span>` : ''}
+      ${label}${count ? ` <span class="opacity-60">${count}</span>` : ''}${alertDot}
     </button>`;
   }).join('');
 
@@ -360,9 +371,9 @@ function renderDashInner() {
     viewStatus === 'all' || g.some(s => s.status === viewStatus)
   );
 
-  // Mode toggle — "In Testing" is the default landing view so the active A/B/C scripts
-  // are the first thing anyone sees, with the full backlog one click away, not mixed in.
-  const modeTabs = testingGroups.length ? `
+  // Mode toggle — admin only. Clients don't need to know about A/B testing mechanics;
+  // they always see all their scripts (viewMode is locked to 'all' for clients at login).
+  const modeTabs = (isAdmin && testingGroups.length) ? `
     <div class="flex gap-2 mb-3">
       <button onclick="setMode('testing')"
         class="px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'testing'
@@ -380,7 +391,14 @@ function renderDashInner() {
 
   const cards = visibleGroups.length
     ? visibleGroups.map(renderCardGroup).join('')
-    : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
+    : (viewStatus === 'Needs Review' && !isAdmin)
+      ? `<div class="text-center py-24">
+           <div style="font-size:3rem;line-height:1;" class="mb-4">✅</div>
+           <div class="text-slate-600 font-semibold text-sm mb-1">You're all caught up</div>
+           <div class="text-slate-300 text-xs">No new scripts to review right now.</div>
+           <button onclick="setStatus2('all')" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">View all scripts</button>
+         </div>`
+      : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
 
   const clientName = CLIENTS[viewSlug]?.name || viewSlug;
 
@@ -500,7 +518,8 @@ function renderCardGroup(group) {
           ${ctaLabel ? `<span class="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-medium">Comment ${ctaLabel}</span>` : ''}
         </div>
       </div>
-      <div class="font-bold text-slate-800 text-base leading-snug mb-3">${s.title}</div>
+      <div class="font-bold text-slate-800 text-base leading-snug">${s.title}</div>
+      ${s.batch ? `<div class="text-[10px] text-slate-300 mt-0.5 mb-2.5 tracking-wide">${escHtml(s.batch)}</div>` : '<div class="mb-3"></div>'}
 
       <!-- Tweak note — what got typed in when this was sent back to Draft. Shown up top,
            impossible to miss, so a tweak request never has to travel by text message again. -->

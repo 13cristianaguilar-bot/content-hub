@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <!-- iOS PWA — add to homescreen feels native, no browser chrome -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Content Hub">
+  <!-- Android browser chrome color -->
+  <meta name="theme-color" content="#f8fafc">
   <title>Content Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,11 +16,15 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     pre { font-family: inherit; }
+    /* Prevent 300ms tap delay on all interactive elements */
+    button, a, input, select { touch-action: manipulation; }
     @keyframes pulse-ring {
       0%, 100% { opacity: 1; box-shadow: 0 0 22px rgba(34,197,94,0.55), 0 0 44px rgba(34,197,94,0.25); }
       50%       { opacity: 0.85; box-shadow: 0 0 36px rgba(34,197,94,0.8), 0 0 72px rgba(34,197,94,0.4); }
     }
     .new-scripts-glow { animation: pulse-ring 2s ease-in-out infinite; }
+    /* Safe area inset for iPhone notch / home bar */
+    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -360,7 +370,7 @@ function renderDashInner() {
       ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;animation:pulse-ring 2s ease-in-out infinite;opacity:1;box-shadow:none;"></span>`
       : '';
     return `<button onclick="setStatus2('${s}')"
-      class="flex-shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-medium transition-all ${active
+      class="flex-shrink-0 whitespace-nowrap px-3 py-2.5 rounded-full text-xs font-medium transition-all ${active
         ? 'bg-slate-800 text-white'
         : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}">
       ${label}${count ? ` <span class="opacity-60">${count}</span>` : ''}${alertDot}
@@ -429,8 +439,8 @@ function renderDashInner() {
             ${isAdmin ? 'Content Hub' : clientName}
           </div>
           <div class="flex items-center gap-1">
-            ${!isAdmin ? `<button onclick="toggleHelp()" class="text-xs text-slate-400 hover:text-slate-600 w-6 h-6 rounded-full border border-slate-200 hover:border-slate-300 transition-colors">?</button>` : ''}
-            <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-2 py-1 rounded-lg hover:bg-slate-100 transition-colors">
+            ${!isAdmin ? `<button onclick="toggleHelp()" class="text-xs text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center">?</button>` : ''}
+            <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px]">
               Sign out
             </button>
           </div>

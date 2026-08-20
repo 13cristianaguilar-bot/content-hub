@@ -10,6 +10,11 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     pre { font-family: inherit; }
+    @keyframes pulse-ring {
+      0%, 100% { opacity: 1; box-shadow: 0 0 22px rgba(34,197,94,0.55), 0 0 44px rgba(34,197,94,0.25); }
+      50%       { opacity: 0.85; box-shadow: 0 0 36px rgba(34,197,94,0.8), 0 0 72px rgba(34,197,94,0.4); }
+    }
+    .new-scripts-glow { animation: pulse-ring 2s ease-in-out infinite; }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -378,6 +383,23 @@ function renderDashInner() {
 
   const clientName = CLIENTS[viewSlug]?.name || viewSlug;
 
+  // Glowing "New Scripts" banner — client-only, shows when Needs Review count > 0
+  const nrCount = !isAdmin ? (countByStatus['Needs Review'] || 0) : 0;
+  const newScriptsBanner = nrCount > 0 ? `
+    <div class="px-4 pt-4">
+      <button onclick="setStatus2('Needs Review')"
+        class="new-scripts-glow w-full rounded-2xl overflow-hidden text-left"
+        style="background:linear-gradient(135deg,#16a34a 0%,#22c55e 100%);display:block;">
+        <div class="px-5 py-4 flex items-center justify-between">
+          <div>
+            <div class="text-white font-bold text-base tracking-tight">🎬 ${nrCount} new script${nrCount === 1 ? '' : 's'} ready to film</div>
+            <div class="text-green-100 text-xs mt-1">Tap to review →</div>
+          </div>
+          <div class="text-white font-black leading-none" style="font-size:3rem;opacity:0.9;">${nrCount}</div>
+        </div>
+      </button>
+    </div>` : '';
+
   document.getElementById('app').innerHTML = `
     <div class="max-w-xl mx-auto min-h-screen flex flex-col">
 
@@ -398,6 +420,9 @@ function renderDashInner() {
         ${modeTabs}
         <div class="flex gap-2 overflow-x-auto no-scrollbar">${statusTabs}</div>
       </div>
+
+      <!-- New Scripts glowing banner — appears when Needs Review count > 0 -->
+      ${newScriptsBanner}
 
       <!-- Client guide -- dismissible, never shown to admin -->
       ${(!isAdmin && showHelp) ? `

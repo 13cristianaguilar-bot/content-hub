@@ -226,6 +226,11 @@ function renderLogin() {
             class="w-full bg-slate-800 text-white rounded-xl py-3 text-sm font-medium hover:bg-slate-700 active:scale-95 transition-all">
             Sign in
           </button>
+          <div class="text-center pt-1">
+            <button onclick="doForgotPassword()" class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
+              Forgot password?
+            </button>
+          </div>
         </div>
       </div>
     </div>`;
@@ -242,6 +247,31 @@ async function doLogin() {
   if (error) {
     err.textContent = error.message; err.classList.remove('hidden');
     lb.textContent = 'Sign in'; lb.disabled = false;
+  }
+}
+
+async function doForgotPassword() {
+  const em = document.getElementById('em').value.trim();
+  if (!em) {
+    const err = document.getElementById('err');
+    err.textContent = 'Enter your email address first, then tap Forgot password.';
+    err.classList.remove('hidden');
+    return;
+  }
+  const { error } = await sb.auth.resetPasswordForEmail(em, {
+    redirectTo: window.location.origin + window.location.pathname
+  });
+  const err = document.getElementById('err');
+  if (error) {
+    err.textContent = error.message; err.classList.remove('hidden');
+  } else {
+    err.textContent = ''; err.classList.add('hidden');
+    document.getElementById('app').innerHTML = `
+      <div class="flex flex-col items-center justify-center min-h-screen px-5 text-center">
+        <div class="text-2xl mb-3">📬</div>
+        <div class="font-semibold text-slate-800 mb-1">Check your email</div>
+        <div class="text-sm text-slate-400 max-w-xs">We sent a password reset link to <strong>${em}</strong>. Click the link in that email to set a new password.</div>
+      </div>`;
   }
 }
 

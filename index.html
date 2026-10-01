@@ -98,16 +98,16 @@ function dossierBlock(emoji, label, text, color, opts) {
     tone: { bg: 'bg-indigo-50', border: 'border-indigo-100', label: 'text-indigo-600', text: 'text-indigo-900' },
     edit: { bg: 'bg-pink-50',   border: 'border-pink-100',   label: 'text-pink-600',   text: 'text-pink-900' },
   }[color];
-  const emphasis = opts.emphasize ? 'border-2 px-4 py-3' : 'px-3 py-2.5';
-  const textSize = opts.emphasize ? 'text-sm' : 'text-xs';
+  const emphasis = opts.emphasize ? 'border-2 px-4 py-3.5' : 'px-3.5 py-3';
+  const textSize = opts.emphasize ? 'text-base' : 'text-sm';
   const body = opts.truncateId
     ? truncatedField(text, opts.truncateId, opts.maxLen)
     : `<div class="whitespace-pre-wrap">${escHtml(text)}</div>`;
   return `
-  <div class="${colors.bg} ${colors.border} border rounded-xl ${emphasis} mb-2">
-    <div class="text-[10px] font-semibold ${colors.label} uppercase tracking-widest mb-1">${emoji ? emoji + ' ' : ''}${label}</div>
+  <div class="${colors.bg} ${colors.border} border rounded-xl ${emphasis} mb-2.5">
+    <div class="text-xs font-bold ${colors.label} uppercase tracking-widest mb-1.5">${emoji ? emoji + ' ' : ''}${label}</div>
     <div class="${textSize} ${colors.text} leading-relaxed">${body}</div>
-    ${opts.subcaption ? `<div class="text-[10px] ${colors.label} opacity-70 mt-1.5 italic">${opts.subcaption}</div>` : ''}
+    ${opts.subcaption ? `<div class="text-xs ${colors.label} opacity-70 mt-2 italic">${opts.subcaption}</div>` : ''}
   </div>`;
 }
 
@@ -150,11 +150,11 @@ function truncatedField(text, id, maxLen) {
   return `
     <div id="prev-${id}">
       <div class="whitespace-pre-wrap">${escHtml(preview)}…</div>
-      <button onclick="toggleText('${id}')" class="text-[11px] font-bold underline mt-1 opacity-75">Show full notes ▾</button>
+      <button onclick="toggleText('${id}')" class="text-xs font-bold underline mt-1.5 opacity-75">Show full notes ▾</button>
     </div>
     <div id="full-${id}" class="hidden">
       <div class="whitespace-pre-wrap">${escHtml(text)}</div>
-      <button onclick="toggleText('${id}')" class="text-[11px] font-bold underline mt-1 opacity-75">Show less ▴</button>
+      <button onclick="toggleText('${id}')" class="text-xs font-bold underline mt-1.5 opacity-75">Show less ▴</button>
     </div>`;
 }
 window.toggleText = id => {
@@ -594,18 +594,18 @@ function renderDossierBody(s) {
   // together as "proof," not two separate stacked boxes. The full verification narrative
   // collapses by default -- the stat tiles are the headline, the paragraph is backup detail.
   const provenBox = (hasClip || s.proof_stats) ? `
-  <div class="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 mb-2">
-    <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1.5">Proven format reference</div>
+  <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
+    <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Proven format reference</div>
     ${hasClip ? `<div class="mb-1">${linkOrText(s.reference_clip)}</div>` : ''}
     ${stats.length ? `
     <div class="flex gap-5 flex-wrap mt-2 pt-2 border-t border-blue-100">
       ${stats.map(st => `
       <div>
-        <div class="text-xl font-bold text-blue-600 leading-none">${escHtml(st.num)}</div>
-        <div class="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">${st.label}</div>
+        <div class="text-2xl font-bold text-blue-600 leading-none">${escHtml(st.num)}</div>
+        <div class="text-[10px] uppercase tracking-wide text-slate-400 mt-0.5">${st.label}</div>
       </div>`).join('')}
     </div>` : ''}
-    ${s.proof_stats ? `<div class="text-xs text-blue-900 leading-relaxed mt-2">${truncatedField(s.proof_stats, 'proof-' + s.id, 160)}</div>` : ''}
+    ${s.proof_stats ? `<div class="text-sm text-blue-900 leading-relaxed mt-2">${truncatedField(s.proof_stats, 'proof-' + s.id, 160)}</div>` : ''}
   </div>` : '';
 
   return `
@@ -616,10 +616,10 @@ function renderDossierBody(s) {
 
       <!-- 3. Clip to react to -->
       ${s.clip_directions ? `
-      <div class="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 mb-2">
-        <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1.5">Clip to react to</div>
-        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" class="inline-block text-sm font-bold text-blue-700 underline mb-1.5">▶ Watch the source clip</a>` : ''}
-        <div class="text-xs text-blue-900 leading-relaxed">${truncatedField(s.clip_directions, 'clip-' + s.id, 180)}</div>
+      <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
+        <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Clip to react to</div>
+        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" class="inline-block text-base font-bold text-blue-700 underline mb-2">▶ Watch the source clip</a>` : ''}
+        <div class="text-sm text-blue-900 leading-relaxed">${truncatedField(s.clip_directions, 'clip-' + s.id, 180)}</div>
       </div>` : ''}
 
       <!-- 4. Filming setup -->
@@ -629,19 +629,19 @@ function renderDossierBody(s) {
            visually heavier than everything above (bigger text, shadow, thicker border), because
            this is what you say and how you say it, not prep -- and now that the boxes above
            collapse their long notes by default, this is what actually dominates the card. -->
-      <div class="mt-3 pt-4 px-3 pb-3 border-2 border-slate-200 rounded-2xl bg-white shadow-md">
-        <div class="text-xs font-extrabold text-slate-600 uppercase tracking-[0.15em] mb-2.5">🎬 What you're actually filming</div>
+      <div class="mt-3 pt-4 px-3.5 pb-3.5 border-2 border-slate-200 rounded-2xl bg-white shadow-md">
+        <div class="text-sm font-extrabold text-slate-600 uppercase tracking-[0.1em] mb-3">🎬 What you're actually filming</div>
 
         ${s.hook ? `
-        <div class="bg-violet-50 border-2 border-violet-200 rounded-xl px-4 py-3 mb-2">
-          <div class="text-[10px] font-semibold text-violet-600 uppercase tracking-widest mb-1">Hook</div>
-          <div class="text-base text-violet-900 font-semibold leading-snug">"${escHtml(s.hook)}"</div>
+        <div class="bg-violet-50 border-2 border-violet-200 rounded-xl px-4 py-3.5 mb-2.5">
+          <div class="text-xs font-bold text-violet-600 uppercase tracking-widest mb-1.5">Hook</div>
+          <div class="text-lg text-violet-900 font-semibold leading-snug">"${escHtml(s.hook)}"</div>
         </div>` : ''}
 
         ${s.full_script ? `
-        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-2">
-          <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Full script</div>
-          <pre class="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
+        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 mb-2.5">
+          <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Full script</div>
+          <pre class="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
         </div>` : ''}
 
         ${dossierBlock('🎙', 'Tonality &amp; delivery — read this right before you hit record', s.tonality_delivery, 'tone', {

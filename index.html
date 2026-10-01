@@ -62,8 +62,12 @@ const STATUS_STYLE = {
   'Filming':      'bg-orange-100 text-orange-700',
   'Posted':       'bg-blue-100 text-blue-700',
   'Passed':       'bg-red-50 text-red-400',
+  'Archived':     'bg-slate-50 text-slate-400',
 };
 const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];
+// Archived is deliberately NOT in STATUS_ORDER -- it isn't a step in the normal Draft -> Posted
+// flow, it's a separate "tucked away, not deleted" bucket (e.g. a whole superseded batch) with
+// its own tab, hidden from the default "All" view instead of cluttering it.
 
 const FORMAT_STYLE = {
   'Reaction':             'bg-blue-100 text-blue-700',
@@ -72,7 +76,54 @@ const FORMAT_STYLE = {
   'Format A':             'bg-blue-100 text-blue-700',
   'List Drop':            'bg-teal-100 text-teal-700',
   'Format C':             'bg-violet-100 text-violet-700',
+  'Personal Story':       'bg-amber-100 text-amber-700',
+  'Direct Address':       'bg-indigo-100 text-indigo-700',
+  'Teaching Story':       'bg-stone-200 text-stone-700',
 };
+
+// ─────────────────────────────────────────────
+// DOSSIER COLOR SYSTEM — ported directly from clients/jan-zands/deliverables/
+// full-production-dossier.html so a script looks the same whether Jan reads it there or here.
+// Each content block gets one fixed color across the whole app: ref=blue, film=teal,
+// hook=violet, tone=indigo, edit=pink. Only rendered when the underlying field has data, so
+// Andrew's existing rows (none of which have these columns populated) are unaffected.
+// ─────────────────────────────────────────────
+function dossierBlock(emoji, label, text, color, opts) {
+  if (!text) return '';
+  opts = opts || {};
+  const colors = {
+    ref:  { bg: 'bg-blue-50',   border: 'border-blue-100',   label: 'text-blue-600',   text: 'text-blue-900' },
+    film: { bg: 'bg-teal-50',   border: 'border-teal-100',   label: 'text-teal-600',   text: 'text-teal-900' },
+    hook: { bg: 'bg-violet-50', border: 'border-violet-100', label: 'text-violet-600', text: 'text-violet-900' },
+    tone: { bg: 'bg-indigo-50', border: 'border-indigo-100', label: 'text-indigo-600', text: 'text-indigo-900' },
+    edit: { bg: 'bg-pink-50',   border: 'border-pink-100',   label: 'text-pink-600',   text: 'text-pink-900' },
+  }[color];
+  const emphasis = opts.emphasize ? 'border-2 px-4 py-3' : 'px-3 py-2.5';
+  const textSize = opts.emphasize ? 'text-sm' : 'text-xs';
+  return `
+  <div class="${colors.bg} ${colors.border} border rounded-xl ${emphasis} mb-2">
+    <div class="text-[10px] font-semibold ${colors.label} uppercase tracking-widest mb-1">${emoji ? emoji + ' ' : ''}${label}</div>
+    <div class="${textSize} ${colors.text} leading-relaxed whitespace-pre-wrap">${escHtml(text)}</div>
+    ${opts.subcaption ? `<div class="text-[10px] ${colors.label} opacity-70 mt-1.5 italic">${opts.subcaption}</div>` : ''}
+  </div>`;
+}
+
+// Pulls real "12,936 likes" / "5.4M views" style numbers out of the free-text proof_stats field
+// so they can render as big stat tiles like the dossier does -- the field itself stays the full
+// verified narrative (resolution notes, what was checked, what was rejected and why), this just
+// surfaces the headline numbers from inside it instead of asking Cristian to re-enter them as
+// separate structured data.
+function extractProofStats(text) {
+  if (!text) return [];
+  const re = /([\d][\d,]*\.?\d*\s?[KMB]?)\s+(views|likes|comments)\b/gi;
+  const seen = {};
+  let m;
+  while ((m = re.exec(text))) {
+    const label = m[2].toLowerCase();
+    if (!seen[label]) seen[label] = m[1].trim();
+  }
+  return ['views', 'likes', 'comments'].filter(l => seen[l]).map(l => ({ num: seen[l], label: l[0].toUpperCase() + l.slice(1) }));
+}
 
 // ─────────────────────────────────────────────
 // STATE
@@ -357,11 +408,16 @@ function renderDashInner() {
 
   const countByStatus = {};
   modeFilteredRows.forEach(s => { countByStatus[s.status] = (countByStatus[s.status] || 0) + 1; });
-  const totalForView = modeFilteredRows.length;
+  // "All" deliberately excludes Archived -- an archived batch (e.g. a superseded seed) shouldn't
+  // inflate or clutter the default view. Archived items are only visible via their own tab.
+  const totalForView = modeFilteredRows.filter(s => s.status !== 'Archived').length;
 
   // Status tabs — "Needs Review" gets a pulsing green dot for clients when not already active,
-  // so the action queue is always visible at a glance without requiring the banner.
-  const statusTabs = ['all', ...STATUS_ORDER].map(s => {
+  // so the action queue is always visible at a glance without requiring the banner. Archived is
+  // appended after the normal workflow tabs and only shows up when something's actually in it.
+  const archivedCount = countByStatus['Archived'] || 0;
+  const tabList = archivedCount > 0 ? ['all', ...STATUS_ORDER, 'Archived'] : ['all', ...STATUS_ORDER];
+  const statusTabs = tabList.map(s => {
     const count = s === 'all' ? totalForView : (countByStatus[s] || 0);
     const label = s === 'all' ? 'All' : s;
     const active = viewStatus === s;
@@ -378,7 +434,7 @@ function renderDashInner() {
   }).join('');
 
   const visibleGroups = modeFilteredGroups.filter(g =>
-    viewStatus === 'all' || g.some(s => s.status === viewStatus)
+    viewStatus === 'all' ? !g.some(s => s.status === 'Archived') : g.some(s => s.status === viewStatus)
   );
 
   // Mode toggle — admin only. Clients don't need to know about A/B testing mechanics;
@@ -463,6 +519,7 @@ function renderDashInner() {
             <li>🧪 <b>In Testing</b> — scripts with a few different versions to compare. <b>All Scripts</b> is everything else.</li>
             <li><b>Take A / B / C</b> tabs on a card — same idea, different opening hooks. Tap each one to compare before you film.</li>
             <li>📹 <b>Ref</b> — the real video this format is based on. Tap the link to watch it.</li>
+            <li>On some cards, scroll down for the full breakdown in order: the reference reel → its real stats → clip directions → filming setup → then <b>what you're actually filming</b> — the hook, full script, and tonality, highlighted so it's the last thing you read before you hit record.</li>
             <li>Tap <b>"Full script + filming notes"</b> to see everything you need to shoot it.</li>
             <li>✅ <b>Film</b> = ready to shoot as-is · ✏️ <b>Tweak</b> = send it back for changes · ✕ <b>Pass</b> = skip this one</li>
           </ul>
@@ -477,6 +534,79 @@ function renderDashInner() {
     </div>`;
 }
 
+// ─────────────────────────────────────────────
+// DOSSIER-STYLE CARD BODY — mirrors full-production-dossier.html's eye-order exactly:
+// 1. reference reel  2. its stats  3. clip directions  4. filming setup  5. the actual
+// filming (hook + full script + tonality, emphasized). Only kicks in for rows that actually
+// carry one of the 4 dossier columns -- every other row (Andrew's, Jan's old Batch-01 seed)
+// keeps the original layout untouched, so this is additive, not a breaking change.
+// ─────────────────────────────────────────────
+function isDossierStyle(s) {
+  return !!(s.filming_setup || s.clip_directions || s.tonality_delivery || s.proof_stats);
+}
+
+function renderDossierBody(s) {
+  const hasClip = !!s.reference_clip;
+  const stats = extractProofStats(s.proof_stats);
+
+  // 1 + 2 combined into one box, same as the dossier: the reel link and its real numbers belong
+  // together as "proof," not two separate stacked boxes.
+  const provenBox = (hasClip || s.proof_stats) ? `
+  <div class="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 mb-2">
+    <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1.5">Proven format reference</div>
+    ${hasClip ? `<div class="mb-1">${linkOrText(s.reference_clip)}</div>` : ''}
+    ${stats.length ? `
+    <div class="flex gap-5 flex-wrap mt-2 pt-2 border-t border-blue-100">
+      ${stats.map(st => `
+      <div>
+        <div class="text-xl font-bold text-blue-600 leading-none">${escHtml(st.num)}</div>
+        <div class="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">${st.label}</div>
+      </div>`).join('')}
+    </div>` : ''}
+    ${s.proof_stats ? `<div class="text-xs text-blue-900 leading-relaxed mt-2 whitespace-pre-wrap">${escHtml(s.proof_stats)}</div>` : ''}
+  </div>` : '';
+
+  return `
+    <div class="px-4 pb-4 pt-3 border-t border-slate-50 space-y-0.5">
+
+      <!-- 1. Reference reel + 2. its real stats -->
+      ${provenBox}
+
+      <!-- 3. Clip to react to -->
+      ${dossierBlock('', 'Clip to react to', s.clip_directions, 'ref')}
+
+      <!-- 4. Filming setup -->
+      ${dossierBlock('', 'Filming setup', s.filming_setup, 'film')}
+
+      <!-- 5. THE ACTUAL FILMING — the hero. Hook, full script, and tonality all live here,
+           visually heavier than everything above, because this is what you say and how you
+           say it, not prep. -->
+      <div class="mt-3 pt-3 border-t-2 border-dashed border-slate-200">
+        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-2">🎬 What you're actually filming</div>
+
+        ${s.hook ? `
+        <div class="bg-violet-50 border-2 border-violet-200 rounded-xl px-4 py-3 mb-2">
+          <div class="text-[10px] font-semibold text-violet-600 uppercase tracking-widest mb-1">Hook</div>
+          <div class="text-base text-violet-900 font-semibold leading-snug">"${escHtml(s.hook)}"</div>
+        </div>` : ''}
+
+        ${s.full_script ? `
+        <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 mb-2">
+          <div class="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1.5">Full script</div>
+          <pre class="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
+        </div>` : ''}
+
+        ${dossierBlock('🎙', 'Tonality &amp; delivery — read this right before you hit record', s.tonality_delivery, 'tone', {
+          emphasize: true
+        })}
+      </div>
+
+      <!-- Editing directions — footer, for the editor after filming, deliberately de-emphasized
+           relative to the filming hero above. -->
+      ${dossierBlock('', 'Editing directions — for the editor, after filming', s.editor_notes, 'edit')}
+    </div>`;
+}
+
 function renderCardGroup(group) {
   const hasTakes = group.length > 1;
   const groupKey = takeGroupKey(group[0]);
@@ -488,6 +618,7 @@ function renderCardGroup(group) {
   const needsReview = s.status === 'Needs Review';
   const isPosted    = s.status === 'Posted';
   const isPassed    = s.status === 'Passed';
+  const isArchived  = s.status === 'Archived';
   const si   = STATUS_ORDER.indexOf(s.status);
   const prev = STATUS_ORDER[si - 1];
   const next = STATUS_ORDER[si + 1];
@@ -515,7 +646,7 @@ function renderCardGroup(group) {
     </div>` : '';
 
   return `
-  <div class="bg-white rounded-2xl border ${needsReview ? 'border-yellow-200' : 'border-slate-100'} shadow-sm overflow-hidden">
+  <div class="bg-white rounded-2xl border ${needsReview ? 'border-yellow-200' : 'border-slate-100'} shadow-sm overflow-hidden ${isArchived ? 'opacity-60' : ''}">
     ${takeTabs}
 
     <!-- Header -->
@@ -539,7 +670,8 @@ function renderCardGroup(group) {
         <div class="text-sm text-orange-900 leading-relaxed">${escHtml(s.client_feedback)}</div>
       </div>` : ''}
 
-      <!-- Hook — the hero -->
+      ${isDossierStyle(s) ? '' : `
+      <!-- Hook — the hero (legacy layout, no dossier fields on this row) -->
       ${s.hook ? `
       <div class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
         <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">THE HOOK</div>
@@ -570,9 +702,11 @@ function renderCardGroup(group) {
           }).join('')}
         </div>
       </div>` : ''}
+      `}
     </div>
 
-    <!-- Ref + Camera -->
+    ${isDossierStyle(s) ? renderDossierBody(s) : `
+    <!-- Ref + Camera (legacy layout) -->
     <div class="px-4 pb-3 space-y-2 border-t border-slate-50 pt-3">
       ${s.reference_clip ? `
       <div class="flex items-start gap-2">
@@ -607,7 +741,7 @@ function renderCardGroup(group) {
           <div class="text-xs text-amber-900 leading-relaxed">${escHtml(s.editor_notes)}</div>
         </div>
       </div>` : ''}
-    </div>
+    </div>`}
 
     <!-- Sous Chef Pass — optional, collapsed by default. One per take-group, not per take,
          since it's a breakdown of the reference reel, which is the same across all takes. -->
@@ -639,6 +773,10 @@ function renderCardGroup(group) {
       isPassed ? `<div class="flex gap-2">
         <div class="flex-1 text-center text-xs text-red-300 py-2">Passed</div>
         ${btn('← Restore', `moveStatus('${s.id}','Needs Review')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50 text-xs')}
+      </div>` :
+      isArchived ? `<div class="flex gap-2">
+        <div class="flex-1 text-center text-xs text-slate-400 py-2">📦 Archived</div>
+        ${btn('← Restore', `moveStatus('${s.id}','Draft')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50 text-xs')}
       </div>` : `
       <div class="flex gap-2">
         ${prev && prev !== 'Passed' ? btn(`← ${prev}`, `moveStatus('${s.id}','${prev}')`, 'flex-1 border border-slate-200 text-slate-500 hover:bg-slate-50') : '<div class="flex-1"></div>'}

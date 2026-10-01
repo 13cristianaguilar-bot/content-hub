@@ -614,8 +614,11 @@ function renderDossierBody(s) {
       <!-- 1. Reference reel + 2. its real stats -->
       ${provenBox}
 
-      <!-- 3. Clip to react to -->
-      ${s.clip_directions ? `
+      <!-- 3. Clip to react to -- Reaction format ONLY. clip_directions is populated on every
+           format (it doubles as general filming notes for Personal Story / Direct Address), so
+           gating on the field being non-empty was wrong -- only an actual Reaction script has a
+           clip to react to. -->
+      ${(s.format === 'Reaction' && s.clip_directions) ? `
       <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
         <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Clip to react to</div>
         ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" class="inline-block text-base font-bold text-blue-700 underline mb-2">▶ Watch the source clip</a>` : ''}
@@ -636,7 +639,7 @@ function renderDossierBody(s) {
              the actual shot order at a glance: say the hook, the clip plays, you react, then the
              full script carries through to the ending -- the exact flow Cristian asked to make
              explicit instead of leaving it implied inside the clip-directions paragraph. -->
-        ${s.clip_directions ? `
+        ${(s.format === 'Reaction' && s.clip_directions) ? `
         <div class="flex items-center gap-1.5 flex-wrap mb-3.5">
           <span class="bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1.5 rounded-full">① Say the hook</span>
           <span class="text-slate-300 text-xs">→</span>

@@ -100,10 +100,13 @@ function dossierBlock(emoji, label, text, color, opts) {
   }[color];
   const emphasis = opts.emphasize ? 'border-2 px-4 py-3' : 'px-3 py-2.5';
   const textSize = opts.emphasize ? 'text-sm' : 'text-xs';
+  const body = opts.truncateId
+    ? truncatedField(text, opts.truncateId, opts.maxLen)
+    : `<div class="whitespace-pre-wrap">${escHtml(text)}</div>`;
   return `
   <div class="${colors.bg} ${colors.border} border rounded-xl ${emphasis} mb-2">
     <div class="text-[10px] font-semibold ${colors.label} uppercase tracking-widest mb-1">${emoji ? emoji + ' ' : ''}${label}</div>
-    <div class="${textSize} ${colors.text} leading-relaxed whitespace-pre-wrap">${escHtml(text)}</div>
+    <div class="${textSize} ${colors.text} leading-relaxed">${body}</div>
     ${opts.subcaption ? `<div class="text-[10px] ${colors.label} opacity-70 mt-1.5 italic">${opts.subcaption}</div>` : ''}
   </div>`;
 }
@@ -124,6 +127,40 @@ function extractProofStats(text) {
   }
   return ['views', 'likes', 'comments'].filter(l => seen[l]).map(l => ({ num: seen[l], label: l[0].toUpperCase() + l.slice(1) }));
 }
+
+// The YouTube source clip (what Jan actually films his reaction to) was getting buried inside
+// the long proof/verification paragraph -- this pulls it out so it can render as its own
+// clickable, prominent link instead of plain text in a wall of text.
+function extractVideoLink(text) {
+  if (!text) return null;
+  const m = text.match(/https?:\/\/(?:www\.)?(?:youtube\.com\/watch\?v=[\w-]+|youtu\.be\/[\w-]+)[^\s)"'”]*/i);
+  return m ? m[0].replace(/[.,;:]+$/, '') : null;
+}
+
+// Long verification/setup paragraphs (the full "what was checked, what was rejected and why"
+// narrative) were making cards feel like a wall of text and visually burying the hook/script/
+// tonality hero below them. Collapsed to a short preview by default with a "Show full notes"
+// toggle -- nothing is deleted or hidden permanently, it's one tap away.
+function truncatedField(text, id, maxLen) {
+  maxLen = maxLen || 200;
+  if (!text) return '';
+  if (text.length <= maxLen) return `<div class="whitespace-pre-wrap">${escHtml(text)}</div>`;
+  const cut = text.slice(0, maxLen);
+  const preview = cut.slice(0, cut.lastIndexOf(' ')) || cut;
+  return `
+    <div id="prev-${id}">
+      <div class="whitespace-pre-wrap">${escHtml(preview)}…</div>
+      <button onclick="toggleText('${id}')" class="text-[11px] font-bold underline mt-1 opacity-75">Show full notes ▾</button>
+    </div>
+    <div id="full-${id}" class="hidden">
+      <div class="whitespace-pre-wrap">${escHtml(text)}</div>
+      <button onclick="toggleText('${id}')" class="text-[11px] font-bold underline mt-1 opacity-75">Show less ▴</button>
+    </div>`;
+}
+window.toggleText = id => {
+  document.getElementById(`prev-${id}`).classList.toggle('hidden');
+  document.getElementById(`full-${id}`).classList.toggle('hidden');
+};
 
 // ─────────────────────────────────────────────
 // STATE
@@ -548,9 +585,14 @@ function isDossierStyle(s) {
 function renderDossierBody(s) {
   const hasClip = !!s.reference_clip;
   const stats = extractProofStats(s.proof_stats);
+  // The actual source video (e.g. the Jim Rohn/Tony Robbins YouTube speech Jan films his
+  // reaction to) was buried inside the proof-stats paragraph as plain text -- pull it out so
+  // it shows as its own clickable link on the clip box, which is where it's actually needed.
+  const sourceClip = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
 
   // 1 + 2 combined into one box, same as the dossier: the reel link and its real numbers belong
-  // together as "proof," not two separate stacked boxes.
+  // together as "proof," not two separate stacked boxes. The full verification narrative
+  // collapses by default -- the stat tiles are the headline, the paragraph is backup detail.
   const provenBox = (hasClip || s.proof_stats) ? `
   <div class="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 mb-2">
     <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1.5">Proven format reference</div>
@@ -563,7 +605,7 @@ function renderDossierBody(s) {
         <div class="text-[9px] uppercase tracking-wide text-slate-400 mt-0.5">${st.label}</div>
       </div>`).join('')}
     </div>` : ''}
-    ${s.proof_stats ? `<div class="text-xs text-blue-900 leading-relaxed mt-2 whitespace-pre-wrap">${escHtml(s.proof_stats)}</div>` : ''}
+    ${s.proof_stats ? `<div class="text-xs text-blue-900 leading-relaxed mt-2">${truncatedField(s.proof_stats, 'proof-' + s.id, 160)}</div>` : ''}
   </div>` : '';
 
   return `
@@ -573,16 +615,22 @@ function renderDossierBody(s) {
       ${provenBox}
 
       <!-- 3. Clip to react to -->
-      ${dossierBlock('', 'Clip to react to', s.clip_directions, 'ref')}
+      ${s.clip_directions ? `
+      <div class="bg-blue-50 border border-blue-100 rounded-xl px-3 py-2.5 mb-2">
+        <div class="text-[10px] font-semibold text-blue-600 uppercase tracking-widest mb-1.5">Clip to react to</div>
+        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" class="inline-block text-sm font-bold text-blue-700 underline mb-1.5">▶ Watch the source clip</a>` : ''}
+        <div class="text-xs text-blue-900 leading-relaxed">${truncatedField(s.clip_directions, 'clip-' + s.id, 180)}</div>
+      </div>` : ''}
 
       <!-- 4. Filming setup -->
-      ${dossierBlock('', 'Filming setup', s.filming_setup, 'film')}
+      ${dossierBlock('', 'Filming setup', s.filming_setup, 'film', { truncateId: 'film-' + s.id, maxLen: 180 })}
 
       <!-- 5. THE ACTUAL FILMING — the hero. Hook, full script, and tonality all live here,
-           visually heavier than everything above, because this is what you say and how you
-           say it, not prep. -->
-      <div class="mt-3 pt-3 border-t-2 border-dashed border-slate-200">
-        <div class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.15em] mb-2">🎬 What you're actually filming</div>
+           visually heavier than everything above (bigger text, shadow, thicker border), because
+           this is what you say and how you say it, not prep -- and now that the boxes above
+           collapse their long notes by default, this is what actually dominates the card. -->
+      <div class="mt-3 pt-4 px-3 pb-3 border-2 border-slate-200 rounded-2xl bg-white shadow-md">
+        <div class="text-xs font-extrabold text-slate-600 uppercase tracking-[0.15em] mb-2.5">🎬 What you're actually filming</div>
 
         ${s.hook ? `
         <div class="bg-violet-50 border-2 border-violet-200 rounded-xl px-4 py-3 mb-2">

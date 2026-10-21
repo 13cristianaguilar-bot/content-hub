@@ -202,6 +202,20 @@ let viewTab = 'list';         // 'list' | 'calendar' | 'pipeline'
 let calMonth = null;          // {y,m} 0-11 -- defaults to today's month on first render
 let calSelectedDay = null;    // 'YYYY-MM-DD' | null
 let calShowUnscheduled = false;
+// One-shot flag: only the actual "user tapped a day" / "jump to a specific date" actions set
+// this to true. renderDashInner() consumes it (fires the scroll once, then clears it) instead
+// of re-deriving "should I scroll" from calSelectedDay simply existing -- otherwise ANY redraw
+// while a day is selected (a realtime update from another device, a take-tab tap, a status
+// button inside the day panel's own cards, expanding the unscheduled list, month nav) would
+// yank the page back down to the day panel every time.
+let calScrollPending = false;
+// True only immediately after a jump INTO List from Pipeline/Calendar (see window.jumpToList).
+// Lets List's own status filter apply the same groupStatus()-based "one status per group"
+// matching Pipeline/Calendar used to compute that count, instead of List's native per-take
+// `.some()` filter -- otherwise a count tapped in Pipeline/Calendar can land on a List showing
+// a different number for groups with mixed take statuses. Reset to false by any NATIVE List
+// status-tab/mode/client interaction so normal List browsing keeps its existing behavior.
+let viewStatusExact = false;
 
 // Client-facing "how this works" guide. Persisted per-browser via localStorage so it doesn't
 // nag on every visit once dismissed, but stays one tap away via the "?" button in the header.
@@ -239,7 +253,14 @@ async function init() {
     sb.auth.onAuthStateChange(async (_e, session) => {
       try {
         if (session) await afterLogin(session.user);
-        else { user = null; role = null; mySlug = null; unsubscribeLiveChanges(); renderLogin(); }
+        else {
+          user = null; role = null; mySlug = null;
+          // Reset admin-only calendar state so it can't leak into the next person who signs in
+          // on this same tab/device (the app never reloads on auth change -- these are plain
+          // module-level `let`s that would otherwise survive across sessions).
+          calSelectedDay = null; calShowUnscheduled = false;
+          unsubscribeLiveChanges(); renderLogin();
+        }
       } catch (e) { renderError(e); }
     });
   } catch (e) { renderError(e); }
@@ -251,6 +272,11 @@ async function afterLogin(u) {
   mySlug = u.user_metadata?.client_slug || null;
   if (role === 'client' && mySlug) viewSlug = mySlug;
   if (role === 'client') viewMode = 'all'; // clients always land on full backlog, not testing-only view
+  // A client can get stranded on Calendar/Pipeline after a logout/login in the same tab --
+  // viewTab is plain module-level state that survives across sessions, and the toggle + status
+  // tabs that would let them escape are both hidden whenever they can't see the view toggle.
+  // Force back to List for any session that can't see the toggle, every time it logs in.
+  if (!(role === 'admin' || CLIENT_VIEW_TABS)) viewTab = 'list';
   await fetchScripts();
   // Auto-route clients to their action queue. If they have new scripts, take them straight there.
   // If everything is reviewed, show all so they can see their history.
@@ -270,17 +296,25 @@ async function afterLogin(u) {
 // on the others within ~1s, not "whenever they happen to refresh."
 // ─────────────────────────────────────────────
 let realtimeChannel = null;
+let realtimeDebounceTimer = null;
 function subscribeLiveChanges() {
   if (realtimeChannel) return; // already subscribed, don't double-subscribe on re-login
   try {
     realtimeChannel = sb.channel('scripts-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'scripts' }, async () => {
-        try { await fetchScripts(); renderDash(); } catch (e) { renderError(e); }
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'scripts' }, () => {
+        // Writing a date to a multi-take group fires one realtime event per row changed --
+        // a 150ms debounce collapses a 3-take group's 3 events into a single refetch+render
+        // instead of firing it 3 times in quick succession.
+        clearTimeout(realtimeDebounceTimer);
+        realtimeDebounceTimer = setTimeout(async () => {
+          try { await fetchScripts(); renderDash(); } catch (e) { renderError(e); }
+        }, 150);
       })
       .subscribe();
   } catch (e) { console.error('Realtime subscription failed (non-fatal):', e); }
 }
 function unsubscribeLiveChanges() {
+  clearTimeout(realtimeDebounceTimer);
   if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
 }
 
@@ -460,6 +494,17 @@ function groupStatus(group) {
   return best;
 }
 
+// Shared predicate so a group bucketed under ONE status in Pipeline (its furthest-along
+// non-Passed status) is matched by that SAME status in List -- not List's native `.some()`
+// filter, which shows a group under EVERY status any of its takes has. Without this, a group
+// Pipeline counts under "Approved" can still show up when List's own `.some()` filter is asked
+// for "Needs Review", because one of its takes happens to carry that status. Also fixes a
+// null/unrecognized take status "disappearing" on a jump-in, since groupStatus() already
+// applies the same Draft fallback STATUS_STYLE uses.
+function groupMatchesStatus(group, status) {
+  return groupStatus(group) === status;
+}
+
 function groupDate(group) {
   // 'YYYY-MM-DD' | null. date_planned is the planned POSTING date (not filming), stored by
   // Postgres as a plain 'date' and returned as a plain 'YYYY-MM-DD' string -- never run it
@@ -485,6 +530,17 @@ function activeGroupsFor(slug) {
 // `new Date(dateString)`, it will reintroduce the off-by-one bug -- don't do it.
 function ymd(y, m, d) {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+}
+
+// Guards against two separate desktop <input type=date> misbehaviors: (1) typing a partial
+// year (e.g. just "2") can fire a `change` event with a nonsensical value like '0002-10-21'
+// before the user finishes typing, and (2) a malformed/empty string should never reach
+// Supabase. Deliberately strict shape check (not just "does Date parse it") plus a sane year
+// range -- rejects anything outside it instead of silently writing garbage to the database.
+function isValidPlannedDate(v) {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const year = Number(v.slice(0, 4));
+  return year >= 2020 && year <= 2100;
 }
 
 // ─────────────────────────────────────────────
@@ -547,8 +603,14 @@ function renderDashInner() {
     </button>`;
   }).join('');
 
+  // viewStatusExact is only ever true right after a jump in from Pipeline/Calendar -- it makes
+  // this match groupStatus() exactly (same bucketing Pipeline/Calendar used for the count the
+  // user just tapped). Native List browsing (status tabs clicked directly) keeps its existing
+  // per-take `.some()` filter untouched -- out of scope for this fix, see F1.
   const visibleGroups = modeFilteredGroups.filter(g =>
-    viewStatus === 'all' ? !g.some(s => s.status === 'Archived') : g.some(s => s.status === viewStatus)
+    viewStatus === 'all' ? !g.some(s => s.status === 'Archived')
+    : viewStatusExact ? groupMatchesStatus(g, viewStatus)
+    : g.some(s => s.status === viewStatus)
   );
 
   // Mode toggle — admin only. Clients don't need to know about A/B testing mechanics;
@@ -569,7 +631,9 @@ function renderDashInner() {
       </button>
     </div>` : '';
 
-  const cards = visibleGroups.length
+  // Skip building List's cards HTML entirely when Calendar/Pipeline is showing -- it was
+  // computed unconditionally every render and thrown away whenever viewTab wasn't 'list'.
+  const cards = viewTab !== 'list' ? '' : (visibleGroups.length
     ? visibleGroups.map(renderCardGroup).join('')
     : (viewStatus === 'Needs Review' && !isAdmin)
       ? `<div class="text-center py-24">
@@ -578,7 +642,7 @@ function renderDashInner() {
            <div class="text-slate-300 text-xs">No new scripts to review right now.</div>
            <button onclick="setStatus2('all')" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">View all scripts</button>
          </div>`
-      : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
+      : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`);
 
   // Body branches on viewTab -- List keeps today's `cards` computation untouched; Calendar
   // and Pipeline use all non-Archived groups directly (not viewMode/viewStatus), computed
@@ -675,7 +739,11 @@ function renderDashInner() {
 
   // Day-panel scroll (Calendar view only) -- DOM is fully rebuilt above, so the panel can't
   // be scrolled to until after this innerHTML assignment. See renderCalendar() for details.
-  if (viewTab === 'calendar' && calSelectedDay) scrollToDayPanel();
+  // One-shot: only consume calScrollPending (set by an actual day-tap/jump-to-date action),
+  // never re-derive from calSelectedDay existing -- that would re-fire the scroll on every
+  // unrelated redraw while a day stays selected (realtime updates, take-tab taps, status
+  // buttons inside the day panel, expanding unscheduled, month nav).
+  if (calScrollPending) { calScrollPending = false; scrollToDayPanel(); }
 }
 
 // ─────────────────────────────────────────────
@@ -806,12 +874,18 @@ function renderCardGroup(group) {
   // groupDate() (the same helper the Calendar buckets days with) so the date shown here is
   // always the exact one the group would file under on the calendar.
   const groupPlannedDate = groupDate(group);
+  // groupKey is NOT interpolated into the onchange string -- a batch name containing an
+  // apostrophe (e.g. "Jan's Batch 02") would otherwise break the generated JS (or the
+  // attribute boundary) silently, with no visible error. It's carried via a data-attribute
+  // (escHtml-safe) and read back out through dataset instead. onclick wires up showPicker()
+  // so desktop Chrome reliably opens the native picker on click (it already works on iOS).
   const dateChip = isAdmin ? `
     <label class="relative h-7 px-2.5 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-medium text-blue-600 flex-shrink-0">
       📅 ${groupPlannedDate || 'Set date'}
-      <input type="date" value="${groupPlannedDate || ''}"
+      <input type="date" value="${groupPlannedDate || ''}" data-group-key="${escHtml(groupKey)}"
         class="absolute inset-0 w-full h-full opacity-0 text-base"
-        onchange="window.setGroupDate('${groupKey}', this.value || null)">
+        onclick="this.showPicker && this.showPicker()"
+        onchange="window.setGroupDate(this.dataset.groupKey, this.value || null)">
     </label>` : '';
 
   // Sous Chef Pass — the 7-field reference-reel breakdown. Stored once per take-group (not
@@ -822,10 +896,13 @@ function renderCardGroup(group) {
 
   // Take tabs — only rendered when this group actually has more than one take. A group
   // of 1 (every existing row today) renders with zero visual change from before.
+  // Same apostrophe-in-groupKey hazard as the date chips above (C2) -- groupKey is carried
+  // via data-attributes instead of being interpolated straight into the onclick string.
   const takeTabs = hasTakes ? `
     <div class="flex gap-1.5 px-4 pt-4 pb-1 flex-wrap">
       ${group.map((g, i) => `
-        <button onclick="window.setTake('${groupKey}', ${i})"
+        <button data-group-key="${escHtml(groupKey)}" data-idx="${i}"
+          onclick="window.setTake(this.dataset.groupKey, Number(this.dataset.idx))"
           class="px-3 py-1 rounded-full text-xs font-semibold transition-all ${i === idx
             ? 'bg-slate-800 text-white'
             : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
@@ -1061,13 +1138,12 @@ function renderPipeline() {
       .join('');
     const more = count > 3 ? `<span>+${count - 3} more</span>` : '<span></span>';
 
-    // Force viewMode='all' first so the count tapped here matches what's then shown in List --
-    // otherwise a client/admin looking at the 'testing' mode could tap "12 Draft" and land on a
-    // filtered List that only shows 3 of them.
-    const jumpTo = `viewMode='all'; viewTab='list'; viewStatus='${stage}'; renderDash();`;
-
+    // jumpToList forces viewMode='all' first so the count tapped here matches what's then
+    // shown in List -- otherwise a client/admin looking at the 'testing' mode could tap
+    // "12 Draft" and land on a filtered List that only shows 3 of them. `stage` is always one
+    // of the fixed STATUS_ORDER strings, never free text, so this interpolation is safe.
     return `
-    <button onclick="${jumpTo}" class="w-full text-left flex gap-3 pl-3 pr-4 py-3.5 active:bg-slate-50">
+    <button onclick="window.jumpToList('${stage}')" class="w-full text-left flex gap-3 pl-3 pr-4 py-3.5 active:bg-slate-50">
       <div class="w-1 self-stretch rounded-full ${dot}"></div>
       <div class="flex-1 min-w-0">
         <div class="flex items-center justify-between gap-2">
@@ -1087,7 +1163,7 @@ function renderPipeline() {
 
   // Passed row -- dashed border ("set aside"), still tappable, no title previews.
   const passedRow = passedBucket.length ? `
-  <button onclick="viewMode='all'; viewTab='list'; viewStatus='Passed'; renderDash();"
+  <button onclick="window.jumpToList('Passed')"
     class="w-full text-left flex items-center justify-between rounded-2xl border border-dashed border-slate-200 px-4 py-3.5">
     <span class="text-sm text-slate-500">✕ ${passedBucket.length} passed</span>
     <span class="text-slate-300">›</span>
@@ -1244,13 +1320,14 @@ function renderCalendar() {
         const st = groupStatus(g);
         const groupKey = takeGroupKey(s);
         const takeChip = g.length > 1 ? `<span class="text-[10px] font-semibold bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full flex-shrink-0">${g.length} takes</span>` : '';
-        // Force viewMode='all' first, same reasoning as the Pipeline jump below -- Calendar/
-        // Pipeline both operate over ALL groups regardless of testing/all mode, so landing on
-        // a 'testing'-filtered List could hide the very item that was just tapped.
-        const jump = `viewMode='all'; viewTab='list'; viewStatus='${st}'; renderDash();`;
+        // jumpToList forces viewMode='all', same reasoning as the Pipeline jump above --
+        // Calendar/Pipeline both operate over ALL groups regardless of testing/all mode, so
+        // landing on a 'testing'-filtered List could hide the very item that was just tapped.
+        // `st` is always a groupStatus() return value (a fixed STATUS_ORDER/'Archived' string,
+        // never free text), so this interpolation is safe.
         return `
         <li class="flex items-center gap-2 px-4 py-3">
-          <button onclick="${jump}" class="flex-1 min-w-0 text-left flex items-center gap-2">
+          <button onclick="window.jumpToList('${st}')" class="flex-1 min-w-0 text-left flex items-center gap-2">
             <span class="flex-1 min-w-0 truncate text-sm text-slate-700">${escHtml(s.title)}</span>
             ${s.reel_number ? `<span class="text-xs text-slate-300 flex-shrink-0">#${s.reel_number}</span>` : ''}
             ${pill(st, STATUS_STYLE[st])}
@@ -1259,7 +1336,9 @@ function renderCalendar() {
           ${isAdmin
             ? `<label class="relative h-9 px-3 inline-flex items-center rounded-full bg-blue-50 border border-blue-100 text-xs font-medium text-blue-600 flex-shrink-0">
                  📅 Set date
-                 <input type="date" class="absolute inset-0 w-full h-full opacity-0 text-base" onchange="window.setGroupDate('${groupKey}', this.value || null)">
+                 <input type="date" data-group-key="${escHtml(groupKey)}" class="absolute inset-0 w-full h-full opacity-0 text-base"
+                   onclick="this.showPicker && this.showPicker()"
+                   onchange="window.setGroupDate(this.dataset.groupKey, this.value || null)">
                </label>`
             : `<span class="text-slate-300 flex-shrink-0">›</span>`}
         </li>`;
@@ -1323,9 +1402,12 @@ function scrollToDayPanel() {
 // ─────────────────────────────────────────────
 // ACTIONS (global so onclick= works)
 // ─────────────────────────────────────────────
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; calSelectedDay = null; renderDash(); };
-window.setStatus2  = s    => { viewStatus = s; renderDash(); };
-window.setMode     = m    => { viewMode = m; viewStatus = 'all'; renderDash(); };
+// Native List browsing (status tabs, mode toggle, client switch) always resets
+// viewStatusExact to false -- it's only ever set true by a jump FROM Pipeline/Calendar
+// (see window.jumpToList below), and should never stick around after that.
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; renderDash(); };
+window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
+window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
 // but a selected day from client A's calendar shouldn't carry over to client B's.
 window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; window.scrollTo(0, 0); renderDash(); };
@@ -1333,23 +1415,54 @@ window.moveStatus  = (id, status) => setStatus(id, status);
 window.requestTweak = (id) => requestTweak(id);
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
 
+// Single jump-in helper for every "tap a count in Pipeline/Calendar -> land in List" path
+// (Pipeline stage rows, the Passed row, unscheduled Calendar rows) -- replaces copy-pasted
+// inline onclick strings. viewStatusExact=true makes List's own filter match groupStatus()
+// exactly (same bucketing Pipeline/Calendar just used), instead of List's native per-take
+// `.some()` filter, so the count just tapped matches what List then shows (F1/F2). Also
+// resets scroll to the top of the page (F3) since landing mid-page was disorienting.
+window.jumpToList = (status) => {
+  viewMode = 'all';
+  viewTab = 'list';
+  viewStatus = status;
+  viewStatusExact = true;
+  calSelectedDay = null;
+  renderDash();
+  window.scrollTo(0, 0);
+};
+
 // Calendar navigation / selection -- all plain state writes + renderDash(), see the
 // calMonth/calSelectedDay/calShowUnscheduled comment at their declaration for why these
 // live as module-level `let`s instead of DOM state.
-window.calGoToday      = () => { const now = new Date(); calMonth = { y: now.getFullYear(), m: now.getMonth() }; renderDash(); };
+window.calGoToday      = () => {
+  const now = new Date();
+  calMonth = { y: now.getFullYear(), m: now.getMonth() };
+  calSelectedDay = null; // clear -- a day selected in the month just left shouldn't linger
+  renderDash();
+};
 window.calShiftMonth   = delta => {
   let { y, m } = calMonth;
   m += delta;
   if (m < 0) { m = 11; y -= 1; } else if (m > 11) { m = 0; y += 1; }
   calMonth = { y, m };
+  // Clear the selected day on month nav -- otherwise the day panel keeps showing a date from
+  // the month you just left, AND incorrectly suppresses the "nothing planned this month" empty
+  // state (which only renders when no day is selected).
+  calSelectedDay = null;
   renderDash();
 };
-window.selectCalDay    = d => { calSelectedDay = (calSelectedDay === d ? null : d); renderDash(); };
+window.selectCalDay    = d => {
+  const selecting = calSelectedDay !== d; // toggle: re-tapping the same day deselects it
+  calSelectedDay = selecting ? d : null;
+  if (selecting) calScrollPending = true; // only scroll when a day is actually being opened
+  renderDash();
+};
 window.toggleUnscheduled = () => { calShowUnscheduled = !calShowUnscheduled; renderDash(); };
 window.calJumpToDate   = dateStr => {
   const [yy, mm] = dateStr.split('-').map(Number);
   calMonth = { y: yy, m: mm - 1 };
   calSelectedDay = dateStr;
+  calScrollPending = true; // jumping straight to a specific date should scroll to its panel
   renderDash();
 };
 
@@ -1360,15 +1473,31 @@ window.calJumpToDate   = dateStr => {
 // every other write in this app: Supabase RLS on `scripts` doesn't itself separate clients,
 // so this is a UI convenience, not a hard security boundary (pre-existing, out of scope here).
 window.setGroupDate = async (groupKey, ymdOrNull) => {
-  const rows = scripts.filter(s => takeGroupKey(s) === groupKey);
-  if (!rows.length) return;
-  const payload = { date_planned: ymdOrNull || null };
-  const { error } = await sb.from('scripts').update(payload).in('id', rows.map(s => s.id));
-  if (!error) {
+  try {
+    const rows = scripts.filter(s => takeGroupKey(s) === groupKey);
+    if (!rows.length) return;
+    // Reject a malformed/partial value (desktop date-input footgun) instead of writing it --
+    // null is still a legitimate "clear the date" request and always allowed through.
+    if (ymdOrNull && !isValidPlannedDate(ymdOrNull)) {
+      console.warn('setGroupDate: ignoring invalid date value', ymdOrNull);
+      return;
+    }
+    const payload = { date_planned: ymdOrNull || null };
+    const ids = rows.map(s => s.id);
+    // .select('id') asks Supabase to hand back the rows it actually matched -- a token refresh
+    // failure (session expired while the PWA was left open) can make .update().in() match ZERO
+    // rows and still resolve with no error, which would otherwise look identical to a real
+    // success and optimistically patch local state with a date that was never saved.
+    const { data, error } = await sb.from('scripts').update(payload).in('id', ids).select('id');
+    if (error) { renderError(error); return; }
+    if (!data || data.length !== ids.length) {
+      renderError(new Error("The date didn't save -- your session may have expired. Please sign in again and retry."));
+      return;
+    }
     rows.forEach(s => Object.assign(s, payload));
     renderDash();
-  } else {
-    renderError(error);
+  } catch (e) {
+    renderError(e);
   }
 };
 

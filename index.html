@@ -785,6 +785,7 @@ function renderCardGroup(group) {
   const groupKey = takeGroupKey(group[0]);
   const idx = hasTakes ? (activeTake[groupKey] ?? 0) % group.length : 0;
   const s = group[idx];
+  const isAdmin = role === 'admin';
 
   const statusStyle = STATUS_STYLE[s.status] || STATUS_STYLE['Draft'];
   const formatStyle = FORMAT_STYLE[s.format] || 'bg-slate-100 text-slate-500';
@@ -798,6 +799,18 @@ function renderCardGroup(group) {
 
   const ctaClean = !s.cta || s.cta.toLowerCase().includes('none') || s.cta.toLowerCase().includes('clean');
   const ctaLabel = ctaClean ? null : s.cta.replace(/^comment\s*/i,'').split(/\s/)[0];
+
+  // Admin-only planned-posting-date picker, same overlay-chip pattern as the Calendar view's
+  // unscheduled rows (a bare empty <input type=date> is nearly invisible on iOS Safari). A
+  // multi-take group shares ONE date -- setGroupDate() writes it to every take's row.
+  const groupPlannedDate = (group.find(g => g.date_planned) || {}).date_planned;
+  const dateChip = isAdmin ? `
+    <label class="relative h-7 px-2.5 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-medium text-blue-600 flex-shrink-0">
+      📅 ${groupPlannedDate ? groupPlannedDate.slice(0, 10) : 'Set date'}
+      <input type="date" value="${groupPlannedDate ? groupPlannedDate.slice(0, 10) : ''}"
+        class="absolute inset-0 w-full h-full opacity-0 text-base"
+        onchange="window.setGroupDate('${groupKey}', this.value || null)">
+    </label>` : '';
 
   // Sous Chef Pass — the 7-field reference-reel breakdown. Stored once per take-group (not
   // duplicated on every row), so look it up from whichever row actually has it.
@@ -824,13 +837,14 @@ function renderCardGroup(group) {
 
     <!-- Header -->
     <div class="px-4 pt-4 pb-3">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center justify-between mb-2 gap-2">
         <div class="flex items-center gap-1.5 flex-wrap">
           ${s.reel_number ? `<span class="text-xs font-bold text-slate-300">#${s.reel_number}</span>` : ''}
           ${pill(s.format || 'Script', formatStyle)}
           ${pill(s.status, statusStyle)}
           ${ctaLabel ? `<span class="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-medium">Comment ${ctaLabel}</span>` : ''}
         </div>
+        ${dateChip}
       </div>
       <div class="font-bold text-slate-800 text-base leading-snug">${s.title}</div>
       ${s.batch ? `<div class="text-[10px] text-slate-300 mt-0.5 mb-2.5 tracking-wide">${escHtml(s.batch)}</div>` : '<div class="mb-3"></div>'}
@@ -1332,6 +1346,25 @@ window.calJumpToDate   = dateStr => {
   calMonth = { y: yy, m: mm - 1 };
   calSelectedDay = dateStr;
   renderDash();
+};
+
+// Admin-only: writes date_planned to every take in a group at once (Q3 -- a multi-take
+// group shares one posting date). ymdOrNull is either a 'YYYY-MM-DD' string straight from a
+// native <input type=date>'s .value, or null to clear the date. Gated behind role==='admin'
+// at the UI layer only (the date-input chips are only rendered for admins) -- same caveat as
+// every other write in this app: Supabase RLS on `scripts` doesn't itself separate clients,
+// so this is a UI convenience, not a hard security boundary (pre-existing, out of scope here).
+window.setGroupDate = async (groupKey, ymdOrNull) => {
+  const rows = scripts.filter(s => takeGroupKey(s) === groupKey);
+  if (!rows.length) return;
+  const payload = { date_planned: ymdOrNull || null };
+  const { error } = await sb.from('scripts').update(payload).in('id', rows.map(s => s.id));
+  if (!error) {
+    rows.forEach(s => Object.assign(s, payload));
+    renderDash();
+  } else {
+    renderError(error);
+  }
 };
 
 window.toggle = id => {

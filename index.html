@@ -960,10 +960,131 @@ function renderCardGroup(group) {
 }
 
 // ─────────────────────────────────────────────
-// PIPELINE VIEW — placeholder, filled in fully below this milestone.
+// PIPELINE VIEW — a stacked stage list with a progress bar, not kanban (six status columns
+// don't fit a phone screen). One row per STATUS_ORDER stage Draft..Posted, a quieter Passed
+// row below a divider, and an admin-only Archived footer line.
 // ─────────────────────────────────────────────
+const PIPELINE_STAGES = STATUS_ORDER.filter(s => s !== 'Passed'); // Draft..Posted
+
 function renderPipeline() {
-  return `<div class="text-center py-16 px-6 text-slate-300 text-sm">Pipeline view coming up.</div>`;
+  const isAdmin = role === 'admin';
+  const clientName = CLIENTS[viewSlug]?.name || viewSlug;
+  const groups = activeGroupsFor(viewSlug);
+
+  if (!groups.length) {
+    return `
+    <div class="text-center py-16 px-6">
+      <div class="text-3xl mb-3">📊</div>
+      <div class="text-sm font-semibold text-slate-600 mb-1">No scripts yet for ${escHtml(clientName)}.</div>
+    </div>`;
+  }
+
+  const bucket = {};
+  PIPELINE_STAGES.forEach(s => bucket[s] = []);
+  const passedBucket = [];
+  groups.forEach(g => {
+    const st = groupStatus(g);
+    if (st === 'Passed') passedBucket.push(g);
+    else (bucket[st] || (bucket[st] = [])).push(g);
+  });
+
+  const totalNonPassed = PIPELINE_STAGES.reduce((n, s) => n + bucket[s].length, 0);
+  const postedCount = bucket['Posted'].length;
+
+  // Summary card + segmented progress bar -- flex-grow by raw COUNT (not percentage) so
+  // rounding never leaves a visible gap, min-width 6px so a count of 1 doesn't disappear.
+  // Rounded ends come from the track's own overflow-hidden rounded-full; inner edges stay
+  // square, the gap-[2px] shows the white card background through as a thin divider.
+  const nonZeroStages = PIPELINE_STAGES.filter(s => bucket[s].length > 0);
+  const barSegments = nonZeroStages
+    .map(s => `<div style="flex: ${bucket[s].length} 1 0%; min-width: 6px" class="${STATUS_DOT[s]}"></div>`)
+    .join('');
+
+  const summaryCard = `
+  <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+    <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Progress</div>
+    <div class="flex items-baseline gap-2 mb-3">
+      <div class="text-2xl font-bold text-blue-600">${postedCount}</div>
+      <div class="text-base font-semibold text-slate-400">of ${totalNonPassed} posted</div>
+    </div>
+    <div class="h-3 flex gap-[2px] rounded-full overflow-hidden ${nonZeroStages.length ? '' : 'bg-slate-100'}">
+      ${barSegments}
+    </div>
+    <div class="flex justify-between text-[10px] uppercase tracking-wide text-slate-400 mt-1.5">
+      <span>Draft</span><span>Posted</span>
+    </div>
+  </div>`;
+
+  // Stage rows — zero-count stage renders as a <div>, not a <button>, so there's no dead-end
+  // tap target to an empty list.
+  const stageRows = PIPELINE_STAGES.map(stage => {
+    const stageGroups = bucket[stage];
+    const count = stageGroups.length;
+    const dot = STATUS_DOT[stage];
+
+    if (count === 0) {
+      return `
+      <div class="w-full flex gap-3 pl-3 pr-4 py-3.5 opacity-50">
+        <div class="w-1 self-stretch rounded-full ${dot}"></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">${pill(stage, STATUS_STYLE[stage])}<span class="text-base font-bold text-slate-300 tabular-nums">0</span></div>
+          </div>
+          <div class="text-[13px] text-slate-400 mt-1">None right now</div>
+        </div>
+      </div>`;
+    }
+
+    const onCalendar = stageGroups.filter(g => groupDate(g)).length;
+    const calHint = onCalendar === 0 ? `<span class="text-slate-300">None on calendar yet</span>`
+      : onCalendar === count ? `All ${count} on calendar`
+      : `${onCalendar} of ${count} on calendar`;
+
+    const titles = stageGroups.slice(0, 3)
+      .map(g => `<div class="text-[13px] leading-5 text-slate-500 truncate">${escHtml(g[0].title)}</div>`)
+      .join('');
+    const more = count > 3 ? `<span>+${count - 3} more</span>` : '<span></span>';
+
+    // Force viewMode='all' first so the count tapped here matches what's then shown in List --
+    // otherwise a client/admin looking at the 'testing' mode could tap "12 Draft" and land on a
+    // filtered List that only shows 3 of them.
+    const jumpTo = `viewMode='all'; viewTab='list'; viewStatus='${stage}'; renderDash();`;
+
+    return `
+    <button onclick="${jumpTo}" class="w-full text-left flex gap-3 pl-3 pr-4 py-3.5 active:bg-slate-50">
+      <div class="w-1 self-stretch rounded-full ${dot}"></div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2">${pill(stage, STATUS_STYLE[stage])}<span class="text-base font-bold text-slate-800 tabular-nums">${count}</span></div>
+          <span class="text-slate-300">›</span>
+        </div>
+        <div class="mt-1 space-y-0.5">${titles}</div>
+        <div class="flex items-center justify-between mt-1 text-[11px] text-slate-400">
+          <span>${more}</span>
+          <span>${calHint}</span>
+        </div>
+      </div>
+    </button>`;
+  }).join('');
+
+  const stagesCard = `<div class="bg-white rounded-2xl border border-slate-100 overflow-hidden divide-y divide-slate-100">${stageRows}</div>`;
+
+  // Passed row -- dashed border ("set aside"), still tappable, no title previews.
+  const passedRow = passedBucket.length ? `
+  <button onclick="viewMode='all'; viewTab='list'; viewStatus='Passed'; renderDash();"
+    class="w-full text-left flex items-center justify-between rounded-2xl border border-dashed border-slate-200 px-4 py-3.5">
+    <span class="text-sm text-slate-500">✕ ${passedBucket.length} passed</span>
+    <span class="text-slate-300">›</span>
+  </button>` : '';
+
+  // Archived footer -- admin only, only rendered if something is actually archived.
+  const archivedTotal = groupIntoTakes(scripts.filter(s => s.client_slug === viewSlug))
+    .filter(g => groupStatus(g) === 'Archived').length;
+  const archivedFooter = (isAdmin && archivedTotal > 0)
+    ? `<div class="text-center text-[11px] text-slate-300">📦 ${archivedTotal} archived (not shown)</div>`
+    : '';
+
+  return [summaryCard, stagesCard, passedRow, archivedFooter].filter(Boolean).join('');
 }
 
 // ─────────────────────────────────────────────

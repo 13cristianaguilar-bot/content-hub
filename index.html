@@ -802,12 +802,14 @@ function renderCardGroup(group) {
 
   // Admin-only planned-posting-date picker, same overlay-chip pattern as the Calendar view's
   // unscheduled rows (a bare empty <input type=date> is nearly invisible on iOS Safari). A
-  // multi-take group shares ONE date -- setGroupDate() writes it to every take's row.
-  const groupPlannedDate = (group.find(g => g.date_planned) || {}).date_planned;
+  // multi-take group shares ONE date -- setGroupDate() writes it to every take's row. Reuses
+  // groupDate() (the same helper the Calendar buckets days with) so the date shown here is
+  // always the exact one the group would file under on the calendar.
+  const groupPlannedDate = groupDate(group);
   const dateChip = isAdmin ? `
     <label class="relative h-7 px-2.5 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-medium text-blue-600 flex-shrink-0">
-      📅 ${groupPlannedDate ? groupPlannedDate.slice(0, 10) : 'Set date'}
-      <input type="date" value="${groupPlannedDate ? groupPlannedDate.slice(0, 10) : ''}"
+      📅 ${groupPlannedDate || 'Set date'}
+      <input type="date" value="${groupPlannedDate || ''}"
         class="absolute inset-0 w-full h-full opacity-0 text-base"
         onchange="window.setGroupDate('${groupKey}', this.value || null)">
     </label>` : '';
@@ -1242,7 +1244,10 @@ function renderCalendar() {
         const st = groupStatus(g);
         const groupKey = takeGroupKey(s);
         const takeChip = g.length > 1 ? `<span class="text-[10px] font-semibold bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full flex-shrink-0">${g.length} takes</span>` : '';
-        const jump = `viewTab='list'; viewStatus='${st}'; renderDash();`;
+        // Force viewMode='all' first, same reasoning as the Pipeline jump below -- Calendar/
+        // Pipeline both operate over ALL groups regardless of testing/all mode, so landing on
+        // a 'testing'-filtered List could hide the very item that was just tapped.
+        const jump = `viewMode='all'; viewTab='list'; viewStatus='${st}'; renderDash();`;
         return `
         <li class="flex items-center gap-2 px-4 py-3">
           <button onclick="${jump}" class="flex-1 min-w-0 text-left flex items-center gap-2">

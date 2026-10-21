@@ -258,7 +258,7 @@ async function init() {
           // Reset admin-only calendar state so it can't leak into the next person who signs in
           // on this same tab/device (the app never reloads on auth change -- these are plain
           // module-level `let`s that would otherwise survive across sessions).
-          calSelectedDay = null; calShowUnscheduled = false;
+          calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
           unsubscribeLiveChanges(); renderLogin();
         }
       } catch (e) { renderError(e); }
@@ -277,6 +277,10 @@ async function afterLogin(u) {
   // tabs that would let them escape are both hidden whenever they can't see the view toggle.
   // Force back to List for any session that can't see the toggle, every time it logs in.
   if (!(role === 'admin' || CLIENT_VIEW_TABS)) viewTab = 'list';
+  // Same leak as above: viewStatusExact must not survive into a new session either (e.g. an
+  // admin jumped in from Pipeline right before signing out), or a client's List filter could
+  // silently use the group-collapsed match instead of the normal per-take one.
+  viewStatusExact = false;
   await fetchScripts();
   // Auto-route clients to their action queue. If they have new scripts, take them straight there.
   // If everything is reviewed, show all so they can see their history.
@@ -1012,7 +1016,7 @@ function renderCardGroup(group) {
     <!-- Sous Chef Pass — optional, collapsed by default. One per take-group, not per take,
          since it's a breakdown of the reference reel, which is the same across all takes. -->
     ${sousChef ? `
-    <button onclick="toggle('${sousChefGroupKey}')"
+    <button data-sc-key="${escHtml(sousChefGroupKey)}" onclick="toggle(this.dataset.scKey)"
       class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
       <span class="font-medium">Sous Chef Pass — reference reel breakdown</span>
       <span id="chev-${sousChefGroupKey}" class="text-slate-300">▸</span>

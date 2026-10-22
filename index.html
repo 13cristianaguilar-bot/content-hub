@@ -1614,7 +1614,7 @@ function renderNext7Strip() {
 
     if (!day.dayGroups.length) {
       return `
-      <button onclick="window.selectCalDay('${day.dateStr}')"
+      <button onclick="window.selectCalDayFromStrip('${day.dateStr}')"
         class="flex-none snap-start w-[42%] rounded-xl border border-dashed border-slate-200 px-3 py-3 text-left">
         <div class="text-xs font-semibold ${day.isToday ? 'text-blue-600' : 'text-slate-500'} mb-2">${dayLabel}</div>
         <div class="text-xs text-slate-300 text-center py-4">Nothing planned</div>
@@ -1633,7 +1633,7 @@ function renderNext7Strip() {
     }).join('');
 
     return `
-    <button onclick="window.selectCalDay('${day.dateStr}')"
+    <button onclick="window.selectCalDayFromStrip('${day.dateStr}')"
       class="flex-none snap-start w-[42%] rounded-xl border ${day.isToday ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100 bg-white'} px-3 py-3 text-left shadow-sm">
       <div class="flex items-center justify-between mb-2">
         <div class="text-xs font-semibold ${day.isToday ? 'text-blue-600' : 'text-slate-500'}">${dayLabel}</div>
@@ -1992,6 +1992,17 @@ window.selectCalDay    = d => {
   calSelectedDay = selecting ? d : null;
   if (selecting) calScrollPending = true; // only scroll when a day is actually being opened
   renderDash();
+};
+// F1 -- the Next-7-days strip can show a day belonging to a DIFFERENT month than whatever the
+// grid currently has open (e.g. grid showing December, but today is Oct 28 so the strip has a
+// card for Nov 1) -- tapping it must move the grid to that month too (same thing
+// calJumpToDate() already does), or the day panel opens while the grid still shows the wrong
+// month with nothing marked selected. Delegates to selectCalDay() for the actual
+// select/toggle/scroll behavior so re-tapping the same strip card still deselects it.
+window.selectCalDayFromStrip = d => {
+  const [yy, mm] = d.split('-').map(Number);
+  calMonth = { y: yy, m: mm - 1 };
+  window.selectCalDay(d);
 };
 window.toggleUnscheduled = () => { calShowUnscheduled = !calShowUnscheduled; renderDash(); };
 window.calJumpToDate   = dateStr => {

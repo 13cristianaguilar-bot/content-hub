@@ -217,6 +217,61 @@ let calScrollPending = false;
 // status-tab/mode/client interaction so normal List browsing keeps its existing behavior.
 let viewStatusExact = false;
 
+// ─────────────────────────────────────────────
+// localStorage helpers — tiny try/catch wrappers so a browser with storage disabled (private
+// mode edge cases, some in-app webviews) degrades to "use the default" instead of throwing and
+// taking the whole render down with it.
+// ─────────────────────────────────────────────
+function lsGetStr(key, fallback)  { try { const v = localStorage.getItem(key); return v === null ? fallback : v; } catch (e) { return fallback; } }
+function lsSetStr(key, val)       { try { localStorage.setItem(key, val); } catch (e) {} }
+function lsGetBool(key, fallback) { try { const v = localStorage.getItem(key); return v === null ? fallback : v === '1'; } catch (e) { return fallback; } }
+function lsSetBool(key, val)      { try { localStorage.setItem(key, val ? '1' : '0'); } catch (e) {} }
+
+// Refinement round -- new UI-only state. Same rule as viewTab/calMonth/calSelectedDay above:
+// anything that drives what's on screen must live in a module-level `let`, consumed fresh on
+// every renderDashInner() call, because a realtime Supabase update can trigger a full redraw
+// at any moment and a value that only lived in the DOM (a toggled class, a hidden attribute)
+// would be silently wiped out by that redraw.
+let settingsOpen = false;      // Item 2 -- settings popover open/closed. Transient, not persisted.
+let calShowKey    = false;     // Item 5 -- inline "?" legend expand/collapse. Transient, not persisted
+                                // (separate from the persisted "always show color key" SETTING below).
+// Item 1 -- Filters pill expand/collapse. Persisted, but read from localStorage ONCE here at
+// load -- every subsequent toggle flips this live `let` AND writes through to localStorage, it
+// never re-reads localStorage mid-session.
+let filtersOpen = lsGetBool('hub_filters_open', false);
+// Item 6 -- Pipeline's "pick your stat" chip. Persisted across sessions.
+let pipelineStat = lsGetStr('hub_pipeline_stat', 'posted');
+// Item 2 settings -- "Open on sign-in": 'last' | 'list' | 'calendar' | 'pipeline'.
+let settingOpenOnSignIn  = lsGetStr('hub_setting_open_on_signin', 'last');
+// Item 2 settings -- "Always show color key" (Calendar legend). Default off -- the "?" trigger
+// (Item 5) is the default experience.
+let settingAlwaysShowKey = lsGetBool('hub_setting_show_key', false);
+
+// Item 3 -- "remember last view", admin only, KEYED BY USER ID so a client who logs into the
+// same browser/device never inherits admin's saved client/tab. Deliberately does NOT persist
+// calSelectedDay / calMonth / viewStatus -- see afterLogin() for why.
+function lastViewKey(uid) { return `hub_lastview_${uid}`; }
+function saveLastView() {
+  if (role !== 'admin' || !user) return;
+  try { localStorage.setItem(lastViewKey(user.id), JSON.stringify({ viewSlug, viewTab })); } catch (e) {}
+}
+function loadLastView(uid) {
+  try {
+    const raw = localStorage.getItem(lastViewKey(uid));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return (parsed && typeof parsed === 'object') ? parsed : null;
+  } catch (e) { return null; }
+}
+
+// Escape closes the settings popover (Item 2). Registered once at script load, not inside
+// renderDashInner() -- the whole #app subtree gets replaced on every render, but a listener
+// attached to `document` itself survives that fine, so this must only ever run once (adding it
+// inside the render function would stack a new listener on every redraw).
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && settingsOpen) { settingsOpen = false; renderDash(); }
+});
+
 // Client-facing "how this works" guide. Persisted per-browser via localStorage so it doesn't
 // nag on every visit once dismissed, but stays one tap away via the "?" button in the header.
 // Admins (Cristian) never see this -- it's onboarding for CLIENTS, not for him.
@@ -259,6 +314,7 @@ async function init() {
           // on this same tab/device (the app never reloads on auth change -- these are plain
           // module-level `let`s that would otherwise survive across sessions).
           calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
+          settingsOpen = false; calShowKey = false;
           unsubscribeLiveChanges(); renderLogin();
         }
       } catch (e) { renderError(e); }
@@ -281,6 +337,29 @@ async function afterLogin(u) {
   // admin jumped in from Pipeline right before signing out), or a client's List filter could
   // silently use the group-collapsed match instead of the normal per-take one.
   viewStatusExact = false;
+
+  // Item 3 -- silent "remember last view" restore, admin only. Reset every piece of transient
+  // view state that must NEVER be restored first (selected day, shown month, status filter) --
+  // restoring those would either auto-scroll to a huge stale day panel or make a fresh login
+  // look empty. Only viewSlug/viewTab are candidates for restore, and only when the "Open on
+  // sign-in" setting is 'last'.
+  calSelectedDay = null;
+  calMonth = null;      // always open on the real current month, never a stale one
+  viewStatus = 'all';   // always reset the List filter on a fresh login, never restore it
+  if (role === 'admin') {
+    if (settingOpenOnSignIn === 'last') {
+      const saved = loadLastView(u.id);
+      const slugValid = saved && saved.viewSlug && CLIENTS[saved.viewSlug];
+      viewSlug = slugValid ? saved.viewSlug : Object.keys(CLIENTS)[0];
+      const tabValid = saved && ['list', 'calendar', 'pipeline'].includes(saved.viewTab);
+      viewTab = tabValid ? saved.viewTab : 'list';
+    } else {
+      // Fixed option ('list' | 'calendar' | 'pipeline') -- use it directly, don't touch the
+      // saved client.
+      viewTab = settingOpenOnSignIn;
+    }
+  }
+
   await fetchScripts();
   // Auto-route clients to their action queue. If they have new scripts, take them straight there.
   // If everything is reviewed, show all so they can see their history.
@@ -523,6 +602,30 @@ function activeGroupsFor(slug) {
   return groupIntoTakes(scripts.filter(s => s.client_slug === slug)).filter(g => groupStatus(g) !== 'Archived');
 }
 
+// Shared by the Next-7-days strip (Item 4) and Pipeline's "Scheduled this week" stat (Item 6)
+// -- a single source of truth for what "this week" means, so both features agree on the exact
+// same window. Deliberately a ROLLING 7-day window (today + the next 6 days), NOT a Sun-Sat
+// calendar week -- a calendar week would show mostly past days by Thursday/Friday, which is
+// useless for "what's coming up." Returns plain 'YYYY-MM-DD' strings built from LOCAL date
+// parts (see the CRITICAL CORRECTNESS note on ymd() below) so the range can be compared
+// lexicographically against groupDate()'s output.
+function rollingWeekRange() {
+  const now = new Date();
+  const start = ymd(now.getFullYear(), now.getMonth(), now.getDate());
+  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 6);
+  const end = ymd(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+  return { start, end };
+}
+
+// Groups whose groupDate() falls within [startStr, endStr] (inclusive, both 'YYYY-MM-DD').
+// String comparison is safe here because 'YYYY-MM-DD' sorts lexicographically == chronologically.
+function groupsInRange(groups, startStr, endStr) {
+  return groups.filter(g => {
+    const d = groupDate(g);
+    return d && d >= startStr && d <= endStr;
+  });
+}
+
 // Builds a 'YYYY-MM-DD' string from LOCAL year/month(0-11)/day parts.
 //
 // CRITICAL: date_planned arrives from Supabase as a plain 'YYYY-MM-DD' string (Postgres
@@ -558,6 +661,13 @@ function renderDash() {
 }
 
 function renderDashInner() {
+  // Item 4 state-survival -- the Next-7-days strip's horizontal scroll position lives only in
+  // the DOM (`scrollLeft`), and the DOM node is destroyed and recreated by the innerHTML
+  // rebuild below. Capture it now, before that happens; restored at the bottom of this
+  // function via requestAnimationFrame (same technique scrollToDayPanel() already uses).
+  const next7ScrollEl = document.getElementById('next7-strip');
+  const next7ScrollLeft = next7ScrollEl ? next7ScrollEl.scrollLeft : 0;
+
   const isAdmin  = role === 'admin';
 
   // Client tabs (admin only)
@@ -620,7 +730,7 @@ function renderDashInner() {
   // Mode toggle — admin only. Clients don't need to know about A/B testing mechanics;
   // they always see all their scripts (viewMode is locked to 'all' for clients at login).
   const modeTabs = (isAdmin && testingGroups.length) ? `
-    <div class="flex gap-2 mb-3">
+    <div class="flex gap-2">
       <button onclick="setMode('testing')"
         class="px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'testing'
           ? 'bg-violet-600 text-white'
@@ -661,7 +771,7 @@ function renderDashInner() {
   // CLIENT_VIEW_TABS is flipped on (Cristian wants to try it himself first).
   const canSeeViewTabs = isAdmin || CLIENT_VIEW_TABS;
   const viewToggle = canSeeViewTabs ? `
-    <div role="tablist" class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl mb-3">
+    <div role="tablist" class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl">
       ${['list', 'calendar', 'pipeline'].map(t => `
         <button role="tab" onclick="setViewTab('${t}')"
           class="h-9 rounded-lg text-[13px] font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-500 ${viewTab === t
@@ -670,6 +780,75 @@ function renderDashInner() {
           ${t === 'list' ? 'List' : t === 'calendar' ? 'Calendar' : 'Pipeline'}
         </button>`).join('')}
     </div>` : '';
+
+  // ───────────────────────────────────────────
+  // ITEM 1 (row 1) + ITEM 2 — gear icon, settings popover, and the collapsed row-1 layout.
+  // Admin-only; clients keep the original row-1 layout untouched (name + "?" + Sign out).
+  // ───────────────────────────────────────────
+  const gearIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`;
+
+  const gearButton = isAdmin ? `
+    <button onclick="window.toggleSettings()" aria-label="Settings"
+      class="text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center flex-shrink-0">
+      ${gearIconSvg}
+    </button>` : '';
+
+  const settingsPanel = (isAdmin && settingsOpen) ? renderSettingsPanel() : '';
+  const settingsBackdrop = (isAdmin && settingsOpen)
+    ? `<button onclick="window.closeSettings()" aria-label="Close settings" class="fixed inset-0 z-30 bg-transparent cursor-default"></button>`
+    : '';
+
+  const headerRow1 = isAdmin ? `
+    <div class="flex items-center gap-2">
+      <div class="flex-1 min-w-0 overflow-x-auto no-scrollbar flex items-center gap-2">${clientTabs}</div>
+      <div class="flex items-center gap-1 flex-shrink-0">
+        ${gearButton}
+        <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px] flex-shrink-0">
+          Sign out
+        </button>
+      </div>
+    </div>` : `
+    <div class="flex items-center justify-between">
+      <div class="font-semibold text-slate-800 text-sm tracking-tight">${clientName}</div>
+      <div class="flex items-center gap-1">
+        <button onclick="toggleHelp()" class="text-xs text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center">?</button>
+        <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px]">
+          Sign out
+        </button>
+      </div>
+    </div>`;
+
+  // ───────────────────────────────────────────
+  // ITEM 1 (row 3) — collapsed "Filters" pill + always-visible mode/status chips. Admin + List
+  // only. The chips must always reflect the REAL active filter even while collapsed -- admin
+  // defaults to 'testing' mode, which hides most of the backlog, so silently hiding that from
+  // view would be a "where did my scripts go" trap.
+  // ───────────────────────────────────────────
+  const modeChipLabel = effectiveMode === 'testing' ? '🧪 In Testing' : '📋 All';
+  const modeChipCount = effectiveMode === 'testing' ? testingGroups.length : allGroups.length;
+  const modeChip = `<span class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">${modeChipLabel} <span class="opacity-60">· ${modeChipCount}</span></span>`;
+
+  const statusChip = viewStatus !== 'all' ? `
+    <button onclick="window.setStatus2('all')" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white">
+      ${viewStatus} <span class="opacity-70">· ${countByStatus[viewStatus] || 0}</span> <span class="opacity-80">✕</span>
+    </button>` : '';
+
+  const filtersRow = (isAdmin && viewTab === 'list') ? `
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+      <button onclick="window.toggleFiltersOpen()"
+        class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${filtersOpen
+          ? 'bg-slate-800 text-white border-slate-800'
+          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}">
+        Filters ${filtersOpen ? '▾' : '▸'}
+      </button>
+      ${modeChip}${statusChip}
+    </div>` : '';
+
+  // The full mode/status tabs block -- unchanged markup, just shown/hidden. Clients always see
+  // it (no Filters pill for them); admin only sees it when the pill is expanded.
+  const expandedFilterBlock = (viewTab === 'list' && (!isAdmin || filtersOpen)) ? `
+    ${modeTabs}
+    <div class="flex gap-2 overflow-x-auto no-scrollbar">${statusTabs}</div>` : '';
 
   // Glowing "New Scripts" banner — client-only, shows when Needs Review count > 0. Keeps
   // working from Calendar/Pipeline too (it's meaningless outside List, so it routes there).
@@ -690,26 +869,24 @@ function renderDashInner() {
     </div>` : '';
 
   document.getElementById('app').innerHTML = `
-    <div class="max-w-xl mx-auto min-h-screen flex flex-col">
+    <div class="max-w-xl mx-auto min-h-screen flex flex-col relative">
 
-      <!-- Sticky header -->
-      <div class="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 px-4 pb-3 pt-4">
-        <div class="flex items-center justify-between mb-3">
-          <div class="font-semibold text-slate-800 text-sm tracking-tight">
-            ${isAdmin ? 'Content Hub' : clientName}
-          </div>
-          <div class="flex items-center gap-1">
-            ${!isAdmin ? `<button onclick="toggleHelp()" class="text-xs text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center">?</button>` : ''}
-            <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px]">
-              Sign out
-            </button>
-          </div>
-        </div>
-        ${isAdmin ? `<div class="flex gap-2 mb-3">${clientTabs}</div>` : ''}
+      <!-- Sticky header -- contents wrapped in space-y-3 (not per-item margins) so spacing
+           stays consistent whether List's extra filter rows are showing or not (Calendar/
+           Pipeline previously stacked the toggle's own mb-3 on top of this container's pb-3,
+           producing a double gap -- fixed by centralizing spacing here). -->
+      <div class="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 px-4 pb-3 pt-4 space-y-3">
+        ${headerRow1}
         ${viewToggle}
-        ${viewTab === 'list' ? modeTabs : ''}
-        ${viewTab === 'list' ? `<div class="flex gap-2 overflow-x-auto no-scrollbar">${statusTabs}</div>` : ''}
+        ${filtersRow}
+        ${expandedFilterBlock}
       </div>
+
+      <!-- Settings popover (Item 2) -- backdrop first (so it's visually "behind"), panel
+           second. Both are siblings of the sticky header (not nested inside it) so z-index
+           comparisons aren't capped by the header's own stacking context. -->
+      ${settingsBackdrop}
+      ${settingsPanel}
 
       <!-- New Scripts glowing banner — appears when Needs Review count > 0 -->
       ${newScriptsBanner}
@@ -748,6 +925,72 @@ function renderDashInner() {
   // unrelated redraw while a day stays selected (realtime updates, take-tab taps, status
   // buttons inside the day panel, expanding unscheduled, month nav).
   if (calScrollPending) { calScrollPending = false; scrollToDayPanel(); }
+
+  // Restore the Next-7-days strip's scroll position captured at the top of this function --
+  // same requestAnimationFrame-after-rebuild technique as scrollToDayPanel(), just for
+  // scrollLeft instead of scrollIntoView. A no-op when the strip isn't in the DOM (not on
+  // Calendar) or was already at scrollLeft 0.
+  requestAnimationFrame(() => {
+    const el = document.getElementById('next7-strip');
+    if (el) el.scrollLeft = next7ScrollLeft;
+  });
+}
+
+// ─────────────────────────────────────────────
+// SETTINGS POPOVER (Item 2) — admin only. Anchored top-right under the header row, closes on
+// backdrop tap / Escape / its own ✕. Changing a setting does NOT close it (so you can see the
+// "Currently: ..." line update live, or flip the color-key toggle and immediately see the
+// calendar react, without the panel snapping shut).
+// ─────────────────────────────────────────────
+function renderSettingsPanel() {
+  // "Currently: ..." reflects whatever is actually SAVED to localStorage (what would be
+  // restored on the next sign-in), not just the live in-memory state -- the two normally match
+  // (every admin nav action writes through immediately via saveLastView()), but this is the
+  // one piece of UI that makes the otherwise-invisible "remember last view" rule inspectable.
+  const saved = user ? loadLastView(user.id) : null;
+  const curSlug = (saved && CLIENTS[saved.viewSlug]) ? saved.viewSlug : viewSlug;
+  const curTab  = (saved && ['list', 'calendar', 'pipeline'].includes(saved.viewTab)) ? saved.viewTab : viewTab;
+  const curTabLabel = curTab === 'list' ? 'List' : curTab === 'calendar' ? 'Calendar' : 'Pipeline';
+  const curClientLabel = CLIENTS[curSlug]?.label || curSlug;
+  const currentlyLine = `${curTabLabel} · ${curClientLabel}`;
+
+  const openOptions = [
+    { v: 'last',     label: 'Where I left off' },
+    { v: 'list',     label: 'List' },
+    { v: 'calendar', label: 'Calendar' },
+    { v: 'pipeline', label: 'Pipeline' },
+  ];
+
+  const radioRows = openOptions.map(o => `
+    <label class="flex items-start gap-2.5 py-2 cursor-pointer">
+      <input type="radio" name="openOnSignIn" value="${o.v}" ${settingOpenOnSignIn === o.v ? 'checked' : ''}
+        onchange="window.setOpenOnSignIn('${o.v}')" class="mt-0.5 accent-slate-800">
+      <span class="flex-1">
+        <span class="block text-sm text-slate-700">${o.label}</span>
+        ${o.v === 'last' ? `<span class="block text-[11px] text-slate-400 mt-0.5">Currently: ${currentlyLine}</span>` : ''}
+      </span>
+    </label>`).join('');
+
+  return `
+  <div class="absolute right-4 top-16 z-40 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-label="Settings">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-sm font-bold text-slate-800">Settings</div>
+      <button onclick="window.closeSettings()" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
+    </div>
+
+    <div class="mb-1">
+      <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Open on sign-in</div>
+      <div class="divide-y divide-slate-100">${radioRows}</div>
+    </div>
+
+    <div class="border-t border-slate-100 mt-2 pt-3 flex items-center justify-between gap-3">
+      <div class="text-sm text-slate-700">Always show color key</div>
+      <button onclick="window.toggleAlwaysShowKey()" role="switch" aria-checked="${settingAlwaysShowKey}"
+        class="relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${settingAlwaysShowKey ? 'bg-slate-800' : 'bg-slate-200'}">
+        <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settingAlwaysShowKey ? 'translate-x-5' : ''}"></span>
+      </button>
+    </div>
+  </div>`;
 }
 
 // ─────────────────────────────────────────────
@@ -1409,15 +1652,34 @@ function scrollToDayPanel() {
 // Native List browsing (status tabs, mode toggle, client switch) always resets
 // viewStatusExact to false -- it's only ever set true by a jump FROM Pipeline/Calendar
 // (see window.jumpToList below), and should never stick around after that.
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; saveLastView(); renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
 // but a selected day from client A's calendar shouldn't carry over to client B's.
-window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; window.scrollTo(0, 0); renderDash(); };
+window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; saveLastView(); window.scrollTo(0, 0); renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
 window.requestTweak = (id) => requestTweak(id);
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
+
+// Item 1 -- Filters pill (List, admin only). Persisted.
+window.toggleFiltersOpen = () => { filtersOpen = !filtersOpen; lsSetBool('hub_filters_open', filtersOpen); renderDash(); };
+
+// Item 2 -- settings popover. Open/close are transient; the two settings inside it persist
+// individually (see their setters below). Neither setter closes the panel -- the owner should
+// be able to see the effect of a change (e.g. the "Currently: ..." line, or the calendar
+// reacting to the color-key toggle) without it snapping shut.
+window.toggleSettings     = () => { settingsOpen = !settingsOpen; renderDash(); };
+window.closeSettings      = () => { settingsOpen = false; renderDash(); };
+window.setOpenOnSignIn    = v  => { settingOpenOnSignIn = v; lsSetStr('hub_setting_open_on_signin', v); renderDash(); };
+window.toggleAlwaysShowKey = () => { settingAlwaysShowKey = !settingAlwaysShowKey; lsSetBool('hub_setting_show_key', settingAlwaysShowKey); renderDash(); };
+
+// Item 5 -- inline "?" legend expand/collapse (Calendar). Transient, not persisted -- separate
+// from the persisted "Always show color key" SETTING above.
+window.toggleCalShowKey = () => { calShowKey = !calShowKey; renderDash(); };
+
+// Item 6 -- Pipeline's stat picker. Persisted.
+window.setPipelineStat = v => { pipelineStat = v; lsSetStr('hub_pipeline_stat', v); renderDash(); };
 
 // Single jump-in helper for every "tap a count in Pipeline/Calendar -> land in List" path
 // (Pipeline stage rows, the Passed row, unscheduled Calendar rows) -- replaces copy-pasted

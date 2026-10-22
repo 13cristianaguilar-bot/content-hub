@@ -24,20 +24,38 @@ create table if not exists scripts (
 
 -- ─────────────────────────────────────────────
 -- ROW LEVEL SECURITY
--- Any signed-in user can read all scripts.
--- Any signed-in user can update status.
--- Only admins can insert/delete (enforced in app, not RLS, for simplicity).
+-- Admins can read/update/insert everything. A client can only read/update their OWN
+-- client_slug's rows, and can't insert at all. Checked against app_metadata, not
+-- user_metadata -- app_metadata can only be set by an admin/service-role, so a client can't
+-- grant themselves admin or claim another client's slug by editing their own account data.
+-- See migrations/2026-10-22_scripts_client_isolation_rls.sql for the full writeup and the
+-- app_metadata setup step required for every admin/client account.
 -- ─────────────────────────────────────────────
 alter table scripts enable row level security;
 
-create policy "signed_in_can_read" on scripts
-  for select to authenticated using (true);
+create policy "admin_or_own_client_can_read" on scripts
+  for select to authenticated
+  using (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    or client_slug = (auth.jwt() -> 'app_metadata' ->> 'client_slug')
+  );
 
-create policy "signed_in_can_update" on scripts
-  for update to authenticated using (true);
+create policy "admin_or_own_client_can_update" on scripts
+  for update to authenticated
+  using (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    or client_slug = (auth.jwt() -> 'app_metadata' ->> 'client_slug')
+  )
+  with check (
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    or client_slug = (auth.jwt() -> 'app_metadata' ->> 'client_slug')
+  );
 
-create policy "signed_in_can_insert" on scripts
-  for insert to authenticated with check (true);
+create policy "admin_only_insert" on scripts
+  for insert to authenticated
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- No delete policy -- stays default-deny.
 
 -- ─────────────────────────────────────────────
 -- SEED: Jan's Batch-01 scripts (9 reels)

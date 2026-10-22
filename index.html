@@ -875,9 +875,13 @@ function renderDashInner() {
   const modeChipCount = effectiveMode === 'testing' ? testingGroups.length : allGroups.length;
   const modeChip = `<span class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">${modeChipLabel} <span class="opacity-60">· ${modeChipCount}</span></span>`;
 
+  // F4 -- count GROUPS (visibleGroups, already filtered to this exact status above), not raw
+  // takes (countByStatus) -- the cards actually on screen are grouped, so a chip built from
+  // per-take counts can show a different number than what's visible, the same mismatch a prior
+  // QA round already fixed for the Pipeline->List jump path.
   const statusChip = viewStatus !== 'all' ? `
     <button onclick="window.setStatus2('all')" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white">
-      ${viewStatus} <span class="opacity-70">· ${countByStatus[viewStatus] || 0}</span> <span class="opacity-80">✕</span>
+      ${viewStatus} <span class="opacity-70">· ${visibleGroups.length}</span> <span class="opacity-80">✕</span>
     </button>` : '';
 
   const filtersRow = (isAdmin && viewTab === 'list') ? `
@@ -1868,9 +1872,14 @@ function renderCalendar() {
     const allDated = Object.keys(byDay).sort();
     const future = allDated.filter(d => d >= todayStr);
     const nextPlanned = future.length ? future[0] : (allDated.length ? allDated[allDated.length - 1] : null);
+    // F5 -- name the shown MONTH specifically, rather than a bare "nothing on the calendar yet"
+    // -- the Next-7-days strip above can legitimately have items while the currently-shown grid
+    // month has none (e.g. strip spans a month boundary), and a generic "nothing on the
+    // calendar" reads as a direct contradiction of a strip sitting right above it with items in
+    // it. Naming the month makes clear this is about THIS month, not the whole calendar.
     const copy = isAdmin
-      ? { l1: 'Nothing on the calendar yet', l2: 'Set a date on any script above to place it here.' }
-      : { l1: 'Nothing on the calendar yet', l2: "Filming dates will show up here once they're set." };
+      ? { l1: `Nothing planned in ${MONTH_NAMES[m]}`, l2: 'Set a date on any script above to place it here.' }
+      : { l1: `Nothing planned in ${MONTH_NAMES[m]}`, l2: "Filming dates will show up here once they're set." };
     dayPanelSlot = `
     <section id="day-panel" class="mt-5" style="${scrollMarginStyle}">
       <div class="rounded-2xl border border-dashed border-slate-200 px-5 py-8 text-center">

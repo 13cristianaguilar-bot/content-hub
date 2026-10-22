@@ -1,0 +1,24 @@
+name: Auto-match posted videos
+
+on:
+  schedule:
+    # Weekly, Monday 9am UTC — after a weekend that may have had a new post,
+    # ahead of the work week so Cristian can confirm/dismiss matches early.
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # manual trigger from the GitHub Actions tab — required
+                      # for the first live test run before trusting the schedule
+
+jobs:
+  match:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run matcher
+        env:
+          SUPABASE_URL: https://udkbnlpnfyjuwlstfxhr.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          COMPOSIO_API_KEY: ${{ secrets.COMPOSIO_API_KEY }}
+          COMPOSIO_INSTAGRAM_ACCOUNT_ID: ${{ secrets.COMPOSIO_INSTAGRAM_ACCOUNT_ID }}
+        run: node scripts/match-posted-videos.mjs

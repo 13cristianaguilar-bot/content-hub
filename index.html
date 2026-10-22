@@ -2091,7 +2091,11 @@ window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact
 // but a selected day from client A's calendar shouldn't carry over to client B's.
 window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; window.scrollTo(0, 0); renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
-window.requestTweak = (id) => requestTweak(id);
+// (No `window.requestTweak = (id) => requestTweak(id)` alias here -- there used to be one, and it
+// broke the Tweak button outright: a top-level `function requestTweak` in a classic script
+// already IS window.requestTweak, so that assignment replaced the real function with an arrow
+// whose `requestTweak(id)` call resolved back to... itself. Infinite recursion -> RangeError on
+// every Tweak tap, prompt never shown. Top-level function declarations need no window alias.)
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
 
 // Item 1 -- Filters pill (List, admin only). Persisted.

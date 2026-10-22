@@ -232,6 +232,27 @@ function lsSetBool(key, val)      { try { localStorage.setItem(key, val ? '1' : 
 // every renderDashInner() call, because a realtime Supabase update can trigger a full redraw
 // at any moment and a value that only lived in the DOM (a toggled class, a hidden attribute)
 // would be silently wiped out by that redraw.
+// K1 -- a settings change (radio pick, switch flip) triggers a full renderDash() redraw, which
+// tears down and rebuilds the whole #app subtree -- without this, a keyboard user tabbing/
+// arrow-keying through the settings panel loses focus (lands on <body>) after every single
+// selection. Each focusable control in the panel carries a stable `data-focus-id`; capture the
+// id of whichever one is focused right before the redraw, then look it up again by that id and
+// refocus it once the new DOM exists.
+let pendingFocusId = null;
+function captureFocusForRedraw() {
+  const el = document.activeElement;
+  pendingFocusId = (el && el.dataset && el.dataset.focusId) ? el.dataset.focusId : null;
+}
+function restoreFocusAfterRedraw() {
+  if (!pendingFocusId) return;
+  const id = pendingFocusId;
+  pendingFocusId = null;
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`[data-focus-id="${id}"]`);
+    if (el) el.focus();
+  });
+}
+
 let settingsOpen = false;      // Item 2 -- settings popover open/closed. Transient, not persisted.
 let calShowKey    = false;     // Item 5 -- inline "?" legend expand/collapse. Transient, not persisted
                                 // (separate from the persisted "always show color key" SETTING below).
@@ -269,7 +290,9 @@ function loadLastView(uid) {
 // attached to `document` itself survives that fine, so this must only ever run once (adding it
 // inside the render function would stack a new listener on every redraw).
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && settingsOpen) { settingsOpen = false; renderDash(); }
+  // K3 -- routed through window.closeSettings() (not a bare `settingsOpen = false; renderDash()`)
+  // so Escape returns focus to the gear button the same way the backdrop tap and ✕ button do.
+  if (e.key === 'Escape' && settingsOpen) { window.closeSettings(); }
 });
 
 // Client-facing "how this works" guide. Persisted per-browser via localStorage so it doesn't
@@ -803,7 +826,7 @@ function renderDashInner() {
   const gearIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`;
 
   const gearButton = isAdmin ? `
-    <button onclick="window.toggleSettings()" aria-label="Settings"
+    <button data-focus-id="settings-gear" onclick="window.toggleSettings()" aria-label="Settings" aria-haspopup="dialog" aria-expanded="${settingsOpen}"
       class="text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center flex-shrink-0">
       ${gearIconSvg}
     </button>` : '';
@@ -978,7 +1001,7 @@ function renderSettingsPanel() {
 
   const radioRows = openOptions.map(o => `
     <label class="flex items-start gap-2.5 py-2 cursor-pointer">
-      <input type="radio" name="openOnSignIn" value="${o.v}" ${settingOpenOnSignIn === o.v ? 'checked' : ''}
+      <input type="radio" name="openOnSignIn" value="${o.v}" data-focus-id="signin-${o.v}" ${settingOpenOnSignIn === o.v ? 'checked' : ''}
         onchange="window.setOpenOnSignIn('${o.v}')" class="mt-0.5 accent-slate-800">
       <span class="flex-1">
         <span class="block text-sm text-slate-700">${o.label}</span>
@@ -987,23 +1010,36 @@ function renderSettingsPanel() {
     </label>`).join('');
 
   return `
-  <div class="absolute right-4 top-16 z-40 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-label="Settings">
-    <div class="flex items-center justify-between mb-2">
-      <div class="text-sm font-bold text-slate-800">Settings</div>
-      <button onclick="window.closeSettings()" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
-    </div>
+  <!-- C2 -- this outer wrapper is "fixed inset-x-0 top-0", anchored to the VIEWPORT, not to the
+       page's scrolling flow. The old markup put "absolute" directly on the panel, positioned
+       relative to the outer page wrapper (which scrolls with the page) -- so scrolling down even
+       slightly carried the panel off-screen while the gear icon (sticky header) stayed visible,
+       and the still-fixed, still-full-viewport backdrop kept eating the next tap. The wrapper
+       itself has no height (zero-height box, "pointer-events-none") so it can't block clicks
+       outside the panel; the panel re-enables pointer-events on itself. Constraining the inner
+       column to "max-w-xl mx-auto" keeps the panel lined up with the rest of the app's content
+       column exactly like before. -->
+  <div class="fixed inset-x-0 top-0 z-40 pointer-events-none">
+    <div class="max-w-xl mx-auto relative">
+      <div class="pointer-events-auto absolute right-4 top-16 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-sm font-bold text-slate-800">Settings</div>
+          <button data-focus-id="settings-close" onclick="window.closeSettings()" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
+        </div>
 
-    <div class="mb-1">
-      <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Open on sign-in</div>
-      <div class="divide-y divide-slate-100">${radioRows}</div>
-    </div>
+        <div class="mb-1">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Open on sign-in</div>
+          <div class="divide-y divide-slate-100">${radioRows}</div>
+        </div>
 
-    <div class="border-t border-slate-100 mt-2 pt-3 flex items-center justify-between gap-3">
-      <div class="text-sm text-slate-700">Always show color key</div>
-      <button onclick="window.toggleAlwaysShowKey()" role="switch" aria-checked="${settingAlwaysShowKey}"
-        class="relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${settingAlwaysShowKey ? 'bg-slate-800' : 'bg-slate-200'}">
-        <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settingAlwaysShowKey ? 'translate-x-5' : ''}"></span>
-      </button>
+        <div class="border-t border-slate-100 mt-2 pt-3 flex items-center justify-between gap-3">
+          <div id="always-show-key-label" class="text-sm text-slate-700">Always show color key</div>
+          <button data-focus-id="always-show-key" onclick="window.toggleAlwaysShowKey()" role="switch" aria-checked="${settingAlwaysShowKey}" aria-labelledby="always-show-key-label"
+            class="relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${settingAlwaysShowKey ? 'bg-slate-800' : 'bg-slate-200'}">
+            <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settingAlwaysShowKey ? 'translate-x-5' : ''}"></span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>`;
 }
@@ -1862,10 +1898,34 @@ window.toggleFiltersOpen = () => { filtersOpen = !filtersOpen; lsSetBool('hub_fi
 // individually (see their setters below). Neither setter closes the panel -- the owner should
 // be able to see the effect of a change (e.g. the "Currently: ..." line, or the calendar
 // reacting to the color-key toggle) without it snapping shut.
-window.toggleSettings     = () => { settingsOpen = !settingsOpen; renderDash(); };
-window.closeSettings      = () => { settingsOpen = false; renderDash(); };
-window.setOpenOnSignIn    = v  => { settingOpenOnSignIn = v; lsSetStr('hub_setting_open_on_signin', v); renderDash(); };
-window.toggleAlwaysShowKey = () => { settingAlwaysShowKey = !settingAlwaysShowKey; lsSetBool('hub_setting_show_key', settingAlwaysShowKey); renderDash(); };
+//
+// K3 -- dialog focus management: opening moves focus to the first focusable element inside the
+// panel (the ✕ close button, which is first in DOM order); closing (by ANY method -- the gear
+// button toggling it shut, the backdrop, Escape, or the ✕ itself) returns focus to the gear
+// button. Both are one requestAnimationFrame after renderDash() rebuilds the DOM, same timing
+// scrollToDayPanel()/restoreFocusAfterRedraw() already rely on.
+window.toggleSettings     = () => {
+  const opening = !settingsOpen;
+  settingsOpen = opening;
+  renderDash();
+  requestAnimationFrame(() => {
+    const el = document.querySelector(`[data-focus-id="${opening ? 'settings-close' : 'settings-gear'}"]`);
+    if (el) el.focus();
+  });
+};
+window.closeSettings      = () => {
+  settingsOpen = false;
+  renderDash();
+  requestAnimationFrame(() => {
+    const el = document.querySelector('[data-focus-id="settings-gear"]');
+    if (el) el.focus();
+  });
+};
+// K1 -- capture whichever control currently has focus BEFORE the value change + redraw below,
+// so restoreFocusAfterRedraw() (called at the end of every renderDashInner()) can put focus
+// back where it was.
+window.setOpenOnSignIn    = v  => { captureFocusForRedraw(); settingOpenOnSignIn = v; lsSetStr('hub_setting_open_on_signin', v); renderDash(); };
+window.toggleAlwaysShowKey = () => { captureFocusForRedraw(); settingAlwaysShowKey = !settingAlwaysShowKey; lsSetBool('hub_setting_show_key', settingAlwaysShowKey); renderDash(); };
 
 // Item 5 -- inline "?" legend expand/collapse (Calendar). Transient, not persisted -- separate
 // from the persisted "Always show color key" SETTING above.

@@ -427,6 +427,33 @@ async function afterLogin(u) {
 // ─────────────────────────────────────────────
 let realtimeChannel = null;
 let realtimeDebounceTimer = null;
+// X1 -- a realtime update arriving while a native <select> (Pipeline's stat picker) or
+// <input type="date"> (the date chips on cards / unscheduled rows) is focused/open must NOT
+// trigger an immediate redraw -- the full-page innerHTML rebuild destroys and recreates that
+// element mid-interaction, which on iOS dismisses the native picker wheel entirely out from
+// under the user. True while a redraw is being held back waiting for that element's own
+// `change`/`blur` event instead of firing right away.
+let pendingRealtimeRedraw = false;
+function isPickerElement(el) {
+  if (!el) return false;
+  const app = document.getElementById('app');
+  if (!app || !app.contains(el)) return false;
+  return el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type === 'date');
+}
+function redrawOrDeferForActivePicker() {
+  const el = document.activeElement;
+  if (!isPickerElement(el)) { renderDash(); return; }
+  if (pendingRealtimeRedraw) return; // already waiting on this element, don't stack listeners
+  pendingRealtimeRedraw = true;
+  const fire = () => {
+    el.removeEventListener('change', fire);
+    el.removeEventListener('blur', fire);
+    pendingRealtimeRedraw = false;
+    renderDash();
+  };
+  el.addEventListener('change', fire);
+  el.addEventListener('blur', fire);
+}
 function subscribeLiveChanges() {
   if (realtimeChannel) return; // already subscribed, don't double-subscribe on re-login
   try {
@@ -437,7 +464,7 @@ function subscribeLiveChanges() {
         // instead of firing it 3 times in quick succession.
         clearTimeout(realtimeDebounceTimer);
         realtimeDebounceTimer = setTimeout(async () => {
-          try { await fetchScripts(); renderDash(); } catch (e) { renderError(e); }
+          try { await fetchScripts(); redrawOrDeferForActivePicker(); } catch (e) { renderError(e); }
         }, 150);
       })
       .subscribe();
@@ -445,6 +472,7 @@ function subscribeLiveChanges() {
 }
 function unsubscribeLiveChanges() {
   clearTimeout(realtimeDebounceTimer);
+  pendingRealtimeRedraw = false;
   if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
 }
 

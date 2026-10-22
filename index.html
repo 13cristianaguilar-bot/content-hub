@@ -1306,6 +1306,19 @@ function renderCardGroup(group) {
 // ─────────────────────────────────────────────
 const PIPELINE_STAGES = STATUS_ORDER.filter(s => s !== 'Passed'); // Draft..Posted
 
+// Item 6 -- Pipeline's "pick your stat" chip (admin only; clients always see the fixed
+// "posted" headline below). `status` is the STATUS_ORDER/bucket key for the 5 status-based
+// options; `verb` fills the existing "N of Total {verb}" headline pattern. "Scheduled this
+// week" is the one non-status option -- no bucket, no verb, its own sentence instead.
+const PIPELINE_STAT_OPTIONS = [
+  { v: 'posted',        label: 'Posted',              status: 'Posted',       verb: 'posted',      color: 'text-blue-600' },
+  { v: 'needsReview',   label: 'Needs Review',        status: 'Needs Review', verb: 'need review',  color: 'text-yellow-700' }, // not yellow-600 -- fails contrast at this weight/size
+  { v: 'approved',      label: 'Approved',            status: 'Approved',     verb: 'approved',     color: 'text-emerald-600' },
+  { v: 'filming',       label: 'Filming',             status: 'Filming',      verb: 'filming',      color: 'text-orange-600' },
+  { v: 'draft',         label: 'Draft',               status: 'Draft',        verb: 'in draft',     color: 'text-slate-600' },
+  { v: 'scheduledWeek', label: 'Scheduled this week', status: null,           verb: null,            color: 'text-slate-800' },
+];
+
 function renderPipeline() {
   const isAdmin = role === 'admin';
   const clientName = CLIENTS[viewSlug]?.name || viewSlug;
@@ -1329,7 +1342,31 @@ function renderPipeline() {
   });
 
   const totalNonPassed = PIPELINE_STAGES.reduce((n, s) => n + bucket[s].length, 0);
-  const postedCount = bucket['Posted'].length;
+
+  // Item 6 -- which stat is driving the headline. Clients always see the fixed "posted"
+  // headline (no picker rendered for them below), regardless of whatever an admin session on
+  // the same browser last picked.
+  const effectiveStat = isAdmin ? pipelineStat : 'posted';
+  const statOpt = PIPELINE_STAT_OPTIONS.find(o => o.v === effectiveStat) || PIPELINE_STAT_OPTIONS[0];
+
+  let headlineNumber, headlineSuffix, highlightStatus = null;
+  if (statOpt.status) {
+    const count = bucket[statOpt.status] ? bucket[statOpt.status].length : 0;
+    headlineNumber = count;
+    headlineSuffix = `of ${totalNonPassed} ${statOpt.verb}`;
+    highlightStatus = statOpt.status;
+  } else {
+    // "Scheduled this week" -- a count, not a status bucket, so it gets its own sentence.
+    const { start, end } = rollingWeekRange();
+    const scheduledThisWeek = groupsInRange(groups.filter(g => groupStatus(g) !== 'Passed'), start, end);
+    headlineNumber = scheduledThisWeek.length;
+    headlineSuffix = `script${headlineNumber === 1 ? '' : 's'} scheduled this week`;
+  }
+  // Dimming reads as "the eye goes from the number to its matching slice" ONLY when there's a
+  // real status to point at AND it actually has a nonzero slice to point to -- dimming
+  // everything when the count is 0, or when a non-status stat ("Scheduled this week") is
+  // selected, would read as broken/disabled rather than as a filter.
+  const dimOtherSegments = highlightStatus !== null && headlineNumber > 0;
 
   // Summary card + segmented progress bar -- flex-grow by raw COUNT (not percentage) so
   // rounding never leaves a visible gap, min-width 6px so a count of 1 doesn't disappear.
@@ -1337,15 +1374,35 @@ function renderPipeline() {
   // square, the gap-[2px] shows the white card background through as a thin divider.
   const nonZeroStages = PIPELINE_STAGES.filter(s => bucket[s].length > 0);
   const barSegments = nonZeroStages
-    .map(s => `<div style="flex: ${bucket[s].length} 1 0%; min-width: 6px" class="${STATUS_DOT[s]}"></div>`)
+    .map(s => {
+      const dim = dimOtherSegments && s !== highlightStatus;
+      return `<div style="flex: ${bucket[s].length} 1 0%; min-width: 6px" class="${STATUS_DOT[s]} transition-opacity ${dim ? 'opacity-25' : ''}"></div>`;
+    })
     .join('');
+
+  // Native <select> overlaid transparently on a visible chip -- same iOS-safe overlay-input
+  // trick the date chips elsewhere in this file already use. text-base (16px) on the real
+  // control prevents iOS Safari's zoom-on-focus.
+  const statPicker = isAdmin ? `
+    <div class="relative inline-flex items-center ml-2">
+      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap">
+        ${statOpt.label} <span class="text-slate-400">▾</span>
+      </span>
+      <select onchange="window.setPipelineStat(this.value)" aria-label="Pipeline stat"
+        class="absolute inset-0 w-full h-full opacity-0 text-base" style="font-size:16px">
+        ${PIPELINE_STAT_OPTIONS.map(o => `<option value="${o.v}" ${o.v === effectiveStat ? 'selected' : ''}>${o.label}</option>`).join('')}
+      </select>
+    </div>` : '';
 
   const summaryCard = `
   <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
-    <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Progress</div>
+    <div class="flex items-center mb-1">
+      <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Progress</div>
+      ${statPicker}
+    </div>
     <div class="flex items-baseline gap-2 mb-3">
-      <div class="text-2xl font-bold text-blue-600">${postedCount}</div>
-      <div class="text-base font-semibold text-slate-400">of ${totalNonPassed} posted</div>
+      <div class="text-2xl font-bold ${statOpt.color}">${headlineNumber}</div>
+      <div class="text-base font-semibold text-slate-400">${headlineSuffix}</div>
     </div>
     <div class="h-3 flex gap-[2px] rounded-full overflow-hidden ${nonZeroStages.length ? '' : 'bg-slate-100'}">
       ${barSegments}

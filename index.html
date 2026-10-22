@@ -78,6 +78,8 @@ const CLIENTS = {
   andrew: { name: 'Andrew George',  label: 'Andrew' },
   jan:    { name: 'Jan Zands',      label: 'Jan'    },
   cristian: { name: 'Cristian Aguilar', label: 'Cristian' },
+  devin:  { name: 'Devin Shea',     label: 'Devin'  },
+  sagun:  { name: 'Sagun Sedai',    label: 'Sagun'  },
 };
 
 // Calendar/Pipeline views are admin-only for now -- Cristian wants to try them himself
@@ -221,7 +223,7 @@ let mySlug   = null;   // 'andrew' | 'jan' (clients only)
 let scripts  = [];
 let viewSlug = 'andrew';
 let viewStatus = 'all';
-let viewMode = 'testing'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
+let viewMode = 'all'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
                            // to 'testing' so anyone logging in sees the active A/B/C tests
                            // first, not buried in the backlog. Falls back to 'all' automatically
                            // if a client has no multi-take groups yet.

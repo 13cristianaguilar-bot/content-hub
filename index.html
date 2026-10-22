@@ -1285,7 +1285,7 @@ function renderCardGroup(group) {
           ${s.reel_number ? `<span class="text-xs font-bold text-slate-300">#${s.reel_number}</span>` : ''}
           ${pill(s.format || 'Script', formatStyle)}
           ${pill(s.status, statusStyle)}
-          ${ctaLabel ? `<span class="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-medium">Comment ${ctaLabel}</span>` : ''}
+          ${ctaLabel ? `<span class="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-medium">Comment ${escHtml(ctaLabel)}</span>` : ''}
         </div>
         ${dateChip}
       </div>

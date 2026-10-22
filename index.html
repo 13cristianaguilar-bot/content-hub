@@ -8,8 +8,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Content Hub">
   <!-- Android browser chrome color -->
-  <meta name="theme-color" content="#f8fafc">
-  <title>Content Hub</title>
+  <meta name="theme-color" content="#fafafa">
+  <title>Content Hub · signals.marketing</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -35,7 +35,322 @@
     }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="min-h-screen">
+<style>
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/fontsource/fonts/geist:vf@5.2.8/latin-wght-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("https://cdn.jsdelivr.net/fontsource/fonts/geist-mono:vf@5.2.7/latin-wght-normal.woff2") format("woff2");
+}
+:root {
+  --paper: #fafafa;
+  --ink: #171717;
+  --signal: #ce2029;
+  --signal-deep: #b71a23;
+  --blush: #f7e5e6;
+  --line: #d8d8d8;
+  --muted: #575757;
+  --soft: #f1eded;
+  --card: #fff;
+  --black: #080808;
+}
+body {
+  font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+button, input, select, textarea { font-family: inherit; }
+body.prompter-open { overflow: hidden; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+.hub-shell { width: 100%; max-width: 960px; margin-inline: auto; }
+.hub-header {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--paper);
+  border-bottom: 1px solid var(--line);
+  padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.hub-top { display: flex; align-items: center; gap: 12px; }
+.hub-top-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.brand-lockup { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand-wave { color: var(--signal); flex-shrink: 0; }
+.brand-word {
+  font-weight: 750; letter-spacing: -0.06em; font-size: 22px; line-height: 1;
+  color: var(--ink); white-space: nowrap;
+}
+.brand-ext { font-weight: 500; letter-spacing: -0.04em; }
+.brand-sub {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px; letter-spacing: 0.04em; color: var(--muted); margin-top: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.client-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+.client-tab {
+  flex: 1 0 auto; min-width: 0; min-height: 44px; padding: 0 8px;
+  background: transparent; border: 0; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; color: var(--muted); font-weight: 600; font-size: 14px;
+  letter-spacing: -0.02em;
+}
+.client-tab.is-on { color: var(--ink); border-bottom-color: var(--signal); }
+.seg {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  border: 1px solid var(--line); background: var(--card);
+}
+.seg-btn {
+  min-height: 40px; background: transparent; border: 0; color: var(--muted);
+  font-size: 13px; font-weight: 600;
+}
+.seg-btn.is-on { background: var(--ink); color: #fff; }
+.eyebrow {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--signal); font-weight: 500;
+}
+.shot {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--signal);
+  padding: 16px 16px 12px;
+}
+.shot.is-quiet { opacity: 0.72; }
+.shot-meta { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.shot-kicker {
+  color: var(--muted); font-size: 13px; line-height: 1.35; letter-spacing: -0.01em;
+}
+.shot-batch { color: #8a8a8a; font-size: 12px; margin-top: 2px; line-height: 1.35; }
+.shot-title {
+  font-size: 28px; line-height: 1.12; letter-spacing: -0.045em;
+  font-weight: 650; margin: 8px 0 12px;
+}
+.status-exact {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--signal); margin-bottom: 8px;
+}
+.rail { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rail-step {
+  min-height: 44px; border: 1px solid var(--line); background: #fff; color: #8a8a8a;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  display: flex; align-items: center; justify-content: center; text-align: center; padding: 6px;
+}
+.rail-step.is-done { color: var(--ink); border-color: var(--ink); }
+.rail-step.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.shot-body { display: flex; flex-direction: column; gap: 18px; margin-top: 16px; }
+.col-main, .col-side { display: contents; }
+.area-hooks { order: 1; }
+.area-ref { order: 2; }
+.area-script { order: 3; }
+.area-setup { order: 4; }
+.area-shots { order: 5; }
+.area-screen { order: 6; }
+.area-cta { order: 7; }
+.block-label { margin-bottom: 8px; }
+.hook-you {
+  font-size: 26px; line-height: 1.25; letter-spacing: -0.03em; font-weight: 600; margin: 0;
+}
+.hook-proven {
+  margin: 0; font-size: 15px; line-height: 1.45; color: var(--muted);
+  border-left: 2px solid var(--signal); padding-left: 12px;
+}
+.hook-pair { display: flex; flex-direction: column; gap: 14px; }
+.ref-row { display: flex; gap: 12px; align-items: stretch; }
+.ref-poster {
+  flex: 1; min-height: 72px; display: flex; align-items: center; gap: 12px;
+  text-align: left; background: var(--black); color: #fff; border: 0; padding: 10px 12px;
+}
+.ref-poster img { width: 72px; height: 52px; object-fit: cover; flex-shrink: 0; }
+.ref-play {
+  width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center;
+  color: var(--signal);
+}
+.ref-kicker { display: block; color: #ff6a70; font-family: "Geist Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; }
+.ref-cta { display: block; margin-top: 2px; font-weight: 600; letter-spacing: -0.02em; }
+.ref-open {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  min-width: 72px; padding: 0 10px; border: 1px solid var(--line); color: var(--ink);
+  font-size: 13px; font-weight: 600; text-decoration: none;
+}
+.embed-slot { margin-top: 8px; background: var(--black); }
+.embed-frame { display: block; width: min(100%, 360px); height: min(70vh, 640px); margin-inline: auto; border: 0; background: #000; }
+.shot-script {
+  font-size: 22px; line-height: 1.45; letter-spacing: -0.02em;
+  white-space: pre-wrap; margin: 0; font-weight: 450;
+}
+.q-sheet { list-style: none; margin: 0; padding: 0; }
+.q-sheet li { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
+.q-n {
+  font-family: "Geist Mono", ui-monospace, monospace; color: var(--signal);
+  font-size: 13px; width: 1.6rem; flex-shrink: 0; padding-top: 6px;
+}
+.q-t { font-size: 22px; line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; }
+.shot-intro { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.script-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.tool-btn, .adv-btn, .shot-alt button {
+  min-height: 44px; background: #fff; border: 1px solid var(--line); color: var(--ink);
+  padding: 0 14px; font-size: 14px; font-weight: 600;
+}
+.tool-btn.primary, .brand-btn, .pr-play {
+  background: var(--signal); color: #fff; border-color: var(--signal);
+}
+.brand-btn { min-height: 48px; width: 100%; font-weight: 650; letter-spacing: -0.02em; }
+.tool-btn.primary { background: var(--ink); border-color: var(--ink); }
+.setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.setup-tile { border: 1px solid var(--line); padding: 10px 12px; min-height: 76px; background: #fff; }
+.setup-tile p { margin: 6px 0 0; font-size: 14px; line-height: 1.35; letter-spacing: -0.01em; }
+.setup-tile.is-empty p { color: #8a8a8a; }
+.setup-notes { margin-top: 8px; font-size: 14px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; }
+.checks { display: flex; flex-direction: column; }
+.shot-check {
+  display: flex; gap: 12px; align-items: flex-start;
+  min-height: 44px; padding: 10px 0; border-top: 1px solid var(--line);
+  font-size: 16px; line-height: 1.35;
+}
+.shot-check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--signal); flex-shrink: 0; }
+.screen-line { display: flex; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 16px; }
+.screen-t {
+  font-family: "Geist Mono", ui-monospace, monospace; color: var(--signal);
+  font-size: 12px; min-width: 3.2rem; padding-top: 3px;
+}
+.cta-line, .cta-word {
+  margin: 0; font-weight: 650; letter-spacing: -0.04em; line-height: 1.15;
+}
+.cta-line { font-size: 24px; }
+.cta-word { font-size: 40px; }
+.cta-kicker { margin: 0 0 2px; color: var(--muted); font-size: 14px; }
+.cta-full { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.delivery { border-left: 2px solid var(--ink); padding-left: 12px; display: flex; flex-direction: column; gap: 10px; }
+.delivery p { margin: 4px 0 0; font-size: 15px; line-height: 1.45; }
+.tweak {
+  background: var(--blush); border: 1px solid #f0c4c7; padding: 12px 14px; margin-bottom: 14px;
+}
+.tweak p { margin: 6px 0 0; font-size: 15px; line-height: 1.45; }
+.take-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.take-tab {
+  min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: #fff;
+  font-size: 13px; font-weight: 600; color: var(--muted);
+}
+.take-tab.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.date-chip {
+  position: relative; display: inline-flex; align-items: center; flex-shrink: 0;
+  min-height: 32px; padding: 0 8px; font-size: 12px; font-weight: 600;
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+}
+.date-chip input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; }
+.date-chip.is-late { color: var(--signal); border-color: var(--signal); }
+.shot-actions { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.shot-go {
+  min-height: 52px; background: var(--signal); color: #fff; border: 0;
+  font-size: 17px; font-weight: 650; letter-spacing: -0.02em;
+}
+.shot-alt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.shot-alt button { width: 100%; }
+.nav-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.posted-flag, .quiet-flag {
+  min-height: 44px; display: flex; align-items: center; justify-content: center;
+  font-weight: 650; letter-spacing: -0.02em;
+}
+.posted-flag { background: var(--ink); color: #fff; }
+.adv { margin-top: 8px; border-top: 1px solid var(--line); }
+.adv-btn {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  background: transparent; border: 0; border-bottom: 1px solid var(--line);
+  padding: 0; text-align: left;
+}
+.adv-body { padding: 12px 0 16px; }
+.adv-grid { display: grid; gap: 8px; }
+.adv-card { border: 1px solid var(--line); padding: 10px 12px; }
+.adv-card p, .field pre, .setup-notes { white-space: pre-wrap; }
+.field { margin-bottom: 12px; }
+.field pre {
+  margin: 6px 0 0; font-family: "Geist", sans-serif; font-size: 13px; line-height: 1.45;
+  max-height: 14rem; overflow: auto; background: var(--paper); padding: 8px;
+}
+.stat-row { display: flex; gap: 18px; margin-bottom: 10px; }
+.stat-num { font-size: 28px; font-weight: 650; letter-spacing: -0.04em; line-height: 1; }
+.stat-label { font-family: "Geist Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.auth-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px 20px; }
+.auth-card { width: 100%; max-width: 400px; }
+.auth-panel { background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 22px; margin-top: 22px; }
+.auth-panel label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.auth-panel input {
+  width: 100%; border: 1px solid var(--line); min-height: 48px; padding: 0 12px; font-size: 16px; background: #fff;
+}
+.auth-panel input:focus { outline: 2px solid var(--signal); border-color: var(--signal); }
+.signout-btn {
+  min-height: 40px; padding: 0 10px; background: transparent; border: 0; color: var(--muted); font-size: 13px; font-weight: 600;
+}
+.icon-btn {
+  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--line); color: var(--ink);
+}
+#prompter {
+  position: fixed; inset: 0; z-index: 80; background: var(--black); color: #fff;
+  display: flex; flex-direction: column;
+}
+.pr-top, .pr-controls {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px; background: #101010;
+}
+.pr-top { padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid #2a2a2a; }
+.pr-title { flex: 1; min-width: 0; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pr-controls { border-top: 1px solid #2a2a2a; padding-bottom: calc(10px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+.pr-controls button, .pr-top button {
+  min-height: 44px; min-width: 44px; background: transparent; color: #fff; border: 1px solid #3a3a3a; padding: 0 12px; font-weight: 600;
+}
+.pr-play { background: var(--signal) !important; border-color: var(--signal) !important; min-width: 84px; }
+.pr-speed { flex: 1; min-width: 100px; accent-color: var(--signal); }
+#prompter-scroll { flex: 1; overflow: auto; padding: 22vh 24px 46vh; }
+#prompter-text { line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; }
+#prompter.is-mirror #prompter-text { transform: scaleX(-1); }
+.pr-focus {
+  pointer-events: none; position: absolute; left: 0; right: 0; top: 34%; height: 3.2rem;
+  border-top: 2px solid var(--signal); border-bottom: 2px solid var(--signal);
+  background: rgba(206, 32, 41, 0.08);
+}
+.pr-q { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid #2a2a2a; }
+.pr-qn { color: #ff6a70; font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.45em; padding-top: 0.35em; }
+.setup-notes button { min-height: 44px; font-size: 14px; font-weight: 600; color: var(--signal); background: none; border: 0; padding: 0; }
+.new-scripts-glow { animation: none !important; box-shadow: none !important; background: #171717 !important; }
+@media (min-width: 860px) {
+  .shot-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.8fr);
+    gap: 8px 32px;
+    align-items: start;
+  }
+  .col-main, .col-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+  .col-main { grid-column: 1; grid-row: 1; }
+  .col-side { grid-column: 2; grid-row: 1; }
+  .area-ref, .area-hooks, .area-script, .area-setup, .area-shots, .area-screen, .area-cta { order: 0; }
+  .setup-grid { grid-template-columns: 1fr 1fr; }
+  .shot-script, .q-t, .hook-you { max-width: 40rem; }
+}
+@media (max-width: 389px) {
+  .brand-word { font-size: 18px; }
+  .shot-title { font-size: 24px; }
+  .hook-you, .q-t, .shot-script { font-size: 20px; }
+  .client-tab { font-size: 13px; padding: 0 6px; }
+}
+
+</style>
 
 <div id="app">
   <div class="flex items-center justify-center min-h-screen">
@@ -48,6 +363,7 @@
      wiped by the very redraw that the status change it's reporting on triggers. Persistent
      aria-live region so screen readers announce each new message. -->
 <div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center px-4 safe-bottom" role="status" aria-live="polite"></div>
+<div id="prompter-root"></div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -371,6 +687,13 @@ function loadLastView(uid) {
 // fine, so this must only ever run once (adding it inside the render function would stack a
 // new listener on every redraw).
 document.addEventListener('keydown', (e) => {
+  if (document.getElementById('prompter')) {
+    if (e.key === 'Escape') { e.preventDefault(); window.closePrompter(); return; }
+    const tag = e.target && e.target.tagName;
+    if (e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+      e.preventDefault(); window.prompterToggle(); return;
+    }
+  }
   // K3 -- routed through window.closeSettings() (not a bare `settingsOpen = false; renderDash()`)
   // so Escape returns focus to the gear button the same way the backdrop tap and ✕ button do.
   if (e.key === 'Escape' && settingsOpen) { window.closeSettings(); return; }
@@ -494,6 +817,7 @@ async function init() {
           // A pending "Undo" belongs to the session that just ended -- it must not be tappable
           // (and fail, or worse, act under the next person's session) after sign-out.
           hideToast();
+          if (window.closePrompter) window.closePrompter();
           unsubscribeLiveChanges(); renderLogin();
         }
       } catch (e) { renderError(e); }
@@ -825,35 +1149,25 @@ function linkOrText(val) {
 // ─────────────────────────────────────────────
 function renderLogin() {
   document.getElementById('app').innerHTML = `
-    <div class="flex flex-col items-center justify-center min-h-screen px-5">
-      <div class="w-full max-w-sm">
-        <div class="text-center mb-8">
-          <div class="text-2xl font-bold text-slate-800 tracking-tight">Content Hub</div>
-          <div class="text-slate-400 text-sm mt-1">Sign in to view your scripts</div>
-        </div>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        ${brandLockup('Content Hub')}
         <!-- A real <form> (not loose inputs + an onclick button): Enter now submits from the
              email field too, not just the password field, and iOS/Chrome password managers
              recognise it as a login form and offer to fill/save credentials. -->
-        <form onsubmit="event.preventDefault(); doLogin()" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
-          <div id="err" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></div>
-          <div>
-            <label for="em" class="text-xs font-medium text-slate-600 block mb-1.5">Email</label>
-            <input id="em" type="email" autocomplete="email" placeholder="you@example.com"
-              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        <form onsubmit="event.preventDefault(); doLogin()" class="auth-panel">
+          <div id="err" class="hidden text-xs text-red-700 bg-red-50 px-3 py-2 mb-3"></div>
+          <div class="mb-3">
+            <label for="em">Email</label>
+            <input id="em" type="email" autocomplete="email" placeholder="you@example.com">
           </div>
-          <div>
-            <label for="pw" class="text-xs font-medium text-slate-600 block mb-1.5">Password</label>
-            <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"
-              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <div class="mb-4">
+            <label for="pw">Password</label>
+            <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••">
           </div>
-          <button id="lb" type="submit"
-            class="w-full bg-slate-800 text-white rounded-xl py-3 text-sm font-medium hover:bg-slate-700 active:scale-95 transition-all">
-            Sign in
-          </button>
-          <div class="text-center pt-1">
-            <button id="fpb" type="button" onclick="doForgotPassword()" class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
-              Forgot password?
-            </button>
+          <button id="lb" type="submit" class="brand-btn">Sign in</button>
+          <div class="text-center pt-3">
+            <button id="fpb" type="button" onclick="doForgotPassword()" class="signout-btn">Forgot password?</button>
           </div>
         </form>
       </div>
@@ -940,33 +1254,23 @@ async function doForgotPassword() {
 // ─────────────────────────────────────────────
 function renderSetNewPassword() {
   document.getElementById('app').innerHTML = `
-    <div class="flex flex-col items-center justify-center min-h-screen px-5">
-      <div class="w-full max-w-sm">
-        <div class="text-center mb-8">
-          <div class="text-2xl font-bold text-slate-800 tracking-tight">Choose a new password</div>
-          <div class="text-slate-400 text-sm mt-1">You'll use this to sign in from now on.</div>
-        </div>
-        <form onsubmit="event.preventDefault(); doSetNewPassword()" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
-          <div id="err" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></div>
-          <div>
-            <label for="npw" class="text-xs font-medium text-slate-600 block mb-1.5">New password</label>
-            <input id="npw" type="password" autocomplete="new-password" minlength="8"
-              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-            <div class="text-[11px] text-slate-400 mt-1">At least 8 characters.</div>
+    <div class="auth-wrap">
+      <div class="auth-card">
+        ${brandLockup('Choose a new password')}
+        <form onsubmit="event.preventDefault(); doSetNewPassword()" class="auth-panel">
+          <div id="err" class="hidden text-xs text-red-700 bg-red-50 px-3 py-2 mb-3"></div>
+          <div class="mb-3">
+            <label for="npw">New password</label>
+            <input id="npw" type="password" autocomplete="new-password" minlength="8">
+            <div class="text-[12px] text-neutral-500 mt-1">At least 8 characters. You'll use this to sign in from now on.</div>
           </div>
-          <div>
-            <label for="npw2" class="text-xs font-medium text-slate-600 block mb-1.5">Type it again</label>
-            <input id="npw2" type="password" autocomplete="new-password"
-              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          <div class="mb-4">
+            <label for="npw2">Type it again</label>
+            <input id="npw2" type="password" autocomplete="new-password">
           </div>
-          <button id="npb" type="submit"
-            class="w-full bg-slate-800 text-white rounded-xl py-3 text-sm font-medium hover:bg-slate-700 active:scale-95 transition-all">
-            Save new password
-          </button>
-          <div class="text-center pt-1">
-            <button type="button" onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
-              Cancel and sign out
-            </button>
+          <button id="npb" type="submit" class="brand-btn">Save new password</button>
+          <div class="text-center pt-3">
+            <button type="button" onclick="doLogout()" class="signout-btn">Cancel and sign out</button>
           </div>
         </form>
       </div>
@@ -1238,14 +1542,10 @@ function renderDashInner() {
   const isAdmin  = role === 'admin';
 
   // Client tabs (admin only)
-  const clientTabs = isAdmin ? Object.entries(CLIENTS).map(([slug, c]) =>
-    `<button onclick="setClient('${slug}')" aria-pressed="${viewSlug === slug}"
-      class="px-4 py-2 rounded-full text-sm font-medium transition-all ${viewSlug === slug
-        ? 'bg-slate-800 text-white'
-        : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
-      ${c.label}
-    </button>`
-  ).join('') : '';
+  const clientTabs = isAdmin ? `<nav class="client-tabs" aria-label="Clients">${Object.entries(CLIENTS).map(([slug, c]) =>
+    `<button type="button" onclick="setClient('${slug}')" aria-pressed="${viewSlug === slug}"
+      class="client-tab ${viewSlug === slug ? 'is-on' : ''}">${escHtml(c.label)}</button>`
+  ).join('')}</nav>` : '';
 
   // Script cards — see listGroupsForCurrentView() for the grouping -> mode -> status pipeline.
   // Status-tab counts below are scoped to the CURRENT mode, so a "Needs Review 34" count
@@ -1340,12 +1640,10 @@ function renderDashInner() {
   // CLIENT_VIEW_TABS is flipped on (Cristian wants to try it himself first).
   const canSeeViewTabs = isAdmin || CLIENT_VIEW_TABS;
   const viewToggle = canSeeViewTabs ? `
-    <div role="tablist" class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl">
+    <div role="tablist" class="seg" aria-label="View">
       ${VIEW_TABS.map(t => `
-        <button role="tab" aria-selected="${viewTab === t}" onclick="setViewTab('${t}')"
-          class="h-9 rounded-lg text-[13px] font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-500 ${viewTab === t
-            ? 'bg-white text-slate-800 shadow-sm'
-            : 'text-slate-500 active:bg-white/60'}">
+        <button type="button" role="tab" aria-selected="${viewTab === t}" onclick="setViewTab('${t}')"
+          class="seg-btn ${viewTab === t ? 'is-on' : ''}">
           ${VIEW_TAB_LABEL[t]}
         </button>`).join('')}
     </div>` : '';
@@ -1357,8 +1655,8 @@ function renderDashInner() {
   const gearIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`;
 
   const gearButton = isAdmin ? `
-    <button data-focus-id="settings-gear" onclick="window.toggleSettings()" aria-label="Settings" aria-haspopup="dialog" aria-expanded="${settingsOpen}"
-      class="text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center flex-shrink-0">
+    <button type="button" data-focus-id="settings-gear" onclick="window.toggleSettings()" aria-label="Settings" aria-haspopup="dialog" aria-expanded="${settingsOpen}"
+      class="icon-btn">
       ${gearIconSvg}
     </button>` : '';
 
@@ -1367,25 +1665,15 @@ function renderDashInner() {
     ? `<button onclick="window.closeSettings()" aria-label="Close settings" class="fixed inset-0 z-30 bg-transparent cursor-default"></button>`
     : '';
 
-  const headerRow1 = isAdmin ? `
-    <div class="flex items-center gap-2">
-      <div class="flex-1 min-w-0 overflow-x-auto no-scrollbar flex items-center gap-2">${clientTabs}</div>
-      <div class="flex items-center gap-1 flex-shrink-0">
-        ${gearButton}
-        <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px] flex-shrink-0">
-          Sign out
-        </button>
+  const headerRow1 = `
+    <div class="hub-top">
+      ${brandLockup(escHtml(clientName))}
+      <div class="hub-top-actions">
+        ${isAdmin ? gearButton : `<button type="button" onclick="toggleHelp()" aria-label="How this works" aria-expanded="${showHelp}" class="icon-btn">?</button>`}
+        <button type="button" onclick="doLogout()" class="signout-btn">Sign out</button>
       </div>
-    </div>` : `
-    <div class="flex items-center justify-between">
-      <div class="font-semibold text-slate-800 text-sm tracking-tight">${clientName}</div>
-      <div class="flex items-center gap-1">
-        <button onclick="toggleHelp()" aria-label="How this works" aria-expanded="${showHelp}" class="text-xs text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center">?</button>
-        <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px]">
-          Sign out
-        </button>
-      </div>
-    </div>`;
+    </div>
+    ${clientTabs}`;
 
   // ───────────────────────────────────────────
   // ITEM 1 (row 3) — collapsed "Filters" pill + always-visible mode/status chips. Admin + List
@@ -1442,13 +1730,11 @@ function renderDashInner() {
     </div>` : '';
 
   document.getElementById('app').innerHTML = `
-    <div class="max-w-xl mx-auto min-h-screen flex flex-col relative">
+    <div class="hub-shell min-h-screen flex flex-col relative">
 
-      <!-- Sticky header -- contents wrapped in space-y-3 (not per-item margins) so spacing
-           stays consistent whether List's extra filter rows are showing or not (Calendar/
-           Pipeline previously stacked the toggle's own mb-3 on top of this container's pb-3,
-           producing a double gap -- fixed by centralizing spacing here). -->
-      <div class="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 px-4 pb-3 pt-4 space-y-3">
+      <!-- Sticky header. Spacing lives on the header itself so Calendar/Pipeline don't
+           double up with the toggle's own margin. -->
+      <div class="hub-header">
         ${headerRow1}
         ${viewToggle}
         ${filtersRow}
@@ -1473,10 +1759,9 @@ function renderDashInner() {
           <ul class="text-xs text-violet-800 space-y-1.5 leading-relaxed">
             <li>🧪 <b>In Testing</b> — scripts with a few different versions to compare. <b>All Scripts</b> is everything else.</li>
             <li><b>Take A / B / C</b> tabs on a card — same idea, different opening hooks. Tap each one to compare before you film.</li>
-            <li>📹 <b>Ref</b> — the real video this format is based on. Tap the link to watch it.</li>
-            <li>On some cards, scroll down for the full breakdown in order: the reference reel → its real stats → clip directions → filming setup → then <b>what you're actually filming</b> — the hook, full script, and tonality, highlighted so it's the last thing you read before you hit record.</li>
-            <li>Tap <b>"Full script + filming notes"</b> to see everything you need to shoot it.</li>
-            <li>✅ <b>Film</b> = ready to shoot as-is · ✏️ <b>Tweak</b> = send it back for changes · ✕ <b>Pass</b> = skip this one</li>
+            <li>Each card is a shot card: reference, your line, the script or question sheet, setup, a shot checklist, on-screen text, then the CTA.</li>
+            <li><b>Full screen</b> opens a teleprompter. Pinch is not required — use A+ and Play.</li>
+            <li><b>Film this</b> means you are shooting it as written. <b>Request a tweak</b> sends it back. <b>Pass</b> skips it.</li>
             ${CLIENT_VIEW_TABS ? `
             <li>📅 <b>Calendar</b> — see what's scheduled to post on any given day, and what hasn't been dated yet.</li>
             <li>📊 <b>Pipeline</b> — see how many scripts are at each stage, from draft to posted.</li>` : ''}
@@ -1577,7 +1862,7 @@ function renderSettingsPanel() {
        reachable (scrollable) on a short/landscape screen instead of letting its bottom content
        get cut off with no way to scroll down to it. -->
   <div class="fixed inset-x-0 top-0 z-40 pointer-events-none">
-    <div class="max-w-xl mx-auto relative">
+    <div class="hub-shell relative">
       <div id="settings-panel" class="pointer-events-auto absolute right-4 top-16 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-bold text-slate-800">Settings</div>
@@ -1714,224 +1999,618 @@ function renderDossierBody(s) {
     </div>`;
 }
 
+// ─────────────────────────────────────────────
+// SHOT CARD — phone-first filming view. Parsers only reorganize text that
+// already lives on the row. Every column is also printed, raw, under All fields.
+// ─────────────────────────────────────────────
+function asText(v) {
+  if (v == null) return '';
+  if (typeof v === 'string') return v;
+  try { return JSON.stringify(v, null, 2); } catch (e) { return String(v); }
+}
+function clipText(str, n) {
+  str = (str || '').trim();
+  if (str.length <= n) return str;
+  const cut = str.slice(0, n - 1);
+  const sp = cut.lastIndexOf(' ');
+  return ((sp > 40 ? cut.slice(0, sp) : cut).trim()) + '…';
+}
+function wordCount(text) {
+  const m = String(text || '').trim().match(/\S+/g);
+  return m ? m.length : 0;
+}
+function readLabel(text) {
+  const w = wordCount(text);
+  if (!w) return '';
+  const sec = Math.max(1, Math.round((w / 150) * 60));
+  const time = sec < 60 ? sec + ' sec' : Math.round(sec / 60) + ' min';
+  return w + ' words · about ' + time;
+}
+
+function parseHookPair(hook) {
+  const raw = asText(hook).trim();
+  if (!raw) return { proven: '', adapted: '', raw: '' };
+  const parts = raw.split(/\n(?=ADAPTED\b)/i);
+  let proven = '', adapted = '';
+  parts.forEach(part => {
+    const p = part.trim();
+    if (/^ADAPTED\b/i.test(p)) adapted = p.replace(/^ADAPTED\b[^:\n]*:\s*/i, '').trim();
+    else if (/PROVEN HOOK/i.test(p)) proven = p.replace(/^[\s\S]*?PROVEN HOOK\b[^:\n]*:\s*/i, '').trim();
+  });
+  adapted = adapted.replace(/\n?On-screen bold caps:[\s\S]*$/i, '').trim();
+  if (!proven && !adapted) return { proven: '', adapted: raw, raw };
+  return { proven, adapted, raw };
+}
+
+function parseSetup(setup, camera) {
+  const text = asText(setup).trim();
+  const labeled = (name) => {
+    // Labels are often inline ("…pass. LOCATION: Fairmont…"), not only at the start of a line.
+    const m = text.match(new RegExp('(?:^|[\\n.]\\s*)' + name + '\\s*:\\s*([^\\n]+)', 'i'));
+    return m ? m[1].trim() : '';
+  };
+  let location = labeled('LOCATION');
+  let mic = labeled('MIC TIP') || labeled('MIC');
+  let shots = '';
+  const sm = text.match(/(?:^|\n)\s*SHOT LIST\s*:\s*([\s\S]*?)(?=\n\s*(?:TIME|MIC|LOCATION|HANDHELD OPTION|FRAMING|PHONE)\b|$)/i);
+  if (sm) shots = sm[1].trim();
+  let rig = '';
+  const rigSentence = text.split(/(?<=\.)\s+|\n/).map(s => s.trim()).find(s => /handheld|tripod|gimbal|\bphone\b/i.test(s));
+  if (rigSentence) rig = rigSentence.replace(/\s+/g, ' ').trim();
+  if (!mic) {
+    const mm = text.match(/[^.!\n]*\b(lav|shotgun|wireless mic|dji mic|clip\/wireless mic|mic)[^.!\n]*[.!]?/i);
+    if (mm) mic = mm[0].trim();
+  }
+  const cam = asText(camera).trim();
+  let framing = '';
+  if (cam && /fram|chest|head-on|vertical|eye|two-shot|close|medium/i.test(cam)) framing = cam;
+  if (!framing) {
+    const fm = text.match(/[^.!\n]*\b(framing|head-on|chest-up|mid-chest|eye height)[^.!\n]*[.!]?/i);
+    if (fm) framing = fm[0].trim();
+  }
+  return { location, rig, framing, mic, shots, raw: text, camera: cam };
+}
+
+function parseShots(raw) {
+  raw = (raw || '').trim();
+  if (!raw) return [];
+  const out = [];
+  const re = /(\d+)\)\s*([\s\S]*?)(?=\s*\d+\)|$)/g;
+  let m;
+  while ((m = re.exec(raw))) {
+    const t = m[2].trim().replace(/[.\s]+$/, '');
+    if (t) out.push(t);
+  }
+  if (out.length) return out;
+  if (raw.includes('→')) return raw.split(/\s*→\s*/).map(s => s.trim()).filter(Boolean);
+  return [raw];
+}
+
+function parseOnScreen(notes, hook) {
+  const items = [];
+  const text = [asText(notes), asText(hook)].filter(Boolean).join('\n');
+  const block = text.match(/ON-SCREEN TEXT\s*:\s*([^\n]+)/i);
+  if (block) {
+    block[1].split(/\s+\/\s+/).forEach(part => {
+      const p = part.trim();
+      if (!p) return;
+      const tm = p.match(/^(\d{1,2}:\d{2})\s+([\s\S]+)$/);
+      if (tm) items.push({ t: tm[1], text: tm[2].trim() });
+      else items.push({ t: '', text: p });
+    });
+  }
+  const re = /on-screen(?:\s+text)?(?:\s+at)?\s*(\d{1,2}:\d{2})\s*:\s*["“']?([^"\n”']+)/gi;
+  let m;
+  while ((m = re.exec(text))) {
+    const tx = m[2].trim();
+    if (!items.some(i => i.t === m[1] && i.text.slice(0, 16) === tx.slice(0, 16))) items.push({ t: m[1], text: tx });
+  }
+  const lt = text.match(/lower third at\s*(\d{1,2}:\d{2})\s*:\s*([^\n]+)/i);
+  if (lt) items.push({ t: lt[1], text: lt[2].trim() });
+  const caps = asText(hook).match(/On-screen bold caps:\s*([^\n]+)/i);
+  if (caps) items.unshift({ t: '0:00', text: caps[1].trim() });
+  const ov = asText(notes).match(/OVERLAYS:\s*([^\n]+)/i);
+  if (ov) items.push({ t: '', text: ov[1].trim() });
+  return items;
+}
+
+function parsePasses(notes) {
+  const raw = asText(notes);
+  if (!/7-PASS/i.test(raw)) return [];
+  const body = raw.split(/7-PASS REVIEW\s*:?/i)[1] || '';
+  const out = [];
+  const re = /(?:^|\n)\s*(\d+)\s+([^:\n]+):\s*([\s\S]*?)(?=\n\s*\d+\s+[^:\n]+:|$)/g;
+  let m;
+  while ((m = re.exec(body))) out.push({ n: m[1], name: m[2].trim(), text: m[3].trim() });
+  return out;
+}
+
+function scriptReadModel(script) {
+  const text = asText(script).trim();
+  if (!text) return { mode: 'empty', intro: '', questions: [], prose: '' };
+  const introM = text.match(/INTRO[^\n]*:\s*([^\n]+)/i);
+  let questions = [];
+  const qBlock = text.split(/QUESTION SHEET[^\n]*\n/i)[1];
+  if (qBlock) {
+    const re = /^\s*(\d+)\.\s+(.+)$/gm;
+    let m;
+    while ((m = re.exec(qBlock))) questions.push({ n: m[1], q: m[2].trim() });
+  }
+  let rest = '';
+  if (questions.length) {
+    const lines = text.split('\n');
+    let lastQ = -1;
+    lines.forEach((line, i) => { if (/^\s*\d+\.\s+/.test(line)) lastQ = i; });
+    rest = lastQ >= 0 ? lines.slice(lastQ + 1).join('\n').trim() : '';
+    return { mode: 'questions', intro: introM ? introM[1].trim() : '', questions, prose: text, rest };
+  }
+  return { mode: 'prose', intro: '', questions: [], prose: text, rest: '' };
+}
+
+function videoInfo(url) {
+  const s = asText(url).trim();
+  if (!s) return null;
+  let m = s.match(/instagram\.com\/(?:reel|p|tv)\/([\w-]+)/i);
+  if (m) {
+    const kind = /\/p\//i.test(s) ? 'p' : 'reel';
+    return { kind: 'ig', src: 'https://www.instagram.com/' + kind + '/' + m[1] + '/embed/', watch: s, label: 'Instagram' };
+  }
+  m = s.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/i);
+  if (m) return { kind: 'yt', src: 'https://www.youtube.com/embed/' + m[1], thumb: 'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg', watch: s, label: 'YouTube' };
+  m = s.match(/tiktok\.com\/@([\w.]+)\/video\/(\d+)/i);
+  if (m) return { kind: 'tt', src: 'https://www.tiktok.com/embed/v2/' + m[2], watch: s, label: 'TikTok · @' + m[1] };
+  if (/^https?:\/\//i.test(s)) return { kind: 'link', watch: s, label: 'Link' };
+  return { kind: 'text', label: s, watch: '' };
+}
+function embedHtml(info) {
+  if (!info || !info.src) return '';
+  return `<iframe class="embed-frame" src="${escHtml(info.src)}" title="Reference video" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>`;
+}
+
+const SOUS_FIELDS = ['Hook Visual Format', 'Text Overlays', 'Camera Format', 'Visual Fills', 'Intonation Cues', 'Energy Match', 'Sound/Music'];
+const SCRIPT_FIELDS = [
+  ['client_slug', 'Client'], ['title', 'Title'], ['format', 'Format'], ['status', 'Status'],
+  ['hook', 'Hook'], ['full_script', 'Full script'], ['reference_clip', 'Reference clip'],
+  ['camera', 'Camera'], ['cta', 'CTA'], ['editor_notes', 'Editor notes'], ['batch', 'Batch'],
+  ['reel_number', 'Reel number'], ['date_planned', 'Date planned'], ['created_at', 'Created'],
+  ['take_label', 'Take label'], ['sous_chef_pass', 'Sous chef pass'], ['filming_direction', 'Filming direction'],
+  ['client_feedback', 'Client feedback'], ['filming_setup', 'Filming setup'], ['clip_directions', 'Clip directions'],
+  ['tonality_delivery', 'Tonality and delivery'], ['proof_stats', 'Proof stats'], ['id', 'Id'],
+];
+
+function shotChecked(id, idx) {
+  try { return !!JSON.parse(localStorage.getItem('hub_shots_' + id) || '{}')[idx]; }
+  catch (e) { return false; }
+}
+window.toggleShot = (id, idx, on) => {
+  const key = 'hub_shots_' + id;
+  let map = {};
+  try { map = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { map = {}; }
+  map[String(idx)] = !!on;
+  try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
+  const box = document.querySelector('[data-shot-count="' + id + '"]');
+  const section = document.getElementById('shots-' + id);
+  if (box && section) {
+    let n = 0;
+    section.querySelectorAll('input[type="checkbox"]').forEach(el => { if (el.checked) n++; });
+    box.textContent = n + ' of ' + section.querySelectorAll('input[type="checkbox"]').length;
+  }
+};
+
+function advSection(key, title, body, open) {
+  if (!body) return '';
+  return `
+    <button type="button" class="adv-btn" onclick="window.toggle('${key}', this)" aria-expanded="${open}" aria-controls="exp-${key}">
+      <span>${title}</span><span id="chev-${key}">${open ? '▾' : '▸'}</span>
+    </button>
+    <div id="exp-${key}" class="adv-body ${open ? '' : 'hidden'}">${body}</div>`;
+}
+
+function renderReferenceBlock(s) {
+  const primary = videoInfo(s.reference_clip);
+  const extraUrl = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
+  const same = extraUrl && s.reference_clip && String(s.reference_clip).indexOf(extraUrl) !== -1;
+  const extra = extraUrl && !same ? videoInfo(extraUrl) : null;
+  if (!primary && !extra) {
+    return `<section class="area-ref"><div class="eyebrow block-label">Reference</div><p class="shot-intro">No reference video on this script.</p></section>`;
+  }
+  const blockFor = (info, idSuffix) => {
+    if (!info) return '';
+    if (info.kind === 'text') {
+      return `<div class="ref-row"><div class="ref-poster" style="cursor:default"><span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span><span><span class="ref-kicker">Reference</span><span class="ref-cta">${escHtml(info.label)}</span></span></div></div>`;
+    }
+    const open = expandedSections.has('embed:' + s.id + idSuffix);
+    const thumb = info.thumb ? `<img alt="" src="${escHtml(info.thumb)}">` : `<span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span>`;
+    return `
+      <div class="ref-row">
+        <button type="button" class="ref-poster" onclick="window.loadEmbed('${s.id}','${idSuffix}')">
+          ${thumb}
+          <span><span class="ref-kicker">Reference · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span>
+        </button>
+        ${info.watch ? `<a class="ref-open" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
+      </div>
+      <div id="embed-${s.id}${idSuffix}" class="embed-slot">${open ? embedHtml(info) : ''}</div>`;
+  };
+  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '')}${extra ? blockFor(extra, '-x') : ''}</section>`;
+}
+window.loadEmbed = (id, suffix) => {
+  suffix = suffix || '';
+  const key = 'embed:' + id + suffix;
+  expandedSections.add(key);
+  const s = scripts.find(x => x.id === id);
+  if (!s) return;
+  const info = suffix === '-x'
+    ? videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats))
+    : videoInfo(s.reference_clip);
+  const slot = document.getElementById('embed-' + id + suffix);
+  if (slot && info) slot.innerHTML = embedHtml(info);
+};
+
+function renderHooks(s) {
+  const pair = parseHookPair(s.hook);
+  if (!pair.raw) return '';
+  const yours = pair.adapted || pair.raw;
+  const proven = pair.proven && pair.proven !== yours
+    ? `<div><div class="eyebrow block-label">Proven hook</div><p class="hook-proven">${escHtml(pair.proven)}</p></div>` : '';
+  return `<section class="area-hooks hook-pair">
+    <div><div class="eyebrow block-label">${proven ? 'Your line' : 'Hook'}</div><p class="hook-you">${escHtml(yours)}</p></div>
+    ${proven}
+  </section>`;
+}
+
+function renderScriptBlock(s) {
+  const model = scriptReadModel(s.full_script);
+  if (model.mode === 'empty' && !s.hook) return '';
+  let body = '';
+  let count = '';
+  if (model.mode === 'questions') {
+    count = model.questions.length + ' question' + (model.questions.length === 1 ? '' : 's');
+    const restOpen = expandedSections.has('rest-' + s.id);
+    body = `
+      ${model.intro ? `<p class="shot-intro">${escHtml(model.intro)}</p>` : ''}
+      <ol class="q-sheet">${model.questions.map(q => `<li><span class="q-n">${escHtml(q.n)}</span><span class="q-t">${escHtml(q.q)}</span></li>`).join('')}</ol>
+      ${model.rest ? advSection('rest-' + s.id, 'How to run it', `<pre class="shot-script">${escHtml(model.rest)}</pre>`, restOpen) : ''}`;
+  } else if (model.prose) {
+    count = readLabel(model.prose);
+    body = `<pre class="shot-script">${escHtml(model.prose)}</pre>`;
+  } else {
+    body = `<pre class="shot-script">${escHtml(asText(s.hook))}</pre>`;
+    count = readLabel(s.hook);
+  }
+  const delivery = renderDelivery(s);
+  return `<section class="area-script">
+    <div class="eyebrow block-label">${model.mode === 'questions' ? 'Question sheet' : 'Script'}${count ? ' · ' + escHtml(count) : ''}</div>
+    ${body}
+    <div class="script-tools">
+      <button type="button" class="tool-btn primary" onclick="window.openPrompter('${s.id}')">Full screen</button>
+      ${s.full_script ? `<button type="button" class="tool-btn" onclick="window.copyScript('${s.id}')">Copy</button>` : ''}
+    </div>
+    ${delivery}
+  </section>`;
+}
+
+function fdObject(s) {
+  const fd = s.filming_direction;
+  if (!fd || typeof fd !== 'object' || Array.isArray(fd)) return null;
+  return fd;
+}
+function renderDelivery(s) {
+  const bits = [];
+  if (s.tonality_delivery) bits.push(['Tonality', asText(s.tonality_delivery)]);
+  const fd = fdObject(s);
+  if (fd) {
+    ['Tonality', 'Pacing', 'Text Hook'].forEach(k => { if (fd[k]) bits.push([k, asText(fd[k])]); });
+  }
+  const cam = asText(s.camera).trim();
+  if (cam && !/fram|chest|head-on|vertical|eye|two-shot|close|medium/i.test(cam)) bits.push(['Camera note', cam]);
+  if (!bits.length) return '';
+  return `<div class="delivery" style="margin-top:16px"><div class="eyebrow">How to say it</div>${bits.map(([k, v]) => `<div><div class="eyebrow" style="color:var(--muted)">${escHtml(k)}</div><p>${escHtml(v)}</p></div>`).join('')}</div>`;
+}
+
+function renderSetupBlock(s) {
+  const parsed = parseSetup(s.filming_setup, s.camera);
+  let framing = parsed.framing;
+  const fd = fdObject(s);
+  if (!framing && fd && fd['Visual Hook']) framing = asText(fd['Visual Hook']);
+  const tiles = [
+    ['Location', parsed.location],
+    ['Phone / tripod', parsed.rig],
+    ['Framing', framing],
+    ['Mic', parsed.mic],
+  ];
+  const grid = `<div class="setup-grid">${tiles.map(([label, val]) => `
+    <div class="setup-tile ${val ? '' : 'is-empty'}"><div class="eyebrow">${label}</div><p>${escHtml(val ? clipText(val, 72) : 'Not specified')}</p></div>`).join('')}</div>`;
+  const notes = parsed.raw ? `<div class="setup-notes">${truncatedField(parsed.raw, 'setup-' + s.id, 220)}</div>` : '';
+  return `<section class="area-setup"><div class="eyebrow block-label">Setup</div>${grid}${notes}</section>`;
+}
+
+function renderShotList(s) {
+  const parsed = parseSetup(s.filming_setup, s.camera);
+  let items = parseShots(parsed.shots);
+  let label = 'Shot list';
+  if (!items.length && s.format === 'Reaction' && s.clip_directions) {
+    items = ['Say the hook', 'Let the clip play', 'React on camera', 'Carry the full script to the ending'];
+    label = 'Filming order';
+  }
+  if (!items.length) return '';
+  let done = 0;
+  const rows = items.map((item, i) => {
+    const on = shotChecked(s.id, i);
+    if (on) done++;
+    return `<label class="shot-check"><input type="checkbox" ${on ? 'checked' : ''} onchange="window.toggleShot('${s.id}', ${i}, this.checked)"><span>${escHtml(item)}</span></label>`;
+  }).join('');
+  return `<section class="area-shots" id="shots-${s.id}"><div class="eyebrow block-label">${label} · <span data-shot-count="${s.id}">${done} of ${items.length}</span></div><div class="checks">${rows}</div></section>`;
+}
+
+function renderOnScreen(s) {
+  const items = parseOnScreen(s.editor_notes, s.hook);
+  if (!items.length) return '';
+  return `<section class="area-screen"><div class="eyebrow block-label">On-screen text</div>${items.map(it => `
+    <div class="screen-line">${it.t ? `<span class="screen-t">${escHtml(it.t)}</span>` : '<span class="screen-t"> </span>'}<span>${escHtml(it.text)}</span></div>`).join('')}</section>`;
+}
+
+function renderCtaBlock(cta) {
+  const raw = asText(cta).trim();
+  if (!raw) return '';
+  if (/^(none|clean|no cta)\b/i.test(raw) && raw.length < 48) {
+    return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="shot-intro">No spoken CTA. End on the last line.</p></section>`;
+  }
+  const comment = raw.match(/^\s*comment\s+(\S+)/i);
+  if (comment) {
+    return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="cta-kicker">Comment</p><p class="cta-word">${escHtml(comment[1])}</p><p class="cta-full">${escHtml(raw)}</p></section>`;
+  }
+  return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="cta-line">${escHtml(raw)}</p></section>`;
+}
+
+function renderCoverage(s) {
+  if (!s.clip_directions) return '';
+  const open = expandedSections.has('cov-' + s.id);
+  return advSection('cov-' + s.id, 'Coverage notes', `<div class="setup-notes">${escHtml(asText(s.clip_directions))}</div>`, open);
+}
+
+function renderAdvanced(s, group) {
+  const sousSource = group.find(g => g.sous_chef_pass);
+  const sous = sousSource && sousSource.sous_chef_pass && typeof sousSource.sous_chef_pass === 'object' ? sousSource.sous_chef_pass : null;
+  let sousBody = '';
+  if (sous) {
+    const keys = SOUS_FIELDS.concat(Object.keys(sous).filter(k => SOUS_FIELDS.indexOf(k) === -1));
+    sousBody = `<div class="adv-grid">${keys.map(k => `<div class="adv-card"><div class="eyebrow">${escHtml(k)}</div><p>${escHtml(sous[k] ? asText(sous[k]) : '—')}</p></div>`).join('')}</div>`;
+  }
+  const passes = parsePasses(s.editor_notes);
+  const passBody = passes.length ? passes.map(p => `<div class="adv-card" style="margin-bottom:8px"><div class="eyebrow">${escHtml(p.n + ' · ' + p.name)}</div><p>${escHtml(p.text)}</p></div>`).join('') : '';
+  const stats = extractProofStats(s.proof_stats);
+  const proofBody = s.proof_stats ? `
+    ${stats.length ? `<div class="stat-row">${stats.map(st => `<div><div class="stat-num">${escHtml(st.num)}</div><div class="stat-label">${escHtml(st.label)}</div></div>`).join('')}</div>` : ''}
+    <div class="setup-notes">${escHtml(asText(s.proof_stats))}</div>` : '';
+  const fd = fdObject(s);
+  const fdBody = fd ? `<div class="adv-grid">${Object.entries(fd).map(([k, v]) => `<div class="adv-card"><div class="eyebrow">${escHtml(k)}</div><p>${escHtml(asText(v))}</p></div>`).join('')}</div>` : '';
+  const editBody = s.editor_notes ? `<div class="setup-notes">${escHtml(asText(s.editor_notes))}</div>` : '';
+  const allBody = SCRIPT_FIELDS.map(([k, label]) => {
+    const v = s[k];
+    const shown = (v == null || v === '') ? '—' : asText(v);
+    return `<div class="field"><div class="eyebrow">${escHtml(label)}</div><pre>${escHtml(shown)}</pre></div>`;
+  }).join('');
+  return `<div class="adv">
+    ${advSection('sc-' + s.id, 'Sous chef · 7 fields', sousBody, expandedSections.has('sc-' + s.id))}
+    ${advSection('pass-' + s.id, '7-pass notes', passBody, expandedSections.has('pass-' + s.id))}
+    ${advSection('proof-' + s.id, 'Proof stats', proofBody, expandedSections.has('proof-' + s.id))}
+    ${advSection('fd-' + s.id, 'Filming direction', fdBody, expandedSections.has('fd-' + s.id))}
+    ${advSection('edit-' + s.id, 'Editor notes', editBody, expandedSections.has('edit-' + s.id))}
+    ${renderCoverage(s)}
+    ${advSection('all-' + s.id, 'All fields', allBody, expandedSections.has('all-' + s.id))}
+  </div>`;
+}
+
+function renderStatusRail(status) {
+  const st = status || 'Draft';
+  const pre = st === 'Draft' || st === 'Needs Review' || st === 'Approved';
+  const filmed = st === 'Filming';
+  const posted = st === 'Posted';
+  const step = (name, on, done, title) => `<div class="rail-step ${on ? 'is-on' : ''} ${done ? 'is-done' : ''}"${title ? ` title="${escHtml(title)}"` : ''}>${name}</div>`;
+  return `<div class="status-exact">${escHtml(st)}</div>
+    <div class="rail" role="group" aria-label="Status">
+      ${step('Draft', pre, filmed || posted)}
+      ${step('Filmed', filmed, posted, filmed ? 'Saved status: Filming' : '')}
+      ${step('Posted', posted, false)}
+    </div>`;
+}
+
+function renderShotActions(s) {
+  const needsReview = s.status === 'Needs Review';
+  const isPosted = s.status === 'Posted';
+  const isPassed = s.status === 'Passed';
+  const isArchived = s.status === 'Archived';
+  const si = STATUS_ORDER.indexOf(s.status);
+  const prev = STATUS_ORDER[si - 1];
+  const next = STATUS_ORDER[si + 1];
+  if (needsReview) {
+    return `<div class="shot-actions">
+      <button type="button" class="shot-go" onclick="moveStatus('${s.id}','Filming')">Film this</button>
+      <div class="shot-alt">
+        <button type="button" onclick="requestTweak('${s.id}')">Request a tweak</button>
+        <button type="button" onclick="moveStatus('${s.id}','Passed')">Pass</button>
+      </div>
+    </div>`;
+  }
+  if (isPosted) return `<div class="shot-actions"><div class="posted-flag">Posted</div></div>`;
+  if (isPassed) return `<div class="shot-actions nav-row"><div class="quiet-flag">Passed</div><button type="button" class="tool-btn" onclick="moveStatus('${s.id}','Needs Review')">Restore</button></div>`;
+  if (isArchived) return `<div class="shot-actions nav-row"><div class="quiet-flag">Archived</div><button type="button" class="tool-btn" onclick="moveStatus('${s.id}','Draft')">Restore</button></div>`;
+  return `<div class="shot-actions nav-row">
+    ${prev && prev !== 'Passed' ? `<button type="button" class="tool-btn" onclick="moveStatus('${s.id}','${prev}')">${escHtml(prev)}</button>` : '<div></div>'}
+    ${next && next !== 'Passed' ? `<button type="button" class="tool-btn primary" onclick="moveStatus('${s.id}','${next}')">${escHtml(next)}</button>` : '<div></div>'}
+  </div>`;
+}
+
 function renderCardGroup(group) {
   const hasTakes = group.length > 1;
   const groupKey = takeGroupKey(group[0]);
   const idx = hasTakes ? (activeTake[groupKey] ?? 0) % group.length : 0;
   const s = group[idx];
   const isAdmin = role === 'admin';
-
-  const statusStyle = STATUS_STYLE[s.status] || STATUS_STYLE['Draft'];
-  const formatStyle = FORMAT_STYLE[s.format] || 'bg-slate-100 text-slate-500';
-  const needsReview = s.status === 'Needs Review';
-  const isPosted    = s.status === 'Posted';
-  const isPassed    = s.status === 'Passed';
-  const isArchived  = s.status === 'Archived';
-  const si   = STATUS_ORDER.indexOf(s.status);
-  const prev = STATUS_ORDER[si - 1];
-  const next = STATUS_ORDER[si + 1];
-
-  const ctaClean = !s.cta || s.cta.toLowerCase().includes('none') || s.cta.toLowerCase().includes('clean');
-  const ctaLabel = ctaClean ? null : s.cta.replace(/^comment\s*/i,'').split(/\s/)[0];
-
-  // Admin-only planned-posting-date picker, same overlay-chip pattern as the Calendar view's
-  // unscheduled rows (a bare empty <input type=date> is nearly invisible on iOS Safari). A
-  // multi-take group shares ONE date -- setGroupDate() writes it to every take's row. Reuses
-  // groupDate() (the same helper the Calendar buckets days with) so the date shown here is
-  // always the exact one the group would file under on the calendar.
+  const isArchived = s.status === 'Archived';
   const groupPlannedDate = groupDate(group);
-  // Past-due: the planned posting date has gone by and it still isn't posted -- turn the chip
-  // red so a slipped script stands out in the List without opening the Calendar.
   const pastDue = isPastDue(group, localTodayStr());
-  const dateChipColor = pastDue ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-100 text-blue-600';
-  // groupKey is NOT interpolated into the onchange string -- a batch name containing an
-  // apostrophe (e.g. "Jan's Batch 02") would otherwise break the generated JS (or the
-  // attribute boundary) silently, with no visible error. It's carried via a data-attribute
-  // (escHtml-safe) and read back out through dataset instead. onclick wires up showPicker()
-  // so desktop Chrome reliably opens the native picker on click (it already works on iOS).
   const dateChip = isAdmin ? `
-    <label class="relative h-7 px-2.5 inline-flex items-center gap-1 rounded-full border ${dateChipColor} text-[11px] font-medium flex-shrink-0"${pastDue ? ' title="Past its planned posting date"' : ''}>
-      ${pastDue ? '⚠️' : '📅'} ${groupPlannedDate || 'Set date'}${pastDue ? '<span class="sr-only"> (past due)</span>' : ''}
+    <label class="date-chip ${pastDue ? 'is-late' : ''}"${pastDue ? ' title="Past its planned posting date"' : ''}>
+      ${pastDue ? 'Past due · ' : ''}${groupPlannedDate || 'Set date'}
       <input type="date" value="${groupPlannedDate || ''}" data-group-key="${escHtml(groupKey)}" aria-label="Planned posting date"
-        class="absolute inset-0 w-full h-full opacity-0 text-base"
         onclick="this.showPicker && this.showPicker()"
         onchange="window.setGroupDate(this.dataset.groupKey, this.value || null)">
-    </label>` : '';
-
-  // Sous Chef Pass — the 7-field reference-reel breakdown. Stored once per take-group (not
-  // duplicated on every row), so look it up from whichever row actually has it.
-  const sousChefSource = group.find(g => g.sous_chef_pass);
-  const sousChef = sousChefSource ? sousChefSource.sous_chef_pass : null;
-  const sousChefGroupKey = `sc-${groupKey}`;
-  // Open/closed comes from expandedSections (module state), not a default-closed DOM class, so
-  // a redraw doesn't snap a section shut while someone is reading it. Keys must match exactly
-  // what window.toggle() receives: String(s.id) from the onclick string, sousChefGroupKey from
-  // the dataset (data-* values round-trip escHtml back to the raw string).
-  const scriptOpen = expandedSections.has(String(s.id));
-  const sousChefOpen = expandedSections.has(sousChefGroupKey);
-
-  // Take tabs — only rendered when this group actually has more than one take. A group
-  // of 1 (every existing row today) renders with zero visual change from before.
-  // Same apostrophe-in-groupKey hazard as the date chips above (C2) -- groupKey is carried
-  // via data-attributes instead of being interpolated straight into the onclick string.
-  // XSS-PRE -- take_label is free-text (unlike reel_number, which schema.sql defines as
-  // `integer`, so it's never run through escHtml); escHtml(null/undefined) returns '', so the
-  // `|| fallback` still kicks in correctly when a take has no label of its own.
+    </label>` : (groupPlannedDate ? `<span class="date-chip">${escHtml(groupPlannedDate)}</span>` : '');
   const takeTabs = hasTakes ? `
-    <div class="flex gap-1.5 px-4 pt-4 pb-1 flex-wrap">
-      ${group.map((g, i) => `
-        <button data-group-key="${escHtml(groupKey)}" data-idx="${i}"
-          onclick="window.setTake(this.dataset.groupKey, Number(this.dataset.idx))"
-          class="px-3 py-1 rounded-full text-xs font-semibold transition-all ${i === idx
-            ? 'bg-slate-800 text-white'
-            : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
-          ${escHtml(g.take_label) || `Take ${String.fromCharCode(65 + i)}`}
-        </button>`).join('')}
-    </div>` : '';
+    <div class="take-tabs">${group.map((g, i) => `
+      <button type="button" data-group-key="${escHtml(groupKey)}" data-idx="${i}"
+        onclick="window.setTake(this.dataset.groupKey, Number(this.dataset.idx))"
+        class="take-tab ${i === idx ? 'is-on' : ''}">${escHtml(g.take_label) || ('Take ' + String.fromCharCode(65 + i))}</button>`).join('')}</div>` : '';
+  const kicker = [s.reel_number ? '#' + s.reel_number : '', s.format || ''].filter(Boolean).map(escHtml).join(' · ');
 
-  return `
-  <div class="bg-white rounded-2xl border ${needsReview ? 'border-yellow-200' : 'border-slate-100'} shadow-sm overflow-hidden ${isArchived ? 'opacity-60' : ''}">
+  return `<article class="shot ${isArchived ? 'is-quiet' : ''}">
     ${takeTabs}
-
-    <!-- Header -->
-    <div class="px-4 pt-4 pb-3">
-      <div class="flex items-center justify-between mb-2 gap-2">
-        <div class="flex items-center gap-1.5 flex-wrap">
-          ${s.reel_number ? `<span class="text-xs font-bold text-slate-300">#${s.reel_number}</span>` : ''}
-          ${pill(s.format || 'Script', formatStyle)}
-          ${pill(s.status, statusStyle)}
-          ${ctaLabel ? `<span class="text-xs bg-blue-50 text-blue-500 px-2 py-0.5 rounded-full font-medium">Comment ${escHtml(ctaLabel)}</span>` : ''}
-        </div>
-        ${dateChip}
+    <div class="shot-meta">
+      <div>
+        <div class="shot-kicker">${kicker}</div>
+        ${s.batch ? `<div class="shot-batch">${escHtml(s.batch)}</div>` : ''}
       </div>
-      <div class="font-bold text-slate-800 text-base leading-snug">${escHtml(s.title)}</div>
-      ${s.batch ? `<div class="text-[10px] text-slate-300 mt-0.5 mb-2.5 tracking-wide">${escHtml(s.batch)}</div>` : '<div class="mb-3"></div>'}
-
-      <!-- Tweak note — what got typed in when this was sent back to Draft. Shown up top,
-           impossible to miss, so a tweak request never has to travel by text message again. -->
-      ${s.client_feedback && s.status === 'Draft' ? `
-      <div class="bg-orange-50 border border-orange-200 rounded-xl px-4 py-3 mb-3">
-        <div class="text-[10px] font-semibold text-orange-500 uppercase tracking-widest mb-1">✏️ Tweak requested</div>
-        <div class="text-sm text-orange-900 leading-relaxed">${escHtml(s.client_feedback)}</div>
-      </div>` : ''}
-
-      ${isDossierStyle(s) ? '' : `
-      <!-- Hook — the hero (legacy layout, no dossier fields on this row) -->
-      ${s.hook ? `
-      <div class="bg-slate-50 border border-slate-100 rounded-xl px-4 py-3">
-        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">THE HOOK</div>
-        <div class="text-sm text-slate-800 font-medium leading-relaxed">"${escHtml(s.hook)}"</div>
-      </div>` : ''}
-
-      <!-- Filming Direction dashboard — always visible, never collapsed, since this is what
-           actually matters most for filming (per direct client feedback: the hook is "so so so
-           important," the generic filming-notes blob is not). Covers hook craft (Text Hook,
-           Visual Hook, Tonality, Pacing — emerald) AND production (Editing Style, Editing Notes
-           — sky) in one consumable panel, so Andrew never has to dig through the raw script to
-           find what he needs to actually shoot it. -->
-      ${s.filming_direction ? `
-      <div class="mt-3">
-        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-1.5">🎬 Filming Direction</div>
-        <div class="grid grid-cols-2 gap-2">
-          ${Object.entries(s.filming_direction).map(([label, text]) => {
-            const isEditing = label.startsWith('Editing');
-            const wide = isEditing ? 'col-span-2' : '';
-            const bg = isEditing ? 'bg-sky-50 border-sky-100' : 'bg-emerald-50 border-emerald-100';
-            const labelColor = isEditing ? 'text-sky-600' : 'text-emerald-600';
-            const textColor = isEditing ? 'text-sky-900' : 'text-emerald-900';
-            return `
-          <div class="${bg} border rounded-xl px-3 py-2 ${wide}">
-            <div class="text-[9px] font-semibold ${labelColor} uppercase tracking-widest mb-1">${escHtml(label)}</div>
-            <div class="text-[11px] ${textColor} leading-snug">${escHtml(text)}</div>
-          </div>`;
-          }).join('')}
-        </div>
-      </div>` : ''}
-      `}
+      ${dateChip}
     </div>
-
-    ${isDossierStyle(s) ? renderDossierBody(s) : `
-    <!-- Ref + Camera (legacy layout) -->
-    <div class="px-4 pb-3 space-y-2 border-t border-slate-50 pt-3">
-      ${s.reference_clip ? `
-      <div class="flex items-start gap-2">
-        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest flex-shrink-0 mt-0.5">📹 Ref</span>
-        <div class="flex-1">${linkOrText(s.reference_clip)}</div>
-      </div>` : ''}
-      ${s.camera ? `
-      <div class="flex items-center gap-2">
-        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">🎥 Cam</span>
-        <span class="text-xs text-slate-500">${escHtml(s.camera)}</span>
-      </div>` : ''}
-    </div>
-
-    <!-- Expand toggle -->
-    <button onclick="toggle('${s.id}', this)" aria-expanded="${scriptOpen}" aria-controls="exp-${s.id}"
-      class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
-      <span class="font-medium">Full script + filming notes</span>
-      <span id="chev-${s.id}" class="text-slate-300">${scriptOpen ? '▾' : '▸'}</span>
-    </button>
-
-    <!-- Expanded -->
-    <div id="exp-${s.id}" class="${scriptOpen ? '' : 'hidden'} border-t border-slate-100">
-      ${s.full_script ? `
-      <div class="px-4 pt-4 pb-3">
-        <div class="flex items-center justify-between mb-2">
-          <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Script</div>
-          ${copyScriptButton(s)}
-        </div>
-        <pre class="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
-      </div>` : ''}
-      ${s.editor_notes ? `
-      <div class="px-4 pb-4 pt-1">
-        <div class="bg-amber-50 border border-amber-100 rounded-xl p-3">
-          <div class="text-[10px] font-semibold text-amber-600 uppercase tracking-widest mb-1.5">Filming Notes</div>
-          <div class="text-xs text-amber-900 leading-relaxed">${escHtml(s.editor_notes)}</div>
-        </div>
-      </div>` : ''}
-    </div>`}
-
-    <!-- Sous Chef Pass — optional, collapsed by default. One per take-group, not per take,
-         since it's a breakdown of the reference reel, which is the same across all takes. -->
-    ${sousChef ? `
-    <button data-sc-key="${escHtml(sousChefGroupKey)}" onclick="toggle(this.dataset.scKey, this)" aria-expanded="${sousChefOpen}"
-      class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
-      <span class="font-medium">Sous Chef Pass — reference reel breakdown</span>
-      <span id="chev-${escHtml(sousChefGroupKey)}" class="text-slate-300">${sousChefOpen ? '▾' : '▸'}</span>
-    </button>
-    <div id="exp-${escHtml(sousChefGroupKey)}" class="${sousChefOpen ? '' : 'hidden'} border-t border-slate-100 px-4 py-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        ${Object.entries(sousChef).map(([label, text]) => `
-        <div class="bg-violet-50 border border-violet-100 rounded-xl p-3">
-          <div class="text-[10px] font-semibold text-violet-500 uppercase tracking-widest mb-1.5">${escHtml(label)}</div>
-          <div class="text-xs text-violet-900 leading-relaxed">${escHtml(text)}</div>
-        </div>`).join('')}
+    <h2 class="shot-title">${escHtml(s.title)}</h2>
+    ${renderStatusRail(s.status)}
+    ${s.client_feedback && s.status === 'Draft' ? `<div class="tweak" style="margin-top:14px"><div class="eyebrow">Tweak requested</div><p>${escHtml(s.client_feedback)}</p></div>` : ''}
+    <div class="shot-body">
+      <div class="col-side">
+        ${renderReferenceBlock(s)}
+        ${renderSetupBlock(s)}
+        ${renderShotList(s)}
+        ${renderOnScreen(s)}
       </div>
-    </div>` : ''}
+      <div class="col-main">
+        ${renderHooks(s)}
+        ${renderScriptBlock(s)}
+        ${renderCtaBlock(s.cta)}
+      </div>
+    </div>
+    ${renderShotActions(s)}
+    ${renderAdvanced(s, group)}
+  </article>`;
+}
 
-    <!-- Action buttons -->
-    <div class="px-4 pb-4 pt-3 border-t border-slate-100">
-      ${needsReview ? `
-        <div class="grid grid-cols-3 gap-2">
-          ${btn('✅ Film', `moveStatus('${s.id}','Filming')`, 'bg-emerald-500 text-white hover:bg-emerald-600 font-semibold')}
-          ${btn('✏️ Tweak', `requestTweak('${s.id}')`, 'border-2 border-orange-300 text-orange-500 hover:bg-orange-50')}
-          ${btn('✕ Pass', `moveStatus('${s.id}','Passed')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50')}
-        </div>` :
-      isPosted ? `<div class="text-center text-xs text-blue-400 font-medium py-1">✓ Posted</div>` :
-      isPassed ? `<div class="flex gap-2">
-        <div class="flex-1 text-center text-xs text-red-300 py-2">Passed</div>
-        ${btn('← Restore', `moveStatus('${s.id}','Needs Review')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50 text-xs')}
-      </div>` :
-      isArchived ? `<div class="flex gap-2">
-        <div class="flex-1 text-center text-xs text-slate-400 py-2">📦 Archived</div>
-        ${btn('← Restore', `moveStatus('${s.id}','Draft')`, 'border border-slate-200 text-slate-400 hover:bg-slate-50 text-xs')}
-      </div>` : `
-      <div class="flex gap-2">
-        ${prev && prev !== 'Passed' ? btn(`← ${prev}`, `moveStatus('${s.id}','${prev}')`, 'flex-1 border border-slate-200 text-slate-500 hover:bg-slate-50') : '<div class="flex-1"></div>'}
-        ${next && next !== 'Passed' ? btn(`${next} →`, `moveStatus('${s.id}','${next}')`, 'flex-1 bg-slate-800 text-white hover:bg-slate-700') : '<div class="flex-1"></div>'}
-      </div>`}
+// ─────────────────────────────────────────────
+// TELEPROMPTER — full-screen read. Lives outside #app so a dashboard redraw
+// does not close it. Type size, speed, and mirror stick on this device.
+// ─────────────────────────────────────────────
+let prompterState = null;
+let prompterRaf = 0;
+function prompterHtml(s) {
+  const model = scriptReadModel(s.full_script);
+  const pair = parseHookPair(s.hook);
+  const lead = pair.adapted ? `<p>${escHtml(pair.adapted)}</p>` : '';
+  let body = lead;
+  if (model.mode === 'questions') {
+    body += model.questions.map(q => `<div class="pr-q"><span class="pr-qn">${escHtml(q.n)}</span><span>${escHtml(q.q)}</span></div>`).join('');
+  } else {
+    const prose = model.prose || asText(s.hook);
+    body += prose.split(/\n{2,}/).map(p => `<p>${escHtml(p)}</p>`).join('');
+  }
+  return body;
+}
+function renderPrompter() {
+  const s = scripts.find(x => x.id === prompterState.id);
+  const root = document.getElementById('prompter-root');
+  if (!s || !root) return;
+  const st = prompterState;
+  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}" role="dialog" aria-modal="true" aria-label="Teleprompter">
+    <div class="pr-top">
+      <div class="pr-title">${escHtml(s.title)}</div>
+      <button type="button" onclick="window.prompterTop()">Top</button>
+      <button type="button" onclick="window.closePrompter()">Close</button>
+    </div>
+    <div class="pr-focus" aria-hidden="true"></div>
+    <div id="prompter-scroll"><div id="prompter-text" style="font-size:${st.font}px">${prompterHtml(s)}</div></div>
+    <div class="pr-controls">
+      <button type="button" onclick="window.prompterFont(-4)" aria-label="Smaller type">A−</button>
+      <button type="button" onclick="window.prompterFont(4)" aria-label="Larger type">A+</button>
+      <button type="button" id="prompter-play" class="pr-play" onclick="window.prompterToggle()">${st.playing ? 'Pause' : 'Play'}</button>
+      <input class="pr-speed" type="range" min="16" max="120" value="${st.speed}" aria-label="Scroll speed" oninput="window.prompterSpeed(this.value)">
+      <button type="button" onclick="window.prompterMirror()" aria-pressed="${st.mirror}">Mirror</button>
     </div>
   </div>`;
+  document.body.classList.add('prompter-open');
+}
+function prompterLoop(ts) {
+  if (!prompterState || !prompterState.playing) return;
+  const el = document.getElementById('prompter-scroll');
+  if (!el) { prompterState.playing = false; return; }
+  if (!prompterState.lastTs) prompterState.lastTs = ts;
+  const dt = Math.min(64, ts - prompterState.lastTs);
+  prompterState.lastTs = ts;
+  el.scrollTop += (prompterState.speed * dt) / 1000;
+  if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4) {
+    prompterState.playing = false;
+    const btn = document.getElementById('prompter-play');
+    if (btn) btn.textContent = 'Play';
+    return;
+  }
+  prompterRaf = requestAnimationFrame(prompterLoop);
+}
+window.openPrompter = (id) => {
+  const s = scripts.find(x => x.id === id);
+  if (!s) return;
+  prompterState = {
+    id,
+    font: Number(lsGetStr('hub_pr_font', '34')) || 34,
+    speed: Number(lsGetStr('hub_pr_speed', '42')) || 42,
+    mirror: lsGetBool('hub_pr_mirror', false),
+    playing: false,
+    lastTs: 0,
+  };
+  renderPrompter();
+};
+window.closePrompter = () => {
+  prompterState = null;
+  cancelAnimationFrame(prompterRaf);
+  const root = document.getElementById('prompter-root');
+  if (root) root.innerHTML = '';
+  document.body.classList.remove('prompter-open');
+};
+window.prompterFont = (d) => {
+  if (!prompterState) return;
+  prompterState.font = Math.min(68, Math.max(20, prompterState.font + d));
+  lsSetStr('hub_pr_font', String(prompterState.font));
+  const el = document.getElementById('prompter-text');
+  if (el) el.style.fontSize = prompterState.font + 'px';
+};
+window.prompterSpeed = (v) => {
+  if (!prompterState) return;
+  prompterState.speed = Number(v) || 42;
+  lsSetStr('hub_pr_speed', String(prompterState.speed));
+};
+window.prompterMirror = () => {
+  if (!prompterState) return;
+  prompterState.mirror = !prompterState.mirror;
+  lsSetBool('hub_pr_mirror', prompterState.mirror);
+  const el = document.getElementById('prompter');
+  if (el) el.classList.toggle('is-mirror', prompterState.mirror);
+};
+window.prompterTop = () => {
+  const el = document.getElementById('prompter-scroll');
+  if (el) el.scrollTop = 0;
+};
+window.prompterToggle = () => {
+  if (!prompterState) return;
+  prompterState.playing = !prompterState.playing;
+  prompterState.lastTs = 0;
+  const btn = document.getElementById('prompter-play');
+  if (btn) btn.textContent = prompterState.playing ? 'Pause' : 'Play';
+  if (prompterState.playing) prompterRaf = requestAnimationFrame(prompterLoop);
+  else cancelAnimationFrame(prompterRaf);
+};
+
+function brandMarkSvg(size) {
+  size = size || 28;
+  return `<svg class="brand-wave" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>`;
+}
+function brandLockup(sub) {
+  return `<div class="brand-lockup">${brandMarkSvg(28)}<div style="min-width:0"><div class="brand-word">signals<span class="brand-ext">.marketing</span></div>${sub ? `<div class="brand-sub">${sub}</div>` : ''}</div></div>`;
 }
 
 // ─────────────────────────────────────────────
@@ -2729,6 +3408,33 @@ function escHtml(str) {
     // JS string in an inline handler -- the browser decodes entities before running it; keep
     // using data-* attributes for that, as the date/take/sous-chef buttons already do.)
     .replace(/'/g,'&#39;');
+}
+
+// Local screenshot/dev hook only. Never active on GitHub Pages.
+// Renders an in-memory script list without touching auth, RLS, or the network.
+if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
+  window.__preview = (rows, opts) => {
+    opts = opts || {};
+    scripts = rows;
+    user = opts.user || { id: 'preview-user', email: 'preview@localhost' };
+    role = opts.role || 'admin';
+    mySlug = opts.mySlug || null;
+    viewSlug = opts.viewSlug || 'andrew';
+    viewStatus = opts.viewStatus || 'all';
+    viewMode = opts.viewMode || 'all';
+    viewTab = opts.viewTab || 'list';
+    filtersOpen = opts.filtersOpen !== false;
+    settingsOpen = false;
+    listSearch = '';
+    showHelp = false;
+    renderDash();
+  };
+  const previewClient = new URLSearchParams(location.search).get('preview');
+  if (previewClient) {
+    fetch('preview-fixtures.json').then(r => r.ok ? r.json() : null).then(rows => {
+      if (rows) window.__preview(rows, { role: 'admin', viewSlug: previewClient === '1' ? 'cristian' : previewClient, viewStatus: 'all', filtersOpen: false });
+    }).catch(() => {});
+  }
 }
 
 // ─────────────────────────────────────────────

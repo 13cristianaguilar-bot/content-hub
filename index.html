@@ -25,6 +25,14 @@
     .new-scripts-glow { animation: pulse-ring 2s ease-in-out infinite; }
     /* Safe area inset for iPhone notch / home bar */
     .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    /* Calendar month bar (Polish) -- only the narrowest phones (<360px, e.g. iPhone SE) swap
+       the full month name for a 3-letter abbreviation to keep the title + Today button + nav
+       arrows from crowding each other. Everything 360px and up keeps the full name. */
+    .month-short { display: none; }
+    @media (max-width: 359px) {
+      .month-short { display: inline; }
+      .month-full  { display: none; }
+    }
   </style>
 </head>
 <body class="bg-slate-50 min-h-screen">
@@ -198,6 +206,12 @@ let activeTake = {};   // groupKey -> index of the currently-shown take within a
 // on purpose -- writing a date triggers a realtime Supabase update -> full renderDash() ->
 // innerHTML rebuilt from scratch, so anything living only in the DOM would reset on every
 // date write. Keeping it here lets it survive redraws.
+// Shared by every place that validates or labels the top-level List/Calendar/Pipeline switch --
+// afterLogin()'s saved-view validation, the settings panel's "Currently: ..." line, and the
+// viewToggle buttons themselves all used to repeat their own `['list','calendar','pipeline']`
+// array and/or label lookup; consolidated here so a future 4th tab only means editing this once.
+const VIEW_TABS = ['list', 'calendar', 'pipeline'];
+const VIEW_TAB_LABEL = { list: 'List', calendar: 'Calendar', pipeline: 'Pipeline' };
 let viewTab = 'list';         // 'list' | 'calendar' | 'pipeline'
 let calMonth = null;          // {y,m} 0-11 -- defaults to today's month on first render
 let calSelectedDay = null;    // 'YYYY-MM-DD' | null
@@ -237,7 +251,10 @@ function lsSetBool(key, val)      { try { localStorage.setItem(key, val ? '1' : 
 // arrow-keying through the settings panel loses focus (lands on <body>) after every single
 // selection. Each focusable control in the panel carries a stable `data-focus-id`; capture the
 // id of whichever one is focused right before the redraw, then look it up again by that id and
-// refocus it once the new DOM exists.
+// refocus it once the new DOM exists. captureFocusForRedraw() runs generically at the top of
+// renderDashInner() itself (not just from the two settings setters below) so focus also
+// survives a realtime update arriving while the panel is open -- it's a no-op for every other
+// redraw path, since nothing outside the settings panel/gear button carries a `data-focus-id`.
 let pendingFocusId = null;
 function captureFocusForRedraw() {
   const el = document.activeElement;
@@ -256,6 +273,11 @@ function restoreFocusAfterRedraw() {
 let settingsOpen = false;      // Item 2 -- settings popover open/closed. Transient, not persisted.
 let calShowKey    = false;     // Item 5 -- inline "?" legend expand/collapse. Transient, not persisted
                                 // (separate from the persisted "always show color key" SETTING below).
+// Polish -- one-shot flag so a client switch (window.setClient) resets the Next-7-days strip's
+// horizontal scroll position to 0 instead of carrying over whatever position the PREVIOUS
+// client's strip happened to be scrolled to. Consumed once by renderDashInner(), same one-shot
+// pattern calScrollPending already uses above.
+let next7ResetPending = false;
 // Item 1 -- Filters pill expand/collapse. Persisted, but read from localStorage ONCE here at
 // load -- every subsequent toggle flips this live `let` AND writes through to localStorage, it
 // never re-reads localStorage mid-session.
@@ -294,14 +316,35 @@ function loadLastView(uid) {
   } catch (e) { return null; }
 }
 
-// Escape closes the settings popover (Item 2). Registered once at script load, not inside
-// renderDashInner() -- the whole #app subtree gets replaced on every render, but a listener
-// attached to `document` itself survives that fine, so this must only ever run once (adding it
-// inside the render function would stack a new listener on every redraw).
+// Escape closes the settings popover (Item 2); Tab/Shift+Tab traps focus inside it while open
+// (K2). Registered once at script load, not inside renderDashInner() -- the whole #app subtree
+// gets replaced on every render, but a listener attached to `document` itself survives that
+// fine, so this must only ever run once (adding it inside the render function would stack a
+// new listener on every redraw).
 document.addEventListener('keydown', (e) => {
   // K3 -- routed through window.closeSettings() (not a bare `settingsOpen = false; renderDash()`)
   // so Escape returns focus to the gear button the same way the backdrop tap and ✕ button do.
-  if (e.key === 'Escape' && settingsOpen) { window.closeSettings(); }
+  if (e.key === 'Escape' && settingsOpen) { window.closeSettings(); return; }
+
+  // K2 -- real focus trap for the settings panel. It declares aria-modal="true"/role="dialog",
+  // so Tab must actually be unable to walk out of it into the rest of the page (and Shift+Tab
+  // from the first control must wrap to the last, not land on the invisible full-screen
+  // backdrop button that sits earlier in DOM order). The panel only ever has a handful of
+  // `data-focus-id` controls, so a full roving-tabindex library would be overkill here --
+  // wrapping Tab/Shift+Tab at the first/last of them is the whole trap.
+  if (e.key === 'Tab' && settingsOpen) {
+    const panel = document.getElementById('settings-panel');
+    if (!panel) return;
+    const focusables = Array.from(panel.querySelectorAll('[data-focus-id]'));
+    if (!focusables.length) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first.focus();
+    }
+  }
 });
 
 // Client-facing "how this works" guide. Persisted per-browser via localStorage so it doesn't
@@ -394,7 +437,7 @@ async function afterLogin(u) {
         const saved = loadLastView(u.id);
         const slugValid = saved && saved.viewSlug && CLIENTS[saved.viewSlug];
         viewSlug = slugValid ? saved.viewSlug : Object.keys(CLIENTS)[0];
-        const tabValid = saved && ['list', 'calendar', 'pipeline'].includes(saved.viewTab);
+        const tabValid = saved && VIEW_TABS.includes(saved.viewTab);
         viewTab = tabValid ? saved.viewTab : 'list';
       } else {
         // Fixed option ('list' | 'calendar' | 'pipeline') -- use it directly, don't touch the
@@ -431,9 +474,16 @@ let realtimeDebounceTimer = null;
 // <input type="date"> (the date chips on cards / unscheduled rows) is focused/open must NOT
 // trigger an immediate redraw -- the full-page innerHTML rebuild destroys and recreates that
 // element mid-interaction, which on iOS dismisses the native picker wheel entirely out from
-// under the user. True while a redraw is being held back waiting for that element's own
-// `change`/`blur` event instead of firing right away.
-let pendingRealtimeRedraw = false;
+// under the user. Holds the redraw back waiting for that element's own `change`/`blur` event
+// instead of firing right away.
+//
+// F3 -- stores the actual ELEMENT being waited on, not just a boolean. A plain boolean flag
+// can get stuck forever if that element is removed from the DOM without ever firing blur (an
+// error screen replacing #app, or some other redraw tearing it out) -- every future realtime
+// update would then see "a redraw is pending" and silently do nothing, forever. Checking
+// `.isConnected` on the stored element lets a later call detect that and self-heal instead of
+// staying stuck.
+let pendingRealtimeRedrawEl = null;
 function isPickerElement(el) {
   if (!el) return false;
   const app = document.getElementById('app');
@@ -442,17 +492,35 @@ function isPickerElement(el) {
 }
 function redrawOrDeferForActivePicker() {
   const el = document.activeElement;
+  // F3 -- the element we were previously waiting on is stale if it's no longer the focused
+  // element, or it's been removed from the DOM entirely. Drop the stale wait instead of
+  // trusting it, so a stuck flag can never silently swallow this (or any future) update.
+  if (pendingRealtimeRedrawEl && (pendingRealtimeRedrawEl !== el || !pendingRealtimeRedrawEl.isConnected)) {
+    pendingRealtimeRedrawEl = null;
+  }
   if (!isPickerElement(el)) { renderDash(); return; }
-  if (pendingRealtimeRedraw) return; // already waiting on this element, don't stack listeners
-  pendingRealtimeRedraw = true;
-  const fire = () => {
-    el.removeEventListener('change', fire);
-    el.removeEventListener('blur', fire);
-    pendingRealtimeRedraw = false;
+  if (pendingRealtimeRedrawEl === el) return; // already waiting on this exact element, don't stack listeners
+  pendingRealtimeRedrawEl = el;
+  const isDateInput = el.tagName === 'INPUT' && el.type === 'date';
+  const cleanup = () => {
+    el.removeEventListener('change', changeHandler);
+    el.removeEventListener('blur', blurHandler);
+    pendingRealtimeRedrawEl = null;
     renderDash();
   };
-  el.addEventListener('change', fire);
-  el.addEventListener('blur', fire);
+  // F2 -- a <select> (Pipeline's stat picker) only ever fires `change` once it has a complete,
+  // valid selection, so resuming the deferred redraw on its very first `change` is safe. A
+  // date <input>, though, fires `change` on desktop Chrome for an intermediate, nonsensical
+  // PARTIAL value while the user is still typing (e.g. one digit of a year) -- resuming on
+  // that first partial change would interrupt typing mid-keystroke, the exact problem this
+  // whole deferral exists to prevent. For date inputs, only resume on blur (interaction is
+  // over) or on a change whose value already passes isValidPlannedDate() (a complete date).
+  const changeHandler = isDateInput
+    ? () => { if (isValidPlannedDate(el.value)) cleanup(); }
+    : cleanup;
+  const blurHandler = cleanup;
+  el.addEventListener('change', changeHandler);
+  el.addEventListener('blur', blurHandler);
 }
 function subscribeLiveChanges() {
   if (realtimeChannel) return; // already subscribed, don't double-subscribe on re-login
@@ -472,7 +540,7 @@ function subscribeLiveChanges() {
 }
 function unsubscribeLiveChanges() {
   clearTimeout(realtimeDebounceTimer);
-  pendingRealtimeRedraw = false;
+  pendingRealtimeRedrawEl = null;
   if (realtimeChannel) { sb.removeChannel(realtimeChannel); realtimeChannel = null; }
 }
 
@@ -687,10 +755,11 @@ function activeGroupsFor(slug) {
   return groupIntoTakes(scripts.filter(s => s.client_slug === slug)).filter(g => groupStatus(g) !== 'Archived');
 }
 
-// Shared by the Next-7-days strip (Item 4) and Pipeline's "Scheduled this week" stat (Item 6)
-// -- a single source of truth for what "this week" means, so both features agree on the exact
-// same window. Deliberately a ROLLING 7-day window (today + the next 6 days), NOT a Sun-Sat
-// calendar week -- a calendar week would show mostly past days by Thursday/Friday, which is
+// Shared by the Next-7-days strip (Item 4) and Pipeline's "Scheduled next 7 days" stat (Item 6)
+// -- a single source of truth for the window, so both features agree on the exact same range.
+// Deliberately a ROLLING 7-day window (today + the next 6 days), NOT a Sun-Sat calendar week
+// (hence the "next 7 days" wording, not "this week") -- a calendar week would show mostly
+// past days by Thursday/Friday, which is
 // useless for "what's coming up." Returns plain 'YYYY-MM-DD' strings built from LOCAL date
 // parts (see the CRITICAL CORRECTNESS note on ymd() below) so the range can be compared
 // lexicographically against groupDate()'s output.
@@ -746,12 +815,22 @@ function renderDash() {
 }
 
 function renderDashInner() {
+  // K1 -- capture whichever control currently has focus BEFORE the innerHTML rebuild below, so
+  // restoreFocusAfterRedraw() at the end of this function can put it back. Runs unconditionally
+  // on every call (not just from the settings setters) so focus into the settings panel also
+  // survives a realtime update landing while it's open -- harmless everywhere else, since it
+  // only ever captures something when the currently-focused element carries a `data-focus-id`.
+  captureFocusForRedraw();
+
   // Item 4 state-survival -- the Next-7-days strip's horizontal scroll position lives only in
   // the DOM (`scrollLeft`), and the DOM node is destroyed and recreated by the innerHTML
   // rebuild below. Capture it now, before that happens; restored at the bottom of this
   // function via requestAnimationFrame (same technique scrollToDayPanel() already uses).
+  // Polish -- a client switch (setClient) wants this reset to 0 instead of carrying over the
+  // previous client's scroll position; it sets next7ResetPending first so this override wins.
   const next7ScrollEl = document.getElementById('next7-strip');
-  const next7ScrollLeft = next7ScrollEl ? next7ScrollEl.scrollLeft : 0;
+  let next7ScrollLeft = next7ScrollEl ? next7ScrollEl.scrollLeft : 0;
+  if (next7ResetPending) { next7ScrollLeft = 0; next7ResetPending = false; }
 
   const isAdmin  = role === 'admin';
 
@@ -775,19 +854,30 @@ function renderDashInner() {
   const modeFilteredGroups = effectiveMode === 'testing' ? testingGroups : allGroups;
   const modeFilteredRows = modeFilteredGroups.flat();
 
+  // countByStatus is raw per-take (used ONLY by the "Needs Review" pulsing-dot client banner
+  // logic below, which is deliberately take-level -- a client should see the alert if ANY take
+  // in a group needs review, even if the group's collapsed groupStatus() shows something else).
   const countByStatus = {};
   modeFilteredRows.forEach(s => { countByStatus[s.status] = (countByStatus[s.status] || 0) + 1; });
+  // F4 -- status TAB badges bucket by groupStatus() (one status per GROUP), the same group-based
+  // counting the collapsed-Filters status chip already uses (visibleGroups.length). Without
+  // this, a mixed-status take-group could inflate several tabs' raw per-take counts at once
+  // while the chip -- built from the grouped count -- shows a different, lower number for the
+  // same filter right next to it (e.g. "Needs Review · 3" on the chip vs "Needs Review 5" on
+  // the tab for the same group right after a Pipeline/Calendar -> List jump).
+  const groupCountByStatus = {};
+  modeFilteredGroups.forEach(g => { const st = groupStatus(g); groupCountByStatus[st] = (groupCountByStatus[st] || 0) + 1; });
   // "All" deliberately excludes Archived -- an archived batch (e.g. a superseded seed) shouldn't
   // inflate or clutter the default view. Archived items are only visible via their own tab.
-  const totalForView = modeFilteredRows.filter(s => s.status !== 'Archived').length;
+  const totalGroupsForView = modeFilteredGroups.filter(g => groupStatus(g) !== 'Archived').length;
 
   // Status tabs — "Needs Review" gets a pulsing green dot for clients when not already active,
   // so the action queue is always visible at a glance without requiring the banner. Archived is
   // appended after the normal workflow tabs and only shows up when something's actually in it.
-  const archivedCount = countByStatus['Archived'] || 0;
+  const archivedCount = groupCountByStatus['Archived'] || 0;
   const tabList = archivedCount > 0 ? ['all', ...STATUS_ORDER, 'Archived'] : ['all', ...STATUS_ORDER];
   const statusTabs = tabList.map(s => {
-    const count = s === 'all' ? totalForView : (countByStatus[s] || 0);
+    const count = s === 'all' ? totalGroupsForView : (groupCountByStatus[s] || 0);
     const label = s === 'all' ? 'All' : s;
     const active = viewStatus === s;
     const hasAlert = !isAdmin && s === 'Needs Review' && count > 0 && !active;
@@ -857,12 +947,12 @@ function renderDashInner() {
   const canSeeViewTabs = isAdmin || CLIENT_VIEW_TABS;
   const viewToggle = canSeeViewTabs ? `
     <div role="tablist" class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl">
-      ${['list', 'calendar', 'pipeline'].map(t => `
+      ${VIEW_TABS.map(t => `
         <button role="tab" onclick="setViewTab('${t}')"
           class="h-9 rounded-lg text-[13px] font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-500 ${viewTab === t
             ? 'bg-white text-slate-800 shadow-sm'
             : 'text-slate-500 active:bg-white/60'}">
-          ${t === 'list' ? 'List' : t === 'calendar' ? 'Calendar' : 'Pipeline'}
+          ${VIEW_TAB_LABEL[t]}
         </button>`).join('')}
     </div>` : '';
 
@@ -1049,12 +1139,13 @@ function renderDashInner() {
 function renderSettingsPanel() {
   // "Currently: ..." reflects whatever is actually SAVED to localStorage (what would be
   // restored on the next sign-in), not just the live in-memory state -- the two normally match
-  // (every admin nav action writes through immediately via saveLastView()), but this is the
-  // one piece of UI that makes the otherwise-invisible "remember last view" rule inspectable.
+  // (renderDashInner() centrally calls saveLastView() once per render whenever viewSlug/viewTab
+  // changed, see F2 there), but this is the one piece of UI that makes the otherwise-invisible
+  // "remember last view" rule inspectable.
   const saved = user ? loadLastView(user.id) : null;
   const curSlug = (saved && CLIENTS[saved.viewSlug]) ? saved.viewSlug : viewSlug;
-  const curTab  = (saved && ['list', 'calendar', 'pipeline'].includes(saved.viewTab)) ? saved.viewTab : viewTab;
-  const curTabLabel = curTab === 'list' ? 'List' : curTab === 'calendar' ? 'Calendar' : 'Pipeline';
+  const curTab  = (saved && VIEW_TABS.includes(saved.viewTab)) ? saved.viewTab : viewTab;
+  const curTabLabel = VIEW_TAB_LABEL[curTab];
   const curClientLabel = CLIENTS[curSlug]?.label || curSlug;
   const currentlyLine = `${curTabLabel} · ${curClientLabel}`;
 
@@ -1084,18 +1175,24 @@ function renderSettingsPanel() {
        itself has no height (zero-height box, "pointer-events-none") so it can't block clicks
        outside the panel; the panel re-enables pointer-events on itself. Constraining the inner
        column to "max-w-xl mx-auto" keeps the panel lined up with the rest of the app's content
-       column exactly like before. -->
+       column exactly like before.
+
+       K2 -- id="settings-panel" is how the document-level Tab-trap keydown listener (see its
+       declaration above) finds this panel's focusable controls without needing its own
+       per-render listener. max-h-[calc(100vh-5rem)]/overflow-y-auto keeps the whole panel
+       reachable (scrollable) on a short/landscape screen instead of letting its bottom content
+       get cut off with no way to scroll down to it. -->
   <div class="fixed inset-x-0 top-0 z-40 pointer-events-none">
     <div class="max-w-xl mx-auto relative">
-      <div class="pointer-events-auto absolute right-4 top-16 w-72 max-w-[calc(100vw-2rem)] bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
+      <div id="settings-panel" class="pointer-events-auto absolute right-4 top-16 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-bold text-slate-800">Settings</div>
           <button data-focus-id="settings-close" onclick="window.closeSettings()" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
         </div>
 
         <div class="mb-1">
-          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Open on sign-in</div>
-          <div class="divide-y divide-slate-100">${radioRows}</div>
+          <div id="open-on-signin-label" class="text-[11px] font-semibold text-slate-400 uppercase tracking-widest mb-1">Open on sign-in</div>
+          <div class="divide-y divide-slate-100" role="radiogroup" aria-labelledby="open-on-signin-label">${radioRows}</div>
         </div>
 
         <div class="border-t border-slate-100 mt-2 pt-3 flex items-center justify-between gap-3">
@@ -1262,6 +1359,9 @@ function renderCardGroup(group) {
   // of 1 (every existing row today) renders with zero visual change from before.
   // Same apostrophe-in-groupKey hazard as the date chips above (C2) -- groupKey is carried
   // via data-attributes instead of being interpolated straight into the onclick string.
+  // XSS-PRE -- take_label is free-text (unlike reel_number, which schema.sql defines as
+  // `integer`, so it's never run through escHtml); escHtml(null/undefined) returns '', so the
+  // `|| fallback` still kicks in correctly when a take has no label of its own.
   const takeTabs = hasTakes ? `
     <div class="flex gap-1.5 px-4 pt-4 pb-1 flex-wrap">
       ${group.map((g, i) => `
@@ -1270,7 +1370,7 @@ function renderCardGroup(group) {
           class="px-3 py-1 rounded-full text-xs font-semibold transition-all ${i === idx
             ? 'bg-slate-800 text-white'
             : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}">
-          ${g.take_label || `Take ${String.fromCharCode(65 + i)}`}
+          ${escHtml(g.take_label) || `Take ${String.fromCharCode(65 + i)}`}
         </button>`).join('')}
     </div>` : '';
 
@@ -1425,15 +1525,17 @@ const PIPELINE_STAGES = STATUS_ORDER.filter(s => s !== 'Passed'); // Draft..Post
 
 // Item 6 -- Pipeline's "pick your stat" chip (admin only; clients always see the fixed
 // "posted" headline below). `status` is the STATUS_ORDER/bucket key for the 5 status-based
-// options; `verb` fills the existing "N of Total {verb}" headline pattern. "Scheduled this
-// week" is the one non-status option -- no bucket, no verb, its own sentence instead.
+// options; `verb` fills the existing "N of Total {verb}" headline pattern. "Scheduled next 7
+// days" is the one non-status option -- no bucket, no verb, its own sentence instead. Named
+// "next 7 days" rather than "this week" because the underlying range is the same rolling
+// 7-day window as the Next-7-days strip (see rollingWeekRange()), not a Sun-Sat calendar week.
 const PIPELINE_STAT_OPTIONS = [
-  { v: 'posted',        label: 'Posted',              status: 'Posted',       verb: 'posted',      color: 'text-blue-600' },
-  { v: 'needsReview',   label: 'Needs Review',        status: 'Needs Review', verb: 'need review',  color: 'text-yellow-700' }, // not yellow-600 -- fails contrast at this weight/size
-  { v: 'approved',      label: 'Approved',            status: 'Approved',     verb: 'approved',     color: 'text-emerald-600' },
-  { v: 'filming',       label: 'Filming',             status: 'Filming',      verb: 'filming',      color: 'text-orange-600' },
-  { v: 'draft',         label: 'Draft',               status: 'Draft',        verb: 'in draft',     color: 'text-slate-600' },
-  { v: 'scheduledWeek', label: 'Scheduled this week', status: null,           verb: null,            color: 'text-slate-800' },
+  { v: 'posted',        label: 'Posted',                 status: 'Posted',       verb: 'posted',      color: 'text-blue-600' },
+  { v: 'needsReview',   label: 'Needs Review',           status: 'Needs Review', verb: 'need review',  color: 'text-yellow-700' }, // not yellow-600 -- fails contrast at this weight/size
+  { v: 'approved',      label: 'Approved',               status: 'Approved',     verb: 'approved',     color: 'text-emerald-600' },
+  { v: 'filming',       label: 'Filming',                status: 'Filming',      verb: 'filming',      color: 'text-orange-600' },
+  { v: 'draft',         label: 'Draft',                  status: 'Draft',        verb: 'in draft',     color: 'text-slate-600' },
+  { v: 'scheduledWeek', label: 'Scheduled next 7 days',  status: null,           verb: null,            color: 'text-slate-800' },
 ];
 
 function renderPipeline() {
@@ -1473,15 +1575,15 @@ function renderPipeline() {
     headlineSuffix = `of ${totalNonPassed} ${statOpt.verb}`;
     highlightStatus = statOpt.status;
   } else {
-    // "Scheduled this week" -- a count, not a status bucket, so it gets its own sentence.
+    // "Scheduled next 7 days" -- a count, not a status bucket, so it gets its own sentence.
     const { start, end } = rollingWeekRange();
-    const scheduledThisWeek = groupsInRange(groups.filter(g => groupStatus(g) !== 'Passed'), start, end);
-    headlineNumber = scheduledThisWeek.length;
-    headlineSuffix = `script${headlineNumber === 1 ? '' : 's'} scheduled this week`;
+    const scheduledNext7Days = groupsInRange(groups.filter(g => groupStatus(g) !== 'Passed'), start, end);
+    headlineNumber = scheduledNext7Days.length;
+    headlineSuffix = `script${headlineNumber === 1 ? '' : 's'} scheduled in the next 7 days`;
   }
   // Dimming reads as "the eye goes from the number to its matching slice" ONLY when there's a
   // real status to point at AND it actually has a nonzero slice to point to -- dimming
-  // everything when the count is 0, or when a non-status stat ("Scheduled this week") is
+  // everything when the count is 0, or when a non-status stat ("Scheduled next 7 days") is
   // selected, would read as broken/disabled rather than as a filter.
   const dimOtherSegments = highlightStatus !== null && headlineNumber > 0;
 
@@ -1500,8 +1602,15 @@ function renderPipeline() {
   // Native <select> overlaid transparently on a visible chip -- same iOS-safe overlay-input
   // trick the date chips elsewhere in this file already use. text-base (16px) on the real
   // control prevents iOS Safari's zoom-on-focus.
+  //
+  // Polish -- the chip itself is only ~18px tall (px-2 py-0.5 text-[10px]), well under the
+  // ~44px comfortable tap target. min-h/min-w-[44px] on the wrapper gives the invisible
+  // overlaid <select> a properly finger-sized hit area; the equal-and-opposite -my-3 keeps the
+  // wrapper's CONTRIBUTION to this row's height exactly what it was before (a negative margin
+  // shrinks an element's outer/"margin" box without shrinking the element itself), so the chip's
+  // own visual size and the row's layout are both unchanged -- only the invisible tap area grows.
   const statPicker = isAdmin ? `
-    <div class="relative inline-flex items-center ml-2">
+    <div class="relative inline-flex items-center justify-center ml-2 -my-3 min-h-[44px] min-w-[44px]">
       <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap">
         ${statOpt.label} <span class="text-slate-400">▾</span>
       </span>
@@ -1608,6 +1717,10 @@ function renderPipeline() {
 // 1500px+ tall, so burying unscheduled work below it would make it effectively invisible.
 // ─────────────────────────────────────────────
 const WEEKDAY_LETTERS = ['S','M','T','W','T','F','S'];
+// Full 3-letter weekday names -- shared by calFormatDayLabel() and renderNext7Strip(), which
+// each used to define their own identical ['Sun','Mon',...] array inline. WEEKDAY_LETTERS above
+// is a genuinely different thing (single-letter column headers for the month grid), not a dup.
+const WEEKDAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function calFormatShort(dateStr) {
@@ -1619,30 +1732,34 @@ function calFormatDayLabel(dateStr) {
   // See the CRITICAL CORRECTNESS note on ymd() above for why that distinction matters.
   const [yy, mm, dd] = dateStr.split('-').map(Number);
   const d = new Date(yy, mm - 1, dd);
-  const weekday = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
-  return `${weekday}, ${MONTH_NAMES[d.getMonth()].slice(0, 3)} ${d.getDate()}`;
+  return `${WEEKDAY_NAMES[d.getDay()]}, ${MONTH_NAMES[d.getMonth()].slice(0, 3)} ${d.getDate()}`;
 }
 
 // ─────────────────────────────────────────────
 // NEXT-7-DAYS STRIP (Item 4) — the actual answer to "these are the scripts for THIS week."
 // Rolling window (today + next 6), not a Sun-Sat calendar week -- see rollingWeekRange(). Each
-// day card is a single <button> (no nested buttons/inputs) that calls the same
+// day card is a single <button> (no nested buttons/inputs) that calls
+// window.selectCalDayFromStrip(), which moves the month grid to the tapped day's month (it can
+// differ from whatever month the grid currently has open) and then delegates to the same
 // window.selectCalDay() the month grid already uses, so tapping a strip card opens the day
 // panel below exactly like tapping a grid day does.
+//
+// activeNonPassedGroups/todayStr/weekRange are computed ONCE by the caller (renderCalendar())
+// and passed in, rather than this function re-deriving the same groups/"today"/date-range work
+// a second time within the same render.
 // ─────────────────────────────────────────────
-function renderNext7Strip() {
+function renderNext7Strip(activeNonPassedGroups, todayStr, weekRange) {
   const isAdmin = role === 'admin';
-  const { start, end } = rollingWeekRange();
-  const activeNonPassed = activeGroupsFor(viewSlug).filter(g => groupStatus(g) !== 'Passed');
-  const inRange = groupsInRange(activeNonPassed, start, end);
+  const { start, end } = weekRange;
+  const inRange = groupsInRange(activeNonPassedGroups, start, end);
 
-  const now = new Date();
+  const [ty, tm, td] = todayStr.split('-').map(Number);
   const days = [];
   for (let i = 0; i < 7; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const d = new Date(ty, tm - 1, td + i);
     const dateStr = ymd(d.getFullYear(), d.getMonth(), d.getDate());
     const dayGroups = inRange.filter(g => groupDate(g) === dateStr);
-    days.push({ dateStr, dayNum: d.getDate(), weekday: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()], dayGroups, isToday: i === 0 });
+    days.push({ dateStr, dayNum: d.getDate(), weekday: WEEKDAY_NAMES[d.getDay()], dayGroups, isToday: i === 0 });
   }
 
   const totalCount = inRange.length;
@@ -1723,9 +1840,11 @@ function renderCalendar() {
     return `<div class="text-center py-16 px-6"><div class="text-3xl mb-3">🗓️</div><div class="text-sm font-semibold text-slate-600 mb-1">No scripts here.</div></div>`;
   }
 
-  // Shared with the Next-7-days strip above -- same rolling window, so the grid's "this week"
-  // tint always agrees with what the strip is showing.
-  const { start: rw7Start, end: rw7End } = rollingWeekRange();
+  // Computed ONCE here and reused below for both the grid's "this week" tint AND passed down
+  // into renderNext7Strip() (instead of each independently calling rollingWeekRange()) --
+  // guarantees the two agree on the exact same window, and does the date-range work once
+  // instead of twice in the same render pass.
+  const weekRange = rollingWeekRange();
 
   // Passed = not being made -- excluded from the schedule, not just dimmed.
   const calendarGroups = allActiveGroups.filter(g => groupStatus(g) !== 'Passed');
@@ -1777,8 +1896,10 @@ function renderCalendar() {
     // Item 4 -- tie the grid visually to the Next-7-days strip above: cells that fall inside
     // the same rolling window get a subtle tint. Today/selected already have their own
     // stronger treatment on the number circle, so they take priority (no tint underneath).
-    const inRollingWindow = c.dateStr >= rw7Start && c.dateStr <= rw7End;
-    const cellBg = (!isSelected && !isToday && inRollingWindow) ? 'bg-slate-50' : '';
+    // Polish -- bg-slate-50 was nearly invisible against the card's white background; bumped
+    // one step darker to bg-slate-100, still subtle but actually perceptible.
+    const inRollingWindow = c.dateStr >= weekRange.start && c.dateStr <= weekRange.end;
+    const cellBg = (!isSelected && !isToday && inRollingWindow) ? 'bg-slate-100' : '';
 
     return `
     <button onclick="window.selectCalDay('${c.dateStr}')" class="h-12 flex flex-col items-center pt-1 gap-1 rounded-xl active:bg-slate-100 ${cellBg}">
@@ -1801,13 +1922,20 @@ function renderCalendar() {
       <span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-[11px] font-semibold">?</span>
     </button>` : '';
 
+  // Polish -- at ~320px-wide screens (iPhone SE), the month title + "Today" button + nav arrows
+  // can get tight. whitespace-nowrap stops the title from wrapping onto two lines; .month-short
+  // (defined in <style> above, only active below 360px) swaps in a 3-letter month abbreviation
+  // for just that narrowest band so there's room to breathe without affecting any wider phone.
   const monthBar = `
   <div class="flex items-center justify-between px-4 pt-4 pb-2">
-    <div class="flex items-center gap-2">
-      <div class="text-sm font-bold text-slate-800">${MONTH_NAMES[m]} ${y}</div>
-      ${!isCurrentMonth ? `<button onclick="window.calGoToday()" class="text-xs font-semibold text-blue-600">Today</button>` : ''}
+    <div class="flex items-center gap-2 min-w-0">
+      <div class="text-sm font-bold text-slate-800 whitespace-nowrap">
+        <span class="month-full">${MONTH_NAMES[m]} ${y}</span>
+        <span class="month-short">${MONTH_NAMES[m].slice(0, 3)} ${y}</span>
+      </div>
+      ${!isCurrentMonth ? `<button onclick="window.calGoToday()" class="text-xs font-semibold text-blue-600 whitespace-nowrap">Today</button>` : ''}
     </div>
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-1 flex-shrink-0">
       ${legendTrigger}
       <button onclick="window.calShiftMonth(-1)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
       <button onclick="window.calShiftMonth(1)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
@@ -1928,8 +2056,10 @@ function renderCalendar() {
   }
 
   // Item 7 -- final order: Next-7-days strip, a divider, then the existing month bar / legend /
-  // grid / unscheduled / day-panel stack, untouched below this point.
-  const next7Section = `<div class="mb-3">${renderNext7Strip()}</div><div class="border-t border-slate-200 mb-3"></div>`;
+  // grid / unscheduled / day-panel stack, untouched below this point. calendarGroups/todayStr/
+  // weekRange are the same values already computed above for the grid itself -- passed down
+  // instead of letting renderNext7Strip() recompute them.
+  const next7Section = `<div class="mb-3">${renderNext7Strip(calendarGroups, todayStr, weekRange)}</div><div class="border-t border-slate-200 mb-3"></div>`;
 
   return `${next7Section}${calendarCard}${unscheduledSection}${dayPanelSlot}`;
 }
@@ -1954,7 +2084,7 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
@@ -1994,11 +2124,10 @@ window.closeSettings      = () => {
     if (el) el.focus();
   });
 };
-// K1 -- capture whichever control currently has focus BEFORE the value change + redraw below,
-// so restoreFocusAfterRedraw() (called at the end of every renderDashInner()) can put focus
-// back where it was.
-window.setOpenOnSignIn    = v  => { captureFocusForRedraw(); settingOpenOnSignIn = v; lsSetStr('hub_setting_open_on_signin', v); renderDash(); };
-window.toggleAlwaysShowKey = () => { captureFocusForRedraw(); settingAlwaysShowKey = !settingAlwaysShowKey; lsSetBool('hub_setting_show_key', settingAlwaysShowKey); renderDash(); };
+// K1 -- focus capture now happens generically at the top of renderDashInner() itself (see the
+// comment there), so these two setters just change the setting and redraw like any other action.
+window.setOpenOnSignIn    = v  => { settingOpenOnSignIn = v; lsSetStr('hub_setting_open_on_signin', v); renderDash(); };
+window.toggleAlwaysShowKey = () => { settingAlwaysShowKey = !settingAlwaysShowKey; lsSetBool('hub_setting_show_key', settingAlwaysShowKey); renderDash(); };
 
 // Item 5 -- inline "?" legend expand/collapse (Calendar). Transient, not persisted -- separate
 // from the persisted "Always show color key" SETTING above.

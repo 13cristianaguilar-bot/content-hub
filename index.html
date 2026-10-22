@@ -972,6 +972,21 @@ function renderDashInner() {
     const el = document.getElementById('next7-strip');
     if (el) el.scrollLeft = next7ScrollLeft;
   });
+
+  // F2 -- single source of truth for "remember last view" persistence (admin only), instead of
+  // requiring every individual navigation action to remember to call saveLastView() itself.
+  // jumpToList() (Pipeline/Calendar -> List) was exactly this gap: it changes viewSlug/viewTab
+  // just like setClient()/setViewTab() do, but never saved, so "Where I left off" silently
+  // stopped reflecting reality after a jump-in. Runs once per render and compares against what's
+  // already saved so it's a no-op write when nothing actually changed.
+  if (isAdmin && user) {
+    const saved = loadLastView(user.id);
+    if (!saved || saved.viewSlug !== viewSlug || saved.viewTab !== viewTab) saveLastView();
+  }
+
+  // K1 -- restore keyboard focus into the just-rebuilt DOM, if a settings change captured it
+  // above. No-op when nothing was captured (every other redraw path).
+  restoreFocusAfterRedraw();
 }
 
 // ─────────────────────────────────────────────
@@ -1881,12 +1896,14 @@ function scrollToDayPanel() {
 // Native List browsing (status tabs, mode toggle, client switch) always resets
 // viewStatusExact to false -- it's only ever set true by a jump FROM Pipeline/Calendar
 // (see window.jumpToList below), and should never stick around after that.
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; saveLastView(); renderDash(); };
+// F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
+// the end of renderDashInner() instead (see the comment there for why).
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
 // but a selected day from client A's calendar shouldn't carry over to client B's.
-window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; saveLastView(); window.scrollTo(0, 0); renderDash(); };
+window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; window.scrollTo(0, 0); renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
 window.requestTweak = (id) => requestTweak(id);
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };

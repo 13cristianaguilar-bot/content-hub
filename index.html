@@ -510,8 +510,13 @@ async function afterLogin(u) {
 
   user   = u;
   authLinkError = null;
-  role   = u.user_metadata?.role || 'client';
-  mySlug = u.user_metadata?.client_slug || null;
+  // Read from app_metadata, not user_metadata -- app_metadata is the only one RLS actually
+  // trusts (a signed-in user can edit their own user_metadata), so this keeps the UI's idea of
+  // "who am I" consistent with what the database will actually let them see/do. Fall back to
+  // user_metadata only for an account created before the client-isolation fix that hasn't had
+  // app_metadata backfilled yet -- see migrations/2026-10-22_scripts_client_isolation_rls.sql.
+  role   = u.app_metadata?.role || u.user_metadata?.role || 'client';
+  mySlug = u.app_metadata?.client_slug || u.user_metadata?.client_slug || null;
   if (role === 'client' && mySlug) viewSlug = mySlug;
   if (role === 'client') viewMode = 'all'; // clients always land on full backlog, not testing-only view
 

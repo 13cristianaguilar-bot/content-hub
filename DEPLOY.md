@@ -55,7 +55,7 @@ Replace the placeholder strings with your real values. Save the file.
 In Supabase: **Authentication** → **Users** → **Add user** (for each person)
 
 ### Your admin account (Cristian)
-- Email: `richlifedevteam@gmail.com`
+- Email: your own admin email
 - Password: pick something strong
 - After creating: click the user → **Edit** → paste into **Raw user meta data**:
   ```json
@@ -78,6 +78,23 @@ In Supabase: **Authentication** → **Users** → **Add user** (for each person)
   ```json
   {"role": "client", "client_slug": "jan"}
   ```
+
+### Required extra step (as of the client-isolation fix): also set app_metadata
+The dashboard's "Add user" form only writes **Raw user meta data**, which a signed-in user can
+edit on themselves — fine for the app's own UI, but not safe to use for real access control.
+The actual security check (in `schema.sql`'s RLS policies) reads **app_metadata** instead, which
+only an admin/service-role can set. After creating a user the normal way above, also run this in
+**SQL Editor** for that user (swap the email and values):
+
+```sql
+update auth.users
+set raw_app_meta_data = raw_app_meta_data || jsonb_build_object('role', 'client', 'client_slug', 'newclient')
+where email = 'newclient@example.com';
+```
+
+Use `'role': 'admin'` with no `client_slug` for an admin account. Without this step, the new
+account can sign in and the app's UI will look right, but RLS will correctly show them zero rows,
+since nothing in their app_metadata matches any client_slug yet.
 
 ---
 

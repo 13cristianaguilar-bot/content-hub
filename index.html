@@ -262,8 +262,17 @@ let calShowKey    = false;     // Item 5 -- inline "?" legend expand/collapse. T
 let filtersOpen = lsGetBool('hub_filters_open', false);
 // Item 6 -- Pipeline's "pick your stat" chip. Persisted across sessions.
 let pipelineStat = lsGetStr('hub_pipeline_stat', 'posted');
-// Item 2 settings -- "Open on sign-in": 'last' | 'list' | 'calendar' | 'pipeline'.
-let settingOpenOnSignIn  = lsGetStr('hub_setting_open_on_signin', 'last');
+// Item 2 settings -- "Open on sign-in": 'last' | 'list' | 'calendar' | 'pipeline'. F3 -- a
+// corrupted/unexpected saved value (manual localStorage edit, a future renamed option, etc.)
+// must not be trusted as-is: it flows straight into viewTab on login, and an invalid viewTab
+// renders nothing in the body switch in renderDashInner(), producing a blank screen. Validate
+// against the allowed set and fall back to 'last' for anything else.
+const VALID_OPEN_ON_SIGNIN = ['last', 'list', 'calendar', 'pipeline'];
+function readOpenOnSignInSetting() {
+  const v = lsGetStr('hub_setting_open_on_signin', 'last');
+  return VALID_OPEN_ON_SIGNIN.includes(v) ? v : 'last';
+}
+let settingOpenOnSignIn  = readOpenOnSignInSetting();
 // Item 2 settings -- "Always show color key" (Calendar legend). Default off -- the "?" trigger
 // (Item 5) is the default experience.
 let settingAlwaysShowKey = lsGetBool('hub_setting_show_key', false);

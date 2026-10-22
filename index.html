@@ -323,47 +323,62 @@ async function init() {
 }
 
 async function afterLogin(u) {
+  // C1 -- Supabase's JS client re-fires `SIGNED_IN` (and `TOKEN_REFRESHED`/`INITIAL_SESSION`)
+  // whenever a backgrounded tab/app regains focus, not just on an actual new login (its
+  // _onVisibilityChanged -> _recoverAndRefresh path). Capture whether this is really a NEW
+  // person signing in BEFORE overwriting `user` below -- everything that resets or restores
+  // VIEW state (selected day, shown month, status filter, remembered tab/client) must be
+  // gated on this, or just switching back to the app from another app would silently wipe
+  // out whatever the user was looking at.
+  const isNewSignIn = !user || user.id !== u.id;
+
   user   = u;
   role   = u.user_metadata?.role || 'client';
   mySlug = u.user_metadata?.client_slug || null;
   if (role === 'client' && mySlug) viewSlug = mySlug;
   if (role === 'client') viewMode = 'all'; // clients always land on full backlog, not testing-only view
-  // A client can get stranded on Calendar/Pipeline after a logout/login in the same tab --
-  // viewTab is plain module-level state that survives across sessions, and the toggle + status
-  // tabs that would let them escape are both hidden whenever they can't see the view toggle.
-  // Force back to List for any session that can't see the toggle, every time it logs in.
-  if (!(role === 'admin' || CLIENT_VIEW_TABS)) viewTab = 'list';
-  // Same leak as above: viewStatusExact must not survive into a new session either (e.g. an
-  // admin jumped in from Pipeline right before signing out), or a client's List filter could
-  // silently use the group-collapsed match instead of the normal per-take one.
-  viewStatusExact = false;
 
-  // Item 3 -- silent "remember last view" restore, admin only. Reset every piece of transient
-  // view state that must NEVER be restored first (selected day, shown month, status filter) --
-  // restoring those would either auto-scroll to a huge stale day panel or make a fresh login
-  // look empty. Only viewSlug/viewTab are candidates for restore, and only when the "Open on
-  // sign-in" setting is 'last'.
-  calSelectedDay = null;
-  calMonth = null;      // always open on the real current month, never a stale one
-  viewStatus = 'all';   // always reset the List filter on a fresh login, never restore it
-  if (role === 'admin') {
-    if (settingOpenOnSignIn === 'last') {
-      const saved = loadLastView(u.id);
-      const slugValid = saved && saved.viewSlug && CLIENTS[saved.viewSlug];
-      viewSlug = slugValid ? saved.viewSlug : Object.keys(CLIENTS)[0];
-      const tabValid = saved && ['list', 'calendar', 'pipeline'].includes(saved.viewTab);
-      viewTab = tabValid ? saved.viewTab : 'list';
-    } else {
-      // Fixed option ('list' | 'calendar' | 'pipeline') -- use it directly, don't touch the
-      // saved client.
-      viewTab = settingOpenOnSignIn;
+  if (isNewSignIn) {
+    // A client can get stranded on Calendar/Pipeline after a logout/login in the same tab --
+    // viewTab is plain module-level state that survives across sessions, and the toggle + status
+    // tabs that would let them escape are both hidden whenever they can't see the view toggle.
+    // Force back to List for any session that can't see the toggle, every time it logs in.
+    if (!(role === 'admin' || CLIENT_VIEW_TABS)) viewTab = 'list';
+    // Same leak as above: viewStatusExact must not survive into a new session either (e.g. an
+    // admin jumped in from Pipeline right before signing out), or a client's List filter could
+    // silently use the group-collapsed match instead of the normal per-take one.
+    viewStatusExact = false;
+
+    // Item 3 -- silent "remember last view" restore, admin only. Reset every piece of transient
+    // view state that must NEVER be restored first (selected day, shown month, status filter) --
+    // restoring those would either auto-scroll to a huge stale day panel or make a fresh login
+    // look empty. Only viewSlug/viewTab are candidates for restore, and only when the "Open on
+    // sign-in" setting is 'last'.
+    calSelectedDay = null;
+    calMonth = null;      // always open on the real current month, never a stale one
+    viewStatus = 'all';   // always reset the List filter on a fresh login, never restore it
+    if (role === 'admin') {
+      if (settingOpenOnSignIn === 'last') {
+        const saved = loadLastView(u.id);
+        const slugValid = saved && saved.viewSlug && CLIENTS[saved.viewSlug];
+        viewSlug = slugValid ? saved.viewSlug : Object.keys(CLIENTS)[0];
+        const tabValid = saved && ['list', 'calendar', 'pipeline'].includes(saved.viewTab);
+        viewTab = tabValid ? saved.viewTab : 'list';
+      } else {
+        // Fixed option ('list' | 'calendar' | 'pipeline') -- use it directly, don't touch the
+        // saved client.
+        viewTab = settingOpenOnSignIn;
+      }
     }
   }
 
   await fetchScripts();
-  // Auto-route clients to their action queue. If they have new scripts, take them straight there.
-  // If everything is reviewed, show all so they can see their history.
-  if (role === 'client') {
+  // Auto-route clients to their action queue -- but only on a genuine new sign-in (see
+  // isNewSignIn above). If this ran on every refocus too, a client's deliberate "view all" tap
+  // would get silently overwritten back to "Needs Review" the next time they switched back to
+  // the app. If they have new scripts, take them straight there; if everything is reviewed,
+  // show all so they can see their history.
+  if (isNewSignIn && role === 'client') {
     const hasNR = scripts.some(s => s.status === 'Needs Review');
     viewStatus = hasNR ? 'Needs Review' : 'all';
   }

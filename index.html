@@ -484,7 +484,10 @@ async function requestTweak(id) {
 // HTML HELPERS
 // ─────────────────────────────────────────────
 function pill(text, style) {
-  return `<span class="text-xs font-medium px-2 py-0.5 rounded-full ${style}">${text}</span>`;
+  // XSS-PRE -- `text` is sometimes raw user/client data (s.format, s.status), never escaped
+  // here before. `style` is always a fixed, trusted CSS-class string from this file's own
+  // STATUS_STYLE/FORMAT_STYLE maps, never interpolated from data, so it's left as-is.
+  return `<span class="text-xs font-medium px-2 py-0.5 rounded-full ${style}">${escHtml(text)}</span>`;
 }
 
 function btn(label, onclick, style) {
@@ -493,9 +496,16 @@ function btn(label, onclick, style) {
 
 function linkOrText(val) {
   if (!val) return '';
-  const isUrl = val.startsWith('http');
-  if (isUrl) return `<a href="${val}" target="_blank" class="text-blue-500 text-xs underline break-all">${val}</a>`;
-  return `<span class="text-xs text-slate-500">${val}</span>`;
+  // XSS-PRE -- `val` is unescaped client-supplied data. The old `val.startsWith('http')` check
+  // also let a crafted value that merely CONTAINED "http" early on, or a non-http(s) scheme
+  // smuggled in alongside it, slip through to an unescaped `href="${val}"` -- a client who can
+  // write to any row (RLS doesn't yet separate clients -- known, separately-tracked issue)
+  // could store a quote-breaking or `javascript:`-style payload in reference_clip/camera and
+  // have it execute in the admin's session. Now strictly requires an actual http(s) scheme AND
+  // escapes both the href and the displayed text in both branches.
+  const isUrl = /^https?:\/\//i.test(val);
+  if (isUrl) return `<a href="${escHtml(val)}" target="_blank" class="text-blue-500 text-xs underline break-all">${escHtml(val)}</a>`;
+  return `<span class="text-xs text-slate-500">${escHtml(val)}</span>`;
 }
 
 // ─────────────────────────────────────────────
@@ -1251,7 +1261,7 @@ function renderCardGroup(group) {
         </div>
         ${dateChip}
       </div>
-      <div class="font-bold text-slate-800 text-base leading-snug">${s.title}</div>
+      <div class="font-bold text-slate-800 text-base leading-snug">${escHtml(s.title)}</div>
       ${s.batch ? `<div class="text-[10px] text-slate-300 mt-0.5 mb-2.5 tracking-wide">${escHtml(s.batch)}</div>` : '<div class="mb-3"></div>'}
 
       <!-- Tweak note — what got typed in when this was sent back to Draft. Shown up top,
@@ -1308,7 +1318,7 @@ function renderCardGroup(group) {
       ${s.camera ? `
       <div class="flex items-center gap-2">
         <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">🎥 Cam</span>
-        <span class="text-xs text-slate-500">${s.camera}</span>
+        <span class="text-xs text-slate-500">${escHtml(s.camera)}</span>
       </div>` : ''}
     </div>
 

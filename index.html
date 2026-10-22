@@ -43,12 +43,31 @@
   </div>
 </div>
 
+<!-- Toast host -- deliberately a SIBLING of #app, not inside it: #app's innerHTML is rebuilt on
+     every renderDash(), and a toast that lived inside it (e.g. "Moved to Passed · Undo") would be
+     wiped by the very redraw that the status change it's reporting on triggers. Persistent
+     aria-live region so screen readers announce each new message. -->
+<div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center px-4 safe-bottom" role="status" aria-live="polite"></div>
+
 <script>
 // ─────────────────────────────────────────────
 // CONFIG — paste your Supabase values here
 // ─────────────────────────────────────────────
 const SUPABASE_URL      = 'https://udkbnlpnfyjuwlstfxhr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_lwmiHRxf1Hdf2Z4b_aJkjg_ck7u1ms4';
+
+// Password-reset links (sent by doForgotPassword()) land back on this page with
+// `#access_token=...&type=recovery` in the URL. supabase-js consumes that fragment, signs the user
+// in, and strips it from the URL during its OWN initialization -- which starts inside
+// createClient() below, before init()'s onAuthStateChange listener exists, so its one-shot
+// PASSWORD_RECOVERY event can fire before anything is listening for it. Read the URL here,
+// synchronously, BEFORE createClient() runs, so the app reliably knows "this visit is a password
+// reset" and shows the set-new-password screen instead of silently dropping the user into the
+// dashboard with their old (forgotten) password still in place. An expired/used link comes back
+// as `#error_description=...` instead -- captured the same way so the login screen can say so.
+const authUrlParams = new URLSearchParams(window.location.hash.replace(/^#/, '') + '&' + window.location.search.replace(/^\?/, ''));
+let passwordRecoveryPending = authUrlParams.get('type') === 'recovery';
+let authLinkError = authUrlParams.get('error_description');
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -372,19 +391,70 @@ function renderError(e) {
 }
 
 // ─────────────────────────────────────────────
+// TOAST — the non-destructive counterpart to renderError(). renderError() is right for "the
+// page itself can't load", but it was also being used for a single failed WRITE (one status tap,
+// one date pick), which threw away the whole screen -- the user's place in the list, their open
+// day panel, everything -- over one retryable action. A failed write now leaves the screen
+// exactly as it was and says what happened down here instead. Also carries the "Undo" action
+// after a status change. One toast at a time; a new one replaces the old.
+// ─────────────────────────────────────────────
+let toastTimer = null;
+let toastActionFn = null;
+function showToast(message, opts) {
+  opts = opts || {};
+  const root = document.getElementById('toast-root');
+  if (!root) return;
+  clearTimeout(toastTimer);
+  toastActionFn = opts.onAction || null;
+  const isError = opts.tone === 'error';
+  root.innerHTML = `
+    <div class="pointer-events-auto mb-4 w-full max-w-md ${isError ? 'bg-red-600' : 'bg-slate-800'} text-white text-sm rounded-xl shadow-lg pl-4 pr-2 py-2 flex items-center gap-2">
+      <div class="flex-1 min-w-0 py-1.5 leading-snug">${escHtml(message)}</div>
+      ${toastActionFn ? `<button onclick="window.toastAction()" class="flex-shrink-0 px-3 py-1.5 rounded-lg font-semibold underline underline-offset-2 hover:bg-white/10">${escHtml(opts.actionLabel || 'Undo')}</button>` : ''}
+      <button onclick="window.hideToast()" aria-label="Dismiss" class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-white/10">✕</button>
+    </div>`;
+  toastTimer = setTimeout(hideToast, opts.duration || (isError ? 9000 : 6000));
+}
+function hideToast() {
+  clearTimeout(toastTimer);
+  toastActionFn = null;
+  const root = document.getElementById('toast-root');
+  if (root) root.innerHTML = '';
+}
+// Clears the toast BEFORE running the action so a slow action (e.g. an Undo write) can't be
+// double-fired by a second tap on a still-visible button.
+window.toastAction = () => { const fn = toastActionFn; hideToast(); if (fn) fn(); };
+
+// Shared copy for the "the write call succeeded but matched zero rows" case -- see the comment
+// in setGroupDate() for why an expired session produces exactly that, with no error.
+const SESSION_EXPIRED_MSG = "That didn't save — your session may have expired. Sign out and back in, then try again.";
+
+// ─────────────────────────────────────────────
 // INIT
 // ─────────────────────────────────────────────
 async function init() {
   try {
     const { data: { session } } = await sb.auth.getSession();
-    if (session) await afterLogin(session.user);
-    else renderLogin();
+    if (session && passwordRecoveryPending) renderSetNewPassword();
+    else if (session) await afterLogin(session.user);
+    else { passwordRecoveryPending = false; renderLogin(); } // expired/invalid reset link -> plain login
 
-    sb.auth.onAuthStateChange(async (_e, session) => {
+    sb.auth.onAuthStateChange(async (event, session) => {
       try {
+        // Belt-and-braces with the URL check at the top of the script (PKCE-style links carry
+        // no `type=recovery` in the URL, only this event).
+        if (event === 'PASSWORD_RECOVERY') passwordRecoveryPending = true;
+        if (session && passwordRecoveryPending) {
+          // Hold on the set-new-password screen -- don't let INITIAL_SESSION/SIGNED_IN/
+          // USER_UPDATED drop the user into the dashboard before they've actually set it.
+          // Only render it if it isn't already up, so a stray event can't wipe a half-typed form.
+          if (!document.getElementById('npw')) renderSetNewPassword();
+          return;
+        }
         if (session) await afterLogin(session.user);
         else {
           user = null; role = null; mySlug = null;
+          passwordRecoveryPending = false;
           // Reset admin-only calendar state so it can't leak into the next person who signs in
           // on this same tab/device (the app never reloads on auth change -- these are plain
           // module-level `let`s that would otherwise survive across sessions).
@@ -408,6 +478,7 @@ async function afterLogin(u) {
   const isNewSignIn = !user || user.id !== u.id;
 
   user   = u;
+  authLinkError = null;
   role   = u.user_metadata?.role || 'client';
   mySlug = u.user_metadata?.client_slug || null;
   if (role === 'client' && mySlug) viewSlug = mySlug;
@@ -447,7 +518,17 @@ async function afterLogin(u) {
     }
   }
 
-  await fetchScripts();
+  // A failed fetch on a genuine new sign-in has nothing on screen worth keeping, so let it
+  // throw through to renderError() (visible error + Reload). On a C1 re-fire (tab refocus) the
+  // screen already holds good data -- one flaky network moment shouldn't replace it with an
+  // error page, so keep what's showing and say so.
+  try {
+    await fetchScripts();
+  } catch (e) {
+    if (isNewSignIn) throw e;
+    console.error(e);
+    showToast("Couldn't refresh — showing what was last loaded.", { tone: 'error' });
+  }
   // Auto-route clients to their action queue -- but only on a genuine new sign-in (see
   // isNewSignIn above). If this ran on every refocus too, a client's deliberate "view all" tap
   // would get silently overwritten back to "Needs Review" the next time they switched back to
@@ -532,7 +613,14 @@ function subscribeLiveChanges() {
         // instead of firing it 3 times in quick succession.
         clearTimeout(realtimeDebounceTimer);
         realtimeDebounceTimer = setTimeout(async () => {
-          try { await fetchScripts(); redrawOrDeferForActivePicker(); } catch (e) { renderError(e); }
+          // A failed background refresh keeps the last good data on screen (fetchScripts()
+          // throws before touching `scripts`) instead of replacing a working page with an error.
+          try { await fetchScripts(); } catch (e) {
+            console.error(e);
+            showToast("Couldn't refresh — showing what was last loaded.", { tone: 'error' });
+            return;
+          }
+          redrawOrDeferForActivePicker();
         }, 150);
       })
       .subscribe();
@@ -551,19 +639,57 @@ async function fetchScripts() {
   let q = sb.from('scripts').select('*').order('reel_number', { ascending: false }); // newest first
   if (role === 'client' && mySlug) q = q.eq('client_slug', mySlug);
   const { data, error } = await q;
-  if (error) console.error(error);
+  // Throw instead of the old `console.error + scripts = []`: a failed fetch used to render as
+  // "No scripts here." -- indistinguishable from the client genuinely having no scripts, and
+  // on a realtime refresh it wiped a perfectly good list off the screen. Callers decide what a
+  // failure means (see afterLogin() and the realtime handler); `scripts` is left untouched.
+  if (error) throw error;
   scripts = data || [];
 }
 
-async function setStatus(id, status, extra) {
+// Friendlier confirmation copy for the status moves a CLIENT makes ("Moved to Filming" reads
+// like internal jargon to Andrew/Jan); anything else falls back to "Moved to <status>".
+const STATUS_MOVE_MSG = {
+  'Filming': 'Marked ready to film',
+  'Passed': 'Passed on this one',
+};
+
+// opts.isUndo -- this call IS an undo, so don't offer to undo it again.
+// opts.message -- override the confirmation copy (requestTweak uses this).
+async function setStatus(id, status, extra, opts) {
+  opts = opts || {};
+  const before = scripts.find(s => s.id === id);
+  // Snapshot exactly the fields this write will touch, so Undo restores precisely them.
+  const prev = before ? { status: before.status ?? null, client_feedback: before.client_feedback ?? null } : null;
   const payload = extra ? { status, ...extra } : { status };
-  const { error } = await sb.from('scripts').update(payload).eq('id', id);
-  if (!error) {
-    const s = scripts.find(s => s.id === id);
-    if (s) Object.assign(s, payload);
-    renderDash();
-  } else {
-    renderError(error);
+
+  // .select('id') + row-count check -- the same session-expired guard setGroupDate() already
+  // has (see the comment there): an expired token can make .update() match ZERO rows and still
+  // resolve with no error. Status taps are the most common write in the whole app, and without
+  // this a client could tap "Film", watch the card move, and the change never reach Cristian.
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('scripts').update(payload).eq('id', id).select('id'));
+  } catch (e) { error = e; }
+  if (error || !data || data.length !== 1) {
+    if (error) console.error(error);
+    showToast(error ? `Couldn't save that change: ${error.message || error}` : SESSION_EXPIRED_MSG, { tone: 'error' });
+    return;
+  }
+
+  const s = scripts.find(s => s.id === id);
+  if (s) Object.assign(s, payload);
+  renderDash();
+
+  if (opts.isUndo) { showToast('Undone'); return; }
+  if (prev) {
+    // Only restore client_feedback if this write changed it (a Tweak) -- a plain status move
+    // must not overwrite a tweak note that someone else edited meanwhile.
+    const undoExtra = ('client_feedback' in payload) ? { client_feedback: prev.client_feedback } : null;
+    showToast(opts.message || STATUS_MOVE_MSG[status] || `Moved to ${status}`, {
+      actionLabel: 'Undo',
+      onAction: () => setStatus(id, prev.status, undoExtra, { isUndo: true }),
+    });
   }
 }
 
@@ -615,31 +741,55 @@ function renderLogin() {
           <div class="text-2xl font-bold text-slate-800 tracking-tight">Content Hub</div>
           <div class="text-slate-400 text-sm mt-1">Sign in to view your scripts</div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+        <!-- A real <form> (not loose inputs + an onclick button): Enter now submits from the
+             email field too, not just the password field, and iOS/Chrome password managers
+             recognise it as a login form and offer to fill/save credentials. -->
+        <form onsubmit="event.preventDefault(); doLogin()" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
           <div id="err" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></div>
           <div>
-            <label class="text-xs font-medium text-slate-600 block mb-1.5">Email</label>
+            <label for="em" class="text-xs font-medium text-slate-600 block mb-1.5">Email</label>
             <input id="em" type="email" autocomplete="email" placeholder="you@example.com"
-              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
           <div>
-            <label class="text-xs font-medium text-slate-600 block mb-1.5">Password</label>
+            <label for="pw" class="text-xs font-medium text-slate-600 block mb-1.5">Password</label>
             <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"
-              onkeydown="if(event.key==='Enter')doLogin()"
-              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
           </div>
-          <button id="lb" onclick="doLogin()"
+          <button id="lb" type="submit"
             class="w-full bg-slate-800 text-white rounded-xl py-3 text-sm font-medium hover:bg-slate-700 active:scale-95 transition-all">
             Sign in
           </button>
           <div class="text-center pt-1">
-            <button onclick="doForgotPassword()" class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
+            <button id="fpb" type="button" onclick="doForgotPassword()" class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
               Forgot password?
             </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>`;
+  // An expired/already-used reset link came back with an error in the URL (captured at the top
+  // of the script). Say so instead of leaving the user wondering why the link "didn't work".
+  // Deliberately NOT cleared here: supabase-js fires INITIAL_SESSION (no session) right after
+  // init() has already shown this screen, which re-runs renderLogin() -- clearing on first
+  // display would wipe the message a moment after it appeared. Cleared once the user acts
+  // (doLogin/doForgotPassword) or signs in (afterLogin) instead.
+  if (authLinkError) {
+    showLoginError(`${authLinkError}. Enter your email and tap "Forgot password?" to get a new link.`);
+    try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+  }
+}
+
+// A thrown (not returned) auth error is a transport failure -- its raw message is something like
+// "Failed to fetch", which means nothing to Andrew or Jan.
+const NETWORK_ERROR_MSG = "Couldn't reach the server — check your connection and try again.";
+
+// textContent, never innerHTML -- these messages can contain server-supplied text.
+function showLoginError(msg) {
+  const err = document.getElementById('err');
+  if (!err) return;
+  err.textContent = msg;
+  err.classList.remove('hidden');
 }
 
 async function doLogin() {
@@ -647,38 +797,114 @@ async function doLogin() {
   const pw = document.getElementById('pw').value;
   const lb = document.getElementById('lb');
   const err = document.getElementById('err');
+  if (lb.disabled) return; // already in flight -- a double Enter shouldn't fire two sign-ins
+  authLinkError = null;
   lb.textContent = 'Signing in…'; lb.disabled = true;
   err.classList.add('hidden');
-  const { error } = await sb.auth.signInWithPassword({ email: em, password: pw });
+  // try/catch: a network failure (offline, captive wifi) can REJECT rather than resolve with
+  // `error` -- previously that left the button stuck on "Signing in…" and disabled forever.
+  let error = null;
+  try { ({ error } = await sb.auth.signInWithPassword({ email: em, password: pw })); }
+  catch (e) { console.error(e); error = { message: NETWORK_ERROR_MSG }; }
   if (error) {
-    err.textContent = error.message; err.classList.remove('hidden');
+    showLoginError(error.message || NETWORK_ERROR_MSG);
     lb.textContent = 'Sign in'; lb.disabled = false;
   }
 }
 
 async function doForgotPassword() {
+  authLinkError = null;
   const em = document.getElementById('em').value.trim();
   if (!em) {
-    const err = document.getElementById('err');
-    err.textContent = 'Enter your email address first, then tap Forgot password.';
-    err.classList.remove('hidden');
+    showLoginError('Enter your email address first, then tap Forgot password.');
     return;
   }
-  const { error } = await sb.auth.resetPasswordForEmail(em, {
-    redirectTo: window.location.origin + window.location.pathname
-  });
-  const err = document.getElementById('err');
+  const fpb = document.getElementById('fpb');
+  if (fpb) { fpb.disabled = true; fpb.textContent = 'Sending…'; }
+  let error = null;
+  try {
+    ({ error } = await sb.auth.resetPasswordForEmail(em, {
+      redirectTo: window.location.origin + window.location.pathname
+    }));
+  } catch (e) { console.error(e); error = { message: NETWORK_ERROR_MSG }; }
   if (error) {
-    err.textContent = error.message; err.classList.remove('hidden');
+    showLoginError(error.message || NETWORK_ERROR_MSG);
+    if (fpb) { fpb.disabled = false; fpb.textContent = 'Forgot password?'; }
   } else {
-    err.textContent = ''; err.classList.add('hidden');
+    // XSS-PRE -- `em` is whatever was typed into the field; it was interpolated raw here.
     document.getElementById('app').innerHTML = `
       <div class="flex flex-col items-center justify-center min-h-screen px-5 text-center">
         <div class="text-2xl mb-3">📬</div>
         <div class="font-semibold text-slate-800 mb-1">Check your email</div>
-        <div class="text-sm text-slate-400 max-w-xs">We sent a password reset link to <strong>${em}</strong>. Click the link in that email to set a new password.</div>
+        <div class="text-sm text-slate-400 max-w-xs">We sent a password reset link to <strong>${escHtml(em)}</strong>. Click the link in that email to set a new password.</div>
+        <button onclick="renderLogin()" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">← Back to sign in</button>
       </div>`;
   }
+}
+
+// ─────────────────────────────────────────────
+// SET NEW PASSWORD — the missing second half of "Forgot password?". The reset email's link
+// signs the user in and lands here (see passwordRecoveryPending at the top of the script);
+// before this screen existed it dropped them straight into the dashboard with no way to
+// actually choose a new password, so the next time they signed out they were locked out again.
+// ─────────────────────────────────────────────
+function renderSetNewPassword() {
+  document.getElementById('app').innerHTML = `
+    <div class="flex flex-col items-center justify-center min-h-screen px-5">
+      <div class="w-full max-w-sm">
+        <div class="text-center mb-8">
+          <div class="text-2xl font-bold text-slate-800 tracking-tight">Choose a new password</div>
+          <div class="text-slate-400 text-sm mt-1">You'll use this to sign in from now on.</div>
+        </div>
+        <form onsubmit="event.preventDefault(); doSetNewPassword()" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+          <div id="err" class="hidden text-xs text-red-600 bg-red-50 rounded-lg px-3 py-2"></div>
+          <div>
+            <label for="npw" class="text-xs font-medium text-slate-600 block mb-1.5">New password</label>
+            <input id="npw" type="password" autocomplete="new-password" minlength="8"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+            <div class="text-[11px] text-slate-400 mt-1">At least 8 characters.</div>
+          </div>
+          <div>
+            <label for="npw2" class="text-xs font-medium text-slate-600 block mb-1.5">Type it again</label>
+            <input id="npw2" type="password" autocomplete="new-password"
+              class="w-full border border-slate-200 rounded-xl px-4 py-3 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+          </div>
+          <button id="npb" type="submit"
+            class="w-full bg-slate-800 text-white rounded-xl py-3 text-sm font-medium hover:bg-slate-700 active:scale-95 transition-all">
+            Save new password
+          </button>
+          <div class="text-center pt-1">
+            <button type="button" onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 underline underline-offset-2 transition-colors">
+              Cancel and sign out
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>`;
+}
+
+async function doSetNewPassword() {
+  const pw = document.getElementById('npw').value;
+  const pw2 = document.getElementById('npw2').value;
+  const npb = document.getElementById('npb');
+  if (npb.disabled) return;
+  if (pw.length < 8) { showLoginError('Use at least 8 characters.'); return; }
+  if (pw !== pw2) { showLoginError("Those two passwords don't match."); return; }
+  npb.disabled = true; npb.textContent = 'Saving…';
+  let data = null, error = null;
+  try { ({ data, error } = await sb.auth.updateUser({ password: pw })); }
+  catch (e) { console.error(e); error = { message: NETWORK_ERROR_MSG }; }
+  if (error || !data || !data.user) {
+    showLoginError((error && error.message) || NETWORK_ERROR_MSG);
+    npb.disabled = false; npb.textContent = 'Save new password';
+    return;
+  }
+  passwordRecoveryPending = false;
+  try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
+  // afterLogin() failures (e.g. the scripts fetch) belong on the normal error screen, not in
+  // this form's inline error -- the password itself DID save at this point.
+  try { await afterLogin(data.user); } catch (e) { renderError(e); }
+  showToast('New password saved.');
 }
 
 // ─────────────────────────────────────────────
@@ -2225,15 +2451,21 @@ window.setGroupDate = async (groupKey, ymdOrNull) => {
     // rows and still resolve with no error, which would otherwise look identical to a real
     // success and optimistically patch local state with a date that was never saved.
     const { data, error } = await sb.from('scripts').update(payload).in('id', ids).select('id');
-    if (error) { renderError(error); return; }
-    if (!data || data.length !== ids.length) {
-      renderError(new Error("The date didn't save -- your session may have expired. Please sign in again and retry."));
+    // Failures toast instead of renderError() (see showToast()) -- and still redraw, because
+    // the native date input has already visibly changed to the picked value; redrawing from
+    // the unchanged `scripts` snaps the chip back to what's actually saved.
+    if (error || !data || data.length !== ids.length) {
+      if (error) console.error(error);
+      showToast(error ? `Couldn't save the date: ${error.message}` : SESSION_EXPIRED_MSG, { tone: 'error' });
+      renderDash();
       return;
     }
     rows.forEach(s => Object.assign(s, payload));
     renderDash();
   } catch (e) {
-    renderError(e);
+    console.error(e);
+    showToast(`Couldn't save the date: ${e && e.message || e}`, { tone: 'error' });
+    renderDash();
   }
 };
 
@@ -2255,7 +2487,13 @@ function escHtml(str) {
     .replace(/&/g,'&amp;')
     .replace(/</g,'&lt;')
     .replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;');
+    .replace(/"/g,'&quot;')
+    // Every attribute in this file is double-quoted today, so this is defense-in-depth: it makes
+    // escHtml() safe for a single-quoted attribute too, so a future edit can't quietly reopen
+    // the XSS-PRE hole by changing quote style. (Note: it does NOT make a value safe inside a
+    // JS string in an inline handler -- the browser decodes entities before running it; keep
+    // using data-* attributes for that, as the date/take/sous-chef buttons already do.)
+    .replace(/'/g,'&#39;');
 }
 
 // ─────────────────────────────────────────────

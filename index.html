@@ -1449,6 +1449,93 @@ function calFormatDayLabel(dateStr) {
   return `${weekday}, ${MONTH_NAMES[d.getMonth()].slice(0, 3)} ${d.getDate()}`;
 }
 
+// ─────────────────────────────────────────────
+// NEXT-7-DAYS STRIP (Item 4) — the actual answer to "these are the scripts for THIS week."
+// Rolling window (today + next 6), not a Sun-Sat calendar week -- see rollingWeekRange(). Each
+// day card is a single <button> (no nested buttons/inputs) that calls the same
+// window.selectCalDay() the month grid already uses, so tapping a strip card opens the day
+// panel below exactly like tapping a grid day does.
+// ─────────────────────────────────────────────
+function renderNext7Strip() {
+  const isAdmin = role === 'admin';
+  const { start, end } = rollingWeekRange();
+  const activeNonPassed = activeGroupsFor(viewSlug).filter(g => groupStatus(g) !== 'Passed');
+  const inRange = groupsInRange(activeNonPassed, start, end);
+
+  const now = new Date();
+  const days = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const dateStr = ymd(d.getFullYear(), d.getMonth(), d.getDate());
+    const dayGroups = inRange.filter(g => groupDate(g) === dateStr);
+    days.push({ dateStr, dayNum: d.getDate(), weekday: ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()], dayGroups, isToday: i === 0 });
+  }
+
+  const totalCount = inRange.length;
+
+  if (totalCount === 0) {
+    return `
+    <div class="rounded-2xl border border-dashed border-slate-200 px-5 py-6 text-center">
+      <div class="text-sm text-slate-500">Nothing planned in the next 7 days.</div>
+      ${isAdmin ? `<div class="text-xs text-slate-400 mt-1">Set a date on a script below to fill this in.</div>` : ''}
+    </div>`;
+  }
+
+  // "Oct 21–27" when both ends fall in the same month, "Oct 28–Nov 3" across a boundary.
+  const [sMon, sDay] = calFormatShort(start).split(' ');
+  const [eMon, eDay] = calFormatShort(end).split(' ');
+  const rangeStr = sMon === eMon ? `${sMon} ${sDay}–${eDay}` : `${calFormatShort(start)}–${calFormatShort(end)}`;
+
+  const dayCards = days.map(day => {
+    const dayLabel = day.isToday ? 'Today' : `${day.weekday} ${day.dayNum}`;
+
+    if (!day.dayGroups.length) {
+      return `
+      <button onclick="window.selectCalDay('${day.dateStr}')"
+        class="flex-none snap-start w-[42%] rounded-xl border border-dashed border-slate-200 px-3 py-3 text-left">
+        <div class="text-xs font-semibold ${day.isToday ? 'text-blue-600' : 'text-slate-500'} mb-2">${dayLabel}</div>
+        <div class="text-xs text-slate-300 text-center py-4">Nothing planned</div>
+      </button>`;
+    }
+
+    const shown = day.dayGroups.slice(0, 2);
+    const more = day.dayGroups.length - shown.length;
+    const rows = shown.map(g => {
+      const st = groupStatus(g);
+      return `
+      <div class="flex items-center gap-1.5 mb-1 min-w-0">
+        <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded-full flex-shrink-0 ${STATUS_STYLE[st]}">${st}</span>
+        <span class="text-[11px] text-slate-600 truncate">${escHtml(g[0].title)}</span>
+      </div>`;
+    }).join('');
+
+    return `
+    <button onclick="window.selectCalDay('${day.dateStr}')"
+      class="flex-none snap-start w-[42%] rounded-xl border ${day.isToday ? 'border-blue-200 bg-blue-50/40' : 'border-slate-100 bg-white'} px-3 py-3 text-left shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-xs font-semibold ${day.isToday ? 'text-blue-600' : 'text-slate-500'}">${dayLabel}</div>
+        <div class="text-[10px] text-slate-400">${day.dayGroups.length}</div>
+      </div>
+      ${rows}
+      ${more > 0 ? `<div class="text-[10px] text-slate-400 mt-0.5">+${more} more</div>` : ''}
+    </button>`;
+  }).join('');
+
+  return `
+  <div>
+    <div class="flex items-center justify-between px-0.5 mb-2">
+      <div class="text-sm font-bold text-slate-800">Next 7 days</div>
+      <div class="text-xs text-slate-400">${totalCount} script${totalCount === 1 ? '' : 's'} · ${rangeStr}</div>
+    </div>
+    <div class="relative">
+      <div id="next7-strip" class="flex gap-2 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-1">
+        ${dayCards}
+      </div>
+      <div class="pointer-events-none absolute right-0 top-0 bottom-1 w-10 bg-gradient-to-l from-slate-50 to-transparent"></div>
+    </div>
+  </div>`;
+}
+
 function renderCalendar() {
   const isAdmin = role === 'admin';
 
@@ -1461,6 +1548,10 @@ function renderCalendar() {
   if (!allActiveGroups.length) {
     return `<div class="text-center py-16 px-6"><div class="text-3xl mb-3">🗓️</div><div class="text-sm font-semibold text-slate-600 mb-1">No scripts here.</div></div>`;
   }
+
+  // Shared with the Next-7-days strip above -- same rolling window, so the grid's "this week"
+  // tint always agrees with what the strip is showing.
+  const { start: rw7Start, end: rw7End } = rollingWeekRange();
 
   // Passed = not being made -- excluded from the schedule, not just dimmed.
   const calendarGroups = allActiveGroups.filter(g => groupStatus(g) !== 'Passed');
@@ -1509,8 +1600,14 @@ function renderCalendar() {
       : dayGroups.length ? 'text-slate-800 font-semibold'
       : 'text-slate-500 font-normal';
 
+    // Item 4 -- tie the grid visually to the Next-7-days strip above: cells that fall inside
+    // the same rolling window get a subtle tint. Today/selected already have their own
+    // stronger treatment on the number circle, so they take priority (no tint underneath).
+    const inRollingWindow = c.dateStr >= rw7Start && c.dateStr <= rw7End;
+    const cellBg = (!isSelected && !isToday && inRollingWindow) ? 'bg-slate-50' : '';
+
     return `
-    <button onclick="window.selectCalDay('${c.dateStr}')" class="h-12 flex flex-col items-center pt-1 gap-1 rounded-xl active:bg-slate-100">
+    <button onclick="window.selectCalDay('${c.dateStr}')" class="h-12 flex flex-col items-center pt-1 gap-1 rounded-xl active:bg-slate-100 ${cellBg}">
       <span class="w-7 h-7 rounded-full flex items-center justify-center text-[13px] tabular-nums ${numClasses}">${c.dayNum}</span>
       <div class="flex items-center gap-0.5 ${c.inMonth ? '' : 'opacity-40'}">
         ${shown.map(st => `<span class="w-1.5 h-1.5 rounded-full ${STATUS_DOT[st]}"></span>`).join('')}
@@ -1519,6 +1616,17 @@ function renderCalendar() {
     </button>`;
   }).join('');
 
+  // Item 5 -- "?" legend trigger joins the ‹ › month-nav arrows in the same button group, so
+  // the arrows shrink to match (w-9 h-9, down from w-10 h-10) to keep "September 2026 · Today"
+  // fitting on a narrow screen. Only shown when the persisted "Always show color key" setting
+  // is OFF -- when it's ON, the legend just renders at the bottom of the card as it always has
+  // (see legendBottom below) and this trigger is skipped entirely.
+  const legendTrigger = !settingAlwaysShowKey ? `
+    <button onclick="window.toggleCalShowKey()" aria-label="Show color key" aria-expanded="${calShowKey}"
+      class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">
+      <span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-[11px] font-semibold">?</span>
+    </button>` : '';
+
   const monthBar = `
   <div class="flex items-center justify-between px-4 pt-4 pb-2">
     <div class="flex items-center gap-2">
@@ -1526,8 +1634,9 @@ function renderCalendar() {
       ${!isCurrentMonth ? `<button onclick="window.calGoToday()" class="text-xs font-semibold text-blue-600">Today</button>` : ''}
     </div>
     <div class="flex items-center gap-1">
-      <button onclick="window.calShiftMonth(-1)" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
-      <button onclick="window.calShiftMonth(1)" class="w-10 h-10 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
+      ${legendTrigger}
+      <button onclick="window.calShiftMonth(-1)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
+      <button onclick="window.calShiftMonth(1)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
     </div>
   </div>`;
 
@@ -1536,17 +1645,25 @@ function renderCalendar() {
     ${WEEKDAY_LETTERS.map(l => `<div class="h-7 flex items-center justify-center text-[11px] font-semibold text-slate-400 uppercase">${l}</div>`).join('')}
   </div>`;
 
-  const legend = `
+  // Item 5 -- the legend body itself is unchanged markup either way; what changes is WHERE it
+  // renders. Inline (under the month bar, only while calShowKey is toggled on) adds one extra
+  // line tying the dot order back to STATUS_ORDER. Bottom-of-card (the original placement,
+  // used when "Always show color key" is on) stays exactly as it rendered before this round.
+  const legendBody = `
   <div class="flex flex-wrap gap-x-3 gap-y-1.5 px-4 py-2.5 border-t border-slate-50">
     ${PIPELINE_STAGES.map(st => `<div class="flex items-center gap-1.5 text-[11px] text-slate-500"><span class="w-2 h-2 rounded-full ${STATUS_DOT[st]}"></span>${st}</div>`).join('')}
   </div>`;
+  const legendExtraLine = `<div class="px-4 pb-2.5 -mt-1 text-[10px] text-slate-400 italic">Dots are always ordered Draft → Posted.</div>`;
+  const legendInline = (!settingAlwaysShowKey && calShowKey) ? `${legendBody}${legendExtraLine}` : '';
+  const legendBottom = settingAlwaysShowKey ? legendBody : '';
 
   const calendarCard = `
   <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
     ${monthBar}
+    ${legendInline}
     ${weekdayHeader}
     <div class="grid grid-cols-7 gap-y-0.5 px-2 pb-2">${cellsHtml}</div>
-    ${legend}
+    ${legendBottom}
   </div>`;
 
   // Unscheduled -- collapsed bar, expands to compact rows. Admin rows get a native date
@@ -1631,7 +1748,11 @@ function renderCalendar() {
     </section>`;
   }
 
-  return `${calendarCard}${unscheduledSection}${dayPanelSlot}`;
+  // Item 7 -- final order: Next-7-days strip, a divider, then the existing month bar / legend /
+  // grid / unscheduled / day-panel stack, untouched below this point.
+  const next7Section = `<div class="mb-3">${renderNext7Strip()}</div><div class="border-t border-slate-200 mb-3"></div>`;
+
+  return `${next7Section}${calendarCard}${unscheduledSection}${dayPanelSlot}`;
 }
 
 function scrollToDayPanel() {

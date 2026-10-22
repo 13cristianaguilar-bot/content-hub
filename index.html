@@ -290,6 +290,38 @@ async function requestTweak(id) {
   await setStatus(id, 'Draft', { client_feedback: note || null });
 }
 
+// Generic field update (no status change) -- used by the auto-match-posted-videos admin
+// actions below, which touch matched_post_* columns without necessarily touching status.
+async function updateFields(id, fields) {
+  const { error } = await sb.from('scripts').update(fields).eq('id', id);
+  if (!error) {
+    const s = scripts.find(s => s.id === id);
+    if (s) Object.assign(s, fields);
+    renderDash();
+  } else {
+    renderError(error);
+  }
+}
+
+// Admin-only: confirms the weekly matcher's candidate post is really this script, moving it
+// straight to Posted (one tap instead of manually cross-checking Instagram against the scripts
+// table). The matched_post_url/detected_at are cleared -- they only existed to drive this
+// one-time confirm, not as a permanent record of where it posted.
+async function confirmPostedMatch(id) {
+  const s = scripts.find(s => s.id === id);
+  if (!s || !s.matched_post_url) return;
+  await updateFields(id, { status: 'Posted', matched_post_url: null, matched_post_detected_at: null });
+}
+
+// Admin-only: rejects the weekly matcher's candidate. Remembers the dismissed URL so next
+// week's run doesn't immediately re-propose this exact same pairing (simple, not bulletproof
+// against every edge case -- an accepted tradeoff for v1).
+async function dismissPostedMatch(id) {
+  const s = scripts.find(s => s.id === id);
+  if (!s || !s.matched_post_url) return;
+  await updateFields(id, { matched_post_url: null, matched_post_detected_at: null, matched_post_dismissed_url: s.matched_post_url });
+}
+
 // ─────────────────────────────────────────────
 // HTML HELPERS
 // ─────────────────────────────────────────────
@@ -679,6 +711,7 @@ function renderCardGroup(group) {
   const idx = hasTakes ? (activeTake[groupKey] ?? 0) % group.length : 0;
   const s = group[idx];
 
+  const isAdmin = role === 'admin';
   const statusStyle = STATUS_STYLE[s.status] || STATUS_STYLE['Draft'];
   const formatStyle = FORMAT_STYLE[s.format] || 'bg-slate-100 text-slate-500';
   const needsReview = s.status === 'Needs Review';
@@ -727,6 +760,20 @@ function renderCardGroup(group) {
       </div>
       <div class="font-bold text-slate-800 text-base leading-snug">${s.title}</div>
       ${s.batch ? `<div class="text-[10px] text-slate-300 mt-0.5 mb-2.5 tracking-wide">${escHtml(s.batch)}</div>` : '<div class="mb-3"></div>'}
+
+      <!-- Auto-match posted videos — admin-only. The weekly job (scripts/match-posted-videos.mjs)
+           flags a likely Instagram match for this script; this surfaces it as a clearly-distinct
+           banner (never a silent status change) with a one-tap Confirm or Not a match. Clients
+           never see this, same role==='admin' gating as every other admin-only control here. -->
+      ${(isAdmin && s.matched_post_url && s.status !== 'Posted') ? `
+      <div class="bg-cyan-50 border border-cyan-200 rounded-xl px-4 py-3 mb-3">
+        <div class="text-[10px] font-semibold text-cyan-600 uppercase tracking-widest mb-1.5">📸 Looks like this posted</div>
+        <a href="${escHtml(s.matched_post_url)}" target="_blank" rel="noopener" class="text-xs text-cyan-700 underline break-all">${escHtml(s.matched_post_url)}</a>
+        <div class="grid grid-cols-2 gap-2 mt-2.5">
+          ${btn('✅ Confirm', `confirmPostedMatch('${s.id}')`, 'bg-cyan-600 text-white hover:bg-cyan-700 font-semibold')}
+          ${btn('✕ Not a match', `dismissPostedMatch('${s.id}')`, 'border border-slate-200 text-slate-500 hover:bg-slate-50')}
+        </div>
+      </div>` : ''}
 
       <!-- Tweak note — what got typed in when this was sent back to Draft. Shown up top,
            impossible to miss, so a tweak request never has to travel by text message again. -->
@@ -860,6 +907,8 @@ window.setStatus2  = s    => { viewStatus = s; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
 window.requestTweak = (id) => requestTweak(id);
+window.confirmPostedMatch = (id) => confirmPostedMatch(id);
+window.dismissPostedMatch = (id) => dismissPostedMatch(id);
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
 
 window.toggle = id => {

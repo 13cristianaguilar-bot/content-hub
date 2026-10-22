@@ -190,17 +190,23 @@ function truncatedField(text, id, maxLen) {
   if (text.length <= maxLen) return `<div class="whitespace-pre-wrap">${escHtml(text)}</div>`;
   const cut = text.slice(0, maxLen);
   const preview = cut.slice(0, cut.lastIndexOf(' ')) || cut;
+  const open = expandedSections.has(`txt:${id}`);
   return `
-    <div id="prev-${id}">
+    <div id="prev-${id}" class="${open ? 'hidden' : ''}">
       <div class="whitespace-pre-wrap">${escHtml(preview)}…</div>
       <button onclick="toggleText('${id}')" class="text-xs font-bold underline mt-1.5 opacity-75">Show full notes ▾</button>
     </div>
-    <div id="full-${id}" class="hidden">
+    <div id="full-${id}" class="${open ? '' : 'hidden'}">
       <div class="whitespace-pre-wrap">${escHtml(text)}</div>
       <button onclick="toggleText('${id}')" class="text-xs font-bold underline mt-1.5 opacity-75">Show less ▴</button>
     </div>`;
 }
+// Flips the DOM directly (no full redraw -- that would cost a scroll jump for a purely local
+// change) AND records the new state in expandedSections, so the next full redraw rebuilds it in
+// the same open/closed state instead of snapping it shut. See expandedSections' declaration.
 window.toggleText = id => {
+  const key = `txt:${id}`;
+  if (expandedSections.has(key)) expandedSections.delete(key); else expandedSections.add(key);
   document.getElementById(`prev-${id}`).classList.toggle('hidden');
   document.getElementById(`full-${id}`).classList.toggle('hidden');
 };
@@ -250,6 +256,22 @@ let calScrollPending = false;
 // status-tab/mode/client interaction so normal List browsing keeps its existing behavior.
 let viewStatusExact = false;
 
+// Which collapsible sections are currently OPEN: "Full script + filming notes" (key = row id),
+// "Sous Chef Pass" (key = `sc-<groupKey>`), and "Show full notes" previews (key = `txt:<id>`).
+// These used to live only as a toggled `hidden` class in the DOM -- exactly the pattern the
+// calMonth/calSelectedDay note above warns against -- so ANY full redraw (a realtime update from
+// another device, a status tap on a different card, switching a take tab) silently collapsed
+// whatever script someone was in the middle of reading. Render functions now read this set to
+// decide open/closed; the toggles write it. Cleared on sign-out (see init()).
+const expandedSections = new Set();
+
+// List search text (List view only). Plain module-level state for the same redraw-survival
+// reason as everything above. Applied AFTER the mode + status filters (search within what the
+// tabs are showing), and reset anywhere the result count must match a number the user just
+// tapped (jumpToList, the client "new scripts" banner) or the underlying data changes owner
+// (client switch, sign-in/out).
+let listSearch = '';
+
 // ─────────────────────────────────────────────
 // localStorage helpers — tiny try/catch wrappers so a browser with storage disabled (private
 // mode edge cases, some in-app webviews) degrades to "use the default" instead of throwing and
@@ -273,7 +295,8 @@ function lsSetBool(key, val)      { try { localStorage.setItem(key, val ? '1' : 
 // refocus it once the new DOM exists. captureFocusForRedraw() runs generically at the top of
 // renderDashInner() itself (not just from the two settings setters below) so focus also
 // survives a realtime update arriving while the panel is open -- it's a no-op for every other
-// redraw path, since nothing outside the settings panel/gear button carries a `data-focus-id`.
+// redraw path, since nothing outside the settings panel/gear button carries a `data-focus-id`
+// except the List search box (which wants exactly this same "keep my focus" treatment).
 let pendingFocusId = null;
 function captureFocusForRedraw() {
   const el = document.activeElement;
@@ -285,7 +308,11 @@ function restoreFocusAfterRedraw() {
   pendingFocusId = null;
   requestAnimationFrame(() => {
     const el = document.querySelector(`[data-focus-id="${id}"]`);
-    if (el) el.focus();
+    if (!el) return;
+    el.focus();
+    // A rebuilt text input gets focus with the caret at the START on some browsers -- put it
+    // back at the end so the next keystroke appends instead of prepending (List search box).
+    if (el.type === 'search') { try { el.setSelectionRange(el.value.length, el.value.length); } catch (e) {} }
   });
 }
 
@@ -460,6 +487,10 @@ async function init() {
           // module-level `let`s that would otherwise survive across sessions).
           calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
           settingsOpen = false; calShowKey = false;
+          listSearch = ''; expandedSections.clear();
+          // A pending "Undo" belongs to the session that just ended -- it must not be tappable
+          // (and fail, or worse, act under the next person's session) after sign-out.
+          hideToast();
           unsubscribeLiveChanges(); renderLogin();
         }
       } catch (e) { renderError(e); }
@@ -503,6 +534,8 @@ async function afterLogin(u) {
     calSelectedDay = null;
     calMonth = null;      // always open on the real current month, never a stale one
     viewStatus = 'all';   // always reset the List filter on a fresh login, never restore it
+    listSearch = '';
+    expandedSections.clear();
     if (role === 'admin') {
       if (settingOpenOnSignIn === 'last') {
         const saved = loadLastView(u.id);
@@ -569,7 +602,10 @@ function isPickerElement(el) {
   if (!el) return false;
   const app = document.getElementById('app');
   if (!app || !app.contains(el)) return false;
-  return el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type === 'date');
+  // The List search box gets the same protection: rebuilding a focused text input mid-typing
+  // dismisses the iOS keyboard, and even on desktop it would eat the keystroke in flight.
+  // It resumes on a delayed blur rather than on change -- see redrawOrDeferForActivePicker().
+  return el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type === 'date') || el.id === 'list-search';
 }
 function redrawOrDeferForActivePicker() {
   const el = document.activeElement;
@@ -583,12 +619,13 @@ function redrawOrDeferForActivePicker() {
   if (pendingRealtimeRedrawEl === el) return; // already waiting on this exact element, don't stack listeners
   pendingRealtimeRedrawEl = el;
   const isDateInput = el.tagName === 'INPUT' && el.type === 'date';
-  const cleanup = () => {
+  const isSearchInput = el.id === 'list-search';
+  const detach = () => {
     el.removeEventListener('change', changeHandler);
     el.removeEventListener('blur', blurHandler);
     pendingRealtimeRedrawEl = null;
-    renderDash();
   };
+  const cleanup = () => { detach(); renderDash(); };
   // F2 -- a <select> (Pipeline's stat picker) only ever fires `change` once it has a complete,
   // valid selection, so resuming the deferred redraw on its very first `change` is safe. A
   // date <input>, though, fires `change` on desktop Chrome for an intermediate, nonsensical
@@ -596,10 +633,19 @@ function redrawOrDeferForActivePicker() {
   // that first partial change would interrupt typing mid-keystroke, the exact problem this
   // whole deferral exists to prevent. For date inputs, only resume on blur (interaction is
   // over) or on a change whose value already passes isValidPlannedDate() (a complete date).
+  //
+  // The List search box resumes on blur ONLY (its `change` fires on Enter while still focused),
+  // and ~250ms AFTER the blur rather than on it: the usual reason it blurs is the user tapping
+  // something else -- a Film/Pass button on a card -- and rebuilding the page between that
+  // tap's pointerdown (which caused the blur) and its click would destroy the button under the
+  // finger and silently swallow the tap. Re-enters this function afterwards instead of calling
+  // renderDash() directly, so if focus went straight back into the search box it just re-defers.
   const changeHandler = isDateInput
     ? () => { if (isValidPlannedDate(el.value)) cleanup(); }
+    : isSearchInput ? () => {} : cleanup;
+  const blurHandler = isSearchInput
+    ? () => { detach(); setTimeout(redrawOrDeferForActivePicker, 250); }
     : cleanup;
-  const blurHandler = cleanup;
   el.addEventListener('change', changeHandler);
   el.addEventListener('blur', blurHandler);
 }
@@ -699,8 +745,44 @@ async function setStatus(id, status, extra, opts) {
 async function requestTweak(id) {
   const note = window.prompt("What needs to change on this one?");
   if (note === null) return; // cancelled -- don't move status, don't lose anything
-  await setStatus(id, 'Draft', { client_feedback: note || null });
+  await setStatus(id, 'Draft', { client_feedback: note || null }, { message: 'Sent back for changes' });
 }
+
+// ─────────────────────────────────────────────
+// COPY SCRIPT — scripted content gets read off a teleprompter app, and selecting a long <pre>
+// block by long-press on a phone is fiddly and easy to get wrong (a missed last line). One tap
+// copies the exact stored script text. Looked up by row id from `scripts` rather than reading
+// the rendered DOM, so it always copies the real field, not escaped/truncated display text.
+// ─────────────────────────────────────────────
+function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+  // Fallback for non-secure contexts (opening the file locally over http) and older webviews.
+  return new Promise((resolve, reject) => {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+    ok ? resolve() : reject(new Error('Copy command was rejected'));
+  });
+}
+window.copyScript = async (id) => {
+  const s = scripts.find(x => x.id === id);
+  const text = s && typeof s.full_script === 'string' ? s.full_script : '';
+  if (!text) return;
+  try {
+    await copyTextToClipboard(text);
+    showToast('Script copied — ready to paste into your teleprompter.');
+  } catch (e) {
+    console.error(e);
+    showToast("Couldn't copy automatically — press and hold the script to copy it instead.", { tone: 'error' });
+  }
+};
 
 // ─────────────────────────────────────────────
 // HTML HELPERS
@@ -1030,6 +1112,93 @@ function isValidPlannedDate(v) {
   return year >= 2020 && year <= 2100;
 }
 
+// Today as a local 'YYYY-MM-DD' (same local-parts rule as ymd() above -- never toISOString(),
+// which is UTC and is already "tomorrow" every US evening).
+function localTodayStr() {
+  const now = new Date();
+  return ymd(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+// A group whose planned posting date has already gone by without it being posted -- the most
+// actionable thing on a content calendar ("what slipped?"). Posted is done, Passed isn't being
+// made, Archived is tucked away; none of those can be "late".
+function isPastDue(group, todayStr) {
+  const d = groupDate(group);
+  if (!d || d >= todayStr) return false;
+  const st = groupStatus(group);
+  return st !== 'Posted' && st !== 'Passed' && st !== 'Archived';
+}
+
+// ─────────────────────────────────────────────
+// LIST FILTER PIPELINE — shared by renderDashInner() and window.setListSearch() (which
+// re-renders only the card region on each keystroke and needs the exact same filtered set).
+// Groups all of this client's scripts into takes FIRST (so a group is never split across the
+// status filter), then applies the testing/all mode filter, then the status filter.
+// ─────────────────────────────────────────────
+function listGroupsForCurrentView() {
+  const allGroups = groupIntoTakes(scripts.filter(s => s.client_slug === viewSlug));
+  const testingGroups = allGroups.filter(g => g.length > 1);
+  const effectiveMode = (viewMode === 'testing' && testingGroups.length === 0) ? 'all' : viewMode;
+  const modeFilteredGroups = effectiveMode === 'testing' ? testingGroups : allGroups;
+  // viewStatusExact is only ever true right after a jump in from Pipeline/Calendar -- it makes
+  // this match groupStatus() exactly (same bucketing Pipeline/Calendar used for the count the
+  // user just tapped). Native List browsing (status tabs clicked directly) keeps its existing
+  // per-take `.some()` filter untouched -- out of scope for this fix, see F1.
+  const visibleGroups = modeFilteredGroups.filter(g =>
+    viewStatus === 'all' ? !g.some(s => s.status === 'Archived')
+    : viewStatusExact ? groupMatchesStatus(g, viewStatus)
+    : g.some(s => s.status === viewStatus)
+  );
+  return { allGroups, testingGroups, effectiveMode, modeFilteredGroups, visibleGroups };
+}
+
+// Case-insensitive match against any take in the group. "#23" means exactly reel 23; a bare
+// "23" matches reel 23 OR any text containing "23". Non-string fields (jsonb) are skipped
+// rather than stringified -- matching inside raw JSON keys would produce confusing hits.
+const SEARCH_FIELDS = ['title', 'hook', 'full_script', 'batch', 'format', 'take_label'];
+function groupMatchesSearch(group, rawQuery) {
+  const q = rawQuery.trim().toLowerCase();
+  if (!q) return true;
+  const reelOnly = /^#\d+$/.test(q);
+  const reelQ = q.replace(/^#/, '');
+  return group.some(s => {
+    if (s.reel_number != null && String(s.reel_number) === reelQ) return true;
+    if (reelOnly) return false;
+    return SEARCH_FIELDS.some(f => typeof s[f] === 'string' && s[f].toLowerCase().includes(q));
+  });
+}
+
+function renderListCards(visibleGroups, isAdmin, effectiveMode) {
+  const q = listSearch.trim();
+  const shown = q ? visibleGroups.filter(g => groupMatchesSearch(g, q)) : visibleGroups;
+
+  if (q && !shown.length) {
+    // Searching inside a narrowed tab (e.g. "Needs Review") is the most likely reason for zero
+    // hits, so offer to widen it rather than leaving a dead end.
+    const narrowed = viewStatus !== 'all' || effectiveMode === 'testing';
+    return `
+      <div class="text-center py-16">
+        <div class="text-slate-500 text-sm mb-1">No scripts match “${escHtml(q)}”${narrowed ? ' in this view' : ''}.</div>
+        <div class="flex items-center justify-center gap-2 mt-4">
+          ${narrowed ? `<button onclick="window.searchAllScripts()" class="text-xs text-blue-600 border border-blue-100 bg-blue-50 px-4 py-2 rounded-full">Search all scripts</button>` : ''}
+          <button onclick="window.clearListSearch()" class="text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">Clear search</button>
+        </div>
+      </div>`;
+  }
+  if (shown.length) {
+    const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${shown.length} of ${visibleGroups.length} match${shown.length === 1 ? 'es' : ''}</div>` : '';
+    return countLine + shown.map(renderCardGroup).join('');
+  }
+  return (viewStatus === 'Needs Review' && !isAdmin)
+    ? `<div class="text-center py-24">
+         <div style="font-size:3rem;line-height:1;" class="mb-4">✅</div>
+         <div class="text-slate-600 font-semibold text-sm mb-1">You're all caught up</div>
+         <div class="text-slate-300 text-xs">No new scripts to review right now.</div>
+         <button onclick="setStatus2('all')" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">View all scripts</button>
+       </div>`
+    : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
+}
+
 // ─────────────────────────────────────────────
 // RENDER DASHBOARD
 // ─────────────────────────────────────────────
@@ -1062,7 +1231,7 @@ function renderDashInner() {
 
   // Client tabs (admin only)
   const clientTabs = isAdmin ? Object.entries(CLIENTS).map(([slug, c]) =>
-    `<button onclick="setClient('${slug}')"
+    `<button onclick="setClient('${slug}')" aria-pressed="${viewSlug === slug}"
       class="px-4 py-2 rounded-full text-sm font-medium transition-all ${viewSlug === slug
         ? 'bg-slate-800 text-white'
         : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
@@ -1070,14 +1239,10 @@ function renderDashInner() {
     </button>`
   ).join('') : '';
 
-  // Script cards — group all of this client's scripts into takes FIRST (so a group is
-  // never split across the status filter), then apply the testing/all mode filter, then
-  // the status filter. Status-tab counts below are scoped to the CURRENT mode, so a
-  // "Needs Review 34" count doesn't show while looking at a 3-item testing view.
-  const allGroups = groupIntoTakes(scripts.filter(s => s.client_slug === viewSlug));
-  const testingGroups = allGroups.filter(g => g.length > 1);
-  const effectiveMode = (viewMode === 'testing' && testingGroups.length === 0) ? 'all' : viewMode;
-  const modeFilteredGroups = effectiveMode === 'testing' ? testingGroups : allGroups;
+  // Script cards — see listGroupsForCurrentView() for the grouping -> mode -> status pipeline.
+  // Status-tab counts below are scoped to the CURRENT mode, so a "Needs Review 34" count
+  // doesn't show while looking at a 3-item testing view.
+  const { allGroups, testingGroups, effectiveMode, modeFilteredGroups, visibleGroups } = listGroupsForCurrentView();
   const modeFilteredRows = modeFilteredGroups.flat();
 
   // countByStatus is raw per-take (used ONLY by the "Needs Review" pulsing-dot client banner
@@ -1110,23 +1275,13 @@ function renderDashInner() {
     const alertDot = hasAlert
       ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;animation:pulse-ring 2s ease-in-out infinite;opacity:1;box-shadow:none;"></span>`
       : '';
-    return `<button onclick="setStatus2('${s}')"
+    return `<button onclick="setStatus2('${s}')" aria-pressed="${active}"
       class="flex-shrink-0 whitespace-nowrap px-3 py-2.5 rounded-full text-xs font-medium transition-all ${active
         ? 'bg-slate-800 text-white'
         : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}">
       ${label}${count ? ` <span class="opacity-60">${count}</span>` : ''}${alertDot}
     </button>`;
   }).join('');
-
-  // viewStatusExact is only ever true right after a jump in from Pipeline/Calendar -- it makes
-  // this match groupStatus() exactly (same bucketing Pipeline/Calendar used for the count the
-  // user just tapped). Native List browsing (status tabs clicked directly) keeps its existing
-  // per-take `.some()` filter untouched -- out of scope for this fix, see F1.
-  const visibleGroups = modeFilteredGroups.filter(g =>
-    viewStatus === 'all' ? !g.some(s => s.status === 'Archived')
-    : viewStatusExact ? groupMatchesStatus(g, viewStatus)
-    : g.some(s => s.status === viewStatus)
-  );
 
   // Mode toggle — admin only. Clients don't need to know about A/B testing mechanics;
   // they always see all their scripts (viewMode is locked to 'all' for clients at login).
@@ -1148,16 +1303,21 @@ function renderDashInner() {
 
   // Skip building List's cards HTML entirely when Calendar/Pipeline is showing -- it was
   // computed unconditionally every render and thrown away whenever viewTab wasn't 'list'.
-  const cards = viewTab !== 'list' ? '' : (visibleGroups.length
-    ? visibleGroups.map(renderCardGroup).join('')
-    : (viewStatus === 'Needs Review' && !isAdmin)
-      ? `<div class="text-center py-24">
-           <div style="font-size:3rem;line-height:1;" class="mb-4">✅</div>
-           <div class="text-slate-600 font-semibold text-sm mb-1">You're all caught up</div>
-           <div class="text-slate-300 text-xs">No new scripts to review right now.</div>
-           <button onclick="setStatus2('all')" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">View all scripts</button>
-         </div>`
-      : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`);
+  // The search box is only offered when there's something to search (or a search is already
+  // active, so a zero-result search can still be edited/cleared). #list-cards is the region
+  // window.setListSearch() swaps on each keystroke without rebuilding the input itself.
+  const showSearch = visibleGroups.length > 0 || listSearch !== '';
+  const searchBox = showSearch ? `
+    <div class="relative">
+      <svg class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="list-search" type="search" data-focus-id="list-search" value="${escHtml(listSearch)}"
+        placeholder="Search title, hook, script, or #reel" aria-label="Search scripts"
+        autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
+        oninput="window.setListSearch(this.value)"
+        class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-base sm:text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+    </div>` : '';
+  const cards = viewTab !== 'list' ? ''
+    : `${searchBox}<div id="list-cards" class="space-y-3">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
 
   // Body branches on viewTab -- List keeps today's `cards` computation untouched; Calendar
   // and Pipeline use all non-Archived groups directly (not viewMode/viewStatus), computed
@@ -1174,7 +1334,7 @@ function renderDashInner() {
   const viewToggle = canSeeViewTabs ? `
     <div role="tablist" class="grid grid-cols-3 gap-1 p-1 bg-slate-200/70 rounded-xl">
       ${VIEW_TABS.map(t => `
-        <button role="tab" onclick="setViewTab('${t}')"
+        <button role="tab" aria-selected="${viewTab === t}" onclick="setViewTab('${t}')"
           class="h-9 rounded-lg text-[13px] font-semibold transition-all focus-visible:ring-2 focus-visible:ring-blue-500 ${viewTab === t
             ? 'bg-white text-slate-800 shadow-sm'
             : 'text-slate-500 active:bg-white/60'}">
@@ -1212,7 +1372,7 @@ function renderDashInner() {
     <div class="flex items-center justify-between">
       <div class="font-semibold text-slate-800 text-sm tracking-tight">${clientName}</div>
       <div class="flex items-center gap-1">
-        <button onclick="toggleHelp()" class="text-xs text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center">?</button>
+        <button onclick="toggleHelp()" aria-label="How this works" aria-expanded="${showHelp}" class="text-xs text-slate-400 hover:text-slate-600 w-10 h-10 rounded-full border border-slate-200 hover:border-slate-300 transition-colors flex items-center justify-center">?</button>
         <button onclick="doLogout()" class="text-xs text-slate-400 hover:text-slate-600 px-3 py-2.5 rounded-lg hover:bg-slate-100 transition-colors min-w-[60px]">
           Sign out
         </button>
@@ -1240,7 +1400,7 @@ function renderDashInner() {
 
   const filtersRow = (isAdmin && viewTab === 'list') ? `
     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-      <button onclick="window.toggleFiltersOpen()"
+      <button onclick="window.toggleFiltersOpen()" aria-expanded="${filtersOpen}"
         class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${filtersOpen
           ? 'bg-slate-800 text-white border-slate-800'
           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}">
@@ -1260,7 +1420,7 @@ function renderDashInner() {
   const nrCount = !isAdmin ? (countByStatus['Needs Review'] || 0) : 0;
   const newScriptsBanner = nrCount > 0 ? `
     <div class="px-4 pt-4">
-      <button onclick="viewMode='all'; viewTab='list'; setStatus2('Needs Review')"
+      <button onclick="viewMode='all'; viewTab='list'; listSearch=''; setStatus2('Needs Review')"
         class="new-scripts-glow w-full rounded-2xl overflow-hidden text-left"
         style="background:linear-gradient(135deg,#16a34a 0%,#22c55e 100%);display:block;">
         <div class="px-5 py-4 flex items-center justify-between">
@@ -1300,7 +1460,7 @@ function renderDashInner() {
       ${(!isAdmin && showHelp) ? `
       <div class="px-4 pt-4">
         <div class="bg-violet-50 border border-violet-100 rounded-2xl p-4 relative">
-          <button onclick="toggleHelp()" class="absolute top-3 right-3 text-violet-300 hover:text-violet-500 text-xs">✕</button>
+          <button onclick="toggleHelp()" aria-label="Dismiss guide" class="absolute top-3 right-3 text-violet-300 hover:text-violet-500 text-xs">✕</button>
           <div class="font-semibold text-violet-700 text-sm mb-2">How this works</div>
           <ul class="text-xs text-violet-800 space-y-1.5 leading-relaxed">
             <li>🧪 <b>In Testing</b> — scripts with a few different versions to compare. <b>All Scripts</b> is everything else.</li>
@@ -1413,7 +1573,7 @@ function renderSettingsPanel() {
       <div id="settings-panel" class="pointer-events-auto absolute right-4 top-16 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-bold text-slate-800">Settings</div>
-          <button data-focus-id="settings-close" onclick="window.closeSettings()" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
+          <button data-focus-id="settings-close" onclick="window.closeSettings()" aria-label="Close settings" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
         </div>
 
         <div class="mb-1">
@@ -1440,6 +1600,14 @@ function renderSettingsPanel() {
 // carry one of the 4 dossier columns -- every other row (Andrew's, Jan's old Batch-01 seed)
 // keeps the original layout untouched, so this is additive, not a breaking change.
 // ─────────────────────────────────────────────
+// Shared by the dossier "Full script" box and the legacy expanded "Script" block. `s.id` is a
+// Postgres uuid (schema.sql), never free text, so interpolating it into the onclick is safe --
+// same as the existing moveStatus('${s.id}', ...) buttons.
+function copyScriptButton(s) {
+  if (typeof s.full_script !== 'string' || !s.full_script) return '';
+  return `<button onclick="window.copyScript('${s.id}')" class="flex-shrink-0 text-[11px] font-semibold text-slate-500 border border-slate-200 bg-white rounded-full px-2.5 py-1 hover:bg-slate-50 active:scale-95 transition-all">Copy script</button>`;
+}
+
 function isDossierStyle(s) {
   return !!(s.filming_setup || s.clip_directions || s.tonality_delivery || s.proof_stats);
 }
@@ -1520,7 +1688,10 @@ function renderDossierBody(s) {
 
         ${s.full_script ? `
         <div class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 mb-2.5">
-          <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Full script</div>
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-xs font-bold text-slate-500 uppercase tracking-widest">Full script</div>
+            ${copyScriptButton(s)}
+          </div>
           <pre class="text-sm text-slate-800 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
         </div>` : ''}
 
@@ -1561,15 +1732,19 @@ function renderCardGroup(group) {
   // groupDate() (the same helper the Calendar buckets days with) so the date shown here is
   // always the exact one the group would file under on the calendar.
   const groupPlannedDate = groupDate(group);
+  // Past-due: the planned posting date has gone by and it still isn't posted -- turn the chip
+  // red so a slipped script stands out in the List without opening the Calendar.
+  const pastDue = isPastDue(group, localTodayStr());
+  const dateChipColor = pastDue ? 'bg-red-50 border-red-200 text-red-600' : 'bg-blue-50 border-blue-100 text-blue-600';
   // groupKey is NOT interpolated into the onchange string -- a batch name containing an
   // apostrophe (e.g. "Jan's Batch 02") would otherwise break the generated JS (or the
   // attribute boundary) silently, with no visible error. It's carried via a data-attribute
   // (escHtml-safe) and read back out through dataset instead. onclick wires up showPicker()
   // so desktop Chrome reliably opens the native picker on click (it already works on iOS).
   const dateChip = isAdmin ? `
-    <label class="relative h-7 px-2.5 inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-100 text-[11px] font-medium text-blue-600 flex-shrink-0">
-      📅 ${groupPlannedDate || 'Set date'}
-      <input type="date" value="${groupPlannedDate || ''}" data-group-key="${escHtml(groupKey)}"
+    <label class="relative h-7 px-2.5 inline-flex items-center gap-1 rounded-full border ${dateChipColor} text-[11px] font-medium flex-shrink-0"${pastDue ? ' title="Past its planned posting date"' : ''}>
+      ${pastDue ? '⚠️' : '📅'} ${groupPlannedDate || 'Set date'}${pastDue ? '<span class="sr-only"> (past due)</span>' : ''}
+      <input type="date" value="${groupPlannedDate || ''}" data-group-key="${escHtml(groupKey)}" aria-label="Planned posting date"
         class="absolute inset-0 w-full h-full opacity-0 text-base"
         onclick="this.showPicker && this.showPicker()"
         onchange="window.setGroupDate(this.dataset.groupKey, this.value || null)">
@@ -1580,6 +1755,12 @@ function renderCardGroup(group) {
   const sousChefSource = group.find(g => g.sous_chef_pass);
   const sousChef = sousChefSource ? sousChefSource.sous_chef_pass : null;
   const sousChefGroupKey = `sc-${groupKey}`;
+  // Open/closed comes from expandedSections (module state), not a default-closed DOM class, so
+  // a redraw doesn't snap a section shut while someone is reading it. Keys must match exactly
+  // what window.toggle() receives: String(s.id) from the onclick string, sousChefGroupKey from
+  // the dataset (data-* values round-trip escHtml back to the raw string).
+  const scriptOpen = expandedSections.has(String(s.id));
+  const sousChefOpen = expandedSections.has(sousChefGroupKey);
 
   // Take tabs — only rendered when this group actually has more than one take. A group
   // of 1 (every existing row today) renders with zero visual change from before.
@@ -1677,17 +1858,20 @@ function renderCardGroup(group) {
     </div>
 
     <!-- Expand toggle -->
-    <button onclick="toggle('${s.id}')"
+    <button onclick="toggle('${s.id}', this)" aria-expanded="${scriptOpen}" aria-controls="exp-${s.id}"
       class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
       <span class="font-medium">Full script + filming notes</span>
-      <span id="chev-${s.id}" class="text-slate-300">▸</span>
+      <span id="chev-${s.id}" class="text-slate-300">${scriptOpen ? '▾' : '▸'}</span>
     </button>
 
     <!-- Expanded -->
-    <div id="exp-${s.id}" class="hidden border-t border-slate-100">
+    <div id="exp-${s.id}" class="${scriptOpen ? '' : 'hidden'} border-t border-slate-100">
       ${s.full_script ? `
       <div class="px-4 pt-4 pb-3">
-        <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-2">Script</div>
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Script</div>
+          ${copyScriptButton(s)}
+        </div>
         <pre class="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">${escHtml(s.full_script)}</pre>
       </div>` : ''}
       ${s.editor_notes ? `
@@ -1702,12 +1886,12 @@ function renderCardGroup(group) {
     <!-- Sous Chef Pass — optional, collapsed by default. One per take-group, not per take,
          since it's a breakdown of the reference reel, which is the same across all takes. -->
     ${sousChef ? `
-    <button data-sc-key="${escHtml(sousChefGroupKey)}" onclick="toggle(this.dataset.scKey)"
+    <button data-sc-key="${escHtml(sousChefGroupKey)}" onclick="toggle(this.dataset.scKey, this)" aria-expanded="${sousChefOpen}"
       class="w-full flex items-center justify-between px-4 py-3 border-t border-slate-100 text-xs text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-colors text-left">
       <span class="font-medium">Sous Chef Pass — reference reel breakdown</span>
-      <span id="chev-${sousChefGroupKey}" class="text-slate-300">▸</span>
+      <span id="chev-${escHtml(sousChefGroupKey)}" class="text-slate-300">${sousChefOpen ? '▾' : '▸'}</span>
     </button>
-    <div id="exp-${sousChefGroupKey}" class="hidden border-t border-slate-100 px-4 py-4">
+    <div id="exp-${escHtml(sousChefGroupKey)}" class="${sousChefOpen ? '' : 'hidden'} border-t border-slate-100 px-4 py-4">
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
         ${Object.entries(sousChef).map(([label, text]) => `
         <div class="bg-violet-50 border border-violet-100 rounded-xl p-3">
@@ -2128,7 +2312,9 @@ function renderCalendar() {
     const cellBg = (!isSelected && !isToday && inRollingWindow) ? 'bg-slate-100' : '';
 
     return `
-    <button onclick="window.selectCalDay('${c.dateStr}')" class="h-12 flex flex-col items-center pt-1 gap-1 rounded-xl active:bg-slate-100 ${cellBg}">
+    <button onclick="window.selectCalDay('${c.dateStr}')" aria-pressed="${isSelected}"
+      aria-label="${calFormatDayLabel(c.dateStr)}${isToday ? ' (today)' : ''}, ${dayGroups.length ? `${dayGroups.length} script${dayGroups.length === 1 ? '' : 's'}` : 'nothing planned'}"
+      class="h-12 flex flex-col items-center pt-1 gap-1 rounded-xl active:bg-slate-100 ${cellBg}">
       <span class="w-7 h-7 rounded-full flex items-center justify-center text-[13px] tabular-nums ${numClasses}">${c.dayNum}</span>
       <div class="flex items-center gap-0.5 ${c.inMonth ? '' : 'opacity-40'}">
         ${shown.map(st => `<span class="w-1.5 h-1.5 rounded-full ${STATUS_DOT[st]}"></span>`).join('')}
@@ -2163,8 +2349,8 @@ function renderCalendar() {
     </div>
     <div class="flex items-center gap-1 flex-shrink-0">
       ${legendTrigger}
-      <button onclick="window.calShiftMonth(-1)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
-      <button onclick="window.calShiftMonth(1)" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
+      <button onclick="window.calShiftMonth(-1)" aria-label="Previous month" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
+      <button onclick="window.calShiftMonth(1)" aria-label="Next month" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
     </div>
   </div>`;
 
@@ -2201,7 +2387,7 @@ function renderCalendar() {
   // an admin tapping outside the chip, jumps straight to the filtered List.
   const unscheduledSection = unscheduled.length ? `
   <div class="mt-3 bg-white rounded-2xl border border-slate-100 overflow-hidden">
-    <button onclick="window.toggleUnscheduled()" class="w-full flex items-center justify-between px-4 py-3 text-left active:bg-slate-50">
+    <button onclick="window.toggleUnscheduled()" aria-expanded="${calShowUnscheduled}" class="w-full flex items-center justify-between px-4 py-3 text-left active:bg-slate-50">
       <span class="text-sm text-slate-600">📌 <b>${unscheduled.length}</b> not scheduled yet</span>
       <span class="text-slate-300">${calShowUnscheduled ? '▾' : '▸'}</span>
     </button>
@@ -2282,12 +2468,28 @@ function renderCalendar() {
   }
 
   // Item 7 -- final order: Next-7-days strip, a divider, then the existing month bar / legend /
-  // grid / unscheduled / day-panel stack, untouched below this point. calendarGroups/todayStr/
+  // grid / unscheduled / day-panel stack, untouched below this point. (Later addition: the
+  // past-due banner below goes ABOVE the strip, and only renders when something has actually
+  // slipped -- overdue work is more urgent than upcoming work, and when nothing is overdue the
+  // Item 7 order is exactly as before.) calendarGroups/todayStr/
   // weekRange are the same values already computed above for the grid itself -- passed down
   // instead of letting renderNext7Strip() recompute them.
   const next7Section = `<div class="mb-3">${renderNext7Strip(calendarGroups, todayStr, weekRange)}</div><div class="border-t border-slate-200 mb-3"></div>`;
 
-  return `${next7Section}${calendarCard}${unscheduledSection}${dayPanelSlot}`;
+  // Past-due banner -- scripts whose planned posting date already went by without being posted.
+  // Neither the Next-7-days strip (starts at today) nor the month grid (just a dot on an old
+  // day) surfaces these, yet "what slipped?" is the first question on a content calendar.
+  // Tapping jumps to the OLDEST one's day (same calJumpToDate() path as "Next planned"), so
+  // re-dating or posting each one and tapping again walks through them oldest-first.
+  const pastDueDates = calendarGroups.filter(g => isPastDue(g, todayStr)).map(groupDate).sort();
+  const pastDueBanner = pastDueDates.length ? `
+  <button onclick="window.calJumpToDate('${pastDueDates[0]}')"
+    class="w-full mb-3 flex items-center justify-between gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-left active:bg-red-100">
+    <span class="text-sm text-red-700">⚠️ <b>${pastDueDates.length}</b> past ${pastDueDates.length === 1 ? 'its' : 'their'} planned date, not posted yet</span>
+    <span class="text-xs font-semibold text-red-600 whitespace-nowrap">Oldest ${calFormatShort(pastDueDates[0])} →</span>
+  </button>` : '';
+
+  return `${pastDueBanner}${next7Section}${calendarCard}${unscheduledSection}${dayPanelSlot}`;
 }
 
 function scrollToDayPanel() {
@@ -2310,7 +2512,24 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; renderDash(); };
+
+// List search. Each keystroke re-renders ONLY #list-cards (not the whole page): a full
+// renderDash() would destroy and recreate the focused <input>, which dismisses the iOS keyboard
+// after every single letter. Falls back to a full redraw if the region isn't on screen.
+window.setListSearch = v => {
+  listSearch = v;
+  const region = document.getElementById('list-cards');
+  if (!region) { renderDash(); return; }
+  try {
+    const { visibleGroups, effectiveMode } = listGroupsForCurrentView();
+    region.innerHTML = renderListCards(visibleGroups, role === 'admin', effectiveMode);
+  } catch (e) { renderError(e); }
+};
+window.clearListSearch  = () => { listSearch = ''; renderDash(); };
+// "Search all scripts" from a zero-result search inside a narrowed tab -- widen mode + status,
+// keep the query.
+window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
@@ -2378,6 +2597,7 @@ window.jumpToList = (status) => {
   viewStatus = status;
   viewStatusExact = true;
   calSelectedDay = null;
+  listSearch = ''; // a leftover search would make List show fewer than the count just tapped
   renderDash();
   window.scrollTo(0, 0);
 };
@@ -2469,11 +2689,18 @@ window.setGroupDate = async (groupKey, ymdOrNull) => {
   }
 };
 
-window.toggle = id => {
+// Flips the DOM in place (no full redraw -- no scroll jump for a purely local change) and records
+// the result in expandedSections so the next full redraw keeps it. `btn` (the toggle button
+// itself, passed as `this`) gets its aria-expanded kept in sync for screen readers.
+window.toggle = (id, btn) => {
   const el = document.getElementById(`exp-${id}`);
   const ch = document.getElementById(`chev-${id}`);
+  if (!el) return;
   el.classList.toggle('hidden');
-  ch.textContent = el.classList.contains('hidden') ? '▸' : '▾';
+  const open = !el.classList.contains('hidden');
+  if (open) expandedSections.add(id); else expandedSections.delete(id);
+  if (ch) ch.textContent = open ? '▾' : '▸';
+  if (btn) btn.setAttribute('aria-expanded', String(open));
 };
 
 function escHtml(str) {

@@ -19,7 +19,12 @@ create table if not exists scripts (
   batch          text,
   reel_number    integer,
   date_planned   date,
-  created_at     timestamptz default now()
+  created_at     timestamptz default now(),
+
+  -- Auto-match posted videos (weekly job: scripts/match-posted-videos.mjs) --
+  matched_post_url           text,        -- candidate IG permalink pending admin confirmation
+  matched_post_detected_at   timestamptz, -- when the candidate was found
+  matched_post_dismissed_url text         -- last candidate URL an admin said "not a match" to
 );
 
 -- ─────────────────────────────────────────────

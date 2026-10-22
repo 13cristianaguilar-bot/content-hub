@@ -859,7 +859,11 @@ window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; renderDash()
 window.setStatus2  = s    => { viewStatus = s; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
-window.requestTweak = (id) => requestTweak(id);
+// requestTweak is already a top-level function declaration, which auto-exposes itself as
+// window.requestTweak in a classic (non-module) script -- a redundant wrapper here used to
+// reassign window.requestTweak to an arrow function that called `requestTweak(id)` by bare
+// name, which re-resolved to that *same* arrow function (global function/window bindings are
+// mirrored), causing infinite self-recursion and an instant crash on every Tweak tap.
 window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
 
 window.toggle = id => {

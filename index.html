@@ -23,8 +23,14 @@
       50%       { opacity: 0.85; box-shadow: 0 0 36px rgba(34,197,94,0.8), 0 0 72px rgba(34,197,94,0.4); }
     }
     .new-scripts-glow { animation: pulse-ring 2s ease-in-out infinite; }
-    /* Safe area inset for iPhone notch / home bar */
-    .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+    /* Safe area inset for iPhone notch / home bar. Horizontal insets too, so a
+       landscape notch doesn't sit on the toast. No Tailwind padding utilities here:
+       the CDN stylesheet loads after this block and would override them. */
+    .safe-bottom {
+      padding-left: max(16px, env(safe-area-inset-left, 0px));
+      padding-right: max(16px, env(safe-area-inset-right, 0px));
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    }
     /* Calendar month bar (Polish) -- only the narrowest phones (<360px, e.g. iPhone SE) swap
        the full month name for a 3-letter abbreviation to keep the title + Today button + nav
        arrows from crowding each other. Everything 360px and up keeps the full name. */
@@ -75,13 +81,33 @@ body.prompter-open { overflow: hidden; }
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
 }
-.hub-shell { width: 100%; max-width: 960px; margin-inline: auto; }
+.hub-shell {
+  width: 100%;
+  max-width: clamp(960px, 86vw, 1280px);
+  margin-inline: auto;
+  min-width: 0;
+}
 .hub-header {
   position: sticky; top: 0; z-index: 20;
   background: var(--paper);
   border-bottom: 1px solid var(--line);
-  padding: max(12px, env(safe-area-inset-top)) 16px 12px;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  padding-bottom: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: flex; flex-direction: column; gap: 10px;
+}
+.hub-main {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
 .hub-top { display: flex; align-items: center; gap: 12px; }
 .hub-top-actions { margin-left: auto; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
@@ -90,6 +116,7 @@ body.prompter-open { overflow: hidden; }
 .brand-word {
   font-weight: 750; letter-spacing: -0.06em; font-size: 22px; line-height: 1;
   color: var(--ink); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 100%;
 }
 .brand-ext { font-weight: 500; letter-spacing: -0.04em; }
 .brand-sub {
@@ -101,7 +128,10 @@ body.prompter-open { overflow: hidden; }
   display: flex;
   border-bottom: 1px solid var(--line);
   overflow-x: auto;
+  min-width: 0;
+  max-width: 100%;
 }
+.hub-header > * { min-width: 0; max-width: 100%; }
 .client-tab {
   flex: 1 0 auto; min-width: 0; min-height: 44px; padding: 0 8px;
   background: transparent; border: 0; border-bottom: 2px solid transparent;
@@ -114,7 +144,7 @@ body.prompter-open { overflow: hidden; }
   border: 1px solid var(--line); background: var(--card);
 }
 .seg-btn {
-  min-height: 40px; background: transparent; border: 0; color: var(--muted);
+  min-height: 44px; background: transparent; border: 0; color: var(--muted);
   font-size: 13px; font-weight: 600;
 }
 .seg-btn.is-on { background: var(--ink); color: #fff; }
@@ -128,6 +158,8 @@ body.prompter-open { overflow: hidden; }
   border: 1px solid var(--line);
   border-top: 2px solid var(--signal);
   padding: 16px 16px 12px;
+  min-width: 0;
+  max-width: 100%;
 }
 .shot.is-quiet { opacity: 0.72; }
 .shot-meta { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
@@ -138,6 +170,7 @@ body.prompter-open { overflow: hidden; }
 .shot-title {
   font-size: 28px; line-height: 1.12; letter-spacing: -0.045em;
   font-weight: 650; margin: 8px 0 12px;
+  overflow-wrap: break-word;
 }
 .status-exact {
   font-family: "Geist Mono", ui-monospace, monospace;
@@ -165,18 +198,53 @@ body.prompter-open { overflow: hidden; }
 .block-label { margin-bottom: 8px; }
 .hook-you {
   font-size: 26px; line-height: 1.25; letter-spacing: -0.03em; font-weight: 600; margin: 0;
+  overflow-wrap: break-word;
 }
 .hook-proven {
   margin: 0; font-size: 15px; line-height: 1.45; color: var(--muted);
   border-left: 2px solid var(--signal); padding-left: 12px;
 }
 .hook-pair { display: flex; flex-direction: column; gap: 14px; }
-.ref-row { display: flex; gap: 12px; align-items: stretch; }
+.ref-row { display: flex; gap: 12px; align-items: stretch; min-width: 0; }
+.ref-row:has(.has-frame) { flex-direction: column; align-items: stretch; }
+.ref-row:has(.has-frame) .ref-open { width: 100%; min-height: 44px; }
 .ref-poster {
-  flex: 1; min-height: 72px; display: flex; align-items: center; gap: 12px;
+  flex: 1; min-height: 72px; min-width: 0; display: flex; align-items: center; gap: 12px;
   text-align: left; background: var(--black); color: #fff; border: 0; padding: 10px 12px;
 }
-.ref-poster img { width: 72px; height: 52px; object-fit: cover; flex-shrink: 0; }
+.ref-poster.has-frame {
+  width: 100%; align-self: stretch;
+  flex-direction: column; align-items: stretch; gap: 0; padding: 0; overflow: hidden;
+}
+.ref-poster.has-frame .ref-play { display: none; }
+.ref-poster.has-frame .ref-caption { padding: 10px 12px; }
+.ref-poster img.thumb-lg {
+  width: 100%; max-width: 100%; height: min(240px, 46vh); object-fit: cover; object-position: center 18%;
+  display: block; background: #080808;
+}
+.list-thumb {
+  width: 52px; height: 72px; object-fit: cover; object-position: center 18%;
+  flex-shrink: 0; display: block; background: #080808;
+}
+.shot-id { display: flex; gap: 12px; align-items: flex-start; }
+.shot-id-main { flex: 1; min-width: 0; }
+.type-bar { display: flex; border: 1px solid var(--line); background: var(--card); }
+.type-bar button {
+  flex: 1; min-height: 44px; background: transparent; border: 0; color: var(--muted);
+  font-size: 13px; font-weight: 600;
+}
+.type-bar button.is-on { background: var(--ink); color: #fff; }
+.type-section {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin: 6px 2px 2px; padding-top: 8px;
+}
+.type-section .type-count { color: var(--muted); font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em; }
+.shot.is-broll { border-top-color: var(--ink); }
+.type-badge {
+  display: inline-block; margin-left: 6px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal);
+}
 .ref-play {
   width: 44px; height: 44px; flex-shrink: 0; display: grid; place-items: center;
   color: var(--signal);
@@ -193,6 +261,7 @@ body.prompter-open { overflow: hidden; }
 .shot-script {
   font-size: 22px; line-height: 1.45; letter-spacing: -0.02em;
   white-space: pre-wrap; margin: 0; font-weight: 450;
+  overflow-wrap: break-word;
 }
 .q-sheet { list-style: none; margin: 0; padding: 0; }
 .q-sheet li { display: flex; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
@@ -200,7 +269,7 @@ body.prompter-open { overflow: hidden; }
   font-family: "Geist Mono", ui-monospace, monospace; color: var(--signal);
   font-size: 13px; width: 1.6rem; flex-shrink: 0; padding-top: 6px;
 }
-.q-t { font-size: 22px; line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; }
+.q-t { font-size: 22px; line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; overflow-wrap: break-word; }
 .shot-intro { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
 .script-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
 .tool-btn, .adv-btn, .shot-alt button {
@@ -244,7 +313,7 @@ body.prompter-open { overflow: hidden; }
 .tweak p { margin: 6px 0 0; font-size: 15px; line-height: 1.45; }
 .take-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
 .take-tab {
-  min-height: 36px; padding: 0 12px; border: 1px solid var(--line); background: #fff;
+  min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: #fff;
   font-size: 13px; font-weight: 600; color: var(--muted);
 }
 .take-tab.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
@@ -253,7 +322,10 @@ body.prompter-open { overflow: hidden; }
   min-height: 32px; padding: 0 8px; font-size: 12px; font-weight: 600;
   background: #fff; border: 1px solid var(--line); color: var(--ink);
 }
-.date-chip input { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; }
+.date-chip input {
+  position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+  opacity: 0; width: 100%; height: 44px; margin: 0;
+}
 .date-chip.is-late { color: var(--signal); border-color: var(--signal); }
 .shot-actions { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
 .shot-go {
@@ -295,11 +367,11 @@ body.prompter-open { overflow: hidden; }
 }
 .auth-panel input:focus { outline: 2px solid var(--signal); border-color: var(--signal); }
 .signout-btn {
-  min-height: 40px; padding: 0 10px; background: transparent; border: 0; color: var(--muted); font-size: 13px; font-weight: 600;
+  min-height: 44px; padding: 0 10px; background: transparent; border: 0; color: var(--muted); font-size: 13px; font-weight: 600;
 }
 .icon-btn {
-  width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
-  background: transparent; border: 1px solid var(--line); color: var(--ink);
+  width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid var(--line); color: var(--ink); flex-shrink: 0;
 }
 #prompter {
   position: fixed; inset: 0; z-index: 80; background: var(--black); color: #fff;
@@ -329,11 +401,25 @@ body.prompter-open { overflow: hidden; }
 .pr-qn { color: #ff6a70; font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.45em; padding-top: 0.35em; }
 .setup-notes button { min-height: 44px; font-size: 14px; font-weight: 600; color: var(--signal); background: none; border: 0; padding: 0; }
 .new-scripts-glow { animation: none !important; box-shadow: none !important; background: #171717 !important; }
-@media (min-width: 860px) {
+img, iframe, video, pre { max-width: 100%; }
+.shot-kicker, .ref-cta, .cta-line { overflow-wrap: break-word; }
+.settings-panel {
+  right: max(16px, env(safe-area-inset-right, 0px));
+  width: min(18rem, calc(100% - 32px));
+  max-height: min(32rem, calc(100dvh - 5rem));
+}
+/* Tablet portrait and up: the card is two columns. Both columns share row 1
+   so the reference stays beside the line you say, not under an empty cell. */
+@media (min-width: 768px) {
+  .hub-header, .hub-main {
+    padding-left: max(24px, env(safe-area-inset-left, 0px));
+    padding-right: max(24px, env(safe-area-inset-right, 0px));
+  }
+  .shot { padding: 20px 20px 16px; }
   .shot-body {
     display: grid;
-    grid-template-columns: minmax(0, 1.25fr) minmax(260px, 0.8fr);
-    gap: 8px 32px;
+    grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.8fr);
+    gap: 8px 28px;
     align-items: start;
   }
   .col-main, .col-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
@@ -342,12 +428,22 @@ body.prompter-open { overflow: hidden; }
   .area-ref, .area-hooks, .area-script, .area-setup, .area-shots, .area-screen, .area-cta { order: 0; }
   .setup-grid { grid-template-columns: 1fr 1fr; }
   .shot-script, .q-t, .hook-you { max-width: 40rem; }
+  .ref-poster img.thumb-lg { height: min(320px, 50vh); }
+}
+@media (min-width: 1024px) {
+  .shot-body {
+    grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.85fr);
+    gap: 8px 36px;
+  }
 }
 @media (max-width: 389px) {
   .brand-word { font-size: 18px; }
   .shot-title { font-size: 24px; }
   .hook-you, .q-t, .shot-script { font-size: 20px; }
   .client-tab { font-size: 13px; padding: 0 6px; }
+  .list-thumb { width: 44px; height: 62px; }
+  .signout-btn { padding: 0 6px; font-size: 12px; }
+  .hub-top { gap: 8px; }
 }
 
 </style>
@@ -362,7 +458,7 @@ body.prompter-open { overflow: hidden; }
      every renderDash(), and a toast that lived inside it (e.g. "Moved to Passed · Undo") would be
      wiped by the very redraw that the status change it's reporting on triggers. Persistent
      aria-live region so screen readers announce each new message. -->
-<div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center px-4 safe-bottom" role="status" aria-live="polite"></div>
+<div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center safe-bottom" role="status" aria-live="polite"></div>
 <div id="prompter-root"></div>
 
 <script>
@@ -539,6 +635,7 @@ let mySlug   = null;   // 'andrew' | 'jan' (clients only)
 let scripts  = [];
 let viewSlug = 'andrew';
 let viewStatus = 'all';
+let viewType = 'all'; // 'all' | 'interview' | 'broll' — default stays all so unlettered scripts stay visible
 let viewMode = 'all'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
                            // to 'testing' so anyone logging in sees the active A/B/C tests
                            // first, not buried in the backlog. Falls back to 'all' automatically
@@ -866,6 +963,7 @@ async function afterLogin(u) {
     calSelectedDay = null;
     calMonth = null;      // always open on the real current month, never a stale one
     viewStatus = 'all';   // always reset the List filter on a fresh login, never restore it
+    viewType = 'all';     // Interview / B-roll filter must not hide scripts on a fresh login
     listSearch = '';
     expandedSections.clear();
     if (role === 'admin') {
@@ -1480,6 +1578,48 @@ function groupMatchesSearch(group, rawQuery) {
   });
 }
 
+// Format labels A–F are interview, G–J are B-roll. A letter only counts when it
+// stands alone ("A · …", "Format A", "G · …"). "F14", "J1", and "J11" are other
+// formats and stay in All. A historical "was B-Roll" phrase is not a type.
+function scriptType(format) {
+  const f = String(format || '').trim();
+  const m = f.match(/^(?:Format\s+)?([A-J])(?:\s*[·•.|:\-–—]|\s*$)/i);
+  if (!m) return 'other';
+  return m[1].toUpperCase() <= 'F' ? 'interview' : 'broll';
+}
+function groupScriptType(group) {
+  return scriptType(group[0] && group[0].format);
+}
+function typeLabel(t) {
+  return t === 'interview' ? 'Interview' : t === 'broll' ? 'B-roll' : 'Other';
+}
+function renderTypedGroups(groups) {
+  const buckets = { interview: [], broll: [], other: [] };
+  groups.forEach(g => { (buckets[groupScriptType(g)] || buckets.other).push(g); });
+  const split = viewType === 'all' && (
+    (buckets.broll.length && (buckets.interview.length || buckets.other.length))
+    || (buckets.interview.length && buckets.other.length)
+  );
+  if (!split) return `<div class="space-y-3">${groups.map(renderCardGroup).join('')}</div>`;
+  return ['interview', 'broll', 'other'].map(t => {
+    const items = buckets[t];
+    if (!items.length) return '';
+    return `<section class="type-block">
+      <div class="type-section"><div class="eyebrow">${typeLabel(t)}</div><div class="type-count">${items.length}</div></div>
+      <div class="space-y-3">${items.map(renderCardGroup).join('')}</div>
+    </section>`;
+  }).join('');
+}
+function renderTypeBar(counts) {
+  const opts = [['all', 'All', counts.interview + counts.broll + counts.other]];
+  if (counts.interview) opts.push(['interview', 'Interview', counts.interview]);
+  if (counts.broll) opts.push(['broll', 'B-roll', counts.broll]);
+  if (opts.length < 2) return '';
+  return `<div class="type-bar" role="tablist" aria-label="Script type">${opts.map(([id, label, n]) =>
+    `<button type="button" role="tab" aria-selected="${viewType === id}" onclick="window.setType('${id}')" class="${viewType === id ? 'is-on' : ''}">${label} <span class="opacity-60">${n}</span></button>`
+  ).join('')}</div>`;
+}
+
 function renderListCards(visibleGroups, isAdmin, effectiveMode) {
   const q = listSearch.trim();
   const shown = q ? visibleGroups.filter(g => groupMatchesSearch(g, q)) : visibleGroups;
@@ -1487,7 +1627,7 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
   if (q && !shown.length) {
     // Searching inside a narrowed tab (e.g. "Needs Review") is the most likely reason for zero
     // hits, so offer to widen it rather than leaving a dead end.
-    const narrowed = viewStatus !== 'all' || effectiveMode === 'testing';
+    const narrowed = viewStatus !== 'all' || viewType !== 'all' || effectiveMode === 'testing';
     return `
       <div class="text-center py-16">
         <div class="text-slate-500 text-sm mb-1">No scripts match “${escHtml(q)}”${narrowed ? ' in this view' : ''}.</div>
@@ -1497,9 +1637,27 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
         </div>
       </div>`;
   }
-  if (shown.length) {
-    const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${shown.length} of ${visibleGroups.length} match${shown.length === 1 ? 'es' : ''}</div>` : '';
-    return countLine + shown.map(renderCardGroup).join('');
+  const typed = viewType === 'all' ? shown : shown.filter(g => groupScriptType(g) === viewType);
+  if (q && !typed.length && shown.length) {
+    return `
+      <div class="text-center py-16">
+        <div class="text-slate-500 text-sm mb-1">No ${escHtml(typeLabel(viewType).toLowerCase())} scripts match “${escHtml(q)}”.</div>
+        <div class="flex items-center justify-center gap-2 mt-4">
+          <button onclick="window.setType('all')" class="text-xs text-slate-700 border border-slate-200 px-4 py-2 rounded-full">All types</button>
+          <button onclick="window.clearListSearch()" class="text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">Clear search</button>
+        </div>
+      </div>`;
+  }
+  if (typed.length) {
+    const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${typed.length} of ${visibleGroups.length} match${typed.length === 1 ? 'es' : ''}</div>` : '';
+    return countLine + renderTypedGroups(typed);
+  }
+  if (shown.length && !typed.length) {
+    return `
+      <div class="text-center py-16">
+        <div class="text-slate-500 text-sm mb-1">No ${escHtml(typeLabel(viewType).toLowerCase())} scripts in this view.</div>
+        <button onclick="window.setType('all')" class="mt-4 text-xs text-slate-700 border border-slate-200 px-4 py-2 rounded-full">Show all types</button>
+      </div>`;
   }
   return (viewStatus === 'Needs Review' && !isAdmin)
     ? `<div class="text-center py-24">
@@ -1584,7 +1742,7 @@ function renderDashInner() {
       ? `<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:4px;vertical-align:middle;animation:pulse-ring 2s ease-in-out infinite;opacity:1;box-shadow:none;"></span>`
       : '';
     return `<button onclick="setStatus2('${s}')" aria-pressed="${active}"
-      class="flex-shrink-0 whitespace-nowrap px-3 py-2.5 rounded-full text-xs font-medium transition-all ${active
+      class="flex-shrink-0 whitespace-nowrap min-h-11 px-3 py-2.5 rounded-full text-xs font-medium transition-all ${active
         ? 'bg-slate-800 text-white'
         : 'bg-white text-slate-400 border border-slate-200 hover:border-slate-300'}">
       ${label}${count ? ` <span class="opacity-60">${count}</span>` : ''}${alertDot}
@@ -1596,13 +1754,13 @@ function renderDashInner() {
   const modeTabs = (isAdmin && testingGroups.length) ? `
     <div class="flex gap-2">
       <button onclick="setMode('testing')"
-        class="px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'testing'
+        class="min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'testing'
           ? 'bg-violet-600 text-white'
           : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
         🧪 In Testing <span class="opacity-70">${testingGroups.length}</span>
       </button>
       <button onclick="setMode('all')"
-        class="px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'all'
+        class="min-h-11 px-4 py-2 rounded-full text-sm font-medium transition-all ${effectiveMode === 'all'
           ? 'bg-slate-800 text-white'
           : 'bg-white text-slate-500 border border-slate-200 hover:border-slate-300'}">
         📋 All Scripts <span class="opacity-70">${allGroups.length}</span>
@@ -1614,6 +1772,10 @@ function renderDashInner() {
   // The search box is only offered when there's something to search (or a search is already
   // active, so a zero-result search can still be edited/cleared). #list-cards is the region
   // window.setListSearch() swaps on each keystroke without rebuilding the input itself.
+  const typeCounts = { interview: 0, broll: 0, other: 0 };
+  visibleGroups.forEach(g => { const t = groupScriptType(g); typeCounts[t] = (typeCounts[t] || 0) + 1; });
+  const typeBar = viewTab === 'list' ? renderTypeBar(typeCounts) : '';
+
   const showSearch = visibleGroups.length > 0 || listSearch !== '';
   const searchBox = showSearch ? `
     <div class="relative">
@@ -1622,10 +1784,10 @@ function renderDashInner() {
         placeholder="Search title, hook, script, or #reel" aria-label="Search scripts"
         autocomplete="off" autocorrect="off" spellcheck="false" enterkeyhint="search"
         oninput="window.setListSearch(this.value)"
-        class="w-full bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-base sm:text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+        class="w-full min-h-11 bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-base sm:text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
     </div>` : '';
   const cards = viewTab !== 'list' ? ''
-    : `${searchBox}<div id="list-cards" class="space-y-3">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
+    : `${typeBar}${searchBox}<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
 
   // Body branches on viewTab -- List keeps today's `cards` computation untouched; Calendar
   // and Pipeline use all non-Archived groups directly (not viewMode/viewStatus), computed
@@ -1690,14 +1852,14 @@ function renderDashInner() {
   // per-take counts can show a different number than what's visible, the same mismatch a prior
   // QA round already fixed for the Pipeline->List jump path.
   const statusChip = viewStatus !== 'all' ? `
-    <button onclick="window.setStatus2('all')" class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white">
+    <button onclick="window.setStatus2('all')" class="flex-shrink-0 min-h-11 px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-800 text-white">
       ${viewStatus} <span class="opacity-70">· ${visibleGroups.length}</span> <span class="opacity-80">✕</span>
     </button>` : '';
 
   const filtersRow = (isAdmin && viewTab === 'list') ? `
-    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 max-w-full">
       <button onclick="window.toggleFiltersOpen()" aria-expanded="${filtersOpen}"
-        class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${filtersOpen
+        class="flex-shrink-0 min-h-11 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${filtersOpen
           ? 'bg-slate-800 text-white border-slate-800'
           : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}">
         Filters ${filtersOpen ? '▾' : '▸'}
@@ -1709,7 +1871,7 @@ function renderDashInner() {
   // it (no Filters pill for them); admin only sees it when the pill is expanded.
   const expandedFilterBlock = (viewTab === 'list' && (!isAdmin || filtersOpen)) ? `
     ${modeTabs}
-    <div class="flex gap-2 overflow-x-auto no-scrollbar">${statusTabs}</div>` : '';
+    <div class="flex gap-2 overflow-x-auto no-scrollbar min-w-0 max-w-full">${statusTabs}</div>` : '';
 
   // Glowing "New Scripts" banner — client-only, shows when Needs Review count > 0. Keeps
   // working from Calendar/Pipeline too (it's meaningless outside List, so it routes there).
@@ -1771,7 +1933,7 @@ function renderDashInner() {
       </div>` : ''}
 
       <!-- Body: List cards, or the Calendar/Pipeline view -->
-      <div class="flex-1 px-4 py-4 space-y-3 pb-10">
+      <div class="hub-main">
         ${body}
       </div>
     </div>`;
@@ -1807,6 +1969,7 @@ function renderDashInner() {
   // K1 -- restore keyboard focus into the just-rebuilt DOM, if a settings change captured it
   // above. No-op when nothing was captured (every other redraw path).
   restoreFocusAfterRedraw();
+  kickThumbResolves();
 }
 
 // ─────────────────────────────────────────────
@@ -1863,10 +2026,10 @@ function renderSettingsPanel() {
        get cut off with no way to scroll down to it. -->
   <div class="fixed inset-x-0 top-0 z-40 pointer-events-none">
     <div class="hub-shell relative">
-      <div id="settings-panel" class="pointer-events-auto absolute right-4 top-16 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100vh-5rem)] overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
+      <div id="settings-panel" class="settings-panel pointer-events-auto absolute top-16 overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-lg p-4" role="dialog" aria-modal="true" aria-label="Settings">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm font-bold text-slate-800">Settings</div>
-          <button data-focus-id="settings-close" onclick="window.closeSettings()" aria-label="Close settings" class="text-slate-300 hover:text-slate-500 text-sm w-7 h-7 flex items-center justify-center flex-shrink-0">✕</button>
+          <button data-focus-id="settings-close" onclick="window.closeSettings()" aria-label="Close settings" class="text-slate-300 hover:text-slate-500 text-sm w-11 h-11 flex items-center justify-center flex-shrink-0">✕</button>
         </div>
 
         <div class="mb-1">
@@ -2148,20 +2311,148 @@ function scriptReadModel(script) {
 }
 
 function videoInfo(url) {
-  const s = asText(url).trim();
-  if (!s) return null;
-  let m = s.match(/instagram\.com\/(?:reel|p|tv)\/([\w-]+)/i);
+  const raw = asText(url).trim();
+  if (!raw) return null;
+  const found = raw.match(/https?:\/\/[^\s]+/i);
+  const s = found ? found[0].replace(/[),.;]+$/, '') : raw;
+  let m = s.match(/instagram\.com\/(?:[\w.]+\/)?(reel|p|tv)\/([\w-]+)/i);
   if (m) {
-    const kind = /\/p\//i.test(s) ? 'p' : 'reel';
-    return { kind: 'ig', src: 'https://www.instagram.com/' + kind + '/' + m[1] + '/embed/', watch: s, label: 'Instagram' };
+    const kind = m[1].toLowerCase();
+    const watch = 'https://www.instagram.com/' + kind + '/' + m[2] + '/';
+    return { kind: 'ig', src: watch + 'embed/', watch: watch, label: 'Instagram' };
   }
   m = s.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([\w-]+)/i);
-  if (m) return { kind: 'yt', src: 'https://www.youtube.com/embed/' + m[1], thumb: 'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg', watch: s, label: 'YouTube' };
+  if (m) {
+    const watch = /shorts\//i.test(s)
+      ? 'https://www.youtube.com/shorts/' + m[1]
+      : 'https://www.youtube.com/watch?v=' + m[1];
+    return { kind: 'yt', src: 'https://www.youtube.com/embed/' + m[1], thumb: 'https://i.ytimg.com/vi/' + m[1] + '/hqdefault.jpg', watch: watch, label: 'YouTube' };
+  }
   m = s.match(/tiktok\.com\/@([\w.]+)\/video\/(\d+)/i);
-  if (m) return { kind: 'tt', src: 'https://www.tiktok.com/embed/v2/' + m[2], watch: s, label: 'TikTok · @' + m[1] };
+  if (m) {
+    const watch = 'https://www.tiktok.com/@' + m[1] + '/video/' + m[2];
+    return { kind: 'tt', src: 'https://www.tiktok.com/embed/v2/' + m[2], watch: watch, label: 'TikTok · @' + m[1] };
+  }
   if (/^https?:\/\//i.test(s)) return { kind: 'link', watch: s, label: 'Link' };
-  return { kind: 'text', label: s, watch: '' };
+  return { kind: 'text', label: raw, watch: '' };
 }
+// Resolved covers for reference URLs that have no stored thumbnail_url yet.
+// Keyed by the canonical watch URL. Empty string means we already tried.
+const thumbCache = new Map();
+function displayThumb(s, info) {
+  if (!info || !info.watch || info.kind === 'text') return '';
+  const stored = asText(s && s.thumbnail_url).trim();
+  const primary = videoInfo(s && s.reference_clip);
+  if (stored && primary && primary.watch === info.watch) return stored;
+  if (info.thumb) return info.thumb;
+  return thumbCache.get(info.watch) || '';
+}
+async function resolveRemoteThumb(info) {
+  if (!info || !info.watch || info.kind === 'text') return '';
+  const oembed = info.kind === 'yt'
+    ? 'https://www.youtube.com/oembed?format=json&url=' + encodeURIComponent(info.watch)
+    : info.kind === 'tt'
+      ? 'https://www.tiktok.com/oembed?url=' + encodeURIComponent(info.watch)
+      : info.kind === 'ig'
+        ? 'https://www.instagram.com/oembed/?url=' + encodeURIComponent(info.watch)
+        : '';
+  if (oembed) {
+    try {
+      const r = await fetch(oembed);
+      if (r.ok) {
+        const j = await r.json();
+        if (j && j.thumbnail_url) return j.thumbnail_url;
+      }
+    } catch (e) {}
+  }
+  if (info.kind === 'yt' && info.thumb) return info.thumb;
+  try {
+    const r = await fetch(info.watch);
+    if (r.ok) {
+      const html = await r.text();
+      const m = html.match(/property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+        || html.match(/content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+      if (m) return m[1].replace(/&amp;/g, '&').replace(/&#38;/g, '&');
+    }
+  } catch (e) {}
+  return '';
+}
+function applyThumb(watch, url) {
+  if (!watch || !url) return;
+  document.querySelectorAll('[data-ref]').forEach(el => {
+    if (el.getAttribute('data-ref') !== watch) return;
+    if (el.tagName === 'IMG') {
+      if (!el.getAttribute('src')) el.src = url;
+      el.hidden = false;
+      const poster = el.closest('.ref-poster');
+      if (poster) poster.classList.add('has-frame');
+      return;
+    }
+    const poster = el.closest('.ref-poster');
+    if (!poster || poster.querySelector('img.thumb-lg')) return;
+    const img = document.createElement('img');
+    img.className = 'thumb-lg';
+    img.alt = '';
+    img.referrerPolicy = 'no-referrer';
+    img.setAttribute('data-ref', watch);
+    img.setAttribute('data-kind', el.getAttribute('data-kind') || '');
+    img.onerror = function () { window.thumbNext(img); };
+    img.src = url;
+    poster.classList.add('has-frame');
+    poster.insertBefore(img, poster.firstChild);
+  });
+}
+function kickThumbResolves() {
+  const pending = new Map();
+  document.querySelectorAll('[data-ref]').forEach(el => {
+    const watch = el.getAttribute('data-ref');
+    if (!watch) return;
+    if (el.tagName === 'IMG' && el.getAttribute('src')) {
+      pending.set(watch, '');
+      return;
+    }
+    if (pending.has(watch)) return;
+    pending.set(watch, el.getAttribute('data-kind') || 'link');
+  });
+  pending.forEach((kind, watch) => {
+    if (!kind) return;
+    if (thumbCache.has(watch)) {
+      const hit = thumbCache.get(watch);
+      if (hit) applyThumb(watch, hit);
+      return;
+    }
+    thumbCache.set(watch, '');
+    const parsed = videoInfo(watch);
+    const info = { kind: kind, watch: watch, thumb: (parsed && parsed.thumb) || '' };
+    resolveRemoteThumb(info).then(url => {
+      thumbCache.set(watch, url || '');
+      if (url) applyThumb(watch, url);
+    });
+  });
+}
+window.thumbNext = (img) => {
+  if (!img || img.dataset.tried === '1') {
+    if (img) {
+      img.hidden = true;
+      const poster = img.closest('.ref-poster');
+      if (poster) poster.classList.remove('has-frame');
+    }
+    return;
+  }
+  img.dataset.tried = '1';
+  const info = videoInfo(img.getAttribute('data-ref')) || { kind: img.getAttribute('data-kind'), watch: img.getAttribute('data-ref') };
+  resolveRemoteThumb(info).then(url => {
+    if (url && url !== img.src) {
+      thumbCache.set(info.watch, url);
+      img.hidden = false;
+      img.src = url;
+      return;
+    }
+    img.hidden = true;
+    const poster = img.closest('.ref-poster');
+    if (poster) poster.classList.remove('has-frame');
+  });
+};
 function embedHtml(info) {
   if (!info || !info.src) return '';
   return `<iframe class="embed-frame" src="${escHtml(info.src)}" title="Reference video" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>`;
@@ -2175,7 +2466,8 @@ const SCRIPT_FIELDS = [
   ['reel_number', 'Reel number'], ['date_planned', 'Date planned'], ['created_at', 'Created'],
   ['take_label', 'Take label'], ['sous_chef_pass', 'Sous chef pass'], ['filming_direction', 'Filming direction'],
   ['client_feedback', 'Client feedback'], ['filming_setup', 'Filming setup'], ['clip_directions', 'Clip directions'],
-  ['tonality_delivery', 'Tonality and delivery'], ['proof_stats', 'Proof stats'], ['id', 'Id'],
+  ['tonality_delivery', 'Tonality and delivery'], ['proof_stats', 'Proof stats'],
+  ['thumbnail_url', 'Thumbnail'], ['id', 'Id'],
 ];
 
 function shotChecked(id, idx) {
@@ -2220,12 +2512,16 @@ function renderReferenceBlock(s) {
       return `<div class="ref-row"><div class="ref-poster" style="cursor:default"><span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span><span><span class="ref-kicker">Reference</span><span class="ref-cta">${escHtml(info.label)}</span></span></div></div>`;
     }
     const open = expandedSections.has('embed:' + s.id + idSuffix);
-    const thumb = info.thumb ? `<img alt="" src="${escHtml(info.thumb)}">` : `<span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span>`;
+    const src = displayThumb(s, info);
+    const mark = `<span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span>`;
+    const frame = src
+      ? `<img class="thumb-lg" alt="" referrerpolicy="no-referrer" src="${escHtml(src)}" data-ref="${escHtml(info.watch)}" data-kind="${escHtml(info.kind)}" onerror="window.thumbNext(this)">`
+      : '';
     return `
       <div class="ref-row">
-        <button type="button" class="ref-poster" onclick="window.loadEmbed('${s.id}','${idSuffix}')">
-          ${thumb}
-          <span><span class="ref-kicker">Reference · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span>
+        <button type="button" class="ref-poster ${src ? 'has-frame' : ''}" onclick="window.loadEmbed('${s.id}','${idSuffix}')">
+          ${frame || mark}
+          <span class="ref-caption" data-ref="${escHtml(info.watch)}" data-kind="${escHtml(info.kind)}"><span><span class="ref-kicker">Reference · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span></span>
         </button>
         ${info.watch ? `<a class="ref-open" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
       </div>
@@ -2463,18 +2759,31 @@ function renderCardGroup(group) {
         onclick="window.setTake(this.dataset.groupKey, Number(this.dataset.idx))"
         class="take-tab ${i === idx ? 'is-on' : ''}">${escHtml(g.take_label) || ('Take ' + String.fromCharCode(65 + i))}</button>`).join('')}</div>` : '';
   const kicker = [s.reel_number ? '#' + s.reel_number : '', s.format || ''].filter(Boolean).map(escHtml).join(' · ');
+  const stype = scriptType(s.format);
+  const badge = (stype === 'interview' || stype === 'broll') ? `<span class="type-badge">${typeLabel(stype)}</span>` : '';
+  const coverInfo = videoInfo(s.reference_clip)
+    || videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats) || '');
+  const cover = displayThumb(s, coverInfo);
+  const listThumb = coverInfo && coverInfo.watch
+    ? `<img class="list-thumb" alt="" referrerpolicy="no-referrer" ${cover ? `src="${escHtml(cover)}"` : 'hidden'} data-ref="${escHtml(coverInfo.watch)}" data-kind="${escHtml(coverInfo.kind)}" onerror="window.thumbNext(this)">`
+    : '';
 
-  return `<article class="shot ${isArchived ? 'is-quiet' : ''}">
+  return `<article class="shot ${isArchived ? 'is-quiet' : ''} ${stype === 'broll' ? 'is-broll' : ''}">
     ${takeTabs}
-    <div class="shot-meta">
-      <div>
-        <div class="shot-kicker">${kicker}</div>
-        ${s.batch ? `<div class="shot-batch">${escHtml(s.batch)}</div>` : ''}
+    <div class="shot-id">
+      ${listThumb}
+      <div class="shot-id-main">
+        <div class="shot-meta">
+          <div>
+            <div class="shot-kicker">${kicker}${badge}</div>
+            ${s.batch ? `<div class="shot-batch">${escHtml(s.batch)}</div>` : ''}
+          </div>
+          ${dateChip}
+        </div>
+        <h2 class="shot-title">${escHtml(s.title)}</h2>
+        ${renderStatusRail(s.status)}
       </div>
-      ${dateChip}
     </div>
-    <h2 class="shot-title">${escHtml(s.title)}</h2>
-    ${renderStatusRail(s.status)}
     ${s.client_feedback && s.status === 'Draft' ? `<div class="tweak" style="margin-top:14px"><div class="eyebrow">Tweak requested</div><p>${escHtml(s.client_feedback)}</p></div>` : ''}
     <div class="shot-body">
       <div class="col-side">
@@ -3010,14 +3319,12 @@ function renderCalendar() {
     </button>`;
   }).join('');
 
-  // Item 5 -- "?" legend trigger joins the ‹ › month-nav arrows in the same button group, so
-  // the arrows shrink to match (w-9 h-9, down from w-10 h-10) to keep "September 2026 · Today"
-  // fitting on a narrow screen. Only shown when the persisted "Always show color key" setting
-  // is OFF -- when it's ON, the legend just renders at the bottom of the card as it always has
-  // (see legendBottom below) and this trigger is skipped entirely.
+  // Item 5 -- "?" legend trigger sits with the month arrows. All three are 44px.
+  // The trigger only renders when "Always show color key" is off; when that setting
+  // is on, the legend stays at the bottom of the card (legendBottom) and this trigger is skipped.
   const legendTrigger = !settingAlwaysShowKey ? `
     <button onclick="window.toggleCalShowKey()" aria-label="Show color key" aria-expanded="${calShowKey}"
-      class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">
+      class="w-11 h-11 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">
       <span class="w-6 h-6 rounded-full border border-slate-300 flex items-center justify-center text-[11px] font-semibold">?</span>
     </button>` : '';
 
@@ -3036,8 +3343,8 @@ function renderCalendar() {
     </div>
     <div class="flex items-center gap-1 flex-shrink-0">
       ${legendTrigger}
-      <button onclick="window.calShiftMonth(-1)" aria-label="Previous month" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
-      <button onclick="window.calShiftMonth(1)" aria-label="Next month" class="w-9 h-9 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
+      <button onclick="window.calShiftMonth(-1)" aria-label="Previous month" class="w-11 h-11 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">‹</button>
+      <button onclick="window.calShiftMonth(1)" aria-label="Next month" class="w-11 h-11 rounded-full flex items-center justify-center text-slate-400 active:bg-slate-100">›</button>
     </div>
   </div>`;
 
@@ -3099,7 +3406,7 @@ function renderCalendar() {
             ${takeChip}
           </button>
           ${isAdmin
-            ? `<label class="relative h-9 px-3 inline-flex items-center rounded-full bg-blue-50 border border-blue-100 text-xs font-medium text-blue-600 flex-shrink-0">
+            ? `<label class="relative min-h-11 px-3 inline-flex items-center rounded-full bg-blue-50 border border-blue-100 text-xs font-medium text-blue-600 flex-shrink-0">
                  📅 Set date
                  <input type="date" data-group-key="${escHtml(groupKey)}" class="absolute inset-0 w-full h-full opacity-0 text-base"
                    onclick="this.showPicker && this.showPicker()"
@@ -3171,9 +3478,9 @@ function renderCalendar() {
   const pastDueDates = calendarGroups.filter(g => isPastDue(g, todayStr)).map(groupDate).sort();
   const pastDueBanner = pastDueDates.length ? `
   <button onclick="window.calJumpToDate('${pastDueDates[0]}')"
-    class="w-full mb-3 flex items-center justify-between gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-left active:bg-red-100">
-    <span class="text-sm text-red-700">⚠️ <b>${pastDueDates.length}</b> past ${pastDueDates.length === 1 ? 'its' : 'their'} planned date, not posted yet</span>
-    <span class="text-xs font-semibold text-red-600 whitespace-nowrap">Oldest ${calFormatShort(pastDueDates[0])} →</span>
+    class="w-full mb-3 flex items-center justify-between gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-left active:bg-red-100 min-h-11">
+    <span class="text-sm text-red-700 min-w-0">⚠️ <b>${pastDueDates.length}</b> past ${pastDueDates.length === 1 ? 'its' : 'their'} planned date, not posted yet</span>
+    <span class="text-xs font-semibold text-red-600 whitespace-nowrap flex-shrink-0">Oldest ${calFormatShort(pastDueDates[0])} →</span>
   </button>` : '';
 
   return `${pastDueBanner}${next7Section}${calendarCard}${unscheduledSection}${dayPanelSlot}`;
@@ -3199,7 +3506,8 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; renderDash(); };
+window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; renderDash(); };
 
 // List search. Each keystroke re-renders ONLY #list-cards (not the whole page): a full
 // renderDash() would destroy and recreate the focused <input>, which dismisses the iOS keyboard
@@ -3211,12 +3519,13 @@ window.setListSearch = v => {
   try {
     const { visibleGroups, effectiveMode } = listGroupsForCurrentView();
     region.innerHTML = renderListCards(visibleGroups, role === 'admin', effectiveMode);
+    kickThumbResolves();
   } catch (e) { renderError(e); }
 };
 window.clearListSearch  = () => { listSearch = ''; renderDash(); };
 // "Search all scripts" from a zero-result search inside a narrowed tab -- widen mode + status,
 // keep the query.
-window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
+window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
@@ -3421,6 +3730,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     mySlug = opts.mySlug || null;
     viewSlug = opts.viewSlug || 'andrew';
     viewStatus = opts.viewStatus || 'all';
+    viewType = opts.viewType || 'all';
     viewMode = opts.viewMode || 'all';
     viewTab = opts.viewTab || 'list';
     filtersOpen = opts.filtersOpen !== false;

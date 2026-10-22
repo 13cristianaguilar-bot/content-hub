@@ -57,3 +57,71 @@ Notes that are not score bugs:
 - The middle status chip reads **Filmed** when the saved status is **Filming**, which is the word already in the pipeline. The exact saved word (Draft, Needs Review, Approved, Filming, Posted, Passed, Archived) is printed above the chips and again under All fields.
 - A client who still has scripts in Needs Review is still dropped on that queue at sign-in. That behavior was already there. The filter’s default, and the admin sign-in default, stay All.
 - Scripts with no `SHOT LIST:` line do not invent shots. Reaction scripts get the four-step filming order. Everything else leaves the checklist off and keeps the setup paragraph.
+
+## Thumbnails, script type, and responsive layout
+
+The card now shows the reference cover, and the list can separate Interview from B-roll. Format letters A–F are Interview and G–J are B-roll. A trailing digit (`F1`, `F14`, `J1`, `J11`) stays Other, as does anything outside A–J (Cristian’s K, L, and M). The default type is All, so unlettered scripts stay visible. When All contains more than one of those groups, the list splits under Interview, B-roll, and Other. The type bar only appears when the current status filter actually contains an interview or a B-roll.
+
+The cover comes from `thumbnail_url` when that column is set. If it is empty, a YouTube reference uses `i.ytimg.com`; other hosts fall back through oEmbed and og:image, then the waveform poster. The column is nullable and the existing row policies cover it (`migrations/2026-10-22_scripts_thumbnail_url.sql`). Signed Instagram and TikTok URLs expire, so a failed image tries the remote fallback once and then returns to the waveform.
+
+On a phone the cover is the full width of the card, under the line you say. In the list it is a small frame beside the title. From 768px up the card is two columns: the line, question sheet, and CTA on the left, the cover on the right. Both columns share the first grid row. The shell grows from a 960px cap toward 1280px (`clamp(960px, 86vw, 1280px)`), so a 1920px window does not stretch a script line across the monitor. Script text still stops at 40rem.
+
+Controls that are tapped while filming are at least 44px tall (client tabs, List / Calendar / Pipeline, the type bar, status chips, icon and Sign out, Open, the status rail). The date chip stays visually short; its invisible input is 44px tall. Header padding uses the top safe-area inset. Header and page padding use the left and right insets, and the page bottom padding includes the home-indicator inset. Nothing uses `100vw`, which was pushing the settings panel past the screen.
+
+Checked in Chrome at each width below. `documentElement.scrollWidth` matched `clientWidth` at every one (overflow 0). Phones are one column. 768, 1024, 1280, 1440, and 1920 are two columns, and the cover’s width matched its column. With a simulated iPhone notch (top 47, bottom 34) the header’s top padding became 47px and the page bottom padding became 74px. In landscape (left and right 47, bottom 21) those paddings became 47px and 61px, the wordmark stayed intact, and overflow stayed 0. The settings panel on a 360px screen sat inside the viewport (288px wide, 16px from the right edge) and its close control was 44px. Calendar and Pipeline were checked at 360 and 768; the month title, 7-column grid, and stage list did not spill.
+
+The frames in these shots are stand-in covers. The signed Instagram CDN URLs 403 from this network, so the harness used YouTube `hqdefault` images. Width and crop were measured on those images. Live cards use `thumbnail_url`.
+
+| Criterion | Score | Why |
+|---|---|---|
+| Glanceability on phone | 8 | At 390px the title, Draft / Filmed / Posted, and the line you say are on the first screen. The cover starts under that line, not above it. |
+| Filming clarity | 9 | The reference is a full-width cover with Play and Open, not a URL. Interview and B-roll are separate. Question sheet, setup, checklist, on-screen text, CTA, and the teleprompter are unchanged. |
+| Hierarchy | 8 | One large line, then the cover. B-roll cards use an ink top rule instead of signal red. |
+| Branding | 8 | Same lockup, Geist, and signal red. The shell stays a readable column on a large monitor. |
+| Navigation | 9 | Client tabs, All, and the type bar (All / Interview / B-roll) fit on a 360px screen. The list filter still defaults to All. |
+
+### 360px
+
+![Shot card at 360px](screenshots/responsive-360.png)
+
+### 390px
+
+![Shot card at 390px](screenshots/responsive-390.png)
+
+![Reference cover at 390px, full card width](screenshots/responsive-390-reference.png)
+
+![B-roll filter at 390px](screenshots/responsive-390-broll.png)
+
+![390px with a simulated notch inset](screenshots/responsive-390-safe.png)
+
+### 430px
+
+![Shot card at 430px](screenshots/responsive-430.png)
+
+### 768px tablet portrait
+
+![Two-column card at 768px](screenshots/responsive-768.png)
+
+![Calendar at 768px](screenshots/responsive-768-calendar.png)
+
+### 1024px tablet landscape
+
+![Two-column card at 1024px](screenshots/responsive-1024.png)
+
+### 1280px
+
+![Shot card at 1280px](screenshots/responsive-1280.png)
+
+### 1440px
+
+![Shot card at 1440px](screenshots/responsive-1440.png)
+
+### 1920px
+
+![Shot card at 1920px, column capped so the script line stays readable](screenshots/responsive-1920.png)
+
+### Calendar and Pipeline at 360px
+
+![Calendar at 360px](screenshots/responsive-360-calendar.png)
+
+![Pipeline at 360px](screenshots/responsive-360-pipeline.png)

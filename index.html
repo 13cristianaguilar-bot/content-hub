@@ -495,8 +495,59 @@ img, iframe, video, pre { max-width: 100%; }
   .hub-top { flex-wrap: wrap; row-gap: 2px; }
   .brand-lockup { flex: 1 1 100%; }
   .brand-word { overflow: visible; text-overflow: clip; }
-  .hub-top-actions { margin-left: auto; }
+  .hub-top-actions { margin-left: auto; flex-wrap: wrap; justify-content: flex-end; }
 }
+.more-btn {
+  min-height: 44px; padding: 0 12px; background: #fff; border: 1px solid var(--line);
+  color: var(--ink); font-weight: 650; font-size: 14px;
+}
+.more-btn.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.batch-list { display: flex; flex-direction: column; gap: 14px; max-width: 560px; }
+.batch-card {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal);
+  padding: 16px 16px 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0;
+}
+.batch-card-hit {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+  width: 100%; min-height: 44px; text-align: left; background: transparent; border: 0;
+  padding: 0; color: var(--ink);
+}
+.batch-card-top { display: flex; align-items: center; width: 100%; gap: 8px; }
+.batch-card-n {
+  font-size: 32px; font-weight: 750; letter-spacing: -0.05em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.batch-card-title {
+  font-size: 22px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.batch-card-who { color: var(--muted); font-size: 15px; }
+.batch-card .new-badge { margin-left: auto; }
+.batch-film {
+  width: 100%; min-height: 52px; background: var(--signal); color: #fff; border: 0;
+  font-size: 17px; font-weight: 650; letter-spacing: -0.02em;
+}
+.past-link {
+  width: 100%; max-width: 560px; min-height: 48px; background: transparent; border: 0;
+  color: var(--ink); font-weight: 650; font-size: 16px; text-align: left;
+  text-decoration: underline; text-underline-offset: 3px; padding: 4px 0;
+}
+.past-block { display: flex; flex-direction: column; gap: 18px; max-width: 560px; }
+.past-batch-name { margin: 0; font-size: 14px; font-weight: 650; color: var(--muted); }
+.more-back {
+  position: fixed; inset: 0; z-index: 60; background: rgba(8, 8, 8, 0.46);
+  display: flex; justify-content: flex-end;
+}
+.more-sheet {
+  width: min(440px, 100%); height: 100%; background: var(--paper); color: var(--ink);
+  overflow: auto; border-left: 1px solid var(--line);
+  padding: max(16px, env(safe-area-inset-top)) 16px 32px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.more-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.more-sheet .client-tabs, .more-sheet .filter-row { flex-wrap: wrap; overflow: visible; }
+.more-sheet .seg, .more-sheet .type-bar { width: 100%; }
+body.more-open { overflow: hidden; }
 @media (max-width: 389px) {
   .brand-word { font-size: 18px; }
   .shot-title { font-size: 24px; }
@@ -735,7 +786,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.23.2';
+const APP_VERSION = '2026.10.23.3';
 // Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
 // What's new popup and on the Help page. Empty hides the video slot.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -749,6 +800,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.23.3',
+    date: 'October 23, 2026',
+    title: 'Just the batch',
+    items: [
+      'The app opens on this batch. Each script is a big card: number, title, who films it, and Film.',
+      'Film opens the full-screen script. Past batches are one link. Filters are under More.',
+    ],
+    steps: [
+      'Tap a card, or Film, to open that script full screen.',
+      'A New badge means you have not filmed that card yet.',
+      'Past batches holds older scripts.',
+      'More is where client, calendar, status, and type filters live.',
+    ],
+  },
   {
     version: '2026.10.23.2',
     date: 'October 23, 2026',
@@ -1005,6 +1071,7 @@ let listSearch = '';
 // #app, so anything on screen has to live here, not only in the DOM.
 let hubPage = 'main';          // 'main' | 'help' | 'requests'
 let previousOpen = false;
+let moreOpen = false;
 let modal = null;              // null | 'whats-new' | 'new-scripts'
 let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
 let modalFocusPending = false;
@@ -1154,6 +1221,7 @@ document.addEventListener('keydown', (e) => {
     else window.dismissNewScripts();
     return;
   }
+  if (e.key === 'Escape' && moreOpen) { window.toggleMore(false); return; }
   if (e.key === 'Escape' && settingsOpen) { window.closeSettings(); return; }
   if (e.key === 'Tab' && document.getElementById('hub-modal')) {
     const panel = document.querySelector('#hub-modal .modal-card');
@@ -1328,12 +1396,12 @@ async function init() {
           calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
           settingsOpen = false; calShowKey = false;
           listSearch = ''; expandedSections.clear();
-          hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false;
+          hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false; moreOpen = false;
           openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
           navIndex = 0; previousIndex = 0; flatIndex = 0;
           navSets = { fresh: [], previous: [], flat: [] };
           requests = []; requestsLoaded = false; requestsError = '';
-          document.body.classList.remove('modal-open');
+          document.body.classList.remove('modal-open', 'more-open');
           // A pending "Undo" belongs to the session that just ended -- it must not be tappable
           // (and fail, or worse, act under the next person's session) after sign-out.
           hideToast();
@@ -2291,6 +2359,65 @@ function renderScriptNav(groups, index, scope) {
   }).join('');
   return `<ol class="script-nav" aria-label="Scripts">${rows}</ol>`;
 }
+function renderBatchCard(group, index) {
+  const s = shownScript(group);
+  if (!s) return '';
+  const ids = group.map(g => g.id).filter(Boolean);
+  const showNew = ids.some(id => freshScriptIds.has(id) && !openedIds.has(id));
+  const person = clientLabel(s.client_slug);
+  const title = s.title || ('Script ' + (index + 1));
+  return `<article class="batch-card" data-script-ids="${escHtml(ids.join(','))}">
+    <button type="button" class="batch-card-hit" onclick="window.filmScript('${s.id}')">
+      <span class="batch-card-top">
+        <span class="batch-card-n">${index + 1}</span>
+        ${showNew ? '<span class="new-badge">New</span>' : ''}
+      </span>
+      <span class="batch-card-title">${escHtml(title)}</span>
+      <span class="batch-card-who">${escHtml(person)}</span>
+    </button>
+    <button type="button" class="batch-film" onclick="window.filmScript('${s.id}')">Film</button>
+  </article>`;
+}
+function renderBatchCards(groups) {
+  if (!groups.length) return '';
+  return `<div class="batch-list">${groups.map((g, i) => renderBatchCard(g, i)).join('')}</div>`;
+}
+function renderPastBatches(groups) {
+  const buckets = [];
+  groups.forEach(g => {
+    const name = groupBatchName(g) || 'Earlier';
+    let bucket = null;
+    for (let i = 0; i < buckets.length; i++) if (buckets[i].name === name) bucket = buckets[i];
+    if (!bucket) { bucket = { name: name, groups: [] }; buckets.push(bucket); }
+    bucket.groups.push(g);
+  });
+  return `<div id="previous-section" class="past-block">${buckets.map(b => `
+    <section class="past-batch">
+      <h3 class="past-batch-name">${escHtml(b.name)}</h3>
+      ${renderBatchCards(b.groups)}
+    </section>`).join('')}</div>`;
+}
+function renderSimpleBatch(groups) {
+  const part = freshPartition(groups);
+  const fresh = part.fresh;
+  const prev = part.previous;
+  navSets.fresh = fresh;
+  navSets.previous = previousOpen ? prev : [];
+  const batchLine = part.batchNames.filter(Boolean).join(' · ');
+  const cards = fresh.length
+    ? renderBatchCards(fresh)
+    : `<p class="fresh-empty">You’re caught up on the latest batch.</p>`;
+  const pastBtn = prev.length
+    ? `<button type="button" class="past-link" id="past-batches" aria-expanded="${previousOpen}" onclick="window.togglePrevious()">${previousOpen ? 'Hide past batches' : 'Past batches'}</button>`
+    : '';
+  const past = previousOpen && prev.length ? renderPastBatches(prev) : '';
+  return `<section id="fresh-section" class="fresh-block" aria-label="Current batch">
+    ${batchLine ? `<p class="fresh-batch">${escHtml(batchLine)}</p>` : ''}
+    ${cards}
+    ${pastBtn}
+    ${past}
+  </section>`;
+}
 function renderScriptPager(index, total, scope) {
   return `<div class="script-pager" role="navigation" aria-label="Scripts in this list">
     <button type="button" ${index <= 0 ? 'disabled' : ''} onclick="window.stepScript('${scope}', -1)">Previous</button>
@@ -2312,6 +2439,18 @@ function renderFocusedSet(groups, scope) {
     </div>
   </div>`;
 }
+window.filmScript = (id) => {
+  const scopes = ['fresh', 'flat', 'previous'];
+  for (let s = 0; s < scopes.length; s++) {
+    const groups = navSets[scopes[s]] || [];
+    for (let i = 0; i < groups.length; i++) {
+      if (!groups[i].some(row => row && row.id === id)) continue;
+      markGroupOpened(groups[i]);
+      setNavIndex(scopes[s], i);
+    }
+  }
+  window.openPrompter(id);
+};
 window.focusScript = (scope, i) => {
   const groups = navSets[scope] || [];
   if (!groups[i]) return;
@@ -2359,10 +2498,12 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
   }
   // Search and a specific status tab stay flat, so Posted / Needs Review / a query
   // can still reach older scripts. The default All view is the fresh batch.
-  if (q || viewStatus !== 'all') {
+  if (q || viewStatus !== 'all' || viewType !== 'all' || viewMode !== 'all') {
     if (typed.length) {
+      navSets.flat = typed;
       const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${typed.length} of ${visibleGroups.length} match${typed.length === 1 ? 'es' : ''}</div>` : '';
-      return countLine + renderFocusedSet(typed, 'flat');
+      const back = `<button type="button" class="past-link" onclick="window.backToBatch()">Back to this batch</button>`;
+      return back + countLine + renderBatchCards(typed);
     }
     if (shown.length && !typed.length) {
       return `
@@ -2381,39 +2522,7 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
       : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
   }
 
-  const part = freshPartition(shown);
-  const freshTyped = viewType === 'all' ? part.fresh : part.fresh.filter(g => groupScriptType(g) === viewType);
-  const prevTyped = viewType === 'all' ? part.previous : part.previous.filter(g => groupScriptType(g) === viewType);
-  const label = part.thisWeek ? 'This week' : 'New';
-  const n = freshTyped.length;
-  const batchLine = part.batchNames.filter(Boolean).join(' · ');
-  let title = n
-    ? (n + ' new script' + (n === 1 ? '' : 's') + ' to film')
-    : 'Nothing new to film';
-  if (!n && viewType !== 'all') title = 'No ' + typeLabel(viewType).toLowerCase() + ' scripts in this batch';
-  const prevBtn = prevTyped.length ? `
-    <button type="button" class="previous-toggle" aria-expanded="${previousOpen}" aria-controls="previous-section" onclick="window.togglePrevious()">
-      <span>Previous</span>
-      <span class="prev-meta">${previousOpen ? 'Hide' : 'Show'} ${prevTyped.length}</span>
-    </button>` : '';
-  const freshBody = n
-    ? renderFocusedSet(freshTyped, 'fresh')
-    : `<p class="fresh-empty">${n === 0 && part.fresh.length === 0 ? 'You’re caught up on the latest batch.' : 'Nothing in this batch matches this type.'}</p>`;
-  return `
-    <section id="fresh-section" class="fresh-block" aria-label="${escHtml(label)}">
-      <div class="fresh-head">
-        <div class="fresh-head-row">
-          <div>
-            <div class="eyebrow">${escHtml(label)}</div>
-            <h2 class="fresh-title">${escHtml(title)}</h2>
-            ${batchLine ? `<p class="fresh-batch">${escHtml(batchLine)}</p>` : ''}
-          </div>
-          ${prevBtn}
-        </div>
-      </div>
-      ${freshBody}
-    </section>
-    ${previousOpen && prevTyped.length ? `<div id="previous-section" class="previous-block">${renderFocusedSet(prevTyped, 'previous')}</div>` : ''}`;
+  return renderSimpleBatch(shown);
 }
 
 function requestKindMeta(id) {
@@ -2476,7 +2585,7 @@ function renderHelpPage() {
       <h2>How filming works</h2>
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
-        <li>This week is a numbered list. Tap a script, or use Previous, Next, and swipe. The count reads Script 3 of 6.</li>
+        <li>The batch is big cards. Tap Film to open the script full screen. Past batches holds older scripts. More holds filters.</li>
         <li>Full screen reads Hook, each beat, and the CTA. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
@@ -2635,6 +2744,7 @@ function renderDashInner() {
   syncModal();
   freshScriptIds = computeFreshScriptIds(viewSlug);
   document.body.classList.toggle('modal-open', !!modal && hubPage === 'main');
+  document.body.classList.toggle('more-open', moreOpen && role === 'admin' && hubPage === 'main');
 
   const isAdmin  = role === 'admin';
 
@@ -2719,14 +2829,17 @@ function renderDashInner() {
         oninput="window.setListSearch(this.value)"
         class="w-full min-h-11 bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-base sm:text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
     </div>` : '';
+  const backToBatch = (hubPage === 'main' && viewTab !== 'list')
+    ? `<button type="button" class="past-link" onclick="window.backToBatch()">Back to this batch</button>`
+    : '';
   const cards = (hubPage !== 'main' || viewTab !== 'list') ? ''
-    : `${typeBar}${searchBox}<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
+    : `<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
 
-  // Help and Requests replace the list. Calendar and Pipeline stay admin tools.
+  // Help and Requests replace the list. Calendar and Pipeline stay admin tools, reached from More.
   const body = hubPage === 'help' ? renderHelpPage()
     : hubPage === 'requests' ? renderRequestsPage()
-    : viewTab === 'calendar' ? renderCalendar()
-    : viewTab === 'pipeline' ? renderPipeline()
+    : viewTab === 'calendar' ? backToBatch + renderCalendar()
+    : viewTab === 'pipeline' ? backToBatch + renderPipeline()
     : cards;
 
   const clientName = CLIENTS[viewSlug]?.name || viewSlug;
@@ -2749,6 +2862,8 @@ function renderDashInner() {
   // ───────────────────────────────────────────
   const gearIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`;
 
+  const moreButton = (isAdmin && hubPage === 'main') ? `
+    <button type="button" class="more-btn${moreOpen ? ' is-on' : ''}" aria-expanded="${moreOpen ? 'true' : 'false'}" aria-controls="more-drawer" onclick="window.toggleMore()">More</button>` : '';
   const gearButton = isAdmin ? `
     <button type="button" data-focus-id="settings-gear" onclick="window.toggleSettings()" aria-label="Settings" aria-haspopup="dialog" aria-expanded="${settingsOpen}"
       class="icon-btn">
@@ -2769,11 +2884,11 @@ function renderDashInner() {
       <div class="hub-top-actions">
         ${helpButton}
         ${requestsButton}
+        ${moreButton}
         ${gearButton}
         <button type="button" onclick="doLogout()" class="signout-btn">Sign out</button>
       </div>
-    </div>
-    ${hubPage === 'main' ? clientTabs : ''}`;
+    </div>`;
 
   // ───────────────────────────────────────────
   // ITEM 1 (row 3) — collapsed "Filters" pill + always-visible mode/status chips. Admin + List
@@ -2794,33 +2909,29 @@ function renderDashInner() {
       ${viewStatus} <span class="opacity-70">· ${visibleGroups.length}</span> <span class="opacity-80">✕</span>
     </button>` : '';
 
-  const filtersRow = (hubPage === 'main' && isAdmin && viewTab === 'list') ? `
-    <div class="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 max-w-full">
-      <button onclick="window.toggleFiltersOpen()" aria-expanded="${filtersOpen}"
-        class="flex-shrink-0 min-h-11 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${filtersOpen
-          ? 'bg-slate-800 text-white border-slate-800'
-          : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}">
-        Filters ${filtersOpen ? '▾' : '▸'}
-      </button>
-      ${modeChip}${statusChip}
+  const moreDrawer = (isAdmin && moreOpen && hubPage === 'main') ? `
+    <div class="more-back" id="more-drawer" onclick="window.toggleMore(false)">
+      <div class="more-sheet" role="dialog" aria-modal="true" aria-label="More" onclick="event.stopPropagation()">
+        <div class="more-head">
+          <div class="eyebrow">More</div>
+          <button type="button" class="tool-btn" onclick="window.toggleMore(false)">Done</button>
+        </div>
+        ${clientTabs ? `<div class="eyebrow">Clients</div>${clientTabs}` : ''}
+        ${viewToggle ? `<div class="eyebrow">View</div>${viewToggle}` : ''}
+        ${modeTabs ? `<div class="eyebrow">Scripts</div>${modeTabs}` : ''}
+        <div class="eyebrow">Status</div>
+        <div class="filter-row">${statusTabs}</div>
+        ${typeBar ? `<div class="eyebrow">Type</div>${typeBar}` : ''}
+        ${searchBox}
+        ${viewStatus !== 'all' || viewMode !== 'all' || viewType !== 'all' || listSearch ? modeChip + statusChip : ''}
+      </div>
     </div>` : '';
-
-  // The full mode/status tabs block -- unchanged markup, just shown/hidden. Clients always see
-  // it (no Filters pill for them); admin only sees it when the pill is expanded.
-  const expandedFilterBlock = (hubPage === 'main' && viewTab === 'list' && (!isAdmin || filtersOpen)) ? `
-    ${modeTabs}
-    <div class="flex gap-2 overflow-x-auto no-scrollbar min-w-0 max-w-full">${statusTabs}</div>` : '';
 
   document.getElementById('app').innerHTML = `
     <div class="hub-shell min-h-screen flex flex-col relative">
 
-      <!-- Sticky header. Spacing lives on the header itself so Calendar/Pipeline don't
-           double up with the toggle's own margin. -->
       <div class="hub-header">
         ${headerRow1}
-        ${viewToggle}
-        ${filtersRow}
-        ${expandedFilterBlock}
       </div>
 
       <!-- Settings popover (Item 2) -- backdrop first (so it's visually "behind"), panel
@@ -2833,6 +2944,7 @@ function renderDashInner() {
         ${body}
       </div>
     </div>
+    ${moreDrawer}
     ${renderHubModal()}`;
 
   // Day-panel scroll (Calendar view only) -- DOM is fully rebuilt above, so the panel can't
@@ -4834,8 +4946,27 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; previousOpen = false; hubPage = 'main'; resetScriptNav(); renderDash(); };
-window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; resetScriptNav(); renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; previousOpen = false; hubPage = 'main'; moreOpen = false; resetScriptNav(); renderDash(); };
+window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash(); };
+window.toggleMore = (force) => {
+  moreOpen = typeof force === 'boolean' ? force : !moreOpen;
+  if (moreOpen) settingsOpen = false;
+  renderDash();
+};
+window.backToBatch = () => {
+  viewTab = 'list';
+  viewStatus = 'all';
+  viewType = 'all';
+  viewMode = 'all';
+  viewStatusExact = false;
+  listSearch = '';
+  previousOpen = false;
+  moreOpen = false;
+  hubPage = 'main';
+  resetScriptNav();
+  renderDash();
+  window.scrollTo(0, 0);
+};
 
 // List search. Each keystroke re-renders ONLY #list-cards (not the whole page): a full
 // renderDash() would destroy and recreate the focused <input>, which dismisses the iOS keyboard
@@ -4843,6 +4974,7 @@ window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 
 window.setListSearch = v => {
   listSearch = v;
   resetScriptNav();
+  if (viewTab !== 'list') { viewTab = 'list'; renderDash(); return; }
   const region = document.getElementById('list-cards');
   if (!region) { renderDash(); return; }
   try {
@@ -4854,8 +4986,8 @@ window.setListSearch = v => {
 window.clearListSearch  = () => { listSearch = ''; resetScriptNav(); renderDash(); };
 // "Search all scripts" from a zero-result search inside a narrowed tab -- widen mode + status,
 // keep the query.
-window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; resetScriptNav(); renderDash(); };
-window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; resetScriptNav(); renderDash(); };
+window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; moreOpen = false; resetScriptNav(); renderDash(); };
+window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash(); };
 window.togglePrevious = () => {
   const y = window.scrollY;
   previousOpen = !previousOpen;
@@ -4907,6 +5039,7 @@ window.showFreshScripts = () => {
   listSearch = '';
   previousOpen = false;
   viewStatusExact = false;
+  moreOpen = false;
   resetScriptNav();
   renderDash();
   requestAnimationFrame(() => {
@@ -5016,10 +5149,10 @@ window.setRequestStatus = async (id, status) => {
   renderDash();
   showToast('Status updated.');
 };
-window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; resetScriptNav(); renderDash(); };
+window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
 // but a selected day from client A's calendar shouldn't carry over to client B's.
-window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; window.scrollTo(0, 0); renderDash(); };
+window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; moreOpen = false; window.scrollTo(0, 0); renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
 // (No `window.requestTweak = (id) => requestTweak(id)` alias here -- there used to be one, and it
 // broke the Tweak button outright: a top-level `function requestTweak` in a classic script
@@ -5044,6 +5177,7 @@ window.toggleFiltersOpen = () => { filtersOpen = !filtersOpen; lsSetBool('hub_fi
 window.toggleSettings     = () => {
   const opening = !settingsOpen;
   settingsOpen = opening;
+  if (opening) moreOpen = false;
   renderDash();
   requestAnimationFrame(() => {
     const el = document.querySelector(`[data-focus-id="${opening ? 'settings-close' : 'settings-gear'}"]`);
@@ -5083,6 +5217,7 @@ window.jumpToList = (status) => {
   viewStatusExact = true;
   calSelectedDay = null;
   listSearch = ''; // a leftover search would make List show fewer than the count just tapped
+  moreOpen = false;
   resetScriptNav();
   renderDash();
   window.scrollTo(0, 0);
@@ -5237,6 +5372,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     requestSending = false;
     requestFilter = opts.requestFilter || 'all';
     requestDraft = { kind: opts.kind || 'feature', body: '', handles: '' };
+    moreOpen = !!opts.moreOpen;
     resetScriptNav();
     openedIds = new Set(opts.openedIds || []);
     modalPinned = opts.autoModal === false || !!opts.modal;

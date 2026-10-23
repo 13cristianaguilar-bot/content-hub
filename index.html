@@ -375,27 +375,79 @@ body.prompter-open { overflow: hidden; }
 }
 #prompter {
   position: fixed; inset: 0; z-index: 80; background: var(--black); color: #fff;
-  display: flex; flex-direction: column;
+  display: flex; flex-direction: column; overflow: hidden;
 }
 .pr-top, .pr-controls {
   display: flex; align-items: center; gap: 8px;
-  padding: 10px 12px; background: #101010;
+  padding: 10px 12px; background: #101010; flex-shrink: 0;
 }
 .pr-top { padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid #2a2a2a; }
 .pr-title { flex: 1; min-width: 0; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pr-controls { border-top: 1px solid #2a2a2a; padding-bottom: calc(10px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
-.pr-controls button, .pr-top button {
+.pr-controls button, .pr-top button, .pr-progress button, .pr-sheet button, .pr-player button {
   min-height: 44px; min-width: 44px; background: transparent; color: #fff; border: 1px solid #3a3a3a; padding: 0 12px; font-weight: 600;
 }
-.pr-play { background: var(--signal) !important; border-color: var(--signal) !important; min-width: 84px; }
-.pr-speed { flex: 1; min-width: 100px; accent-color: var(--signal); }
-#prompter-scroll { flex: 1; overflow: auto; padding: 22vh 24px 46vh; }
+.pr-play, .pr-notes-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
+.pr-play { min-width: 84px; }
+.pr-speed-label {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9a9a9a;
+}
+.pr-speed { flex: 1; min-width: 88px; accent-color: var(--signal); }
+.pr-read { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
+.pr-progress {
+  display: flex; gap: 6px; overflow-x: auto; flex-shrink: 0;
+  padding: 8px 12px; background: #101010; border-bottom: 1px solid #2a2a2a;
+}
+.pr-progress button { flex: 0 0 auto; color: #c8c8c8; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+.pr-progress button.is-current { background: var(--signal); border-color: var(--signal); color: #fff; }
+.pr-viewport { flex: 1; min-height: 0; position: relative; }
+#prompter-scroll { height: 100%; overflow: auto; padding: 22vh 24px 46vh; }
 #prompter-text { line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; }
 #prompter.is-mirror #prompter-text { transform: scaleX(-1); }
 .pr-focus {
-  pointer-events: none; position: absolute; left: 0; right: 0; top: 34%; height: 3.2rem;
+  pointer-events: none; position: absolute; left: 0; right: 0; top: 22vh; height: 3.2rem;
   border-top: 2px solid var(--signal); border-bottom: 2px solid var(--signal);
-  background: rgba(206, 32, 41, 0.08);
+  background: rgba(206, 32, 41, 0.08); z-index: 1;
+}
+.pr-sec { padding: 0 0 1.15em; color: #bdbdbd; }
+.pr-sec.is-current { color: #fff; }
+.pr-sec.is-past { color: #7d7d7d; }
+.pr-label {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.38em; letter-spacing: 0.14em; text-transform: uppercase;
+  color: #8d8d8d; margin: 0 0 0.45em;
+}
+.pr-sec.is-current .pr-label { color: #ff6a70; }
+.pr-sec p { margin: 0 0 0.45em; }
+.pr-sec.is-clip { font-size: 0.72em; color: #9ec1ff; }
+.pr-sec.is-clip.is-current { color: #d6e6ff; }
+.pr-sec.is-clip.is-past { color: #60789f; }
+.pr-sheet, .pr-player {
+  position: absolute; inset: 0; z-index: 5; background: #0e0e0e; color: #fff;
+  display: flex; flex-direction: column; min-height: 0;
+}
+.pr-sheet[hidden], .pr-player[hidden] { display: none !important; }
+.pr-sheet-body { flex: 1; overflow: auto; padding: 4px 16px 28px; }
+.pr-note { padding: 14px 0; border-top: 1px solid #2a2a2a; }
+.pr-note h3 {
+  margin: 0 0 8px; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #ff6a70; font-weight: 500;
+}
+.pr-note p, .pr-note li { margin: 0 0 8px; line-height: 1.45; font-size: 16px; }
+.pr-note-empty { color: #8d8d8d; }
+.pr-note a { color: #fff; }
+.pr-shot { display: block; padding: 4px 0 4px 1.2em; text-indent: -1.2em; }
+.pr-player-frame { flex: 1; min-height: 0; background: #000; }
+.pr-player-frame iframe, .pr-embed {
+  width: 100%; height: 100%; max-width: none; border: 0; display: block; background: #000;
+}
+.pr-link-fallback { padding: 24px; }
+@media (min-width: 900px) {
+  .pr-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
+  #prompter.has-notes > .pr-top,
+  #prompter.has-notes > .pr-read,
+  #prompter.has-notes > .pr-controls { margin-right: min(440px, 40vw); }
 }
 .pr-q { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid #2a2a2a; }
 .pr-qn { color: #ff6a70; font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.45em; padding-top: 0.35em; }
@@ -646,11 +698,13 @@ const RELEASES = [
       'A popup when a new batch is ready to film.',
       'A New badge on any script you have not opened yet.',
       'Requests and feedback you can send without leaving the app.',
+      'Full screen reads the hook, each beat, and the CTA, and keeps the reference and shot notes in that view.',
     ],
     steps: [
       'When a batch arrives, read the popup and tap Show my new scripts.',
       'Film the scripts under This week. A New badge means you have not opened that card.',
       'Watch the reference reel, keep the first line as written, shoot vertical, do 3 takes, and say the script number before each take.',
+      'Tap Full screen. Follow the red bar from Hook through each beat to the CTA. Notes stays on that screen.',
       'Older and already filmed scripts are under Previous.',
       'Use What’s new anytime for these notes. Use Requests to tell us what you want next.',
     ],
@@ -985,9 +1039,16 @@ function loadLastView(uid) {
 // new listener on every redraw).
 document.addEventListener('keydown', (e) => {
   if (document.getElementById('prompter')) {
-    if (e.key === 'Escape') { e.preventDefault(); window.closePrompter(); return; }
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      if (prompterState && prompterState.player) { window.prompterClosePlayer(); return; }
+      if (prompterState && prompterState.notes) { window.prompterNotes(false); return; }
+      window.closePrompter();
+      return;
+    }
     const tag = e.target && e.target.tagName;
     if (e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
+      if (prompterState && (prompterState.notes || prompterState.player)) return;
       e.preventDefault(); window.prompterToggle(); return;
     }
   }
@@ -2203,7 +2264,7 @@ function renderHelpPage() {
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
         <li>This week is the newest batch that still needs to be filmed. Previous holds older and filmed scripts.</li>
-        <li>Full screen opens the teleprompter. Use A+ and Play. Pinch is not required.</li>
+        <li>Full screen reads Hook, each beat, and the CTA. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openRequests()">Requests and feedback</button>
@@ -3437,46 +3498,289 @@ function renderCardGroup(group) {
 }
 
 // ─────────────────────────────────────────────
-// TELEPROMPTER — full-screen read. Lives outside #app so a dashboard redraw
-// does not close it. Type size, speed, and mirror stick on this device.
+// TELEPROMPTER — full-screen read of the whole script, in order.
+// Hook, each body beat, then the CTA. Lives outside #app so a dashboard
+// redraw does not close it. Type size, speed, and mirror stick on this device.
 // ─────────────────────────────────────────────
+function normSpoken(value) {
+  return asText(value).toLowerCase().replace(/[“”"']/g, '').replace(/\s+/g, ' ').trim();
+}
+function spokenHook(s) {
+  const pair = parseHookPair(s && s.hook);
+  let text = (pair.adapted || pair.raw || '').trim();
+  text = text.replace(/\n?On-screen bold caps:[\s\S]*$/i, '').trim();
+  text = text.replace(/^[\s\S]*?PROVEN HOOK\b[^:\n]*:\s*/i, '').trim();
+  return text;
+}
+function parseBeats(script) {
+  const text = asText(script).trim();
+  if (!text) return [];
+  const re = /(?:^|\n)\s*\[([^\]]+)\]\s*([\s\S]*?)(?=\n\s*\[|$)/g;
+  const beats = [];
+  let m;
+  while ((m = re.exec(text))) {
+    const tag = m[1].trim();
+    const body = m[2].trim();
+    if (!body) continue;
+    const timeMatch = tag.match(/\d{1,2}:\d{2}/);
+    beats.push({ clip: /^clip\b/i.test(tag), time: timeMatch ? timeMatch[0] : '', text: body });
+  }
+  if (beats.length) return beats;
+  const numbered = text.split(/\n(?=\s*(?:one|two|three|four|five|six|seven|eight|nine|ten|\d{1,2})[.)]\s+)/i);
+  if (numbered.length > 1) {
+    return numbered.map(chunk => ({ clip: false, time: '', text: chunk.trim() })).filter(b => b.text);
+  }
+  const paras = text.split(/\n{2,}/).map(p => p.trim()).filter(Boolean);
+  if (paras.length) return paras.map(p => ({ clip: false, time: '', text: p }));
+  return [{ clip: false, time: '', text: text }];
+}
+function peelHook(beat, hook) {
+  if (!beat || beat.clip || !hook) return null;
+  const raw = beat.text.trim();
+  const hookNorm = normSpoken(hook);
+  if (!hookNorm || hookNorm.length < 8) return null;
+  if (normSpoken(raw) === hookNorm) return { hookText: raw, rest: null };
+  const lines = raw.split('\n');
+  if (normSpoken(lines[0]) !== hookNorm) return null;
+  const rest = lines.slice(1).join('\n').trim();
+  if (!rest) return { hookText: lines[0].trim(), rest: null };
+  return { hookText: lines[0].trim(), rest: { clip: false, time: beat.time, text: rest } };
+}
+function beatName(text) {
+  const m = String(text || '').match(/^\s*(one|two|three|four|five|six|seven|eight|nine|ten|\d{1,2})[.)]\s+/i);
+  return m ? m[1] : '';
+}
+function scriptFlow(s) {
+  const hook = spokenHook(s);
+  const beats = parseBeats(s && s.full_script);
+  const sections = [];
+  let pending = beats.slice();
+  if (hook) {
+    const peeled = peelHook(pending[0], hook);
+    if (peeled) {
+      sections.push({ kind: 'hook', label: 'Hook', text: peeled.hookText, time: (pending[0] && pending[0].time) || '' });
+      pending = pending.slice(1);
+      if (peeled.rest) pending.unshift(peeled.rest);
+    } else {
+      sections.push({ kind: 'hook', label: 'Hook', text: hook, time: '' });
+    }
+  }
+  const spokenCount = pending.filter(b => !b.clip).length;
+  let n = 0;
+  pending.forEach(b => {
+    if (b.clip) {
+      sections.push({ kind: 'clip', label: b.time ? 'Clip ' + b.time : 'Clip', text: b.text, time: b.time || '' });
+      return;
+    }
+    n += 1;
+    const named = beatName(b.text);
+    let label = 'Body';
+    if (named) label = 'Beat ' + named;
+    else if (spokenCount > 1) label = b.time ? 'Beat ' + n + ' · ' + b.time : 'Beat ' + n;
+    else if (b.time) label = 'Body · ' + b.time;
+    sections.push({ kind: 'beat', label: label, text: b.text, time: b.time || '' });
+  });
+  const ctaRaw = asText(s && s.cta).trim();
+  if (ctaRaw) {
+    const clean = /^(none|clean|no cta)\b/i.test(ctaRaw) && ctaRaw.length < 64;
+    const text = clean ? 'No spoken CTA. End on the last line.' : ctaRaw;
+    const last = sections[sections.length - 1];
+    if (last && normSpoken(last.text) === normSpoken(text)) {
+      last.kind = 'cta';
+      last.label = 'CTA';
+    } else {
+      sections.push({ kind: 'cta', label: 'CTA', text: text, time: '' });
+    }
+  }
+  if (!sections.length) sections.push({ kind: 'beat', label: 'Script', text: 'No script on this card.', time: '' });
+  return sections;
+}
+function pullLabeled(text, names) {
+  const raw = asText(text);
+  if (!raw || !names || !names.length) return '';
+  const lines = raw.split('\n');
+  const re = new RegExp('^\\s*(?:' + names.join('|') + ')\\s*:\\s*(.*)$', 'i');
+  for (let i = 0; i < lines.length; i++) {
+    const hit = lines[i].match(re);
+    if (!hit) continue;
+    const out = [hit[1].trim()];
+    for (let j = i + 1; j < lines.length; j++) {
+      if (!lines[j].trim()) break;
+      if (/^\s*[A-Za-z][^:\n]{0,24}:\s+\S/.test(lines[j])) break;
+      out.push(lines[j].trim());
+    }
+    const joined = out.filter(Boolean).join('\n');
+    if (joined) return joined;
+  }
+  const lower = raw.toLowerCase();
+  for (let i = 0; i < names.length; i++) {
+    const at = lower.indexOf(names[i].toLowerCase() + ':');
+    if (at < 0) continue;
+    const after = raw.slice(at + names[i].length + 1).split('\n')[0].trim();
+    if (after) return after;
+  }
+  return '';
+}
+function referencePack(s) {
+  s = s || {};
+  const client = (typeof CLIENTS !== 'undefined' && CLIENTS[s.client_slug]) || null;
+  const camera = asText(s.camera).trim();
+  const pair = parseHookPair(s.hook);
+  const setup = parseSetup(s.filming_setup, s.camera);
+  const noteParts = [];
+  if (setup.location) noteParts.push('Location: ' + setup.location);
+  if (setup.rig) noteParts.push('Phone / tripod: ' + setup.rig);
+  if (setup.framing && normSpoken(setup.framing) !== normSpoken(camera)) noteParts.push('Framing: ' + setup.framing);
+  if (setup.mic) noteParts.push('Mic: ' + setup.mic);
+  if (!noteParts.length && setup.raw) noteParts.push(setup.raw);
+  if (asText(s.clip_directions).trim()) noteParts.push(asText(s.clip_directions).trim());
+  if (asText(s.tonality_delivery).trim()) noteParts.push(asText(s.tonality_delivery).trim());
+  const fd = fdObject(s);
+  const audio = [];
+  if (fd) {
+    Object.keys(fd).forEach(k => {
+      const v = asText(fd[k]).trim();
+      if (!v) return;
+      if (/sound|music|audio/i.test(k)) audio.push(v);
+      else noteParts.push(k + ': ' + v);
+    });
+  }
+  const sous = s.sous_chef_pass && typeof s.sous_chef_pass === 'object' ? s.sous_chef_pass : null;
+  if (sous && sous['Sound/Music']) audio.push(asText(sous['Sound/Music']).trim());
+  const audioNote = pullLabeled(s.editor_notes, ['audio', 'music', 'sound']);
+  if (audioNote) audio.push(audioNote);
+  const caption = pullLabeled(s.editor_notes, ['caption', 'captions']) || pullLabeled(s.client_feedback, ['caption', 'captions']);
+  const refs = [];
+  const primary = videoInfo(s.reference_clip);
+  if (primary) refs.push(primary);
+  const extraUrl = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
+  const extra = extraUrl ? videoInfo(extraUrl) : null;
+  if (extra && (!primary || extra.watch !== primary.watch)) refs.push(extra);
+  const spoken = spokenHook(s);
+  return {
+    person: client ? client.name : (s.client_slug || ''),
+    camera: camera,
+    proven: pair.proven && normSpoken(pair.proven) !== normSpoken(spoken) ? pair.proven : '',
+    shots: parseShots(setup.shots),
+    notes: noteParts.filter(Boolean),
+    onScreen: parseOnScreen(s.editor_notes, s.hook),
+    audio: audio.filter(Boolean),
+    caption: caption,
+    refs: refs,
+  };
+}
+function flowTextHtml(text) {
+  return escHtml(text).split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
+}
+function prompterEmbed(info) {
+  if (!info) return '<p class="pr-note-empty">No reference reel on this script.</p>';
+  if (info.src) {
+    return `<iframe class="pr-embed" src="${escHtml(info.src)}" title="Reference video" allow="autoplay; fullscreen; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>`;
+  }
+  if (info.watch) {
+    return `<div class="pr-link-fallback"><p>This reference does not play inside the page.</p><p><a href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(info.label || 'Open reference')}</a></p></div>`;
+  }
+  return `<p class="pr-link-fallback">${escHtml(info.label || 'No reference reel on this script.')}</p>`;
+}
+function prompterNotesHtml(s) {
+  const pack = referencePack(s);
+  const refs = pack.refs.length ? pack.refs.map((info, i) => {
+    const playable = info.kind !== 'text' && (info.src || info.watch);
+    return `<p>${escHtml(playable ? (info.label || 'Reference') : (info.label || 'Reference'))}</p>`
+      + (playable ? `<p><button type="button" onclick="window.prompterPlayRef(${i})">Play reference</button></p>` : '');
+  }).join('') : '<p class="pr-note-empty">No reference reel on this script.</p>';
+  const shots = pack.shots.length
+    ? pack.shots.map((item, i) => `<div class="pr-shot">${i + 1}. ${escHtml(item)}</div>`).join('')
+    : '';
+  const notes = (shots ? shots : '') + pack.notes.map(n => `<p>${escHtml(n)}</p>`).join('');
+  const screen = pack.onScreen.length
+    ? pack.onScreen.map(it => `<p>${it.t ? escHtml(it.t) + ' — ' : ''}${escHtml(it.text)}</p>`).join('')
+    : '<p class="pr-note-empty">No on-screen text on this script.</p>';
+  const audio = pack.audio.length
+    ? pack.audio.map(a => `<p>${escHtml(a)}</p>`).join('')
+    : '<p class="pr-note-empty">No audio note on this script.</p>';
+  const person = [pack.person, pack.camera].filter(Boolean).join(' · ') || 'Not specified';
+  return `
+    <section class="pr-note"><h3>Reference</h3>${refs}${pack.proven ? `<p>Proven hook: ${escHtml(pack.proven)}</p>` : ''}</section>
+    <section class="pr-note"><h3>On camera</h3><p>${escHtml(person)}</p></section>
+    <section class="pr-note"><h3>Filming notes</h3>${notes || '<p class="pr-note-empty">No filming notes on this script.</p>'}</section>
+    <section class="pr-note"><h3>On-screen text</h3>${screen}</section>
+    <section class="pr-note"><h3>Audio</h3>${audio}</section>
+    <section class="pr-note"><h3>Caption</h3>${pack.caption ? `<p>${escHtml(pack.caption)}</p>` : '<p class="pr-note-empty">No caption on this script.</p>'}</section>`;
+}
+
 let prompterState = null;
 let prompterRaf = 0;
 function prompterHtml(s) {
   const model = scriptReadModel(s.full_script);
-  const pair = parseHookPair(s.hook);
-  const lead = pair.adapted ? `<p>${escHtml(pair.adapted)}</p>` : '';
-  let body = lead;
   if (model.mode === 'questions') {
-    body += model.questions.map(q => `<div class="pr-q"><span class="pr-qn">${escHtml(q.n)}</span><span>${escHtml(q.q)}</span></div>`).join('');
-  } else {
-    const prose = model.prose || asText(s.hook);
-    body += prose.split(/\n{2,}/).map(p => `<p>${escHtml(p)}</p>`).join('');
+    const hook = spokenHook(s);
+    const questions = model.questions.map(q => `<div class="pr-q" data-flow="q"><span class="pr-qn">${escHtml(q.n)}</span><span>${escHtml(q.q)}</span></div>`).join('');
+    const rest = model.rest ? flowTextHtml(model.rest) : '';
+    return `<section class="pr-sec" data-flow="0"><div class="pr-label">Hook</div>${hook ? flowTextHtml(hook) : ''}${model.intro ? flowTextHtml(model.intro) : ''}</section>
+      <section class="pr-sec" data-flow="1"><div class="pr-label">Body</div>${questions}${rest}</section>`
+      + (asText(s.cta).trim() ? `<section class="pr-sec" data-flow="2"><div class="pr-label">CTA</div>${flowTextHtml(asText(s.cta))}</section>` : '');
   }
-  return body;
+  return scriptFlow(s).map((sec, i) => `
+    <section class="pr-sec${sec.kind === 'clip' ? ' is-clip' : ''}" data-flow="${i}">
+      <div class="pr-label">${escHtml(sec.label)}</div>
+      ${flowTextHtml(sec.text)}
+    </section>`).join('');
+}
+function prompterChips(s) {
+  const model = scriptReadModel(s.full_script);
+  const labels = model.mode === 'questions'
+    ? ['Hook', 'Body'].concat(asText(s.cta).trim() ? ['CTA'] : [])
+    : scriptFlow(s).map(sec => sec.label);
+  return labels.map((label, i) => `<button type="button" class="pr-jump" onclick="window.prompterJump(${i})">${escHtml(label)}</button>`).join('');
 }
 function renderPrompter() {
   const s = scripts.find(x => x.id === prompterState.id);
   const root = document.getElementById('prompter-root');
   if (!s || !root) return;
   const st = prompterState;
-  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}" role="dialog" aria-modal="true" aria-label="Teleprompter">
+  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}" role="dialog" aria-modal="true" aria-label="Teleprompter">
     <div class="pr-top">
       <div class="pr-title">${escHtml(s.title)}</div>
+      <button type="button" id="pr-notes-btn" class="pr-notes-btn${st.notes ? ' is-on' : ''}" aria-expanded="${st.notes ? 'true' : 'false'}" onclick="window.prompterNotes()">Notes</button>
       <button type="button" onclick="window.prompterTop()">Top</button>
       <button type="button" onclick="window.closePrompter()">Close</button>
     </div>
-    <div class="pr-focus" aria-hidden="true"></div>
-    <div id="prompter-scroll"><div id="prompter-text" style="font-size:${st.font}px">${prompterHtml(s)}</div></div>
+    <div class="pr-read">
+      <div class="pr-progress" aria-label="Script sections">${prompterChips(s)}</div>
+      <div class="pr-viewport">
+        <div class="pr-focus" aria-hidden="true"></div>
+        <div id="prompter-scroll"><div id="prompter-text" style="font-size:${st.font}px">${prompterHtml(s)}</div></div>
+      </div>
+    </div>
     <div class="pr-controls">
       <button type="button" onclick="window.prompterFont(-4)" aria-label="Smaller type">A−</button>
       <button type="button" onclick="window.prompterFont(4)" aria-label="Larger type">A+</button>
       <button type="button" id="prompter-play" class="pr-play" onclick="window.prompterToggle()">${st.playing ? 'Pause' : 'Play'}</button>
+      <span class="pr-speed-label">Speed</span>
       <input class="pr-speed" type="range" min="16" max="120" value="${st.speed}" aria-label="Scroll speed" oninput="window.prompterSpeed(this.value)">
       <button type="button" onclick="window.prompterMirror()" aria-pressed="${st.mirror}">Mirror</button>
     </div>
+    <div class="pr-sheet" id="pr-sheet" ${st.notes ? '' : 'hidden'}>
+      <div class="pr-top">
+        <div class="pr-title">Reference and notes</div>
+        <button type="button" onclick="window.prompterNotes(false)">Back to script</button>
+      </div>
+      <div class="pr-sheet-body">${prompterNotesHtml(s)}</div>
+    </div>
+    <div class="pr-player" id="pr-player" hidden>
+      <div class="pr-top">
+        <div class="pr-title">Reference</div>
+        <button type="button" onclick="window.prompterRefFullscreen()">Full screen</button>
+        <button type="button" onclick="window.prompterClosePlayer()">Back to script</button>
+      </div>
+      <div class="pr-player-frame" id="pr-player-frame"></div>
+    </div>
   </div>`;
   document.body.classList.add('prompter-open');
+  const scroller = document.getElementById('prompter-scroll');
+  if (scroller) scroller.addEventListener('scroll', prompterSyncProgress, { passive: true });
+  requestAnimationFrame(prompterSyncProgress);
 }
 function prompterLoop(ts) {
   if (!prompterState || !prompterState.playing) return;
@@ -3486,6 +3790,7 @@ function prompterLoop(ts) {
   const dt = Math.min(64, ts - prompterState.lastTs);
   prompterState.lastTs = ts;
   el.scrollTop += (prompterState.speed * dt) / 1000;
+  prompterSyncProgress();
   if (el.scrollTop + el.clientHeight >= el.scrollHeight - 4) {
     prompterState.playing = false;
     const btn = document.getElementById('prompter-play');
@@ -3504,8 +3809,98 @@ window.openPrompter = (id) => {
     mirror: lsGetBool('hub_pr_mirror', false),
     playing: false,
     lastTs: 0,
+    notes: false,
+    player: false,
   };
   renderPrompter();
+};
+function prompterPause() {
+  if (!prompterState) return;
+  prompterState.playing = false;
+  cancelAnimationFrame(prompterRaf);
+  const btn = document.getElementById('prompter-play');
+  if (btn) btn.textContent = 'Play';
+}
+function prompterSyncProgress() {
+  const scroller = document.getElementById('prompter-scroll');
+  const line = document.querySelector('#prompter .pr-focus');
+  if (!scroller || !line) return;
+  const y = line.getBoundingClientRect().top + 8;
+  const sections = Array.from(scroller.querySelectorAll('.pr-sec'));
+  let idx = 0;
+  sections.forEach((sec, i) => {
+    if (sec.getBoundingClientRect().top <= y) idx = i;
+  });
+  sections.forEach((sec, i) => {
+    sec.classList.toggle('is-current', i === idx);
+    sec.classList.toggle('is-past', i < idx);
+    sec.classList.toggle('is-ahead', i > idx);
+  });
+  const bar = document.querySelector('#prompter .pr-progress');
+  if (!bar) return;
+  const chips = Array.from(bar.querySelectorAll('.pr-jump'));
+  chips.forEach((btn, i) => {
+    const on = i === idx;
+    btn.classList.toggle('is-current', on);
+    if (on) btn.setAttribute('aria-current', 'true');
+    else btn.removeAttribute('aria-current');
+  });
+  const current = chips[idx];
+  if (current) {
+    const left = current.offsetLeft - (bar.clientWidth / 2) + (current.offsetWidth / 2);
+    if (Math.abs(bar.scrollLeft - left) > 8) bar.scrollLeft = left;
+  }
+}
+window.prompterJump = (i) => {
+  const scroller = document.getElementById('prompter-scroll');
+  const sec = document.querySelector('#prompter .pr-sec[data-flow="' + i + '"]');
+  const line = document.querySelector('#prompter .pr-focus');
+  if (!scroller || !sec || !line) return;
+  const target = sec.querySelector('p') || sec;
+  scroller.scrollTop += target.getBoundingClientRect().top - line.getBoundingClientRect().top;
+  prompterSyncProgress();
+};
+window.prompterNotes = (force) => {
+  if (!prompterState) return;
+  prompterState.notes = typeof force === 'boolean' ? force : !prompterState.notes;
+  if (prompterState.notes) prompterPause();
+  const root = document.getElementById('prompter');
+  if (root) root.classList.toggle('has-notes', prompterState.notes);
+  const sheet = document.getElementById('pr-sheet');
+  if (sheet) sheet.hidden = !prompterState.notes;
+  const btn = document.getElementById('pr-notes-btn');
+  if (btn) {
+    btn.classList.toggle('is-on', prompterState.notes);
+    btn.setAttribute('aria-expanded', prompterState.notes ? 'true' : 'false');
+  }
+};
+window.prompterPlayRef = (index) => {
+  if (!prompterState) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  const pack = s ? referencePack(s) : null;
+  const info = pack && pack.refs[index];
+  if (!info) return;
+  prompterPause();
+  prompterState.player = true;
+  const frame = document.getElementById('pr-player-frame');
+  if (frame) frame.innerHTML = prompterEmbed(info);
+  const player = document.getElementById('pr-player');
+  if (player) player.hidden = false;
+};
+window.prompterClosePlayer = () => {
+  if (!prompterState) return;
+  prompterState.player = false;
+  const player = document.getElementById('pr-player');
+  if (player) player.hidden = true;
+  const frame = document.getElementById('pr-player-frame');
+  if (frame) frame.innerHTML = '';
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+};
+window.prompterRefFullscreen = () => {
+  const el = document.getElementById('pr-player-frame');
+  if (!el || !el.requestFullscreen) return;
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else el.requestFullscreen().catch(() => {});
 };
 window.closePrompter = () => {
   prompterState = null;

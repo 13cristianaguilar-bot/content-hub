@@ -436,6 +436,14 @@ img, iframe, video, pre { max-width: 100%; }
     gap: 8px 36px;
   }
 }
+/* Phones: Help, Requests, and Sign out don't fit beside the wordmark.
+   Drop the actions onto their own row so "signals.marketing" stays whole. */
+@media (max-width: 559px) {
+  .hub-top { flex-wrap: wrap; row-gap: 2px; }
+  .brand-lockup { flex: 1 1 100%; }
+  .brand-word { overflow: visible; text-overflow: clip; }
+  .hub-top-actions { margin-left: auto; }
+}
 @media (max-width: 389px) {
   .brand-word { font-size: 18px; }
   .shot-title { font-size: 24px; }
@@ -444,6 +452,121 @@ img, iframe, video, pre { max-width: 100%; }
   .list-thumb { width: 44px; height: 62px; }
   .signout-btn { padding: 0 6px; font-size: 12px; }
   .hub-top { gap: 8px; }
+}
+.icon-btn.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+body.modal-open { overflow: hidden; }
+.fresh-block { display: flex; flex-direction: column; gap: 12px; }
+.fresh-head-row { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.fresh-title {
+  font-size: 22px; line-height: 1.15; letter-spacing: -0.04em; font-weight: 650; margin: 2px 0 0;
+}
+.fresh-batch { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.fresh-empty { color: var(--muted); font-size: 14px; margin: 0; }
+.previous-toggle {
+  width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  padding: 0 12px; font-size: 14px; font-weight: 650; letter-spacing: -0.02em; text-align: left;
+}
+.previous-toggle .prev-meta {
+  font-family: "Geist Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: 0.06em;
+  text-transform: uppercase; font-weight: 500; color: var(--muted);
+}
+.previous-block { display: flex; flex-direction: column; gap: 12px; }
+.new-badge {
+  display: inline-block; margin-left: 8px; background: var(--signal); color: #fff;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 3px 6px; vertical-align: 1px;
+}
+.modal-back {
+  position: fixed; inset: 0; z-index: 70;
+  background: rgba(8, 8, 8, 0.46);
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-top: max(12px, env(safe-area-inset-top, 0px));
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  padding-left: max(12px, env(safe-area-inset-left, 0px));
+}
+.modal-card {
+  background: #fff; color: var(--ink);
+  border: 1px solid var(--line); border-top: 2px solid var(--signal);
+  width: min(520px, 100%);
+  max-height: min(100%, calc(100dvh - 24px));
+  overflow: auto;
+  padding: 18px 16px 14px;
+}
+.modal-card h2 {
+  font-size: 26px; line-height: 1.12; letter-spacing: -0.045em; font-weight: 650; margin: 6px 0 8px;
+}
+.guide-list, .step-list { margin: 8px 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.guide-list { list-style: none; }
+.step-list { padding-left: 1.15rem; }
+.guide-list li, .step-list li { font-size: 15px; line-height: 1.4; }
+.modal-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.modal-actions .shot-go { width: 100%; }
+.ghost-btn {
+  min-height: 44px; width: 100%; background: transparent; border: 0; color: var(--muted);
+  font-size: 14px; font-weight: 650;
+}
+.back-btn {
+  min-height: 44px; padding: 0; background: transparent; border: 0; color: var(--ink);
+  font-size: 14px; font-weight: 650; letter-spacing: -0.02em; align-self: flex-start;
+}
+.page-stack { display: flex; flex-direction: column; gap: 12px; width: 100%; min-width: 0; }
+.page-card {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 16px;
+  min-width: 0;
+}
+.page-card h2 { font-size: 22px; letter-spacing: -0.04em; font-weight: 650; margin: 4px 0 8px; line-height: 1.15; }
+.page-card p { margin: 0 0 8px; font-size: 14px; line-height: 1.45; color: var(--ink); }
+.kind-grid { display: flex; flex-direction: column; gap: 8px; }
+.req-kind {
+  width: 100%; text-align: left; min-height: 44px;
+  border: 1px solid var(--line); background: #fff; color: var(--ink);
+  padding: 10px 12px; font-size: 14px; font-weight: 650;
+}
+.req-kind.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.field-label { display: block; font-size: 13px; font-weight: 650; margin: 12px 0 6px; }
+.field-input, .field-area, .status-select {
+  width: 100%; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  font-size: 16px; padding: 10px 12px;
+}
+.field-input { min-height: 48px; }
+.field-area { min-height: 120px; resize: vertical; line-height: 1.4; }
+.field-input:focus, .field-area:focus, .status-select:focus { outline: 2px solid var(--signal); border-color: var(--signal); }
+.status-select { min-height: 44px; font-weight: 650; }
+.req-meta { color: var(--muted); font-size: 13px; margin-top: 4px; }
+.req-body { margin: 8px 0 0; font-size: 15px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.status-chip {
+  display: inline-block; border: 1px solid var(--line); padding: 4px 8px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.status-chip.is-new { border-color: var(--signal); color: var(--signal); }
+.status-chip.is-progress { border-color: var(--ink); color: var(--ink); }
+.status-chip.is-done { color: var(--muted); }
+.filter-row { display: flex; gap: 8px; overflow-x: auto; min-width: 0; }
+.filter-row button {
+  flex: 0 0 auto; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: #fff;
+  font-size: 13px; font-weight: 650; color: var(--muted);
+}
+.filter-row button.is-on { background: var(--ink); color: #fff; border-color: var(--ink); }
+.walkthrough { margin-top: 12px; }
+.walkthrough-frame {
+  display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; height: auto;
+  border: 0; background: #080808; margin-top: 8px;
+}
+#fresh-section { scroll-margin-top: 12px; }
+@media (min-width: 700px) {
+  .modal-back { align-items: center; }
+  .fresh-head-row { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+  .previous-toggle { width: auto; min-width: 11rem; flex-shrink: 0; }
+  .kind-grid { display: grid; grid-template-columns: 1fr 1fr; }
+  .fresh-title { font-size: 26px; }
+}
+@media (max-width: 389px) {
+  .modal-card h2 { font-size: 22px; }
+  .fresh-title { font-size: 20px; }
 }
 
 </style>
@@ -497,6 +620,65 @@ const CLIENTS = {
 // Calendar/Pipeline views are admin-only for now -- Cristian wants to try them himself
 // before exposing them to clients. Flip to true once validated.
 const CLIENT_VIEW_TABS = false;
+
+// Bump this when the What's new popup should show again. It must match
+// the first entry in RELEASES. Per-user dismissal lives in localStorage.
+const APP_VERSION = '2026.10.23';
+// Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
+// What's new popup and on the Help page. Empty hides the video slot.
+const WALKTHROUGH_VIDEO_URL = '';
+
+const FILMING_GUIDE = [
+  'Watch the reference reel before you roll.',
+  'Keep the first line as written.',
+  'Shoot vertical.',
+  'Do 3 takes.',
+  'Say the script number before each take.',
+];
+
+const RELEASES = [
+  {
+    version: '2026.10.23',
+    date: 'October 23, 2026',
+    title: "See what's new first",
+    items: [
+      'The list opens on this week’s new scripts, not your whole archive.',
+      'A popup when a new batch is ready to film.',
+      'A New badge on any script you have not opened yet.',
+      'Requests and feedback you can send without leaving the app.',
+    ],
+    steps: [
+      'When a batch arrives, read the popup and tap Show my new scripts.',
+      'Film the scripts under This week. A New badge means you have not opened that card.',
+      'Watch the reference reel, keep the first line as written, shoot vertical, do 3 takes, and say the script number before each take.',
+      'Older and already filmed scripts are under Previous.',
+      'Use What’s new anytime for these notes. Use Requests to tell us what you want next.',
+    ],
+  },
+  {
+    version: '2026.10.22',
+    date: 'October 22, 2026',
+    title: 'Shot cards',
+    items: [
+      'Phone-first shot cards with the line you say, the reference, and a full-screen teleprompter.',
+    ],
+    steps: [
+      'Read your line, then the script.',
+      'Tap Full screen for the teleprompter. Use A+ and Play.',
+      'Film this keeps the script. Request a tweak sends it back. Pass skips it.',
+    ],
+  },
+];
+
+const REQUEST_KINDS = [
+  { id: 'feature', label: 'Feature request', hint: 'What should the app do?' },
+  { id: 'competitor', label: 'Competitor or creator', hint: 'Who should we study, and why?' },
+  { id: 'format', label: 'Video format', hint: 'What format do you want to film?' },
+  { id: 'cadence', label: 'Posting cadence', hint: 'How should the posting schedule change?' },
+  { id: 'feedback', label: 'General feedback', hint: 'What is working, or what is not?' },
+  { id: 'other', label: 'Other', hint: 'Anything else we should know.' },
+];
+const REQUEST_STATUSES = ['new', 'in progress', 'done'];
 
 // ─────────────────────────────────────────────
 // STATUS / FORMAT STYLES
@@ -688,6 +870,24 @@ const expandedSections = new Set();
 // (client switch, sign-in/out).
 let listSearch = '';
 
+// Fresh list focus, What's new / Requests pages, and the two popups.
+// Same redraw rule as the rest of this state: a realtime refresh rebuilds
+// #app, so anything on screen has to live here, not only in the DOM.
+let hubPage = 'main';          // 'main' | 'help' | 'requests'
+let previousOpen = false;
+let modal = null;              // null | 'whats-new' | 'new-scripts'
+let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
+let modalFocusPending = false;
+let openedIds = new Set();
+let freshScriptIds = new Set();
+let previewMode = false;
+let requests = [];
+let requestsLoaded = false;
+let requestsError = '';
+let requestSending = false;
+let requestFilter = 'all';
+let requestDraft = { kind: 'feature', body: '', handles: '' };
+
 // ─────────────────────────────────────────────
 // localStorage helpers — tiny try/catch wrappers so a browser with storage disabled (private
 // mode edge cases, some in-app webviews) degrades to "use the default" instead of throwing and
@@ -793,7 +993,25 @@ document.addEventListener('keydown', (e) => {
   }
   // K3 -- routed through window.closeSettings() (not a bare `settingsOpen = false; renderDash()`)
   // so Escape returns focus to the gear button the same way the backdrop tap and ✕ button do.
+  if (e.key === 'Escape' && modal) {
+    e.preventDefault();
+    if (modal === 'whats-new') window.dismissWhatsNew();
+    else window.dismissNewScripts();
+    return;
+  }
   if (e.key === 'Escape' && settingsOpen) { window.closeSettings(); return; }
+  if (e.key === 'Tab' && document.getElementById('hub-modal')) {
+    const panel = document.querySelector('#hub-modal .modal-card');
+    if (panel) {
+      const focusables = Array.from(panel.querySelectorAll('button, a, input, select, textarea'));
+      if (focusables.length) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+      }
+    }
+  }
 
   // K2 -- real focus trap for the settings panel. It declares aria-modal="true"/role="dialog",
   // so Tab must actually be unable to walk out of it into the rest of the page (and Shift+Tab
@@ -819,6 +1037,19 @@ document.addEventListener('keydown', (e) => {
 // Client-facing "how this works" guide. Persisted per-browser via localStorage so it doesn't
 // nag on every visit once dismissed, but stays one tap away via the "?" button in the header.
 // Admins (Cristian) never see this -- it's onboarding for CLIENTS, not for him.
+// Opening a shot card clears its New badge without a full redraw, so the
+// page does not jump. Stored per user, not per browser profile alone.
+document.addEventListener('click', (e) => {
+  const art = e.target && e.target.closest && e.target.closest('article.shot');
+  if (!art) return;
+  const ids = (art.getAttribute('data-script-ids') || '').split(',').map(s => s.trim()).filter(Boolean);
+  let changed = false;
+  ids.forEach(id => { if (!openedIds.has(id)) { openedIds.add(id); changed = true; } });
+  if (!changed) return;
+  persistOpened();
+  art.querySelectorAll('.new-badge').forEach(n => n.remove());
+});
+
 function helpDismissed() { try { return localStorage.getItem('hub_help_dismissed') === '1'; } catch (e) { return false; } }
 let showHelp = !helpDismissed();
 window.toggleHelp = () => { showHelp = !showHelp; if (!showHelp) { try { localStorage.setItem('hub_help_dismissed', '1'); } catch (e) {} } renderDash(); };
@@ -885,11 +1116,13 @@ const SESSION_EXPIRED_MSG = "That didn't save — your session may have expired.
 async function init() {
   try {
     const { data: { session } } = await sb.auth.getSession();
+    if (window.__previewLock) return;
     if (session && passwordRecoveryPending) renderSetNewPassword();
     else if (session) await afterLogin(session.user);
     else { passwordRecoveryPending = false; renderLogin(); } // expired/invalid reset link -> plain login
 
     sb.auth.onAuthStateChange(async (event, session) => {
+      if (window.__previewLock) return;
       try {
         // Belt-and-braces with the URL check at the top of the script (PKCE-style links carry
         // no `type=recovery` in the URL, only this event).
@@ -911,6 +1144,10 @@ async function init() {
           calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
           settingsOpen = false; calShowKey = false;
           listSearch = ''; expandedSections.clear();
+          hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false;
+          openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
+          requests = []; requestsLoaded = false; requestsError = '';
+          document.body.classList.remove('modal-open');
           // A pending "Undo" belongs to the session that just ended -- it must not be tappable
           // (and fail, or worse, act under the next person's session) after sign-out.
           hideToast();
@@ -923,6 +1160,7 @@ async function init() {
 }
 
 async function afterLogin(u) {
+  if (window.__previewLock) return;
   // C1 -- Supabase's JS client re-fires `SIGNED_IN` (and `TOKEN_REFRESHED`/`INITIAL_SESSION`)
   // whenever a backgrounded tab/app regains focus, not just on an actual new login (its
   // _onVisibilityChanged -> _recoverAndRefresh path). Capture whether this is really a NEW
@@ -988,21 +1226,24 @@ async function afterLogin(u) {
   try {
     await fetchScripts();
   } catch (e) {
+    if (window.__previewLock) return;
     if (isNewSignIn) throw e;
     console.error(e);
     showToast("Couldn't refresh — showing what was last loaded.", { tone: 'error' });
   }
-  // Auto-route clients to their action queue -- but only on a genuine new sign-in (see
-  // isNewSignIn above). If this ran on every refocus too, a client's deliberate "view all" tap
-  // would get silently overwritten back to "Needs Review" the next time they switched back to
-  // the app. If they have new scripts, take them straight there; if everything is reviewed,
-  // show all so they can see their history.
+  if (window.__previewLock) return;
+  // Clients land on the fresh list (newest unfilmed batch), not Needs Review and not
+  // the full archive. Only on a real sign-in, so a deliberate filter survives a tab refocus.
   if (isNewSignIn && role === 'client') {
-    const hasNR = scripts.some(s => s.status === 'Needs Review');
-    viewStatus = hasNR ? 'Needs Review' : 'all';
+    viewStatus = 'all';
+    viewTab = 'list';
+    previousOpen = false;
+    hubPage = 'main';
   }
+  if (isNewSignIn) loadOpened();
   renderDash();
   subscribeLiveChanges();
+  fetchRequests();
 }
 
 // ─────────────────────────────────────────────
@@ -1035,7 +1276,12 @@ function isPickerElement(el) {
   // The List search box gets the same protection: rebuilding a focused text input mid-typing
   // dismisses the iOS keyboard, and even on desktop it would eat the keystroke in flight.
   // It resumes on a delayed blur rather than on change -- see redrawOrDeferForActivePicker().
-  return el.tagName === 'SELECT' || (el.tagName === 'INPUT' && el.type === 'date') || el.id === 'list-search';
+  if (el.tagName === 'SELECT' || el.tagName === 'TEXTAREA') return true;
+  if (el.tagName === 'INPUT') {
+    const t = el.type || 'text';
+    return t !== 'checkbox' && t !== 'radio' && t !== 'button' && t !== 'submit';
+  }
+  return el.id === 'list-search';
 }
 function redrawOrDeferForActivePicker() {
   const el = document.activeElement;
@@ -1049,7 +1295,7 @@ function redrawOrDeferForActivePicker() {
   if (pendingRealtimeRedrawEl === el) return; // already waiting on this exact element, don't stack listeners
   pendingRealtimeRedrawEl = el;
   const isDateInput = el.tagName === 'INPUT' && el.type === 'date';
-  const isSearchInput = el.id === 'list-search';
+  const isSearchInput = el.id === 'list-search' || el.tagName === 'TEXTAREA' || (el.tagName === 'INPUT' && el.type !== 'date');
   const detach = () => {
     el.removeEventListener('change', changeHandler);
     el.removeEventListener('blur', blurHandler);
@@ -1121,6 +1367,25 @@ async function fetchScripts() {
   // failure means (see afterLogin() and the realtime handler); `scripts` is left untouched.
   if (error) throw error;
   scripts = data || [];
+}
+
+async function fetchRequests() {
+  if (!user || previewMode) return;
+  let error = null;
+  let data = null;
+  try {
+    ({ data, error } = await sb.from('client_requests').select('*').order('created_at', { ascending: false }));
+  } catch (e) { error = e; }
+  if (!user) return;
+  if (error) {
+    requestsError = error.message || 'Could not load requests.';
+    requests = [];
+  } else {
+    requestsError = '';
+    requests = data || [];
+  }
+  requestsLoaded = true;
+  if (hubPage === 'requests') renderDash();
 }
 
 // Friendlier confirmation copy for the status moves a CLIENT makes ("Moved to Filming" reads
@@ -1580,18 +1845,188 @@ function groupMatchesSearch(group, rawQuery) {
 
 // Format labels A–F are interview, G–J are B-roll. A letter only counts when it
 // stands alone ("A · …", "Format A", "G · …"). "F14", "J1", and "J11" are other
-// formats and stay in All. A historical "was B-Roll" phrase is not a type.
+// formats. A historical "was B-Roll" phrase is not a type.
+// Labels with no A–J letter fall back: reaction / talking-head => interview,
+// silent or text-on-screen => b-roll. Anything else stays other (All only).
 function scriptType(format) {
   const f = String(format || '').trim();
+  if (/\bwas\s+b-?roll\b/i.test(f)) return 'other';
+  if (/^b-?roll\b/i.test(f)) return 'broll';
   const m = f.match(/^(?:Format\s+)?([A-J])(?:\s*[·•.|:\-–—]|\s*$)/i);
-  if (!m) return 'other';
-  return m[1].toUpperCase() <= 'F' ? 'interview' : 'broll';
+  if (m) return m[1].toUpperCase() <= 'F' ? 'interview' : 'broll';
+  if (/\breaction\b/i.test(f) || /\btalking[-\s]?head\b/i.test(f)) return 'interview';
+  if (/\bsilent\b/i.test(f) || /\btext[-\s]?on[-\s]?screen\b/i.test(f)) return 'broll';
+  return 'other';
 }
 function groupScriptType(group) {
   return scriptType(group[0] && group[0].format);
 }
 function typeLabel(t) {
   return t === 'interview' ? 'Interview' : t === 'broll' ? 'B-roll' : 'Other';
+}
+
+// Batch names in this app look like "Jan FINAL · 10.23.2026" (month.day.year).
+function parseBatchDate(batch) {
+  const s = String(batch || '');
+  let m = s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (m) {
+    const mm = Number(m[2]);
+    const dd = Number(m[3]);
+    if (mm >= 1 && mm <= 12 && dd >= 1 && dd <= 31) return m[1] + '-' + m[2] + '-' + m[3];
+  }
+  m = s.match(/(\d{1,2})[./](\d{1,2})[./](\d{4})/);
+  if (!m) return '';
+  const mm = Number(m[1]);
+  const dd = Number(m[2]);
+  if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return '';
+  return m[3] + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0');
+}
+
+function groupBatchName(group) {
+  return (group[0] && group[0].batch) || '';
+}
+
+function groupBatchDate(group) {
+  const named = parseBatchDate(groupBatchName(group));
+  if (named) return named;
+  let best = 0;
+  group.forEach(s => {
+    const t = Date.parse(s.created_at || '');
+    if (!isNaN(t) && t > best) best = t;
+  });
+  if (!best) return '';
+  const d = new Date(best);
+  return ymd(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function isFilmedStatus(status) {
+  return status === 'Posted' || status === 'Passed' || status === 'Archived';
+}
+
+function isUnfilmedGroup(group) {
+  return !isFilmedStatus(groupStatus(group));
+}
+
+// Monday that starts the calendar week containing ymdStr. '' if the date is unusable.
+function weekStartMonday(ymdStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymdStr || '')) return '';
+  const parts = ymdStr.split('-').map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  const day = dt.getDay();
+  const delta = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + delta);
+  return ymd(dt.getFullYear(), dt.getMonth(), dt.getDate());
+}
+
+// Newest batch that still has something to film, vs everything else.
+// today is injectable so a test can pin the week. Filmed rows in that batch
+// stay in previous, and so do unfilmed rows from older batches.
+function freshPartition(groups, today) {
+  today = today || localTodayStr();
+  const active = groups.filter(g => groupStatus(g) !== 'Archived');
+  let bestDate = '';
+  active.forEach(g => {
+    if (!isUnfilmedGroup(g)) return;
+    const d = groupBatchDate(g);
+    if (d > bestDate) bestDate = d;
+  });
+  const namesOnBest = [];
+  if (bestDate) {
+    active.forEach(g => {
+      if (!isUnfilmedGroup(g) || groupBatchDate(g) !== bestDate) return;
+      const name = groupBatchName(g);
+      if (namesOnBest.indexOf(name) === -1) namesOnBest.push(name);
+    });
+  }
+  const fresh = [];
+  const previous = [];
+  active.forEach(g => {
+    const name = groupBatchName(g);
+    const inNewest = bestDate && namesOnBest.indexOf(name) !== -1 && groupBatchDate(g) === bestDate && isUnfilmedGroup(g);
+    if (inNewest) fresh.push(g);
+    else previous.push(g);
+  });
+  const thisWeek = !!(bestDate && weekStartMonday(bestDate) && weekStartMonday(bestDate) === weekStartMonday(today));
+  return { fresh, previous, bestDate, batchNames: namesOnBest, thisWeek };
+}
+
+function clientGroups(slug) {
+  return groupIntoTakes(scripts.filter(s => s.client_slug === (slug || viewSlug)));
+}
+
+function computeFreshScriptIds(slug) {
+  const ids = new Set();
+  freshPartition(clientGroups(slug)).fresh.forEach(g => g.forEach(s => { if (s.id) ids.add(s.id); }));
+  return ids;
+}
+
+function freshSignature(fresh) {
+  const names = [];
+  const ids = [];
+  fresh.forEach(g => {
+    const n = groupBatchName(g);
+    if (names.indexOf(n) === -1) names.push(n);
+    g.forEach(s => { if (s.id) ids.push(String(s.id)); });
+  });
+  names.sort();
+  ids.sort();
+  return names.join('||') + '##' + ids.join(',');
+}
+
+function versionStorageKey() {
+  return 'hub_seen_version_' + (user && user.id ? user.id : 'anon');
+}
+function batchStorageKey() {
+  return 'hub_seen_batch_' + (user && user.id ? user.id : 'anon') + '_' + viewSlug;
+}
+function openedStorageKey() {
+  return 'hub_opened_' + (user && user.id ? user.id : 'anon');
+}
+function loadOpened() {
+  openedIds = new Set();
+  if (!user) return;
+  try {
+    const raw = localStorage.getItem(openedStorageKey());
+    const arr = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(arr)) arr.forEach(id => { if (typeof id === 'string') openedIds.add(id); });
+  } catch (e) { openedIds = new Set(); }
+}
+function persistOpened() {
+  try { localStorage.setItem(openedStorageKey(), JSON.stringify(Array.from(openedIds))); } catch (e) {}
+}
+function unseenReleases() {
+  if (!user) return [];
+  const seen = lsGetStr(versionStorageKey(), '');
+  if (!seen) return RELEASES.slice(0, 1);
+  const idx = RELEASES.findIndex(r => r.version === seen);
+  if (idx === 0) return [];
+  if (idx < 0) return RELEASES.slice(0, 1);
+  return RELEASES.slice(0, idx);
+}
+function unseenFreshGroups() {
+  const fresh = freshPartition(clientGroups(viewSlug)).fresh;
+  if (!fresh.length || !user) return [];
+  const seen = lsGetStr(batchStorageKey(), '');
+  return seen === freshSignature(fresh) ? [] : fresh;
+}
+function acknowledgeFreshBatch() {
+  if (!user) return;
+  const fresh = freshPartition(clientGroups(viewSlug)).fresh;
+  lsSetStr(batchStorageKey(), freshSignature(fresh));
+}
+function syncModal() {
+  if (modalPinned) return;
+  if (!user || hubPage !== 'main') {
+    modal = null;
+    return;
+  }
+  const want = unseenReleases().length ? 'whats-new' : (unseenFreshGroups().length ? 'new-scripts' : null);
+  if (modal === 'whats-new' && unseenReleases().length) return;
+  if (modal === 'new-scripts' && want === 'new-scripts') return;
+  if (modal !== want) {
+    modal = want;
+    if (want) modalFocusPending = true;
+  }
 }
 function renderTypedGroups(groups) {
   const buckets = { interview: [], broll: [], other: [] };
@@ -1648,25 +2083,251 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
         </div>
       </div>`;
   }
-  if (typed.length) {
-    const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${typed.length} of ${visibleGroups.length} match${typed.length === 1 ? 'es' : ''}</div>` : '';
-    return countLine + renderTypedGroups(typed);
+  // Search and a specific status tab stay flat, so Posted / Needs Review / a query
+  // can still reach older scripts. The default All view is the fresh batch.
+  if (q || viewStatus !== 'all') {
+    if (typed.length) {
+      const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${typed.length} of ${visibleGroups.length} match${typed.length === 1 ? 'es' : ''}</div>` : '';
+      return countLine + renderTypedGroups(typed);
+    }
+    if (shown.length && !typed.length) {
+      return `
+        <div class="text-center py-16">
+          <div class="text-slate-500 text-sm mb-1">No ${escHtml(typeLabel(viewType).toLowerCase())} scripts in this view.</div>
+          <button onclick="window.setType('all')" class="mt-4 text-xs text-slate-700 border border-slate-200 px-4 py-2 rounded-full">Show all types</button>
+        </div>`;
+    }
+    return (viewStatus === 'Needs Review' && !isAdmin)
+      ? `<div class="text-center py-24">
+           <div style="font-size:3rem;line-height:1;" class="mb-4">✅</div>
+           <div class="text-slate-600 font-semibold text-sm mb-1">You're all caught up</div>
+           <div class="text-slate-300 text-xs">No new scripts to review right now.</div>
+           <button onclick="setStatus2('all')" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">View all scripts</button>
+         </div>`
+      : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
   }
-  if (shown.length && !typed.length) {
-    return `
-      <div class="text-center py-16">
-        <div class="text-slate-500 text-sm mb-1">No ${escHtml(typeLabel(viewType).toLowerCase())} scripts in this view.</div>
-        <button onclick="window.setType('all')" class="mt-4 text-xs text-slate-700 border border-slate-200 px-4 py-2 rounded-full">Show all types</button>
-      </div>`;
+
+  const part = freshPartition(shown);
+  const freshTyped = viewType === 'all' ? part.fresh : part.fresh.filter(g => groupScriptType(g) === viewType);
+  const prevTyped = viewType === 'all' ? part.previous : part.previous.filter(g => groupScriptType(g) === viewType);
+  const label = part.thisWeek ? 'This week' : 'New';
+  const n = freshTyped.length;
+  const batchLine = part.batchNames.filter(Boolean).join(' · ');
+  let title = n
+    ? (n + ' new script' + (n === 1 ? '' : 's') + ' to film')
+    : 'Nothing new to film';
+  if (!n && viewType !== 'all') title = 'No ' + typeLabel(viewType).toLowerCase() + ' scripts in this batch';
+  const prevBtn = prevTyped.length ? `
+    <button type="button" class="previous-toggle" aria-expanded="${previousOpen}" aria-controls="previous-section" onclick="window.togglePrevious()">
+      <span>Previous</span>
+      <span class="prev-meta">${previousOpen ? 'Hide' : 'Show'} ${prevTyped.length}</span>
+    </button>` : '';
+  const freshBody = n
+    ? renderTypedGroups(freshTyped)
+    : `<p class="fresh-empty">${n === 0 && part.fresh.length === 0 ? 'You’re caught up on the latest batch.' : 'Nothing in this batch matches this type.'}</p>`;
+  return `
+    <section id="fresh-section" class="fresh-block" aria-label="${escHtml(label)}">
+      <div class="fresh-head">
+        <div class="fresh-head-row">
+          <div>
+            <div class="eyebrow">${escHtml(label)}</div>
+            <h2 class="fresh-title">${escHtml(title)}</h2>
+            ${batchLine ? `<p class="fresh-batch">${escHtml(batchLine)}</p>` : ''}
+          </div>
+          ${prevBtn}
+        </div>
+      </div>
+      ${freshBody}
+    </section>
+    ${previousOpen && prevTyped.length ? `<div id="previous-section" class="previous-block">${renderTypedGroups(prevTyped)}</div>` : ''}`;
+}
+
+function requestKindMeta(id) {
+  return REQUEST_KINDS.filter(k => k.id === id)[0] || REQUEST_KINDS[0];
+}
+function requestStatusLabel(status) {
+  if (status === 'in progress') return 'In progress';
+  if (status === 'done') return 'Done';
+  return 'New';
+}
+function requestStatusClass(status) {
+  if (status === 'in progress') return 'is-progress';
+  if (status === 'done') return 'is-done';
+  return 'is-new';
+}
+function formatStamp(iso) {
+  const t = Date.parse(iso || '');
+  if (isNaN(t)) return '';
+  const d = new Date(t);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function clientLabel(slug) {
+  if (!slug) return 'Client';
+  if (CLIENTS[slug] && CLIENTS[slug].name) return CLIENTS[slug].name;
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+function renderVideoSlot(url) {
+  const u = String(url || '').trim();
+  if (!u) return '';
+  const yt = u.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([\w-]{6,})/i);
+  const vimeo = u.match(/vimeo\.com\/(\d+)/i);
+  let inner = '';
+  if (yt) {
+    inner = `<iframe class="walkthrough-frame" src="https://www.youtube.com/embed/${escHtml(yt[1])}" title="Walkthrough" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  } else if (vimeo) {
+    inner = `<iframe class="walkthrough-frame" src="https://player.vimeo.com/video/${escHtml(vimeo[1])}" title="Walkthrough" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  } else if (/\.(mp4|webm)(\?|$)/i.test(u)) {
+    inner = `<video class="walkthrough-frame" controls playsinline src="${escHtml(u)}"></video>`;
+  } else {
+    inner = `<p style="margin-top:8px"><a href="${escHtml(u)}" target="_blank" rel="noopener noreferrer">Watch the walkthrough</a></p>`;
   }
-  return (viewStatus === 'Needs Review' && !isAdmin)
-    ? `<div class="text-center py-24">
-         <div style="font-size:3rem;line-height:1;" class="mb-4">✅</div>
-         <div class="text-slate-600 font-semibold text-sm mb-1">You're all caught up</div>
-         <div class="text-slate-300 text-xs">No new scripts to review right now.</div>
-         <button onclick="setStatus2('all')" class="mt-6 text-xs text-slate-400 border border-slate-200 px-4 py-2 rounded-full hover:bg-slate-50">View all scripts</button>
-       </div>`
-    : `<div class="text-center py-20 text-slate-300 text-sm">No scripts here.</div>`;
+  return `<div class="walkthrough"><div class="eyebrow">Walkthrough</div>${inner}</div>`;
+}
+function renderReleaseArticle(r) {
+  const video = r.version === APP_VERSION ? renderVideoSlot(WALKTHROUGH_VIDEO_URL) : renderVideoSlot(r.video || '');
+  return `<article class="page-card">
+    <div class="eyebrow">${escHtml(r.date)} · ${escHtml(r.version)}</div>
+    <h2>${escHtml(r.title)}</h2>
+    <ul class="guide-list">${(r.items || []).map(item => `<li>${escHtml(item)}</li>`).join('')}</ul>
+    ${(r.steps || []).length ? `<ol class="step-list">${r.steps.map(step => `<li>${escHtml(step)}</li>`).join('')}</ol>` : ''}
+    ${video}
+  </article>`;
+}
+function renderHelpPage() {
+  const guide = FILMING_GUIDE.map(line => `<li>${escHtml(line)}</li>`).join('');
+  return `<div class="page-stack">
+    <button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>
+    <article class="page-card">
+      <div class="eyebrow">Help</div>
+      <h2>How filming works</h2>
+      <ol class="step-list">${guide}</ol>
+      <ul class="guide-list" style="margin-top:14px">
+        <li>This week is the newest batch that still needs to be filmed. Previous holds older and filmed scripts.</li>
+        <li>Full screen opens the teleprompter. Use A+ and Play. Pinch is not required.</li>
+        <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
+      </ul>
+      <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openRequests()">Requests and feedback</button>
+    </article>
+    <div class="eyebrow">What’s new</div>
+    ${RELEASES.map(renderReleaseArticle).join('')}
+  </div>`;
+}
+function requestsMigrationHint() {
+  const missing = /client_requests|schema cache|does not exist|PGRST205|404/i.test(requestsError || '');
+  if (!missing) return `<p class="fresh-batch">${escHtml(requestsError)}</p>`;
+  if (role === 'admin') {
+    return `<p>Requests are not on in the database yet. Run <b>migrations/2026-10-23_client_requests.sql</b> in the Supabase SQL editor, then reload.</p>`;
+  }
+  return `<p>Sending a request is not available yet. Text Cristian and he can turn it on.</p>`;
+}
+function renderRequestCard(r, isAdmin) {
+  const kind = requestKindMeta(r.kind).label;
+  const handles = r.handles ? `<p class="req-meta">${escHtml(r.handles)}</p>` : '';
+  const statusControl = isAdmin
+    ? `<label class="field-label" for="st-${escHtml(r.id)}">Status</label>
+       <select id="st-${escHtml(r.id)}" class="status-select" data-request-id="${escHtml(r.id)}" aria-label="Status for ${escHtml(kind)}"
+         onchange="window.setRequestStatus(this.dataset.requestId, this.value)">
+         ${REQUEST_STATUSES.map(st => `<option value="${escHtml(st)}"${r.status === st ? ' selected' : ''}>${escHtml(requestStatusLabel(st))}</option>`).join('')}
+       </select>`
+    : `<span class="status-chip ${requestStatusClass(r.status)}">${escHtml(requestStatusLabel(r.status))}</span>`;
+  return `<article class="page-card">
+    <div class="eyebrow">${escHtml((isAdmin ? clientLabel(r.client_slug) + ' · ' : '') + formatStamp(r.created_at))}</div>
+    <h2>${escHtml(kind)}</h2>
+    ${handles}
+    <p class="req-body">${escHtml(r.body || '')}</p>
+    ${isAdmin ? statusControl : `<p style="margin:10px 0 0"><span class="status-chip ${requestStatusClass(r.status)}">${escHtml(requestStatusLabel(r.status))}</span></p>`}
+  </article>`;
+}
+function renderRequestsPage() {
+  const isAdmin = role === 'admin';
+  const visibleRequests = isAdmin ? requests : requests.filter(r =>
+    (user && r.user_id === user.id) || (mySlug && r.client_slug === mySlug)
+  );
+  const mine = visibleRequests.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
+  const counts = { all: mine.length, 'new': 0, 'in progress': 0, done: 0 };
+  mine.forEach(r => { if (counts[r.status] != null) counts[r.status] += 1; });
+  const shown = !isAdmin || requestFilter === 'all' ? mine : mine.filter(r => r.status === requestFilter);
+  const kind = requestKindMeta(requestDraft.kind);
+  const filterRow = isAdmin ? `<div class="filter-row" role="tablist" aria-label="Request status">
+    ${[['all', 'All', counts.all], ['new', 'New', counts.new], ['in progress', 'In progress', counts['in progress']], ['done', 'Done', counts.done]].map(([id, label, n]) =>
+      `<button type="button" class="${requestFilter === id ? 'is-on' : ''}" aria-pressed="${requestFilter === id}" onclick="window.setRequestFilter('${id}')">${label} ${n}</button>`
+    ).join('')}
+  </div>` : '';
+  const form = isAdmin ? '' : `<form class="page-card" id="requests-form" onsubmit="event.preventDefault(); window.submitRequest()">
+    <div class="eyebrow">Requests and feedback</div>
+    <h2>Tell us what you need</h2>
+    <p>Feature ideas, creators to study, formats, cadence, or anything else. Only you and Cristian can see what you send.</p>
+    <div class="kind-grid" role="radiogroup" aria-label="Request type">
+      ${REQUEST_KINDS.map(k => `<button type="button" class="req-kind${requestDraft.kind === k.id ? ' is-on' : ''}" role="radio" aria-checked="${requestDraft.kind === k.id}" onclick="window.setRequestKind('${k.id}')">${escHtml(k.label)}</button>`).join('')}
+    </div>
+    ${requestDraft.kind === 'competitor' ? `
+      <label class="field-label" for="request-handles">Instagram handles</label>
+      <input id="request-handles" class="field-input" type="text" inputmode="text" autocomplete="off" placeholder="@creator" data-focus-id="request-handles" value="${escHtml(requestDraft.handles)}" oninput="window.setRequestHandles(this.value)">
+    ` : ''}
+    <label class="field-label" for="request-body">Details</label>
+    <textarea id="request-body" class="field-area" data-focus-id="request-body" placeholder="${escHtml(kind.hint)}" oninput="window.setRequestBody(this.value)">${escHtml(requestDraft.body)}</textarea>
+    <button type="submit" class="shot-go" style="margin-top:12px" ${requestSending ? 'disabled' : ''}>${requestSending ? 'Sending…' : 'Send'}</button>
+  </form>`;
+  const listTitle = isAdmin ? 'All client requests' : 'Your requests';
+  const empty = requestsError
+    ? `<article class="page-card">${requestsMigrationHint()}</article>`
+    : (!requestsLoaded && !previewMode)
+      ? `<article class="page-card"><p>Loading requests…</p></article>`
+      : (shown.length ? shown.map(r => renderRequestCard(r, isAdmin)).join('') : `<article class="page-card"><p>${isAdmin ? 'No requests in this filter.' : 'You have not sent a request yet.'}</p></article>`);
+  return `<div class="page-stack">
+    <button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>
+    ${form}
+    ${filterRow}
+    <div class="eyebrow">${escHtml(listTitle)}</div>
+    ${empty}
+  </div>`;
+}
+function renderNewScriptsModal() {
+  const groups = unseenFreshGroups();
+  const n = groups.length || freshPartition(clientGroups(viewSlug)).fresh.length;
+  const names = [];
+  (groups.length ? groups : freshPartition(clientGroups(viewSlug)).fresh).forEach(g => {
+    const name = groupBatchName(g);
+    if (name && names.indexOf(name) === -1) names.push(name);
+  });
+  return `<div class="modal-back" id="hub-modal" onclick="window.dismissNewScripts()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="event.stopPropagation()">
+      <div class="eyebrow">New scripts</div>
+      <h2 id="modal-title">${n} new script${n === 1 ? '' : 's'} ready to film</h2>
+      ${names.length ? `<p class="fresh-batch">${escHtml(names.join(' · '))}</p>` : ''}
+      <ol class="step-list">${FILMING_GUIDE.map(line => `<li>${escHtml(line)}</li>`).join('')}</ol>
+      <div class="modal-actions">
+        <button type="button" id="modal-primary" class="shot-go" onclick="window.showFreshScripts()">Show my new scripts</button>
+        <button type="button" class="ghost-btn" onclick="window.dismissNewScripts()">Not now</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderWhatsNewModal() {
+  const releases = unseenReleases();
+  const main = releases[0] || RELEASES[0];
+  if (!main) return '';
+  const video = main.version === APP_VERSION ? renderVideoSlot(WALKTHROUGH_VIDEO_URL) : '';
+  return `<div class="modal-back" id="hub-modal" onclick="window.dismissWhatsNew()">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="event.stopPropagation()">
+      <div class="eyebrow">What’s new in the app</div>
+      <h2 id="modal-title">${escHtml(main.title)}</h2>
+      <p class="fresh-batch">${escHtml(main.date)}</p>
+      <ul class="guide-list">${(main.items || []).map(item => `<li>${escHtml(item)}</li>`).join('')}</ul>
+      ${(main.steps || []).length ? `<div class="eyebrow" style="margin-top:14px">How to use it</div><ol class="step-list">${main.steps.map(step => `<li>${escHtml(step)}</li>`).join('')}</ol>` : ''}
+      ${video}
+      <div class="modal-actions">
+        <button type="button" id="modal-primary" class="shot-go" onclick="window.dismissWhatsNew()">Got it</button>
+        <button type="button" class="ghost-btn" onclick="window.openHelp()">What’s new / Help</button>
+      </div>
+    </div>
+  </div>`;
+}
+function renderHubModal() {
+  if (hubPage !== 'main') return '';
+  if (modal === 'whats-new') return renderWhatsNewModal();
+  if (modal === 'new-scripts') return renderNewScriptsModal();
+  return '';
 }
 
 // ─────────────────────────────────────────────
@@ -1697,6 +2358,10 @@ function renderDashInner() {
   let next7ScrollLeft = next7ScrollEl ? next7ScrollEl.scrollLeft : 0;
   if (next7ResetPending) { next7ScrollLeft = 0; next7ResetPending = false; }
 
+  syncModal();
+  freshScriptIds = computeFreshScriptIds(viewSlug);
+  document.body.classList.toggle('modal-open', !!modal && hubPage === 'main');
+
   const isAdmin  = role === 'admin';
 
   // Client tabs (admin only)
@@ -1709,13 +2374,7 @@ function renderDashInner() {
   // Status-tab counts below are scoped to the CURRENT mode, so a "Needs Review 34" count
   // doesn't show while looking at a 3-item testing view.
   const { allGroups, testingGroups, effectiveMode, modeFilteredGroups, visibleGroups } = listGroupsForCurrentView();
-  const modeFilteredRows = modeFilteredGroups.flat();
 
-  // countByStatus is raw per-take (used ONLY by the "Needs Review" pulsing-dot client banner
-  // logic below, which is deliberately take-level -- a client should see the alert if ANY take
-  // in a group needs review, even if the group's collapsed groupStatus() shows something else).
-  const countByStatus = {};
-  modeFilteredRows.forEach(s => { countByStatus[s.status] = (countByStatus[s.status] || 0) + 1; });
   // F4 -- status TAB badges bucket by groupStatus() (one status per GROUP), the same group-based
   // counting the collapsed-Filters status chip already uses (visibleGroups.length). Without
   // this, a mixed-status take-group could inflate several tabs' raw per-take counts at once
@@ -1728,8 +2387,8 @@ function renderDashInner() {
   // inflate or clutter the default view. Archived items are only visible via their own tab.
   const totalGroupsForView = modeFilteredGroups.filter(g => groupStatus(g) !== 'Archived').length;
 
-  // Status tabs — "Needs Review" gets a pulsing green dot for clients when not already active,
-  // so the action queue is always visible at a glance without requiring the banner. Archived is
+  // Status tabs — "Needs Review" gets a pulsing green dot for clients when not already active.
+  // Archived is
   // appended after the normal workflow tabs and only shows up when something's actually in it.
   const archivedCount = groupCountByStatus['Archived'] || 0;
   const tabList = archivedCount > 0 ? ['all', ...STATUS_ORDER, 'Archived'] : ['all', ...STATUS_ORDER];
@@ -1774,7 +2433,7 @@ function renderDashInner() {
   // window.setListSearch() swaps on each keystroke without rebuilding the input itself.
   const typeCounts = { interview: 0, broll: 0, other: 0 };
   visibleGroups.forEach(g => { const t = groupScriptType(g); typeCounts[t] = (typeCounts[t] || 0) + 1; });
-  const typeBar = viewTab === 'list' ? renderTypeBar(typeCounts) : '';
+  const typeBar = (hubPage === 'main' && viewTab === 'list') ? renderTypeBar(typeCounts) : '';
 
   const showSearch = visibleGroups.length > 0 || listSearch !== '';
   const searchBox = showSearch ? `
@@ -1786,13 +2445,13 @@ function renderDashInner() {
         oninput="window.setListSearch(this.value)"
         class="w-full min-h-11 bg-white border border-slate-200 rounded-xl pl-9 pr-3 py-2.5 text-base sm:text-sm placeholder:text-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
     </div>` : '';
-  const cards = viewTab !== 'list' ? ''
+  const cards = (hubPage !== 'main' || viewTab !== 'list') ? ''
     : `${typeBar}${searchBox}<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
 
-  // Body branches on viewTab -- List keeps today's `cards` computation untouched; Calendar
-  // and Pipeline use all non-Archived groups directly (not viewMode/viewStatus), computed
-  // by their own render functions below.
-  const body = viewTab === 'calendar' ? renderCalendar()
+  // Help and Requests replace the list. Calendar and Pipeline stay admin tools.
+  const body = hubPage === 'help' ? renderHelpPage()
+    : hubPage === 'requests' ? renderRequestsPage()
+    : viewTab === 'calendar' ? renderCalendar()
     : viewTab === 'pipeline' ? renderPipeline()
     : cards;
 
@@ -1801,7 +2460,7 @@ function renderDashInner() {
   // List / Calendar / Pipeline segmented toggle -- admin always sees it; clients only once
   // CLIENT_VIEW_TABS is flipped on (Cristian wants to try it himself first).
   const canSeeViewTabs = isAdmin || CLIENT_VIEW_TABS;
-  const viewToggle = canSeeViewTabs ? `
+  const viewToggle = (canSeeViewTabs && hubPage === 'main') ? `
     <div role="tablist" class="seg" aria-label="View">
       ${VIEW_TABS.map(t => `
         <button type="button" role="tab" aria-selected="${viewTab === t}" onclick="setViewTab('${t}')"
@@ -1821,6 +2480,9 @@ function renderDashInner() {
       class="icon-btn">
       ${gearIconSvg}
     </button>` : '';
+  const helpButton = `<button type="button" onclick="window.openHelp()" aria-label="What's new and help" aria-pressed="${hubPage === 'help'}" class="icon-btn${hubPage === 'help' ? ' is-on' : ''}">?</button>`;
+  const requestsIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16v12H4z"/><path d="m4 7 8 6 8-6"/></svg>`;
+  const requestsButton = `<button type="button" onclick="window.openRequests()" aria-label="Requests and feedback" aria-pressed="${hubPage === 'requests'}" class="icon-btn${hubPage === 'requests' ? ' is-on' : ''}">${requestsIconSvg}</button>`;
 
   const settingsPanel = (isAdmin && settingsOpen) ? renderSettingsPanel() : '';
   const settingsBackdrop = (isAdmin && settingsOpen)
@@ -1831,11 +2493,13 @@ function renderDashInner() {
     <div class="hub-top">
       ${brandLockup(escHtml(clientName))}
       <div class="hub-top-actions">
-        ${isAdmin ? gearButton : `<button type="button" onclick="toggleHelp()" aria-label="How this works" aria-expanded="${showHelp}" class="icon-btn">?</button>`}
+        ${helpButton}
+        ${requestsButton}
+        ${gearButton}
         <button type="button" onclick="doLogout()" class="signout-btn">Sign out</button>
       </div>
     </div>
-    ${clientTabs}`;
+    ${hubPage === 'main' ? clientTabs : ''}`;
 
   // ───────────────────────────────────────────
   // ITEM 1 (row 3) — collapsed "Filters" pill + always-visible mode/status chips. Admin + List
@@ -1856,7 +2520,7 @@ function renderDashInner() {
       ${viewStatus} <span class="opacity-70">· ${visibleGroups.length}</span> <span class="opacity-80">✕</span>
     </button>` : '';
 
-  const filtersRow = (isAdmin && viewTab === 'list') ? `
+  const filtersRow = (hubPage === 'main' && isAdmin && viewTab === 'list') ? `
     <div class="flex items-center gap-2 overflow-x-auto no-scrollbar min-w-0 max-w-full">
       <button onclick="window.toggleFiltersOpen()" aria-expanded="${filtersOpen}"
         class="flex-shrink-0 min-h-11 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${filtersOpen
@@ -1869,27 +2533,9 @@ function renderDashInner() {
 
   // The full mode/status tabs block -- unchanged markup, just shown/hidden. Clients always see
   // it (no Filters pill for them); admin only sees it when the pill is expanded.
-  const expandedFilterBlock = (viewTab === 'list' && (!isAdmin || filtersOpen)) ? `
+  const expandedFilterBlock = (hubPage === 'main' && viewTab === 'list' && (!isAdmin || filtersOpen)) ? `
     ${modeTabs}
     <div class="flex gap-2 overflow-x-auto no-scrollbar min-w-0 max-w-full">${statusTabs}</div>` : '';
-
-  // Glowing "New Scripts" banner — client-only, shows when Needs Review count > 0. Keeps
-  // working from Calendar/Pipeline too (it's meaningless outside List, so it routes there).
-  const nrCount = !isAdmin ? (countByStatus['Needs Review'] || 0) : 0;
-  const newScriptsBanner = nrCount > 0 ? `
-    <div class="px-4 pt-4">
-      <button onclick="viewMode='all'; viewTab='list'; listSearch=''; setStatus2('Needs Review')"
-        class="new-scripts-glow w-full rounded-2xl overflow-hidden text-left"
-        style="background:linear-gradient(135deg,#16a34a 0%,#22c55e 100%);display:block;">
-        <div class="px-5 py-4 flex items-center justify-between">
-          <div>
-            <div class="text-white font-bold text-base tracking-tight">🎬 ${nrCount} new script${nrCount === 1 ? '' : 's'} ready to film</div>
-            <div class="text-green-100 text-xs mt-1">Tap to review →</div>
-          </div>
-          <div class="text-white font-black leading-none" style="font-size:3rem;opacity:0.9;">${nrCount}</div>
-        </div>
-      </button>
-    </div>` : '';
 
   document.getElementById('app').innerHTML = `
     <div class="hub-shell min-h-screen flex flex-col relative">
@@ -1909,34 +2555,11 @@ function renderDashInner() {
       ${settingsBackdrop}
       ${settingsPanel}
 
-      <!-- New Scripts glowing banner — appears when Needs Review count > 0 -->
-      ${newScriptsBanner}
-
-      <!-- Client guide -- dismissible, never shown to admin -->
-      ${(!isAdmin && showHelp) ? `
-      <div class="px-4 pt-4">
-        <div class="bg-violet-50 border border-violet-100 rounded-2xl p-4 relative">
-          <button onclick="toggleHelp()" aria-label="Dismiss guide" class="absolute top-3 right-3 text-violet-300 hover:text-violet-500 text-xs">✕</button>
-          <div class="font-semibold text-violet-700 text-sm mb-2">How this works</div>
-          <ul class="text-xs text-violet-800 space-y-1.5 leading-relaxed">
-            <li>🧪 <b>In Testing</b> — scripts with a few different versions to compare. <b>All Scripts</b> is everything else.</li>
-            <li><b>Take A / B / C</b> tabs on a card — same idea, different opening hooks. Tap each one to compare before you film.</li>
-            <li>Each card is a shot card: reference, your line, the script or question sheet, setup, a shot checklist, on-screen text, then the CTA.</li>
-            <li><b>Full screen</b> opens a teleprompter. Pinch is not required — use A+ and Play.</li>
-            <li><b>Film this</b> means you are shooting it as written. <b>Request a tweak</b> sends it back. <b>Pass</b> skips it.</li>
-            ${CLIENT_VIEW_TABS ? `
-            <li>📅 <b>Calendar</b> — see what's scheduled to post on any given day, and what hasn't been dated yet.</li>
-            <li>📊 <b>Pipeline</b> — see how many scripts are at each stage, from draft to posted.</li>` : ''}
-          </ul>
-          <button onclick="toggleHelp()" class="mt-3 text-xs font-semibold text-violet-600 hover:text-violet-700">Got it →</button>
-        </div>
-      </div>` : ''}
-
-      <!-- Body: List cards, or the Calendar/Pipeline view -->
       <div class="hub-main">
         ${body}
       </div>
-    </div>`;
+    </div>
+    ${renderHubModal()}`;
 
   // Day-panel scroll (Calendar view only) -- DOM is fully rebuilt above, so the panel can't
   // be scrolled to until after this innerHTML assignment. See renderCalendar() for details.
@@ -1969,6 +2592,13 @@ function renderDashInner() {
   // K1 -- restore keyboard focus into the just-rebuilt DOM, if a settings change captured it
   // above. No-op when nothing was captured (every other redraw path).
   restoreFocusAfterRedraw();
+  if (modalFocusPending) {
+    modalFocusPending = false;
+    requestAnimationFrame(() => {
+      const el = document.getElementById('modal-primary');
+      if (el) el.focus();
+    });
+  }
   kickThumbResolves();
 }
 
@@ -2706,7 +3336,7 @@ function renderStatusRail(status) {
   return `<div class="status-exact">${escHtml(st)}</div>
     <div class="rail" role="group" aria-label="Status">
       ${step('Draft', pre, filmed || posted)}
-      ${step('Filmed', filmed, posted, filmed ? 'Saved status: Filming' : '')}
+      ${step('Filming', filmed, posted)}
       ${step('Posted', posted, false)}
     </div>`;
 }
@@ -2761,6 +3391,9 @@ function renderCardGroup(group) {
   const kicker = [s.reel_number ? '#' + s.reel_number : '', s.format || ''].filter(Boolean).map(escHtml).join(' · ');
   const stype = scriptType(s.format);
   const badge = (stype === 'interview' || stype === 'broll') ? `<span class="type-badge">${typeLabel(stype)}</span>` : '';
+  const groupIds = group.map(g => g.id).filter(Boolean);
+  const showNew = groupIds.some(id => freshScriptIds.has(id) && !openedIds.has(id));
+  const newBadge = showNew ? `<span class="new-badge">New</span>` : '';
   const coverInfo = videoInfo(s.reference_clip)
     || videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats) || '');
   const cover = displayThumb(s, coverInfo);
@@ -2768,14 +3401,14 @@ function renderCardGroup(group) {
     ? `<img class="list-thumb" alt="" referrerpolicy="no-referrer" ${cover ? `src="${escHtml(cover)}"` : 'hidden'} data-ref="${escHtml(coverInfo.watch)}" data-kind="${escHtml(coverInfo.kind)}" onerror="window.thumbNext(this)">`
     : '';
 
-  return `<article class="shot ${isArchived ? 'is-quiet' : ''} ${stype === 'broll' ? 'is-broll' : ''}">
+  return `<article class="shot ${isArchived ? 'is-quiet' : ''} ${stype === 'broll' ? 'is-broll' : ''}" data-script-ids="${escHtml(groupIds.join(','))}">
     ${takeTabs}
     <div class="shot-id">
       ${listThumb}
       <div class="shot-id-main">
         <div class="shot-meta">
           <div>
-            <div class="shot-kicker">${kicker}${badge}</div>
+            <div class="shot-kicker">${kicker}${badge}${newBadge}</div>
             ${s.batch ? `<div class="shot-batch">${escHtml(s.batch)}</div>` : ''}
           </div>
           ${dateChip}
@@ -3506,7 +4139,7 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; previousOpen = false; hubPage = 'main'; renderDash(); };
 window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; renderDash(); };
 
 // List search. Each keystroke re-renders ONLY #list-cards (not the whole page): a full
@@ -3527,6 +4160,165 @@ window.clearListSearch  = () => { listSearch = ''; renderDash(); };
 // keep the query.
 window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; renderDash(); };
 window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
+window.togglePrevious = () => {
+  const y = window.scrollY;
+  previousOpen = !previousOpen;
+  renderDash();
+  requestAnimationFrame(() => window.scrollTo(0, y));
+};
+window.openHelp = () => {
+  if (user) lsSetStr(versionStorageKey(), APP_VERSION);
+  hubPage = 'help';
+  modal = null;
+  modalPinned = false;
+  renderDash();
+  window.scrollTo(0, 0);
+};
+window.openRequests = () => {
+  hubPage = 'requests';
+  modal = null;
+  modalPinned = false;
+  renderDash();
+  window.scrollTo(0, 0);
+  fetchRequests();
+};
+window.closeHubPage = () => {
+  hubPage = 'main';
+  renderDash();
+  window.scrollTo(0, 0);
+};
+window.dismissWhatsNew = () => {
+  if (user) lsSetStr(versionStorageKey(), APP_VERSION);
+  modal = null;
+  modalPinned = false;
+  renderDash();
+};
+window.dismissNewScripts = () => {
+  acknowledgeFreshBatch();
+  modal = null;
+  modalPinned = false;
+  renderDash();
+};
+window.showFreshScripts = () => {
+  acknowledgeFreshBatch();
+  modal = null;
+  modalPinned = false;
+  hubPage = 'main';
+  viewTab = 'list';
+  viewStatus = 'all';
+  viewType = 'all';
+  if (role === 'client') viewMode = 'all';
+  listSearch = '';
+  previousOpen = false;
+  viewStatusExact = false;
+  renderDash();
+  requestAnimationFrame(() => {
+    const el = document.getElementById('fresh-section');
+    const header = document.querySelector('.hub-header');
+    if (!el) return;
+    const top = el.getBoundingClientRect().top + window.scrollY - ((header ? header.offsetHeight : 0) + 8);
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: Math.max(0, top), behavior: reduce ? 'auto' : 'smooth' });
+  });
+};
+window.setRequestKind = k => {
+  if (!REQUEST_KINDS.some(item => item.id === k)) return;
+  requestDraft.kind = k;
+  renderDash();
+};
+window.setRequestBody = v => { requestDraft.body = v; };
+window.setRequestHandles = v => { requestDraft.handles = v; };
+window.setRequestFilter = v => { requestFilter = v; renderDash(); };
+
+async function submitRequest() {
+  if (requestSending) return;
+  const bodyEl = document.getElementById('request-body');
+  const handlesEl = document.getElementById('request-handles');
+  if (bodyEl) requestDraft.body = bodyEl.value;
+  if (handlesEl) requestDraft.handles = handlesEl.value;
+  const kind = requestDraft.kind;
+  const body = (requestDraft.body || '').trim();
+  const handles = (requestDraft.handles || '').trim();
+  if (kind === 'competitor') {
+    if (!handles && !body) {
+      showToast('Add an Instagram handle or a short note.', { tone: 'error' });
+      return;
+    }
+  } else if (!body) {
+    showToast('Add a few words so we know what you need.', { tone: 'error' });
+    return;
+  }
+  const slug = role === 'client' ? mySlug : (mySlug || viewSlug);
+  if (role === 'client' && !slug) {
+    showToast('This account is not linked to a client yet.', { tone: 'error' });
+    return;
+  }
+  const payload = {
+    user_id: user && user.id,
+    client_slug: slug || null,
+    kind,
+    body: body || handles,
+    handles: handles || null,
+    status: 'new',
+  };
+  if (previewMode || (user && user.id === 'preview-user')) {
+    requests.unshift(Object.assign({ id: 'local-' + Date.now(), created_at: new Date().toISOString() }, payload));
+    requestDraft = { kind: 'feature', body: '', handles: '' };
+    requestsLoaded = true;
+    requestsError = '';
+    renderDash();
+    showToast('Request saved.');
+    return;
+  }
+  requestSending = true;
+  renderDash();
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('client_requests').insert(payload).select('*'));
+  } catch (e) { error = e; }
+  requestSending = false;
+  if (error || !data || !data.length) {
+    if (error) {
+      requestsError = error.message || String(error);
+      console.error(error);
+    }
+    showToast(error ? 'Could not send that. Open Requests to see why.' : SESSION_EXPIRED_MSG, { tone: 'error' });
+    renderDash();
+    return;
+  }
+  requestsError = '';
+  requests.unshift(data[0]);
+  requestDraft = { kind: 'feature', body: '', handles: '' };
+  requestsLoaded = true;
+  renderDash();
+  showToast('Request sent.');
+}
+
+window.setRequestStatus = async (id, status) => {
+  if (REQUEST_STATUSES.indexOf(status) === -1) return;
+  const row = requests.find(r => r.id === id);
+  const prev = row ? row.status : null;
+  if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
+    if (row) row.status = status;
+    renderDash();
+    showToast('Status updated.');
+    return;
+  }
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('client_requests').update({ status }).eq('id', id).select('id'));
+  } catch (e) { error = e; }
+  if (error || !data || data.length !== 1) {
+    if (error) console.error(error);
+    if (row && prev) row.status = prev;
+    showToast(error ? ('Could not update status: ' + (error.message || error)) : SESSION_EXPIRED_MSG, { tone: 'error' });
+    renderDash();
+    return;
+  }
+  if (row) row.status = status;
+  renderDash();
+  showToast('Status updated.');
+};
 window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
 // but a selected day from client A's calendar shouldn't carry over to client B's.
@@ -3724,6 +4516,8 @@ function escHtml(str) {
 if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
   window.__preview = (rows, opts) => {
     opts = opts || {};
+    window.__previewLock = true;
+    previewMode = true;
     scripts = rows;
     user = opts.user || { id: 'preview-user', email: 'preview@localhost' };
     role = opts.role || 'admin';
@@ -3733,10 +4527,22 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     viewType = opts.viewType || 'all';
     viewMode = opts.viewMode || 'all';
     viewTab = opts.viewTab || 'list';
-    filtersOpen = opts.filtersOpen !== false;
+    filtersOpen = opts.filtersOpen !== false && role === 'admin';
     settingsOpen = false;
     listSearch = '';
     showHelp = false;
+    hubPage = opts.hubPage || 'main';
+    previousOpen = !!opts.previousOpen;
+    requests = opts.requests || [];
+    requestsLoaded = true;
+    requestsError = opts.requestsError || '';
+    requestSending = false;
+    requestFilter = opts.requestFilter || 'all';
+    requestDraft = { kind: opts.kind || 'feature', body: '', handles: '' };
+    openedIds = new Set(opts.openedIds || []);
+    modalPinned = opts.autoModal === false || !!opts.modal;
+    modal = opts.modal || null;
+    modalFocusPending = false;
     renderDash();
   };
   const previewClient = new URLSearchParams(location.search).get('preview');

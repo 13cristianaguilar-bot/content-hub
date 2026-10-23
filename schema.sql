@@ -241,3 +241,68 @@ insert into scripts (client_slug, title, format, status, hook, full_script, refe
 -- insert into scripts (client_slug, title, format, status, hook, full_script, reference_clip, camera, cta, editor_notes, batch, reel_number) values
 -- ('andrew', '...', 'Format A', 'Needs Review', '...', '...', '...', 'Camera A', 'Comment SUITE', '...', 'Andrew Batch-02 · 7.11.2026', 1);
 -- ─────────────────────────────────────────────
+
+-- ─────────────────────────────────────────────
+-- CLIENT REQUESTS — see migrations/2026-10-23_client_requests.sql
+-- Included here so a brand-new project gets the table. On an existing
+-- project, run that migration instead of re-running this whole file.
+-- ─────────────────────────────────────────────
+create table if not exists public.client_requests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null default auth.uid(),
+  client_slug text,
+  kind text not null,
+  body text not null default '',
+  handles text,
+  status text not null default 'new',
+  created_at timestamptz not null default now(),
+  constraint client_requests_kind_check check (
+    kind in ('feature', 'competitor', 'format', 'cadence', 'feedback', 'other')
+  ),
+  constraint client_requests_status_check check (
+    status in ('new', 'in progress', 'done')
+  )
+);
+
+create index if not exists client_requests_user_created_idx
+  on public.client_requests (user_id, created_at desc);
+
+create index if not exists client_requests_status_created_idx
+  on public.client_requests (status, created_at desc);
+
+alter table public.client_requests enable row level security;
+
+revoke all on public.client_requests from anon;
+grant select, insert, update on public.client_requests to authenticated;
+
+drop policy if exists "client_requests_select_own_or_admin" on public.client_requests;
+create policy "client_requests_select_own_or_admin"
+  on public.client_requests
+  for select
+  to authenticated
+  using (
+    (select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+    or user_id = (select auth.uid())
+  );
+
+drop policy if exists "client_requests_insert_own" on public.client_requests;
+create policy "client_requests_insert_own"
+  on public.client_requests
+  for insert
+  to authenticated
+  with check (
+    user_id = (select auth.uid())
+    and status = 'new'
+    and (
+      (select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+      or client_slug = (select auth.jwt() -> 'app_metadata' ->> 'client_slug')
+    )
+  );
+
+drop policy if exists "client_requests_admin_update" on public.client_requests;
+create policy "client_requests_admin_update"
+  on public.client_requests
+  for update
+  to authenticated
+  using ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+  with check ((select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');

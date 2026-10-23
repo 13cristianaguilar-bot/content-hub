@@ -401,8 +401,8 @@ body.prompter-open { overflow: hidden; }
 }
 .pr-progress button { flex: 0 0 auto; color: #c8c8c8; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
 .pr-progress button.is-current { background: var(--signal); border-color: var(--signal); color: #fff; }
-.pr-viewport { flex: 1; min-height: 0; position: relative; }
-#prompter-scroll { height: 100%; overflow: auto; padding: 22vh 24px 46vh; }
+.pr-viewport { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+#prompter-scroll { height: 100%; min-height: 0; overflow: auto; padding: 22vh 24px 46vh; }
 #prompter-text { line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; }
 #prompter.is-mirror #prompter-text { transform: scaleX(-1); }
 .pr-focus {
@@ -446,6 +446,7 @@ body.prompter-open { overflow: hidden; }
 @media (min-width: 900px) {
   .pr-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
   #prompter.has-notes > .pr-top,
+  #prompter.has-notes > .pr-scriptnav,
   #prompter.has-notes > .pr-read,
   #prompter.has-notes > .pr-controls { margin-right: min(440px, 40vw); }
 }
@@ -608,7 +609,64 @@ body.modal-open { overflow: hidden; }
   display: block; width: 100%; max-width: 100%; aspect-ratio: 16 / 9; height: auto;
   border: 0; background: #080808; margin-top: 8px;
 }
-#fresh-section { scroll-margin-top: 12px; }
+#fresh-section, .script-detail { scroll-margin-top: 12px; }
+.script-stage { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.script-nav {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.script-nav-btn {
+  width: 100%; min-height: 48px; display: flex; align-items: center; gap: 10px;
+  text-align: left; background: #fff; border: 1px solid var(--line); color: var(--ink);
+  padding: 8px 10px;
+}
+.script-nav-btn.is-on { border-color: var(--ink); box-shadow: inset 3px 0 0 var(--signal); }
+.script-nav-n {
+  flex: 0 0 auto; width: 1.6rem; font-weight: 750; font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em; font-size: 16px;
+}
+.script-nav-copy { min-width: 0; flex: 1 1 auto; display: flex; flex-direction: column; gap: 1px; }
+.script-nav-title, .script-nav-meta {
+  display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.script-nav-title { font-weight: 650; letter-spacing: -0.03em; font-size: 14px; }
+.script-nav-meta { color: var(--muted); font-size: 12px; }
+.script-nav-btn .new-badge { margin-left: 0; flex-shrink: 0; }
+.script-detail { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.script-pager, .pr-scriptnav {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.script-pager {
+  position: sticky; bottom: 0; z-index: 12;
+  background: var(--paper); border: 1px solid var(--line); padding: 6px;
+}
+.script-pager button, .pr-scriptnav button {
+  flex: 1 1 0; min-width: 0; min-height: 44px; padding: 0 10px;
+  background: #fff; border: 1px solid var(--line); color: var(--ink);
+  font-weight: 650; font-size: 14px;
+}
+.pr-scriptnav {
+  padding: 8px 12px; background: #101010; border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+}
+.pr-scriptnav button {
+  background: transparent; color: #fff; border-color: #3a3a3a;
+}
+.script-pager button, .pr-scriptnav button { white-space: nowrap; }
+.script-pager button[disabled], .pr-scriptnav button[disabled] { opacity: 0.35; }
+.script-pager-count, .pr-script-count {
+  flex: 0 1 auto; text-align: center; font-weight: 650; letter-spacing: -0.03em;
+  font-size: 13px; white-space: nowrap;
+}
+.pr-script-count { color: #fff; }
+@media (min-width: 900px) {
+  .script-stage { display: grid; grid-template-columns: minmax(220px, 320px) minmax(0, 1fr); align-items: start; }
+  .script-nav {
+    position: sticky;
+    top: calc(var(--hub-header-h, 7.5rem) + 8px);
+    max-height: calc(100dvh - var(--hub-header-h, 7.5rem) - 16px);
+    overflow: auto;
+  }
+}
 @media (min-width: 700px) {
   .modal-back { align-items: center; }
   .fresh-head-row { flex-direction: row; align-items: flex-end; justify-content: space-between; }
@@ -619,6 +677,8 @@ body.modal-open { overflow: hidden; }
 @media (max-width: 389px) {
   .modal-card h2 { font-size: 22px; }
   .fresh-title { font-size: 20px; }
+  .script-pager-count, .pr-script-count { font-size: 12px; }
+  .script-pager button, .pr-scriptnav button { font-size: 13px; padding: 0 6px; }
 }
 
 </style>
@@ -675,7 +735,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.23';
+const APP_VERSION = '2026.10.23.2';
 // Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
 // What's new popup and on the Help page. Empty hides the video slot.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -689,6 +749,22 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.23.2',
+    date: 'October 23, 2026',
+    title: 'Jump to any script',
+    items: [
+      'This week is a numbered list. Tap Script 1 through Script N instead of scrolling every card.',
+      'Previous and Next, and a swipe on your phone, move between scripts on the card and in full screen.',
+      'The count on screen reads Script 3 of 6, with who is on camera and the status in the list.',
+    ],
+    steps: [
+      'Tap the script number you want. The card for that script opens under the list.',
+      'Use Previous and Next, or swipe sideways, to move one script at a time.',
+      'Full screen has the same Previous, Next, and Script 3 of 6 count.',
+      'Previous at the top of the list still holds older scripts.',
+    ],
+  },
   {
     version: '2026.10.23',
     date: 'October 23, 2026',
@@ -941,6 +1017,24 @@ let requestsError = '';
 let requestSending = false;
 let requestFilter = 'all';
 let requestDraft = { kind: 'feature', body: '', handles: '' };
+let navIndex = 0;
+let previousIndex = 0;
+let flatIndex = 0;
+let navSets = { fresh: [], previous: [], flat: [] };
+let navScrollScope = '';
+function resetScriptNav() {
+  navIndex = 0;
+  previousIndex = 0;
+  flatIndex = 0;
+}
+function syncHubHeaderOffset() {
+  const header = document.querySelector('.hub-header');
+  if (!header) return;
+  const h = header.getBoundingClientRect().height;
+  if (h < 48 || h > window.innerHeight * 0.55) return;
+  document.documentElement.style.setProperty('--hub-header-h', Math.ceil(h) + 'px');
+}
+window.addEventListener('resize', syncHubHeaderOffset);
 
 // ─────────────────────────────────────────────
 // localStorage helpers — tiny try/catch wrappers so a browser with storage disabled (private
@@ -1109,7 +1203,36 @@ document.addEventListener('click', (e) => {
   if (!changed) return;
   persistOpened();
   art.querySelectorAll('.new-badge').forEach(n => n.remove());
+  document.querySelectorAll('.script-nav-btn').forEach(btn => {
+    const mine = (btn.getAttribute('data-script-ids') || '').split(',').map(s => s.trim());
+    if (mine.some(id => ids.indexOf(id) !== -1)) btn.querySelectorAll('.new-badge').forEach(n => n.remove());
+  });
 });
+
+let swipeGesture = null;
+document.addEventListener('touchstart', (e) => {
+  if (!e.touches || e.touches.length !== 1) { swipeGesture = null; return; }
+  const zone = e.target.closest && e.target.closest('[data-swipe-scope]');
+  if (!zone) { swipeGesture = null; return; }
+  if (e.target.closest('button, a, input, textarea, select, label, .pr-progress, .pr-controls, .pr-sheet, .pr-player, .script-pager')) {
+    swipeGesture = null;
+    return;
+  }
+  const t = e.touches[0];
+  swipeGesture = { x: t.clientX, y: t.clientY, scope: zone.getAttribute('data-swipe-scope') };
+}, { passive: true });
+document.addEventListener('touchend', (e) => {
+  if (!swipeGesture || !e.changedTouches || !e.changedTouches[0]) { swipeGesture = null; return; }
+  const t = e.changedTouches[0];
+  const dx = t.clientX - swipeGesture.x;
+  const dy = t.clientY - swipeGesture.y;
+  const scope = swipeGesture.scope;
+  swipeGesture = null;
+  if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+  if (scope === 'prompter' && prompterState && (prompterState.notes || prompterState.player)) return;
+  window.stepScript(scope, dx < 0 ? 1 : -1);
+}, { passive: true });
+document.addEventListener('touchcancel', () => { swipeGesture = null; });
 
 function helpDismissed() { try { return localStorage.getItem('hub_help_dismissed') === '1'; } catch (e) { return false; } }
 let showHelp = !helpDismissed();
@@ -1207,6 +1330,8 @@ async function init() {
           listSearch = ''; expandedSections.clear();
           hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false;
           openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
+          navIndex = 0; previousIndex = 0; flatIndex = 0;
+          navSets = { fresh: [], previous: [], flat: [] };
           requests = []; requestsLoaded = false; requestsError = '';
           document.body.classList.remove('modal-open');
           // A pending "Undo" belongs to the session that just ended -- it must not be tappable
@@ -2116,7 +2241,95 @@ function renderTypeBar(counts) {
   ).join('')}</div>`;
 }
 
+function shownScript(group) {
+  if (!group || !group.length) return null;
+  const key = takeGroupKey(group[0]);
+  const idx = group.length > 1 ? ((activeTake[key] ?? 0) % group.length) : 0;
+  return group[idx];
+}
+function onCameraLine(s) {
+  if (!s) return 'On camera';
+  const person = clientLabel(s.client_slug);
+  const cam = asText(s.camera).trim();
+  if (!cam) return person || 'On camera';
+  const short = cam.length > 36 ? cam.slice(0, 34).trim() + '…' : cam;
+  return person ? person + ' · ' + short : short;
+}
+function navIndexFor(scope) {
+  if (scope === 'previous') return previousIndex;
+  if (scope === 'flat') return flatIndex;
+  return navIndex;
+}
+function setNavIndex(scope, i) {
+  if (scope === 'previous') previousIndex = i;
+  else if (scope === 'flat') flatIndex = i;
+  else navIndex = i;
+}
+function markGroupOpened(group) {
+  if (!group) return;
+  let changed = false;
+  group.forEach(s => {
+    if (s && s.id && !openedIds.has(s.id)) { openedIds.add(s.id); changed = true; }
+  });
+  if (changed) persistOpened();
+}
+function renderScriptNav(groups, index, scope) {
+  const rows = groups.map((group, i) => {
+    const s = shownScript(group);
+    if (!s) return '';
+    const ids = group.map(g => g.id).filter(Boolean);
+    const showNew = ids.some(id => freshScriptIds.has(id) && !openedIds.has(id));
+    const on = i === index;
+    return `<li><button type="button" class="script-nav-btn${on ? ' is-on' : ''}" aria-current="${on ? 'true' : 'false'}" data-script-ids="${escHtml(ids.join(','))}" onclick="window.focusScript('${scope}', ${i})">
+      <span class="script-nav-n">${i + 1}</span>
+      <span class="script-nav-copy">
+        <span class="script-nav-title">${escHtml(s.title || ('Script ' + (i + 1)))}</span>
+        <span class="script-nav-meta">${escHtml(onCameraLine(s))} · ${escHtml(s.status || 'Draft')}</span>
+      </span>
+      ${showNew ? '<span class="new-badge">New</span>' : ''}
+    </button></li>`;
+  }).join('');
+  return `<ol class="script-nav" aria-label="Scripts">${rows}</ol>`;
+}
+function renderScriptPager(index, total, scope) {
+  return `<div class="script-pager" role="navigation" aria-label="Scripts in this list">
+    <button type="button" ${index <= 0 ? 'disabled' : ''} onclick="window.stepScript('${scope}', -1)">Previous</button>
+    <span class="script-pager-count">Script ${index + 1} of ${total}</span>
+    <button type="button" ${index >= total - 1 ? 'disabled' : ''} onclick="window.stepScript('${scope}', 1)">Next</button>
+  </div>`;
+}
+function renderFocusedSet(groups, scope) {
+  if (!groups.length) return '';
+  let index = navIndexFor(scope);
+  if (index < 0 || index >= groups.length) index = 0;
+  setNavIndex(scope, index);
+  navSets[scope] = groups;
+  return `<div class="script-stage">
+    ${renderScriptNav(groups, index, scope)}
+    <div class="script-detail" id="detail-${scope}" data-swipe-scope="${scope}">
+      ${renderCardGroup(groups[index])}
+      ${renderScriptPager(index, groups.length, scope)}
+    </div>
+  </div>`;
+}
+window.focusScript = (scope, i) => {
+  const groups = navSets[scope] || [];
+  if (!groups[i]) return;
+  markGroupOpened(groups[i]);
+  setNavIndex(scope, i);
+  navScrollScope = scope;
+  renderDash();
+};
+window.stepScript = (scope, delta) => {
+  if (scope === 'prompter') { window.prompterStep(delta); return; }
+  const groups = navSets[scope] || [];
+  if (!groups.length) return;
+  const next = navIndexFor(scope) + delta;
+  if (next < 0 || next >= groups.length) return;
+  window.focusScript(scope, next);
+};
 function renderListCards(visibleGroups, isAdmin, effectiveMode) {
+  navSets = { fresh: [], previous: [], flat: [] };
   const q = listSearch.trim();
   const shown = q ? visibleGroups.filter(g => groupMatchesSearch(g, q)) : visibleGroups;
 
@@ -2149,7 +2362,7 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
   if (q || viewStatus !== 'all') {
     if (typed.length) {
       const countLine = q ? `<div class="text-xs text-slate-400 px-0.5">${typed.length} of ${visibleGroups.length} match${typed.length === 1 ? 'es' : ''}</div>` : '';
-      return countLine + renderTypedGroups(typed);
+      return countLine + renderFocusedSet(typed, 'flat');
     }
     if (shown.length && !typed.length) {
       return `
@@ -2184,7 +2397,7 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
       <span class="prev-meta">${previousOpen ? 'Hide' : 'Show'} ${prevTyped.length}</span>
     </button>` : '';
   const freshBody = n
-    ? renderTypedGroups(freshTyped)
+    ? renderFocusedSet(freshTyped, 'fresh')
     : `<p class="fresh-empty">${n === 0 && part.fresh.length === 0 ? 'You’re caught up on the latest batch.' : 'Nothing in this batch matches this type.'}</p>`;
   return `
     <section id="fresh-section" class="fresh-block" aria-label="${escHtml(label)}">
@@ -2200,7 +2413,7 @@ function renderListCards(visibleGroups, isAdmin, effectiveMode) {
       </div>
       ${freshBody}
     </section>
-    ${previousOpen && prevTyped.length ? `<div id="previous-section" class="previous-block">${renderTypedGroups(prevTyped)}</div>` : ''}`;
+    ${previousOpen && prevTyped.length ? `<div id="previous-section" class="previous-block">${renderFocusedSet(prevTyped, 'previous')}</div>` : ''}`;
 }
 
 function requestKindMeta(id) {
@@ -2263,7 +2476,7 @@ function renderHelpPage() {
       <h2>How filming works</h2>
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
-        <li>This week is the newest batch that still needs to be filmed. Previous holds older and filmed scripts.</li>
+        <li>This week is a numbered list. Tap a script, or use Previous, Next, and swipe. The count reads Script 3 of 6.</li>
         <li>Full screen reads Hook, each beat, and the CTA. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
@@ -2653,6 +2866,31 @@ function renderDashInner() {
   // K1 -- restore keyboard focus into the just-rebuilt DOM, if a settings change captured it
   // above. No-op when nothing was captured (every other redraw path).
   restoreFocusAfterRedraw();
+  syncHubHeaderOffset();
+  requestAnimationFrame(() => {
+    syncHubHeaderOffset();
+    requestAnimationFrame(syncHubHeaderOffset);
+  });
+  if (navScrollScope) {
+    const scope = navScrollScope;
+    navScrollScope = '';
+    requestAnimationFrame(() => {
+      const header = document.querySelector('.hub-header');
+      const detail = document.getElementById('detail-' + scope);
+      if (!detail) return;
+      const headerH = header ? header.offsetHeight : 0;
+      const top = detail.getBoundingClientRect().top;
+      if (top < headerH + 4 || top > window.innerHeight * 0.4) {
+        window.scrollTo({ top: Math.max(0, top + window.scrollY - (headerH + 8)), behavior: 'auto' });
+      }
+      const stage = detail.closest('.script-stage');
+      const onBtn = stage && stage.querySelector('.script-nav-btn.is-on');
+      if (onBtn) {
+        const nav = onBtn.closest('.script-nav');
+        if (nav && nav.scrollHeight > nav.clientHeight + 8) onBtn.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  }
   if (modalFocusPending) {
     modalFocusPending = false;
     requestAnimationFrame(() => {
@@ -3734,11 +3972,28 @@ function prompterChips(s) {
     : scriptFlow(s).map(sec => sec.label);
   return labels.map((label, i) => `<button type="button" class="pr-jump" onclick="window.prompterJump(${i})">${escHtml(label)}</button>`).join('');
 }
+function queueForScript(id) {
+  const scopes = ['fresh', 'flat', 'previous'];
+  for (let s = 0; s < scopes.length; s++) {
+    const groups = navSets[scopes[s]] || [];
+    for (let i = 0; i < groups.length; i++) {
+      if (!groups[i].some(row => row && row.id === id)) continue;
+      const queue = groups.map(g => {
+        const shown = shownScript(g);
+        return shown && shown.id ? shown.id : '';
+      }).filter(Boolean);
+      return { scope: scopes[s], index: i, queue: queue.length ? queue : [id] };
+    }
+  }
+  return { scope: '', index: 0, queue: [id] };
+}
 function renderPrompter() {
   const s = scripts.find(x => x.id === prompterState.id);
   const root = document.getElementById('prompter-root');
   if (!s || !root) return;
   const st = prompterState;
+  const qLen = (st.queue && st.queue.length) || 1;
+  const qIndex = st.index || 0;
   root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}" role="dialog" aria-modal="true" aria-label="Teleprompter">
     <div class="pr-top">
       <div class="pr-title">${escHtml(s.title)}</div>
@@ -3746,11 +4001,16 @@ function renderPrompter() {
       <button type="button" onclick="window.prompterTop()">Top</button>
       <button type="button" onclick="window.closePrompter()">Close</button>
     </div>
+    <div class="pr-scriptnav" role="navigation" aria-label="Scripts in this batch">
+      <button type="button" ${qIndex <= 0 ? 'disabled' : ''} onclick="window.prompterStep(-1)">Previous</button>
+      <span class="pr-script-count">Script ${qIndex + 1} of ${qLen}</span>
+      <button type="button" ${qIndex >= qLen - 1 ? 'disabled' : ''} onclick="window.prompterStep(1)">Next</button>
+    </div>
     <div class="pr-read">
       <div class="pr-progress" aria-label="Script sections">${prompterChips(s)}</div>
       <div class="pr-viewport">
         <div class="pr-focus" aria-hidden="true"></div>
-        <div id="prompter-scroll"><div id="prompter-text" style="font-size:${st.font}px">${prompterHtml(s)}</div></div>
+        <div id="prompter-scroll" data-swipe-scope="prompter"><div id="prompter-text" style="font-size:${st.font}px">${prompterHtml(s)}</div></div>
       </div>
     </div>
     <div class="pr-controls">
@@ -3802,6 +4062,7 @@ function prompterLoop(ts) {
 window.openPrompter = (id) => {
   const s = scripts.find(x => x.id === id);
   if (!s) return;
+  const found = queueForScript(id);
   prompterState = {
     id,
     font: Number(lsGetStr('hub_pr_font', '34')) || 34,
@@ -3811,7 +4072,36 @@ window.openPrompter = (id) => {
     lastTs: 0,
     notes: false,
     player: false,
+    scope: found.scope,
+    index: found.index,
+    queue: found.queue,
   };
+  if (found.scope) {
+    const groups = navSets[found.scope] || [];
+    if (groups[found.index]) markGroupOpened(groups[found.index]);
+    setNavIndex(found.scope, found.index);
+  }
+  renderPrompter();
+};
+window.prompterStep = (delta) => {
+  if (!prompterState || !prompterState.queue) return;
+  const next = (prompterState.index || 0) + delta;
+  if (next < 0 || next >= prompterState.queue.length) return;
+  const id = prompterState.queue[next];
+  if (!id || !scripts.some(x => x.id === id)) return;
+  prompterState.id = id;
+  prompterState.index = next;
+  prompterState.playing = false;
+  prompterState.lastTs = 0;
+  prompterState.notes = false;
+  prompterState.player = false;
+  cancelAnimationFrame(prompterRaf);
+  if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
+  if (prompterState.scope) {
+    setNavIndex(prompterState.scope, next);
+    const groups = navSets[prompterState.scope] || [];
+    if (groups[next]) markGroupOpened(groups[next]);
+  }
   renderPrompter();
 };
 function prompterPause() {
@@ -3903,11 +4193,21 @@ window.prompterRefFullscreen = () => {
   else el.requestFullscreen().catch(() => {});
 };
 window.closePrompter = () => {
+  const wasOpen = !!prompterState;
+  const scope = prompterState && prompterState.scope;
+  const index = prompterState ? (prompterState.index || 0) : 0;
   prompterState = null;
   cancelAnimationFrame(prompterRaf);
   const root = document.getElementById('prompter-root');
   if (root) root.innerHTML = '';
   document.body.classList.remove('prompter-open');
+  if (wasOpen && user) {
+    if (scope) {
+      setNavIndex(scope, index);
+      navScrollScope = scope;
+    }
+    renderDash();
+  }
 };
 window.prompterFont = (d) => {
   if (!prompterState) return;
@@ -4534,14 +4834,15 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; previousOpen = false; hubPage = 'main'; renderDash(); };
-window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; renderDash(); };
+window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; previousOpen = false; hubPage = 'main'; resetScriptNav(); renderDash(); };
+window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; resetScriptNav(); renderDash(); };
 
 // List search. Each keystroke re-renders ONLY #list-cards (not the whole page): a full
 // renderDash() would destroy and recreate the focused <input>, which dismisses the iOS keyboard
 // after every single letter. Falls back to a full redraw if the region isn't on screen.
 window.setListSearch = v => {
   listSearch = v;
+  resetScriptNav();
   const region = document.getElementById('list-cards');
   if (!region) { renderDash(); return; }
   try {
@@ -4550,11 +4851,11 @@ window.setListSearch = v => {
     kickThumbResolves();
   } catch (e) { renderError(e); }
 };
-window.clearListSearch  = () => { listSearch = ''; renderDash(); };
+window.clearListSearch  = () => { listSearch = ''; resetScriptNav(); renderDash(); };
 // "Search all scripts" from a zero-result search inside a narrowed tab -- widen mode + status,
 // keep the query.
-window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; renderDash(); };
-window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; renderDash(); };
+window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; resetScriptNav(); renderDash(); };
+window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; resetScriptNav(); renderDash(); };
 window.togglePrevious = () => {
   const y = window.scrollY;
   previousOpen = !previousOpen;
@@ -4606,6 +4907,7 @@ window.showFreshScripts = () => {
   listSearch = '';
   previousOpen = false;
   viewStatusExact = false;
+  resetScriptNav();
   renderDash();
   requestAnimationFrame(() => {
     const el = document.getElementById('fresh-section');
@@ -4714,7 +5016,7 @@ window.setRequestStatus = async (id, status) => {
   renderDash();
   showToast('Status updated.');
 };
-window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; renderDash(); };
+window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact = false; resetScriptNav(); renderDash(); };
 // Keep viewTab/calMonth across a client switch (so admin can compare clients month-to-month)
 // but a selected day from client A's calendar shouldn't carry over to client B's.
 window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; window.scrollTo(0, 0); renderDash(); };
@@ -4781,6 +5083,7 @@ window.jumpToList = (status) => {
   viewStatusExact = true;
   calSelectedDay = null;
   listSearch = ''; // a leftover search would make List show fewer than the count just tapped
+  resetScriptNav();
   renderDash();
   window.scrollTo(0, 0);
 };
@@ -4934,6 +5237,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     requestSending = false;
     requestFilter = opts.requestFilter || 'all';
     requestDraft = { kind: opts.kind || 'feature', body: '', handles: '' };
+    resetScriptNav();
     openedIds = new Set(opts.openedIds || []);
     modalPinned = opts.autoModal === false || !!opts.modal;
     modal = opts.modal || null;

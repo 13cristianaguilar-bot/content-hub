@@ -13,6 +13,7 @@ create table if not exists scripts (
   hook           text,
   full_script    text,
   reference_clip text,                -- YouTube URL or account handle
+  thumbnail_url  text,                -- optional cover/first frame; UI falls back to oEmbed or og:image. See migrations/2026-10-22_scripts_thumbnail_url.sql
   camera         text,
   cta            text,
   editor_notes   text,

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- sla-v2 -->
+<!-- sla-v2 helper-v1 -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080808" />
@@ -663,6 +663,37 @@
       font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
     }
     .wow-strip .wow-sub { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+
+    .chooser-label {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--dim); margin: 0 0 8px;
+    }
+    .helper-card {
+      margin: 0 0 16px; padding: 14px 14px 12px;
+      border-radius: 14px; border: 1px solid var(--line-hot);
+      background: linear-gradient(160deg, var(--surface-2), var(--surface));
+      box-shadow: 0 0 36px -18px var(--red-glow);
+    }
+    .helper-card .hc-kicker {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 6px;
+    }
+    .helper-card .hc-title {
+      font-size: 15px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; color: var(--fg);
+    }
+    .helper-card .hc-body {
+      font-size: 13px; color: var(--muted); line-height: 1.45;
+    }
+    .helper-card .hc-body strong { color: var(--fg); font-weight: 700; }
+    .helper-card .hc-note {
+      margin-top: 8px; font-size: 11px; color: var(--dim); line-height: 1.4;
+    }
+    .panel-purpose {
+      font-size: 12px; color: var(--dim); margin: 0 0 14px; line-height: 1.4;
+      padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--line);
+    }
+    .panel-purpose strong { color: var(--muted); font-weight: 700; }
+
     .mode-row {
       display: flex; gap: 8px; margin: 0 0 16px; flex-wrap: wrap;
     }
@@ -754,6 +785,7 @@
   <div class="wrap">
     <!-- ========== PITCH ========== -->
     <section id="panel-pitch" class="panel active">
+      <p class="panel-purpose" data-purpose="panel-pitch"><strong>Pitch</strong> — Open the conversation — mode + track + sample.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -777,13 +809,15 @@
         <p class="tagline">Growth partner. Content that <strong>makes money</strong>. Not a “content strategist.”</p>
       </div>
 
-      <div class="mode-row" id="modeRow" role="radiogroup" aria-label="Interaction length">
+      <p class="chooser-label">Your time with them · not a submit</p>
+      <div class="mode-row" id="modeRow" role="radiogroup" aria-label="Your floor conversation length">
         <button type="button" class="mode on" data-mode="60" role="radio" aria-checked="true"><strong>60s</strong>grab + sample</button>
         <button type="button" class="mode" data-mode="5" role="radio" aria-checked="false"><strong>5 min</strong>intake + preview</button>
         <button type="button" class="mode" data-mode="20" role="radio" aria-checked="false"><strong>15–20</strong>story interview</button>
       </div>
 
-      <div class="tracks" id="trackChooser" role="radiogroup" aria-label="Track">
+      <p class="chooser-label">What you’ll send · pick a track</p>
+      <div class="tracks" id="trackChooser" role="radiogroup" aria-label="What you’ll deliver">
         <button type="button" class="track" data-track="A" role="radio" aria-checked="false">
           <div class="row">
             <div>
@@ -819,6 +853,14 @@
       </div>
 
       
+
+      <div class="helper-card" id="whatThisDoes" aria-live="polite">
+        <div class="hc-kicker">What this does</div>
+        <div class="hc-title" id="helperTitle">60s floor chat · pick a track</div>
+        <div class="hc-body" id="helperBody">These chips set <strong>your</strong> conversation length on the floor — they don’t submit anything. Pick a track so you know what you’ll deliver in ~15 min.</div>
+        <div class="hc-note" id="helperNote">No client send from this app. You copy / DM yourself.</div>
+      </div>
+
       <div class="sample-card" id="sampleCard">
         <div class="sc-label" id="sampleLabel">Sample deliverable · not theirs yet</div>
         <h3 id="sampleTitle">Outlier Pack teaser</h3>
@@ -880,6 +922,7 @@
 
     <!-- ========== INTAKE ========== -->
     <section id="panel-intake" class="panel">
+      <p class="panel-purpose" data-purpose="panel-intake"><strong>Intake</strong> — Capture contact on this phone (localStorage). You send later.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -993,6 +1036,7 @@
 
     <!-- ========== INTERVIEW ========== -->
     <section id="panel-interview" class="panel">
+      <p class="panel-purpose" data-purpose="panel-interview"><strong>60s</strong> — Record / guided story interview + live notes.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -1045,6 +1089,7 @@
 
     <!-- ========== OPS ========== -->
     <section id="panel-ops" class="panel">
+      <p class="panel-purpose" data-purpose="panel-ops"><strong>Ops</strong> — Internal checklist for the floor session.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -1087,6 +1132,7 @@
 
     <!-- ========== OUTLIER ========== -->
     <section id="panel-outlier" class="panel">
+      <p class="panel-purpose" data-purpose="panel-outlier"><strong>Pack</strong> — Build the Outlier Pack — send later, bots never send.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -1153,6 +1199,7 @@
 
     <!-- ========== CLOSE ========== -->
     <section id="panel-close" class="panel">
+      <p class="panel-purpose" data-purpose="panel-close"><strong>Close</strong> — Book the call while it’s hot.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
@@ -1745,6 +1792,53 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
 
 
   // ===== IMPRESS: duration modes + sample wow =====
+
+  const MODE_HELP = {
+    '60': {
+      title: '60s · hallway grab',
+      body: 'Your floor time with them: ~60 seconds. Grab <strong>IG + site</strong> → show the sample preview → thin save. Fast hallway / booth pass. Nothing submits to a server.'
+    },
+    '5': {
+      title: '5 min · intake + preview',
+      body: 'Your floor time: about five minutes. Fill full intake fields, then show a preview of what lands in <strong>~15 min</strong>. Still just local on this phone.'
+    },
+    '20': {
+      title: '15–20 · story interview',
+      body: 'Your floor time: longer sit. Capture contact, then run the <strong>guided story interview / live notes</strong> path (Track B or BOTH).'
+    }
+  };
+  const TRACK_HELP = {
+    A: {
+      title: 'Track A · Outlier Pack',
+      body: 'What <strong>you’ll send</strong> in ~15 min: what’s already working for pages like theirs + 3 filmable angles for this week.'
+    },
+    B: {
+      title: 'Track B · Story → AI clip',
+      body: 'What <strong>you’ll deliver</strong>: 60s story interview → beat sheet → Pixar/cartoon or no-audio cool piece (you run gens later).'
+    },
+    BOTH: {
+      title: 'BOTH · Audit + AI',
+      body: 'What <strong>you’ll deliver</strong>: Outlier Pack <em>and</em> Story→AI. Best when they’ve got a few minutes. VIP stack.'
+    }
+  };
+  function updateHelper() {
+    const hTitle = $('#helperTitle');
+    const hBody = $('#helperBody');
+    const hNote = $('#helperNote');
+    if (!hTitle) return;
+    const m = MODE_HELP[demoMode] || MODE_HELP['60'];
+    const t = selectedTrack ? TRACK_HELP[selectedTrack] : null;
+    if (t) {
+      hTitle.textContent = m.title.split('·')[0].trim() + ' + ' + t.title;
+      hBody.innerHTML = m.body + '<br><br>' + t.body;
+      hNote.textContent = 'Mode = your time with them. Track = what you’ll send. Neither button emails the prospect.';
+    } else {
+      hTitle.textContent = m.title + ' · pick a track';
+      hBody.innerHTML = m.body + '<br><br>Next: tap <strong>Track A / B / BOTH</strong> so you know what you’ll deliver.';
+      hNote.textContent = 'These are floor controls for you — not a form submit.';
+    }
+  }
+
   let demoMode = '60'; // 60 | 5 | 20
   const SAMPLE = {
     A: {
@@ -1806,6 +1900,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
       $('#trackHint').textContent = (selectedTrack ? 'Track ' + selectedTrack + ' · ' : '') + '15–20 min: guided story interview + live notes';
     }
     if (selectedTrack) renderSample(selectedTrack);
+    updateHelper();
   }
 
   $$('#modeRow .mode').forEach(b => {
@@ -1830,6 +1925,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
   _origTrackBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       renderSample(btn.dataset.track);
+      updateHelper();
       if (demoMode === '60') {
         $('#fastCapture').classList.add('show');
         setTimeout(() => $('#fastIg').focus(), 80);
@@ -1950,6 +2046,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
   if (_qp) _qp.addEventListener('click', () => setTimeout(refreshLiveNotes, 0));
 
   setMode('60');
+  updateHelper();
 
   renderOps();
   renderSaved();

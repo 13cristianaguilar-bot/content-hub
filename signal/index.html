@@ -765,14 +765,14 @@
         <div class="wow-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
         <div class="wow-copy">
           <div class="wow-kicker">Signal Marketing · live floor</div>
-          <div class="wow-line">A postable win in ~1 hour.</div>
+          <div class="wow-line">A postable win in ~15 min.</div>
           <div class="wow-sub">Watch the sample. Leave with the real thing.</div>
         </div>
       </div>
 
       <div class="hero">
         <h1>Give me your <em>IG</em> + site.</h1>
-        <p class="sub">In about an hour I’ll send something you can actually post — free.</p>
+        <p class="sub">In about 15 minutes I’ll send something you can actually post — free.</p>
         <p class="tagline">Growth partner. Content that <strong>makes money</strong>. Not a “content strategist.”</p>
       </div>
 
@@ -786,7 +786,7 @@
         <button type="button" class="track" data-track="A" role="radio" aria-checked="false">
           <div class="row">
             <div>
-              <div class="label">Track A · ~1 hour</div>
+              <div class="label">Track A · ~15 min</div>
               <h2>Outlier Pack</h2>
               <p>What’s already working for pages like yours — plus 3 angles you can film this week.</p>
             </div>
@@ -830,7 +830,7 @@
       <div class="fast-capture" id="fastCapture">
         <div class="section" style="margin:0;padding:14px">
           <h3 style="margin-bottom:4px">60-second capture</h3>
-          <p class="help" style="margin-bottom:10px">IG + site → they see a sample of what lands in ~1 hour.</p>
+          <p class="help" style="margin-bottom:10px">IG + site → they see a sample of what lands in ~15 min.</p>
           <div class="fc-grid">
             <div class="field" style="margin:0">
               <label>Instagram</label>
@@ -851,7 +851,7 @@
       </div>
 
       <div class="preview-panel" id="previewPanel">
-        <div class="pv-title">What lands in ~1 hour</div>
+        <div class="pv-title">What lands in ~15 min</div>
         <div id="previewBody"></div>
         <div class="btn-row" style="margin-top:12px">
           <button type="button" class="btn btn-primary" id="previewToIntake">Lock contact →</button>
@@ -864,7 +864,7 @@
 
       <div class="section" style="margin-top:16px">
         <h3>10-second pitch</h3>
-        <div class="script" id="pitchScript">“Drop your IG + website — in about an hour I’ll either pull what’s working in your niche, or turn a 60-second story into a cool AI clip you can post. Or both. Free.”</div>
+        <div class="script" id="pitchScript">“Drop your IG + website — in about 15 minutes I’ll either pull what’s working in your niche, or turn a 60-second story into a cool AI clip you can post. Or both. Free.”</div>
         <div class="btn-row">
           <button type="button" class="btn btn-soft" data-copy="#pitchScript">Copy pitch</button>
           <button type="button" class="btn btn-soft" data-goto="ops">Open SLA ops</button>
@@ -1750,7 +1750,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
       label: 'Track A sample · Outlier Pack',
       title: 'What’s already working — + 3 angles',
       body: '<strong>Format DNA pull:</strong> short hook → proof → soft CTA. Competitors in their lane are winning with <strong>talking-head + screenshot</strong> and <strong>story-beat carousels</strong>.',
-      chips: ['5–8 working posts', '3 filmable angles', 'Send in ~1 hr', 'You can post today'],
+      chips: ['5–8 working posts', '3 filmable angles', 'Send in ~15 min', 'You can post today'],
       preview: [
         ['Page snapshot', 'Niche feel · cadence · 1 strength · 1 gap (filled after we open their IG)'],
         ['Outlier #1', 'Hook-first TH · why it works: pattern interrupt in first 1.5s'],
@@ -1798,7 +1798,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
     } else if (m === '5') {
       fc.classList.remove('show');
       $('#startIntake').textContent = '5-min intake + preview →';
-      $('#trackHint').textContent = (selectedTrack ? 'Track ' + selectedTrack + ' · ' : '') + '5-min: deeper intake, then preview what lands in ~1 hr';
+      $('#trackHint').textContent = (selectedTrack ? 'Track ' + selectedTrack + ' · ' : '') + '5-min: deeper intake, then preview what lands in ~15 min';
     } else {
       fc.classList.remove('show');
       $('#startIntake').textContent = 'Capture → start interview →';
@@ -1843,7 +1843,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
     s.preview.forEach(row => {
       h += '<div class="pv-item"><em>' + escapeHtml(row[0]) + '</em><br>' + escapeHtml(row[1]) + '</div>';
     });
-    h += '<div class="pv-item" style="color:var(--ok)"><em>Promise</em><br>Real pack lands in ~1 hour on the contact they give you.</div>';
+    h += '<div class="pv-item" style="color:var(--ok)"><em>Promise</em><br>Real pack lands in ~15 min on the contact they give you.</div>';
     return h;
   }
 
@@ -1914,7 +1914,7 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
         host = document.createElement('div');
         host.id = 'intakePreviewHost';
         host.className = 'preview-panel show';
-        host.innerHTML = '<div class="pv-title">What they’ll get in ~1 hour</div><div id="intakePreviewBody"></div>';
+        host.innerHTML = '<div class="pv-title">What they’ll get in ~15 min</div><div id="intakePreviewBody"></div>';
         const status = $('#intakeStatus');
         status.parentNode.insertBefore(host, status.nextSibling);
       }

@@ -146,8 +146,16 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .seg-btn {
   min-height: 44px; background: transparent; border: 0; color: var(--muted);
   font-size: 13px; font-weight: 600;
+  padding: 6px 4px; line-height: 1.15; white-space: normal;
 }
 .seg-btn.is-on { background: var(--ink); color: #fff; }
+.seg-count {
+  display: block;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.04em; opacity: 0.75;
+}
+.seg-btn.is-on .seg-count { opacity: 0.9; }
+#segment-bar { max-width: 560px; }
 .film-lane-seg {
   display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
   border: 1px solid var(--line); background: var(--card);
@@ -1361,10 +1369,10 @@ let listSearch = '';
 // #app, so anything on screen has to live here, not only in the DOM.
 let hubPage = 'main';          // 'main' | 'help' | 'requests'
 let previousOpen = false;
-// Floor film lane for cristian + andrew only: conference | new | other
-let filmLane = 'conference';
-const FILM_LANE_SLUGS = ['cristian', 'andrew'];
-const FILM_LANES = ['conference', 'new', 'other'];
+// List segments for every client: conference | new | other.
+// Set on sign-in and on setClient via defaultSegmentForClient (conference when that client has any).
+let viewSegment = 'conference';
+const VIEW_SEGMENTS = ['conference', 'new', 'other'];
 let moreOpen = false;
 let modal = null;              // null | 'whats-new' | 'new-scripts'
 let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
@@ -1816,7 +1824,10 @@ async function afterLogin(u) {
     previousOpen = false;
     hubPage = 'main';
   }
-  if (isNewSignIn) loadOpened();
+  if (isNewSignIn) {
+    loadOpened();
+    viewSegment = defaultSegmentForClient(viewSlug);
+  }
   renderDash();
   subscribeLiveChanges();
   fetchRequests();
@@ -2484,14 +2495,91 @@ function parseBatchDate(batch) {
 }
 
 function isConferenceBatch(batch) {
-  const s = String(batch || '').toLowerCase();
-  // Archived renames (e.g. "zz · archive · CONFERENCE …") stay out of the floor lane.
+  const raw = String(batch || '');
+  const s = raw.toLowerCase();
+  // Archived renames (e.g. "zz · archive · CONFERENCE …") stay out of Conference.
   if (s.includes('archive') || s.trim().startsWith('zz')) return false;
-  return s.includes('conference') || s.includes('floor-film') || s.includes('floor film');
+  return s.includes('conference') || s.includes('floor-film') || s.includes('floor film') || raw.includes('⭐') || raw.includes('★');
+}
+
+function isFloorFilmBatch(batch) {
+  const s = String(batch || '').toLowerCase();
+  return s.includes('floor film') || s.includes('floor-film');
 }
 
 function groupIsConference(group) {
   return isConferenceBatch(groupBatchName(group));
+}
+
+function normalizeSegment(id) {
+  return VIEW_SEGMENTS.indexOf(id) === -1 ? 'other' : id;
+}
+
+// conference: name contains conference / floor film / ⭐, and is not zz… or …archive…
+// new: not conference, still unfilmed, batch does not start with zz
+// other: everything else (posted, passed, archived, zz, older)
+function segmentOfGroup(group) {
+  const name = groupBatchName(group);
+  if (isConferenceBatch(name)) return 'conference';
+  if (!String(name || '').toLowerCase().trim().startsWith('zz') && isUnfilmedGroup(group)) return 'new';
+  return 'other';
+}
+
+function partitionSegments(groups) {
+  const conference = [];
+  const fresh = [];
+  const other = [];
+  (groups || []).forEach(g => {
+    const seg = segmentOfGroup(g);
+    if (seg === 'conference') conference.push(g);
+    else if (seg === 'new') fresh.push(g);
+    else other.push(g);
+  });
+  conference.sort((a, b) => {
+    const af = isFloorFilmBatch(groupBatchName(a)) ? 0 : 1;
+    const bf = isFloorFilmBatch(groupBatchName(b)) ? 0 : 1;
+    return af - bf;
+  });
+  return { conference: conference, new: fresh, other: other };
+}
+
+function defaultSegmentForClient(slug) {
+  const part = partitionSegments(clientGroups(slug));
+  if (part.conference.length) return 'conference';
+  if (part.new.length) return 'new';
+  return 'other';
+}
+
+function segmentLabel(seg) {
+  return seg === 'conference' ? 'Conference' : seg === 'new' ? 'New to film' : 'Other/Past';
+}
+
+function segmentEmptyCopy(seg) {
+  if (seg === 'conference') return 'No conference batches yet. Floor Film and conference scripts show up here.';
+  if (seg === 'new') return 'Nothing new to film. Weekly Needs Review and CORE work shows up here.';
+  return 'Nothing in Other/Past.';
+}
+
+// Mode-scoped groups, then the active segment, then the status filter.
+// Status "all" keeps Archived rows inside whichever segment they belong to
+// (almost always Other/Past) so the three buttons are a real split.
+function segmentState() {
+  const view = listGroupsForCurrentView();
+  const parts = partitionSegments(view.modeFilteredGroups);
+  const seg = normalizeSegment(viewSegment);
+  let groups = parts[seg].slice();
+  if (viewStatus !== 'all') {
+    groups = groups.filter(g => viewStatusExact ? groupMatchesStatus(g, viewStatus) : g.some(s => s.status === viewStatus));
+  }
+  return {
+    allGroups: view.allGroups,
+    testingGroups: view.testingGroups,
+    effectiveMode: view.effectiveMode,
+    modeFilteredGroups: view.modeFilteredGroups,
+    parts: parts,
+    seg: seg,
+    segmentGroups: groups,
+  };
 }
 
 function batchNamesFromGroups(groups) {
@@ -2779,124 +2867,28 @@ function renderPastBatches(groups) {
       ${renderBatchCards(b.groups)}
     </section>`).join('')}</div>`;
 }
-function renderLane(kind, groups, openByDefault) {
-  if (!groups.length) return '';
-  const conf = kind === 'conference';
-  const names = batchNamesFromGroups(groups);
-  const batchLine = names.filter(Boolean).join(' · ');
-  const kicker = conf ? 'Film first' : 'After conference';
-  const title = conf ? 'Conference / floor film' : 'Weekly / other';
-  const sub = conf
-    ? 'Proven formats for the floor. Pick one → Film.'
-    : 'CORE and older batches. Open when you’re not on the floor.';
-  return `<section class="lane-block${conf ? ' is-conference' : ''}" aria-label="${escHtml(title)}">
-    <header class="lane-head${conf ? ' is-conference' : ''}">
-      <div class="lane-kicker">${escHtml(kicker)}</div>
-      <h2 class="lane-title">${escHtml(title)}</h2>
-      <p class="lane-sub">${escHtml(sub)}</p>
-    </header>
-    ${batchLine ? `<p class="lane-batch">${escHtml(batchLine)}</p>` : ''}
-    ${renderBatchCards(groups)}
-  </section>`;
-}
-
-function usesFilmLaneSeg() {
-  return FILM_LANE_SLUGS.indexOf(viewSlug) !== -1;
-}
-function filmLaneBuckets(groups) {
-  const active = groups.filter(g => groupStatus(g) !== 'Archived');
-  // Conference = any batch tagged conference / floor film (filmed or not — lane owns the set).
-  const conference = active.filter(g => groupIsConference(g));
-  const nonConf = active.filter(g => !groupIsConference(g));
-  const weeklyPart = freshPartition(nonConf);
-  const weeklyFresh = weeklyPart.fresh;
-  const freshSet = new Set(weeklyFresh);
-  const other = nonConf.filter(g => !freshSet.has(g));
-  return { conference, weeklyFresh, other, active };
-}
-function ensureFilmLane(buckets) {
-  if (!usesFilmLaneSeg()) return;
-  if (FILM_LANES.indexOf(filmLane) === -1) filmLane = 'conference';
-  // If selected lane is empty, fall to the first lane that has scripts.
-  const order = ['conference', 'new', 'other'];
-  const map = { conference: buckets.conference, new: buckets.weeklyFresh, other: buckets.other };
-  if (map[filmLane] && map[filmLane].length) return;
-  for (let i = 0; i < order.length; i++) {
-    if (map[order[i]] && map[order[i]].length) { filmLane = order[i]; return; }
-  }
-}
-function renderFilmLaneSeg(buckets) {
+function renderSegmentBar(parts) {
+  const seg = normalizeSegment(viewSegment);
   const items = [
-    { id: 'conference', label: 'Conference', count: buckets.conference.length, hint: 'Floor + interview conference packs' },
-    { id: 'new', label: 'New scripts', count: buckets.weeklyFresh.length, hint: 'Newest weekly pack to film' },
-    { id: 'other', label: 'Other', count: buckets.other.length, hint: 'Older batches and archives' },
+    ['conference', 'Conference'],
+    ['new', 'New to film'],
+    ['other', 'Other/Past'],
   ];
-  const on = items.filter(i => i.id === filmLane)[0] || items[0];
-  const buttons = items.map(i =>
-    `<button type="button" role="tab" class="seg-btn${i.id === filmLane ? ' is-on' : ''}" aria-selected="${i.id === filmLane}" onclick="window.setFilmLane('${i.id}')">
-      <span>${escHtml(i.label)}</span>
-      <span class="lane-count">${i.count}</span>
-    </button>`
-  ).join('');
-  return `<div class="film-lane-seg" role="tablist" aria-label="Script lanes">${buttons}</div>
-    <p class="film-lane-hint">${escHtml(on.hint)} · tap a lane to switch</p>`;
+  return `<div id="segment-bar" role="tablist" class="seg" aria-label="Segments">${items.map(([id, label]) => {
+    const on = seg === id;
+    const n = (parts[id] || []).length;
+    return `<button type="button" role="tab" aria-selected="${on}" onclick="window.setSegment('${id}')" class="seg-btn${on ? ' is-on' : ''}">${label} <span class="seg-count">${n}</span></button>`;
+  }).join('')}</div>`;
 }
 function renderSimpleBatch(groups) {
-  const buckets = filmLaneBuckets(groups);
-  const { conference, weeklyFresh, other, active } = buckets;
-
-  if (usesFilmLaneSeg()) {
-    ensureFilmLane(buckets);
-    const laneGroups = filmLane === 'conference' ? conference
-      : filmLane === 'new' ? weeklyFresh
-      : other;
-    navSets.fresh = laneGroups;
-    navSets.previous = [];
-
-    let body = '';
-    if (filmLane === 'conference') {
-      body = laneGroups.length
-        ? renderLane('conference', laneGroups)
-        : `<p class="fresh-empty">No conference scripts right now.</p>`;
-    } else if (filmLane === 'new') {
-      body = laneGroups.length
-        ? renderLane('weekly', laneGroups)
-        : `<p class="fresh-empty">${active.length ? 'You’re caught up on the newest weekly pack.' : escHtml(emptyHubCopy())}</p>`;
-    } else {
-      body = laneGroups.length
-        ? renderPastBatches(laneGroups)
-        : `<p class="fresh-empty">Nothing in Other yet.</p>`;
-    }
-    return `<section id="fresh-section" class="fresh-block" aria-label="Film lanes">
-      ${renderFilmLaneSeg(buckets)}
-      ${body}
-    </section>`;
-  }
-
-  // Other clients: stacked Conference (if any) + weekly fresh + optional older.
-  const confUnfilmed = conference.filter(g => isUnfilmedGroup(g));
-  const shown = new Set(confUnfilmed.concat(weeklyFresh));
-  const prev = active.filter(g => !shown.has(g));
-
-  navSets.fresh = confUnfilmed.length ? confUnfilmed : weeklyFresh;
-  navSets.previous = previousOpen ? prev : [];
-
-  let body = '';
-  if (confUnfilmed.length) body += renderLane('conference', confUnfilmed);
-  if (weeklyFresh.length) body += renderLane('weekly', weeklyFresh);
-  if (!confUnfilmed.length && !weeklyFresh.length) {
-    body = `<p class="fresh-empty">${groups.length ? 'You’re caught up on the latest batch.' : escHtml(emptyHubCopy())}</p>`;
-  }
-
-  const pastLabel = previousOpen ? 'Hide older batches' : 'Older batches';
-  const pastBtn = prev.length
-    ? `<button type="button" class="past-link" id="past-batches" aria-expanded="${previousOpen}" onclick="window.togglePrevious()">${pastLabel}</button>`
-    : '';
-  const past = previousOpen && prev.length ? renderPastBatches(prev) : '';
-  return `<section id="fresh-section" class="fresh-block" aria-label="Film lanes">
+  const seg = normalizeSegment(viewSegment);
+  navSets.fresh = groups;
+  navSets.previous = [];
+  const body = groups.length
+    ? renderPastBatches(groups)
+    : `<p class="fresh-empty">${escHtml(segmentEmptyCopy(seg))}</p>`;
+  return `<section id="fresh-section" class="fresh-block" aria-label="${escHtml(segmentLabel(seg))}">
     ${body}
-    ${pastBtn}
-    ${past}
   </section>`;
 }
 function renderScriptPager(index, total, scope) {
@@ -3266,7 +3258,8 @@ function renderDashInner() {
   // Script cards — see listGroupsForCurrentView() for the grouping -> mode -> status pipeline.
   // Status-tab counts below are scoped to the CURRENT mode, so a "Needs Review 34" count
   // doesn't show while looking at a 3-item testing view.
-  const { allGroups, testingGroups, effectiveMode, modeFilteredGroups, visibleGroups } = listGroupsForCurrentView();
+  const { allGroups, testingGroups, effectiveMode, modeFilteredGroups, parts, segmentGroups } = segmentState();
+  const visibleGroups = segmentGroups;
 
   // F4 -- status TAB badges bucket by groupStatus() (one status per GROUP), the same group-based
   // counting the collapsed-Filters status chip already uses (visibleGroups.length). Without
@@ -3341,8 +3334,9 @@ function renderDashInner() {
   const backToBatch = (hubPage === 'main' && viewTab !== 'list')
     ? `<button type="button" class="past-link" onclick="window.backToBatch()">Back to this batch</button>`
     : '';
+  const segmentBar = (hubPage === 'main' && viewTab === 'list') ? renderSegmentBar(parts) : '';
   const cards = (hubPage !== 'main' || viewTab !== 'list') ? ''
-    : `<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
+    : `${segmentBar}<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
 
   // Help and Requests replace the list. Calendar and Pipeline stay admin tools, reached from More.
   const body = hubPage === 'help' ? renderHelpPage()
@@ -6472,13 +6466,27 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setFilmLane = id => {
-  if (FILM_LANES.indexOf(id) === -1) return;
-  filmLane = id;
+window.setSegment = id => {
+  if (VIEW_SEGMENTS.indexOf(id) === -1 || id === viewSegment) return;
+  viewSegment = id;
+  viewTab = 'list';
   previousOpen = false;
+  moreOpen = false;
   resetScriptNav();
   renderDash();
-  window.scrollTo(0, 0);
+  requestAnimationFrame(() => {
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const bar = document.getElementById('segment-bar');
+    const header = document.querySelector('.hub-header');
+    if (!bar) return;
+    const headerH = header ? header.offsetHeight : 0;
+    const top = bar.getBoundingClientRect().top;
+    if (Math.abs(top - (headerH + 8)) <= 12) return;
+    window.scrollTo({
+      top: Math.max(0, top + window.scrollY - headerH - 8),
+      behavior: reduce ? 'auto' : 'smooth',
+    });
+  });
 };
 window.setClient   = slug => {
   if (role !== 'admin' || !CLIENTS[slug]) return;
@@ -6499,8 +6507,7 @@ window.setClient   = slug => {
   next7ResetPending = true;
   listSearch = '';
   previousOpen = false;
-  // Default floor clients to Conference when they have conference packs.
-  filmLane = (FILM_LANE_SLUGS.indexOf(slug) !== -1) ? 'conference' : filmLane;
+  viewSegment = defaultSegmentForClient(slug);
   hubPage = 'main';
   moreOpen = false;
   viewTab = 'list';
@@ -6522,6 +6529,7 @@ window.backToWorkspace = () => {
   viewStatusExact = false;
   listSearch = '';
   previousOpen = false;
+  viewSegment = defaultSegmentForClient(viewSlug);
   hubPage = 'main';
   moreOpen = false;
   viewTab = 'list';
@@ -6559,8 +6567,8 @@ window.setListSearch = v => {
   const region = document.getElementById('list-cards');
   if (!region) { renderDash(); return; }
   try {
-    const { visibleGroups, effectiveMode } = listGroupsForCurrentView();
-    region.innerHTML = renderListCards(visibleGroups, role === 'admin', effectiveMode);
+    const { segmentGroups, effectiveMode } = segmentState();
+    region.innerHTML = renderListCards(segmentGroups, role === 'admin', effectiveMode);
     kickThumbResolves();
   } catch (e) { renderError(e); }
 };
@@ -6945,6 +6953,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     viewType = opts.viewType || 'all';
     viewMode = opts.viewMode || 'all';
     viewTab = opts.viewTab || 'list';
+    viewSegment = opts.viewSegment || defaultSegmentForClient(viewSlug);
     filtersOpen = opts.filtersOpen !== false && role === 'admin';
     settingsOpen = false;
     listSearch = '';

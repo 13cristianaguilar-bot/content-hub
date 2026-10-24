@@ -23,7 +23,8 @@ function extract(name) {
 
 const names = [
   'escHtml', 'ymd', 'groupStatus', 'parseBatchDate', 'groupBatchName', 'groupBatchDate',
-  'isFilmedStatus', 'isUnfilmedGroup', 'weekStartMonday', 'freshPartition', 'scriptType',
+  'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
+  'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
@@ -592,5 +593,40 @@ assert.notStrictEqual(adminHome.viewSlug, 'andrew');
 assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian');
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
+
+assert.strictEqual(ctx.isConferenceBatch('⭐ Floor Film · AIMW'), true);
+assert.strictEqual(ctx.isConferenceBatch('CONFERENCE · floor-film'), true);
+assert.strictEqual(ctx.isConferenceBatch('Andrew floor film pack'), true);
+assert.strictEqual(ctx.isConferenceBatch('zz · archive · CONFERENCE'), false);
+assert.strictEqual(ctx.isConferenceBatch('zz Floor Film'), false);
+assert.strictEqual(ctx.isConferenceBatch('CONFERENCE archive'), false);
+assert.strictEqual(ctx.isConferenceBatch('CORE Week 12'), false);
+assert.strictEqual(ctx.isFloorFilmBatch('⭐ Floor Film'), true);
+assert.strictEqual(ctx.isFloorFilmBatch('CONFERENCE interview'), false);
+
+function segGroup(batch, status) {
+  return [{ id: batch + status, batch: batch, status: status, format: 'Reaction', created_at: '2026-10-01T00:00:00Z' }];
+}
+assert.strictEqual(ctx.segmentOfGroup(segGroup('⭐ Floor Film', 'Needs Review')), 'conference');
+assert.strictEqual(ctx.segmentOfGroup(segGroup('CONFERENCE · interviews', 'Posted')), 'conference');
+assert.strictEqual(ctx.segmentOfGroup(segGroup('zz · archive · CONFERENCE', 'Needs Review')), 'other');
+assert.strictEqual(ctx.segmentOfGroup(segGroup('CORE · Needs Review', 'Needs Review')), 'new');
+assert.strictEqual(ctx.segmentOfGroup(segGroup('CORE · Needs Review', 'Posted')), 'other');
+assert.strictEqual(ctx.segmentOfGroup(segGroup('zz leftover', 'Filming')), 'other');
+assert.strictEqual(ctx.segmentOfGroup(segGroup('Old batch', 'Archived')), 'other');
+
+const parts = ctx.partitionSegments([
+  segGroup('CONFERENCE · interviews', 'Approved'),
+  segGroup('⭐ Floor Film', 'Needs Review'),
+  segGroup('CORE weekly', 'Needs Review'),
+  segGroup('Posted last month', 'Posted'),
+  segGroup('zz · archive · CONFERENCE', 'Needs Review'),
+]);
+assert.strictEqual(parts.conference.length, 2);
+assert.strictEqual(parts.conference[0][0].batch, '⭐ Floor Film');
+assert.strictEqual(parts.conference[1][0].batch, 'CONFERENCE · interviews');
+assert.strictEqual(parts.new.length, 1);
+assert.strictEqual(parts.new[0][0].batch, 'CORE weekly');
+assert.strictEqual(parts.other.length, 2);
 
 console.log('hub-logic tests passed');

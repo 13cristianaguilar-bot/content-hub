@@ -614,6 +614,139 @@
       margin: 8px 0 0;
       min-height: 1.2em;
     }
+
+    /* ===== IMPRESS UPGRADE (floor demo) ===== */
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(237,48,57,0.45), 0 20px 60px rgba(237,48,57,0.15); }
+      50% { box-shadow: 0 0 0 10px rgba(237,48,57,0), 0 24px 70px rgba(237,48,57,0.25); }
+    }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translateY(14px) scale(0.98); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes barPulse {
+      0%, 100% { transform: scaleY(0.55); }
+      50% { transform: scaleY(1); }
+    }
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    .wow-strip {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, #1a0c0e 0%, #101010 60%);
+      border: 1px solid var(--line-hot);
+      border-radius: 16px; padding: 14px 16px;
+      margin-bottom: 18px;
+      animation: riseIn .45s ease both, pulseGlow 2.8s ease-in-out infinite;
+    }
+    .wow-eq {
+      display: flex; align-items: flex-end; gap: 3px; height: 36px; flex-shrink: 0;
+    }
+    .wow-eq i {
+      display: block; width: 5px; border-radius: 2px;
+      background: linear-gradient(180deg, var(--red-soft), var(--red));
+      animation: barPulse 1.1s ease-in-out infinite;
+    }
+    .wow-eq i:nth-child(1) { height: 40%; animation-delay: 0s; }
+    .wow-eq i:nth-child(2) { height: 70%; animation-delay: .12s; }
+    .wow-eq i:nth-child(3) { height: 100%; animation-delay: .24s; }
+    .wow-eq i:nth-child(4) { height: 55%; animation-delay: .08s; }
+    .wow-eq i:nth-child(5) { height: 80%; animation-delay: .2s; }
+    .wow-strip .wow-copy { flex: 1; min-width: 0; }
+    .wow-strip .wow-kicker {
+      font-size: 10px; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 2px;
+    }
+    .wow-strip .wow-line {
+      font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2;
+    }
+    .wow-strip .wow-sub { font-size: 0.78rem; color: var(--muted); margin-top: 3px; }
+    .mode-row {
+      display: flex; gap: 8px; margin: 0 0 16px; flex-wrap: wrap;
+    }
+    .mode {
+      flex: 1; min-width: 90px; text-align: center;
+      padding: 10px 8px; border-radius: 12px;
+      border: 1.5px solid var(--line); background: var(--surface);
+      color: var(--muted); font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all .15s;
+    }
+    .mode strong { display: block; color: var(--fg); font-size: 14px; margin-bottom: 2px; }
+    .mode.on {
+      border-color: var(--line-hot); background: var(--surface-2);
+      color: var(--red-soft); box-shadow: 0 0 0 1px rgba(237,48,57,0.12);
+    }
+    .mode.on strong { color: var(--red-soft); }
+    .sample-card {
+      display: none; margin: 14px 0 4px;
+      background: linear-gradient(180deg, #161212, #101010);
+      border: 1px solid var(--line-hot); border-radius: 16px;
+      padding: 16px; animation: riseIn .35s ease both;
+      position: relative; overflow: hidden;
+    }
+    .sample-card.show { display: block; }
+    .sample-card::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(110deg, transparent 30%, rgba(237,48,57,0.08) 50%, transparent 70%);
+      background-size: 200% 100%; animation: shimmer 3.5s linear infinite;
+    }
+    .sample-card .sc-label {
+      font-size: 10px; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 6px;
+    }
+    .sample-card h3 {
+      font-size: 1.15rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 8px;
+    }
+    .sample-card .sc-body { font-size: 0.9rem; color: var(--muted); line-height: 1.45; }
+    .sample-card .sc-body strong { color: var(--fg); }
+    .sample-card .sc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .sample-card .chip {
+      font-size: 11px; font-weight: 700; padding: 5px 10px; border-radius: 999px;
+      background: rgba(237,48,57,0.12); border: 1px solid var(--line-hot); color: var(--red-soft);
+    }
+    .sample-card .chip.ok { background: rgba(61,214,140,0.1); border-color: rgba(61,214,140,0.35); color: var(--ok); }
+    .fast-capture {
+      display: none; margin-top: 12px; animation: riseIn .3s ease both;
+    }
+    .fast-capture.show { display: block; }
+    .fast-capture .fc-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+    }
+    .preview-panel {
+      display: none; margin-top: 14px;
+      border: 1px solid var(--line); border-radius: 16px; padding: 14px;
+      background: var(--surface); animation: riseIn .35s ease both;
+    }
+    .preview-panel.show { display: block; }
+    .preview-panel .pv-title {
+      font-size: 11px; font-weight: 800; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 8px;
+    }
+    .preview-panel .pv-item {
+      padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 13px; line-height: 1.4;
+    }
+    .preview-panel .pv-item:last-child { border-bottom: 0; }
+    .preview-panel .pv-item em { font-style: normal; color: var(--red-soft); font-weight: 700; }
+    .live-notes {
+      background: #0c0c0c; border: 1px solid #2a1a1c; border-radius: 14px;
+      padding: 12px 14px; margin-top: 12px; min-height: 80px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 12px; color: #d0d0d0; white-space: pre-wrap; line-height: 1.5;
+    }
+    .live-notes .ln-empty { color: #555; font-style: italic; }
+    .interview-hero {
+      background: linear-gradient(160deg, #1f1012, #101010);
+      border: 1px solid var(--line-hot); border-radius: 16px;
+      padding: 14px; margin-bottom: 12px;
+    }
+    .interview-hero h2 {
+      font-size: 1.25rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px;
+    }
+    .interview-hero p { font-size: 0.85rem; color: var(--muted); }
+    .hero h1 { animation: riseIn .5s ease both; }
+    .hero .sub { animation: riseIn .55s .05s ease both; }
+
   </style>
 </head>
 <body>
@@ -628,10 +761,25 @@
         <div class="pill">Free drop</div>
       </div>
 
+      <div class="wow-strip" aria-hidden="false">
+        <div class="wow-eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="wow-copy">
+          <div class="wow-kicker">Signal Marketing · live floor</div>
+          <div class="wow-line">A postable win in ~1 hour.</div>
+          <div class="wow-sub">Watch the sample. Leave with the real thing.</div>
+        </div>
+      </div>
+
       <div class="hero">
         <h1>Give me your <em>IG</em> + site.</h1>
-        <p class="sub">In about an hour I’ll send something you can actually use — free.</p>
+        <p class="sub">In about an hour I’ll send something you can actually post — free.</p>
         <p class="tagline">Growth partner. Content that <strong>makes money</strong>. Not a “content strategist.”</p>
+      </div>
+
+      <div class="mode-row" id="modeRow" role="radiogroup" aria-label="Interaction length">
+        <button type="button" class="mode on" data-mode="60" role="radio" aria-checked="true"><strong>60s</strong>grab + sample</button>
+        <button type="button" class="mode" data-mode="5" role="radio" aria-checked="false"><strong>5 min</strong>intake + preview</button>
+        <button type="button" class="mode" data-mode="20" role="radio" aria-checked="false"><strong>15–20</strong>story interview</button>
       </div>
 
       <div class="tracks" id="trackChooser" role="radiogroup" aria-label="Track">
@@ -667,6 +815,48 @@
             <div class="check" aria-hidden="true"></div>
           </div>
         </button>
+      </div>
+
+      
+      <div class="sample-card" id="sampleCard">
+        <div class="sc-label" id="sampleLabel">Sample deliverable · not theirs yet</div>
+        <h3 id="sampleTitle">Outlier Pack teaser</h3>
+        <div class="sc-body" id="sampleBody">
+          <strong>What they get:</strong> 5–8 posts already working in their lane + 3 filmable angles for this week.
+        </div>
+        <div class="sc-chips" id="sampleChips"></div>
+      </div>
+
+      <div class="fast-capture" id="fastCapture">
+        <div class="section" style="margin:0;padding:14px">
+          <h3 style="margin-bottom:4px">60-second capture</h3>
+          <p class="help" style="margin-bottom:10px">IG + site → they see a sample of what lands in ~1 hour.</p>
+          <div class="fc-grid">
+            <div class="field" style="margin:0">
+              <label>Instagram</label>
+              <input id="fastIg" placeholder="@handle" autocapitalize="off" autocorrect="off" />
+            </div>
+            <div class="field" style="margin:0">
+              <label>Website</label>
+              <input id="fastSite" placeholder="https://" inputmode="url" autocapitalize="off" />
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:10px">
+            <label>Name (optional)</label>
+            <input id="fastName" placeholder="First name" />
+          </div>
+          <button type="button" class="btn btn-primary" id="showSampleBtn">Show them the sample →</button>
+          <p class="status-line" id="fastStatus"></p>
+        </div>
+      </div>
+
+      <div class="preview-panel" id="previewPanel">
+        <div class="pv-title">What lands in ~1 hour</div>
+        <div id="previewBody"></div>
+        <div class="btn-row" style="margin-top:12px">
+          <button type="button" class="btn btn-primary" id="previewToIntake">Lock contact →</button>
+          <button type="button" class="btn btn-ghost" data-goto="close">Soft close</button>
+        </div>
       </div>
 
       <button type="button" class="btn btn-primary" id="startIntake" disabled>Start intake →</button>
@@ -810,6 +1000,11 @@
         <div class="pill">Track B</div>
       </div>
 
+      <div class="interview-hero">
+        <h2>Live story capture</h2>
+        <p>Premium 15–20 min path · their words only · notes stream below as you go.</p>
+      </div>
+
       <div class="section">
         <h3>Timed interview</h3>
         <div class="progress-dots" id="qDots"></div>
@@ -833,6 +1028,7 @@
           <button type="button" class="btn btn-primary" id="qNext">Next →</button>
         </div>
         <p class="help" style="margin-top:12px;margin-bottom:0">Prompts: one-liner · before · turning point · client result · 12-month want. Keep total ~60s.</p>
+        <div class="live-notes" id="liveNotes"><span class="ln-empty">Live notes will stream here as you capture…</span></div>
       </div>
 
       <div class="section">
@@ -1545,6 +1741,214 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
       $('#styleStatus').textContent = 'Style: ' + stylePick;
     }
   } catch {}
+
+
+  // ===== IMPRESS: duration modes + sample wow =====
+  let demoMode = '60'; // 60 | 5 | 20
+  const SAMPLE = {
+    A: {
+      label: 'Track A sample · Outlier Pack',
+      title: 'What’s already working — + 3 angles',
+      body: '<strong>Format DNA pull:</strong> short hook → proof → soft CTA. Competitors in their lane are winning with <strong>talking-head + screenshot</strong> and <strong>story-beat carousels</strong>.',
+      chips: ['5–8 working posts', '3 filmable angles', 'Send in ~1 hr', 'You can post today'],
+      preview: [
+        ['Page snapshot', 'Niche feel · cadence · 1 strength · 1 gap (filled after we open their IG)'],
+        ['Outlier #1', 'Hook-first TH · why it works: pattern interrupt in first 1.5s'],
+        ['Outlier #2', 'Carousel proof · why: saves + shares from slide 3'],
+        ['Angle pack', '3 angles mapped to their offer — filmable this week']
+      ]
+    },
+    B: {
+      label: 'Track B sample · Story → AI',
+      title: '60s story → postable AI clip',
+      body: '<strong>Beat sheet preview:</strong> one-liner → before → turning point → client result → 12-month want. Style: Pixar story <em>or</em> no-audio cool moment.',
+      chips: ['Live 60s interview', 'Beat sheet today', 'Clip tonight / AM', 'Their words only'],
+      preview: [
+        ['Beat 1', 'Who they are in one sentence'],
+        ['Beat 2–3', 'Before state → turning point'],
+        ['Beat 4–5', 'Client result → 12-month want'],
+        ['Delivery', 'Stills plan + AI clip (Cristian runs gens)']
+      ]
+    },
+    BOTH: {
+      label: 'VIP sample · Audit + AI',
+      title: 'Research engine + something cool to post',
+      body: '<strong>Full stack:</strong> Outlier Pack (what to film) <em>plus</em> Story→AI (something cool to post). Best when they’ve got 3+ minutes.',
+      chips: ['Outlier Pack', 'Story→AI', 'Weekly system tease', 'Book 15 min'],
+      preview: [
+        ['Pack', 'Working posts + 3 angles'],
+        ['Clip', 'Interview → beats → AI visual'],
+        ['Close', 'Map next 7 days of posts on a 15-min call']
+      ]
+    }
+  };
+
+  function setMode(m) {
+    demoMode = m;
+    $$('#modeRow .mode').forEach(b => {
+      const on = b.dataset.mode === m;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-checked', on ? 'true' : 'false');
+    });
+    const fc = $('#fastCapture');
+    if (m === '60') {
+      fc.classList.add('show');
+      $('#startIntake').textContent = 'Full intake (optional) →';
+      $('#trackHint').textContent = (selectedTrack ? 'Track ' + selectedTrack + ' · ' : '') + '60s path: capture IG/site → show sample';
+    } else if (m === '5') {
+      fc.classList.remove('show');
+      $('#startIntake').textContent = '5-min intake + preview →';
+      $('#trackHint').textContent = (selectedTrack ? 'Track ' + selectedTrack + ' · ' : '') + '5-min: deeper intake, then preview what lands in ~1 hr';
+    } else {
+      fc.classList.remove('show');
+      $('#startIntake').textContent = 'Capture → start interview →';
+      $('#trackHint').textContent = (selectedTrack ? 'Track ' + selectedTrack + ' · ' : '') + '15–20 min: guided story interview + live notes';
+    }
+    if (selectedTrack) renderSample(selectedTrack);
+  }
+
+  $$('#modeRow .mode').forEach(b => {
+    b.addEventListener('click', () => setMode(b.dataset.mode));
+  });
+
+  function renderSample(track) {
+    const s = SAMPLE[track] || SAMPLE.A;
+    const card = $('#sampleCard');
+    card.classList.add('show');
+    $('#sampleLabel').textContent = s.label;
+    $('#sampleTitle').textContent = s.title;
+    $('#sampleBody').innerHTML = s.body;
+    $('#sampleChips').innerHTML = s.chips.map((c, i) =>
+      '<span class="chip' + (i === s.chips.length - 1 ? ' ok' : '') + '">' + c + '</span>'
+    ).join('');
+    if (demoMode === '60') $('#fastCapture').classList.add('show');
+  }
+
+  // Hook track chooser to show sample immediately
+  const _origTrackBtns = $$('#trackChooser .track');
+  _origTrackBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      renderSample(btn.dataset.track);
+      if (demoMode === '60') {
+        $('#fastCapture').classList.add('show');
+        setTimeout(() => $('#fastIg').focus(), 80);
+      }
+    });
+  });
+
+  function buildPreviewHTML(track, handle, name) {
+    const s = SAMPLE[track] || SAMPLE.A;
+    const who = name || handle || 'them';
+    let h = '<div class="pv-item"><em>For ' + escapeHtml(who) + '</em> — sample shape of the drop (real research fills blanks after).</div>';
+    s.preview.forEach(row => {
+      h += '<div class="pv-item"><em>' + escapeHtml(row[0]) + '</em><br>' + escapeHtml(row[1]) + '</div>';
+    });
+    h += '<div class="pv-item" style="color:var(--ok)"><em>Promise</em><br>Real pack lands in ~1 hour on the contact they give you.</div>';
+    return h;
+  }
+
+  $('#showSampleBtn').addEventListener('click', () => {
+    if (!selectedTrack) { toast('Pick a track first'); return; }
+    const ig = ($('#fastIg').value || '').replace(/^@/, '').trim();
+    const site = ($('#fastSite').value || '').trim();
+    const name = ($('#fastName').value || '').trim();
+    if (!ig && !site) { toast('Grab IG or site first'); $('#fastIg').focus(); return; }
+    // Prefill main form
+    const f = $('#intakeForm');
+    if (ig) f.elements.ig.value = '@' + ig;
+    if (site) f.elements.website.value = site;
+    if (name) f.elements.name.value = name;
+    f.elements.track.value = selectedTrack;
+    $('#previewBody').innerHTML = buildPreviewHTML(selectedTrack, ig ? '@' + ig : '', name);
+    $('#previewPanel').classList.add('show');
+    $('#fastStatus').textContent = 'Sample up — let them feel it, then lock contact.';
+    toast('Sample on screen — wow them');
+    $('#previewPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  $('#previewToIntake').addEventListener('click', () => {
+    // For 60s: save thin lead if we have enough; else intake
+    const f = $('#intakeForm');
+    const ig = (f.elements.ig.value || '').replace(/^@/, '');
+    if (demoMode === '60' && ig && f.elements.website.value) {
+      // ensure contact field focus
+      goto('intake');
+      setTimeout(() => f.elements.contact.focus(), 100);
+      toast('Lock phone/email to finish');
+    } else if (demoMode === '20') {
+      goto('intake');
+      setTimeout(() => {
+        if (f.reportValidity()) goto('interview');
+      }, 50);
+    } else {
+      goto('intake');
+    }
+  });
+
+  // Override startIntake for mode-aware routing
+  $('#startIntake').addEventListener('click', (e) => {
+    if (!selectedTrack) return;
+    if (demoMode === '20') {
+      // after quick fields, jump interview — still need intake first if empty
+      const f = $('#intakeForm');
+      goto('intake');
+      $('#intakeStatus').textContent = '15–20 path: capture contact, then open 60s / live notes';
+    } else if (demoMode === '5') {
+      goto('intake');
+      // show preview after save — handled below
+    }
+  }, true);
+
+  // After save lead in 5-min mode, auto-show preview
+  $('#saveLead').addEventListener('click', () => {
+    if (demoMode !== '5' && demoMode !== '60') return;
+    setTimeout(() => {
+      const f = $('#intakeForm');
+      if (!f.checkValidity()) return;
+      const ig = (f.elements.ig.value || '').replace(/^@/, '');
+      const name = (f.elements.name.value || '').split(' ')[0];
+      $('#previewBody').innerHTML = buildPreviewHTML(selectedTrack || f.elements.track.value, ig ? '@' + ig : '', name);
+      // Inject preview into intake panel if not visible
+      let host = $('#intakePreviewHost');
+      if (!host) {
+        host = document.createElement('div');
+        host.id = 'intakePreviewHost';
+        host.className = 'preview-panel show';
+        host.innerHTML = '<div class="pv-title">What they’ll get in ~1 hour</div><div id="intakePreviewBody"></div>';
+        const status = $('#intakeStatus');
+        status.parentNode.insertBefore(host, status.nextSibling);
+      }
+      $('#intakePreviewBody').innerHTML = buildPreviewHTML(selectedTrack || f.elements.track.value, ig ? '@' + ig : '', name);
+      host.classList.add('show');
+      if (demoMode === '20') {
+        // offer interview
+      }
+    }, 50);
+  });
+
+  function refreshLiveNotes() {
+    const el = $('#liveNotes');
+    if (!el) return;
+    const parts = QUESTIONS.map((q, i) => {
+      const n = (qNotes[i] || '').trim();
+      return (i + 1) + '. ' + q + '\n   → ' + (n || '…');
+    });
+    if (stylePick) parts.push('\nStyle: ' + stylePick);
+    el.textContent = parts.join('\n');
+  }
+
+  // Patch interview note input
+  const _qNote = $('#qNote');
+  if (_qNote) {
+    _qNote.addEventListener('input', refreshLiveNotes);
+  }
+  $$('.style-pick').forEach(b => b.addEventListener('click', () => setTimeout(refreshLiveNotes, 0)));
+  const _qn = $('#qNext');
+  if (_qn) _qn.addEventListener('click', () => setTimeout(refreshLiveNotes, 0));
+  const _qp = $('#qPrev');
+  if (_qp) _qp.addEventListener('click', () => setTimeout(refreshLiveNotes, 0));
+
+  setMode('60');
 
   renderOps();
   renderSaved();

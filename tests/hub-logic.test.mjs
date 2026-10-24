@@ -28,8 +28,10 @@ const names = [
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
   'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
+  'reactClipKey', 'hasReactClipKey', 'isReactionScript', 'reactionClipInfo', 'showsReactClip',
   'fdPick', 'referenceMetrics', 'derivePrepPacing', 'derivePrepFraming', 'prepModel',
-  'prepText', 'prepMetricsHtml',
+  'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink', 'prepStepHtml',
+  'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding',
@@ -39,6 +41,7 @@ const src = [
   "const APP_VERSION = '2026.10.23';",
   "const WALKTHROUGH_VIDEO_URL = '';",
   "const CLIENTS = { jan: { name: 'Jan Zands', label: 'Jan' } };",
+  'let prepState = null;',
   ...names.map(extract),
 ].join('\n');
 const ctx = {};
@@ -299,6 +302,115 @@ assert.strictEqual(gap.metrics.views, '');
 const gapHtml = ctx.prepMetricsHtml(gap.metrics);
 assert.ok(gapHtml.includes('—'));
 assert.ok(gapHtml.includes('is-empty'));
+
+const s5 = ctx.prepModel({
+  id: 'e9f08bdc-dcc8-4468-94ec-0cc215bc0316',
+  title: "Reaction: Bob Proctor's 6 Must-Read Books",
+  client_slug: 'jan',
+  format: 'Reaction + Listicle · greenscreen (@davidreadsfast · C96PhruO6BC)',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_setup: 'LOCATION: Plain light wall at home.\nFRAMING: Phone handheld or tripod selfie, vertical 9:16, face in LOWER half.\nMIC: Lav or phone mic.\nSHOT LIST: 1) Hook line 2) Silent reaction while Proctor clip plays 3) Rapid list in one take 4) CTA\nTIME: ~59s.',
+  clip_directions: 'REACT TO: https://www.youtube.com/watch?v=V_uebI9QpMg\nTrim only Think and Grow Rich.\nEDITOR SOUND: dialogue only under Monica.',
+  editor_notes: 'AUDIO: dialogue only under Monica.\nCAPTION: Comment RICH.',
+  filming_direction: {
+    Format: 'Reaction + numbered listicle.',
+    Pacing: '~59s davidreadsfast cadence.',
+    Framing: 'Plain light wall. Face in the LOWER half.',
+    'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'EDITOR SOUND': 'dialogue only under Monica; Proctor clip audio.',
+    'Reference Metrics': '420,531 views · 12,957 likes · 495 comments · 536.4x Sandcastles · Audience: Adjacent · Verdict: PASS',
+  },
+  proof_stats: '420,531 views · 12,957 likes · 495 comments\nOutlier / x-median: 536.4x Sandcastles\nAudience: Adjacent\nViral score / verdict: PASS',
+});
+assert.strictEqual(s5.ref.kind, 'ig');
+assert.strictEqual(s5.ref.watch, 'https://www.instagram.com/reel/C96PhruO6BC/');
+assert.strictEqual(s5.react.kind, 'yt');
+assert.strictEqual(s5.react.watch, 'https://www.youtube.com/watch?v=V_uebI9QpMg');
+assert.ok(s5.react.src.includes('youtube.com/embed/V_uebI9QpMg'));
+assert.strictEqual(s5.metrics.views, '420,531');
+assert.strictEqual(s5.showMetrics, true);
+assert.ok(s5.audio.some(a => /dialogue only/i.test(a)));
+assert.ok(s5.extras.some(ex => ex.label === 'Clip directions' && /Trim only/.test(ex.text)));
+assert.ok(!s5.extras.some(ex => /^(reaction clip|react to)$/i.test(ex.label)));
+const s5Html = ctx.prepStepHtml(s5, 0);
+assert.ok(s5Html.includes('Format reference'));
+assert.ok(s5Html.includes('Format to match'));
+assert.ok(s5Html.includes('>React to<'));
+assert.ok(s5Html.includes('Source clip for the reaction / greenscreen beat.'));
+assert.ok(s5Html.includes('https://www.instagram.com/reel/C96PhruO6BC/'));
+assert.ok(s5Html.includes('https://www.youtube.com/watch?v=V_uebI9QpMg'));
+assert.ok(s5Html.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(s5Html.includes('youtube.com/embed/V_uebI9QpMg'));
+assert.ok(s5Html.includes('Outlier metrics'));
+assert.ok(s5Html.includes('Open format reference'));
+assert.ok(s5Html.includes('Open react-to clip'));
+assert.strictEqual((s5Html.match(/class="prep-react"/g) || []).length, 1);
+assert.ok(Array.isArray(s5.shots) && s5.shots.length === 4);
+const s5Notes = ctx.prepStepHtml(s5, 1);
+assert.ok(s5Notes.includes('Trim only Think and Grow Rich'));
+assert.ok(/dialogue only/i.test(s5Notes));
+assert.ok(s5Notes.includes('Silent reaction while Proctor clip plays'));
+const quietHtml = ctx.prepStepHtml(prepped, 0);
+assert.ok(!quietHtml.includes('>React to<'));
+assert.ok(!quietHtml.includes('prep-react'));
+assert.ok(quietHtml.includes('Open reference reel'));
+assert.ok(quietHtml.includes('Outlier metrics'));
+
+assert.strictEqual(ctx.reactionClipInfo({
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_direction: { reaction_clip: 'https://www.youtube.com/watch?v=V_uebI9QpMg' },
+}).watch, 'https://www.youtube.com/watch?v=V_uebI9QpMg');
+assert.strictEqual(ctx.reactionClipInfo({
+  filming_direction: { 'React To': 'Watch this https://youtu.be/V_uebI9QpMg today' },
+}).watch, 'https://www.youtube.com/watch?v=V_uebI9QpMg');
+assert.strictEqual(ctx.reactionClipInfo({
+  reference_clip: 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+  filming_direction: { 'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg' },
+}), null);
+assert.strictEqual(ctx.reactionClipInfo({ title: 'No clip' }), null);
+assert.strictEqual(ctx.isReactionScript({ format: 'Reaction' }), true);
+assert.strictEqual(ctx.isReactionScript({ format: 'Reaction + Listicle · greenscreen (@davidreadsfast)' }), true);
+assert.strictEqual(ctx.isReactionScript({ format: 'Green-screen card' }), true);
+assert.strictEqual(ctx.isReactionScript({ format: 'Personal Story', clip_directions: 'notes' }), false);
+assert.strictEqual(ctx.isReactionScript({ format: 'F2 List', filming_direction: { 'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg' } }), true);
+assert.strictEqual(ctx.showsReactClip({ format: 'Reaction', clip_directions: 'Say the line.' }), true);
+assert.strictEqual(ctx.showsReactClip({ format: 'Personal Story', clip_directions: 'https://www.youtube.com/watch?v=V_uebI9QpMg' }), false);
+assert.strictEqual(ctx.showsReactClip({
+  format: 'Reaction + Listicle · greenscreen',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_direction: {
+    'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+  },
+}), true);
+
+const dossier = ctx.renderDossierBody({
+  id: 'e9f08bdc-dcc8-4468-94ec-0cc215bc0316',
+  format: 'Reaction + Listicle · greenscreen (@davidreadsfast · C96PhruO6BC)',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  clip_directions: 'Trim only Think and Grow Rich. https://www.youtube.com/watch?v=V_uebI9QpMg',
+  filming_direction: {
+    'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+  },
+});
+assert.ok(dossier.includes('Format reference'));
+assert.ok(dossier.includes('Format to match'));
+assert.ok(dossier.includes('>React to<'));
+assert.ok(dossier.includes('https://www.instagram.com/reel/C96PhruO6BC/'));
+assert.ok(dossier.includes('https://www.youtube.com/watch?v=V_uebI9QpMg'));
+assert.ok(dossier.includes('Open react-to clip'));
+assert.ok(dossier.includes('Clip plays'));
+const storyCard = ctx.renderDossierBody({
+  id: 'story-1',
+  format: 'Personal Story',
+  clip_directions: 'General filming notes. No source clip.',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+});
+assert.ok(storyCard.includes('Format reference'));
+assert.ok(!storyCard.includes('>React to<'));
+assert.ok(!storyCard.includes('Open react-to clip'));
 
 const derived = ctx.prepModel({
   reference_clip: 'https://www.youtube.com/watch?v=abcdefghijk',

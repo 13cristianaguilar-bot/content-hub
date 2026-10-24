@@ -544,6 +544,26 @@ img, iframe, video, pre { max-width: 100%; }
   color: var(--ink); font-weight: 650; font-size: 16px; text-align: left;
   text-decoration: underline; text-underline-offset: 3px; padding: 4px 0;
 }
+.preview-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--ink); color: #fff; padding: 10px 12px; max-width: 560px;
+}
+.preview-banner span { font-size: 14px; font-weight: 650; min-width: 0; }
+.preview-banner button {
+  flex: 0 0 auto; min-height: 44px; padding: 0 12px; background: #fff; color: var(--ink);
+  border: 0; font-weight: 650; font-size: 14px;
+}
+.view-as { max-width: 560px; }
+.view-as-toggle {
+  width: 100%; min-height: 48px; text-align: left; background: #fff; border: 1px solid var(--line);
+  padding: 0 14px; font-weight: 650; font-size: 16px; color: var(--ink);
+}
+.view-as-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
+.view-as-item {
+  width: 100%; min-height: 52px; text-align: left; background: #fff; border: 1px solid var(--line);
+  border-top: 2px solid var(--signal); padding: 10px 14px; color: var(--ink); font-weight: 650; font-size: 16px;
+}
+.view-as-item small { display: block; margin-top: 2px; font-weight: 500; color: var(--muted); font-size: 13px; }
 .past-block { display: flex; flex-direction: column; gap: 18px; max-width: 560px; }
 .past-batch-name { margin: 0; font-size: 14px; font-weight: 650; color: var(--muted); }
 .more-back {
@@ -920,7 +940,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.24.1';
+const APP_VERSION = '2026.10.24.2';
 // Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
 // What's new popup and on the Help page. Empty hides the video slot.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -934,6 +954,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.24.2',
+    date: 'October 24, 2026',
+    title: 'Your workspace',
+    items: [
+      'An admin opens on their own workspace. Another client is never the default.',
+      'View a client opens that client’s scripts, prep, and edits. Your workspace brings you back.',
+    ],
+    steps: [
+      'Sign in. The header says Your workspace.',
+      'Your own scripts are the cards. Film and Edit work here.',
+      'Tap View a client to open their hub.',
+      'Tap Your workspace to come back.',
+    ],
+  },
   {
     version: '2026.10.24.1',
     date: 'October 24, 2026',
@@ -1173,9 +1208,11 @@ window.toggleText = id => {
 // ─────────────────────────────────────────────
 let user     = null;
 let role     = null;   // 'admin' | 'client'
-let mySlug   = null;   // 'andrew' | 'jan' (clients only)
+let mySlug   = null;   // app_metadata.client_slug; clients and an admin's own workspace
 let scripts  = [];
-let viewSlug = 'andrew';
+let viewSlug = null;   // whose scripts are on screen; never defaults to a client
+let previewSlug = null; // admin is viewing this client's hub; null is their own workspace
+let viewAsOpen = false;
 let viewStatus = 'all';
 let viewType = 'all'; // 'all' | 'interview' | 'broll' — default stays all so unlettered scripts stay visible
 let viewMode = 'all'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
@@ -1351,8 +1388,8 @@ let settingAlwaysShowKey = lsGetBool('hub_setting_show_key', false);
 // calSelectedDay / calMonth / viewStatus -- see afterLogin() for why.
 function lastViewKey(uid) { return `hub_lastview_${uid}`; }
 function saveLastView() {
-  if (role !== 'admin' || !user) return;
-  try { localStorage.setItem(lastViewKey(user.id), JSON.stringify({ viewSlug, viewTab })); } catch (e) {}
+  if (role !== 'admin' || !user || previewSlug) return;
+  try { localStorage.setItem(lastViewKey(user.id), JSON.stringify({ viewTab })); } catch (e) {}
 }
 function loadLastView(uid) {
   try {
@@ -1578,6 +1615,7 @@ async function init() {
           listSearch = ''; expandedSections.clear();
           hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false; moreOpen = false;
           openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
+          viewSlug = null; previewSlug = null; viewAsOpen = false;
           navIndex = 0; previousIndex = 0; flatIndex = 0;
           navSets = { fresh: [], previous: [], flat: [] };
           requests = []; requestsLoaded = false; requestsError = '';
@@ -1616,8 +1654,15 @@ async function afterLogin(u) {
   // app_metadata backfilled yet -- see migrations/2026-10-22_scripts_client_isolation_rls.sql.
   role   = u.app_metadata?.role || u.user_metadata?.role || 'client';
   mySlug = u.app_metadata?.client_slug || u.user_metadata?.client_slug || null;
-  if (role === 'client' && mySlug) viewSlug = mySlug;
-  if (role === 'client') viewMode = 'all'; // clients always land on full backlog, not testing-only view
+  // A missing slug must not become Andrew. Clients are locked to their slug.
+  // Admins keep a preview across a token refresh, and land on their own slug
+  // only when this is a real sign-in.
+  if (role === 'client') {
+    viewSlug = homeSlug(mySlug);
+    previewSlug = null;
+    viewAsOpen = false;
+    viewMode = 'all';
+  }
 
   if (isNewSignIn) {
     // A client can get stranded on Calendar/Pipeline after a logout/login in the same tab --
@@ -1642,16 +1687,17 @@ async function afterLogin(u) {
     listSearch = '';
     expandedSections.clear();
     if (role === 'admin') {
-      if (settingOpenOnSignIn === 'last') {
+      previewSlug = null;
+      viewAsOpen = false;
+      viewSlug = homeSlug(mySlug);
+      if (viewSlug && settingOpenOnSignIn === 'last') {
         const saved = loadLastView(u.id);
-        const slugValid = saved && saved.viewSlug && CLIENTS[saved.viewSlug];
-        viewSlug = slugValid ? saved.viewSlug : Object.keys(CLIENTS)[0];
         const tabValid = saved && VIEW_TABS.includes(saved.viewTab);
         viewTab = tabValid ? saved.viewTab : 'list';
-      } else {
-        // Fixed option ('list' | 'calendar' | 'pipeline') -- use it directly, don't touch the
-        // saved client.
+      } else if (viewSlug && VIEW_TABS.includes(settingOpenOnSignIn)) {
         viewTab = settingOpenOnSignIn;
+      } else {
+        viewTab = 'list';
       }
     }
   }
@@ -1797,7 +1843,10 @@ function unsubscribeLiveChanges() {
 // ─────────────────────────────────────────────
 async function fetchScripts() {
   let q = sb.from('scripts').select('*').order('reel_number', { ascending: false }); // newest first
-  if (role === 'client' && mySlug) q = q.eq('client_slug', mySlug);
+  if (role === 'client') {
+    if (!mySlug) { scripts = []; return; }
+    q = q.eq('client_slug', mySlug);
+  }
   const { data, error } = await q;
   // Throw instead of the old `console.error + scripts = []`: a failed fetch used to render as
   // "No scripts here." -- indistinguishable from the client genuinely having no scripts, and
@@ -2270,7 +2319,7 @@ function isPastDue(group, todayStr) {
 // status filter), then applies the testing/all mode filter, then the status filter.
 // ─────────────────────────────────────────────
 function listGroupsForCurrentView() {
-  const allGroups = groupIntoTakes(scripts.filter(s => s.client_slug === viewSlug));
+  const allGroups = viewSlug ? groupIntoTakes(scripts.filter(s => s.client_slug === viewSlug)) : [];
   const testingGroups = allGroups.filter(g => g.length > 1);
   const effectiveMode = (viewMode === 'testing' && testingGroups.length === 0) ? 'all' : viewMode;
   const modeFilteredGroups = effectiveMode === 'testing' ? testingGroups : allGroups;
@@ -2582,7 +2631,7 @@ function renderBatchCard(group, index) {
     </button>
     ${editBadgeHtml(s.id)}
     <div class="batch-actions">
-      ${canEditScripts() ? `<button type="button" class="batch-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
+      ${canEditScripts() || viewingAsClient() ? `<button type="button" class="batch-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
       <button type="button" class="batch-film" onclick="window.filmScript('${s.id}')">Film</button>
     </div>
   </article>`;
@@ -2615,7 +2664,7 @@ function renderSimpleBatch(groups) {
   const batchLine = part.batchNames.filter(Boolean).join(' · ');
   const cards = fresh.length
     ? renderBatchCards(fresh)
-    : `<p class="fresh-empty">You’re caught up on the latest batch.</p>`;
+    : `<p class="fresh-empty">${groups.length ? 'You’re caught up on the latest batch.' : escHtml(emptyHubCopy())}</p>`;
   const pastBtn = prev.length
     ? `<button type="button" class="past-link" id="past-batches" aria-expanded="${previousOpen}" onclick="window.togglePrevious()">${previousOpen ? 'Hide past batches' : 'Past batches'}</button>`
     : '';
@@ -2753,6 +2802,32 @@ function formatStamp(iso) {
   const d = new Date(t);
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
+function emptyHubCopy() {
+  if (viewingAsClient()) return 'No scripts yet for ' + clientLabel(viewSlug) + '.';
+  if (role === 'admin') return 'No scripts in your workspace yet.';
+  if (!mySlug) return 'This account is not linked to a client yet.';
+  return 'No scripts yet.';
+}
+function headerSubtitle() {
+  if (role === 'admin' && !previewSlug) return 'Your workspace';
+  if (viewingAsClient()) return 'Viewing as ' + (CLIENTS[previewSlug] ? CLIENTS[previewSlug].label : clientLabel(previewSlug));
+  if (viewSlug && CLIENTS[viewSlug]) return CLIENTS[viewSlug].name;
+  if (mySlug) return clientLabel(mySlug);
+  return '';
+}
+function renderContextBar() {
+  if (viewingAsClient()) {
+    const name = clientLabel(previewSlug);
+    return `<div class="preview-banner" role="status"><span>Viewing as ${escHtml(name)}</span><button type="button" onclick="window.backToWorkspace()">Your workspace</button></div>`;
+  }
+  if (role !== 'admin' || hubPage !== 'main' || viewTab !== 'list') return '';
+  const own = homeSlug(mySlug);
+  const others = Object.keys(CLIENTS).filter(slug => slug !== own);
+  const list = viewAsOpen ? `<div class="view-as-list" id="view-as-list">${others.map(slug =>
+    `<button type="button" class="view-as-item" data-view-as="${escHtml(slug)}" onclick="window.setClient('${slug}')">${escHtml(CLIENTS[slug].name)}<small>Their scripts, prep, and edits</small></button>`
+  ).join('')}</div>` : '';
+  return `<div class="view-as" id="view-as"><button type="button" class="view-as-toggle" id="view-as-toggle" aria-expanded="${viewAsOpen ? 'true' : 'false'}" onclick="window.toggleViewAs()">View a client</button>${list}</div>`;
+}
 function clientLabel(slug) {
   if (!slug) return 'Client';
   if (CLIENTS[slug] && CLIENTS[slug].name) return CLIENTS[slug].name;
@@ -2831,9 +2906,12 @@ function renderRequestCard(r, isAdmin) {
   </article>`;
 }
 function renderRequestsPage() {
-  const isAdmin = role === 'admin';
+  const asClient = role !== 'admin' || viewingAsClient();
+  const isAdmin = !asClient;
   const visibleRequests = isAdmin ? requests : requests.filter(r =>
-    (user && r.user_id === user.id) || (mySlug && r.client_slug === mySlug)
+    viewingAsClient()
+      ? r.client_slug === previewSlug
+      : ((user && r.user_id === user.id) || (mySlug && r.client_slug === mySlug))
   );
   const mine = visibleRequests.slice().sort((a, b) => String(b.created_at || '').localeCompare(String(a.created_at || '')));
   const counts = { all: mine.length, 'new': 0, 'in progress': 0, done: 0 };
@@ -2860,12 +2938,12 @@ function renderRequestsPage() {
     <textarea id="request-body" class="field-area" data-focus-id="request-body" placeholder="${escHtml(kind.hint)}" oninput="window.setRequestBody(this.value)">${escHtml(requestDraft.body)}</textarea>
     <button type="submit" class="shot-go" style="margin-top:12px" ${requestSending ? 'disabled' : ''}>${requestSending ? 'Sending…' : 'Send'}</button>
   </form>`;
-  const listTitle = isAdmin ? 'All client requests' : 'Your requests';
+  const listTitle = isAdmin ? 'All client requests' : (viewingAsClient() ? (clientLabel(previewSlug) + '’s requests') : 'Your requests');
   const empty = requestsError
     ? `<article class="page-card">${requestsMigrationHint()}</article>`
     : (!requestsLoaded && !previewMode)
       ? `<article class="page-card"><p>Loading requests…</p></article>`
-      : (shown.length ? shown.map(r => renderRequestCard(r, isAdmin)).join('') : `<article class="page-card"><p>${isAdmin ? 'No requests in this filter.' : 'You have not sent a request yet.'}</p></article>`);
+      : (shown.length ? shown.map(r => renderRequestCard(r, isAdmin)).join('') : `<article class="page-card"><p>${isAdmin ? 'No requests in this filter.' : (viewingAsClient() ? 'No requests from ' + escHtml(clientLabel(previewSlug)) + ' yet.' : 'You have not sent a request yet.')}</p></article>`);
   return `<div class="page-stack">
     <button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>
     ${form}
@@ -2956,8 +3034,7 @@ function renderDashInner() {
   document.body.classList.toggle('more-open', moreOpen && role === 'admin' && hubPage === 'main');
 
   const isAdmin  = role === 'admin';
-
-  // Client tabs (admin only)
+  const clientName = headerSubtitle();
   const clientTabs = isAdmin ? `<nav class="client-tabs" aria-label="Clients">${Object.entries(CLIENTS).map(([slug, c]) =>
     `<button type="button" onclick="setClient('${slug}')" aria-pressed="${viewSlug === slug}"
       class="client-tab ${viewSlug === slug ? 'is-on' : ''}">${escHtml(c.label)}</button>`
@@ -3052,8 +3129,6 @@ function renderDashInner() {
     : viewTab === 'pipeline' ? backToBatch + renderPipeline()
     : cards;
 
-  const clientName = CLIENTS[viewSlug]?.name || viewSlug;
-
   // List / Calendar / Pipeline segmented toggle -- admin always sees it; clients only once
   // CLIENT_VIEW_TABS is flipped on (Cristian wants to try it himself first).
   const canSeeViewTabs = isAdmin || CLIENT_VIEW_TABS;
@@ -3072,9 +3147,9 @@ function renderDashInner() {
   // ───────────────────────────────────────────
   const gearIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>`;
 
-  const moreButton = (isAdmin && hubPage === 'main') ? `
+  const moreButton = (isAdmin && !previewSlug && hubPage === 'main') ? `
     <button type="button" class="more-btn${moreOpen ? ' is-on' : ''}" aria-expanded="${moreOpen ? 'true' : 'false'}" aria-controls="more-drawer" onclick="window.toggleMore()">More</button>` : '';
-  const gearButton = isAdmin ? `
+  const gearButton = (isAdmin && !previewSlug) ? `
     <button type="button" data-focus-id="settings-gear" onclick="window.toggleSettings()" aria-label="Settings" aria-haspopup="dialog" aria-expanded="${settingsOpen}"
       class="icon-btn">
       ${gearIconSvg}
@@ -3119,7 +3194,7 @@ function renderDashInner() {
       ${viewStatus} <span class="opacity-70">· ${visibleGroups.length}</span> <span class="opacity-80">✕</span>
     </button>` : '';
 
-  const moreDrawer = (isAdmin && moreOpen && hubPage === 'main') ? `
+  const moreDrawer = (isAdmin && !previewSlug && moreOpen && hubPage === 'main') ? `
     <div class="more-back" id="more-drawer" onclick="window.toggleMore(false)">
       <div class="more-sheet" role="dialog" aria-modal="true" aria-label="More" onclick="event.stopPropagation()">
         <div class="more-head">
@@ -3152,6 +3227,7 @@ function renderDashInner() {
       ${settingsPanel}
 
       <div class="hub-main">
+        ${renderContextBar()}
         ${body}
       </div>
     </div>
@@ -3181,9 +3257,9 @@ function renderDashInner() {
   // just like setClient()/setViewTab() do, but never saved, so "Where I left off" silently
   // stopped reflecting reality after a jump-in. Runs once per render and compares against what's
   // already saved so it's a no-op write when nothing actually changed.
-  if (isAdmin && user) {
+  if (isAdmin && user && !previewSlug) {
     const saved = loadLastView(user.id);
-    if (!saved || saved.viewSlug !== viewSlug || saved.viewTab !== viewTab) saveLastView();
+    if (!saved || saved.viewTab !== viewTab) saveLastView();
   }
 
   // K1 -- restore keyboard focus into the just-rebuilt DOM, if a settings change captured it
@@ -3237,11 +3313,9 @@ function renderSettingsPanel() {
   // changed, see F2 there), but this is the one piece of UI that makes the otherwise-invisible
   // "remember last view" rule inspectable.
   const saved = user ? loadLastView(user.id) : null;
-  const curSlug = (saved && CLIENTS[saved.viewSlug]) ? saved.viewSlug : viewSlug;
   const curTab  = (saved && VIEW_TABS.includes(saved.viewTab)) ? saved.viewTab : viewTab;
   const curTabLabel = VIEW_TAB_LABEL[curTab];
-  const curClientLabel = CLIENTS[curSlug]?.label || curSlug;
-  const currentlyLine = `${curTabLabel} · ${curClientLabel}`;
+  const currentlyLine = curTabLabel;
 
   const openOptions = [
     { v: 'last',     label: 'Where I left off' },
@@ -4054,7 +4128,7 @@ function renderCardGroup(group) {
         ${renderCtaBlock(s.cta)}
       </div>
     </div>
-    ${canEditScripts() ? `<button type="button" class="shot-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
+    ${canEditScripts() || viewingAsClient() ? `<button type="button" class="shot-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
     ${renderShotActions(s)}
     ${renderAdvanced(s, group)}
   </article>`;
@@ -4773,7 +4847,7 @@ function prepStepHtml(model, step) {
     const extras = (model.extras || []).map(ex => `<div class="prep-extra"><div class="eyebrow">${escHtml(ex.label)}</div><p>${prepText(ex.text)}</p></div>`).join('');
     const scriptId = prepState && prepState.id;
     const editTools = scriptId
-      ? `${editBadgeHtml(scriptId)}${canEditScripts() ? `<button type="button" class="prep-edit" onclick="window.openScriptEdit('${scriptId}')">Edit</button>` : ''}`
+      ? `${editBadgeHtml(scriptId)}${(canEditScripts() || viewingAsClient()) ? `<button type="button" class="prep-edit" onclick="window.openScriptEdit('${scriptId}')">Edit</button>` : ''}`
       : '';
     const yours = model.clientNotes ? `<section class="prep-block"><h3>Your notes</h3><p>${prepText(model.clientNotes)}</p></section>` : '';
     return `
@@ -4864,8 +4938,24 @@ window.closePrep = (silent) => {
 // and every changed field is appended to script_edits. History is the log.
 // The original of a field is the before_text on its earliest row.
 // ─────────────────────────────────────────────
+function homeSlug(clientSlug) {
+  const slug = asText(clientSlug).trim();
+  return slug || null;
+}
+function sessionLanding(role, clientSlug) {
+  return {
+    role: role === 'admin' ? 'admin' : 'client',
+    viewSlug: homeSlug(clientSlug),
+    previewSlug: null,
+  };
+}
+function viewingAsClient() {
+  return role === 'admin' && !!previewSlug;
+}
 function canEditScripts() {
-  return role === 'client' && !!mySlug;
+  if (viewingAsClient()) return false;
+  if (role === 'client') return !!mySlug && viewSlug === mySlug;
+  return role === 'admin' && !!mySlug && viewSlug === mySlug && !previewSlug;
 }
 function editorLabel(u) {
   u = u || {};
@@ -5061,7 +5151,7 @@ function renderEditHistory(s) {
       <p><b>After</b> ${escHtml(row.after_text || 'Empty')}</p>
       ${row.reason ? `<p><b>Reason</b> ${escHtml(row.reason)}</p>` : ''}
     </article>`).join('') : '<p class="prep-empty">No edits on this script yet.</p>';
-  const restore = canEditScripts() && rows.length
+  const restore = (canEditScripts() || viewingAsClient()) && rows.length
     ? `<button type="button" class="edit-restore" ${changed ? '' : 'disabled'} onclick="window.restoreScriptOriginal()">${changed ? 'Restore original' : 'Already the original'}</button>`
     : '';
   return `
@@ -5077,7 +5167,7 @@ function renderEdit() {
   if (!root || !s) { clearEdit(); return; }
   const history = editState.mode === 'history';
   const body = history ? renderEditHistory(s) : renderEditForm(s);
-  const save = !history && canEditScripts()
+  const save = !history && (canEditScripts() || viewingAsClient())
     ? `<button type="button" class="edit-save" ${editSaving ? 'disabled' : ''} onclick="window.saveScriptEdit()">Save edits</button>`
     : '';
   root.innerHTML = `<div id="edit-sheet" role="dialog" aria-modal="true" aria-labelledby="edit-title">
@@ -5118,6 +5208,10 @@ function finishLocalEdit(s, diff, name, reason, toastMessage) {
 }
 async function commitScriptEdit(s, values, reason) {
   if (!s || editSaving) return;
+  if (viewingAsClient()) {
+    showToast('This is ' + clientLabel(previewSlug) + '’s hub. Changes save only in your workspace.', { tone: 'error' });
+    return;
+  }
   if (!canEditScripts() || s.client_slug !== mySlug) {
     showToast('You can only edit your own scripts.', { tone: 'error' });
     return;
@@ -5176,7 +5270,8 @@ async function commitScriptEdit(s, values, reason) {
 }
 window.openScriptEdit = (id) => {
   const s = scripts.find(row => row && row.id === id);
-  if (!s || !canEditScripts()) return;
+  if (!s || !(canEditScripts() || viewingAsClient())) return;
+  if (viewingAsClient() && s.client_slug !== previewSlug) return;
   editState = { id: id, mode: 'edit' };
   renderEdit();
 };
@@ -5306,7 +5401,7 @@ const PIPELINE_STAT_OPTIONS = [
 
 function renderPipeline() {
   const isAdmin = role === 'admin';
-  const clientName = CLIENTS[viewSlug]?.name || viewSlug;
+  const clientName = viewSlug ? (CLIENTS[viewSlug]?.name || clientLabel(viewSlug)) : 'your workspace';
   const groups = activeGroupsFor(viewSlug);
 
   if (!groups.length) {
@@ -5866,7 +5961,52 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
-window.setClient   = slug => { viewSlug = slug; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; calSelectedDay = null; next7ResetPending = true; listSearch = ''; previousOpen = false; hubPage = 'main'; moreOpen = false; resetScriptNav(); renderDash(); };
+window.setClient   = slug => {
+  if (role !== 'admin' || !CLIENTS[slug]) return;
+  if (window.closeEdit) window.closeEdit(true);
+  const own = homeSlug(mySlug);
+  if (own && slug === own) {
+    previewSlug = null;
+    viewSlug = own;
+  } else {
+    previewSlug = slug;
+    viewSlug = slug;
+  }
+  viewAsOpen = false;
+  viewStatus = 'all';
+  viewType = 'all';
+  viewStatusExact = false;
+  calSelectedDay = null;
+  next7ResetPending = true;
+  listSearch = '';
+  previousOpen = false;
+  hubPage = 'main';
+  moreOpen = false;
+  viewTab = 'list';
+  resetScriptNav();
+  renderDash();
+};
+window.toggleViewAs = (force) => {
+  if (role !== 'admin' || previewSlug) return;
+  viewAsOpen = typeof force === 'boolean' ? force : !viewAsOpen;
+  renderDash();
+};
+window.backToWorkspace = () => {
+  if (window.closeEdit) window.closeEdit(true);
+  previewSlug = null;
+  viewAsOpen = false;
+  viewSlug = homeSlug(mySlug);
+  viewStatus = 'all';
+  viewType = 'all';
+  viewStatusExact = false;
+  listSearch = '';
+  previousOpen = false;
+  hubPage = 'main';
+  moreOpen = false;
+  viewTab = 'list';
+  resetScriptNav();
+  renderDash();
+};
 window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash(); };
 window.toggleMore = (force) => {
   moreOpen = typeof force === 'boolean' ? force : !moreOpen;
@@ -6275,7 +6415,11 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     user = opts.user || { id: 'preview-user', email: 'preview@localhost' };
     role = opts.role || 'admin';
     mySlug = opts.mySlug || null;
-    viewSlug = opts.viewSlug || 'andrew';
+    previewSlug = opts.previewing ? (opts.viewSlug || null) : null;
+    viewAsOpen = !!opts.viewAsOpen;
+    if (opts.viewSlug && !opts.previewing) viewSlug = opts.viewSlug;
+    else if (previewSlug) viewSlug = previewSlug;
+    else viewSlug = homeSlug(mySlug);
     viewStatus = opts.viewStatus || 'all';
     viewType = opts.viewType || 'all';
     viewMode = opts.viewMode || 'all';

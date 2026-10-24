@@ -30,6 +30,7 @@ const names = [
   'parseReadWays', 'labeledChunks', 'prepShownNote', 'prepModel',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
+  'homeSlug', 'sessionLanding',
 ];
 const src = [
   "const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];",
@@ -265,5 +266,16 @@ assert.strictEqual(ctx.editFieldLabel('on_screen'), 'On-screen text');
 assert.strictEqual(ctx.editorLabel({ user_metadata: { full_name: 'Monica' }, email: 'x@y.com' }), 'Monica');
 assert.strictEqual(ctx.editorLabel({ email: 'monica@example.com' }), 'Monica');
 assert.strictEqual(ctx.editorLabel({ email: 'preview@localhost' }), 'Client');
+
+assert.strictEqual(ctx.homeSlug(''), null);
+assert.strictEqual(ctx.homeSlug(null), null);
+assert.strictEqual(ctx.homeSlug('cristian'), 'cristian');
+const adminHome = ctx.sessionLanding('admin', null);
+assert.strictEqual(adminHome.viewSlug, null);
+assert.strictEqual(adminHome.previewSlug, null);
+assert.notStrictEqual(adminHome.viewSlug, 'andrew');
+assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian');
+assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
+assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
 console.log('hub-logic tests passed');

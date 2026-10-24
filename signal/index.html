@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- sla-v3 pack-build-v1 film-cue -->
+<!-- sla-v4 offer-outliers-real film-dna -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080808" />
@@ -622,6 +622,39 @@
       font-size: 0.9rem; color: var(--muted); line-height: 1.45;
     }
     .pack-delivery .pd-cta strong { color: var(--fg); }
+
+    .pack-delivery .pd-offer {
+      background: #141414;
+      border: 1px solid var(--line-hot);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }
+    .pack-delivery .pd-offer .row { margin-bottom: 8px; }
+    .pack-delivery .pd-offer .row:last-child { margin-bottom: 0; }
+    .pack-delivery .pd-offer .k {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 3px;
+    }
+    .pack-delivery .pd-offer .v { font-size: 0.9rem; line-height: 1.4; color: var(--fg); }
+    .pack-delivery .pd-keywords { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .pack-delivery .pd-keywords span {
+      font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 999px;
+      background: #1a1a1a; border: 1px solid var(--line); color: var(--muted);
+    }
+    .pack-delivery .pd-out .dna {
+      margin-top: 8px; padding-top: 8px; border-top: 1px dashed var(--line);
+      font-size: 0.78rem; color: var(--dim); line-height: 1.45;
+    }
+    .pack-delivery .pd-out .dna b { color: var(--muted); font-weight: 700; }
+    .pack-delivery .pd-out .script-mini {
+      margin-top: 8px; padding: 10px; border-radius: 10px; background: #0d0d0d;
+      border: 1px solid var(--line); font-size: 0.82rem; white-space: pre-wrap; color: var(--fg); line-height: 1.4;
+    }
+    .pack-delivery .pd-meta {
+      font-size: 0.75rem; color: var(--dim); margin-bottom: 10px; line-height: 1.35;
+    }
+
     .pack-edit-toggle { margin-bottom: 10px; }
     .pack-edit { display: none; }
     .pack-edit.show { display: block; }
@@ -1284,28 +1317,29 @@
       </div>
 
       <div class="pack-delivery" id="packDelivery" hidden>
-        <div class="pd-kicker">Signal Marketing · free event drop</div>
+        <div class="pd-kicker">Signal Marketing · client-style floor drop</div>
         <h2 id="pdTitle">Outlier Pack</h2>
-        <p class="pd-sub" id="pdSub">Built for your page — what to film this week.</p>
+        <p class="pd-sub" id="pdSub">Offer → keywords → proven formats → film scripts</p>
+        <p class="pd-meta" id="pdMeta"></p>
 
         <div class="pd-block">
-          <div class="pd-label">Page snapshot</div>
-          <div class="pd-snap" id="pdSnap"></div>
+          <div class="pd-label">Offer read</div>
+          <div class="pd-offer" id="pdOffer"></div>
         </div>
         <div class="pd-block">
-          <div class="pd-label">What’s working in your lane</div>
+          <div class="pd-label">Proven outlier formats (real posts · DNA kept · messaging swapped)</div>
           <div id="pdOutliers"></div>
         </div>
         <div class="pd-block">
-          <div class="pd-label">3 filmable angles for you</div>
+          <div class="pd-label">Film order (easiest first)</div>
           <div id="pdAngles"></div>
         </div>
         <div class="pd-block" id="pdScriptBlock" hidden>
-          <div class="pd-label">Talking-head skeleton</div>
+          <div class="pd-label">Teleprompter · angle 1</div>
           <div class="pd-snap" id="pdScript"></div>
         </div>
         <div class="pd-cta" id="pdCta">
-          <strong>Soft next:</strong> If this feels useful, we map your next 7 days of posts in 15 minutes.
+          <strong>Soft next:</strong> Film angle 1 now, or map next 7 days in 15 minutes.
         </div>
       </div>
 
@@ -1318,12 +1352,12 @@
         <button type="button" class="btn btn-soft" id="copyDmA">Copy send DM</button>
         <button type="button" class="btn btn-soft" id="rebuildPack">Rebuild</button>
       </div>
-      <p class="action-legend" id="packLegend" hidden><strong>Copy / Share / Mailto</strong> = you send the pack — bots don’t. Show the Pack screen above to them first.</p>
+      <p class="action-legend" id="packLegend" hidden><strong>Copy / Share / Mailto</strong> = you send the pack — bots don’t. Show Offer + proof reels + film scripts first.</p>
 
       <div class="film-cue" id="filmCue" hidden>
         <div class="fc-kicker">Floor cue · optional · ~45s</div>
         <h3>Film angle 1 now?</h3>
-        <p class="fc-why" id="filmWhy">They’re here — shoot the top angle in-hall before they walk. Voice Memos / Camera is fine.</p>
+        <p class="fc-why" id="filmWhy">They’re here — shoot the top angle in-hall before they walk. Voice Memos / Camera is fine. Or open your proven conference formats: <a href="https://13cristianaguilar-bot.github.io/content-hub/conference/" style="color:inherit;text-decoration:underline">Conference Film Board</a> · Hub batch <strong>CONFERENCE · floor-film</strong>.</p>
         <div class="teleprompter">
           <div class="tp-label">One-liner · hold for them · look at lens</div>
           <div class="tp-line" id="tpLine">…</div>
@@ -1340,7 +1374,7 @@
       <div class="section pack-edit" id="packEdit">
         <h3>Ops edit</h3>
         <h4>Tweak before you send</h4>
-        <p class="help">Auto-filled from IG + site signals. Observational only — no invented revenue.</p>
+        <p class="help">Auto-filled from offer read + real outlier URLs. Keep Format DNA; only swap messaging. No invented revenue.</p>
 
         <div class="field">
           <label>For @handle</label>
@@ -1355,7 +1389,7 @@
           <textarea id="outSnap" placeholder="Niche feel · cadence · 1 strength · 1 gap"></textarea>
         </div>
 
-        <h3 style="margin-top:8px">Outliers (pattern / search / why)</h3>
+        <h3 style="margin-top:8px">Outliers (real IG URL · why / DNA)</h3>
         <div id="outlierRows"></div>
         <button type="button" class="btn btn-soft" id="addOutlier" style="margin-bottom:14px">+ Add outlier row</button>
 
@@ -1928,149 +1962,23 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
   });
 
 
-  // ===== PACK ENGINE (floor ~15 min) =====
-  const STORAGE_PACKS = 'signal_lm_packs_v1';
+  // ===== PACK ENGINE v4 (offer → keywords → real outliers → DNA → film) =====
+  const STORAGE_PACKS = 'signal_lm_packs_v2';
+  const STORAGE_QUEUE = 'signal_lm_research_queue_v1';
+
+  const DEMO_PACK_CRISTIAN = {"id": "demo_cristian_signal", "handle": "@cristianaguilar.ai", "name": "Cristian", "nicheLabel": "content strategy + AI for founders", "status": "real-outliers", "source": "outlier-pipeline ranked \u22653\u00d7 median (Apify hard-limit; used cached scrapes)", "offer": {"oneLiner": "Content strategy + AI partnership for founders \u2014 research the angle, turn experience into film-ready scripts, build a publishing rhythm you own.", "buyer": "Founders / operators who already have the knowledge (decisions, client convos, problems solved) but need direction so it becomes a body of work \u2014 not more tip spam.", "foundation": "$3,500 one-time setup \u2014 research, onboarding, first calendar + scripts, documented system", "ongoing": "$1,000/mo \u2014 weekly strategy, planning + scripts, performance review, AI thought partnership", "site": "https://signals.marketing", "keywords": ["content strategy founders", "AI content partnership", "ready-to-film scripts", "outlier formats Instagram", "publishing rhythm", "founder talking head", "research positioning", "customer conversations content"]}, "insight": "Your site already says the offer clearly. What most founders in your lane miss: they post tips about content, not the formats that already printed for peers \u2014 then swap only messaging. Show the proven reel + DNA + their script. That\u2019s the drop.", "outliers": [{"title": "Binary client-tier POV (talking head)", "formatName": "Contrast hook \u2192 personal proof \u2192 soft CTA", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Binary frame ($500 vs $5000) forces self-selection in 2 seconds. Easy to film on a phone at a conference \u2014 no B-roll required.", "dna": {"hook": "Two numbers / two paths in the first line", "components": "Face to camera \u00b7 big contrast \u00b7 short proof \u00b7 who-this-is-for", "rehook": "Name yourself + what you help with mid-clip", "cadence": "One idea, ~30\u201345s", "length": "30\u201360s talking-head", "idea": "Price/tier contrast reveals who you actually want", "reward": "Viewer knows which bucket they\u2019re in", "emotionalNext": "Curiosity \u2192 \u2018which one am I?\u2019 \u2192 lean into offer"}, "keepDna": "Keep the binary contrast + face-to-camera + mid-clip identity line.", "swapMessaging": "Swap $500/$5000 \u2192 Foundation vs Ongoing (or \u2018random posts\u2019 vs \u2018owned system\u2019). Voice = calm operator, not hype.", "filmScript": "HOOK (on screen): \u201c$3,500 foundation vs $1,000/mo partnership \u2014 which do you actually need?\u201d\nSPOKEN: Most founders don\u2019t need more content ideas. They need the research + scripts + rhythm so the ideas they already have become a body of work. Foundation builds the system. Ongoing keeps the signal sharp.\nEND: Soft \u2014 \u201cIf you\u2019re at the event, I\u2019ll map your next 7 days in 15 minutes.\u201d"}, {"title": "Contrarian \u2018I don\u2019t care if\u2026\u2019 owner take", "formatName": "Contrarian permission \u2192 logic \u2192 reframe", "url": "https://www.instagram.com/reel/DdbzuysjzzD/", "creator": "zerodollarcoach", "views": 7577702, "score": 1159.2, "why": "Permission-giving hot takes print for operators. Same DNA works for content myths founders cling to. Filmable standing in a hallway.", "dna": {"hook": "I don\u2019t care if\u2026 (violates assumed rule)", "components": "Talking-head \u00b7 one contrarian claim \u00b7 because-logic \u00b7 reframe", "rehook": "Half of you will think I\u2019m wrong \u2014 here\u2019s why I\u2019m not", "cadence": "Claim \u2192 proof \u2192 implication", "length": "45\u201390s (trim to 45 for floor)", "idea": "Kill a sacred productivity/content rule", "reward": "Relief + new rule they can use Monday", "emotionalNext": "Save / share with a founder friend"}, "keepDna": "Keep \u2018I don\u2019t care if\u2026\u2019 + half-will-disagree rehook + calm logic.", "swapMessaging": "Target content myths: daily posting, dancing trends, \u2018I need a media team.\u2019 Swap to Signal\u2019s rule: right 3 pieces > empty daily streak.", "filmScript": "HOOK: \u201cI don\u2019t care if you post every day.\u201d\nSPOKEN: Half the founders in this room will hate that. Here\u2019s why I don\u2019t care: daily empty tips train the algorithm \u2014 and your buyer \u2014 that you have nothing specific to say. I\u2019d rather you ship three researched, film-ready pieces with a next step.\nEND: \u201cThat\u2019s the partnership \u2014 research, scripts, rhythm.\u201d"}, {"title": "AI tool drop + comment keyword CTA", "formatName": "New tool reveal \u2192 what it replaces \u2192 comment-to-DM", "url": "https://www.instagram.com/p/DRUbY-3D7ef/", "creator": "nick_saraev", "views": 735868, "score": 5.95, "why": "Comment-gated value is the modern lead magnet. Maps directly to your AI thought-partnership pillar \u2014 and you can film the \u2018what I\u2019d actually use this for\u2019 cut on the spot.", "dna": {"hook": "Named new AI tool + \u2018comment X\u2019", "components": "Screen/face \u00b7 capability list \u00b7 who it\u2019s for \u00b7 comment CTA", "rehook": "While everyone\u2019s distracted by ChatGPT\u2026", "cadence": "Hook \u2192 3 bullets \u2192 CTA", "length": "20\u201340s", "idea": "Practical AI for marketers/founders", "reward": "Free resource via comment", "emotionalNext": "Comment \u2192 DM \u2192 relationship"}, "keepDna": "Keep named-tool hook + 3 practical bullets + single comment keyword.", "swapMessaging": "Don\u2019t spam tools. Angle: \u2018Here\u2019s the one AI workflow I\u2019d set up in your business this week\u2019 \u2014 then point to partnership, not a freebie pile.", "filmScript": "HOOK: \u201cComment FLOW if you want the one AI workflow I\u2019d install for a founder this week.\u201d\nSPOKEN: Not another ChatGPT tip. One workflow: turn customer conversations \u2192 hooks \u2192 film-ready scripts \u2192 calendar. That\u2019s the AI thought partnership inside Signal \u2014 tools with a job, not a toy drawer.\nEND: Hold for comments / show signals.marketing."}, {"title": "Industry observation \u2192 implication (no flex)", "formatName": "Pattern callout \u2192 what smart operators do instead", "url": "https://www.instagram.com/p/DYU9NJjDWqa/", "creator": "andrewpreneurship", "views": 152680, "score": 383.14, "why": "Calm pattern-interrupt. Perfect for conference interviews too \u2014 you can film them answering the implication.", "dna": {"hook": "Most [category] don\u2019t rely on X\u2026", "components": "Observation \u00b7 contrast \u00b7 implication for viewer", "rehook": "\ud83d\udc40 visual beat / pause", "cadence": "One sentence observation, then the turn", "length": "15\u201335s", "idea": "Systems beat heroics", "reward": "Viewer feels behind in a useful way", "emotionalNext": "Want the system"}, "keepDna": "Keep \u2018Most X don\u2019t\u2026\u2019 observation + quiet confidence + one implication.", "swapMessaging": "\u2018Most founders don\u2019t need more content ideas \u2014 they need a system that owns the ideas they already have.\u2019", "filmScript": "HOOK: \u201cMost founders don\u2019t need more content ideas.\u201d\nSPOKEN: Your best material is already there \u2014 decisions, problems you solve, customer conversations. What\u2019s missing is research, scripts, and a rhythm you own. That\u2019s the Signal partnership.\nEND: \u201cI\u2019ll show you three formats printing in your lane \u2014 want to film one before you leave?\u201d"}, {"title": "Script-as-product (comment for templates)", "formatName": "Promise a script \u00b7 show the shape \u00b7 comment CTA", "url": "https://www.instagram.com/p/C4IkEsAqMmh/", "creator": "pavels_life", "views": 466016, "score": 111.33, "why": "Your deliverable IS scripts. This format makes the product visible on camera \u2014 filmable with a notes app on screen.", "dna": {"hook": "Sell / say anything with this script", "components": "Bold promise \u00b7 script shape on screen \u00b7 comment keyword", "rehook": "Copy/paste energy", "cadence": "Hook \u2192 lines \u2192 CTA", "length": "15\u201330s", "idea": "Script is the product", "reward": "Tangible takeaway", "emotionalNext": "Comment for the goods"}, "keepDna": "Keep promise-of-script + on-screen lines + one keyword CTA.", "swapMessaging": "Show a real Signal-style TH skeleton (hook / spoken / end) for THEIR niche \u2014 that\u2019s the demo of the $3.5k foundation.", "filmScript": "HOOK: \u201cHere\u2019s the talking-head script I\u2019d film for you before lunch.\u201d\nSPOKEN: Hook plate. Spoken path. End screenshot. Same Format DNA that printed for others \u2014 your messaging, your buyer, your voice.\nEND: \u201cComment SCRIPT \u2014 or just film this with me right now.\u201d"}], "angles": ["Hook: HOOK  \u201c$3,500 foundation vs $1,000/mo partnership \u2014 which do you actually need?\u201d \u00b7 Format: Contrast hook \u2192 personal proof \u2192 soft CTA \u00b7 Proof: @danhenry 309.76\u00d7 median", "Hook: \u201cI don\u2019t care if you post every day.\u201d \u00b7 Format: Contrarian permission \u2192 logic \u2192 reframe \u00b7 Proof: @zerodollarcoach 1159.2\u00d7 median", "Hook: \u201cComment FLOW if you want the one AI workflow I\u2019d install for a founder this week.\u201d \u00b7 Format: New tool reveal \u2192 what it replaces \u2192 comment-to-DM \u00b7 Proof: @nick_saraev 5.95\u00d7 median"], "hook": "Most founders don\u2019t need more content ideas \u2014 they need a system that owns the ones they already have.", "script": "HOOK: \u201cMost founders don\u2019t need more content ideas.\u201d\nSPOKEN: Your best material is already there \u2014 decisions, problems you solve, customer conversations. What\u2019s missing is research, scripts, and a rhythm you own. That\u2019s the Signal partnership.\nEND: \u201cI\u2019ll show you three formats printing in your lane \u2014 want to film one before you leave?\u201d", "builtAt": "2026-10-24T15:39:38.734259+00:00"};
+
+  const FORMAT_LIBS = {"coach": [{"title": "Contrarian owner permission take", "formatName": "I don\u2019t care if\u2026 \u2192 logic", "url": "https://www.instagram.com/reel/DdbzuysjzzD/", "creator": "zerodollarcoach", "views": 7577702, "score": 1159.2, "why": "Contrarian permission prints for coaches/owners. Film as talking-head.", "dna": {"hook": "I don\u2019t care if\u2026", "components": "TH + claim + logic", "rehook": "Half will disagree", "cadence": "claim\u2192proof", "length": "45-90s", "idea": "Kill a sacred rule", "reward": "Relief", "emotionalNext": "Save"}, "keepDna": "Contrarian opener + calm logic.", "swapMessaging": "Swap to your coaching myth.", "filmScript": "HOOK: \u201cI don\u2019t care if\u2026\u201d\nSPOKEN: [your myth]\nEND: Soft CTA"}, {"title": "Binary client tier", "formatName": "A vs B self-select", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Forces buyer self-selection.", "dna": {"hook": "Two paths", "components": "contrast + face", "rehook": "who I help", "cadence": "one idea", "length": "30-45s", "idea": "tier contrast", "reward": "clarity", "emotionalNext": "DM"}, "keepDna": "Binary frame.", "swapMessaging": "Your offer tiers.", "filmScript": "HOOK: \u201c[Low] vs [High] \u2014 which are you?\u201d\nSPOKEN: \u2026\nEND: Soft CTA"}, {"title": "3 things people pay for", "formatName": "Numbered framework TH", "url": "https://www.instagram.com/reel/DYxCMBxhoYs/", "creator": "davidimonitie", "views": 4566838, "score": 291.04, "why": "Framework posts teach + sell.", "dna": {"hook": "Your business must\u2026", "components": "3 buckets", "rehook": "great companies", "cadence": "list", "length": "60-90s", "idea": "solutions/convenience/experiences", "reward": "framework", "emotionalNext": "audit self"}, "keepDna": "3-bucket framework.", "swapMessaging": "Your methodology.", "filmScript": "HOOK: \u201cYour offer must hit 1 of these 3.\u201d\nSPOKEN: \u2026\nEND: Which one are you?"}], "agency": [{"title": "AI tool / workflow drop", "formatName": "Tool reveal + comment CTA", "url": "https://www.instagram.com/p/DRUbY-3D7ef/", "creator": "nick_saraev", "views": 735868, "score": 5.95, "why": "Comment CTA is the agency lead magnet now.", "dna": {"hook": "Named tool", "components": "bullets + CTA", "rehook": "while everyone\u2026", "cadence": "fast", "length": "20-40s", "idea": "practical AI", "reward": "resource", "emotionalNext": "comment"}, "keepDna": "Named tool + keyword CTA.", "swapMessaging": "Your stack / audit offer.", "filmScript": "HOOK: \u201cComment STACK for the workflow.\u201d\nSPOKEN: \u2026\nEND: Hold"}, {"title": "One-person AI team stack", "formatName": "Tool stack as team", "url": "https://www.instagram.com/p/DVq24l7DfXC/", "creator": "leadgenman", "views": 63969, "score": 3.45, "why": "Stack-as-team content converts lean agencies.", "dna": {"hook": "One person. These tools.", "components": "list roles", "rehook": "whole team", "cadence": "staccato", "length": "20-35s", "idea": "leverage", "reward": "stack", "emotionalNext": "save"}, "keepDna": "Role=tool mapping.", "swapMessaging": "Your delivery stack.", "filmScript": "HOOK: \u201cOne person. This stack.\u201d\nSPOKEN: \u2026\nEND: Save"}, {"title": "Script-as-product", "formatName": "Show the script", "url": "https://www.instagram.com/p/C4IkEsAqMmh/", "creator": "pavels_life", "views": 466016, "score": 111.33, "why": "Makes the deliverable visible.", "dna": {"hook": "Sell with this script", "components": "lines on screen", "rehook": "copy/paste", "cadence": "tight", "length": "15-30s", "idea": "script=product", "reward": "takeaway", "emotionalNext": "comment"}, "keepDna": "Script on screen.", "swapMessaging": "Your pitch / creative brief.", "filmScript": "HOOK: \u201cSteal this script.\u201d\nSPOKEN: \u2026\nEND: Comment SCRIPT"}], "saas": [{"title": "Pattern: most don\u2019t rely on X", "formatName": "Observation \u2192 implication", "url": "https://www.instagram.com/p/DYU9NJjDWqa/", "creator": "andrewpreneurship", "views": 152680, "score": 383.14, "why": "Systems > heroics for SaaS founders.", "dna": {"hook": "Most X don\u2019t\u2026", "components": "obs\u2192turn", "rehook": "pause", "cadence": "one beat", "length": "15-35s", "idea": "systems", "reward": "aha", "emotionalNext": "want system"}, "keepDna": "Quiet observation.", "swapMessaging": "Your category myth.", "filmScript": "HOOK: \u201cMost teams still\u2026\u201d\nSPOKEN: \u2026\nEND: Soft CTA"}, {"title": "AI coding / builder news punch", "formatName": "News \u2192 why it matters", "url": "https://www.instagram.com/reel/DcMJ3t_BVbE/", "creator": "rowancheung", "views": 3561809, "score": 74.47, "why": "Timely AI product news with builder angle.", "dna": {"hook": "Named launch", "components": "what it does", "rehook": "instead of\u2026", "cadence": "news", "length": "30-45s", "idea": "agents do work", "reward": "awareness", "emotionalNext": "try/follow"}, "keepDna": "Named launch + implication.", "swapMessaging": "Tie to your product job-to-be-done.", "filmScript": "HOOK: \u201c[Product] just shipped\u2026\u201d\nSPOKEN: Here\u2019s why your users care.\nEND: CTA"}, {"title": "Claude/startup perks list", "formatName": "List of unlocked value", "url": "https://www.instagram.com/p/DeWJZciNCKX/", "creator": "leadgenman", "views": 137816, "score": 7.44, "why": "Specific unlocked value > vague \u2018we use AI\u2019.", "dna": {"hook": "Got approved for\u2026", "components": "perk list", "rehook": "longer than expected", "cadence": "list", "length": "25-40s", "idea": "leverage deals", "reward": "tactics", "emotionalNext": "save"}, "keepDna": "Specific list.", "swapMessaging": "Your integration/perk story.", "filmScript": "HOOK: \u201cWe just unlocked\u2026\u201d\nSPOKEN: \u2026\nEND: Save"}], "creator": [{"title": "Method question hook", "formatName": "Are you using this method?", "url": "https://www.instagram.com/reel/Cvcz3QKtwW3/", "creator": "frazerbrookesonline", "views": 2816848, "score": 169.77, "why": "Question hooks stop the scroll for creators.", "dna": {"hook": "Are you using this method\u2026", "components": "question\u2192method", "rehook": "reach/engagement", "cadence": "teach", "length": "30s", "idea": "growth method", "reward": "tactic", "emotionalNext": "try"}, "keepDna": "Question + method.", "swapMessaging": "Your distribution system.", "filmScript": "HOOK: \u201cAre you using this method?\u201d\nSPOKEN: \u2026\nEND: Save"}, {"title": "Binary client tier", "formatName": "A vs B", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Personal brand monetization clarity.", "dna": {"hook": "Two paths", "components": "contrast", "rehook": "who I help", "cadence": "one idea", "length": "30-45s", "idea": "tier", "reward": "clarity", "emotionalNext": "DM"}, "keepDna": "Binary.", "swapMessaging": "Your offer.", "filmScript": "HOOK: \u201cCreator vs operator income.\u201d\nSPOKEN: \u2026\nEND: CTA"}, {"title": "AI tool comment CTA", "formatName": "Tool + comment", "url": "https://www.instagram.com/p/DSm-QQ_Dxh3/", "creator": "nick_saraev", "views": 1001427, "score": 8.09, "why": "Creator growth via useful AI drops.", "dna": {"hook": "Comment KEYWORD", "components": "tools list", "rehook": "while everyone\u2026", "cadence": "fast", "length": "25-40s", "idea": "free tools", "reward": "resource", "emotionalNext": "comment"}, "keepDna": "Comment gate.", "swapMessaging": "Your free asset.", "filmScript": "HOOK: \u201cComment TOOLS.\u201d\nSPOKEN: \u2026\nEND: Hold"}], "generic": [{"title": "Binary client-tier POV (talking head)", "formatName": "Contrast hook \u2192 personal proof \u2192 soft CTA", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Binary frame ($500 vs $5000) forces self-selection in 2 seconds. Easy to film on a phone at a conference \u2014 no B-roll required.", "dna": {"hook": "Two numbers / two paths in the first line", "components": "Face to camera \u00b7 big contrast \u00b7 short proof \u00b7 who-this-is-for", "rehook": "Name yourself + what you help with mid-clip", "cadence": "One idea, ~30\u201345s", "length": "30\u201360s talking-head", "idea": "Price/tier contrast reveals who you actually want", "reward": "Viewer knows which bucket they\u2019re in", "emotionalNext": "Curiosity \u2192 \u2018which one am I?\u2019 \u2192 lean into offer"}, "keepDna": "Keep the binary contrast + face-to-camera + mid-clip identity line.", "swapMessaging": "Swap $500/$5000 \u2192 Foundation vs Ongoing (or \u2018random posts\u2019 vs \u2018owned system\u2019). Voice = calm operator, not hype.", "filmScript": "HOOK (on screen): \u201c$3,500 foundation vs $1,000/mo partnership \u2014 which do you actually need?\u201d\nSPOKEN: Most founders don\u2019t need more content ideas. They need the research + scripts + rhythm so the ideas they already have become a body of work. Foundation builds the system. Ongoing keeps the signal sharp.\nEND: Soft \u2014 \u201cIf you\u2019re at the event, I\u2019ll map your next 7 days in 15 minutes.\u201d"}, {"title": "Contrarian \u2018I don\u2019t care if\u2026\u2019 owner take", "formatName": "Contrarian permission \u2192 logic \u2192 reframe", "url": "https://www.instagram.com/reel/DdbzuysjzzD/", "creator": "zerodollarcoach", "views": 7577702, "score": 1159.2, "why": "Permission-giving hot takes print for operators. Same DNA works for content myths founders cling to. Filmable standing in a hallway.", "dna": {"hook": "I don\u2019t care if\u2026 (violates assumed rule)", "components": "Talking-head \u00b7 one contrarian claim \u00b7 because-logic \u00b7 reframe", "rehook": "Half of you will think I\u2019m wrong \u2014 here\u2019s why I\u2019m not", "cadence": "Claim \u2192 proof \u2192 implication", "length": "45\u201390s (trim to 45 for floor)", "idea": "Kill a sacred productivity/content rule", "reward": "Relief + new rule they can use Monday", "emotionalNext": "Save / share with a founder friend"}, "keepDna": "Keep \u2018I don\u2019t care if\u2026\u2019 + half-will-disagree rehook + calm logic.", "swapMessaging": "Target content myths: daily posting, dancing trends, \u2018I need a media team.\u2019 Swap to Signal\u2019s rule: right 3 pieces > empty daily streak.", "filmScript": "HOOK: \u201cI don\u2019t care if you post every day.\u201d\nSPOKEN: Half the founders in this room will hate that. Here\u2019s why I don\u2019t care: daily empty tips train the algorithm \u2014 and your buyer \u2014 that you have nothing specific to say. I\u2019d rather you ship three researched, film-ready pieces with a next step.\nEND: \u201cThat\u2019s the partnership \u2014 research, scripts, rhythm.\u201d"}, {"title": "AI tool drop + comment keyword CTA", "formatName": "New tool reveal \u2192 what it replaces \u2192 comment-to-DM", "url": "https://www.instagram.com/p/DRUbY-3D7ef/", "creator": "nick_saraev", "views": 735868, "score": 5.95, "why": "Comment-gated value is the modern lead magnet. Maps directly to your AI thought-partnership pillar \u2014 and you can film the \u2018what I\u2019d actually use this for\u2019 cut on the spot.", "dna": {"hook": "Named new AI tool + \u2018comment X\u2019", "components": "Screen/face \u00b7 capability list \u00b7 who it\u2019s for \u00b7 comment CTA", "rehook": "While everyone\u2019s distracted by ChatGPT\u2026", "cadence": "Hook \u2192 3 bullets \u2192 CTA", "length": "20\u201340s", "idea": "Practical AI for marketers/founders", "reward": "Free resource via comment", "emotionalNext": "Comment \u2192 DM \u2192 relationship"}, "keepDna": "Keep named-tool hook + 3 practical bullets + single comment keyword.", "swapMessaging": "Don\u2019t spam tools. Angle: \u2018Here\u2019s the one AI workflow I\u2019d set up in your business this week\u2019 \u2014 then point to partnership, not a freebie pile.", "filmScript": "HOOK: \u201cComment FLOW if you want the one AI workflow I\u2019d install for a founder this week.\u201d\nSPOKEN: Not another ChatGPT tip. One workflow: turn customer conversations \u2192 hooks \u2192 film-ready scripts \u2192 calendar. That\u2019s the AI thought partnership inside Signal \u2014 tools with a job, not a toy drawer.\nEND: Hold for comments / show signals.marketing."}, {"title": "Industry observation \u2192 implication (no flex)", "formatName": "Pattern callout \u2192 what smart operators do instead", "url": "https://www.instagram.com/p/DYU9NJjDWqa/", "creator": "andrewpreneurship", "views": 152680, "score": 383.14, "why": "Calm pattern-interrupt. Perfect for conference interviews too \u2014 you can film them answering the implication.", "dna": {"hook": "Most [category] don\u2019t rely on X\u2026", "components": "Observation \u00b7 contrast \u00b7 implication for viewer", "rehook": "\ud83d\udc40 visual beat / pause", "cadence": "One sentence observation, then the turn", "length": "15\u201335s", "idea": "Systems beat heroics", "reward": "Viewer feels behind in a useful way", "emotionalNext": "Want the system"}, "keepDna": "Keep \u2018Most X don\u2019t\u2026\u2019 observation + quiet confidence + one implication.", "swapMessaging": "\u2018Most founders don\u2019t need more content ideas \u2014 they need a system that owns the ideas they already have.\u2019", "filmScript": "HOOK: \u201cMost founders don\u2019t need more content ideas.\u201d\nSPOKEN: Your best material is already there \u2014 decisions, problems you solve, customer conversations. What\u2019s missing is research, scripts, and a rhythm you own. That\u2019s the Signal partnership.\nEND: \u201cI\u2019ll show you three formats printing in your lane \u2014 want to film one before you leave?\u201d"}], "ecom": [{"title": "Method question hook", "formatName": "Are you using this method?", "url": "https://www.instagram.com/reel/Cvcz3QKtwW3/", "creator": "frazerbrookesonline", "views": 2816848, "score": 169.77, "why": "Question hooks stop the scroll for creators.", "dna": {"hook": "Are you using this method\u2026", "components": "question\u2192method", "rehook": "reach/engagement", "cadence": "teach", "length": "30s", "idea": "growth method", "reward": "tactic", "emotionalNext": "try"}, "keepDna": "Question + method.", "swapMessaging": "Your distribution system.", "filmScript": "HOOK: \u201cAre you using this method?\u201d\nSPOKEN: \u2026\nEND: Save"}, {"title": "Binary client tier", "formatName": "A vs B", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Personal brand monetization clarity.", "dna": {"hook": "Two paths", "components": "contrast", "rehook": "who I help", "cadence": "one idea", "length": "30-45s", "idea": "tier", "reward": "clarity", "emotionalNext": "DM"}, "keepDna": "Binary.", "swapMessaging": "Your offer.", "filmScript": "HOOK: \u201cCreator vs operator income.\u201d\nSPOKEN: \u2026\nEND: CTA"}, {"title": "AI tool comment CTA", "formatName": "Tool + comment", "url": "https://www.instagram.com/p/DSm-QQ_Dxh3/", "creator": "nick_saraev", "views": 1001427, "score": 8.09, "why": "Creator growth via useful AI drops.", "dna": {"hook": "Comment KEYWORD", "components": "tools list", "rehook": "while everyone\u2026", "cadence": "fast", "length": "25-40s", "idea": "free tools", "reward": "resource", "emotionalNext": "comment"}, "keepDna": "Comment gate.", "swapMessaging": "Your free asset.", "filmScript": "HOOK: \u201cComment TOOLS.\u201d\nSPOKEN: \u2026\nEND: Hold"}], "local": [{"title": "Contrarian owner permission take", "formatName": "I don\u2019t care if\u2026 \u2192 logic", "url": "https://www.instagram.com/reel/DdbzuysjzzD/", "creator": "zerodollarcoach", "views": 7577702, "score": 1159.2, "why": "Contrarian permission prints for coaches/owners. Film as talking-head.", "dna": {"hook": "I don\u2019t care if\u2026", "components": "TH + claim + logic", "rehook": "Half will disagree", "cadence": "claim\u2192proof", "length": "45-90s", "idea": "Kill a sacred rule", "reward": "Relief", "emotionalNext": "Save"}, "keepDna": "Contrarian opener + calm logic.", "swapMessaging": "Swap to your coaching myth.", "filmScript": "HOOK: \u201cI don\u2019t care if\u2026\u201d\nSPOKEN: [your myth]\nEND: Soft CTA"}, {"title": "Binary client tier", "formatName": "A vs B self-select", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Forces buyer self-selection.", "dna": {"hook": "Two paths", "components": "contrast + face", "rehook": "who I help", "cadence": "one idea", "length": "30-45s", "idea": "tier contrast", "reward": "clarity", "emotionalNext": "DM"}, "keepDna": "Binary frame.", "swapMessaging": "Your offer tiers.", "filmScript": "HOOK: \u201c[Low] vs [High] \u2014 which are you?\u201d\nSPOKEN: \u2026\nEND: Soft CTA"}, {"title": "3 things people pay for", "formatName": "Numbered framework TH", "url": "https://www.instagram.com/reel/DYxCMBxhoYs/", "creator": "davidimonitie", "views": 4566838, "score": 291.04, "why": "Framework posts teach + sell.", "dna": {"hook": "Your business must\u2026", "components": "3 buckets", "rehook": "great companies", "cadence": "list", "length": "60-90s", "idea": "solutions/convenience/experiences", "reward": "framework", "emotionalNext": "audit self"}, "keepDna": "3-bucket framework.", "swapMessaging": "Your methodology.", "filmScript": "HOOK: \u201cYour offer must hit 1 of these 3.\u201d\nSPOKEN: \u2026\nEND: Which one are you?"}], "content_strategy": [{"title": "Binary client-tier POV (talking head)", "formatName": "Contrast hook \u2192 personal proof \u2192 soft CTA", "url": "https://www.instagram.com/p/DObqU9KEtkn/", "creator": "danhenry", "views": 1363245, "score": 309.76, "why": "Binary frame ($500 vs $5000) forces self-selection in 2 seconds. Easy to film on a phone at a conference \u2014 no B-roll required.", "dna": {"hook": "Two numbers / two paths in the first line", "components": "Face to camera \u00b7 big contrast \u00b7 short proof \u00b7 who-this-is-for", "rehook": "Name yourself + what you help with mid-clip", "cadence": "One idea, ~30\u201345s", "length": "30\u201360s talking-head", "idea": "Price/tier contrast reveals who you actually want", "reward": "Viewer knows which bucket they\u2019re in", "emotionalNext": "Curiosity \u2192 \u2018which one am I?\u2019 \u2192 lean into offer"}, "keepDna": "Keep the binary contrast + face-to-camera + mid-clip identity line.", "swapMessaging": "Swap $500/$5000 \u2192 Foundation vs Ongoing (or \u2018random posts\u2019 vs \u2018owned system\u2019). Voice = calm operator, not hype.", "filmScript": "HOOK (on screen): \u201c$3,500 foundation vs $1,000/mo partnership \u2014 which do you actually need?\u201d\nSPOKEN: Most founders don\u2019t need more content ideas. They need the research + scripts + rhythm so the ideas they already have become a body of work. Foundation builds the system. Ongoing keeps the signal sharp.\nEND: Soft \u2014 \u201cIf you\u2019re at the event, I\u2019ll map your next 7 days in 15 minutes.\u201d"}, {"title": "Contrarian \u2018I don\u2019t care if\u2026\u2019 owner take", "formatName": "Contrarian permission \u2192 logic \u2192 reframe", "url": "https://www.instagram.com/reel/DdbzuysjzzD/", "creator": "zerodollarcoach", "views": 7577702, "score": 1159.2, "why": "Permission-giving hot takes print for operators. Same DNA works for content myths founders cling to. Filmable standing in a hallway.", "dna": {"hook": "I don\u2019t care if\u2026 (violates assumed rule)", "components": "Talking-head \u00b7 one contrarian claim \u00b7 because-logic \u00b7 reframe", "rehook": "Half of you will think I\u2019m wrong \u2014 here\u2019s why I\u2019m not", "cadence": "Claim \u2192 proof \u2192 implication", "length": "45\u201390s (trim to 45 for floor)", "idea": "Kill a sacred productivity/content rule", "reward": "Relief + new rule they can use Monday", "emotionalNext": "Save / share with a founder friend"}, "keepDna": "Keep \u2018I don\u2019t care if\u2026\u2019 + half-will-disagree rehook + calm logic.", "swapMessaging": "Target content myths: daily posting, dancing trends, \u2018I need a media team.\u2019 Swap to Signal\u2019s rule: right 3 pieces > empty daily streak.", "filmScript": "HOOK: \u201cI don\u2019t care if you post every day.\u201d\nSPOKEN: Half the founders in this room will hate that. Here\u2019s why I don\u2019t care: daily empty tips train the algorithm \u2014 and your buyer \u2014 that you have nothing specific to say. I\u2019d rather you ship three researched, film-ready pieces with a next step.\nEND: \u201cThat\u2019s the partnership \u2014 research, scripts, rhythm.\u201d"}, {"title": "AI tool drop + comment keyword CTA", "formatName": "New tool reveal \u2192 what it replaces \u2192 comment-to-DM", "url": "https://www.instagram.com/p/DRUbY-3D7ef/", "creator": "nick_saraev", "views": 735868, "score": 5.95, "why": "Comment-gated value is the modern lead magnet. Maps directly to your AI thought-partnership pillar \u2014 and you can film the \u2018what I\u2019d actually use this for\u2019 cut on the spot.", "dna": {"hook": "Named new AI tool + \u2018comment X\u2019", "components": "Screen/face \u00b7 capability list \u00b7 who it\u2019s for \u00b7 comment CTA", "rehook": "While everyone\u2019s distracted by ChatGPT\u2026", "cadence": "Hook \u2192 3 bullets \u2192 CTA", "length": "20\u201340s", "idea": "Practical AI for marketers/founders", "reward": "Free resource via comment", "emotionalNext": "Comment \u2192 DM \u2192 relationship"}, "keepDna": "Keep named-tool hook + 3 practical bullets + single comment keyword.", "swapMessaging": "Don\u2019t spam tools. Angle: \u2018Here\u2019s the one AI workflow I\u2019d set up in your business this week\u2019 \u2014 then point to partnership, not a freebie pile.", "filmScript": "HOOK: \u201cComment FLOW if you want the one AI workflow I\u2019d install for a founder this week.\u201d\nSPOKEN: Not another ChatGPT tip. One workflow: turn customer conversations \u2192 hooks \u2192 film-ready scripts \u2192 calendar. That\u2019s the AI thought partnership inside Signal \u2014 tools with a job, not a toy drawer.\nEND: Hold for comments / show signals.marketing."}, {"title": "Industry observation \u2192 implication (no flex)", "formatName": "Pattern callout \u2192 what smart operators do instead", "url": "https://www.instagram.com/p/DYU9NJjDWqa/", "creator": "andrewpreneurship", "views": 152680, "score": 383.14, "why": "Calm pattern-interrupt. Perfect for conference interviews too \u2014 you can film them answering the implication.", "dna": {"hook": "Most [category] don\u2019t rely on X\u2026", "components": "Observation \u00b7 contrast \u00b7 implication for viewer", "rehook": "\ud83d\udc40 visual beat / pause", "cadence": "One sentence observation, then the turn", "length": "15\u201335s", "idea": "Systems beat heroics", "reward": "Viewer feels behind in a useful way", "emotionalNext": "Want the system"}, "keepDna": "Keep \u2018Most X don\u2019t\u2026\u2019 observation + quiet confidence + one implication.", "swapMessaging": "\u2018Most founders don\u2019t need more content ideas \u2014 they need a system that owns the ideas they already have.\u2019", "filmScript": "HOOK: \u201cMost founders don\u2019t need more content ideas.\u201d\nSPOKEN: Your best material is already there \u2014 decisions, problems you solve, customer conversations. What\u2019s missing is research, scripts, and a rhythm you own. That\u2019s the Signal partnership.\nEND: \u201cI\u2019ll show you three formats printing in your lane \u2014 want to film one before you leave?\u201d"}, {"title": "Script-as-product (comment for templates)", "formatName": "Promise a script \u00b7 show the shape \u00b7 comment CTA", "url": "https://www.instagram.com/p/C4IkEsAqMmh/", "creator": "pavels_life", "views": 466016, "score": 111.33, "why": "Your deliverable IS scripts. This format makes the product visible on camera \u2014 filmable with a notes app on screen.", "dna": {"hook": "Sell / say anything with this script", "components": "Bold promise \u00b7 script shape on screen \u00b7 comment keyword", "rehook": "Copy/paste energy", "cadence": "Hook \u2192 lines \u2192 CTA", "length": "15\u201330s", "idea": "Script is the product", "reward": "Tangible takeaway", "emotionalNext": "Comment for the goods"}, "keepDna": "Keep promise-of-script + on-screen lines + one keyword CTA.", "swapMessaging": "Show a real Signal-style TH skeleton (hook / spoken / end) for THEIR niche \u2014 that\u2019s the demo of the $3.5k foundation.", "filmScript": "HOOK: \u201cHere\u2019s the talking-head script I\u2019d film for you before lunch.\u201d\nSPOKEN: Hook plate. Spoken path. End screenshot. Same Format DNA that printed for others \u2014 your messaging, your buyer, your voice.\nEND: \u201cComment SCRIPT \u2014 or just film this with me right now.\u201d"}]};
+
   const NICHES = [
-    {
-      id: 'coach',
-      keys: ['coach','coaching','mentor','consult','agency owner','course','mastermind','community','program','transform'],
-      label: 'coaches / mentors',
-      insight: 'Most coaches post “tips.” The posts that actually pull DMs are specific failure→fix stories with a number — not another carousel of principles.',
-      gap: 'Cadence looks tip-heavy; the gap is proof-of-life moments (before/after tension) that make strangers self-select.',
-      patterns: [
-        { title: 'Specific failure → fix (with a number)', why: 'Concrete loss/gain beats “mindset.” People DM when they see themselves in the number.', search: 'site:instagram.com “I almost” coach OR agency' },
-        { title: 'Client objection → live teardown', why: 'Objection content converts silent lurkers who think “that won’t work for me.”', search: 'instagram “you’re not ready” coaching reel' },
-        { title: 'Behind-the-offer stack (what’s included, what isn’t)', why: 'Clarity content outperforms “book a call” CTAs when the offer is fuzzy on the page.', search: 'instagram offer breakdown coaching' },
-        { title: 'Day-in-the-life of delivery (not lifestyle flex)', why: 'Delivery footage builds trust faster than Lambos — especially at events.', search: 'instagram day in the life coach delivery' }
-      ],
-      angles: [
-        'Hook: “Stop posting tips. Post the day you almost quit.” · Format: 20s talking-head · CTA: “Comment QUIT if you’ve been there.”',
-        'Hook: “The objection I hear every week — and the 1-line answer.” · Format: split-screen text + face · CTA: Save for the next sales call.',
-        'Hook: “What’s NOT in my offer (on purpose).” · Format: list on screen · CTA: “Which one surprised you?”'
-      ],
-      hook: 'Stop posting tips. Post the day you almost quit — that’s what makes strangers DM.',
-      script: 'HOOK (on screen): “Stop posting tips.”\nSPOKEN: Most people in my lane teach principles. The posts that fill calls are the days it almost didn’t work — with a real number.\nEND: Screenshot of their calendar / offer page.'
-    },
-    {
-      id: 'agency',
-      keys: ['agency','ads','media buyer','creative','performance','marketing agency','paid social','meta ads','google ads'],
-      label: 'agencies / performance',
-      insight: 'Agencies drown feeds in “we scaled X.” What outsiders can’t copy — and what they lean in for — is the messy creative test you killed, and why.',
-      gap: 'Proof posts exist; the missing piece is transparent kill-lists (what you stopped running) that signal real operator taste.',
-      patterns: [
-        { title: 'Creative we killed (and the metric that killed it)', why: 'Kill-lists feel insider. Screenshots of dead ads outperform vanity ROAS flexes.', search: 'instagram “we killed this ad” agency' },
-        { title: 'Before/after landing page (1 change)', why: 'Single-variable teardowns teach + sell without a case-study PDF.', search: 'instagram landing page teardown agency' },
-        { title: 'Client brief → first 48h plan', why: 'Process content converts founders who fear “agency black box.”', search: 'instagram first 48 hours agency onboarding' },
-        { title: 'Comment reply → mini audit', why: 'Public micro-audits are the modern lead magnet for agencies.', search: 'instagram comment audit ads' }
-      ],
-      angles: [
-        'Hook: “This ad looked pretty. We killed it in 4 days.” · Format: screenshot + face · CTA: “Want the kill criteria?”',
-        'Hook: “One landing-page change. Here’s the before/after.” · Format: swipe stills · CTA: Comment PAGE.',
-        'Hook: “First 48 hours after a new client pays.” · Format: checklist on screen · CTA: Save this for your next kickoff.'
-      ],
-      hook: 'This ad looked pretty. We killed it in 4 days — here’s the metric that decided.',
-      script: 'HOOK: “Pretty ads die.”\nSPOKEN: Here’s a creative we killed in 4 days and the one number that decided. If your agency never shows kill-lists, you’re buying vibes.\nEND: Screenshot of the dead ad + the metric.'
-    },
-    {
-      id: 'saas',
-      keys: ['saas','software','app','platform','b2b','startup','product','api','dashboard'],
-      label: 'SaaS / product',
-      insight: 'Feature dumps don’t convert. The surprise winners are “workflow theft” clips — show the painful manual thing your user still does, then the 10-second escape.',
-      gap: 'Product UI is on the site; the feed is missing the painful before-state your buyer still lives in.',
-      patterns: [
-        { title: 'Painful manual workflow → 10s escape', why: 'Empathy first, product second. Buyers share these with their team.', search: 'instagram saas workflow before after' },
-        { title: 'One setting most users miss', why: 'Power-user secrets outperform launch posts after week 2.', search: 'instagram “most people miss this” saas' },
-        { title: 'Customer voice (raw) > polished testimonial', why: 'Unedited Loom quotes feel real; brand-safe quotes feel ads.', search: 'instagram customer quote saas raw' },
-        { title: 'Changelog as story (why we shipped it)', why: '“Why” changelog posts retain better than feature lists.', search: 'instagram changelog why we built' }
-      ],
-      angles: [
-        'Hook: “Your team still does this by hand — watch.” · Format: screen record 15s · CTA: Link in bio / comment TOOL.',
-        'Hook: “One setting 80% of users never touch.” · Format: cursor + voiceover · CTA: Save.',
-        'Hook: “Why we shipped this (not the feature — the pain).” · Format: talking-head + UI cutaway · CTA: “Tag a teammate who needs this.”'
-      ],
-      hook: 'Your team still does this by hand — watch the 10-second escape.',
-      script: 'HOOK: “Still doing this by hand?”\nSPOKEN: Most teams in our space still {pain}. Here’s the 10-second escape inside the product — not a feature tour, the exact click path.\nEND: UI screenshot of the win state.'
-    },
-    {
-      id: 'ecom',
-      keys: ['shop','store','ecommerce','e-com','sku','product','brand','dtc','shopify','merch'],
-      label: 'ecom / DTC',
-      insight: 'Product demos are table stakes. The overlooked lever is “use occasion” content — when/why someone reaches for it — which outperforms another unboxing.',
-      gap: 'Catalog energy is high; occasion + objection-handling UGC is thin.',
-      patterns: [
-        { title: 'Use occasion (when they actually grab it)', why: 'Occasion > aesthetics for purchase intent.', search: 'instagram “I grab this when” product' },
-        { title: 'Objection handling UGC (“I thought it was…” )', why: 'Neutralizes the exact hesitation in comments.', search: 'instagram “I thought it was” review ugc' },
-        { title: 'Packaging / unboxing with a twist (not ASMR)', why: 'Twist = a use tip mid-unbox; pure ASMR fatigues.', search: 'instagram unboxing tip brand' },
-        { title: 'Restock / scarcity with a reason', why: 'Reasoned scarcity (“batch dye”) beats fake countdown timers.', search: 'instagram restock reason brand' }
-      ],
-      angles: [
-        'Hook: “I only grab this when ___.” · Format: POV 12s · CTA: “What’s your occasion?”',
-        'Hook: “I thought it was overpriced — then this happened.” · Format: UGC-style face · CTA: Link.',
-        'Hook: “Why this batch took 3 weeks (and why that’s good).” · Format: behind-the-scenes · CTA: Notify me / restock.'
-      ],
-      hook: 'I only grab this when ___ — that’s the video your catalog is missing.',
-      script: 'HOOK: “Not another unboxing.”\nSPOKEN: Here’s when people actually reach for this — the occasion. If your feed is only products on white, you’re invisible in the moment of need.\nEND: Product in the real occasion.'
-    },
-    {
-      id: 'creator',
-      keys: ['creator','influencer','content','youtube','tiktok','newsletter','personal brand','podcast'],
-      label: 'creators / personal brands',
-      insight: 'Growth tips are saturated. The valuable flip: post the distribution system (where one piece becomes 5) — that’s what other creators DM about.',
-      gap: 'Personality is clear; the “how the machine runs” posts are rare and highly saveable.',
-      patterns: [
-        { title: '1 piece → 5 distributions (show the board)', why: 'Systems content gets saves from peer creators.', search: 'instagram content repurposing board' },
-        { title: 'Hook graveyard (what died + what won)', why: 'Failure libraries outperform “my 7-figure tips.”', search: 'instagram hooks that flopped' },
-        { title: 'Comment → new video seed', why: 'Closes the loop with audience; algorithm-friendly.', search: 'instagram answering comments reel' },
-        { title: 'Analytics honesty (one metric that lied)', why: 'Credibility > flex graphs.', search: 'instagram vanity metrics creator' }
-      ],
-      angles: [
-        'Hook: “One video became five. Here’s the board.” · Format: screen + finger · CTA: Save the system.',
-        'Hook: “This hook flopped. This one printed.” · Format: side-by-side · CTA: “Which would you have picked?”',
-        'Hook: “The metric that lied to me last month.” · Format: talking-head · CTA: Follow for the ugly numbers.'
-      ],
-      hook: 'One video became five — here’s the board most creators never show.',
-      script: 'HOOK: “Stop making more. Split better.”\nSPOKEN: One piece became five touchpoints. I’ll show the board — not theory, the actual tiles.\nEND: Screenshot of the repurpose board.'
-    },
-    {
-      id: 'local',
-      keys: ['dentist','chiro','medspa','restaurant','gym','realtor','real estate','clinic','salon','lawyer','attorney'],
-      label: 'local / pro services',
-      insight: 'Local brands over-index on stock smiles. The posts that book are myth-busting (“you don’t need X”) + real patient/client moments with consent.',
-      gap: 'Trust signals on the site; myth-bust + process-on-camera missing in the feed.',
-      patterns: [
-        { title: 'Myth bust (“you don’t need X”)', why: 'Relieves anxiety; earns the consult.', search: 'instagram myth bust dentist OR medspa OR realtor' },
-        { title: 'Process on camera (first 10 minutes)', why: 'Reduces no-shows by setting expectations.', search: 'instagram what to expect appointment' },
-        { title: 'Neighborhood proof (not city-wide flex)', why: 'Hyperlocal > vanity city shots.', search: 'instagram neighborhood realtor OR clinic' },
-        { title: 'FAQ from DMs as a reel', why: 'Turns private objections into public SEO.', search: 'instagram FAQ reel local business' }
-      ],
-      angles: [
-        'Hook: “You don’t need ___ — here’s why.” · Format: face + big text · CTA: Book / DM QUESTION.',
-        'Hook: “First 10 minutes when you walk in.” · Format: walkthrough · CTA: “Nervous? Watch this.”',
-        'Hook: “DM I get every week — answered out loud.” · Format: talking-head · CTA: Comment your question.'
-      ],
-      hook: 'You don’t need ___ — the myth that’s quietly killing your bookings.',
-      script: 'HOOK: “You don’t need ___.”\nSPOKEN: Biggest myth in our lane. Here’s what actually matters when someone is deciding whether to book.\nEND: Soft CTA to DM or book.'
-    },
-    {
-      id: 'generic',
-      keys: [],
-      label: 'operators / founders',
-      insight: 'Generic “value posts” blend in. The thing they’re not thinking about: a point-of-view on what to stop doing in their niche — subtraction content gets saves.',
-      gap: 'Offer is somewhere on the site; the feed lacks a sharp “stop doing X” point of view.',
-      patterns: [
-        { title: 'Stop doing X (subtraction POV)', why: 'Opinionated subtraction cuts through tip spam.', search: 'instagram “stop doing” business reel' },
-        { title: 'Customer language → offer rewrite', why: 'Using their words on camera builds instant relevance.', search: 'instagram customer language offer' },
-        { title: 'One screenshot teardown of a competitor pattern', why: 'Pattern recognition > dunking on a named rival.', search: 'instagram competitor pattern teardown' },
-        { title: 'Weekly operating cadence (what you actually ship)', why: 'Operators hire operators — show the calendar.', search: 'instagram weekly cadence founder' }
-      ],
-      angles: [
-        'Hook: “Stop doing ___ in your niche.” · Format: 15s talking-head · CTA: “What should I myth-bust next?”',
-        'Hook: “I rewrote our offer using a customer’s exact words.” · Format: before/after text · CTA: Save.',
-        'Hook: “The weekly cadence that actually ships.” · Format: calendar screenshot · CTA: “Want the template?”'
-      ],
-      hook: 'Stop doing ___ in your niche — subtraction gets more saves than another tip.',
-      script: 'HOOK: “Stop doing this.”\nSPOKEN: Hot take for people in our lane. Here’s what to cut this week so the feed stops blending in.\nEND: Soft CTA — 15 min to map next 7 days.'
-    }
+    { id: 'content_strategy', keys: ['signal','signals.marketing','content strategy','ai partnership','thought partnership','publishing rhythm','ready-to-film','cristianaguilar','founder content'], label: 'content strategy + AI for founders', lib: 'content_strategy' },
+    { id: 'coach', keys: ['coach','coaching','mentor','consult','course','mastermind','community','program','transform'], label: 'coaches / mentors', lib: 'coach' },
+    { id: 'agency', keys: ['agency','ads','media buyer','creative','performance','marketing agency','paid social','meta ads','lead gen','gohighlevel'], label: 'agencies / performance', lib: 'agency' },
+    { id: 'saas', keys: ['saas','software','app','platform','b2b','startup','product','api','dashboard'], label: 'SaaS / product', lib: 'saas' },
+    { id: 'ecom', keys: ['shop','store','ecommerce','e-com','sku','dtc','shopify','merch'], label: 'ecom / DTC', lib: 'ecom' },
+    { id: 'creator', keys: ['creator','influencer','youtube','tiktok','newsletter','personal brand','podcast'], label: 'creators / personal brands', lib: 'creator' },
+    { id: 'local', keys: ['dentist','chiro','medspa','restaurant','gym','realtor','real estate','clinic','salon','lawyer','attorney'], label: 'local / pro services', lib: 'local' },
+    { id: 'generic', keys: [], label: 'operators / founders', lib: 'generic' }
   ];
 
   function loadPacks() {
@@ -2081,6 +1989,29 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     all[id] = pack;
     localStorage.setItem(STORAGE_PACKS, JSON.stringify(all));
   }
+  function enqueueResearch(lead, offer) {
+    let q = [];
+    try { q = JSON.parse(localStorage.getItem(STORAGE_QUEUE) || '[]'); } catch { q = []; }
+    const item = {
+      id: lead.id || ('q_' + Date.now()),
+      ig: lead.ig, website: lead.website, name: lead.name, company: lead.company,
+      bottleneck: lead.bottleneck, notes: lead.notes, buyer: lead.buyer,
+      offer, queuedAt: new Date().toISOString(), status: 'needs-apify'
+    };
+    q.unshift(item);
+    q = q.slice(0, 40);
+    localStorage.setItem(STORAGE_QUEUE, JSON.stringify(q));
+    // Best-effort: also trigger a downloadable queue crumb for Ops laptops
+    try {
+      const blob = new Blob([JSON.stringify(item, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'signal-lm-queue-' + (lead.ig || 'lead').replace(/[^a-z0-9._-]/gi,'') + '.json';
+      // don't auto-click on phone floor — too noisy; ops can use Copy queue
+      window.__lastQueueItem = item;
+    } catch (e) {}
+    return item;
+  }
 
   function detectNiche(text) {
     const t = (text || '').toLowerCase();
@@ -2089,16 +2020,80 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     NICHES.forEach(n => {
       if (!n.keys.length) return;
       let s = 0;
-      n.keys.forEach(k => { if (t.includes(k)) s += 1; });
+      n.keys.forEach(k => { if (t.includes(k)) s += (k.length > 8 ? 2 : 1); });
       if (s > score) { score = s; best = n; }
     });
     return best;
   }
 
+  function isCristianDemo(lead, site) {
+    const ig = (lead.ig || '').replace(/^@/, '').toLowerCase();
+    const web = ((lead.website || '') + ' ' + (site.url || '') + ' ' + (site.text || '')).toLowerCase();
+    const q = (location.search || '').includes('demo=1');
+    return q || ig === 'cristianaguilar.ai' || ig === 'cristianaguilar' || web.includes('signals.marketing');
+  }
+
+  function parseOfferFromSite(lead, site) {
+    const text = [site.title, site.desc, site.text, lead.notes, lead.company, lead.bottleneck, lead.buyer].join(' ').replace(/\s+/g, ' ').trim();
+    const title = site.title || lead.company || 'Their offer';
+    // Heuristic one-liner
+    let oneLiner = site.desc || site.title || '';
+    if (!oneLiner && lead.notes) oneLiner = lead.notes.slice(0, 180);
+    if (!oneLiner) oneLiner = (lead.company ? (lead.company + ' — ') : '') + 'offer inferred from site + intake (thin fetch)';
+    // Buyer
+    let buyer = lead.buyer || '';
+    const forM = text.match(/for ([A-Za-z][A-Za-z0-9 /&,-]{2,40})/i);
+    if (!buyer && forM) buyer = forM[1].trim();
+    if (!buyer) {
+      const niche = detectNiche(text + ' ' + (lead.ig || ''));
+      buyer = 'Buyers in ' + niche.label;
+    }
+    // Keywords from offer words
+    const stop = new Set(['with','that','this','from','your','their','have','been','into','about','will','them','they','what','when','where','which','while','the','and','for','are','you','our','content','strategy']);
+    const words = (oneLiner + ' ' + buyer + ' ' + (lead.company || '')).toLowerCase().match(/[a-z][a-z0-9+]{3,}/g) || [];
+    const freq = {};
+    words.forEach(w => { if (!stop.has(w)) freq[w] = (freq[w] || 0) + 1; });
+    let keywords = Object.keys(freq).sort((a,b) => freq[b]-freq[a]).slice(0, 8);
+    if (keywords.length < 4) {
+      const niche = detectNiche(text);
+      keywords = keywords.concat((niche.keys || []).slice(0, 4)).slice(0, 8);
+    }
+    return {
+      oneLiner: oneLiner.slice(0, 280),
+      buyer: String(buyer).slice(0, 200),
+      foundation: '',
+      ongoing: '',
+      site: site.url || lead.website || '',
+      keywords,
+      rawTitle: title.slice(0, 120)
+    };
+  }
+
+  function libToOutliers(libKey, offer) {
+    const lib = FORMAT_LIBS[libKey] || FORMAT_LIBS.generic;
+    const buyerBit = (offer.buyer || 'your buyer').split(/[./]/)[0].trim();
+    return (lib || []).slice(0, 5).map(o => {
+      const copy = JSON.parse(JSON.stringify(o));
+      // Light personalization of swap line
+      copy.swapMessaging = (copy.swapMessaging || '') + ' Speak to: ' + buyerBit + '.';
+      return copy;
+    });
+  }
+
   async function fetchSiteSignals(url) {
-    if (!url) return { title: '', desc: '', text: '' };
+    if (!url) return { title: '', desc: '', text: '', url: '' };
     let u = url.trim();
     if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    // Known offers (offline-safe for floor)
+    if (/signals\.marketing/i.test(u)) {
+      return {
+        title: 'Content Strategy for Founders | signals.marketing',
+        desc: 'Content strategy and AI partnership for founders. Find the ideas worth sharing, shape them into scripts, and build a publishing rhythm.',
+        text: 'Content strategy and AI partnership for founders Research positioning Scripts creative direction Content planning Strategy review AI thought partnership Documentation ownership Foundation $3500 Ongoing $1000 month @cristianaguilar.ai',
+        url: u,
+        known: true
+      };
+    }
     const controllers = [
       'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
       'https://corsproxy.io/?' + encodeURIComponent(u)
@@ -2115,7 +2110,7 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
         const desc = (html.match(/name=["']description["'][^>]*content=["']([^"']+)/i) ||
                       html.match(/content=["']([^"']+)["'][^>]*name=["']description["']/i) || [])[1] || '';
         const h1 = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1] || '';
-        const clean = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 280);
+        const clean = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 400);
         return { title: clean(title), desc: clean(desc), text: clean(title + ' ' + desc + ' ' + h1), url: u };
       } catch (e) { /* try next */ }
     }
@@ -2125,41 +2120,40 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
   function buildPackObject(lead, site) {
     const name = ((lead.name || '').split(' ')[0]) || 'you';
     const ig = (lead.ig || '').replace(/^@/, '');
-    const company = lead.company || '';
-    const blob = [lead.name, company, lead.notes, lead.website, ig, site.title, site.desc, site.text, lead.bottleneck, lead.buyer].join(' ');
+
+    if (isCristianDemo(lead, site)) {
+      const pack = JSON.parse(JSON.stringify(DEMO_PACK_CRISTIAN));
+      pack.leadId = lead.id;
+      pack.name = name || pack.name;
+      pack.handle = '@' + (ig || 'cristianaguilar.ai');
+      pack.builtAt = new Date().toISOString();
+      pack.status = 'real-outliers';
+      return pack;
+    }
+
+    const offer = parseOfferFromSite(lead, site);
+    const blob = [lead.name, lead.company, lead.notes, lead.website, ig, site.title, site.desc, site.text, lead.bottleneck, lead.buyer, offer.oneLiner].join(' ');
     const niche = detectNiche(blob);
-    const siteLine = site.title
-      ? ('Site reads as: “' + site.title + '”' + (site.desc ? (' — ' + site.desc.slice(0, 120)) : ''))
-      : ('Site on file: ' + (lead.website || '—') + ' (live fetch thin — using niche signals from handle + URL).');
-    const snap = [
-      '@' + ig + (company ? (' · ' + company) : '') + ' · lane: ' + niche.label + '.',
-      siteLine,
-      'Insight they’re probably not thinking about: ' + niche.insight,
-      'Observed gap: ' + niche.gap
-    ].join('\\n');
-    const outliers = niche.patterns.slice(0, 4).map(p => ({
-      link: 'Search IG: ' + p.search,
-      why: p.title + ' — ' + p.why,
-      title: p.title
-    }));
-    const angles = niche.angles.map(a => a.replace(/\{pain\}/g, 'the messy manual step'));
-    const hook = niche.hook;
-    const script = niche.script.replace(/\{pain\}/g, 'the messy manual step');
+    const outliers = libToOutliers(niche.lib || niche.id, offer);
+    enqueueResearch(lead, offer);
+
     return {
       leadId: lead.id,
       handle: '@' + ig,
-      name: name,
+      name,
       nicheId: niche.id,
       nicheLabel: niche.label,
-      insight: niche.insight,
-      snap: snap,
-      outliers: outliers,
-      angles: angles,
-      script: script,
-      hook: hook,
+      offer,
+      insight: 'Showing proven formats from our outlier vault in your lane. Full live Apify refresh is queued for Ops (static Pages can’t hold Apify secrets). Structure matches client delivery: offer · buyer · keywords · real URLs · DNA · film scripts.',
+      outliers,
+      angles: outliers.slice(0, 3).map(o => 'Film: ' + o.title + ' · keep DNA · swap to ' + (offer.buyer || 'their buyer')),
+      hook: (outliers[0] && outliers[0].filmScript) ? outliers[0].filmScript.split('\n')[0].replace(/^HOOK:\s*/i,'').replace(/\(on screen\):\s*/i,'') : 'Film the top format before they leave.',
+      script: (outliers[0] && outliers[0].filmScript) || '',
       siteTitle: site.title || '',
       builtAt: new Date().toISOString(),
-      status: site.title ? 'enriched' : 'signals'
+      status: site.title || site.known ? 'vault-matched' : 'vault-matched-thin',
+      source: 'format-vault + outlier-pipeline URLs · Apify live scrape queued',
+      queued: true
     };
   }
 
@@ -2173,24 +2167,37 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     t.textContent = text;
   }
 
+  function fmtViews(n) {
+    n = Number(n) || 0;
+    if (n >= 1e6) return (n/1e6).toFixed(1).replace(/\\.0$/,'') + 'M';
+    if (n >= 1e3) return (n/1e3).toFixed(1).replace(/\\.0$/,'') + 'K';
+    return String(n);
+  }
+
   function fillOpsFields(pack) {
     ensureOutlierRows();
     $('#outHandle').value = pack.handle;
     $('#outName').value = pack.name;
-    $('#outSnap').value = pack.snap;
+    const offer = pack.offer || {};
+    $('#outSnap').value = [
+      'OFFER: ' + (offer.oneLiner || ''),
+      'BUYER: ' + (offer.buyer || ''),
+      'KEYWORDS: ' + ((offer.keywords || []).join(', ')),
+      pack.insight || ''
+    ].join('\n');
     const rows = $$('#outlierRows .outlier-row');
-    pack.outliers.forEach((o, i) => {
+    (pack.outliers || []).forEach((o, i) => {
       if (!rows[i]) addOutlierRow();
       const row = $$('#outlierRows .outlier-row')[i];
       if (!row) return;
-      $('.o-link', row).value = o.link;
-      $('.o-why', row).value = o.why;
+      $('.o-link', row).value = o.url || o.link || '';
+      $('.o-why', row).value = (o.title || '') + ' — ' + (o.why || '') + (o.score ? (' · ' + o.score + '× @' + (o.creator || '')) : '');
     });
-    pack.angles.forEach((a, i) => {
+    (pack.angles || []).forEach((a, i) => {
       const el = $('#ang' + (i + 1));
       if (el) el.value = a;
     });
-    $('#outScript').value = pack.script;
+    $('#outScript').value = pack.script || (pack.outliers && pack.outliers[0] && pack.outliers[0].filmScript) || '';
   }
 
   function renderPackDelivery() {
@@ -2198,44 +2205,82 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     const del = $('#packDelivery');
     if (!pack || !del) return;
     del.hidden = false;
+    const offer = pack.offer || {};
     $('#pdTitle').textContent = 'Outlier Pack — ' + pack.handle;
-    $('#pdSub').textContent = pack.name + ' · ' + pack.nicheLabel + ' · built for the room, not a PDF';
-    $('#pdSnap').textContent = pack.snap;
-    $('#pdOutliers').innerHTML = pack.outliers.map((o, i) =>
-      '<div class="pd-out"><div class="n">Signal ' + (i + 1) + '</div><strong>' + escapeHtml(o.title || ('Pattern ' + (i + 1))) + '</strong><p>' + escapeHtml(o.why) + '</p><a href="#" onclick="return false;">' + escapeHtml(o.link) + '</a></div>'
-    ).join('');
-    $('#pdAngles').innerHTML = pack.angles.map((a, i) =>
-      '<div class="pd-angle"><em>Angle ' + (i + 1) + '</em> — ' + escapeHtml(a) + '</div>'
-    ).join('');
-    if (pack.script) {
-      $('#pdScriptBlock').hidden = false;
-      $('#pdScript').textContent = pack.script;
+    $('#pdSub').textContent = pack.name + ' · ' + (pack.nicheLabel || offer.buyer || '') + ' · same bar as client delivery';
+    const meta = $('#pdMeta');
+    if (meta) {
+      meta.textContent = (pack.source || '') + (pack.queued ? ' · live Apify refresh queued for Ops' : '');
     }
-    $('#pdCta').innerHTML = '<strong>Soft next:</strong> If this feels useful, we map your next 7 days of posts in 15 minutes. Or — film angle 1 right now while you’re here.';
+    const offerEl = $('#pdOffer');
+    if (offerEl) {
+      offerEl.innerHTML = [
+        '<div class="row"><div class="k">Offer</div><div class="v">' + escapeHtml(offer.oneLiner || '—') + '</div></div>',
+        '<div class="row"><div class="k">Who they sell to</div><div class="v">' + escapeHtml(offer.buyer || '—') + '</div></div>',
+        (offer.foundation ? '<div class="row"><div class="k">Foundation</div><div class="v">' + escapeHtml(offer.foundation) + '</div></div>' : ''),
+        (offer.ongoing ? '<div class="row"><div class="k">Ongoing</div><div class="v">' + escapeHtml(offer.ongoing) + '</div></div>' : ''),
+        '<div class="row"><div class="k">Keywords used for outlier search</div><div class="pd-keywords">' +
+          (offer.keywords || []).map(k => '<span>' + escapeHtml(k) + '</span>').join('') + '</div></div>'
+      ].join('');
+    }
+    $('#pdOutliers').innerHTML = (pack.outliers || []).map((o, i) => {
+      const dna = o.dna || {};
+      const dnaLine = ['hook','components','rehook','cadence','length','idea','reward','emotionalNext']
+        .filter(k => dna[k])
+        .map(k => '<b>' + k + ':</b> ' + escapeHtml(dna[k]))
+        .join(' · ');
+      const url = o.url || o.link || '#';
+      const isHttp = /^https?:\/\//i.test(url);
+      return '<div class="pd-out">' +
+        '<div class="n">Format ' + (i + 1) + (o.score ? (' · ' + o.score + '× median') : '') +
+          (o.views ? (' · ' + fmtViews(o.views) + ' views') : '') +
+          (o.creator ? (' · @' + escapeHtml(o.creator)) : '') + '</div>' +
+        '<strong>' + escapeHtml(o.title || o.formatName || ('Format ' + (i + 1))) + '</strong>' +
+        '<p>' + escapeHtml(o.why || '') + '</p>' +
+        (isHttp ? ('<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Open proof reel →</a>') : ('<span style="color:var(--dim)">' + escapeHtml(url) + '</span>')) +
+        '<div class="dna"><b>KEEP DNA</b> — ' + escapeHtml(o.keepDna || dnaLine) + '<br><b>SWAP</b> — ' + escapeHtml(o.swapMessaging || '') +
+        (dnaLine ? ('<br>' + dnaLine) : '') + '</div>' +
+        (o.filmScript ? ('<div class="script-mini">' + escapeHtml(o.filmScript) + '</div>') : '') +
+        '</div>';
+    }).join('');
+    $('#pdAngles').innerHTML = (pack.angles || []).map((a, i) =>
+      '<div class="pd-angle"><em>Shoot ' + (i + 1) + '</em> — ' + escapeHtml(a) + '</div>'
+    ).join('');
+    const script = pack.script || (pack.outliers && pack.outliers[0] && pack.outliers[0].filmScript) || '';
+    if (script) {
+      $('#pdScriptBlock').hidden = false;
+      $('#pdScript').textContent = script;
+    }
+    $('#pdCta').innerHTML = '<strong>Soft next:</strong> Open proof reel #1 with them → read KEEP DNA → film the swapped script on the spot. Or map next 7 days in 15 minutes.';
     ['packActionRow','packDmRow','packLegend'].forEach(id => { const el = $('#' + id); if (el) el.hidden = false; });
     const film = $('#filmCue');
     if (film) {
       film.hidden = false;
-      $('#tpLine').textContent = pack.hook;
-      $('#filmWhy').textContent = 'Angle 1 fits an in-hall talking-head. Hold this phone as teleprompter — 15–45s. Optional but high-wow.';
+      const hookLine = pack.hook || (script.split('\n')[0] || '').replace(/^HOOK:\s*/i,'').replace(/\(on screen\):\s*/i,'');
+      $('#tpLine').textContent = hookLine;
+      $('#filmWhy').innerHTML = 'Angle 1 is conference-filmable. Hold this phone as teleprompter — 15–45s. Proven formats board: <a href="https://13cristianaguilar-bot.github.io/content-hub/conference/" style="color:inherit;text-decoration:underline">Conference Film Board</a>.';
     }
   }
 
   async function startPackBuild(lead) {
     currentPack = null;
-    setResearch('busy', 'Entering @' + (lead.ig || '') + '’s world — reading site + niche signals…');
+    setResearch('busy', 'Reading offer + deriving keywords + matching proven outlier formats…');
     goto('outlier');
-    toast('Building Pack for @' + lead.ig + '…', 'ok');
+    toast('Building real pack for @' + lead.ig + '…', 'ok');
     const site = await fetchSiteSignals(lead.website);
+    // brief tick so banner paints
+    await new Promise(r => setTimeout(r, 280));
     const pack = buildPackObject(lead, site);
     currentPack = pack;
     savePack(lead.id, pack);
     fillOpsFields(pack);
     renderPackDelivery();
-    if (pack.status === 'enriched') {
-      setResearch('ok', 'Live site read ✓ · niche: ' + pack.nicheLabel + ' · insight locked. Show them this screen.');
+    if (pack.status === 'real-outliers') {
+      setResearch('ok', 'Offer locked from signals.marketing · ' + (pack.outliers||[]).length + ' real outlier formats with URLs + DNA + film scripts. Show them.');
+    } else if (pack.queued) {
+      setResearch('ok', 'Offer read + vault formats ready (' + pack.nicheLabel + '). Live Apify refresh queued — Ops can deepen ≤15 min. Show the pack now.');
     } else {
-      setResearch('ok', 'Best-effort pack ready (site fetch thin). Niche: ' + pack.nicheLabel + ' from IG/URL/notes. Tweak in Edit if needed.');
+      setResearch('ok', 'Pack ready · ' + (pack.nicheLabel || '') + '. Show them this screen.');
     }
     toast('Pack ready — show them', 'ok');
     haptic();
@@ -2249,15 +2294,21 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
   });
   const _applyEdit = $('#applyPackEdit');
   if (_applyEdit) _applyEdit.addEventListener('click', () => {
-    if (!currentPack) currentPack = { outliers: [], angles: [] };
+    if (!currentPack) currentPack = { outliers: [], angles: [], offer: {} };
     currentPack.handle = $('#outHandle').value || currentPack.handle;
     currentPack.name = $('#outName').value || currentPack.name;
-    currentPack.snap = $('#outSnap').value || currentPack.snap;
-    currentPack.outliers = $$('#outlierRows .outlier-row').map(row => ({
-      link: $('.o-link', row).value,
-      why: $('.o-why', row).value,
-      title: ($('.o-why', row).value || '').split('—')[0].trim() || 'Pattern'
-    })).filter(o => o.link || o.why);
+    currentPack.outliers = $$('#outlierRows .outlier-row').map(row => {
+      const why = $('.o-why', row).value || '';
+      return {
+        url: $('.o-link', row).value,
+        link: $('.o-link', row).value,
+        why,
+        title: why.split('—')[0].trim() || 'Format',
+        keepDna: 'Ops edit',
+        swapMessaging: '',
+        filmScript: ''
+      };
+    }).filter(o => o.url || o.why);
     currentPack.angles = [1,2,3].map(n => $('#ang' + n).value).filter(Boolean);
     currentPack.script = $('#outScript').value;
     currentPack.hook = currentPack.hook || (currentPack.angles[0] || '').split('·')[0].replace(/^Hook:\\s*/i, '').trim();
@@ -2313,8 +2364,8 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     div.className = 'outlier-row';
     div.innerHTML = `
       <div class="hdr"><strong>#${i}</strong></div>
-      <div class="field" style="margin-bottom:8px"><input class="o-link" placeholder="https://instagram.com/p/…" inputmode="url" autocapitalize="off" /></div>
-      <div class="field" style="margin:0"><input class="o-why" placeholder="Why it works: hook / format / topic" /></div>
+      <div class="field" style="margin-bottom:8px"><input class="o-link" placeholder="https://www.instagram.com/reel/…" inputmode="url" autocapitalize="off" /></div>
+      <div class="field" style="margin:0"><input class="o-why" placeholder="Format name — why it prints · score × @creator" /></div>
     `;
     box.appendChild(div);
   }

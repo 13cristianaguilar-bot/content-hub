@@ -814,6 +814,10 @@ body.modal-open { overflow: hidden; }
   text-decoration: none; font-size: 17px; font-weight: 650; letter-spacing: -0.02em;
 }
 .prep-reel.is-primary { background: var(--signal); }
+.prep-role { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.prep-url { margin: -4px 0 12px; color: var(--muted); font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+.prep-react { margin-top: 8px; }
+.prep-react .prep-frame { width: min(240px, 72vw); max-width: 260px; height: auto; }
 .prep-facts, .prep-extras { display: flex; flex-direction: column; gap: 10px; }
 .prep-facts { flex: 1 1 auto; min-width: 0; }
 .prep-fact, .prep-extra {
@@ -3416,14 +3420,16 @@ function renderDossierBody(s) {
   // The actual source video (e.g. the Jim Rohn/Tony Robbins YouTube speech Jan films his
   // reaction to) was buried inside the proof-stats paragraph as plain text -- pull it out so
   // it shows as its own clickable link on the clip box, which is where it's actually needed.
-  const sourceClip = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
+  const reactInfo = reactionClipInfo(s);
+  const sourceClip = (reactInfo && reactInfo.watch) || extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
 
   // 1 + 2 combined into one box, same as the dossier: the reel link and its real numbers belong
   // together as "proof," not two separate stacked boxes. The full verification narrative
   // collapses by default -- the stat tiles are the headline, the paragraph is backup detail.
   const provenBox = (hasClip || s.proof_stats) ? `
   <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
-    <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Proven format reference</div>
+    <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Format reference</div>
+    <div class="text-sm text-blue-900 mb-2">Format to match.</div>
     ${hasClip ? `<div class="mb-1">${linkOrText(s.reference_clip)}</div>` : ''}
     ${stats.length ? `
     <div class="flex gap-5 flex-wrap mt-2 pt-2 border-t border-blue-100">
@@ -3442,15 +3448,15 @@ function renderDossierBody(s) {
       <!-- 1. Reference reel + 2. its real stats -->
       ${provenBox}
 
-      <!-- 3. Clip to react to -- Reaction format ONLY. clip_directions is populated on every
-           format (it doubles as general filming notes for Personal Story / Direct Address), so
-           gating on the field being non-empty was wrong -- only an actual Reaction script has a
-           clip to react to. -->
-      ${(s.format === 'Reaction' && s.clip_directions) ? `
+      <!-- 3. React to — reaction / greenscreen scripts, including "Reaction + Listicle".
+           clip_directions is also general filming notes, so a non-reaction row stays hidden
+           unless it carries a Reaction Clip or React To key. -->
+      ${showsReactClip(s) ? `
       <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
-        <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Clip to react to</div>
-        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" class="inline-block text-base font-bold text-blue-700 underline mb-2">▶ Watch the source clip</a>` : ''}
-        <div class="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">${escHtml(s.clip_directions)}</div>
+        <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">React to</div>
+        <div class="text-sm text-blue-900 mb-2">Source clip for the reaction / greenscreen beat.</div>
+        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" rel="noopener noreferrer" class="inline-block text-base font-bold text-blue-700 underline mb-2">Open react-to clip</a>` : ''}
+        ${s.clip_directions ? `<div class="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">${escHtml(s.clip_directions)}</div>` : ''}
       </div>` : ''}
 
       <!-- 4. Filming setup -->
@@ -3467,7 +3473,7 @@ function renderDossierBody(s) {
              the actual shot order at a glance: say the hook, the clip plays, you react, then the
              full script carries through to the ending -- the exact flow Cristian asked to make
              explicit instead of leaving it implied inside the clip-directions paragraph. -->
-        ${(s.format === 'Reaction' && s.clip_directions) ? `
+        ${showsReactClip(s) ? `
         <div class="flex items-center gap-1.5 flex-wrap mb-3.5">
           <span class="bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1.5 rounded-full">① Say the hook</span>
           <span class="text-slate-300 text-xs">→</span>
@@ -3843,16 +3849,18 @@ function advSection(key, title, body, open) {
 
 function renderReferenceBlock(s) {
   const primary = videoInfo(s.reference_clip);
+  const react = reactionClipInfo(s);
   const extraUrl = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
-  const same = extraUrl && s.reference_clip && String(s.reference_clip).indexOf(extraUrl) !== -1;
-  const extra = extraUrl && !same ? videoInfo(extraUrl) : null;
+  const extraInfo = extraUrl ? videoInfo(extraUrl) : null;
+  const same = extraInfo && primary && primary.watch && extraInfo.watch === primary.watch;
+  const extra = react || (extraInfo && !same ? extraInfo : null);
   if (!primary && !extra) {
     return `<section class="area-ref"><div class="eyebrow block-label">Reference</div><p class="shot-intro">No reference video on this script.</p></section>`;
   }
-  const blockFor = (info, idSuffix) => {
+  const blockFor = (info, idSuffix, kicker) => {
     if (!info) return '';
     if (info.kind === 'text') {
-      return `<div class="ref-row"><div class="ref-poster" style="cursor:default"><span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span><span><span class="ref-kicker">Reference</span><span class="ref-cta">${escHtml(info.label)}</span></span></div></div>`;
+      return `<div class="ref-row"><div class="ref-poster" style="cursor:default"><span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span><span><span class="ref-kicker">${escHtml(kicker)}</span><span class="ref-cta">${escHtml(info.label)}</span></span></div></div>`;
     }
     const open = expandedSections.has('embed:' + s.id + idSuffix);
     const src = displayThumb(s, info);
@@ -3864,13 +3872,14 @@ function renderReferenceBlock(s) {
       <div class="ref-row">
         <button type="button" class="ref-poster ${src ? 'has-frame' : ''}" onclick="window.loadEmbed('${s.id}','${idSuffix}')">
           ${frame || mark}
-          <span class="ref-caption" data-ref="${escHtml(info.watch)}" data-kind="${escHtml(info.kind)}"><span><span class="ref-kicker">Reference · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span></span>
+          <span class="ref-caption" data-ref="${escHtml(info.watch)}" data-kind="${escHtml(info.kind)}"><span><span class="ref-kicker">${escHtml(kicker)} · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span></span>
         </button>
         ${info.watch ? `<a class="ref-open" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
       </div>
       <div id="embed-${s.id}${idSuffix}" class="embed-slot">${open ? embedHtml(info) : ''}</div>`;
   };
-  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '')}${extra ? blockFor(extra, '-x') : ''}</section>`;
+  const extraKicker = react ? 'React to' : 'Reference';
+  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '', 'Format reference')}${extra ? blockFor(extra, '-x', extraKicker) : ''}</section>`;
 }
 window.loadEmbed = (id, suffix) => {
   suffix = suffix || '';
@@ -3879,7 +3888,7 @@ window.loadEmbed = (id, suffix) => {
   const s = scripts.find(x => x.id === id);
   if (!s) return;
   const info = suffix === '-x'
-    ? videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats))
+    ? (reactionClipInfo(s) || videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats)))
     : videoInfo(s.reference_clip);
   const slot = document.getElementById('embed-' + id + suffix);
   if (slot && info) slot.innerHTML = embedHtml(info);
@@ -3967,7 +3976,7 @@ function renderShotList(s) {
   const parsed = parseSetup(s.filming_setup, s.camera);
   let items = parseShots(parsed.shots);
   let label = 'Shot list';
-  if (!items.length && s.format === 'Reaction' && s.clip_directions) {
+  if (!items.length && showsReactClip(s)) {
     items = ['Say the hook', 'Let the clip play', 'React on camera', 'Carry the full script to the ending'];
     label = 'Filming order';
   }
@@ -4703,6 +4712,48 @@ function labeledChunks(text) {
 function prepShownNote(label) {
   return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound|client notes)$/i.test(label || '');
 }
+// Title Case keys Client Fulfillment writes: "Reaction Clip" and "React To".
+// reaction_clip / react_to / react-to are the same field with different punctuation.
+function reactClipKey(name) {
+  const n = String(name || '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return n === 'reaction clip' || n === 'react to' || n === 'react to clip' || n === 'clip to react to';
+}
+function hasReactClipKey(s) {
+  const fd = fdObject(s);
+  if (!fd) return false;
+  return Object.keys(fd).some(reactClipKey);
+}
+function isReactionScript(s) {
+  if (/react|green\s*-?\s*screen/i.test(asText(s && s.format))) return true;
+  return hasReactClipKey(s);
+}
+function reactionClipInfo(s) {
+  const fd = fdObject(s) || {};
+  const ranked = [];
+  function push(text) {
+    const t = asText(text).trim();
+    if (!t) return;
+    if (ranked.some(item => item.toLowerCase() === t.toLowerCase())) return;
+    ranked.push(t);
+  }
+  push(fdPick(fd, 'Reaction Clip'));
+  push(fdPick(fd, 'React To'));
+  Object.keys(fd).forEach(k => { if (reactClipKey(k)) push(fd[k]); });
+  let info = null;
+  for (let i = 0; i < ranked.length; i++) {
+    const parsed = videoInfo(ranked[i]);
+    if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
+  }
+  if (!info) return null;
+  const primary = videoInfo(s && s.reference_clip);
+  if (primary && primary.watch && info.watch === primary.watch) return null;
+  return info;
+}
+function showsReactClip(s) {
+  if (!isReactionScript(s)) return false;
+  if (reactionClipInfo(s)) return true;
+  return !!asText(s && s.clip_directions).trim();
+}
 // Title Case is the key Client Fulfillment writes (Format, Pacing, Framing, Reference Metrics).
 // A lowercase twin is only a fallback so an older row is not dropped.
 function fdPick(fd, name) {
@@ -4854,6 +4905,7 @@ function prepModel(s) {
   if (asText(s.cta).trim()) addExtra('CTA', s.cta);
   Object.keys(fd).forEach(k => {
     if (/^(pacing|framing|format|reference metrics)$/i.test(k)) return;
+    if (reactClipKey(k)) return;
     if (/sound|music|audio/i.test(k)) return;
     const tone = asText(fd[k]).trim();
     if (/^tonality$/i.test(k) && waysBefore && tone && waysBefore.toLowerCase().indexOf(tone.toLowerCase()) !== -1) return;
@@ -4901,13 +4953,14 @@ function prepModel(s) {
     metrics: metrics,
     showMetrics: showMetrics,
     ref: (pack.refs && pack.refs[0]) || null,
+    react: reactionClipInfo(s),
     person: pack.person || '',
     camera: asText(s.camera).trim(),
     onCamera: onCamera,
     location: setup.location,
     rig: setup.rig,
     mic: setup.mic,
-    shots: setup.shots || [],
+    shots: parseShots(setup.shots),
     setupRest: rest,
     onScreen: pack.onScreen || [],
     audio: pack.audio || [],
@@ -4945,23 +4998,41 @@ function prepParagraphs(items, empty) {
   if (!items || !items.length) return `<p class="prep-empty">${escHtml(empty)}</p>`;
   return items.map(item => `<p>${prepText(item)}</p>`).join('');
 }
+function prepFrame(info, title) {
+  if (!info || !info.src) return '';
+  return `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="${escHtml(title)}" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+}
+function prepOpenLink(info, label) {
+  if (!info) return '';
+  if (info.watch) {
+    const primary = info.src ? '' : ' is-primary';
+    return `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(label)}</a><p class="prep-url">${escHtml(info.watch)}</p>`;
+  }
+  if (info.label) return `<p>${escHtml(info.label)}</p>`;
+  return '';
+}
 function prepStepHtml(model, step) {
   if (step === 0) {
     const info = model.ref;
-    const frame = info && info.src
-      ? `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="Reference video" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`
-      : '';
+    const react = model.react;
+    const frame = prepFrame(info, 'Format reference');
     let open = '<p class="prep-empty">No reference reel on this script.</p>';
-    if (info && info.watch) {
-      const primary = info.src ? '' : ' is-primary';
-      open = `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open reference reel</a>`;
-    } else if (info && info.label) {
-      open = `<p>${escHtml(info.label)}</p>`;
-    }
+    if (info && (info.watch || info.label)) open = prepOpenLink(info, react ? 'Open format reference' : 'Open reference reel') || open;
+    const formatLabel = react
+      ? `<p class="eyebrow">Format reference</p><p class="prep-role">Format to match.</p>`
+      : '';
+    const reactBlock = react ? `
+      <section class="prep-react">
+        <p class="eyebrow">React to</p>
+        <p class="prep-role">Source clip for the reaction / greenscreen beat.</p>
+        ${prepOpenLink(react, 'Open react-to clip')}
+        ${prepFrame(react, 'React-to video')}
+      </section>` : '';
     return `
       <p class="eyebrow">Step 1 · Reference</p>
       <h2 id="prep-title">Watch the reference</h2>
       <p class="prep-lead">Copy the format, the pacing, and the framing.</p>
+      ${formatLabel}
       <div class="prep-watch">
         ${frame}
         <div class="prep-facts">
@@ -4971,7 +5042,8 @@ function prepStepHtml(model, step) {
           ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}
         </div>
       </div>
-      ${open}`;
+      ${open}
+      ${reactBlock}`;
   }
   if (step === 1) {
     const who = [model.person, model.camera, model.onCamera].filter(Boolean);

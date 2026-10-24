@@ -814,13 +814,18 @@ body.modal-open { overflow: hidden; }
   text-decoration: none; font-size: 17px; font-weight: 650; letter-spacing: -0.02em;
 }
 .prep-reel.is-primary { background: var(--signal); }
+.prep-role { margin: 0 0 10px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.prep-url { margin: -4px 0 12px; color: var(--muted); font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+.prep-react { margin-top: 8px; }
+.prep-react .prep-frame { width: min(240px, 72vw); max-width: 260px; height: auto; }
 .prep-facts, .prep-extras { display: flex; flex-direction: column; gap: 10px; }
+.prep-facts { flex: 1 1 auto; min-width: 0; }
 .prep-fact, .prep-extra {
   background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 8px 10px;
 }
 .prep-fact p, .prep-extra p { margin: 2px 0 0; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
 .prep-duo { display: flex; flex-direction: column; gap: 14px; margin: 0 0 14px; }
-.prep-clip h3, .prep-keep h3, .prep-metrics h3 {
+.prep-clip h3, .prep-keep h3 {
   margin: 0 0 4px; font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal); font-weight: 500;
 }
@@ -833,21 +838,19 @@ body.modal-open { overflow: hidden; }
   color: var(--ink); text-decoration: none; font-weight: 650;
 }
 .prep-clip.is-react .prep-openlink { background: var(--ink); color: #fff; border-color: var(--ink); }
-.prep-metrics {
-  margin-top: 12px; background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 8px 10px;
-}
 .prep-keep { margin: 0 0 12px; }
 .prep-keep p { margin: 4px 0 0; font-size: 16px; line-height: 1.4; }
 .prep-more summary { cursor: pointer; color: var(--signal); font-size: 13px; margin-top: 4px; }
 .prep-more p { margin-top: 6px; }
-.prep-metrics { margin-top: 12px; }
-.prep-metric-block + .prep-metric-block { margin-top: 10px; }
-.prep-metric-row { display: flex; gap: 18px; flex-wrap: wrap; }
-.prep-metric b { display: block; font-size: 22px; letter-spacing: -0.04em; font-weight: 650; line-height: 1.1; }
-.prep-metric span {
-  font-family: "Geist Mono", ui-monospace, monospace; font-size: 10px; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--muted);
+.prep-metrics { margin: 6px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.prep-metrics div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.prep-metrics dt {
+  flex: 0 0 auto; margin: 0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500;
 }
+.prep-metrics dd { margin: 0; font-size: 14px; line-height: 1.35; font-weight: 650; letter-spacing: -0.02em; text-align: right; overflow-wrap: anywhere; }
+.prep-metrics dd.is-empty { color: var(--muted); font-weight: 500; }
 .prep-block p { margin: 4px 0 0; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
 @media (min-width: 700px) {
   .prep-frame { height: min(460px, 52dvh); max-width: none; }
@@ -1183,21 +1186,27 @@ function dossierBlock(emoji, label, text, color, opts) {
   </div>`;
 }
 
-// Pulls real "12,936 likes" / "5.4M views" style numbers out of the free-text proof_stats field
-// so they can render as big stat tiles like the dossier does -- the field itself stays the full
-// verified narrative (resolution notes, what was checked, what was rejected and why), this just
-// surfaces the headline numbers from inside it instead of asking Cristian to re-enter them as
-// separate structured data.
+// Pulls real "12,936 likes" / "5.4M views" / "109,468 views · 5,120 likes · 199 comments"
+// numbers out of the free-text proof_stats field. The number comes before the word.
+// When a row starts with "REFERENCE METRICS", that block is the current count — a later
+// "REPLACED … was 264,624 views" line is the old reel and must not win.
 function extractProofStats(text) {
   if (!text) return [];
-  const re = /([\d][\d,]*\.?\d*\s?[KMB]?)\s+(views|likes|comments)\b/gi;
-  const seen = {};
-  let m;
-  while ((m = re.exec(text))) {
-    const label = m[2].toLowerCase();
-    if (!seen[label]) seen[label] = m[1].trim();
-  }
-  return ['views', 'likes', 'comments'].filter(l => seen[l]).map(l => ({ num: seen[l], label: l[0].toUpperCase() + l.slice(1) }));
+  const read = (source) => {
+    const re = /([\d][\d,]*\.?\d*\s?[KMB]?)\s+(views|likes|comments)\b/gi;
+    const seen = {};
+    let m;
+    while ((m = re.exec(source))) {
+      const label = m[2].toLowerCase();
+      if (!seen[label]) seen[label] = m[1].trim();
+    }
+    return ['views', 'likes', 'comments'].filter(l => seen[l]).map(l => ({ num: seen[l], label: l[0].toUpperCase() + l.slice(1) }));
+  };
+  const raw = asText(text);
+  const head = raw.match(/REFERENCE METRICS[^\n]*\n([\s\S]*?)(?=\n\s*(?:Source|REPLACED)\b|$)/i);
+  const preferred = head ? read(head[1]) : [];
+  if (preferred.length) return preferred;
+  return read(raw);
 }
 
 // The YouTube source clip (what Jan actually films his reaction to) was getting buried inside
@@ -3437,14 +3446,16 @@ function renderDossierBody(s) {
   // The actual source video (e.g. the Jim Rohn/Tony Robbins YouTube speech Jan films his
   // reaction to) was buried inside the proof-stats paragraph as plain text -- pull it out so
   // it shows as its own clickable link on the clip box, which is where it's actually needed.
-  const sourceClip = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
+  const reactInfo = reactionClipInfo(s);
+  const sourceClip = (reactInfo && reactInfo.watch) || extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
 
   // 1 + 2 combined into one box, same as the dossier: the reel link and its real numbers belong
   // together as "proof," not two separate stacked boxes. The full verification narrative
   // collapses by default -- the stat tiles are the headline, the paragraph is backup detail.
   const provenBox = (hasClip || s.proof_stats) ? `
   <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
-    <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Proven format reference</div>
+    <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Format reference</div>
+    <div class="text-sm text-blue-900 mb-2">Format to match.</div>
     ${hasClip ? `<div class="mb-1">${linkOrText(s.reference_clip)}</div>` : ''}
     ${stats.length ? `
     <div class="flex gap-5 flex-wrap mt-2 pt-2 border-t border-blue-100">
@@ -3463,15 +3474,15 @@ function renderDossierBody(s) {
       <!-- 1. Reference reel + 2. its real stats -->
       ${provenBox}
 
-      <!-- 3. Clip to react to -- Reaction format ONLY. clip_directions is populated on every
-           format (it doubles as general filming notes for Personal Story / Direct Address), so
-           gating on the field being non-empty was wrong -- only an actual Reaction script has a
-           clip to react to. -->
-      ${(s.format === 'Reaction' && s.clip_directions) ? `
+      <!-- 3. React to — reaction / greenscreen scripts, including "Reaction + Listicle".
+           clip_directions is also general filming notes, so a non-reaction row stays hidden
+           unless it carries a Reaction Clip or React To key. -->
+      ${showsReactClip(s) ? `
       <div class="bg-blue-50 border border-blue-100 rounded-xl px-3.5 py-3 mb-2.5">
-        <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">Clip to react to</div>
-        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" class="inline-block text-base font-bold text-blue-700 underline mb-2">▶ Watch the source clip</a>` : ''}
-        <div class="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">${escHtml(s.clip_directions)}</div>
+        <div class="text-xs font-bold text-blue-600 uppercase tracking-widest mb-2">React to</div>
+        <div class="text-sm text-blue-900 mb-2">Source clip for the reaction / greenscreen beat.</div>
+        ${sourceClip ? `<a href="${escHtml(sourceClip)}" target="_blank" rel="noopener noreferrer" class="inline-block text-base font-bold text-blue-700 underline mb-2">Open react-to clip</a>` : ''}
+        ${s.clip_directions ? `<div class="text-sm text-blue-900 leading-relaxed whitespace-pre-wrap">${escHtml(s.clip_directions)}</div>` : ''}
       </div>` : ''}
 
       <!-- 4. Filming setup -->
@@ -3488,7 +3499,7 @@ function renderDossierBody(s) {
              the actual shot order at a glance: say the hook, the clip plays, you react, then the
              full script carries through to the ending -- the exact flow Cristian asked to make
              explicit instead of leaving it implied inside the clip-directions paragraph. -->
-        ${(s.format === 'Reaction' && s.clip_directions) ? `
+        ${showsReactClip(s) ? `
         <div class="flex items-center gap-1.5 flex-wrap mb-3.5">
           <span class="bg-violet-100 text-violet-700 text-xs font-bold px-2.5 py-1.5 rounded-full">① Say the hook</span>
           <span class="text-slate-300 text-xs">→</span>
@@ -3585,7 +3596,8 @@ function parseSetup(setup, camera) {
   if (rigSentence) rig = rigSentence.replace(/\s+/g, ' ').trim();
   if (!mic) {
     const mm = text.match(/[^.!\n]*\b(lav|shotgun|wireless mic|dji mic|clip\/wireless mic|mic)[^.!\n]*[.!]?/i);
-    if (mm) mic = mm[0].trim();
+    // "desk/mic" inside a FRAMING sentence is the shot, not the microphone.
+    if (mm && !/\bframing\s*:/i.test(mm[0])) mic = mm[0].trim();
   }
   const cam = asText(camera).trim();
   let framing = '';
@@ -3863,16 +3875,18 @@ function advSection(key, title, body, open) {
 
 function renderReferenceBlock(s) {
   const primary = videoInfo(s.reference_clip);
+  const react = reactionClipInfo(s);
   const extraUrl = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
-  const same = extraUrl && s.reference_clip && String(s.reference_clip).indexOf(extraUrl) !== -1;
-  const extra = extraUrl && !same ? videoInfo(extraUrl) : null;
+  const extraInfo = extraUrl ? videoInfo(extraUrl) : null;
+  const same = extraInfo && primary && primary.watch && extraInfo.watch === primary.watch;
+  const extra = react || (extraInfo && !same ? extraInfo : null);
   if (!primary && !extra) {
     return `<section class="area-ref"><div class="eyebrow block-label">Reference</div><p class="shot-intro">No reference video on this script.</p></section>`;
   }
-  const blockFor = (info, idSuffix) => {
+  const blockFor = (info, idSuffix, kicker) => {
     if (!info) return '';
     if (info.kind === 'text') {
-      return `<div class="ref-row"><div class="ref-poster" style="cursor:default"><span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span><span><span class="ref-kicker">Reference</span><span class="ref-cta">${escHtml(info.label)}</span></span></div></div>`;
+      return `<div class="ref-row"><div class="ref-poster" style="cursor:default"><span class="ref-play" aria-hidden="true">${brandMarkSvg(22)}</span><span><span class="ref-kicker">${escHtml(kicker)}</span><span class="ref-cta">${escHtml(info.label)}</span></span></div></div>`;
     }
     const open = expandedSections.has('embed:' + s.id + idSuffix);
     const src = displayThumb(s, info);
@@ -3884,13 +3898,14 @@ function renderReferenceBlock(s) {
       <div class="ref-row">
         <button type="button" class="ref-poster ${src ? 'has-frame' : ''}" onclick="window.loadEmbed('${s.id}','${idSuffix}')">
           ${frame || mark}
-          <span class="ref-caption" data-ref="${escHtml(info.watch)}" data-kind="${escHtml(info.kind)}"><span><span class="ref-kicker">Reference · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span></span>
+          <span class="ref-caption" data-ref="${escHtml(info.watch)}" data-kind="${escHtml(info.kind)}"><span><span class="ref-kicker">${escHtml(kicker)} · ${escHtml(info.label)}</span><span class="ref-cta">${open ? 'Playing' : 'Play'}</span></span></span>
         </button>
         ${info.watch ? `<a class="ref-open" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
       </div>
       <div id="embed-${s.id}${idSuffix}" class="embed-slot">${open ? embedHtml(info) : ''}</div>`;
   };
-  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '')}${extra ? blockFor(extra, '-x') : ''}</section>`;
+  const extraKicker = react ? 'React to' : 'Reference';
+  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '', 'Format reference')}${extra ? blockFor(extra, '-x', extraKicker) : ''}</section>`;
 }
 window.loadEmbed = (id, suffix) => {
   suffix = suffix || '';
@@ -3899,7 +3914,7 @@ window.loadEmbed = (id, suffix) => {
   const s = scripts.find(x => x.id === id);
   if (!s) return;
   const info = suffix === '-x'
-    ? videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats))
+    ? (reactionClipInfo(s) || videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats)))
     : videoInfo(s.reference_clip);
   const slot = document.getElementById('embed-' + id + suffix);
   if (slot && info) slot.innerHTML = embedHtml(info);
@@ -3987,7 +4002,7 @@ function renderShotList(s) {
   const parsed = parseSetup(s.filming_setup, s.camera);
   let items = parseShots(parsed.shots);
   let label = 'Shot list';
-  if (!items.length && s.format === 'Reaction' && s.clip_directions) {
+  if (!items.length && showsReactClip(s)) {
     items = ['Say the hook', 'Let the clip play', 'React on camera', 'Carry the full script to the ending'];
     label = 'Filming order';
   }
@@ -4723,10 +4738,6 @@ function labeledChunks(text) {
 function prepShownNote(label) {
   return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound|client notes)$/i.test(label || '');
 }
-function httpUrl(text) {
-  const m = asText(text).match(/https?:\/\/[^\s<>"')\]]+/i);
-  return m ? m[0].replace(/[),.;]+$/, '') : '';
-}
 function clipKey(url) {
   const info = videoInfo(url);
   if (!info) return '';
@@ -4741,23 +4752,6 @@ function sameClip(a, b) {
   const kb = clipKey(b);
   return !!(ka && kb && ka === kb);
 }
-function reactionClipUrl(s) {
-  s = s || {};
-  const fd = fdObject(s) || {};
-  const keys = Object.keys(fd);
-  for (let i = 0; i < keys.length; i++) {
-    if (!/^(reaction\s*clip|react\s*to|react-to)$/i.test(String(keys[i] || '').trim())) continue;
-    const url = httpUrl(fd[keys[i]]);
-    if (url && !sameClip(url, s.reference_clip)) return url;
-  }
-  const lines = asText(s.clip_directions).split('\n');
-  for (let i = 0; i < lines.length; i++) {
-    if (!/react\s*to|reaction\s*clip|source\s*clip/i.test(lines[i])) continue;
-    const url = httpUrl(lines[i]);
-    if (url && !sameClip(url, s.reference_clip)) return url;
-  }
-  return '';
-}
 function formatPrinciples(text) {
   const raw = asText(text).replace(/\s+/g, ' ').trim();
   const m = raw.match(/keep (?:the )?same\s+([^.]*)/i);
@@ -4765,48 +4759,6 @@ function formatPrinciples(text) {
   const parts = m[1].split(/,|·/).map(part => part.replace(/^and\s+/i, '').trim()).filter(Boolean);
   if (parts.length < 2) return '';
   return parts.join(' · ');
-}
-function metricNums(chunk) {
-  if (!chunk) return null;
-  const pick = (re) => {
-    const m = String(chunk).match(re);
-    return m ? m[1].replace(/\s+/g, '') : '';
-  };
-  const views = pick(/~?\s*(\d[\d,]*\.?\d*\s?[KMB]?)\s*views\b/i) || pick(/(\d[\d,]*\.?\d*)v\b/i);
-  const likes = pick(/(\d[\d,]*\.?\d*\s?[KMB]?)\s*likes\b/i) || pick(/(\d[\d,]*\.?\d*)L\b/);
-  const comments = pick(/(\d[\d,]*\.?\d*\s?[KMB]?)\s*comments\b/i) || pick(/(\d[\d,]*\.?\d*)c\b/i);
-  if (!views && !likes && !comments) return null;
-  return { views: views || '—', likes: likes || '—', comments: comments || '—' };
-}
-function reactionMetrics(s) {
-  const fd = fdObject(s) || {};
-  const blob = [asText(s && s.proof_stats), asText(fd['Reference Metrics'])].filter(Boolean).join('\n');
-  if (!blob.trim()) return null;
-  const formatBits = [];
-  const reactBits = [];
-  const otherBits = [];
-  blob.split(/\n/).forEach(line => {
-    let bucket = 'other';
-    line.split(/\s*(?:·|\|)\s*/).forEach(bit => {
-      const reactAt = bit.search(/\breact(?:[-\s]?to|\s*clip)\b/i);
-      const formatAt = bit.search(/\bformat\b/i);
-      const pieces = (reactAt > 0 && formatAt >= 0 && formatAt < reactAt)
-        ? [bit.slice(0, reactAt), bit.slice(reactAt)]
-        : [bit];
-      pieces.forEach(piece => {
-        if (/\breact(?:[-\s]?to|\s*clip)\b/i.test(piece)) bucket = 'react';
-        else if (/\bformat\b/i.test(piece)) bucket = 'format';
-        if (bucket === 'react') reactBits.push(piece);
-        else if (bucket === 'format') formatBits.push(piece);
-        else otherBits.push(piece);
-      });
-    });
-  });
-  const format = metricNums(formatBits.join(' '));
-  const react = metricNums(reactBits.join(' '));
-  const all = (!format && !react) ? metricNums(otherBits.join(' ') || blob) : null;
-  if (!format && !react && !all) return null;
-  return { format: format, react: react, all: all };
 }
 function tightCopy(text) {
   const t = asText(text).replace(/\s+/g, ' ').trim();
@@ -4827,12 +4779,171 @@ function tightCopy(text) {
   const clipped = t.slice(0, 220).replace(/\s+\S*$/, '').trim();
   return clipped + '…';
 }
+// Title Case keys Client Fulfillment writes: "Reaction Clip" and "React To".
+// reaction_clip / react_to / react-to are the same field with different punctuation.
+function reactClipKey(name) {
+  const n = String(name || '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return n === 'reaction clip' || n === 'react to' || n === 'react to clip' || n === 'clip to react to';
+}
+function hasReactClipKey(s) {
+  const fd = fdObject(s);
+  if (!fd) return false;
+  return Object.keys(fd).some(reactClipKey);
+}
+function isReactionScript(s) {
+  if (/react|green\s*-?\s*screen/i.test(asText(s && s.format))) return true;
+  return hasReactClipKey(s);
+}
+function reactionClipInfo(s) {
+  const fd = fdObject(s) || {};
+  const ranked = [];
+  function push(text) {
+    const t = asText(text).trim();
+    if (!t) return;
+    if (ranked.some(item => item.toLowerCase() === t.toLowerCase())) return;
+    ranked.push(t);
+  }
+  push(fdPick(fd, 'Reaction Clip'));
+  push(fdPick(fd, 'React To'));
+  Object.keys(fd).forEach(k => { if (reactClipKey(k)) push(fd[k]); });
+  let info = null;
+  for (let i = 0; i < ranked.length; i++) {
+    const parsed = videoInfo(ranked[i]);
+    if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
+  }
+  if (!info) {
+    const lines = asText(s && s.clip_directions).split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (!/react\s*to|reaction\s*clip|source\s*clip/i.test(lines[i])) continue;
+      const parsed = videoInfo(lines[i]);
+      if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
+    }
+  }
+  if (!info) return null;
+  const primary = videoInfo(s && s.reference_clip);
+  if (primary && sameClip(primary.watch || '', info.watch || '')) return null;
+  return info;
+}
+function reactionClipUrl(s) {
+  const info = reactionClipInfo(s);
+  return info && info.watch ? info.watch : '';
+}
+function showsReactClip(s) {
+  if (!isReactionScript(s)) return false;
+  if (reactionClipInfo(s)) return true;
+  return !!asText(s && s.clip_directions).trim();
+}
+// Title Case is the key Client Fulfillment writes (Format, Pacing, Framing, Reference Metrics).
+// A lowercase twin is only a fallback so an older row is not dropped.
+function fdPick(fd, name) {
+  if (!fd || typeof fd !== 'object' || Array.isArray(fd)) return '';
+  const exact = asText(fd[name]).trim();
+  if (exact) return exact;
+  const want = String(name || '').toLowerCase();
+  const keys = Object.keys(fd);
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i].toLowerCase() !== want) continue;
+    const value = asText(fd[keys[i]]).trim();
+    if (value) return value;
+  }
+  return '';
+}
+function referenceMetrics(proof, fd) {
+  const empty = { views: '', likes: '', comments: '', xMedian: '', audience: '', viral: '' };
+  const head = asText(proof).trim();
+  const line = fdPick(fd, 'Reference Metrics');
+  if (!head && !line) return empty;
+  const primary = extractProofStats(head);
+  const extra = extractProofStats(line);
+  const count = (label) => {
+    const row = primary.find(item => item.label.toLowerCase() === label) || extra.find(item => item.label.toLowerCase() === label);
+    return row ? row.num : '';
+  };
+  const blob = [head, line].filter(Boolean).join('\n');
+  let xMedian = '';
+  const labeled = blob.match(/Outlier\s*\/\s*x-median\s*:\s*([^\n]+)/i);
+  if (labeled) xMedian = labeled[1].trim();
+  if (!xMedian) {
+    const med = blob.match(/~?\d[\d,]*\.?\d*x\s+(?:[^\n.]|\.\d)*median(?:\s*\([^)\n]*\))?/i);
+    if (med) xMedian = med[0].replace(/\s+/g, ' ').trim();
+  }
+  if (!xMedian) {
+    const outlier = blob.match(/[\d][\d,]*\.?\d*x\s+outlier(?:\s+score)?/i)
+      || blob.match(/outlier(?:\s+score)?\s*[:=]?\s*[\d][\d,]*\.?\d*x/i);
+    if (outlier) xMedian = outlier[0].replace(/\s+/g, ' ').trim();
+  }
+  let audience = '';
+  const aud = blob.match(/Audience\s*:\s*([^\n]+)/i);
+  if (aud) audience = aud[1].split(/\s+·\s+/)[0].trim();
+  let viral = '';
+  const viralLine = blob.match(/Viral score\s*(?:\/\s*verdict)?\s*:\s*([^\n]+)/i);
+  if (viralLine) viral = viralLine[1].trim();
+  if (!viral) {
+    const verdict = blob.match(/(?:^|\n)\s*Verdict\s*:\s*([^\n]+)/i) || blob.match(/·\s*Verdict\s*:\s*([^·\n]+)/i);
+    if (verdict) viral = verdict[1].trim();
+  }
+  return {
+    views: count('views'),
+    likes: count('likes'),
+    comments: count('comments'),
+    xMedian: xMedian,
+    audience: audience,
+    viral: viral,
+  };
+}
+function derivePrepPacing(s, fd) {
+  const dur = asText(s && s.proof_stats).match(/Duration\s*:\s*([^\n]+)/i);
+  if (dur && dur[1].trim()) return dur[1].trim();
+  const secs = fd && (fd.target_length_s != null ? fd.target_length_s : fd['Target Length']);
+  const n = Number(secs);
+  if (n > 0 && n < 600) return 'About ' + Math.round(n) + ' seconds.';
+  const blob = [asText(s && s.format), fdPick(fd, 'Format'), asText(s && s.camera)].join('\n');
+  if (/numbered\s+list|\blisticle\b|\blist\b/i.test(blob)) return 'Numbered list. One beat per item.';
+  if (/\breaction\b/i.test(blob)) return 'Hold for the clip, then react.';
+  if (/\btalking[-\s]?head\b/i.test(blob)) return 'Talking head. One take, conversational pace.';
+  if (/\bb-?roll\b/i.test(blob)) return 'Cut to the reference length.';
+  return '';
+}
+function derivePrepFraming(s) {
+  const blob = [asText(s && s.format), asText(s && s.camera), asText(s && s.filming_setup)].join('\n');
+  if (/handheld selfie|walking selfie/i.test(blob)) return 'Handheld selfie, vertical 9:16.';
+  if (/\breaction\b/i.test(blob)) return 'Talking head, then the clip, then back on camera. Vertical 9:16.';
+  if (/\bb-?roll\b|\btext[-\s]?on[-\s]?screen\b|\bsilent\b/i.test(blob)) return 'B-roll, vertical 9:16.';
+  if (/\btalking[-\s]?head\b/i.test(blob)) return 'Talking head, vertical 9:16, eye level.';
+  return '';
+}
 function prepModel(s) {
   s = s || {};
   const setup = parseSetup(s.filming_setup, s.camera);
   const fd = fdObject(s) || {};
-  const pacing = asText(fd.Pacing).trim() || pullLabeled(s.filming_setup, ['pacing']) || pullLabeled(s.editor_notes, ['pacing']);
   const pack = referencePack(s);
+  const hasRef = !!(pack.refs && pack.refs[0]);
+  let format = fdPick(fd, 'Format') || asText(s.format).trim();
+  let pacing = fdPick(fd, 'Pacing') || pullLabeled(s.filming_setup, ['pacing']) || pullLabeled(s.editor_notes, ['pacing']) || pullLabeled(s.tonality_delivery, ['pacing']);
+  let framing = fdPick(fd, 'Framing') || setup.framing;
+  let formatPrompt = false;
+  let pacingPrompt = false;
+  let framingPrompt = false;
+  if (hasRef && !format) {
+    format = 'Add format in editor';
+    formatPrompt = true;
+  }
+  if (hasRef && !pacing) {
+    pacing = derivePrepPacing(s, fd);
+    if (!pacing) {
+      pacing = 'Add pacing in editor';
+      pacingPrompt = true;
+    }
+  }
+  if (hasRef && !framing) {
+    framing = derivePrepFraming(s);
+    if (!framing) {
+      framing = 'Add framing in editor';
+      framingPrompt = true;
+    }
+  }
+  const metrics = referenceMetrics(s.proof_stats, fd);
+  const showMetrics = !!(hasRef || metrics.views || metrics.likes || metrics.comments || metrics.xMedian || metrics.audience || metrics.viral);
   const read = parseReadWays(s.tonality_delivery);
   const extras = [];
   const seen = {};
@@ -4872,7 +4983,8 @@ function prepModel(s) {
   const onCamera = pullLabeled(s.editor_notes, ['on camera']);
   if (asText(s.cta).trim()) addExtra('CTA', s.cta);
   Object.keys(fd).forEach(k => {
-    if (/^pacing$/i.test(k)) return;
+    if (/^(pacing|framing|format|reference metrics)$/i.test(k)) return;
+    if (reactClipKey(k)) return;
     if (/sound|music|audio/i.test(k)) return;
     const tone = asText(fd[k]).trim();
     if (/^tonality$/i.test(k) && waysBefore && tone && waysBefore.toLowerCase().indexOf(tone.toLowerCase()) !== -1) return;
@@ -4889,7 +5001,6 @@ function prepModel(s) {
     const link = extractVideoLink(clip);
     if (!link || clip.replace(link, '').trim().length > 8) addExtra('Clip directions', clip);
   }
-  if (asText(s.proof_stats).trim()) addExtra('Proof', s.proof_stats);
   if (asText(s.client_feedback).trim()) addExtra('Client feedback', s.client_feedback);
   const sous = s.sous_chef_pass && typeof s.sous_chef_pass === 'object' ? s.sous_chef_pass : null;
   if (sous) {
@@ -4901,8 +5012,7 @@ function prepModel(s) {
   if (s.reel_number != null && String(s.reel_number).trim()) addExtra('Reel number', String(s.reel_number));
   if (asText(s.date_planned).trim()) addExtra('Date', s.date_planned);
   if (asText(s.take_label).trim()) addExtra('Take', s.take_label);
-  const reactUrl = reactionClipUrl(s);
-  const react = reactUrl ? videoInfo(reactUrl) : null;
+  const reactInfo = reactionClipInfo(s);
   let rest = asText(s.filming_setup);
   [setup.location, setup.rig, setup.mic, setup.framing].concat(setup.shots || []).forEach(part => {
     const p = asText(part).trim();
@@ -4914,22 +5024,24 @@ function prepModel(s) {
   if (rest.length < 12) rest = '';
   return {
     title: asText(s.title).trim() || 'Script',
-    format: asText(s.format).trim(),
+    format: format,
+    formatPrompt: formatPrompt,
     pacing: pacing,
-    framing: setup.framing,
-    formatEssay: asText(fd.Format).trim(),
-    framingEssay: asText(fd.Framing).trim(),
-    react: react,
-    principles: react ? formatPrinciples(asText(fd.Format) || asText(s.format)) : '',
-    metrics: react ? reactionMetrics(s) : null,
+    pacingPrompt: pacingPrompt,
+    framing: framing,
+    framingPrompt: framingPrompt,
+    metrics: metrics,
+    showMetrics: showMetrics,
+    principles: reactInfo ? formatPrinciples(fdPick(fd, 'Format') || asText(s.format)) : '',
     ref: (pack.refs && pack.refs[0]) || null,
+    react: reactInfo,
     person: pack.person || '',
     camera: asText(s.camera).trim(),
     onCamera: onCamera,
     location: setup.location,
     rig: setup.rig,
     mic: setup.mic,
-    shots: setup.shots || [],
+    shots: parseShots(setup.shots),
     setupRest: rest,
     onScreen: pack.onScreen || [],
     audio: pack.audio || [],
@@ -4945,13 +5057,40 @@ function prepModel(s) {
 function prepText(text) {
   return escHtml(asText(text)).replace(/\n/g, '<br>');
 }
-function prepFact(label, value) {
-  const body = value ? prepText(value) : '<span class="prep-empty">Not on this script.</span>';
+function prepFact(label, value, prompt) {
+  const body = value
+    ? (prompt ? '<span class="prep-empty">' + prepText(value) + '</span>' : prepText(value))
+    : '<span class="prep-empty">Not on this script.</span>';
   return `<div class="prep-fact"><div class="eyebrow">${escHtml(label)}</div><p>${body}</p></div>`;
+}
+function prepMetricsHtml(metrics) {
+  const m = metrics || {};
+  const row = (label, value) => {
+    const empty = !asText(value).trim();
+    const body = empty ? '—' : prepText(value);
+    return `<div><dt>${escHtml(label)}</dt><dd${empty ? ' class="is-empty"' : ''}>${body}</dd></div>`;
+  };
+  return `<div class="prep-fact prep-metrics-card"><div class="eyebrow">Outlier metrics</div><dl class="prep-metrics">${
+    row('Views', m.views) + row('Likes', m.likes) + row('Comments', m.comments)
+    + row('x-median', m.xMedian) + row('Audience', m.audience) + row('Viral score', m.viral)
+  }</dl></div>`;
 }
 function prepParagraphs(items, empty) {
   if (!items || !items.length) return `<p class="prep-empty">${escHtml(empty)}</p>`;
   return items.map(item => `<p>${prepText(item)}</p>`).join('');
+}
+function prepFrame(info, title) {
+  if (!info || !info.src) return '';
+  return `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="${escHtml(title)}" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
+}
+function prepOpenLink(info, label) {
+  if (!info) return '';
+  if (info.watch) {
+    const primary = info.src ? '' : ' is-primary';
+    return `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(label)}</a><p class="prep-url">${escHtml(info.watch)}</p>`;
+  }
+  if (info.label) return `<p>${escHtml(info.label)}</p>`;
+  return '';
 }
 function prepPlayer(info, label, cue) {
   const react = /react/i.test(label);
@@ -4983,21 +5122,6 @@ function prepTightFact(label, full) {
     : '');
   return `<div class="prep-fact"><div class="eyebrow">${escHtml(label)}</div><p>${body}</p></div>`;
 }
-function prepMetricCells(stats) {
-  if (!stats) return '';
-  const cell = (n, name) => `<div class="prep-metric"><b>${escHtml(n || '—')}</b><span>${escHtml(name)}</span></div>`;
-  return `${cell(stats.views, 'Views')}${cell(stats.likes, 'Likes')}${cell(stats.comments, 'Comments')}`;
-}
-function prepMetricsHtml(metrics) {
-  if (!metrics) return '';
-  const blocks = [];
-  if (metrics.react) blocks.push(['Clip to react to', metrics.react]);
-  if (metrics.format) blocks.push(['Format to match', metrics.format]);
-  if (!blocks.length && metrics.all) blocks.push(['This reference', metrics.all]);
-  if (!blocks.length) return '';
-  return `<section class="prep-metrics"><h3>Outlier metrics</h3>${blocks.map(([label, stats]) => `
-    <div class="prep-metric-block"><div class="eyebrow">${escHtml(label)}</div><div class="prep-metric-row">${prepMetricCells(stats)}</div></div>`).join('')}</section>`;
-}
 function prepReferenceHtml(model) {
   model = model || {};
   if (model.react) {
@@ -5014,23 +5138,16 @@ function prepReferenceHtml(model) {
       </div>
       ${keep}
       <div class="prep-facts">
-        ${prepTightFact('Format', model.formatEssay || model.format)}
-        ${prepTightFact('Pacing', model.pacing)}
-        ${prepTightFact('Framing', model.framingEssay || model.framing)}
+        ${prepTightFact('Format', model.formatPrompt ? '' : model.format)}
+        ${prepTightFact('Pacing', model.pacingPrompt ? '' : model.pacing)}
+        ${prepTightFact('Framing', model.framingPrompt ? '' : model.framing)}
       </div>
-      ${prepMetricsHtml(model.metrics)}`;
+      ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}`;
   }
   const info = model.ref;
-  const frame = info && info.src
-    ? `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="Reference video" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`
-    : '';
+  const frame = prepFrame(info, 'Reference video');
   let open = '<p class="prep-empty">No reference reel on this script.</p>';
-  if (info && info.watch) {
-    const primary = info.src ? '' : ' is-primary';
-    open = `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open reference reel</a>`;
-  } else if (info && info.label) {
-    open = `<p>${escHtml(info.label)}</p>`;
-  }
+  if (info && (info.watch || info.label)) open = prepOpenLink(info, 'Open reference reel') || open;
   return `
     <p class="eyebrow">Step 1 · Reference</p>
     <h2 id="prep-title">Watch the reference</h2>
@@ -5038,9 +5155,10 @@ function prepReferenceHtml(model) {
     <div class="prep-watch">
       ${frame}
       <div class="prep-facts">
-        ${prepFact('Format', model.format)}
-        ${prepFact('Pacing', model.pacing)}
-        ${prepFact('Framing', model.framing)}
+        ${prepFact('Format', model.format, model.formatPrompt)}
+        ${prepFact('Pacing', model.pacing, model.pacingPrompt)}
+        ${prepFact('Framing', model.framing, model.framingPrompt)}
+        ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}
       </div>
     </div>
     ${open}`;

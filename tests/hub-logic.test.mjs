@@ -27,9 +27,13 @@ const names = [
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
-  'parseReadWays', 'labeledChunks', 'prepShownNote', 'prepModel',
-  'httpUrl', 'clipKey', 'sameClip', 'reactionClipUrl', 'formatPrinciples', 'metricNums', 'reactionMetrics', 'tightCopy',
-  'prepText', 'prepFact', 'prepPlayer', 'prepTightFact', 'prepMetricCells', 'prepMetricsHtml', 'prepReferenceHtml',
+  'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
+  'clipKey', 'sameClip', 'formatPrinciples', 'tightCopy',
+  'reactClipKey', 'hasReactClipKey', 'isReactionScript', 'reactionClipInfo', 'reactionClipUrl', 'showsReactClip',
+  'fdPick', 'referenceMetrics', 'derivePrepPacing', 'derivePrepFraming', 'prepModel',
+  'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink',
+  'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
+  'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding',
@@ -39,6 +43,7 @@ const src = [
   "const APP_VERSION = '2026.10.23';",
   "const WALKTHROUGH_VIDEO_URL = '';",
   "const CLIENTS = { jan: { name: 'Jan Zands', label: 'Jan' } };",
+  'let prepState = null;',
   ...names.map(extract),
 ].join('\n');
 const ctx = {};
@@ -192,11 +197,16 @@ assert.ok(!prepped.extras.some(ex => ex.label === 'Pacing'));
 assert.ok(prepped.onScreen.some(it => /Their opinion/.test(it.text)));
 assert.ok(prepped.caption.includes('Full lesson'));
 assert.ok(prepped.audio.some(a => /no music/i.test(a)));
+assert.strictEqual(prepped.metrics.views, '7,499,192');
+assert.strictEqual(prepped.showMetrics, true);
+assert.ok(!prepped.extras.some(ex => ex.label === 'Proof'));
+assert.ok(!prepped.extras.some(ex => ex.label === 'Reference Metrics'));
 
 const plain = ctx.prepModel(reaction);
 assert.strictEqual(plain.react, null);
 assert.strictEqual(plain.principles, '');
-assert.strictEqual(plain.metrics, null);
+assert.strictEqual(plain.showMetrics, true);
+assert.strictEqual(plain.metrics.views, '');
 const plainHtml = ctx.prepReferenceHtml(plain);
 assert.ok(plainHtml.includes('Watch the reference'));
 assert.ok(plainHtml.includes('Open reference reel'));
@@ -248,10 +258,10 @@ assert.ok(melPrep.principles.includes('cadence (~100–105s)'));
 assert.ok(melPrep.principles.includes('idea'));
 assert.ok(melPrep.principles.includes('reward'));
 assert.ok(melPrep.principles.includes('emotional reward/next step (RICH)'));
-assert.strictEqual(melPrep.metrics.react.views, '952,832');
-assert.strictEqual(melPrep.metrics.format.views, '420,531');
-assert.strictEqual(melPrep.metrics.format.likes, '12,957');
-assert.strictEqual(melPrep.metrics.format.comments, '495');
+assert.strictEqual(melPrep.showMetrics, true);
+assert.strictEqual(melPrep.metrics.views, '420,531');
+assert.strictEqual(melPrep.metrics.likes, '12,957');
+assert.strictEqual(melPrep.metrics.comments, '495');
 assert.ok(melPrep.pacing.length > 80);
 assert.ok(ctx.tightCopy(melPrep.pacing).length < melPrep.pacing.length);
 const melHtml = ctx.prepReferenceHtml(melPrep);
@@ -263,7 +273,9 @@ assert.ok(melHtml.includes('Keep the same'));
 assert.ok(melHtml.includes('Mel card on top'));
 assert.ok(melHtml.includes('Full pacing note'));
 assert.ok(melHtml.includes('Outlier metrics'));
-assert.ok(melHtml.includes('>952,832<'));
+assert.ok(melHtml.includes('420,531'));
+assert.ok(melHtml.includes('id="react-clip"'));
+assert.ok(!melHtml.includes('prep-react'));
 assert.ok(!melHtml.includes('Open reference reel'));
 
 assert.strictEqual(plain.waysKind, 'script');
@@ -271,6 +283,235 @@ assert.strictEqual(plain.ways.map(w => w.letter).join(''), 'ABC');
 assert.ok(plain.ways[0].text.includes('Les Brown'));
 assert.ok(plain.extras.some(ex => ex.label === 'Tonality'));
 assert.strictEqual(plain.clientNotes, '');
+assert.strictEqual(plain.pacing, 'Talking head. One take, conversational pace.');
+assert.strictEqual(plain.framing, 'Talking head, vertical 9:16, eye level.');
+assert.strictEqual(plain.pacingPrompt, false);
+
+const s6Proof = [
+  'REFERENCE METRICS (Step 1):',
+  '109,468 views · 5,120 likes · 199 comments',
+  'Outlier / x-median: 6.6x Apify median (16,592)',
+  'Audience: PASS — NM (@frazerbrookesonline)',
+  'Viral score / verdict: PASS',
+  'Ref: https://www.instagram.com/reel/DUIafE1DJqb/',
+  '',
+  'Source: Apify Oct 23. REPLACED — old DenkBZACTmp was 264,624 views / 21 comments',
+].join('\n');
+const s6 = ctx.prepModel({
+  title: '5 Questions to Ask Before You Join Any Opportunity',
+  client_slug: 'jan',
+  format: 'Numbered List Talking Head (@frazerbrookesonline · DUIafE1DJqb)',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  camera: 'Jan',
+  filming_direction: {
+    Format: 'Numbered-list talking-head / breakdown explainer.',
+    Pacing: 'Punchy numbered list ~46s. One beat per question.',
+    Framing: 'Mid talking-head at desk/mic. Phone on tripod, eye level, vertical 9:16.',
+    'Reference Metrics': '109,468 views · 5,120 likes · 199 comments · 6.6x Apify median (16,592) · Audience: PASS — NM (@frazerbrookesonline) · Verdict: PASS',
+    Tonality: 'Calm, plain.',
+    framing: 'lowercase must not win',
+  },
+  proof_stats: s6Proof,
+});
+assert.strictEqual(s6.format, 'Numbered-list talking-head / breakdown explainer.');
+assert.strictEqual(s6.pacing, 'Punchy numbered list ~46s. One beat per question.');
+assert.ok(s6.framing.startsWith('Mid talking-head at desk/mic.'));
+assert.strictEqual(s6.pacingPrompt, false);
+assert.strictEqual(s6.framingPrompt, false);
+assert.strictEqual(s6.metrics.views, '109,468');
+assert.strictEqual(s6.metrics.likes, '5,120');
+assert.strictEqual(s6.metrics.comments, '199');
+assert.ok(s6.metrics.xMedian.includes('6.6x'));
+assert.ok(!s6.metrics.xMedian.includes('264,624'));
+assert.ok(s6.metrics.audience.includes('@frazerbrookesonline'));
+assert.strictEqual(s6.metrics.viral, 'PASS');
+assert.strictEqual(s6.showMetrics, true);
+assert.ok(!s6.extras.some(ex => /^(format|pacing|framing|reference metrics|proof)$/i.test(ex.label)));
+assert.ok(s6.extras.some(ex => ex.label === 'Tonality'));
+const s6Html = ctx.prepMetricsHtml(s6.metrics);
+assert.ok(s6Html.includes('Outlier metrics'));
+assert.ok(s6Html.includes('109,468'));
+assert.ok(s6Html.includes('x-median'));
+assert.ok(!s6Html.includes('Not on this script'));
+
+const s4 = ctx.referenceMetrics([
+  'REFERENCE METRICS (Step 1):',
+  '118,823 views · 8,343 likes · 1,602 comments',
+  'Outlier / x-median: 41.3x Apify median (2,876) · Sandcastles 43.9x',
+  'Audience: PASS — NM women (@rachaelbodie)',
+  'Viral score / verdict: PASS',
+  '',
+  'Source: Apify. REPLACED — old was 188,678 views / 25 comments',
+].join('\n'), {});
+assert.strictEqual(s4.views, '118,823');
+assert.strictEqual(s4.likes, '8,343');
+assert.strictEqual(s4.comments, '1,602');
+assert.ok(s4.xMedian.startsWith('41.3x'));
+assert.ok(!s4.views.includes('188,678'));
+
+const counts = ctx.extractProofStats('12,936 likes and 5.4M views');
+assert.strictEqual(counts.find(row => row.label === 'Views').num, '5.4M');
+assert.strictEqual(counts.find(row => row.label === 'Likes').num, '12,936');
+
+const lower = ctx.prepModel({
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  format: 'Short label',
+  camera: 'Jan',
+  filming_direction: { framing: 'Lowercase desk shot.', pacing: 'Lowercase pace.' },
+});
+assert.strictEqual(lower.format, 'Short label');
+assert.strictEqual(lower.framing, 'Lowercase desk shot.');
+assert.strictEqual(lower.pacing, 'Lowercase pace.');
+
+const gap = ctx.prepModel({
+  title: 'No pace',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  format: 'Something else',
+  camera: 'Jan',
+});
+assert.strictEqual(gap.format, 'Something else');
+assert.strictEqual(gap.pacing, 'Add pacing in editor');
+assert.strictEqual(gap.pacingPrompt, true);
+assert.strictEqual(gap.framing, 'Add framing in editor');
+assert.strictEqual(gap.framingPrompt, true);
+assert.strictEqual(gap.showMetrics, true);
+assert.strictEqual(gap.metrics.views, '');
+const gapHtml = ctx.prepMetricsHtml(gap.metrics);
+assert.ok(gapHtml.includes('—'));
+assert.ok(gapHtml.includes('is-empty'));
+
+const s5 = ctx.prepModel({
+  id: 'e9f08bdc-dcc8-4468-94ec-0cc215bc0316',
+  title: "Reaction: Bob Proctor's 6 Must-Read Books",
+  client_slug: 'jan',
+  format: 'Reaction + Listicle · greenscreen (@davidreadsfast · C96PhruO6BC)',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_setup: 'LOCATION: Plain light wall at home.\nFRAMING: Phone handheld or tripod selfie, vertical 9:16, face in LOWER half.\nMIC: Lav or phone mic.\nSHOT LIST: 1) Hook line 2) Silent reaction while Proctor clip plays 3) Rapid list in one take 4) CTA\nTIME: ~59s.',
+  clip_directions: 'REACT TO: https://www.youtube.com/watch?v=V_uebI9QpMg\nTrim only Think and Grow Rich.\nEDITOR SOUND: dialogue only under Monica.',
+  editor_notes: 'AUDIO: dialogue only under Monica.\nCAPTION: Comment RICH.',
+  filming_direction: {
+    Format: 'Reaction + numbered listicle.',
+    Pacing: '~59s davidreadsfast cadence.',
+    Framing: 'Plain light wall. Face in the LOWER half.',
+    'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'EDITOR SOUND': 'dialogue only under Monica; Proctor clip audio.',
+    'Reference Metrics': '420,531 views · 12,957 likes · 495 comments · 536.4x Sandcastles · Audience: Adjacent · Verdict: PASS',
+  },
+  proof_stats: '420,531 views · 12,957 likes · 495 comments\nOutlier / x-median: 536.4x Sandcastles\nAudience: Adjacent\nViral score / verdict: PASS',
+});
+assert.strictEqual(s5.ref.kind, 'ig');
+assert.strictEqual(s5.ref.watch, 'https://www.instagram.com/reel/C96PhruO6BC/');
+assert.strictEqual(s5.react.kind, 'yt');
+assert.strictEqual(s5.react.watch, 'https://www.youtube.com/watch?v=V_uebI9QpMg');
+assert.ok(s5.react.src.includes('youtube.com/embed/V_uebI9QpMg'));
+assert.strictEqual(s5.metrics.views, '420,531');
+assert.strictEqual(s5.showMetrics, true);
+assert.ok(s5.audio.some(a => /dialogue only/i.test(a)));
+assert.ok(s5.extras.some(ex => ex.label === 'Clip directions' && /Trim only/.test(ex.text)));
+assert.ok(!s5.extras.some(ex => /^(reaction clip|react to)$/i.test(ex.label)));
+const s5Html = ctx.prepStepHtml(s5, 0);
+assert.ok(s5Html.indexOf('Clip to react to') < s5Html.indexOf('Format to match'));
+assert.ok(s5Html.includes('Scroll if needed — this is what you react to.'));
+assert.ok(s5Html.includes('https://www.instagram.com/reel/C96PhruO6BC/'));
+assert.ok(s5Html.includes('https://www.youtube.com/watch?v=V_uebI9QpMg'));
+assert.ok(s5Html.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(s5Html.includes('youtube.com/embed/V_uebI9QpMg'));
+assert.ok(s5Html.includes('Outlier metrics'));
+assert.ok(s5Html.includes('id="react-clip"'));
+assert.ok(!s5Html.includes('class="prep-react"'));
+assert.ok(!s5Html.includes('Open react-to clip'));
+assert.ok(Array.isArray(s5.shots) && s5.shots.length === 4);
+const s5Notes = ctx.prepStepHtml(s5, 1);
+assert.ok(s5Notes.includes('Trim only Think and Grow Rich'));
+assert.ok(/dialogue only/i.test(s5Notes));
+assert.ok(s5Notes.includes('Silent reaction while Proctor clip plays'));
+const quietHtml = ctx.prepStepHtml(prepped, 0);
+assert.ok(!quietHtml.includes('>React to<'));
+assert.ok(!quietHtml.includes('prep-react'));
+assert.ok(quietHtml.includes('Open reference reel'));
+assert.ok(quietHtml.includes('Outlier metrics'));
+
+assert.strictEqual(ctx.reactionClipInfo({
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_direction: { reaction_clip: 'https://www.youtube.com/watch?v=V_uebI9QpMg' },
+}).watch, 'https://www.youtube.com/watch?v=V_uebI9QpMg');
+assert.strictEqual(ctx.reactionClipInfo({
+  filming_direction: { 'React To': 'Watch this https://youtu.be/V_uebI9QpMg today' },
+}).watch, 'https://www.youtube.com/watch?v=V_uebI9QpMg');
+assert.strictEqual(ctx.reactionClipInfo({
+  reference_clip: 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+  filming_direction: { 'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg' },
+}), null);
+assert.strictEqual(ctx.reactionClipInfo({ title: 'No clip' }), null);
+assert.strictEqual(ctx.isReactionScript({ format: 'Reaction' }), true);
+assert.strictEqual(ctx.isReactionScript({ format: 'Reaction + Listicle · greenscreen (@davidreadsfast)' }), true);
+assert.strictEqual(ctx.isReactionScript({ format: 'Green-screen card' }), true);
+assert.strictEqual(ctx.isReactionScript({ format: 'Personal Story', clip_directions: 'notes' }), false);
+assert.strictEqual(ctx.isReactionScript({ format: 'F2 List', filming_direction: { 'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg' } }), true);
+assert.strictEqual(ctx.showsReactClip({ format: 'Reaction', clip_directions: 'Say the line.' }), true);
+assert.strictEqual(ctx.showsReactClip({ format: 'Personal Story', clip_directions: 'https://www.youtube.com/watch?v=V_uebI9QpMg' }), false);
+assert.strictEqual(ctx.showsReactClip({
+  format: 'Reaction + Listicle · greenscreen',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_direction: {
+    'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+  },
+}), true);
+
+const dossier = ctx.renderDossierBody({
+  id: 'e9f08bdc-dcc8-4468-94ec-0cc215bc0316',
+  format: 'Reaction + Listicle · greenscreen (@davidreadsfast · C96PhruO6BC)',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  clip_directions: 'Trim only Think and Grow Rich. https://www.youtube.com/watch?v=V_uebI9QpMg',
+  filming_direction: {
+    'Reaction Clip': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+    'React To': 'https://www.youtube.com/watch?v=V_uebI9QpMg',
+  },
+});
+assert.ok(dossier.includes('Format reference'));
+assert.ok(dossier.includes('Format to match'));
+assert.ok(dossier.includes('>React to<'));
+assert.ok(dossier.includes('https://www.instagram.com/reel/C96PhruO6BC/'));
+assert.ok(dossier.includes('https://www.youtube.com/watch?v=V_uebI9QpMg'));
+assert.ok(dossier.includes('Open react-to clip'));
+assert.ok(dossier.includes('Clip plays'));
+const storyCard = ctx.renderDossierBody({
+  id: 'story-1',
+  format: 'Personal Story',
+  clip_directions: 'General filming notes. No source clip.',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+});
+assert.ok(storyCard.includes('Format reference'));
+assert.ok(!storyCard.includes('>React to<'));
+assert.ok(!storyCard.includes('Open react-to clip'));
+
+const derived = ctx.prepModel({
+  reference_clip: 'https://www.youtube.com/watch?v=abcdefghijk',
+  format: 'Numbered List Talking Head',
+  camera: 'Jan',
+});
+assert.strictEqual(derived.pacing, 'Numbered list. One beat per item.');
+assert.strictEqual(derived.framing, 'Talking head, vertical 9:16, eye level.');
+
+const bare = ctx.prepModel({ title: 'Bare' });
+assert.strictEqual(bare.pacing, '');
+assert.strictEqual(bare.framing, '');
+assert.strictEqual(bare.showMetrics, false);
+
+const desk = ctx.parseSetup('LOCATION: Seated office or home, plain wall.\nFRAMING: Mid talking-head desk/mic. Phone on tripod, eye level.', 'Jan');
+assert.strictEqual(desk.location, 'Seated office or home, plain wall.');
+assert.strictEqual(desk.mic, '');
+assert.ok(/desk\/mic/i.test(desk.framing));
+
+const outlierOnly = ctx.referenceMetrics('bradleysugars - 2,386,159 views, 2982.7x outlier score, 3,080 likes, 27 comments.', null);
+assert.strictEqual(outlierOnly.views, '2,386,159');
+assert.strictEqual(outlierOnly.likes, '3,080');
+assert.strictEqual(outlierOnly.comments, '27');
+assert.ok(/2982\.7x outlier score/i.test(outlierOnly.xMedian));
+assert.strictEqual(outlierOnly.audience, '');
+assert.strictEqual(outlierOnly.viral, '');
 
 const notes = 'ON-SCREEN TEXT: OLD LINE\nCAPTION: Old caption.\nFILMING EASE: 4/5 — one location.';
 const rewritten = ctx.setLabeledBlock(ctx.setLabeledBlock(ctx.setLabeledBlock(notes, 'ON-SCREEN TEXT', 'NEW LINE'), 'CAPTION', 'New caption.'), 'CLIENT NOTES', 'Say it warmer.');

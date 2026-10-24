@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- sla-v2 helper-v1 -->
+<!-- sla-v3 pack-build-v1 film-cue -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080808" />
@@ -528,6 +528,134 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    .toast.ok { border-color: rgba(61,214,140,0.55); background: #122018; color: #d8ffe9; }
+    .toast.err { border-color: rgba(237,48,57,0.55); background: #201212; color: #ffd0d2; }
+    .toast.big { font-size: 1rem; padding: 14px 22px; max-width: 92vw; }
+    .btn.flash {
+      animation: btnFlash .55s ease;
+      box-shadow: 0 0 0 3px rgba(61,214,140,0.45), 0 0 28px rgba(61,214,140,0.25);
+    }
+    @keyframes btnFlash {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.03); background: #2a9a64; border-color: #3dd68c; }
+      100% { transform: scale(1); }
+    }
+    .action-legend {
+      font-size: 0.78rem; color: var(--dim); line-height: 1.4; margin: 8px 0 4px;
+    }
+    .action-legend strong { color: var(--muted); font-weight: 700; }
+    .next-cue {
+      display: none; margin-top: 12px; padding: 14px;
+      border: 1px solid var(--line-hot); border-radius: 14px;
+      background: linear-gradient(160deg, #1f1012, #101010);
+      animation: riseIn .3s ease both;
+    }
+    .next-cue.show { display: block; }
+    .next-cue .nc-title {
+      font-size: 12px; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 6px;
+    }
+    .next-cue p { font-size: 0.92rem; color: var(--muted); margin-bottom: 10px; line-height: 1.4; }
+    .preview-only-tag {
+      display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--dim);
+      background: #1a1a1a; border: 1px solid var(--line); padding: 4px 8px; border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    .research-banner {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 14px; border-radius: 14px; margin-bottom: 12px;
+      background: #141010; border: 1px solid var(--line);
+      font-size: 0.88rem; color: var(--muted); line-height: 1.35;
+    }
+    .research-banner.busy { border-color: var(--line-hot); color: var(--fg); }
+    .research-banner.ok { border-color: rgba(61,214,140,0.4); }
+    .research-banner .spin {
+      width: 14px; height: 14px; border-radius: 50%;
+      border: 2px solid #333; border-top-color: var(--red); flex-shrink: 0;
+    }
+    .research-banner.busy .spin { animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .pack-delivery {
+      background: linear-gradient(180deg, #161212, #0c0c0c);
+      border: 1px solid var(--line-hot); border-radius: 18px;
+      padding: 18px 16px 16px; margin-bottom: 14px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.4);
+    }
+    .pack-delivery .pd-kicker {
+      font-size: 10px; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 6px;
+    }
+    .pack-delivery h2 {
+      font-size: 1.35rem; font-weight: 900; letter-spacing: -0.03em;
+      margin-bottom: 4px; line-height: 1.15;
+    }
+    .pack-delivery .pd-sub { font-size: 0.88rem; color: var(--muted); margin-bottom: 14px; }
+    .pack-delivery .pd-block { margin-bottom: 14px; }
+    .pack-delivery .pd-label {
+      font-size: 10px; font-weight: 800; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 6px;
+    }
+    .pack-delivery .pd-snap {
+      font-size: 0.95rem; line-height: 1.45; color: var(--fg);
+      white-space: pre-wrap;
+    }
+    .pack-delivery .pd-out {
+      border: 1px solid var(--line); border-radius: 12px;
+      padding: 12px; margin-bottom: 8px; background: rgba(0,0,0,0.35);
+    }
+    .pack-delivery .pd-out .n {
+      font-size: 11px; font-weight: 800; color: var(--red-soft);
+      letter-spacing: .08em; text-transform: uppercase; margin-bottom: 4px;
+    }
+    .pack-delivery .pd-out strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
+    .pack-delivery .pd-out p { font-size: 0.85rem; color: var(--muted); line-height: 1.4; margin: 0; }
+    .pack-delivery .pd-out a { color: var(--red-soft); font-size: 0.8rem; word-break: break-all; }
+    .pack-delivery .pd-angle {
+      border-left: 3px solid var(--red); padding: 10px 12px;
+      background: #101010; border-radius: 0 12px 12px 0; margin-bottom: 8px;
+      font-size: 0.9rem; line-height: 1.4;
+    }
+    .pack-delivery .pd-angle em { font-style: normal; color: var(--red-soft); font-weight: 700; }
+    .pack-delivery .pd-cta {
+      margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);
+      font-size: 0.9rem; color: var(--muted); line-height: 1.45;
+    }
+    .pack-delivery .pd-cta strong { color: var(--fg); }
+    .pack-edit-toggle { margin-bottom: 10px; }
+    .pack-edit { display: none; }
+    .pack-edit.show { display: block; }
+
+    .film-cue {
+      margin: 14px 0 8px; padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(160deg, #1a1410, #0c0c0c);
+      border: 1px solid rgba(237,48,57,0.5);
+      box-shadow: 0 0 40px rgba(237,48,57,0.12);
+    }
+    .film-cue .fc-kicker {
+      font-size: 10px; font-weight: 800; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--red-soft); margin-bottom: 6px;
+    }
+    .film-cue h3 {
+      font-size: 1.25rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px;
+    }
+    .film-cue .fc-why { font-size: 0.88rem; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+    .teleprompter {
+      background: #050505; border: 1px solid #333; border-radius: 14px;
+      padding: 18px 16px; margin-bottom: 12px; text-align: center;
+    }
+    .teleprompter .tp-label {
+      font-size: 10px; font-weight: 800; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--dim); margin-bottom: 10px;
+    }
+    .teleprompter .tp-line {
+      font-size: 1.35rem; font-weight: 800; line-height: 1.25;
+      letter-spacing: -0.02em; color: var(--fg);
+    }
+
+
+
     /* Bottom nav */
     .nav {
       position: fixed;
@@ -862,7 +990,7 @@
       </div>
 
       <div class="sample-card" id="sampleCard">
-        <div class="sc-label" id="sampleLabel">Sample deliverable · not theirs yet</div>
+        <div class="sc-label" id="sampleLabel">Preview only — real pack after Save + build</div>
         <h3 id="sampleTitle">Outlier Pack teaser</h3>
         <div class="sc-body" id="sampleBody">
           <strong>What they get:</strong> 5–8 posts already working in their lane + 3 filmable angles for this week.
@@ -894,10 +1022,10 @@
       </div>
 
       <div class="preview-panel" id="previewPanel">
-        <div class="pv-title">What lands in ~15 min</div>
+        <div class="pv-title">Preview only — real pack after you research</div>
         <div id="previewBody"></div>
         <div class="btn-row" style="margin-top:12px">
-          <button type="button" class="btn btn-primary" id="previewToIntake">Lock contact →</button>
+          <button type="button" class="btn btn-primary" id="previewToIntake">Lock contact → build Pack</button>
           <button type="button" class="btn btn-ghost" data-goto="close">Soft close</button>
         </div>
       </div>
@@ -1010,14 +1138,23 @@
         </form>
 
         <div class="btn-row" style="margin-top:8px">
-          <button type="button" class="btn btn-primary" id="saveLead">Save lead</button>
+          <button type="button" class="btn btn-primary" id="saveLead">Save + build pack</button>
         </div>
         <div class="btn-row" style="margin-top:8px">
           <button type="button" class="btn btn-ghost" id="copyLead">Copy text</button>
           <button type="button" class="btn btn-ghost" id="shareLead">Share</button>
           <button type="button" class="btn btn-ghost" id="mailLead">Mailto</button>
         </div>
-        <p class="status-line" id="intakeStatus"></p>
+        <p class="action-legend"><strong>Save</strong> keeps it on this phone + starts the Pack · <strong>Copy / Share / Mailto</strong> = you send — bots don’t</p>
+        <p class="status-line" id="intakeStatus" aria-live="polite"></p>
+        <div class="next-cue" id="nextCue">
+          <div class="nc-title">Next → show them the Pack</div>
+          <p id="nextCueBody">Lead saved. Pack is building from their IG + site — open it with them.</p>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" data-goto="outlier">Open Pack →</button>
+            <button type="button" class="btn btn-ghost" data-goto="close">Close / book</button>
+          </div>
+        </div>
       </div>
 
       <div class="section" id="bGate">
@@ -1132,19 +1269,78 @@
 
     <!-- ========== OUTLIER ========== -->
     <section id="panel-outlier" class="panel">
-      <p class="panel-purpose" data-purpose="panel-outlier"><strong>Pack</strong> — Build the Outlier Pack — send later, bots never send.</p>
+      <p class="panel-purpose" data-purpose="panel-outlier"><strong>Pack</strong> — On-the-spot Outlier Pack. Show this screen to the prospect.</p>
       <div class="topbar">
         <div class="brand">
           <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
-          <span>Track A pack</span>
+          <span>Outlier Pack</span>
         </div>
-        <div class="pill">Delivery</div>
+        <div class="pill">~15 min</div>
       </div>
 
-      <div class="section">
-        <h3>Outlier delivery</h3>
-        <h4>Fill blanks → copy → you send</h4>
-        <p class="help">5–8 working posts + 3 filmable angles. Observational only — no invented revenue.</p>
+      <div class="research-banner" id="researchBanner">
+        <span class="spin" aria-hidden="true"></span>
+        <span id="researchText">Waiting for a lead — capture IG + site, then Save + build pack.</span>
+      </div>
+
+      <div class="pack-delivery" id="packDelivery" hidden>
+        <div class="pd-kicker">Signal Marketing · free event drop</div>
+        <h2 id="pdTitle">Outlier Pack</h2>
+        <p class="pd-sub" id="pdSub">Built for your page — what to film this week.</p>
+
+        <div class="pd-block">
+          <div class="pd-label">Page snapshot</div>
+          <div class="pd-snap" id="pdSnap"></div>
+        </div>
+        <div class="pd-block">
+          <div class="pd-label">What’s working in your lane</div>
+          <div id="pdOutliers"></div>
+        </div>
+        <div class="pd-block">
+          <div class="pd-label">3 filmable angles for you</div>
+          <div id="pdAngles"></div>
+        </div>
+        <div class="pd-block" id="pdScriptBlock" hidden>
+          <div class="pd-label">Talking-head skeleton</div>
+          <div class="pd-snap" id="pdScript"></div>
+        </div>
+        <div class="pd-cta" id="pdCta">
+          <strong>Soft next:</strong> If this feels useful, we map your next 7 days of posts in 15 minutes.
+        </div>
+      </div>
+
+      <div class="btn-row" id="packActionRow" hidden>
+        <button type="button" class="btn btn-primary" id="copyOutlierPack">Copy pack</button>
+        <button type="button" class="btn btn-ghost" id="sharePack">Share pack</button>
+        <button type="button" class="btn btn-ghost" id="mailPack">Mailto pack</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px" id="packDmRow" hidden>
+        <button type="button" class="btn btn-soft" id="copyDmA">Copy send DM</button>
+        <button type="button" class="btn btn-soft" id="rebuildPack">Rebuild</button>
+      </div>
+      <p class="action-legend" id="packLegend" hidden><strong>Copy / Share / Mailto</strong> = you send the pack — bots don’t. Show the Pack screen above to them first.</p>
+
+      <div class="film-cue" id="filmCue" hidden>
+        <div class="fc-kicker">Floor cue · optional · ~45s</div>
+        <h3>Film angle 1 now?</h3>
+        <p class="fc-why" id="filmWhy">They’re here — shoot the top angle in-hall before they walk. Voice Memos / Camera is fine.</p>
+        <div class="teleprompter">
+          <div class="tp-label">One-liner · hold for them · look at lens</div>
+          <div class="tp-line" id="tpLine">…</div>
+        </div>
+        <div class="btn-row">
+          <button type="button" class="btn btn-primary" id="copyHook">Copy hook</button>
+          <button type="button" class="btn btn-ghost" id="skipFilm">Skip → Close</button>
+        </div>
+      </div>
+
+
+      <button type="button" class="btn btn-soft pack-edit-toggle" id="togglePackEdit">Edit fields (ops)</button>
+
+      <div class="section pack-edit" id="packEdit">
+        <h3>Ops edit</h3>
+        <h4>Tweak before you send</h4>
+        <p class="help">Auto-filled from IG + site signals. Observational only — no invented revenue.</p>
 
         <div class="field">
           <label>For @handle</label>
@@ -1159,7 +1355,7 @@
           <textarea id="outSnap" placeholder="Niche feel · cadence · 1 strength · 1 gap"></textarea>
         </div>
 
-        <h3 style="margin-top:8px">Outliers (link + why)</h3>
+        <h3 style="margin-top:8px">Outliers (pattern / search / why)</h3>
         <div id="outlierRows"></div>
         <button type="button" class="btn btn-soft" id="addOutlier" style="margin-bottom:14px">+ Add outlier row</button>
 
@@ -1187,13 +1383,7 @@
           <label>Optional TH script skeleton</label>
           <textarea id="outScript" placeholder="Hook plate + spoken path + end screenshot idea"></textarea>
         </div>
-
-        <div class="btn-row">
-          <button type="button" class="btn btn-primary" id="copyOutlierPack">Copy Outlier Pack</button>
-        </div>
-        <div class="btn-row" style="margin-top:8px">
-          <button type="button" class="btn btn-ghost" id="copyDmA">Copy send DM</button>
-        </div>
+        <button type="button" class="btn btn-primary" id="applyPackEdit">Apply edits → delivery view</button>
       </div>
     </section>
 
@@ -1323,12 +1513,31 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
   const $ = (s, el = document) => el.querySelector(s);
   const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
-  function toast(msg) {
+  function toast(msg, kind) {
     const t = $('#toast');
     t.textContent = msg;
-    t.classList.add('show');
+    t.className = 'toast show big' + (kind === 'ok' ? ' ok' : kind === 'err' ? ' err' : '');
     clearTimeout(toast._id);
-    toast._id = setTimeout(() => t.classList.remove('show'), 2200);
+    toast._id = setTimeout(() => { t.className = 'toast'; }, kind === 'ok' ? 3200 : 2600);
+  }
+  function flashBtn(el) {
+    if (!el) return;
+    el.classList.remove('flash');
+    void el.offsetWidth;
+    el.classList.add('flash');
+    setTimeout(() => el.classList.remove('flash'), 600);
+  }
+  function haptic() {
+    try { if (navigator.vibrate) navigator.vibrate(30); } catch (e) {}
+  }
+  function bumpFloorKPI(ids) {
+    try {
+      const day = '2026-10-24';
+      const key = 'cc_floor_kpis_' + day;
+      const st = JSON.parse(localStorage.getItem(key) || '{"videos":0,"magnets":0,"contacts":0,"calls":0,"deals":0}');
+      (ids || []).forEach(id => { st[id] = (st[id] || 0) + 1; });
+      localStorage.setItem(key, JSON.stringify(st));
+    } catch (e) {}
   }
 
   function goto(name) {
@@ -1345,7 +1554,7 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
       window.scrollTo(0, 0);
     }
     if (name === 'interview') renderQuestion();
-    if (name === 'outlier') ensureOutlierRows();
+    if (name === 'outlier') { ensureOutlierRows(); renderPackDelivery(); }
     window.scrollTo(0, 0);
   }
 
@@ -1410,13 +1619,14 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
       'Company: ' + (o.company || ''),
       'IG: @' + (o.ig || ''),
       'Website: ' + (o.website || ''),
-      'Contact: ' + (o.contact || ''),
+      'Phone/email: ' + (o.contact || ''),
       'Track: ' + (o.track || ''),
       'Buyer: ' + (o.buyer || ''),
       'Posting weekly: ' + (o.posting || '—'),
       'Bottleneck: ' + (o.bottleneck || '—'),
       'Call slot: ' + (o.callSlot || '—'),
       'Notes: ' + (o.notes || '—'),
+      'Promise: Outlier Pack / story plan in ~15 min (you send — bots don’t)',
       '',
       'Warmth / sent flags: fill after drop'
     ].join('\n');
@@ -1430,62 +1640,111 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     localStorage.setItem(STORAGE_LEADS, JSON.stringify(arr));
   }
 
+  let lastSavedLead = null;
+  let currentPack = null;
+
   $('#saveLead').addEventListener('click', () => {
     const f = $('#intakeForm');
-    if (!f.reportValidity()) return;
+    if (!f.reportValidity()) {
+      toast('Fill required fields first', 'err');
+      return;
+    }
     const o = formData();
     const arr = loadLeads();
     arr.unshift(o);
     saveLeads(arr);
-    $('#intakeStatus').textContent = 'Saved · ' + (o.name || o.ig);
-    toast('Lead saved on this phone');
+    lastSavedLead = o;
+    const label = o.name || ('@' + o.ig);
+    $('#intakeStatus').textContent = 'Saved · ' + label + ' · building Pack…';
+    $('#intakeStatus').style.color = 'var(--ok)';
+    flashBtn($('#saveLead'));
+    haptic();
+    toast('Saved · ' + label, 'ok');
+    bumpFloorKPI(['contacts', 'magnets']);
     renderSaved();
-    // Prefill outlier pack
+    const cue = $('#nextCue');
+    if (cue) {
+      cue.classList.add('show');
+      $('#nextCueBody').textContent = 'Saved on this phone. Pack is building from @' + o.ig + ' + their site — open it with them.';
+    }
+    setTimeout(() => {
+      const list = $('#savedList');
+      if (list) list.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 120);
     $('#outHandle').value = '@' + o.ig;
     $('#outName').value = (o.name || '').split(' ')[0] || '';
+    startPackBuild(o);
   });
 
-  async function copyText(text) {
+  async function copyText(text, okMsg) {
+    const msg = okMsg || 'Copied — paste into iMessage/Notes';
     try {
       await navigator.clipboard.writeText(text);
-      toast('Copied');
+      toast(msg, 'ok');
+      haptic();
       return true;
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-      toast('Copied');
-      return true;
+    } catch (e1) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        ta.remove();
+        if (ok) { toast(msg, 'ok'); haptic(); return true; }
+      } catch (e2) {}
+      try {
+        window.prompt('Clipboard blocked — Select All + Copy:', text);
+        toast('Clipboard blocked — used select fallback', 'err');
+      } catch (e3) {
+        toast('Clipboard blocked on this browser', 'err');
+      }
+      const btn = $('#copyLead');
+      if (btn) { btn.disabled = true; btn.title = 'Clipboard blocked'; setTimeout(() => { btn.disabled = false; }, 2500); }
+      return false;
     }
   }
 
   $('#copyLead').addEventListener('click', () => {
-    const o = formData();
-    copyText(formatLead(o));
+    const o = lastSavedLead || formData();
+    const packBlurb = currentPack ? ('\n\n--- PACK ---\n' + buildOutlierPack()) : '';
+    copyText(formatLead(o) + packBlurb, 'Copied — paste into iMessage/Notes');
+    flashBtn($('#copyLead'));
   });
 
   $('#shareLead').addEventListener('click', async () => {
-    const o = formData();
-    const text = formatLead(o);
+    const o = lastSavedLead || formData();
+    const text = formatLead(o) + (currentPack ? ('\n\n--- PACK ---\n' + buildOutlierPack()) : '');
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Signal LM — ' + (o.name || o.ig), text });
+        toast('Share sheet opened', 'ok');
+        haptic();
         return;
       } catch (e) {
-        if (e && e.name === 'AbortError') return;
+        if (e && e.name === 'AbortError') { toast('Share cancelled'); return; }
       }
     }
-    copyText(text);
+    await copyText(text, 'Share unavailable — copied instead');
+    flashBtn($('#shareLead'));
   });
 
   $('#mailLead').addEventListener('click', () => {
-    const o = formData();
+    const o = lastSavedLead || formData();
     const subject = encodeURIComponent('Signal LM — ' + (o.name || o.ig || 'lead'));
-    const body = encodeURIComponent(formatLead(o));
-    location.href = 'mailto:?subject=' + subject + '&body=' + body;
+    const body = encodeURIComponent(formatLead(o) + (currentPack ? ('\n\n--- PACK ---\n' + buildOutlierPack()) : ''));
+    const href = 'mailto:?subject=' + subject + '&body=' + body;
+    try {
+      window.location.href = href;
+      toast('Opening Mail…', 'ok');
+      haptic();
+      flashBtn($('#mailLead'));
+    } catch (e) {
+      toast('Mailto blocked — use Copy instead', 'err');
+    }
   });
 
   function renderSaved() {
@@ -1668,6 +1927,379 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     toast('Ops reset');
   });
 
+
+  // ===== PACK ENGINE (floor ~15 min) =====
+  const STORAGE_PACKS = 'signal_lm_packs_v1';
+  const NICHES = [
+    {
+      id: 'coach',
+      keys: ['coach','coaching','mentor','consult','agency owner','course','mastermind','community','program','transform'],
+      label: 'coaches / mentors',
+      insight: 'Most coaches post “tips.” The posts that actually pull DMs are specific failure→fix stories with a number — not another carousel of principles.',
+      gap: 'Cadence looks tip-heavy; the gap is proof-of-life moments (before/after tension) that make strangers self-select.',
+      patterns: [
+        { title: 'Specific failure → fix (with a number)', why: 'Concrete loss/gain beats “mindset.” People DM when they see themselves in the number.', search: 'site:instagram.com “I almost” coach OR agency' },
+        { title: 'Client objection → live teardown', why: 'Objection content converts silent lurkers who think “that won’t work for me.”', search: 'instagram “you’re not ready” coaching reel' },
+        { title: 'Behind-the-offer stack (what’s included, what isn’t)', why: 'Clarity content outperforms “book a call” CTAs when the offer is fuzzy on the page.', search: 'instagram offer breakdown coaching' },
+        { title: 'Day-in-the-life of delivery (not lifestyle flex)', why: 'Delivery footage builds trust faster than Lambos — especially at events.', search: 'instagram day in the life coach delivery' }
+      ],
+      angles: [
+        'Hook: “Stop posting tips. Post the day you almost quit.” · Format: 20s talking-head · CTA: “Comment QUIT if you’ve been there.”',
+        'Hook: “The objection I hear every week — and the 1-line answer.” · Format: split-screen text + face · CTA: Save for the next sales call.',
+        'Hook: “What’s NOT in my offer (on purpose).” · Format: list on screen · CTA: “Which one surprised you?”'
+      ],
+      hook: 'Stop posting tips. Post the day you almost quit — that’s what makes strangers DM.',
+      script: 'HOOK (on screen): “Stop posting tips.”\nSPOKEN: Most people in my lane teach principles. The posts that fill calls are the days it almost didn’t work — with a real number.\nEND: Screenshot of their calendar / offer page.'
+    },
+    {
+      id: 'agency',
+      keys: ['agency','ads','media buyer','creative','performance','marketing agency','paid social','meta ads','google ads'],
+      label: 'agencies / performance',
+      insight: 'Agencies drown feeds in “we scaled X.” What outsiders can’t copy — and what they lean in for — is the messy creative test you killed, and why.',
+      gap: 'Proof posts exist; the missing piece is transparent kill-lists (what you stopped running) that signal real operator taste.',
+      patterns: [
+        { title: 'Creative we killed (and the metric that killed it)', why: 'Kill-lists feel insider. Screenshots of dead ads outperform vanity ROAS flexes.', search: 'instagram “we killed this ad” agency' },
+        { title: 'Before/after landing page (1 change)', why: 'Single-variable teardowns teach + sell without a case-study PDF.', search: 'instagram landing page teardown agency' },
+        { title: 'Client brief → first 48h plan', why: 'Process content converts founders who fear “agency black box.”', search: 'instagram first 48 hours agency onboarding' },
+        { title: 'Comment reply → mini audit', why: 'Public micro-audits are the modern lead magnet for agencies.', search: 'instagram comment audit ads' }
+      ],
+      angles: [
+        'Hook: “This ad looked pretty. We killed it in 4 days.” · Format: screenshot + face · CTA: “Want the kill criteria?”',
+        'Hook: “One landing-page change. Here’s the before/after.” · Format: swipe stills · CTA: Comment PAGE.',
+        'Hook: “First 48 hours after a new client pays.” · Format: checklist on screen · CTA: Save this for your next kickoff.'
+      ],
+      hook: 'This ad looked pretty. We killed it in 4 days — here’s the metric that decided.',
+      script: 'HOOK: “Pretty ads die.”\nSPOKEN: Here’s a creative we killed in 4 days and the one number that decided. If your agency never shows kill-lists, you’re buying vibes.\nEND: Screenshot of the dead ad + the metric.'
+    },
+    {
+      id: 'saas',
+      keys: ['saas','software','app','platform','b2b','startup','product','api','dashboard'],
+      label: 'SaaS / product',
+      insight: 'Feature dumps don’t convert. The surprise winners are “workflow theft” clips — show the painful manual thing your user still does, then the 10-second escape.',
+      gap: 'Product UI is on the site; the feed is missing the painful before-state your buyer still lives in.',
+      patterns: [
+        { title: 'Painful manual workflow → 10s escape', why: 'Empathy first, product second. Buyers share these with their team.', search: 'instagram saas workflow before after' },
+        { title: 'One setting most users miss', why: 'Power-user secrets outperform launch posts after week 2.', search: 'instagram “most people miss this” saas' },
+        { title: 'Customer voice (raw) > polished testimonial', why: 'Unedited Loom quotes feel real; brand-safe quotes feel ads.', search: 'instagram customer quote saas raw' },
+        { title: 'Changelog as story (why we shipped it)', why: '“Why” changelog posts retain better than feature lists.', search: 'instagram changelog why we built' }
+      ],
+      angles: [
+        'Hook: “Your team still does this by hand — watch.” · Format: screen record 15s · CTA: Link in bio / comment TOOL.',
+        'Hook: “One setting 80% of users never touch.” · Format: cursor + voiceover · CTA: Save.',
+        'Hook: “Why we shipped this (not the feature — the pain).” · Format: talking-head + UI cutaway · CTA: “Tag a teammate who needs this.”'
+      ],
+      hook: 'Your team still does this by hand — watch the 10-second escape.',
+      script: 'HOOK: “Still doing this by hand?”\nSPOKEN: Most teams in our space still {pain}. Here’s the 10-second escape inside the product — not a feature tour, the exact click path.\nEND: UI screenshot of the win state.'
+    },
+    {
+      id: 'ecom',
+      keys: ['shop','store','ecommerce','e-com','sku','product','brand','dtc','shopify','merch'],
+      label: 'ecom / DTC',
+      insight: 'Product demos are table stakes. The overlooked lever is “use occasion” content — when/why someone reaches for it — which outperforms another unboxing.',
+      gap: 'Catalog energy is high; occasion + objection-handling UGC is thin.',
+      patterns: [
+        { title: 'Use occasion (when they actually grab it)', why: 'Occasion > aesthetics for purchase intent.', search: 'instagram “I grab this when” product' },
+        { title: 'Objection handling UGC (“I thought it was…” )', why: 'Neutralizes the exact hesitation in comments.', search: 'instagram “I thought it was” review ugc' },
+        { title: 'Packaging / unboxing with a twist (not ASMR)', why: 'Twist = a use tip mid-unbox; pure ASMR fatigues.', search: 'instagram unboxing tip brand' },
+        { title: 'Restock / scarcity with a reason', why: 'Reasoned scarcity (“batch dye”) beats fake countdown timers.', search: 'instagram restock reason brand' }
+      ],
+      angles: [
+        'Hook: “I only grab this when ___.” · Format: POV 12s · CTA: “What’s your occasion?”',
+        'Hook: “I thought it was overpriced — then this happened.” · Format: UGC-style face · CTA: Link.',
+        'Hook: “Why this batch took 3 weeks (and why that’s good).” · Format: behind-the-scenes · CTA: Notify me / restock.'
+      ],
+      hook: 'I only grab this when ___ — that’s the video your catalog is missing.',
+      script: 'HOOK: “Not another unboxing.”\nSPOKEN: Here’s when people actually reach for this — the occasion. If your feed is only products on white, you’re invisible in the moment of need.\nEND: Product in the real occasion.'
+    },
+    {
+      id: 'creator',
+      keys: ['creator','influencer','content','youtube','tiktok','newsletter','personal brand','podcast'],
+      label: 'creators / personal brands',
+      insight: 'Growth tips are saturated. The valuable flip: post the distribution system (where one piece becomes 5) — that’s what other creators DM about.',
+      gap: 'Personality is clear; the “how the machine runs” posts are rare and highly saveable.',
+      patterns: [
+        { title: '1 piece → 5 distributions (show the board)', why: 'Systems content gets saves from peer creators.', search: 'instagram content repurposing board' },
+        { title: 'Hook graveyard (what died + what won)', why: 'Failure libraries outperform “my 7-figure tips.”', search: 'instagram hooks that flopped' },
+        { title: 'Comment → new video seed', why: 'Closes the loop with audience; algorithm-friendly.', search: 'instagram answering comments reel' },
+        { title: 'Analytics honesty (one metric that lied)', why: 'Credibility > flex graphs.', search: 'instagram vanity metrics creator' }
+      ],
+      angles: [
+        'Hook: “One video became five. Here’s the board.” · Format: screen + finger · CTA: Save the system.',
+        'Hook: “This hook flopped. This one printed.” · Format: side-by-side · CTA: “Which would you have picked?”',
+        'Hook: “The metric that lied to me last month.” · Format: talking-head · CTA: Follow for the ugly numbers.'
+      ],
+      hook: 'One video became five — here’s the board most creators never show.',
+      script: 'HOOK: “Stop making more. Split better.”\nSPOKEN: One piece became five touchpoints. I’ll show the board — not theory, the actual tiles.\nEND: Screenshot of the repurpose board.'
+    },
+    {
+      id: 'local',
+      keys: ['dentist','chiro','medspa','restaurant','gym','realtor','real estate','clinic','salon','lawyer','attorney'],
+      label: 'local / pro services',
+      insight: 'Local brands over-index on stock smiles. The posts that book are myth-busting (“you don’t need X”) + real patient/client moments with consent.',
+      gap: 'Trust signals on the site; myth-bust + process-on-camera missing in the feed.',
+      patterns: [
+        { title: 'Myth bust (“you don’t need X”)', why: 'Relieves anxiety; earns the consult.', search: 'instagram myth bust dentist OR medspa OR realtor' },
+        { title: 'Process on camera (first 10 minutes)', why: 'Reduces no-shows by setting expectations.', search: 'instagram what to expect appointment' },
+        { title: 'Neighborhood proof (not city-wide flex)', why: 'Hyperlocal > vanity city shots.', search: 'instagram neighborhood realtor OR clinic' },
+        { title: 'FAQ from DMs as a reel', why: 'Turns private objections into public SEO.', search: 'instagram FAQ reel local business' }
+      ],
+      angles: [
+        'Hook: “You don’t need ___ — here’s why.” · Format: face + big text · CTA: Book / DM QUESTION.',
+        'Hook: “First 10 minutes when you walk in.” · Format: walkthrough · CTA: “Nervous? Watch this.”',
+        'Hook: “DM I get every week — answered out loud.” · Format: talking-head · CTA: Comment your question.'
+      ],
+      hook: 'You don’t need ___ — the myth that’s quietly killing your bookings.',
+      script: 'HOOK: “You don’t need ___.”\nSPOKEN: Biggest myth in our lane. Here’s what actually matters when someone is deciding whether to book.\nEND: Soft CTA to DM or book.'
+    },
+    {
+      id: 'generic',
+      keys: [],
+      label: 'operators / founders',
+      insight: 'Generic “value posts” blend in. The thing they’re not thinking about: a point-of-view on what to stop doing in their niche — subtraction content gets saves.',
+      gap: 'Offer is somewhere on the site; the feed lacks a sharp “stop doing X” point of view.',
+      patterns: [
+        { title: 'Stop doing X (subtraction POV)', why: 'Opinionated subtraction cuts through tip spam.', search: 'instagram “stop doing” business reel' },
+        { title: 'Customer language → offer rewrite', why: 'Using their words on camera builds instant relevance.', search: 'instagram customer language offer' },
+        { title: 'One screenshot teardown of a competitor pattern', why: 'Pattern recognition > dunking on a named rival.', search: 'instagram competitor pattern teardown' },
+        { title: 'Weekly operating cadence (what you actually ship)', why: 'Operators hire operators — show the calendar.', search: 'instagram weekly cadence founder' }
+      ],
+      angles: [
+        'Hook: “Stop doing ___ in your niche.” · Format: 15s talking-head · CTA: “What should I myth-bust next?”',
+        'Hook: “I rewrote our offer using a customer’s exact words.” · Format: before/after text · CTA: Save.',
+        'Hook: “The weekly cadence that actually ships.” · Format: calendar screenshot · CTA: “Want the template?”'
+      ],
+      hook: 'Stop doing ___ in your niche — subtraction gets more saves than another tip.',
+      script: 'HOOK: “Stop doing this.”\nSPOKEN: Hot take for people in our lane. Here’s what to cut this week so the feed stops blending in.\nEND: Soft CTA — 15 min to map next 7 days.'
+    }
+  ];
+
+  function loadPacks() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_PACKS) || '{}'); } catch { return {}; }
+  }
+  function savePack(id, pack) {
+    const all = loadPacks();
+    all[id] = pack;
+    localStorage.setItem(STORAGE_PACKS, JSON.stringify(all));
+  }
+
+  function detectNiche(text) {
+    const t = (text || '').toLowerCase();
+    let best = NICHES[NICHES.length - 1];
+    let score = 0;
+    NICHES.forEach(n => {
+      if (!n.keys.length) return;
+      let s = 0;
+      n.keys.forEach(k => { if (t.includes(k)) s += 1; });
+      if (s > score) { score = s; best = n; }
+    });
+    return best;
+  }
+
+  async function fetchSiteSignals(url) {
+    if (!url) return { title: '', desc: '', text: '' };
+    let u = url.trim();
+    if (!/^https?:\/\//i.test(u)) u = 'https://' + u;
+    const controllers = [
+      'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+      'https://corsproxy.io/?' + encodeURIComponent(u)
+    ];
+    for (const endpoint of controllers) {
+      try {
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 6000);
+        const res = await fetch(endpoint, { signal: ctrl.signal });
+        clearTimeout(timer);
+        if (!res.ok) continue;
+        const html = await res.text();
+        const title = (html.match(/<title[^>]*>([^<]+)<\/title>/i) || [])[1] || '';
+        const desc = (html.match(/name=["']description["'][^>]*content=["']([^"']+)/i) ||
+                      html.match(/content=["']([^"']+)["'][^>]*name=["']description["']/i) || [])[1] || '';
+        const h1 = (html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [])[1] || '';
+        const clean = (s) => String(s || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 280);
+        return { title: clean(title), desc: clean(desc), text: clean(title + ' ' + desc + ' ' + h1), url: u };
+      } catch (e) { /* try next */ }
+    }
+    return { title: '', desc: '', text: '', url: u };
+  }
+
+  function buildPackObject(lead, site) {
+    const name = ((lead.name || '').split(' ')[0]) || 'you';
+    const ig = (lead.ig || '').replace(/^@/, '');
+    const company = lead.company || '';
+    const blob = [lead.name, company, lead.notes, lead.website, ig, site.title, site.desc, site.text, lead.bottleneck, lead.buyer].join(' ');
+    const niche = detectNiche(blob);
+    const siteLine = site.title
+      ? ('Site reads as: “' + site.title + '”' + (site.desc ? (' — ' + site.desc.slice(0, 120)) : ''))
+      : ('Site on file: ' + (lead.website || '—') + ' (live fetch thin — using niche signals from handle + URL).');
+    const snap = [
+      '@' + ig + (company ? (' · ' + company) : '') + ' · lane: ' + niche.label + '.',
+      siteLine,
+      'Insight they’re probably not thinking about: ' + niche.insight,
+      'Observed gap: ' + niche.gap
+    ].join('\\n');
+    const outliers = niche.patterns.slice(0, 4).map(p => ({
+      link: 'Search IG: ' + p.search,
+      why: p.title + ' — ' + p.why,
+      title: p.title
+    }));
+    const angles = niche.angles.map(a => a.replace(/\{pain\}/g, 'the messy manual step'));
+    const hook = niche.hook;
+    const script = niche.script.replace(/\{pain\}/g, 'the messy manual step');
+    return {
+      leadId: lead.id,
+      handle: '@' + ig,
+      name: name,
+      nicheId: niche.id,
+      nicheLabel: niche.label,
+      insight: niche.insight,
+      snap: snap,
+      outliers: outliers,
+      angles: angles,
+      script: script,
+      hook: hook,
+      siteTitle: site.title || '',
+      builtAt: new Date().toISOString(),
+      status: site.title ? 'enriched' : 'signals'
+    };
+  }
+
+  function setResearch(state, text) {
+    const b = $('#researchBanner');
+    const t = $('#researchText');
+    if (!b || !t) return;
+    b.classList.remove('busy', 'ok');
+    if (state === 'busy') b.classList.add('busy');
+    if (state === 'ok') b.classList.add('ok');
+    t.textContent = text;
+  }
+
+  function fillOpsFields(pack) {
+    ensureOutlierRows();
+    $('#outHandle').value = pack.handle;
+    $('#outName').value = pack.name;
+    $('#outSnap').value = pack.snap;
+    const rows = $$('#outlierRows .outlier-row');
+    pack.outliers.forEach((o, i) => {
+      if (!rows[i]) addOutlierRow();
+      const row = $$('#outlierRows .outlier-row')[i];
+      if (!row) return;
+      $('.o-link', row).value = o.link;
+      $('.o-why', row).value = o.why;
+    });
+    pack.angles.forEach((a, i) => {
+      const el = $('#ang' + (i + 1));
+      if (el) el.value = a;
+    });
+    $('#outScript').value = pack.script;
+  }
+
+  function renderPackDelivery() {
+    const pack = currentPack;
+    const del = $('#packDelivery');
+    if (!pack || !del) return;
+    del.hidden = false;
+    $('#pdTitle').textContent = 'Outlier Pack — ' + pack.handle;
+    $('#pdSub').textContent = pack.name + ' · ' + pack.nicheLabel + ' · built for the room, not a PDF';
+    $('#pdSnap').textContent = pack.snap;
+    $('#pdOutliers').innerHTML = pack.outliers.map((o, i) =>
+      '<div class="pd-out"><div class="n">Signal ' + (i + 1) + '</div><strong>' + escapeHtml(o.title || ('Pattern ' + (i + 1))) + '</strong><p>' + escapeHtml(o.why) + '</p><a href="#" onclick="return false;">' + escapeHtml(o.link) + '</a></div>'
+    ).join('');
+    $('#pdAngles').innerHTML = pack.angles.map((a, i) =>
+      '<div class="pd-angle"><em>Angle ' + (i + 1) + '</em> — ' + escapeHtml(a) + '</div>'
+    ).join('');
+    if (pack.script) {
+      $('#pdScriptBlock').hidden = false;
+      $('#pdScript').textContent = pack.script;
+    }
+    $('#pdCta').innerHTML = '<strong>Soft next:</strong> If this feels useful, we map your next 7 days of posts in 15 minutes. Or — film angle 1 right now while you’re here.';
+    ['packActionRow','packDmRow','packLegend'].forEach(id => { const el = $('#' + id); if (el) el.hidden = false; });
+    const film = $('#filmCue');
+    if (film) {
+      film.hidden = false;
+      $('#tpLine').textContent = pack.hook;
+      $('#filmWhy').textContent = 'Angle 1 fits an in-hall talking-head. Hold this phone as teleprompter — 15–45s. Optional but high-wow.';
+    }
+  }
+
+  async function startPackBuild(lead) {
+    currentPack = null;
+    setResearch('busy', 'Entering @' + (lead.ig || '') + '’s world — reading site + niche signals…');
+    goto('outlier');
+    toast('Building Pack for @' + lead.ig + '…', 'ok');
+    const site = await fetchSiteSignals(lead.website);
+    const pack = buildPackObject(lead, site);
+    currentPack = pack;
+    savePack(lead.id, pack);
+    fillOpsFields(pack);
+    renderPackDelivery();
+    if (pack.status === 'enriched') {
+      setResearch('ok', 'Live site read ✓ · niche: ' + pack.nicheLabel + ' · insight locked. Show them this screen.');
+    } else {
+      setResearch('ok', 'Best-effort pack ready (site fetch thin). Niche: ' + pack.nicheLabel + ' from IG/URL/notes. Tweak in Edit if needed.');
+    }
+    toast('Pack ready — show them', 'ok');
+    haptic();
+  }
+
+  const _toggleEdit = $('#togglePackEdit');
+  if (_toggleEdit) _toggleEdit.addEventListener('click', () => {
+    const ed = $('#packEdit');
+    ed.classList.toggle('show');
+    _toggleEdit.textContent = ed.classList.contains('show') ? 'Hide ops edit' : 'Edit fields (ops)';
+  });
+  const _applyEdit = $('#applyPackEdit');
+  if (_applyEdit) _applyEdit.addEventListener('click', () => {
+    if (!currentPack) currentPack = { outliers: [], angles: [] };
+    currentPack.handle = $('#outHandle').value || currentPack.handle;
+    currentPack.name = $('#outName').value || currentPack.name;
+    currentPack.snap = $('#outSnap').value || currentPack.snap;
+    currentPack.outliers = $$('#outlierRows .outlier-row').map(row => ({
+      link: $('.o-link', row).value,
+      why: $('.o-why', row).value,
+      title: ($('.o-why', row).value || '').split('—')[0].trim() || 'Pattern'
+    })).filter(o => o.link || o.why);
+    currentPack.angles = [1,2,3].map(n => $('#ang' + n).value).filter(Boolean);
+    currentPack.script = $('#outScript').value;
+    currentPack.hook = currentPack.hook || (currentPack.angles[0] || '').split('·')[0].replace(/^Hook:\\s*/i, '').trim();
+    if (lastSavedLead) savePack(lastSavedLead.id, currentPack);
+    renderPackDelivery();
+    toast('Delivery view updated', 'ok');
+    $('#packEdit').classList.remove('show');
+  });
+  const _rebuild = $('#rebuildPack');
+  if (_rebuild) _rebuild.addEventListener('click', () => {
+    const lead = lastSavedLead || formData();
+    if (!(lead.ig && lead.website)) { toast('Need IG + website', 'err'); return; }
+    if (!lead.id) lead.id = 'lm_' + Date.now();
+    startPackBuild(lead);
+  });
+  const _sharePack = $('#sharePack');
+  if (_sharePack) _sharePack.addEventListener('click', async () => {
+    const text = buildOutlierPack();
+    if (navigator.share) {
+      try { await navigator.share({ title: 'Outlier Pack — ' + ($('#outHandle').value || ''), text }); toast('Share sheet opened', 'ok'); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    copyText(text, 'Share unavailable — pack copied instead');
+  });
+  const _mailPack = $('#mailPack');
+  if (_mailPack) _mailPack.addEventListener('click', () => {
+    const subject = encodeURIComponent('Outlier Pack — ' + ($('#outHandle').value || 'Signal'));
+    const body = encodeURIComponent(buildOutlierPack());
+    window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+    toast('Opening Mail…', 'ok');
+  });
+  const _copyHook = $('#copyHook');
+  if (_copyHook) _copyHook.addEventListener('click', () => {
+    const line = ($('#tpLine') && $('#tpLine').textContent) || (currentPack && currentPack.hook) || '';
+    copyText(line, 'Hook copied — hand them the phone / film');
+    flashBtn(_copyHook);
+    bumpFloorKPI(['videos']);
+  });
+  const _skipFilm = $('#skipFilm');
+  if (_skipFilm) _skipFilm.addEventListener('click', () => goto('close'));
+
+
   // Outlier pack
   function ensureOutlierRows() {
     const box = $('#outlierRows');
@@ -1689,6 +2321,33 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
   $('#addOutlier').addEventListener('click', () => addOutlierRow());
 
   function buildOutlierPack() {
+    if (currentPack && currentPack.snap) {
+      const p = currentPack;
+      return [
+        'Outlier Pack — ' + p.handle,
+        'For: ' + p.name + ' · ' + (p.nicheLabel || ''),
+        '',
+        'INSIGHT',
+        p.insight || '',
+        '',
+        'PAGE SNAPSHOT',
+        p.snap,
+        '',
+        'WHAT\'S WORKING IN YOUR LANE',
+        p.outliers.map((o, i) => (i + 1) + '. ' + (o.title || '') + '\n   ' + o.why + '\n   ' + o.link).join('\n'),
+        '',
+        '3 FILMABLE ANGLES',
+        p.angles.map((a, i) => (i + 1) + ') ' + a).join('\n'),
+        '',
+        'FILM NOW HOOK',
+        p.hook || '',
+        '',
+        'OPTIONAL TH SKELETON',
+        p.script || '—',
+        '',
+        '— Signal Marketing · free event drop · not a strategy deck'
+      ].join('\n');
+    }
     const handle = $('#outHandle').value || '@handle';
     const name = $('#outName').value || 'Friend';
     const snap = $('#outSnap').value || '—';
@@ -1724,7 +2383,7 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     ].join('\n');
   }
 
-  $('#copyOutlierPack').addEventListener('click', () => copyText(buildOutlierPack()));
+  $('#copyOutlierPack').addEventListener('click', () => { copyText(buildOutlierPack(), 'Pack copied — paste into iMessage/Notes'); flashBtn($('#copyOutlierPack')); });
 
   function dmA() {
     const name = $('#outName').value || ($('#intakeForm').elements.name.value || '').split(' ')[0] || '{FirstName}';
@@ -1958,27 +2617,24 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
     f.elements.track.value = selectedTrack;
     $('#previewBody').innerHTML = buildPreviewHTML(selectedTrack, ig ? '@' + ig : '', name);
     $('#previewPanel').classList.add('show');
-    $('#fastStatus').textContent = 'Sample up — let them feel it, then lock contact.';
-    toast('Sample on screen — wow them');
+    $('#fastStatus').textContent = 'Preview only — lock contact → Save + build pack for the real thing.';
+    toast('Preview only — real pack after Save', 'ok');
     $('#previewPanel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
   $('#previewToIntake').addEventListener('click', () => {
-    // For 60s: save thin lead if we have enough; else intake
     const f = $('#intakeForm');
     const ig = (f.elements.ig.value || '').replace(/^@/, '');
+    goto('intake');
     if (demoMode === '60' && ig && f.elements.website.value) {
-      // ensure contact field focus
-      goto('intake');
       setTimeout(() => f.elements.contact.focus(), 100);
-      toast('Lock phone/email to finish');
+      toast('Add phone/email → Save + build pack', 'ok');
+      $('#intakeStatus').textContent = 'Almost — contact then Save + build pack (real delivery).';
+      $('#intakeStatus').style.color = 'var(--ok)';
     } else if (demoMode === '20') {
-      goto('intake');
-      setTimeout(() => {
-        if (f.reportValidity()) goto('interview');
-      }, 50);
+      $('#intakeStatus').textContent = '15–20 path: capture contact, then 60s interview — or Save + build pack first.';
     } else {
-      goto('intake');
+      toast('Fill intake → Save + build pack', 'ok');
     }
   });
 
@@ -1996,32 +2652,9 @@ Pack = what to film. Clip = something cool to post. That's the whole game.
     }
   }, true);
 
-  // After save lead in 5-min mode, auto-show preview
-  $('#saveLead').addEventListener('click', () => {
-    if (demoMode !== '5' && demoMode !== '60') return;
-    setTimeout(() => {
-      const f = $('#intakeForm');
-      if (!f.checkValidity()) return;
-      const ig = (f.elements.ig.value || '').replace(/^@/, '');
-      const name = (f.elements.name.value || '').split(' ')[0];
-      $('#previewBody').innerHTML = buildPreviewHTML(selectedTrack || f.elements.track.value, ig ? '@' + ig : '', name);
-      // Inject preview into intake panel if not visible
-      let host = $('#intakePreviewHost');
-      if (!host) {
-        host = document.createElement('div');
-        host.id = 'intakePreviewHost';
-        host.className = 'preview-panel show';
-        host.innerHTML = '<div class="pv-title">What they’ll get in ~15 min</div><div id="intakePreviewBody"></div>';
-        const status = $('#intakeStatus');
-        status.parentNode.insertBefore(host, status.nextSibling);
-      }
-      $('#intakePreviewBody').innerHTML = buildPreviewHTML(selectedTrack || f.elements.track.value, ig ? '@' + ig : '', name);
-      host.classList.add('show');
-      if (demoMode === '20') {
-        // offer interview
-      }
-    }, 50);
-  });
+  // Sample preview on pitch stays "preview only"; real pack kicks from Save + build pack
+  // (second save listener removed — pack engine handles post-save UX)
+
 
   function refreshLiveNotes() {
     const el = $('#liveNotes');

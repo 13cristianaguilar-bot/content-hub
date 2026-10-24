@@ -824,6 +824,24 @@ body.modal-open { overflow: hidden; }
   background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 8px 10px;
 }
 .prep-fact p, .prep-extra p { margin: 2px 0 0; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.prep-duo { display: flex; flex-direction: column; gap: 14px; margin: 0 0 14px; }
+.prep-clip h3, .prep-keep h3 {
+  margin: 0 0 4px; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal); font-weight: 500;
+}
+.prep-cue { margin: 0 0 8px; font-size: 15px; line-height: 1.35; font-weight: 650; }
+.prep-duo .prep-frame { width: auto; max-width: 70%; height: min(200px, 30dvh); }
+.prep-clip.is-react .prep-frame { box-shadow: inset 0 0 0 2px var(--signal); }
+.prep-openlink {
+  display: flex; align-items: center; justify-content: center; width: auto; max-width: 70%;
+  min-height: 44px; margin-top: 8px; padding: 0 12px; border: 1px solid var(--line); background: #fff;
+  color: var(--ink); text-decoration: none; font-weight: 650;
+}
+.prep-clip.is-react .prep-openlink { background: var(--ink); color: #fff; border-color: var(--ink); }
+.prep-keep { margin: 0 0 12px; }
+.prep-keep p { margin: 4px 0 0; font-size: 16px; line-height: 1.4; }
+.prep-more summary { cursor: pointer; color: var(--signal); font-size: 13px; margin-top: 4px; }
+.prep-more p { margin-top: 6px; }
 .prep-metrics { margin: 6px 0 0; display: flex; flex-direction: column; gap: 6px; }
 .prep-metrics div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
 .prep-metrics dt {
@@ -837,6 +855,14 @@ body.modal-open { overflow: hidden; }
 @media (min-width: 700px) {
   .prep-frame { height: min(460px, 52dvh); max-width: none; }
   .prep-scroll { padding-left: max(24px, calc(50% - 280px)); padding-right: max(24px, calc(50% - 280px)); }
+  #prep.is-duo .prep-scroll { padding-left: max(24px, calc(50% - 420px)); padding-right: max(24px, calc(50% - 420px)); }
+  #prep.is-duo .prep-duo { flex-direction: row; align-items: stretch; }
+  #prep.is-duo .prep-clip { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+  #prep.is-duo .prep-duo .prep-frame,
+  #prep.is-duo .prep-openlink { width: min(168px, 100%); max-width: 168px; }
+  #prep.is-duo .prep-duo .prep-frame { height: auto; aspect-ratio: 9 / 16; max-height: 34dvh; }
+  #prep.is-duo .prep-openlink { margin-top: auto; }
+  #prep.is-duo .prep-facts { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: start; }
 }
 .prep-empty { color: var(--muted); }
 .prep-block { margin-top: 18px; }
@@ -4712,6 +4738,47 @@ function labeledChunks(text) {
 function prepShownNote(label) {
   return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound|client notes)$/i.test(label || '');
 }
+function clipKey(url) {
+  const info = videoInfo(url);
+  if (!info) return '';
+  if (info.kind === 'yt') {
+    const m = asText(info.src).match(/embed\/([\w-]+)/);
+    return m ? 'yt:' + m[1] : (info.watch || '');
+  }
+  return info.watch || info.label || '';
+}
+function sameClip(a, b) {
+  const ka = clipKey(a);
+  const kb = clipKey(b);
+  return !!(ka && kb && ka === kb);
+}
+function formatPrinciples(text) {
+  const raw = asText(text).replace(/\s+/g, ' ').trim();
+  const m = raw.match(/keep (?:the )?same\s+([^.]*)/i);
+  if (!m) return '';
+  const parts = m[1].split(/,|·/).map(part => part.replace(/^and\s+/i, '').trim()).filter(Boolean);
+  if (parts.length < 2) return '';
+  return parts.join(' · ');
+}
+function tightCopy(text) {
+  const t = asText(text).replace(/\s+/g, ' ').trim();
+  if (!t || t.length <= 240) return t;
+  let end = -1;
+  let from = 0;
+  let sentences = 0;
+  while (sentences < 2) {
+    const rel = t.slice(from).search(/[.!](\s|$)/);
+    if (rel < 0) break;
+    const next = from + rel;
+    if (next > 280 && sentences > 0) break;
+    end = next;
+    from = next + 1;
+    sentences++;
+  }
+  if (end >= 80 && end <= 320) return t.slice(0, end + 1).trim();
+  const clipped = t.slice(0, 220).replace(/\s+\S*$/, '').trim();
+  return clipped + '…';
+}
 // Title Case keys Client Fulfillment writes: "Reaction Clip" and "React To".
 // reaction_clip / react_to / react-to are the same field with different punctuation.
 function reactClipKey(name) {
@@ -4744,10 +4811,22 @@ function reactionClipInfo(s) {
     const parsed = videoInfo(ranked[i]);
     if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
   }
+  if (!info) {
+    const lines = asText(s && s.clip_directions).split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (!/react\s*to|reaction\s*clip|source\s*clip/i.test(lines[i])) continue;
+      const parsed = videoInfo(lines[i]);
+      if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
+    }
+  }
   if (!info) return null;
   const primary = videoInfo(s && s.reference_clip);
-  if (primary && primary.watch && info.watch === primary.watch) return null;
+  if (primary && sameClip(primary.watch || '', info.watch || '')) return null;
   return info;
+}
+function reactionClipUrl(s) {
+  const info = reactionClipInfo(s);
+  return info && info.watch ? info.watch : '';
 }
 function showsReactClip(s) {
   if (!isReactionScript(s)) return false;
@@ -4933,6 +5012,7 @@ function prepModel(s) {
   if (s.reel_number != null && String(s.reel_number).trim()) addExtra('Reel number', String(s.reel_number));
   if (asText(s.date_planned).trim()) addExtra('Date', s.date_planned);
   if (asText(s.take_label).trim()) addExtra('Take', s.take_label);
+  const reactInfo = reactionClipInfo(s);
   let rest = asText(s.filming_setup);
   [setup.location, setup.rig, setup.mic, setup.framing].concat(setup.shots || []).forEach(part => {
     const p = asText(part).trim();
@@ -4952,8 +5032,9 @@ function prepModel(s) {
     framingPrompt: framingPrompt,
     metrics: metrics,
     showMetrics: showMetrics,
+    principles: reactInfo ? formatPrinciples(fdPick(fd, 'Format') || asText(s.format)) : '',
     ref: (pack.refs && pack.refs[0]) || null,
-    react: reactionClipInfo(s),
+    react: reactInfo,
     person: pack.person || '',
     camera: asText(s.camera).trim(),
     onCamera: onCamera,
@@ -5011,40 +5092,79 @@ function prepOpenLink(info, label) {
   if (info.label) return `<p>${escHtml(info.label)}</p>`;
   return '';
 }
-function prepStepHtml(model, step) {
-  if (step === 0) {
-    const info = model.ref;
-    const react = model.react;
-    const frame = prepFrame(info, 'Format reference');
-    let open = '<p class="prep-empty">No reference reel on this script.</p>';
-    if (info && (info.watch || info.label)) open = prepOpenLink(info, react ? 'Open format reference' : 'Open reference reel') || open;
-    const formatLabel = react
-      ? `<p class="eyebrow">Format reference</p><p class="prep-role">Format to match.</p>`
+function prepPlayer(info, label, cue) {
+  const react = /react/i.test(label);
+  const frame = info && info.src
+    ? `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="${escHtml(label)}" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`
+    : '';
+  let open = '';
+  if (info && info.watch) {
+    open = `<a class="prep-openlink" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open</a>`;
+  } else if (info && info.label && !info.src) {
+    open = `<p>${escHtml(info.label)}</p>`;
+  } else if (!info) {
+    open = '<p class="prep-empty">No video on this script.</p>';
+  }
+  return `<section class="prep-clip${react ? ' is-react' : ''}"${react ? ' id="react-clip"' : ''}>
+    <h3>${escHtml(label)}</h3>
+    ${cue ? `<p class="prep-cue">${escHtml(cue)}</p>` : ''}
+    ${frame}
+    ${open}
+  </section>`;
+}
+function prepTightFact(label, full) {
+  const text = asText(full).trim();
+  if (!text) return prepFact(label, '');
+  const short = tightCopy(text);
+  const more = short !== text;
+  const body = prepText(short) + (more
+    ? `<details class="prep-more"><summary>Full ${escHtml(label.toLowerCase())} note</summary><p>${prepText(text)}</p></details>`
+    : '');
+  return `<div class="prep-fact"><div class="eyebrow">${escHtml(label)}</div><p>${body}</p></div>`;
+}
+function prepReferenceHtml(model) {
+  model = model || {};
+  if (model.react) {
+    const keep = model.principles
+      ? `<section class="prep-keep"><h3>Keep the same</h3><p>${prepText(model.principles)}</p></section>`
       : '';
-    const reactBlock = react ? `
-      <section class="prep-react">
-        <p class="eyebrow">React to</p>
-        <p class="prep-role">Source clip for the reaction / greenscreen beat.</p>
-        ${prepOpenLink(react, 'Open react-to clip')}
-        ${prepFrame(react, 'React-to video')}
-      </section>` : '';
     return `
       <p class="eyebrow">Step 1 · Reference</p>
       <h2 id="prep-title">Watch the reference</h2>
       <p class="prep-lead">Copy the format, the pacing, and the framing.</p>
-      ${formatLabel}
-      <div class="prep-watch">
-        ${frame}
-        <div class="prep-facts">
-          ${prepFact('Format', model.format, model.formatPrompt)}
-          ${prepFact('Pacing', model.pacing, model.pacingPrompt)}
-          ${prepFact('Framing', model.framing, model.framingPrompt)}
-          ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}
-        </div>
+      <div class="prep-duo">
+        ${prepPlayer(model.react, 'Clip to react to', 'Scroll if needed — this is what you react to.')}
+        ${prepPlayer(model.ref, 'Format to match', '')}
       </div>
-      ${open}
-      ${reactBlock}`;
+      ${keep}
+      <div class="prep-facts">
+        ${prepTightFact('Format', model.formatPrompt ? '' : model.format)}
+        ${prepTightFact('Pacing', model.pacingPrompt ? '' : model.pacing)}
+        ${prepTightFact('Framing', model.framingPrompt ? '' : model.framing)}
+      </div>
+      ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}`;
   }
+  const info = model.ref;
+  const frame = prepFrame(info, 'Reference video');
+  let open = '<p class="prep-empty">No reference reel on this script.</p>';
+  if (info && (info.watch || info.label)) open = prepOpenLink(info, 'Open reference reel') || open;
+  return `
+    <p class="eyebrow">Step 1 · Reference</p>
+    <h2 id="prep-title">Watch the reference</h2>
+    <p class="prep-lead">Copy the format, the pacing, and the framing.</p>
+    <div class="prep-watch">
+      ${frame}
+      <div class="prep-facts">
+        ${prepFact('Format', model.format, model.formatPrompt)}
+        ${prepFact('Pacing', model.pacing, model.pacingPrompt)}
+        ${prepFact('Framing', model.framing, model.framingPrompt)}
+        ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}
+      </div>
+    </div>
+    ${open}`;
+}
+function prepStepHtml(model, step) {
+  if (step === 0) return prepReferenceHtml(model);
   if (step === 1) {
     const who = [model.person, model.camera, model.onCamera].filter(Boolean);
     const setupBits = [];
@@ -5095,6 +5215,7 @@ function renderPrep() {
   if (!root || !s) { clearPrep(); return; }
   const step = prepState.step || 0;
   const model = prepModel(s);
+  const duo = step === 0 && !!model.react;
   const labels = ['Reference', 'Notes', 'Film'];
   const dots = labels.map((label, i) => {
     const cls = i === step ? 'is-on' : (i < step ? 'is-done' : '');
@@ -5103,7 +5224,7 @@ function renderPrep() {
   const forward = step >= 2
     ? '<button type="button" class="prep-go" onclick="window.prepFilm()">OK, I\'m going to film</button>'
     : '<button type="button" class="prep-next" onclick="window.prepMove(1)">Next</button>';
-  root.innerHTML = `<div id="prep" role="dialog" aria-modal="true" aria-labelledby="prep-title">
+  root.innerHTML = `<div id="prep"${duo ? ' class="is-duo"' : ''} role="dialog" aria-modal="true" aria-labelledby="prep-title">
     <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
     <div class="prep-dots" role="tablist" aria-label="Prep steps">${dots}</div>
     <p class="prep-which">${escHtml(model.title)}</p>

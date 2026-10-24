@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- sla-v4 offer-outliers-real film-dna -->
+<!-- sla-v5 film-prep-fullscreen proof-btns apify-honest -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#080808" />
@@ -674,6 +674,106 @@
       font-size: 1.25rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 6px;
     }
     .film-cue .fc-why { font-size: 0.88rem; color: var(--muted); margin-bottom: 12px; line-height: 1.4; }
+
+    .pack-delivery .pd-out .proof-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px;
+    }
+    .pack-delivery .pd-out .proof-row a,
+    .pack-delivery .pd-out .proof-row button {
+      flex: 1 1 140px;
+      min-height: 44px;
+      display: grid; place-items: center;
+      border-radius: 12px;
+      font-size: 0.85rem; font-weight: 800;
+      letter-spacing: 0.02em;
+      text-decoration: none;
+      border: 1px solid var(--line-hot);
+      cursor: pointer;
+      font-family: inherit;
+      color: var(--fg);
+      background: #1a1a1a;
+    }
+    .pack-delivery .pd-out .proof-row a.proof-open {
+      background: var(--red);
+      border-color: var(--red);
+      color: #fff;
+    }
+    .pack-delivery .pd-out .proof-row button.film-prep-btn {
+      background: #141414;
+      border-color: var(--line-hot);
+      color: var(--fg);
+    }
+    .apify-honest {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255,180,80,0.45);
+      background: rgba(255,180,80,0.08);
+      color: #f0d9a8;
+      font-size: 0.78rem;
+      line-height: 1.4;
+    }
+    /* Full-screen Film prep (Hub-parity teleprompter) */
+    #lmPrompter {
+      position: fixed; inset: 0; z-index: 200;
+      background: #000; color: #fff;
+      display: none; flex-direction: column;
+    }
+    #lmPrompter.open { display: flex; }
+    body.lm-prompter-open { overflow: hidden; }
+    #lmPrompter .lp-top {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 12px; padding-top: max(10px, env(safe-area-inset-top));
+      background: #101010; border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+    }
+    #lmPrompter .lp-title {
+      flex: 1; min-width: 0; font-weight: 700; font-size: 0.95rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #lmPrompter .lp-top button, #lmPrompter .lp-controls button {
+      min-height: 44px; min-width: 44px; padding: 0 12px;
+      background: transparent; color: #fff; border: 1px solid #3a3a3a;
+      border-radius: 10px; font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    #lmPrompter .lp-nav {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 8px 12px; background: #101010; border-bottom: 1px solid #2a2a2a; flex-shrink: 0;
+    }
+    #lmPrompter .lp-nav span { font-size: 0.8rem; color: #c8c8c8; font-weight: 700; }
+    #lmPrompter .lp-proof {
+      display: flex; gap: 8px; padding: 10px 12px; flex-shrink: 0;
+      background: #141414; border-bottom: 1px solid #2a2a2a;
+    }
+    #lmPrompter .lp-proof a {
+      flex: 1; min-height: 44px; display: grid; place-items: center;
+      background: var(--red); color: #fff; border-radius: 12px;
+      font-weight: 800; text-decoration: none; font-size: 0.9rem;
+    }
+    #lmPrompter .lp-proof .lp-dna {
+      flex: 1.4; font-size: 0.72rem; color: #bdbdbd; line-height: 1.35;
+      overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;
+    }
+    #lmPrompter .lp-read { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+    #lmPrompter .lp-focus {
+      pointer-events: none; position: absolute; left: 0; right: 0; top: 22vh; height: 3.2rem;
+      border-top: 2px solid var(--red); border-bottom: 2px solid var(--red);
+      background: rgba(206,32,41,0.08); z-index: 1;
+    }
+    #lmPrompter .lp-scroll {
+      height: 100%; overflow: auto; padding: 22vh 22px 46vh;
+      -webkit-overflow-scrolling: touch;
+    }
+    #lmPrompter .lp-text {
+      line-height: 1.35; letter-spacing: -0.02em; font-weight: 560; font-size: 28px;
+      white-space: pre-wrap;
+    }
+    #lmPrompter .lp-controls {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      background: #101010; border-top: 1px solid #2a2a2a; flex-shrink: 0;
+    }
+    #lmPrompter .lp-play { background: var(--red) !important; border-color: var(--red) !important; min-width: 84px; }
+
     .teleprompter {
       background: #050505; border: 1px solid #333; border-radius: 14px;
       padding: 18px 16px; margin-bottom: 12px; text-align: center;
@@ -1321,6 +1421,7 @@
         <h2 id="pdTitle">Outlier Pack</h2>
         <p class="pd-sub" id="pdSub">Offer → keywords → proven formats → film scripts</p>
         <p class="pd-meta" id="pdMeta"></p>
+        <div class="apify-honest" id="pdHonest" hidden></div>
 
         <div class="pd-block">
           <div class="pd-label">Offer read</div>
@@ -1363,7 +1464,8 @@
           <div class="tp-line" id="tpLine">…</div>
         </div>
         <div class="btn-row">
-          <button type="button" class="btn btn-primary" id="copyHook">Copy hook</button>
+          <button type="button" class="btn btn-primary" id="openFilmPrep">Full-screen Film prep</button>
+          <button type="button" class="btn btn-ghost" id="copyHook">Copy hook</button>
           <button type="button" class="btn btn-ghost" id="skipFilm">Skip → Close</button>
         </div>
       </div>
@@ -2223,6 +2325,14 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
           (offer.keywords || []).map(k => '<span>' + escapeHtml(k) + '</span>').join('') + '</div></div>'
       ].join('');
     }
+    const honest = $('#pdHonest');
+    if (honest) {
+      const live = pack.status === 'apify-live';
+      honest.hidden = !!live;
+      if (!live) {
+        honest.textContent = 'Apify monthly hard-limit hit — these are real proof reels from our outlier-pipeline (≥3× creator median), not live-scraped this minute. No “Search IG” homework. Full live refresh queued for Ops.';
+      }
+    }
     $('#pdOutliers').innerHTML = (pack.outliers || []).map((o, i) => {
       const dna = o.dna || {};
       const dnaLine = ['hook','components','rehook','cadence','length','idea','reward','emotionalNext']
@@ -2231,18 +2341,26 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
         .join(' · ');
       const url = o.url || o.link || '#';
       const isHttp = /^https?:\/\//i.test(url);
-      return '<div class="pd-out">' +
+      return '<div class="pd-out" data-fmt="' + i + '">' +
         '<div class="n">Format ' + (i + 1) + (o.score ? (' · ' + o.score + '× median') : '') +
           (o.views ? (' · ' + fmtViews(o.views) + ' views') : '') +
           (o.creator ? (' · @' + escapeHtml(o.creator)) : '') + '</div>' +
         '<strong>' + escapeHtml(o.title || o.formatName || ('Format ' + (i + 1))) + '</strong>' +
         '<p>' + escapeHtml(o.why || '') + '</p>' +
-        (isHttp ? ('<a href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Open proof reel →</a>') : ('<span style="color:var(--dim)">' + escapeHtml(url) + '</span>')) +
+        '<div class="proof-row">' +
+          (isHttp
+            ? ('<a class="proof-open" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">Open proof reel</a>')
+            : ('<span style="color:var(--dim);font-size:0.8rem">No proof URL</span>')) +
+          '<button type="button" class="film-prep-btn" data-film="' + i + '">Film prep →</button>' +
+        '</div>' +
         '<div class="dna"><b>KEEP DNA</b> — ' + escapeHtml(o.keepDna || dnaLine) + '<br><b>SWAP</b> — ' + escapeHtml(o.swapMessaging || '') +
         (dnaLine ? ('<br>' + dnaLine) : '') + '</div>' +
         (o.filmScript ? ('<div class="script-mini">' + escapeHtml(o.filmScript) + '</div>') : '') +
         '</div>';
     }).join('');
+    $$('#pdOutliers .film-prep-btn').forEach(btn => {
+      btn.addEventListener('click', () => openLmPrompter(Number(btn.dataset.film) || 0));
+    });
     $('#pdAngles').innerHTML = (pack.angles || []).map((a, i) =>
       '<div class="pd-angle"><em>Shoot ' + (i + 1) + '</em> — ' + escapeHtml(a) + '</div>'
     ).join('');
@@ -2276,7 +2394,7 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
     fillOpsFields(pack);
     renderPackDelivery();
     if (pack.status === 'real-outliers') {
-      setResearch('ok', 'Offer locked from signals.marketing · ' + (pack.outliers||[]).length + ' real outlier formats with URLs + DNA + film scripts. Show them.');
+      setResearch('ok', 'Offer locked · ' + (pack.outliers||[]).length + ' proof reels (cached ≥3× ranks — Apify hard-limit) · tap Open proof / Film prep. Show them.');
     } else if (pack.queued) {
       setResearch('ok', 'Offer read + vault formats ready (' + pack.nicheLabel + '). Live Apify refresh queued — Ops can deepen ≤15 min. Show the pack now.');
     } else {
@@ -2349,6 +2467,86 @@ Got 15 minutes {tonight / tomorrow AM} so I can map your next 7 days of posts? W
   });
   const _skipFilm = $('#skipFilm');
   if (_skipFilm) _skipFilm.addEventListener('click', () => goto('close'));
+
+
+
+  // ===== FULL-SCREEN FILM PREP (Hub-parity) =====
+  let lmPrompterIndex = 0;
+  let lmPrompterFont = 28;
+  let lmPrompterTimer = 0;
+
+  function openLmPrompter(index) {
+    if (!currentPack || !(currentPack.outliers || []).length) {
+      toast('Build a pack first', 'err'); return;
+    }
+    lmPrompterIndex = Math.max(0, Math.min(index || 0, currentPack.outliers.length - 1));
+    renderLmPrompter();
+    const el = document.getElementById('lmPrompter');
+    if (el) el.classList.add('open');
+    document.body.classList.add('lm-prompter-open');
+    haptic();
+  }
+  function closeLmPrompter() {
+    stopLmPrompterScroll();
+    const el = document.getElementById('lmPrompter');
+    if (el) el.classList.remove('open');
+    document.body.classList.remove('lm-prompter-open');
+  }
+  function renderLmPrompter() {
+    const outs = (currentPack && currentPack.outliers) || [];
+    const o = outs[lmPrompterIndex] || {};
+    const n = outs.length || 1;
+    $('#lpTitle').textContent = (o.title || 'Format') + (o.creator ? (' · @' + o.creator) : '');
+    $('#lpCount').textContent = 'Format ' + (lmPrompterIndex + 1) + ' of ' + n;
+    const url = o.url || o.link || '#';
+    const a = $('#lpProofLink');
+    a.href = /^https?:\/\//i.test(url) ? url : '#';
+    a.textContent = /^https?:\/\//i.test(url) ? 'Open proof reel →' : 'No proof URL';
+    a.style.opacity = /^https?:\/\//i.test(url) ? '1' : '0.4';
+    const dna = o.dna || {};
+    $('#lpDna').textContent = 'KEEP: ' + (o.keepDna || dna.hook || '—') + '  ·  SWAP: ' + (o.swapMessaging || 'their messaging/voice only');
+    const script = o.filmScript || currentPack.script || currentPack.hook || '';
+    const text = $('#lpText');
+    text.textContent = script;
+    text.style.fontSize = lmPrompterFont + 'px';
+    const sc = $('#lpScroll');
+    if (sc) sc.scrollTop = 0;
+    $('#lpPrev').disabled = lmPrompterIndex <= 0;
+    $('#lpNext').disabled = lmPrompterIndex >= n - 1;
+  }
+  function stopLmPrompterScroll() {
+    if (lmPrompterTimer) { clearInterval(lmPrompterTimer); lmPrompterTimer = 0; }
+    const b = $('#lpPlay'); if (b) b.textContent = 'Play';
+  }
+  function toggleLmPrompterScroll() {
+    if (lmPrompterTimer) { stopLmPrompterScroll(); return; }
+    const sc = $('#lpScroll');
+    $('#lpPlay').textContent = 'Pause';
+    lmPrompterTimer = setInterval(() => {
+      if (!sc) return;
+      sc.scrollTop += 1;
+      if (sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2) stopLmPrompterScroll();
+    }, 30);
+  }
+
+  (function wireLmPrompter() {
+    const close = $('#lpClose'); if (close) close.addEventListener('click', closeLmPrompter);
+    const prev = $('#lpPrev'); if (prev) prev.addEventListener('click', () => { lmPrompterIndex--; renderLmPrompter(); });
+    const next = $('#lpNext'); if (next) next.addEventListener('click', () => { lmPrompterIndex++; renderLmPrompter(); });
+    const top = $('#lpTop'); if (top) top.addEventListener('click', () => { const sc = $('#lpScroll'); if (sc) sc.scrollTop = 0; });
+    const fd = $('#lpFontDown'); if (fd) fd.addEventListener('click', () => { lmPrompterFont = Math.max(18, lmPrompterFont - 4); $('#lpText').style.fontSize = lmPrompterFont + 'px'; });
+    const fu = $('#lpFontUp'); if (fu) fu.addEventListener('click', () => { lmPrompterFont = Math.min(48, lmPrompterFont + 4); $('#lpText').style.fontSize = lmPrompterFont + 'px'; });
+    const play = $('#lpPlay'); if (play) play.addEventListener('click', toggleLmPrompterScroll);
+    const copy = $('#lpCopy'); if (copy) copy.addEventListener('click', () => {
+      const t = ($('#lpText') && $('#lpText').textContent) || '';
+      copyText(t, 'Script copied — paste into notes / film');
+    });
+    const open = $('#openFilmPrep');
+    if (open) open.addEventListener('click', () => openLmPrompter(0));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && document.body.classList.contains('lm-prompter-open')) closeLmPrompter();
+    });
+  })();
 
 
   // Outlier pack

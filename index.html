@@ -2461,6 +2461,8 @@ function parseBatchDate(batch) {
 
 function isConferenceBatch(batch) {
   const s = String(batch || '').toLowerCase();
+  // Archived renames (e.g. "zz · archive · CONFERENCE …") stay out of the floor lane.
+  if (s.includes('archive') || s.trim().startsWith('zz')) return false;
   return s.includes('conference') || s.includes('floor-film') || s.includes('floor film');
 }
 

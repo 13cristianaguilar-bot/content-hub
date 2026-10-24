@@ -28,6 +28,8 @@ const names = [
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
   'parseReadWays', 'labeledChunks', 'prepShownNote', 'prepModel',
+  'httpUrl', 'clipKey', 'sameClip', 'reactionClipUrl', 'formatPrinciples', 'metricNums', 'reactionMetrics', 'tightCopy',
+  'prepText', 'prepFact', 'prepPlayer', 'prepTightFact', 'prepMetricCells', 'prepMetricsHtml', 'prepReferenceHtml',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding',
@@ -192,6 +194,78 @@ assert.ok(prepped.caption.includes('Full lesson'));
 assert.ok(prepped.audio.some(a => /no music/i.test(a)));
 
 const plain = ctx.prepModel(reaction);
+assert.strictEqual(plain.react, null);
+assert.strictEqual(plain.principles, '');
+assert.strictEqual(plain.metrics, null);
+const plainHtml = ctx.prepReferenceHtml(plain);
+assert.ok(plainHtml.includes('Watch the reference'));
+assert.ok(plainHtml.includes('Open reference reel'));
+assert.ok(plainHtml.includes('youtube.com/embed/abcdefghijk'));
+assert.ok(!plainHtml.includes('Clip to react to'));
+assert.ok(!plainHtml.includes('Format to match'));
+
+const mel = {
+  title: 'Reaction: Mel Robbins — Your Self-Doubt Is Lying to You',
+  format: 'Reaction · David Reads Fast stack (C96PhruO6BC) · Mel react-to',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  clip_directions: 'REACT TO / SOURCE CLIP (Mel Robbins): https://www.youtube.com/shorts/wFbr2UUZ2Xo',
+  camera: 'Phone vertical 9:16, eye level. Face lower half while Mel card is up.',
+  filming_setup: 'LOCATION: Plain light wall.\nFRAMING: Phone handheld selfie.',
+  proof_stats: [
+    'FORMAT ref (@davidreadsfast C96PhruO6BC): 420,531 views · 12,957 likes · 495 comments · 536.4x',
+    'REACT-TO (Mel Short wFbr2UUZ2Xo): 952,832 views · ~953K · 10.3x PASS',
+  ].join('\n'),
+  filming_direction: {
+    Format: 'David Reads Fast REACTION STACK = FORMAT DNA only — hook → authority clip plays → react/apply → CTA. Keep same hook, rehook/apply length, cadence (~100–105s), idea, reward, emotional reward/next step (RICH).',
+    Pacing: 'Spoken ~100–105s. 0–4s Monica hook to camera, then 4–40s the Mel clip plays while Monica stays silent and does not talk over the scar reveal, then 40–90s she resumes the full react and apply at the format length, then 90–105s the soft close. Do not shrink the apply to a one-liner or rush the last line.',
+    Framing: 'Mel card on top. Face in the lower half. Then full frame.',
+    'Reaction Clip': 'https://www.youtube.com/shorts/wFbr2UUZ2Xo',
+    'React To': 'https://www.youtube.com/watch?v=wFbr2UUZ2Xo',
+    'Reference Metrics': 'FORMAT C96PhruO6BC: 420,531v · 12,957L · 495c · REACT-TO Mel: ~953K',
+  },
+};
+assert.strictEqual(ctx.reactionClipUrl(mel), 'https://www.youtube.com/shorts/wFbr2UUZ2Xo');
+assert.strictEqual(ctx.reactionClipUrl(Object.assign({}, mel, {
+  filming_direction: { 'Reaction Clip': 'https://www.instagram.com/reel/C96PhruO6BC/' },
+  clip_directions: '',
+})), '');
+assert.strictEqual(ctx.reactionClipUrl({
+  reference_clip: 'https://www.youtube.com/watch?v=abcdefghijk',
+  proof_stats: 'see https://www.youtube.com/watch?v=zzzzzzzzzzz',
+  clip_directions: 'General filming notes, no react link.',
+}), '');
+assert.strictEqual(ctx.reactionClipUrl({
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  clip_directions: 'SOURCE CLIP: https://www.youtube.com/shorts/wFbr2UUZ2Xo',
+}), 'https://www.youtube.com/shorts/wFbr2UUZ2Xo');
+const melPrep = ctx.prepModel(mel);
+assert.strictEqual(melPrep.ref.kind, 'ig');
+assert.strictEqual(melPrep.react.kind, 'yt');
+assert.ok(melPrep.react.watch.includes('/shorts/wFbr2UUZ2Xo'));
+assert.ok(melPrep.principles.includes('hook'));
+assert.ok(melPrep.principles.includes('rehook/apply length'));
+assert.ok(melPrep.principles.includes('cadence (~100–105s)'));
+assert.ok(melPrep.principles.includes('idea'));
+assert.ok(melPrep.principles.includes('reward'));
+assert.ok(melPrep.principles.includes('emotional reward/next step (RICH)'));
+assert.strictEqual(melPrep.metrics.react.views, '952,832');
+assert.strictEqual(melPrep.metrics.format.views, '420,531');
+assert.strictEqual(melPrep.metrics.format.likes, '12,957');
+assert.strictEqual(melPrep.metrics.format.comments, '495');
+assert.ok(melPrep.pacing.length > 80);
+assert.ok(ctx.tightCopy(melPrep.pacing).length < melPrep.pacing.length);
+const melHtml = ctx.prepReferenceHtml(melPrep);
+assert.ok(melHtml.indexOf('Clip to react to') < melHtml.indexOf('Format to match'));
+assert.ok(melHtml.includes('Scroll if needed — this is what you react to.'));
+assert.ok(melHtml.includes('youtube.com/embed/wFbr2UUZ2Xo'));
+assert.ok(melHtml.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(melHtml.includes('Keep the same'));
+assert.ok(melHtml.includes('Mel card on top'));
+assert.ok(melHtml.includes('Full pacing note'));
+assert.ok(melHtml.includes('Outlier metrics'));
+assert.ok(melHtml.includes('>952,832<'));
+assert.ok(!melHtml.includes('Open reference reel'));
+
 assert.strictEqual(plain.waysKind, 'script');
 assert.strictEqual(plain.ways.map(w => w.letter).join(''), 'ABC');
 assert.ok(plain.ways[0].text.includes('Les Brown'));

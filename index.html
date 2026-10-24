@@ -148,6 +148,26 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
   font-size: 13px; font-weight: 600;
 }
 .seg-btn.is-on { background: var(--ink); color: #fff; }
+.film-lane-seg {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0;
+  border: 1px solid var(--line); background: var(--card);
+  border-radius: 12px; overflow: hidden;
+  margin: 0 0 4px;
+}
+.film-lane-seg .seg-btn {
+  min-height: 48px; padding: 8px 6px; line-height: 1.15;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border-right: 1px solid var(--line);
+}
+.film-lane-seg .seg-btn:last-child { border-right: 0; }
+.film-lane-seg .seg-btn .lane-count {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.04em; opacity: 0.75;
+}
+.film-lane-seg .seg-btn.is-on .lane-count { opacity: 0.9; }
+.film-lane-hint {
+  margin: 0 0 8px; color: var(--muted); font-size: 13px; line-height: 1.35;
+}
 .eyebrow {
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
@@ -1341,6 +1361,10 @@ let listSearch = '';
 // #app, so anything on screen has to live here, not only in the DOM.
 let hubPage = 'main';          // 'main' | 'help' | 'requests'
 let previousOpen = false;
+// Floor film lane for cristian + andrew only: conference | new | other
+let filmLane = 'conference';
+const FILM_LANE_SLUGS = ['cristian', 'andrew'];
+const FILM_LANES = ['conference', 'new', 'other'];
 let moreOpen = false;
 let modal = null;              // null | 'whats-new' | 'new-scripts'
 let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
@@ -2776,24 +2800,91 @@ function renderLane(kind, groups, openByDefault) {
   </section>`;
 }
 
-function renderSimpleBatch(groups) {
-  const part = freshPartition(groups);
+function usesFilmLaneSeg() {
+  return FILM_LANE_SLUGS.indexOf(viewSlug) !== -1;
+}
+function filmLaneBuckets(groups) {
   const active = groups.filter(g => groupStatus(g) !== 'Archived');
-  const conference = active.filter(g => groupIsConference(g) && isUnfilmedGroup(g));
-  // Newest non-conference unfilmed batch(es) for the Weekly lane — never mixed into Conference.
+  // Conference = any batch tagged conference / floor film (filmed or not — lane owns the set).
+  const conference = active.filter(g => groupIsConference(g));
   const nonConf = active.filter(g => !groupIsConference(g));
   const weeklyPart = freshPartition(nonConf);
   const weeklyFresh = weeklyPart.fresh;
-  const shown = new Set(conference.concat(weeklyFresh));
+  const freshSet = new Set(weeklyFresh);
+  const other = nonConf.filter(g => !freshSet.has(g));
+  return { conference, weeklyFresh, other, active };
+}
+function ensureFilmLane(buckets) {
+  if (!usesFilmLaneSeg()) return;
+  if (FILM_LANES.indexOf(filmLane) === -1) filmLane = 'conference';
+  // If selected lane is empty, fall to the first lane that has scripts.
+  const order = ['conference', 'new', 'other'];
+  const map = { conference: buckets.conference, new: buckets.weeklyFresh, other: buckets.other };
+  if (map[filmLane] && map[filmLane].length) return;
+  for (let i = 0; i < order.length; i++) {
+    if (map[order[i]] && map[order[i]].length) { filmLane = order[i]; return; }
+  }
+}
+function renderFilmLaneSeg(buckets) {
+  const items = [
+    { id: 'conference', label: 'Conference', count: buckets.conference.length, hint: 'Floor + interview conference packs' },
+    { id: 'new', label: 'New scripts', count: buckets.weeklyFresh.length, hint: 'Newest weekly pack to film' },
+    { id: 'other', label: 'Other', count: buckets.other.length, hint: 'Older batches and archives' },
+  ];
+  const on = items.filter(i => i.id === filmLane)[0] || items[0];
+  const buttons = items.map(i =>
+    `<button type="button" role="tab" class="seg-btn${i.id === filmLane ? ' is-on' : ''}" aria-selected="${i.id === filmLane}" onclick="window.setFilmLane('${i.id}')">
+      <span>${escHtml(i.label)}</span>
+      <span class="lane-count">${i.count}</span>
+    </button>`
+  ).join('');
+  return `<div class="film-lane-seg" role="tablist" aria-label="Script lanes">${buttons}</div>
+    <p class="film-lane-hint">${escHtml(on.hint)} · tap a lane to switch</p>`;
+}
+function renderSimpleBatch(groups) {
+  const buckets = filmLaneBuckets(groups);
+  const { conference, weeklyFresh, other, active } = buckets;
+
+  if (usesFilmLaneSeg()) {
+    ensureFilmLane(buckets);
+    const laneGroups = filmLane === 'conference' ? conference
+      : filmLane === 'new' ? weeklyFresh
+      : other;
+    navSets.fresh = laneGroups;
+    navSets.previous = [];
+
+    let body = '';
+    if (filmLane === 'conference') {
+      body = laneGroups.length
+        ? renderLane('conference', laneGroups)
+        : `<p class="fresh-empty">No conference scripts right now.</p>`;
+    } else if (filmLane === 'new') {
+      body = laneGroups.length
+        ? renderLane('weekly', laneGroups)
+        : `<p class="fresh-empty">${active.length ? 'You’re caught up on the newest weekly pack.' : escHtml(emptyHubCopy())}</p>`;
+    } else {
+      body = laneGroups.length
+        ? renderPastBatches(laneGroups)
+        : `<p class="fresh-empty">Nothing in Other yet.</p>`;
+    }
+    return `<section id="fresh-section" class="fresh-block" aria-label="Film lanes">
+      ${renderFilmLaneSeg(buckets)}
+      ${body}
+    </section>`;
+  }
+
+  // Other clients: stacked Conference (if any) + weekly fresh + optional older.
+  const confUnfilmed = conference.filter(g => isUnfilmedGroup(g));
+  const shown = new Set(confUnfilmed.concat(weeklyFresh));
   const prev = active.filter(g => !shown.has(g));
 
-  navSets.fresh = conference.length ? conference : weeklyFresh;
+  navSets.fresh = confUnfilmed.length ? confUnfilmed : weeklyFresh;
   navSets.previous = previousOpen ? prev : [];
 
   let body = '';
-  if (conference.length) body += renderLane('conference', conference);
+  if (confUnfilmed.length) body += renderLane('conference', confUnfilmed);
   if (weeklyFresh.length) body += renderLane('weekly', weeklyFresh);
-  if (!conference.length && !weeklyFresh.length) {
+  if (!confUnfilmed.length && !weeklyFresh.length) {
     body = `<p class="fresh-empty">${groups.length ? 'You’re caught up on the latest batch.' : escHtml(emptyHubCopy())}</p>`;
   }
 
@@ -6381,6 +6472,14 @@ function scrollToDayPanel() {
 // (see window.jumpToList below), and should never stick around after that.
 // F2 -- none of these call saveLastView() themselves anymore; persistence is centralized at
 // the end of renderDashInner() instead (see the comment there for why).
+window.setFilmLane = id => {
+  if (FILM_LANES.indexOf(id) === -1) return;
+  filmLane = id;
+  previousOpen = false;
+  resetScriptNav();
+  renderDash();
+  window.scrollTo(0, 0);
+};
 window.setClient   = slug => {
   if (role !== 'admin' || !CLIENTS[slug]) return;
   if (window.closeEdit) window.closeEdit(true);
@@ -6400,6 +6499,8 @@ window.setClient   = slug => {
   next7ResetPending = true;
   listSearch = '';
   previousOpen = false;
+  // Default floor clients to Conference when they have conference packs.
+  filmLane = (FILM_LANE_SLUGS.indexOf(slug) !== -1) ? 'conference' : filmLane;
   hubPage = 'main';
   moreOpen = false;
   viewTab = 'list';

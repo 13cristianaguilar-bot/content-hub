@@ -598,6 +598,29 @@ body.modal-open { overflow: hidden; }
 }
 .fresh-batch { margin: 4px 0 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
 .fresh-empty { color: var(--muted); font-size: 14px; margin: 0; }
+.lane-block { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.lane-block + .lane-block { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.lane-head {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 12px 14px; border: 1px solid var(--line); background: #fff;
+}
+.lane-head.is-conference {
+  border-color: var(--ink); background: var(--ink); color: #fff;
+}
+.lane-kicker {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  font-weight: 600; opacity: 0.72;
+}
+.lane-head.is-conference .lane-kicker { color: #fff; opacity: 0.78; }
+.lane-title {
+  font-size: 20px; line-height: 1.15; letter-spacing: -0.04em; font-weight: 700; margin: 0;
+}
+.lane-sub { margin: 0; font-size: 13px; line-height: 1.35; color: var(--muted); }
+.lane-head.is-conference .lane-sub { color: rgba(255,255,255,0.78); }
+.lane-batch {
+  margin: 0; font-size: 13px; line-height: 1.35; color: var(--muted); font-weight: 550;
+}
 .previous-toggle {
   width: 100%; min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px;
   background: #fff; border: 1px solid var(--line); color: var(--ink);
@@ -2436,6 +2459,24 @@ function parseBatchDate(batch) {
   return m[3] + '-' + String(mm).padStart(2, '0') + '-' + String(dd).padStart(2, '0');
 }
 
+function isConferenceBatch(batch) {
+  const s = String(batch || '').toLowerCase();
+  return s.includes('conference') || s.includes('floor-film') || s.includes('floor film');
+}
+
+function groupIsConference(group) {
+  return isConferenceBatch(groupBatchName(group));
+}
+
+function batchNamesFromGroups(groups) {
+  const names = [];
+  groups.forEach(g => {
+    const n = groupBatchName(g);
+    if (n && names.indexOf(n) === -1) names.push(n);
+  });
+  return names;
+}
+
 function groupBatchName(group) {
   return (group[0] && group[0].batch) || '';
 }
@@ -2492,8 +2533,19 @@ function freshPartition(groups, today) {
       if (namesOnBest.indexOf(name) === -1) namesOnBest.push(name);
     });
   }
+  const confUnfilmed = active.filter(g => isUnfilmedGroup(g) && groupIsConference(g));
   const fresh = [];
   const previous = [];
+  // Conference / floor-film always wins the top "film now" lane when any are unfilmed.
+  if (confUnfilmed.length) {
+    const confNames = batchNamesFromGroups(confUnfilmed);
+    active.forEach(g => {
+      if (isUnfilmedGroup(g) && groupIsConference(g)) fresh.push(g);
+      else previous.push(g);
+    });
+    const thisWeek = !!(bestDate && weekStartMonday(bestDate) && weekStartMonday(bestDate) === weekStartMonday(today));
+    return { fresh, previous, bestDate, batchNames: confNames, thisWeek, conferenceFirst: true };
+  }
   active.forEach(g => {
     const name = groupBatchName(g);
     const inNewest = bestDate && namesOnBest.indexOf(name) !== -1 && groupBatchDate(g) === bestDate && isUnfilmedGroup(g);
@@ -2501,7 +2553,7 @@ function freshPartition(groups, today) {
     else previous.push(g);
   });
   const thisWeek = !!(bestDate && weekStartMonday(bestDate) && weekStartMonday(bestDate) === weekStartMonday(today));
-  return { fresh, previous, bestDate, batchNames: namesOnBest, thisWeek };
+  return { fresh, previous, bestDate, batchNames: namesOnBest, thisWeek, conferenceFirst: false };
 }
 
 function clientGroups(slug) {
@@ -2701,23 +2753,55 @@ function renderPastBatches(groups) {
       ${renderBatchCards(b.groups)}
     </section>`).join('')}</div>`;
 }
+function renderLane(kind, groups, openByDefault) {
+  if (!groups.length) return '';
+  const conf = kind === 'conference';
+  const names = batchNamesFromGroups(groups);
+  const batchLine = names.filter(Boolean).join(' · ');
+  const kicker = conf ? 'Film first' : 'After conference';
+  const title = conf ? 'Conference / floor film' : 'Weekly / other';
+  const sub = conf
+    ? 'Proven formats for the floor. Pick one → Film.'
+    : 'CORE and older batches. Open when you’re not on the floor.';
+  return `<section class="lane-block${conf ? ' is-conference' : ''}" aria-label="${escHtml(title)}">
+    <header class="lane-head${conf ? ' is-conference' : ''}">
+      <div class="lane-kicker">${escHtml(kicker)}</div>
+      <h2 class="lane-title">${escHtml(title)}</h2>
+      <p class="lane-sub">${escHtml(sub)}</p>
+    </header>
+    ${batchLine ? `<p class="lane-batch">${escHtml(batchLine)}</p>` : ''}
+    ${renderBatchCards(groups)}
+  </section>`;
+}
+
 function renderSimpleBatch(groups) {
   const part = freshPartition(groups);
-  const fresh = part.fresh;
-  const prev = part.previous;
-  navSets.fresh = fresh;
+  const active = groups.filter(g => groupStatus(g) !== 'Archived');
+  const conference = active.filter(g => groupIsConference(g) && isUnfilmedGroup(g));
+  // Newest non-conference unfilmed batch(es) for the Weekly lane — never mixed into Conference.
+  const nonConf = active.filter(g => !groupIsConference(g));
+  const weeklyPart = freshPartition(nonConf);
+  const weeklyFresh = weeklyPart.fresh;
+  const shown = new Set(conference.concat(weeklyFresh));
+  const prev = active.filter(g => !shown.has(g));
+
+  navSets.fresh = conference.length ? conference : weeklyFresh;
   navSets.previous = previousOpen ? prev : [];
-  const batchLine = part.batchNames.filter(Boolean).join(' · ');
-  const cards = fresh.length
-    ? renderBatchCards(fresh)
-    : `<p class="fresh-empty">${groups.length ? 'You’re caught up on the latest batch.' : escHtml(emptyHubCopy())}</p>`;
+
+  let body = '';
+  if (conference.length) body += renderLane('conference', conference);
+  if (weeklyFresh.length) body += renderLane('weekly', weeklyFresh);
+  if (!conference.length && !weeklyFresh.length) {
+    body = `<p class="fresh-empty">${groups.length ? 'You’re caught up on the latest batch.' : escHtml(emptyHubCopy())}</p>`;
+  }
+
+  const pastLabel = previousOpen ? 'Hide older batches' : 'Older batches';
   const pastBtn = prev.length
-    ? `<button type="button" class="past-link" id="past-batches" aria-expanded="${previousOpen}" onclick="window.togglePrevious()">${previousOpen ? 'Hide past batches' : 'Past batches'}</button>`
+    ? `<button type="button" class="past-link" id="past-batches" aria-expanded="${previousOpen}" onclick="window.togglePrevious()">${pastLabel}</button>`
     : '';
   const past = previousOpen && prev.length ? renderPastBatches(prev) : '';
-  return `<section id="fresh-section" class="fresh-block" aria-label="Current batch">
-    ${batchLine ? `<p class="fresh-batch">${escHtml(batchLine)}</p>` : ''}
-    ${cards}
+  return `<section id="fresh-section" class="fresh-block" aria-label="Film lanes">
+    ${body}
     ${pastBtn}
     ${past}
   </section>`;

@@ -27,7 +27,9 @@ const names = [
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
-  'parseReadWays', 'labeledChunks', 'prepShownNote', 'prepModel',
+  'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
+  'fdPick', 'referenceMetrics', 'derivePrepPacing', 'derivePrepFraming', 'prepModel',
+  'prepText', 'prepMetricsHtml',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding',
@@ -190,6 +192,10 @@ assert.ok(!prepped.extras.some(ex => ex.label === 'Pacing'));
 assert.ok(prepped.onScreen.some(it => /Their opinion/.test(it.text)));
 assert.ok(prepped.caption.includes('Full lesson'));
 assert.ok(prepped.audio.some(a => /no music/i.test(a)));
+assert.strictEqual(prepped.metrics.views, '7,499,192');
+assert.strictEqual(prepped.showMetrics, true);
+assert.ok(!prepped.extras.some(ex => ex.label === 'Proof'));
+assert.ok(!prepped.extras.some(ex => ex.label === 'Reference Metrics'));
 
 const plain = ctx.prepModel(reaction);
 assert.strictEqual(plain.waysKind, 'script');
@@ -197,6 +203,128 @@ assert.strictEqual(plain.ways.map(w => w.letter).join(''), 'ABC');
 assert.ok(plain.ways[0].text.includes('Les Brown'));
 assert.ok(plain.extras.some(ex => ex.label === 'Tonality'));
 assert.strictEqual(plain.clientNotes, '');
+assert.strictEqual(plain.pacing, 'Talking head. One take, conversational pace.');
+assert.strictEqual(plain.framing, 'Talking head, vertical 9:16, eye level.');
+assert.strictEqual(plain.pacingPrompt, false);
+
+const s6Proof = [
+  'REFERENCE METRICS (Step 1):',
+  '109,468 views · 5,120 likes · 199 comments',
+  'Outlier / x-median: 6.6x Apify median (16,592)',
+  'Audience: PASS — NM (@frazerbrookesonline)',
+  'Viral score / verdict: PASS',
+  'Ref: https://www.instagram.com/reel/DUIafE1DJqb/',
+  '',
+  'Source: Apify Oct 23. REPLACED — old DenkBZACTmp was 264,624 views / 21 comments',
+].join('\n');
+const s6 = ctx.prepModel({
+  title: '5 Questions to Ask Before You Join Any Opportunity',
+  client_slug: 'jan',
+  format: 'Numbered List Talking Head (@frazerbrookesonline · DUIafE1DJqb)',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  camera: 'Jan',
+  filming_direction: {
+    Format: 'Numbered-list talking-head / breakdown explainer.',
+    Pacing: 'Punchy numbered list ~46s. One beat per question.',
+    Framing: 'Mid talking-head at desk/mic. Phone on tripod, eye level, vertical 9:16.',
+    'Reference Metrics': '109,468 views · 5,120 likes · 199 comments · 6.6x Apify median (16,592) · Audience: PASS — NM (@frazerbrookesonline) · Verdict: PASS',
+    Tonality: 'Calm, plain.',
+    framing: 'lowercase must not win',
+  },
+  proof_stats: s6Proof,
+});
+assert.strictEqual(s6.format, 'Numbered-list talking-head / breakdown explainer.');
+assert.strictEqual(s6.pacing, 'Punchy numbered list ~46s. One beat per question.');
+assert.ok(s6.framing.startsWith('Mid talking-head at desk/mic.'));
+assert.strictEqual(s6.pacingPrompt, false);
+assert.strictEqual(s6.framingPrompt, false);
+assert.strictEqual(s6.metrics.views, '109,468');
+assert.strictEqual(s6.metrics.likes, '5,120');
+assert.strictEqual(s6.metrics.comments, '199');
+assert.ok(s6.metrics.xMedian.includes('6.6x'));
+assert.ok(!s6.metrics.xMedian.includes('264,624'));
+assert.ok(s6.metrics.audience.includes('@frazerbrookesonline'));
+assert.strictEqual(s6.metrics.viral, 'PASS');
+assert.strictEqual(s6.showMetrics, true);
+assert.ok(!s6.extras.some(ex => /^(format|pacing|framing|reference metrics|proof)$/i.test(ex.label)));
+assert.ok(s6.extras.some(ex => ex.label === 'Tonality'));
+const s6Html = ctx.prepMetricsHtml(s6.metrics);
+assert.ok(s6Html.includes('Outlier metrics'));
+assert.ok(s6Html.includes('109,468'));
+assert.ok(s6Html.includes('x-median'));
+assert.ok(!s6Html.includes('Not on this script'));
+
+const s4 = ctx.referenceMetrics([
+  'REFERENCE METRICS (Step 1):',
+  '118,823 views · 8,343 likes · 1,602 comments',
+  'Outlier / x-median: 41.3x Apify median (2,876) · Sandcastles 43.9x',
+  'Audience: PASS — NM women (@rachaelbodie)',
+  'Viral score / verdict: PASS',
+  '',
+  'Source: Apify. REPLACED — old was 188,678 views / 25 comments',
+].join('\n'), {});
+assert.strictEqual(s4.views, '118,823');
+assert.strictEqual(s4.likes, '8,343');
+assert.strictEqual(s4.comments, '1,602');
+assert.ok(s4.xMedian.startsWith('41.3x'));
+assert.ok(!s4.views.includes('188,678'));
+
+const counts = ctx.extractProofStats('12,936 likes and 5.4M views');
+assert.strictEqual(counts.find(row => row.label === 'Views').num, '5.4M');
+assert.strictEqual(counts.find(row => row.label === 'Likes').num, '12,936');
+
+const lower = ctx.prepModel({
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  format: 'Short label',
+  camera: 'Jan',
+  filming_direction: { framing: 'Lowercase desk shot.', pacing: 'Lowercase pace.' },
+});
+assert.strictEqual(lower.format, 'Short label');
+assert.strictEqual(lower.framing, 'Lowercase desk shot.');
+assert.strictEqual(lower.pacing, 'Lowercase pace.');
+
+const gap = ctx.prepModel({
+  title: 'No pace',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  format: 'Something else',
+  camera: 'Jan',
+});
+assert.strictEqual(gap.format, 'Something else');
+assert.strictEqual(gap.pacing, 'Add pacing in editor');
+assert.strictEqual(gap.pacingPrompt, true);
+assert.strictEqual(gap.framing, 'Add framing in editor');
+assert.strictEqual(gap.framingPrompt, true);
+assert.strictEqual(gap.showMetrics, true);
+assert.strictEqual(gap.metrics.views, '');
+const gapHtml = ctx.prepMetricsHtml(gap.metrics);
+assert.ok(gapHtml.includes('—'));
+assert.ok(gapHtml.includes('is-empty'));
+
+const derived = ctx.prepModel({
+  reference_clip: 'https://www.youtube.com/watch?v=abcdefghijk',
+  format: 'Numbered List Talking Head',
+  camera: 'Jan',
+});
+assert.strictEqual(derived.pacing, 'Numbered list. One beat per item.');
+assert.strictEqual(derived.framing, 'Talking head, vertical 9:16, eye level.');
+
+const bare = ctx.prepModel({ title: 'Bare' });
+assert.strictEqual(bare.pacing, '');
+assert.strictEqual(bare.framing, '');
+assert.strictEqual(bare.showMetrics, false);
+
+const desk = ctx.parseSetup('LOCATION: Seated office or home, plain wall.\nFRAMING: Mid talking-head desk/mic. Phone on tripod, eye level.', 'Jan');
+assert.strictEqual(desk.location, 'Seated office or home, plain wall.');
+assert.strictEqual(desk.mic, '');
+assert.ok(/desk\/mic/i.test(desk.framing));
+
+const outlierOnly = ctx.referenceMetrics('bradleysugars - 2,386,159 views, 2982.7x outlier score, 3,080 likes, 27 comments.', null);
+assert.strictEqual(outlierOnly.views, '2,386,159');
+assert.strictEqual(outlierOnly.likes, '3,080');
+assert.strictEqual(outlierOnly.comments, '27');
+assert.ok(/2982\.7x outlier score/i.test(outlierOnly.xMedian));
+assert.strictEqual(outlierOnly.audience, '');
+assert.strictEqual(outlierOnly.viral, '');
 
 const notes = 'ON-SCREEN TEXT: OLD LINE\nCAPTION: Old caption.\nFILMING EASE: 4/5 — one location.';
 const rewritten = ctx.setLabeledBlock(ctx.setLabeledBlock(ctx.setLabeledBlock(notes, 'ON-SCREEN TEXT', 'NEW LINE'), 'CAPTION', 'New caption.'), 'CLIENT NOTES', 'Say it warmer.');

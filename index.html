@@ -815,10 +815,20 @@ body.modal-open { overflow: hidden; }
 }
 .prep-reel.is-primary { background: var(--signal); }
 .prep-facts, .prep-extras { display: flex; flex-direction: column; gap: 10px; }
+.prep-facts { flex: 1 1 auto; min-width: 0; }
 .prep-fact, .prep-extra {
   background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 8px 10px;
 }
 .prep-fact p, .prep-extra p { margin: 2px 0 0; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.prep-metrics { margin: 6px 0 0; display: flex; flex-direction: column; gap: 6px; }
+.prep-metrics div { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.prep-metrics dt {
+  flex: 0 0 auto; margin: 0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500;
+}
+.prep-metrics dd { margin: 0; font-size: 14px; line-height: 1.35; font-weight: 650; letter-spacing: -0.02em; text-align: right; overflow-wrap: anywhere; }
+.prep-metrics dd.is-empty { color: var(--muted); font-weight: 500; }
 .prep-block p { margin: 4px 0 0; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
 @media (min-width: 700px) {
   .prep-frame { height: min(460px, 52dvh); max-width: none; }
@@ -1146,21 +1156,27 @@ function dossierBlock(emoji, label, text, color, opts) {
   </div>`;
 }
 
-// Pulls real "12,936 likes" / "5.4M views" style numbers out of the free-text proof_stats field
-// so they can render as big stat tiles like the dossier does -- the field itself stays the full
-// verified narrative (resolution notes, what was checked, what was rejected and why), this just
-// surfaces the headline numbers from inside it instead of asking Cristian to re-enter them as
-// separate structured data.
+// Pulls real "12,936 likes" / "5.4M views" / "109,468 views · 5,120 likes · 199 comments"
+// numbers out of the free-text proof_stats field. The number comes before the word.
+// When a row starts with "REFERENCE METRICS", that block is the current count — a later
+// "REPLACED … was 264,624 views" line is the old reel and must not win.
 function extractProofStats(text) {
   if (!text) return [];
-  const re = /([\d][\d,]*\.?\d*\s?[KMB]?)\s+(views|likes|comments)\b/gi;
-  const seen = {};
-  let m;
-  while ((m = re.exec(text))) {
-    const label = m[2].toLowerCase();
-    if (!seen[label]) seen[label] = m[1].trim();
-  }
-  return ['views', 'likes', 'comments'].filter(l => seen[l]).map(l => ({ num: seen[l], label: l[0].toUpperCase() + l.slice(1) }));
+  const read = (source) => {
+    const re = /([\d][\d,]*\.?\d*\s?[KMB]?)\s+(views|likes|comments)\b/gi;
+    const seen = {};
+    let m;
+    while ((m = re.exec(source))) {
+      const label = m[2].toLowerCase();
+      if (!seen[label]) seen[label] = m[1].trim();
+    }
+    return ['views', 'likes', 'comments'].filter(l => seen[l]).map(l => ({ num: seen[l], label: l[0].toUpperCase() + l.slice(1) }));
+  };
+  const raw = asText(text);
+  const head = raw.match(/REFERENCE METRICS[^\n]*\n([\s\S]*?)(?=\n\s*(?:Source|REPLACED)\b|$)/i);
+  const preferred = head ? read(head[1]) : [];
+  if (preferred.length) return preferred;
+  return read(raw);
 }
 
 // The YouTube source clip (what Jan actually films his reaction to) was getting buried inside
@@ -3548,7 +3564,8 @@ function parseSetup(setup, camera) {
   if (rigSentence) rig = rigSentence.replace(/\s+/g, ' ').trim();
   if (!mic) {
     const mm = text.match(/[^.!\n]*\b(lav|shotgun|wireless mic|dji mic|clip\/wireless mic|mic)[^.!\n]*[.!]?/i);
-    if (mm) mic = mm[0].trim();
+    // "desk/mic" inside a FRAMING sentence is the shot, not the microphone.
+    if (mm && !/\bframing\s*:/i.test(mm[0])) mic = mm[0].trim();
   }
   const cam = asText(camera).trim();
   let framing = '';
@@ -4686,12 +4703,117 @@ function labeledChunks(text) {
 function prepShownNote(label) {
   return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound|client notes)$/i.test(label || '');
 }
+// Title Case is the key Client Fulfillment writes (Format, Pacing, Framing, Reference Metrics).
+// A lowercase twin is only a fallback so an older row is not dropped.
+function fdPick(fd, name) {
+  if (!fd || typeof fd !== 'object' || Array.isArray(fd)) return '';
+  const exact = asText(fd[name]).trim();
+  if (exact) return exact;
+  const want = String(name || '').toLowerCase();
+  const keys = Object.keys(fd);
+  for (let i = 0; i < keys.length; i++) {
+    if (keys[i].toLowerCase() !== want) continue;
+    const value = asText(fd[keys[i]]).trim();
+    if (value) return value;
+  }
+  return '';
+}
+function referenceMetrics(proof, fd) {
+  const empty = { views: '', likes: '', comments: '', xMedian: '', audience: '', viral: '' };
+  const head = asText(proof).trim();
+  const line = fdPick(fd, 'Reference Metrics');
+  if (!head && !line) return empty;
+  const primary = extractProofStats(head);
+  const extra = extractProofStats(line);
+  const count = (label) => {
+    const row = primary.find(item => item.label.toLowerCase() === label) || extra.find(item => item.label.toLowerCase() === label);
+    return row ? row.num : '';
+  };
+  const blob = [head, line].filter(Boolean).join('\n');
+  let xMedian = '';
+  const labeled = blob.match(/Outlier\s*\/\s*x-median\s*:\s*([^\n]+)/i);
+  if (labeled) xMedian = labeled[1].trim();
+  if (!xMedian) {
+    const med = blob.match(/~?\d[\d,]*\.?\d*x\s+(?:[^\n.]|\.\d)*median(?:\s*\([^)\n]*\))?/i);
+    if (med) xMedian = med[0].replace(/\s+/g, ' ').trim();
+  }
+  if (!xMedian) {
+    const outlier = blob.match(/[\d][\d,]*\.?\d*x\s+outlier(?:\s+score)?/i)
+      || blob.match(/outlier(?:\s+score)?\s*[:=]?\s*[\d][\d,]*\.?\d*x/i);
+    if (outlier) xMedian = outlier[0].replace(/\s+/g, ' ').trim();
+  }
+  let audience = '';
+  const aud = blob.match(/Audience\s*:\s*([^\n]+)/i);
+  if (aud) audience = aud[1].split(/\s+·\s+/)[0].trim();
+  let viral = '';
+  const viralLine = blob.match(/Viral score\s*(?:\/\s*verdict)?\s*:\s*([^\n]+)/i);
+  if (viralLine) viral = viralLine[1].trim();
+  if (!viral) {
+    const verdict = blob.match(/(?:^|\n)\s*Verdict\s*:\s*([^\n]+)/i) || blob.match(/·\s*Verdict\s*:\s*([^·\n]+)/i);
+    if (verdict) viral = verdict[1].trim();
+  }
+  return {
+    views: count('views'),
+    likes: count('likes'),
+    comments: count('comments'),
+    xMedian: xMedian,
+    audience: audience,
+    viral: viral,
+  };
+}
+function derivePrepPacing(s, fd) {
+  const dur = asText(s && s.proof_stats).match(/Duration\s*:\s*([^\n]+)/i);
+  if (dur && dur[1].trim()) return dur[1].trim();
+  const secs = fd && (fd.target_length_s != null ? fd.target_length_s : fd['Target Length']);
+  const n = Number(secs);
+  if (n > 0 && n < 600) return 'About ' + Math.round(n) + ' seconds.';
+  const blob = [asText(s && s.format), fdPick(fd, 'Format'), asText(s && s.camera)].join('\n');
+  if (/numbered\s+list|\blisticle\b|\blist\b/i.test(blob)) return 'Numbered list. One beat per item.';
+  if (/\breaction\b/i.test(blob)) return 'Hold for the clip, then react.';
+  if (/\btalking[-\s]?head\b/i.test(blob)) return 'Talking head. One take, conversational pace.';
+  if (/\bb-?roll\b/i.test(blob)) return 'Cut to the reference length.';
+  return '';
+}
+function derivePrepFraming(s) {
+  const blob = [asText(s && s.format), asText(s && s.camera), asText(s && s.filming_setup)].join('\n');
+  if (/handheld selfie|walking selfie/i.test(blob)) return 'Handheld selfie, vertical 9:16.';
+  if (/\breaction\b/i.test(blob)) return 'Talking head, then the clip, then back on camera. Vertical 9:16.';
+  if (/\bb-?roll\b|\btext[-\s]?on[-\s]?screen\b|\bsilent\b/i.test(blob)) return 'B-roll, vertical 9:16.';
+  if (/\btalking[-\s]?head\b/i.test(blob)) return 'Talking head, vertical 9:16, eye level.';
+  return '';
+}
 function prepModel(s) {
   s = s || {};
   const setup = parseSetup(s.filming_setup, s.camera);
   const fd = fdObject(s) || {};
-  const pacing = asText(fd.Pacing).trim() || pullLabeled(s.filming_setup, ['pacing']) || pullLabeled(s.editor_notes, ['pacing']);
   const pack = referencePack(s);
+  const hasRef = !!(pack.refs && pack.refs[0]);
+  let format = fdPick(fd, 'Format') || asText(s.format).trim();
+  let pacing = fdPick(fd, 'Pacing') || pullLabeled(s.filming_setup, ['pacing']) || pullLabeled(s.editor_notes, ['pacing']) || pullLabeled(s.tonality_delivery, ['pacing']);
+  let framing = fdPick(fd, 'Framing') || setup.framing;
+  let formatPrompt = false;
+  let pacingPrompt = false;
+  let framingPrompt = false;
+  if (hasRef && !format) {
+    format = 'Add format in editor';
+    formatPrompt = true;
+  }
+  if (hasRef && !pacing) {
+    pacing = derivePrepPacing(s, fd);
+    if (!pacing) {
+      pacing = 'Add pacing in editor';
+      pacingPrompt = true;
+    }
+  }
+  if (hasRef && !framing) {
+    framing = derivePrepFraming(s);
+    if (!framing) {
+      framing = 'Add framing in editor';
+      framingPrompt = true;
+    }
+  }
+  const metrics = referenceMetrics(s.proof_stats, fd);
+  const showMetrics = !!(hasRef || metrics.views || metrics.likes || metrics.comments || metrics.xMedian || metrics.audience || metrics.viral);
   const read = parseReadWays(s.tonality_delivery);
   const extras = [];
   const seen = {};
@@ -4731,7 +4853,7 @@ function prepModel(s) {
   const onCamera = pullLabeled(s.editor_notes, ['on camera']);
   if (asText(s.cta).trim()) addExtra('CTA', s.cta);
   Object.keys(fd).forEach(k => {
-    if (/^pacing$/i.test(k)) return;
+    if (/^(pacing|framing|format|reference metrics)$/i.test(k)) return;
     if (/sound|music|audio/i.test(k)) return;
     const tone = asText(fd[k]).trim();
     if (/^tonality$/i.test(k) && waysBefore && tone && waysBefore.toLowerCase().indexOf(tone.toLowerCase()) !== -1) return;
@@ -4748,7 +4870,6 @@ function prepModel(s) {
     const link = extractVideoLink(clip);
     if (!link || clip.replace(link, '').trim().length > 8) addExtra('Clip directions', clip);
   }
-  if (asText(s.proof_stats).trim()) addExtra('Proof', s.proof_stats);
   if (asText(s.client_feedback).trim()) addExtra('Client feedback', s.client_feedback);
   const sous = s.sous_chef_pass && typeof s.sous_chef_pass === 'object' ? s.sous_chef_pass : null;
   if (sous) {
@@ -4771,9 +4892,14 @@ function prepModel(s) {
   if (rest.length < 12) rest = '';
   return {
     title: asText(s.title).trim() || 'Script',
-    format: asText(s.format).trim(),
+    format: format,
+    formatPrompt: formatPrompt,
     pacing: pacing,
-    framing: setup.framing,
+    pacingPrompt: pacingPrompt,
+    framing: framing,
+    framingPrompt: framingPrompt,
+    metrics: metrics,
+    showMetrics: showMetrics,
     ref: (pack.refs && pack.refs[0]) || null,
     person: pack.person || '',
     camera: asText(s.camera).trim(),
@@ -4797,9 +4923,23 @@ function prepModel(s) {
 function prepText(text) {
   return escHtml(asText(text)).replace(/\n/g, '<br>');
 }
-function prepFact(label, value) {
-  const body = value ? prepText(value) : '<span class="prep-empty">Not on this script.</span>';
+function prepFact(label, value, prompt) {
+  const body = value
+    ? (prompt ? '<span class="prep-empty">' + prepText(value) + '</span>' : prepText(value))
+    : '<span class="prep-empty">Not on this script.</span>';
   return `<div class="prep-fact"><div class="eyebrow">${escHtml(label)}</div><p>${body}</p></div>`;
+}
+function prepMetricsHtml(metrics) {
+  const m = metrics || {};
+  const row = (label, value) => {
+    const empty = !asText(value).trim();
+    const body = empty ? '—' : prepText(value);
+    return `<div><dt>${escHtml(label)}</dt><dd${empty ? ' class="is-empty"' : ''}>${body}</dd></div>`;
+  };
+  return `<div class="prep-fact prep-metrics-card"><div class="eyebrow">Outlier metrics</div><dl class="prep-metrics">${
+    row('Views', m.views) + row('Likes', m.likes) + row('Comments', m.comments)
+    + row('x-median', m.xMedian) + row('Audience', m.audience) + row('Viral score', m.viral)
+  }</dl></div>`;
 }
 function prepParagraphs(items, empty) {
   if (!items || !items.length) return `<p class="prep-empty">${escHtml(empty)}</p>`;
@@ -4825,9 +4965,10 @@ function prepStepHtml(model, step) {
       <div class="prep-watch">
         ${frame}
         <div class="prep-facts">
-          ${prepFact('Format', model.format)}
-          ${prepFact('Pacing', model.pacing)}
-          ${prepFact('Framing', model.framing)}
+          ${prepFact('Format', model.format, model.formatPrompt)}
+          ${prepFact('Pacing', model.pacing, model.pacingPrompt)}
+          ${prepFact('Framing', model.framing, model.framingPrompt)}
+          ${model.showMetrics ? prepMetricsHtml(model.metrics) : ''}
         </div>
       </div>
       ${open}`;

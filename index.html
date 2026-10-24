@@ -76,7 +76,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button, input, select, textarea { font-family: inherit; }
-body.prompter-open, body.prep-open { overflow: hidden; }
+body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
@@ -523,9 +523,21 @@ img, iframe, video, pre { max-width: 100%; }
 }
 .batch-card-who { color: var(--muted); font-size: 15px; }
 .batch-card .new-badge { margin-left: auto; }
+.batch-actions { display: flex; gap: 8px; }
+.batch-edit, .prep-edit, .shot-edit {
+  min-height: 52px; padding: 0 14px; background: #fff; border: 1px solid var(--line);
+  color: var(--ink); font-size: 16px; font-weight: 650;
+}
+.batch-edit { flex: 0 0 auto; min-width: 88px; }
+.prep-edit, .shot-edit { width: 100%; margin-top: 8px; }
 .batch-film {
   width: 100%; min-height: 52px; background: var(--signal); color: #fff; border: 0;
   font-size: 17px; font-weight: 650; letter-spacing: -0.02em;
+}
+.batch-actions .batch-film { width: auto; flex: 1; }
+.edit-badge {
+  align-self: flex-start; min-height: 32px; padding: 4px 8px; background: var(--blush);
+  color: var(--signal-deep); border: 0; font-size: 13px; font-weight: 650; text-align: left;
 }
 .past-link {
   width: 100%; max-width: 560px; min-height: 48px; background: transparent; border: 0;
@@ -650,6 +662,7 @@ body.modal-open { overflow: hidden; }
 .status-chip.is-progress { border-color: var(--ink); color: var(--ink); }
 .status-chip.is-done { color: var(--muted); }
 .filter-row { display: flex; gap: 8px; overflow-x: auto; min-width: 0; }
+.edit-filters { flex-wrap: wrap; overflow: visible; }
 .filter-row button {
   flex: 0 0 auto; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: #fff;
   font-size: 13px; font-weight: 650; color: var(--muted);
@@ -817,6 +830,39 @@ body.modal-open { overflow: hidden; }
 .prep-next, .prep-go {
   flex: 1; min-height: 56px; padding: 0 14px; background: var(--signal); color: #fff; border: 0; font-size: 17px;
 }
+#edit-sheet {
+  position: fixed; inset: 0; z-index: 78; background: var(--paper); color: var(--ink);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.edit-scroll { flex: 1; min-height: 0; overflow: auto; padding: 8px 16px 24px; }
+.edit-scroll h2 {
+  font-size: 28px; line-height: 1.1; letter-spacing: -0.045em; font-weight: 650; margin: 2px 0 8px;
+}
+.edit-field { display: block; margin: 0 0 12px; }
+.edit-field span {
+  display: block; margin-bottom: 6px; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal); font-weight: 500;
+}
+.edit-field textarea {
+  width: 100%; box-sizing: border-box; min-height: 72px; border: 1px solid var(--line); background: #fff; color: var(--ink);
+  font-size: 16px; line-height: 1.4; padding: 10px 12px; resize: vertical;
+}
+.edit-field textarea.edit-body { min-height: 140px; }
+.edit-field textarea:focus { outline: 2px solid var(--signal); border-color: var(--signal); }
+.edit-history { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
+.edit-change {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 12px;
+}
+.edit-change p { margin: 6px 0 0; font-size: 15px; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; }
+.edit-bar {
+  display: flex; gap: 8px; flex-shrink: 0; background: var(--paper); border-top: 1px solid var(--line);
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.edit-save, .edit-restore {
+  flex: 1; min-height: 56px; padding: 0 14px; background: var(--signal); color: #fff; border: 0;
+  font-size: 17px; font-weight: 650;
+}
+.edit-save[disabled], .edit-restore[disabled] { opacity: 0.45; }
 
 </style>
 
@@ -833,6 +879,7 @@ body.modal-open { overflow: hidden; }
 <div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center safe-bottom" role="status" aria-live="polite"></div>
 <div id="prompter-root"></div>
 <div id="prep-root"></div>
+<div id="edit-root"></div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -873,7 +920,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.23.4';
+const APP_VERSION = '2026.10.24.1';
 // Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
 // What's new popup and on the Help page. Empty hides the video slot.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -887,6 +934,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.24.1',
+    date: 'October 24, 2026',
+    title: 'Edit your lines',
+    items: [
+      'Edit on each script. Change the hook, on-screen text, body, CTA, caption, and notes.',
+      'The script keeps your words, and the history keeps every version. Restore original puts the first version back.',
+    ],
+    steps: [
+      'Tap Edit on a card, or Edit in the filming notes.',
+      'Change the lines you want. A reason is optional.',
+      'Save. The card shows Edited by your name.',
+      'Tap that badge to read the history or restore the original.',
+    ],
+  },
   {
     version: '2026.10.23.4',
     date: 'October 23, 2026',
@@ -1183,6 +1245,12 @@ let previewMode = false;
 let requests = [];
 let requestsLoaded = false;
 let requestsError = '';
+let scriptEdits = [];
+let editsLoaded = false;
+let editsError = '';
+let editFilter = 'all';
+let editState = null;
+let editSaving = false;
 let requestSending = false;
 let requestFilter = 'all';
 let requestDraft = { kind: 'feature', body: '', handles: '' };
@@ -1301,6 +1369,11 @@ function loadLastView(uid) {
 // fine, so this must only ever run once (adding it inside the render function would stack a
 // new listener on every redraw).
 document.addEventListener('keydown', (e) => {
+  if (document.getElementById('edit-sheet') && e.key === 'Escape') {
+    e.preventDefault();
+    window.closeEdit();
+    return;
+  }
   if (document.getElementById('prep') && e.key === 'Escape') {
     e.preventDefault();
     window.closePrep();
@@ -1508,10 +1581,12 @@ async function init() {
           navIndex = 0; previousIndex = 0; flatIndex = 0;
           navSets = { fresh: [], previous: [], flat: [] };
           requests = []; requestsLoaded = false; requestsError = '';
-          document.body.classList.remove('modal-open', 'more-open');
+          scriptEdits = []; editsLoaded = false; editsError = ''; editFilter = 'all';
+          document.body.classList.remove('modal-open', 'more-open', 'edit-open');
           // A pending "Undo" belongs to the session that just ended -- it must not be tappable
           // (and fail, or worse, act under the next person's session) after sign-out.
           hideToast();
+          if (window.closeEdit) window.closeEdit(true);
           if (window.closePrep) window.closePrep(true);
           if (window.closePrompter) window.closePrompter();
           unsubscribeLiveChanges(); renderLogin();
@@ -1606,6 +1681,7 @@ async function afterLogin(u) {
   renderDash();
   subscribeLiveChanges();
   fetchRequests();
+  fetchEdits();
 }
 
 // ─────────────────────────────────────────────
@@ -1748,6 +1824,27 @@ async function fetchRequests() {
   }
   requestsLoaded = true;
   if (hubPage === 'requests') renderDash();
+}
+
+async function fetchEdits() {
+  if (!user || previewMode) return;
+  let error = null;
+  let data = null;
+  try {
+    ({ data, error } = await sb.from('script_edits').select('*').order('edited_at', { ascending: false }));
+  } catch (e) { error = e; }
+  if (!user) return;
+  if (error) {
+    editsError = error.message || 'Could not load edits.';
+    scriptEdits = [];
+  } else {
+    editsError = '';
+    scriptEdits = data || [];
+  }
+  editsLoaded = true;
+  if (hubPage === 'edits' || editState) renderDash();
+  if (editState) renderEdit();
+  if (prepState) renderPrep();
 }
 
 // Friendlier confirmation copy for the status moves a CLIENT makes ("Moved to Filming" reads
@@ -2483,7 +2580,11 @@ function renderBatchCard(group, index) {
       <span class="batch-card-title">${escHtml(title)}</span>
       <span class="batch-card-who">${escHtml(person)}</span>
     </button>
-    <button type="button" class="batch-film" onclick="window.filmScript('${s.id}')">Film</button>
+    ${editBadgeHtml(s.id)}
+    <div class="batch-actions">
+      ${canEditScripts() ? `<button type="button" class="batch-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
+      <button type="button" class="batch-film" onclick="window.filmScript('${s.id}')">Film</button>
+    </div>
   </article>`;
 }
 function renderBatchCards(groups) {
@@ -2693,7 +2794,7 @@ function renderHelpPage() {
       <h2>How filming works</h2>
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
-        <li>The batch is big cards. Tap Film for a short prep, then the full-screen script. Past batches holds older scripts. More holds filters.</li>
+        <li>The batch is big cards. Tap Film for a short prep, then the full-screen script. Edit changes your lines and keeps a history. Past batches holds older scripts. More holds filters.</li>
         <li>Full screen reads Hook, each beat, and the CTA. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
@@ -2946,6 +3047,7 @@ function renderDashInner() {
   // Help and Requests replace the list. Calendar and Pipeline stay admin tools, reached from More.
   const body = hubPage === 'help' ? renderHelpPage()
     : hubPage === 'requests' ? renderRequestsPage()
+    : hubPage === 'edits' ? renderEditsPage()
     : viewTab === 'calendar' ? backToBatch + renderCalendar()
     : viewTab === 'pipeline' ? backToBatch + renderPipeline()
     : cards;
@@ -3024,6 +3126,7 @@ function renderDashInner() {
           <div class="eyebrow">More</div>
           <button type="button" class="tool-btn" onclick="window.toggleMore(false)">Done</button>
         </div>
+        <button type="button" class="shot-edit" onclick="window.openEdits()">Script edits</button>
         ${clientTabs ? `<div class="eyebrow">Clients</div>${clientTabs}` : ''}
         ${viewToggle ? `<div class="eyebrow">View</div>${viewToggle}` : ''}
         ${modeTabs ? `<div class="eyebrow">Scripts</div>${modeTabs}` : ''}
@@ -3933,6 +4036,7 @@ function renderCardGroup(group) {
           ${dateChip}
         </div>
         <h2 class="shot-title">${escHtml(s.title)}</h2>
+        ${editBadgeHtml(s.id)}
         ${renderStatusRail(s.status)}
       </div>
     </div>
@@ -3950,6 +4054,7 @@ function renderCardGroup(group) {
         ${renderCtaBlock(s.cta)}
       </div>
     </div>
+    ${canEditScripts() ? `<button type="button" class="shot-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
     ${renderShotActions(s)}
     ${renderAdvanced(s, group)}
   </article>`;
@@ -4505,7 +4610,7 @@ function labeledChunks(text) {
   return out;
 }
 function prepShownNote(label) {
-  return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound)$/i.test(label || '');
+  return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound|client notes)$/i.test(label || '');
 }
 function prepModel(s) {
   s = s || {};
@@ -4612,6 +4717,7 @@ function prepModel(s) {
     waysBefore: waysBefore,
     waysKind: waysKind,
     extras: extras,
+    clientNotes: pullLabeled(s.editor_notes, ['client notes']).trim(),
   };
 }
 function prepText(text) {
@@ -4665,9 +4771,16 @@ function prepStepHtml(model, step) {
       : (model.waysNote ? `<p class="prep-kicker">${escHtml(model.waysNote)}</p>` : '');
     const ways = (model.ways || []).map(w => `<li><span class="prep-way-n">${escHtml(w.letter)}</span><span>${prepText(w.text)}</span></li>`).join('');
     const extras = (model.extras || []).map(ex => `<div class="prep-extra"><div class="eyebrow">${escHtml(ex.label)}</div><p>${prepText(ex.text)}</p></div>`).join('');
+    const scriptId = prepState && prepState.id;
+    const editTools = scriptId
+      ? `${editBadgeHtml(scriptId)}${canEditScripts() ? `<button type="button" class="prep-edit" onclick="window.openScriptEdit('${scriptId}')">Edit</button>` : ''}`
+      : '';
+    const yours = model.clientNotes ? `<section class="prep-block"><h3>Your notes</h3><p>${prepText(model.clientNotes)}</p></section>` : '';
     return `
       <p class="eyebrow">Step 2 · Notes</p>
       <h2 id="prep-title">Filming notes</h2>
+      ${editTools}
+      ${yours}
       <section class="prep-block"><h3>Who films</h3>${prepParagraphs(who, 'Not on this script.')}</section>
       <section class="prep-block"><h3>Setup</h3>${prepParagraphs(setupBits, 'No setup on this script.')}${shots.length ? shots.map(s => `<p>${escHtml(s)}</p>`).join('') : ''}${model.setupRest ? `<p>${prepText(model.setupRest)}</p>` : ''}</section>
       <section class="prep-block"><h3>On-screen text</h3>${prepParagraphs(screen, 'No on-screen text on this script.')}</section>
@@ -4744,6 +4857,422 @@ window.closePrep = (silent) => {
   const was = !!prepState;
   clearPrep();
   if (was && user && silent !== true) renderDash();
+};
+
+// ─────────────────────────────────────────────
+// SCRIPT EDITS — clients change their own lines. The script row is updated
+// and every changed field is appended to script_edits. History is the log.
+// The original of a field is the before_text on its earliest row.
+// ─────────────────────────────────────────────
+function canEditScripts() {
+  return role === 'client' && !!mySlug;
+}
+function editorLabel(u) {
+  u = u || {};
+  const meta = u.user_metadata || {};
+  const named = asText(meta.full_name || meta.name || meta.display_name).trim();
+  if (named) return named.slice(0, 120);
+  const local = asText(u.email).trim().split('@')[0] || '';
+  if (!local || local === 'preview') return 'Client';
+  const words = local.replace(/[._+-]+/g, ' ').trim();
+  if (!words) return 'Client';
+  return words.replace(/\b[a-z]/g, function (ch) { return ch.toUpperCase(); }).slice(0, 120);
+}
+function editFieldLabel(field) {
+  if (field === 'hook') return 'Hook';
+  if (field === 'on_screen') return 'On-screen text';
+  if (field === 'body') return 'Body';
+  if (field === 'cta') return 'CTA';
+  if (field === 'caption') return 'Caption';
+  if (field === 'notes') return 'Notes';
+  return 'Field';
+}
+function setLabeledBlock(text, label, value) {
+  const raw = asText(text).replace(/\r\n/g, '\n').trim();
+  const lines = raw ? raw.split('\n') : [];
+  const head = String(label || '').toLowerCase() + ':';
+  let start = -1;
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].trim().toLowerCase().indexOf(head) === 0) { start = i; break; }
+  }
+  const next = asText(value).replace(/\r\n/g, '\n').trim();
+  const block = next ? [label + ': ' + next] : [];
+  if (start < 0) {
+    if (!next) return raw;
+    return raw ? raw + '\n' + block[0] : block[0];
+  }
+  let end = start + 1;
+  for (; end < lines.length; end++) {
+    const line = lines[end];
+    if (!line.trim()) break;
+    if (/^\s*[A-Za-z][^:\n]{0,40}:\s+\S/.test(line)) break;
+  }
+  return lines.slice(0, start).concat(block).concat(lines.slice(end)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+function scriptEditValue(s, field) {
+  s = s || {};
+  if (field === 'hook') return asText(s.hook).trim();
+  if (field === 'body') return asText(s.full_script).trim();
+  if (field === 'cta') return asText(s.cta).trim();
+  if (field === 'on_screen') {
+    const labeled = pullLabeled(s.editor_notes, ['on-screen text', 'onscreen text']);
+    if (labeled) return labeled.trim();
+    return parseOnScreen(s.editor_notes, s.hook).map(it => (it.t ? it.t + ' ' : '') + it.text).join('\n').trim();
+  }
+  if (field === 'caption') return pullLabeled(s.editor_notes, ['caption', 'captions']).trim();
+  if (field === 'notes') return pullLabeled(s.editor_notes, ['client notes']).trim();
+  return '';
+}
+function scriptEditDiff(s, values) {
+  values = values || {};
+  const fields = ['hook', 'on_screen', 'body', 'cta', 'caption', 'notes'];
+  const changes = [];
+  fields.forEach(field => {
+    if (!Object.prototype.hasOwnProperty.call(values, field)) return;
+    const before = scriptEditValue(s, field);
+    const after = asText(values[field]).trim();
+    if (before !== after) changes.push({ field: field, before_text: before, after_text: after });
+  });
+  const patch = {};
+  changes.forEach(change => {
+    if (change.field === 'hook') patch.hook = change.after_text;
+    if (change.field === 'body') patch.full_script = change.after_text;
+    if (change.field === 'cta') patch.cta = change.after_text;
+  });
+  const touchesNotes = changes.some(change => change.field === 'on_screen' || change.field === 'caption' || change.field === 'notes');
+  if (touchesNotes) {
+    let notes = asText(s.editor_notes);
+    if (changes.some(change => change.field === 'on_screen')) notes = setLabeledBlock(notes, 'ON-SCREEN TEXT', values.on_screen);
+    if (changes.some(change => change.field === 'caption')) notes = setLabeledBlock(notes, 'CAPTION', values.caption);
+    if (changes.some(change => change.field === 'notes')) notes = setLabeledBlock(notes, 'CLIENT NOTES', values.notes);
+    patch.editor_notes = notes;
+    const fd = fdObject(s);
+    if (fd && changes.some(change => change.field === 'on_screen')) {
+      const copy = {};
+      Object.keys(fd).forEach(key => { copy[key] = fd[key]; });
+      copy['Text Hook'] = asText(values.on_screen).trim().split('\n')[0];
+      patch.filming_direction = copy;
+    }
+  }
+  return { patch: patch, changes: changes };
+}
+function editOriginalMap(rows) {
+  const map = {};
+  const list = (rows || []).slice().sort((a, b) => String(a && a.edited_at || '').localeCompare(String(b && b.edited_at || '')));
+  list.forEach(row => {
+    const field = row && row.field;
+    if (!field || Object.prototype.hasOwnProperty.call(map, field)) return;
+    map[field] = row.before_text == null ? '' : String(row.before_text);
+  });
+  return map;
+}
+function restoreEditValues(s, rows) {
+  const values = {
+    hook: scriptEditValue(s, 'hook'),
+    on_screen: scriptEditValue(s, 'on_screen'),
+    body: scriptEditValue(s, 'body'),
+    cta: scriptEditValue(s, 'cta'),
+    caption: scriptEditValue(s, 'caption'),
+    notes: scriptEditValue(s, 'notes'),
+  };
+  const original = editOriginalMap(rows);
+  Object.keys(original).forEach(field => {
+    if (Object.prototype.hasOwnProperty.call(values, field)) values[field] = original[field];
+  });
+  return values;
+}
+function csvCell(value) {
+  const text = value == null ? '' : String(value);
+  if (/[",\n\r]/.test(text)) return '"' + text.replace(/"/g, '""') + '"';
+  return text;
+}
+function editsToCsv(rows) {
+  const headers = ['id', 'script_id', 'client', 'field', 'before_text', 'after_text', 'edited_by', 'edited_at', 'reason'];
+  const lines = [headers.join(',')];
+  (rows || []).forEach(row => {
+    lines.push(headers.map(header => csvCell(row[header])).join(','));
+  });
+  return lines.join('\n');
+}
+function editsToJson(rows) {
+  return JSON.stringify(rows || [], null, 2);
+}
+function editsForScript(id) {
+  return scriptEdits.filter(row => row && row.script_id === id).slice().sort((a, b) => String(b.edited_at || '').localeCompare(String(a.edited_at || '')));
+}
+function visibleEdits() {
+  const rows = editFilter === 'all' ? scriptEdits.slice() : scriptEdits.filter(row => row && row.client === editFilter);
+  return rows.sort((a, b) => String(b.edited_at || '').localeCompare(String(a.edited_at || '')));
+}
+function editBadgeHtml(scriptId) {
+  const row = editsForScript(scriptId)[0];
+  if (!row || !/^[A-Za-z0-9-]+$/.test(String(scriptId || ''))) return '';
+  const name = row.edited_by || 'someone';
+  return `<button type="button" class="edit-badge" onclick="window.openScriptHistory('${scriptId}')">Edited by ${escHtml(name)}</button>`;
+}
+function scriptTitleById(id) {
+  const s = scripts.find(row => row && row.id === id);
+  return s && s.title ? s.title : 'Script';
+}
+function clearEdit() {
+  editState = null;
+  editSaving = false;
+  const root = document.getElementById('edit-root');
+  if (root) root.innerHTML = '';
+  document.body.classList.remove('edit-open');
+}
+function renderEditForm(s) {
+  const fields = [
+    ['hook', 'Hook', false],
+    ['on_screen', 'On-screen text', false],
+    ['body', 'Body', true],
+    ['cta', 'CTA', false],
+    ['caption', 'Caption', false],
+    ['notes', 'Notes', false],
+  ];
+  const inputs = fields.map(item => {
+    const value = scriptEditValue(s, item[0]);
+    return `<label class="edit-field"><span>${escHtml(item[1])}</span><textarea data-edit-field="${item[0]}" class="${item[2] ? 'edit-body' : ''}">${escHtml(value)}</textarea></label>`;
+  }).join('');
+  const history = editsForScript(s.id).length && /^[A-Za-z0-9-]+$/.test(s.id)
+    ? `<button type="button" class="past-link" onclick="window.openScriptHistory('${s.id}')">Version history</button>`
+    : '';
+  return `
+    <p class="eyebrow">Edit</p>
+    <h2 id="edit-title">${escHtml(s.title || 'Script')}</h2>
+    <p class="prep-lead">Change the lines you say or show. Saving updates this script and keeps the old words in the history.</p>
+    ${editBadgeHtml(s.id)}
+    ${history}
+    ${inputs}
+    <label class="edit-field"><span>Reason, optional</span><textarea id="edit-reason" placeholder="Why this change"></textarea></label>`;
+}
+function renderEditHistory(s) {
+  const rows = editsForScript(s.id);
+  const original = editOriginalMap(rows);
+  const current = restoreEditValues(s, []);
+  let changed = false;
+  Object.keys(original).forEach(field => {
+    if (asText(current[field]).trim() !== asText(original[field]).trim()) changed = true;
+  });
+  const items = rows.length ? rows.map(row => `
+    <article class="edit-change">
+      <div class="eyebrow">${escHtml(editFieldLabel(row.field))} · ${escHtml(formatStamp(row.edited_at))} · ${escHtml(row.edited_by || '')}</div>
+      <p><b>Before</b> ${escHtml(row.before_text || 'Empty')}</p>
+      <p><b>After</b> ${escHtml(row.after_text || 'Empty')}</p>
+      ${row.reason ? `<p><b>Reason</b> ${escHtml(row.reason)}</p>` : ''}
+    </article>`).join('') : '<p class="prep-empty">No edits on this script yet.</p>';
+  const restore = canEditScripts() && rows.length
+    ? `<button type="button" class="edit-restore" ${changed ? '' : 'disabled'} onclick="window.restoreScriptOriginal()">${changed ? 'Restore original' : 'Already the original'}</button>`
+    : '';
+  return `
+    <p class="eyebrow">History</p>
+    <h2 id="edit-title">${escHtml(s.title || 'Script')}</h2>
+    ${editBadgeHtml(s.id)}
+    <div class="edit-history">${items}</div>
+    ${restore}`;
+}
+function renderEdit() {
+  const root = document.getElementById('edit-root');
+  const s = editState && scripts.find(row => row && row.id === editState.id);
+  if (!root || !s) { clearEdit(); return; }
+  const history = editState.mode === 'history';
+  const body = history ? renderEditHistory(s) : renderEditForm(s);
+  const save = !history && canEditScripts()
+    ? `<button type="button" class="edit-save" ${editSaving ? 'disabled' : ''} onclick="window.saveScriptEdit()">Save edits</button>`
+    : '';
+  root.innerHTML = `<div id="edit-sheet" role="dialog" aria-modal="true" aria-labelledby="edit-title">
+    <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closeEdit()">Close</button></header>
+    <div class="edit-scroll" id="edit-scroll">${body}</div>
+    ${save ? `<div class="edit-bar">${save}</div>` : ''}
+  </div>`;
+  document.body.classList.add('edit-open');
+}
+function readEditForm() {
+  const values = {};
+  document.querySelectorAll('[data-edit-field]').forEach(el => {
+    values[el.getAttribute('data-edit-field')] = el.value;
+  });
+  return values;
+}
+function finishLocalEdit(s, diff, name, reason, toastMessage) {
+  Object.assign(s, diff.patch);
+  const now = Date.now();
+  const rows = diff.changes.map((change, i) => ({
+    id: 'local-' + now + '-' + i,
+    script_id: s.id,
+    client: s.client_slug,
+    field: change.field,
+    before_text: change.before_text,
+    after_text: change.after_text,
+    edited_by: name,
+    edited_at: new Date(now + (diff.changes.length - i)).toISOString(),
+    reason: reason || null,
+  }));
+  scriptEdits = rows.concat(scriptEdits);
+  editsLoaded = true;
+  editsError = '';
+  clearEdit();
+  if (user) renderDash();
+  if (prepState && prepState.id === s.id) renderPrep();
+  if (toastMessage !== false) showToast(toastMessage || (reason === 'Restored original' ? 'Original restored.' : 'Edits saved.'));
+}
+async function commitScriptEdit(s, values, reason) {
+  if (!s || editSaving) return;
+  if (!canEditScripts() || s.client_slug !== mySlug) {
+    showToast('You can only edit your own scripts.', { tone: 'error' });
+    return;
+  }
+  const diff = scriptEditDiff(s, values);
+  const note = asText(reason).trim().slice(0, 500);
+  if (!diff.changes.length) {
+    showToast(note === 'Restored original' ? 'Already the original.' : 'Nothing changed.');
+    return;
+  }
+  const name = editorLabel(user);
+  if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
+    finishLocalEdit(s, diff, name, note);
+    return;
+  }
+  editSaving = true;
+  const saveBtn = document.querySelector('.edit-save, .edit-restore');
+  if (saveBtn) saveBtn.disabled = true;
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('scripts').update(diff.patch).eq('id', s.id).select('id'));
+  } catch (e) { error = e; }
+  if (error || !data || data.length !== 1) {
+    editSaving = false;
+    if (saveBtn) saveBtn.disabled = false;
+    showToast(error ? ('Could not save: ' + (error.message || error)) : SESSION_EXPIRED_MSG, { tone: 'error' });
+    return;
+  }
+  Object.assign(s, diff.patch);
+  const logRows = diff.changes.map(change => ({
+    script_id: s.id,
+    client: s.client_slug,
+    field: change.field,
+    before_text: change.before_text,
+    after_text: change.after_text,
+    edited_by: name,
+    reason: note || null,
+  }));
+  let logged = null, logError = null;
+  try {
+    ({ data: logged, error: logError } = await sb.from('script_edits').insert(logRows).select('*'));
+  } catch (e) { logError = e; }
+  editSaving = false;
+  if (logError || !logged || !logged.length) {
+    finishLocalEdit(s, { patch: {}, changes: diff.changes }, name, note, false);
+    showToast('Saved the script. The history log did not save.', { tone: 'error' });
+    return;
+  }
+  scriptEdits = logged.concat(scriptEdits);
+  editsError = '';
+  editsLoaded = true;
+  clearEdit();
+  if (user) renderDash();
+  if (prepState && prepState.id === s.id) renderPrep();
+  showToast(note === 'Restored original' ? 'Original restored.' : 'Edits saved.');
+}
+window.openScriptEdit = (id) => {
+  const s = scripts.find(row => row && row.id === id);
+  if (!s || !canEditScripts()) return;
+  editState = { id: id, mode: 'edit' };
+  renderEdit();
+};
+window.openScriptHistory = (id) => {
+  const s = scripts.find(row => row && row.id === id);
+  if (!s) return;
+  editState = { id: id, mode: 'history' };
+  renderEdit();
+};
+window.closeEdit = (silent) => {
+  clearEdit();
+  if (silent === true) return;
+};
+window.saveScriptEdit = () => {
+  if (!editState) return;
+  const s = scripts.find(row => row && row.id === editState.id);
+  if (!s) return;
+  const reasonEl = document.getElementById('edit-reason');
+  commitScriptEdit(s, readEditForm(), reasonEl ? reasonEl.value : '');
+};
+window.restoreScriptOriginal = () => {
+  if (!editState) return;
+  const s = scripts.find(row => row && row.id === editState.id);
+  if (!s) return;
+  commitScriptEdit(s, restoreEditValues(s, editsForScript(s.id)), 'Restored original');
+};
+function editsMigrationHint() {
+  const missing = /script_edits|schema cache|does not exist|PGRST205|404/i.test(editsError || '');
+  if (!missing) return `<p class="fresh-batch">${escHtml(editsError)}</p>`;
+  return `<p>Script edits are not on in the database yet. Run <b>migrations/2026-10-24_script_edits.sql</b> in the Supabase SQL editor, then reload.</p>`;
+}
+function renderEditsPage() {
+  if (role !== 'admin') {
+    return `<div class="page-stack"><button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button><p>An admin reviews script edits.</p></div>`;
+  }
+  const slugs = Object.keys(CLIENTS);
+  const filters = [['all', 'All']].concat(slugs.map(slug => [slug, CLIENTS[slug].label]));
+  const filterRow = `<div class="filter-row edit-filters" role="tablist" aria-label="Client">${filters.map(item =>
+    `<button type="button" class="${editFilter === item[0] ? 'is-on' : ''}" onclick="window.setEditFilter('${item[0]}')">${escHtml(item[1])}</button>`
+  ).join('')}</div>`;
+  const rows = visibleEdits();
+  const list = rows.length ? rows.map(row => `
+    <article class="page-card">
+      <div class="eyebrow">${escHtml(clientLabel(row.client))} · ${escHtml(editFieldLabel(row.field))} · ${escHtml(formatStamp(row.edited_at))}</div>
+      <h2>${escHtml(scriptTitleById(row.script_id))}</h2>
+      <p class="req-meta">Edited by ${escHtml(row.edited_by || '')}${row.reason ? ' · ' + escHtml(row.reason) : ''}</p>
+      <p class="req-body"><b>Before</b> ${escHtml(row.before_text || 'Empty')}</p>
+      <p class="req-body"><b>After</b> ${escHtml(row.after_text || 'Empty')}</p>
+    </article>`).join('') : `<p class="fresh-empty">${editFilter === 'all' ? 'No edits yet.' : 'No edits for this client yet.'}</p>`;
+  return `<div class="page-stack">
+    <button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>
+    <article class="page-card">
+      <div class="eyebrow">Admin</div>
+      <h2>Script edits</h2>
+      <p>Every line a client changed, so you can see how they like to say it.</p>
+      ${editsError ? editsMigrationHint() : ''}
+      ${filterRow}
+      <p class="req-meta">${rows.length} edit${rows.length === 1 ? '' : 's'}</p>
+      <div class="batch-actions">
+        <button type="button" class="batch-edit" id="export-csv" onclick="window.exportEdits('csv')">Export CSV</button>
+        <button type="button" class="batch-edit" id="export-json" onclick="window.exportEdits('json')">Export JSON</button>
+      </div>
+    </article>
+    ${list}
+  </div>`;
+}
+function downloadText(filename, mime, text) {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+window.setEditFilter = (slug) => {
+  editFilter = slug && (slug === 'all' || CLIENTS[slug]) ? slug : 'all';
+  if (hubPage === 'edits') renderDash();
+};
+window.exportEdits = (kind) => {
+  const rows = visibleEdits();
+  const slug = editFilter === 'all' ? 'all' : editFilter;
+  if (kind === 'json') downloadText('script-edits-' + slug + '.json', 'application/json', editsToJson(rows));
+  else downloadText('script-edits-' + slug + '.csv', 'text/csv;charset=utf-8', editsToCsv(rows));
+};
+window.openEdits = () => {
+  if (role !== 'admin') return;
+  hubPage = 'edits';
+  moreOpen = false;
+  modal = null;
+  modalPinned = false;
+  renderDash();
+  window.scrollTo(0, 0);
+  fetchEdits();
 };
 function brandMarkSvg(size) {
   size = size || 28;
@@ -5764,7 +6293,13 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     requestFilter = opts.requestFilter || 'all';
     requestDraft = { kind: opts.kind || 'feature', body: '', handles: '' };
     moreOpen = !!opts.moreOpen;
+    scriptEdits = opts.edits || [];
+    editsLoaded = true;
+    editsError = opts.editsError || '';
+    editFilter = opts.editFilter || 'all';
+    clearEdit();
     clearPrep();
+    hideToast();
     resetScriptNav();
     openedIds = new Set(opts.openedIds || []);
     modalPinned = opts.autoModal === false || !!opts.modal;

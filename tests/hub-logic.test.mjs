@@ -28,6 +28,8 @@ const names = [
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
   'parseReadWays', 'labeledChunks', 'prepShownNote', 'prepModel',
+  'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
+  'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
 ];
 const src = [
   "const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];",
@@ -193,5 +195,75 @@ assert.strictEqual(plain.waysKind, 'script');
 assert.strictEqual(plain.ways.map(w => w.letter).join(''), 'ABC');
 assert.ok(plain.ways[0].text.includes('Les Brown'));
 assert.ok(plain.extras.some(ex => ex.label === 'Tonality'));
+assert.strictEqual(plain.clientNotes, '');
+
+const notes = 'ON-SCREEN TEXT: OLD LINE\nCAPTION: Old caption.\nFILMING EASE: 4/5 — one location.';
+const rewritten = ctx.setLabeledBlock(ctx.setLabeledBlock(ctx.setLabeledBlock(notes, 'ON-SCREEN TEXT', 'NEW LINE'), 'CAPTION', 'New caption.'), 'CLIENT NOTES', 'Say it warmer.');
+assert.ok(rewritten.includes('ON-SCREEN TEXT: NEW LINE'));
+assert.ok(rewritten.includes('CAPTION: New caption.'));
+assert.ok(rewritten.includes('CLIENT NOTES: Say it warmer.'));
+assert.ok(rewritten.includes('FILMING EASE: 4/5 — one location.'));
+assert.strictEqual(ctx.setLabeledBlock(notes, 'CAPTION', ''), notes.replace('CAPTION: Old caption.\n', ''));
+
+const editable = {
+  hook: 'Old hook',
+  full_script: 'Old body',
+  cta: 'Old cta',
+  editor_notes: notes,
+  filming_direction: { Pacing: 'Steady', 'Text Hook': 'OLD LINE' },
+};
+assert.strictEqual(ctx.scriptEditValue(editable, 'on_screen'), 'OLD LINE');
+assert.strictEqual(ctx.scriptEditValue(editable, 'caption'), 'Old caption.');
+assert.strictEqual(ctx.scriptEditValue(editable, 'notes'), '');
+const diff = ctx.scriptEditDiff(editable, {
+  hook: 'New hook',
+  on_screen: 'NEW LINE',
+  body: 'Old body',
+  cta: 'Old cta',
+  caption: 'New caption.',
+  notes: 'Say it warmer.',
+});
+assert.strictEqual(diff.changes.map(c => c.field).join(','), 'hook,on_screen,caption,notes');
+assert.strictEqual(diff.patch.hook, 'New hook');
+assert.strictEqual('full_script' in diff.patch, false);
+assert.ok(diff.patch.editor_notes.includes('FILMING EASE: 4/5'));
+assert.ok(diff.patch.editor_notes.includes('CLIENT NOTES: Say it warmer.'));
+assert.strictEqual(diff.patch.filming_direction['Text Hook'], 'NEW LINE');
+assert.strictEqual(diff.patch.filming_direction.Pacing, 'Steady');
+const same = ctx.scriptEditDiff(editable, { hook: 'Old hook', body: 'Old body' });
+assert.strictEqual(same.changes.length, 0);
+
+const history = [
+  { field: 'hook', before_text: 'First', after_text: 'Second', edited_at: '2026-10-24T02:00:00Z' },
+  { field: 'hook', before_text: 'Original hook', after_text: 'First', edited_at: '2026-10-24T01:00:00Z' },
+  { field: 'notes', before_text: '', after_text: 'A note', edited_at: '2026-10-24T03:00:00Z' },
+];
+assert.strictEqual(ctx.editOriginalMap(history).hook, 'Original hook');
+assert.strictEqual(ctx.editOriginalMap(history).notes, '');
+const restored = ctx.restoreEditValues({
+  hook: 'Second',
+  full_script: 'Body stays',
+  cta: 'End',
+  editor_notes: 'CLIENT NOTES: A note',
+}, history);
+assert.strictEqual(restored.hook, 'Original hook');
+assert.strictEqual(restored.notes, '');
+assert.strictEqual(restored.body, 'Body stays');
+assert.strictEqual(restored.cta, 'End');
+
+const csv = ctx.editsToCsv([{
+  id: '1', script_id: 's', client: 'jan', field: 'hook',
+  before_text: 'a, "b"', after_text: 'c', edited_by: 'Monica', edited_at: 't', reason: 'line\n2',
+}]);
+assert.ok(csv.startsWith('id,script_id,client,field,before_text,after_text,edited_by,edited_at,reason\n'));
+assert.ok(csv.includes('"a, ""b"""'));
+assert.ok(csv.includes('"line\n2"'));
+assert.ok(csv.includes('Monica'));
+const json = JSON.parse(ctx.editsToJson([{ field: 'cta', edited_by: 'Monica' }]));
+assert.strictEqual(json[0].edited_by, 'Monica');
+assert.strictEqual(ctx.editFieldLabel('on_screen'), 'On-screen text');
+assert.strictEqual(ctx.editorLabel({ user_metadata: { full_name: 'Monica' }, email: 'x@y.com' }), 'Monica');
+assert.strictEqual(ctx.editorLabel({ email: 'monica@example.com' }), 'Monica');
+assert.strictEqual(ctx.editorLabel({ email: 'preview@localhost' }), 'Client');
 
 console.log('hub-logic tests passed');

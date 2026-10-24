@@ -252,6 +252,112 @@
     .tabs { max-width: 520px; left: 50%; transform: translateX(-50%); border-radius: 16px 16px 0 0; }
     .stat-grid { grid-template-columns: repeat(4, 1fr); }
   }
+
+  /* Mobile: collapse long pipeline essays */
+  @media (max-width: 719px) {
+    .panel[data-panel="pipeline"] > .lead,
+    .panel[data-panel="pipeline"] > .fail-callout {
+      display: none;
+    }
+    .panel[data-panel="pipeline"] .mobile-summary {
+      display: block;
+    }
+  }
+  .mobile-summary { display: none; }
+  .mobile-summary summary {
+    list-style: none; cursor: pointer;
+    background: rgba(230,184,77,.1); border: 1px solid rgba(230,184,77,.4);
+    border-radius: var(--radius); padding: 12px 14px; margin-bottom: 14px;
+    font-size: 13px; color: #f0d59a; line-height: 1.45; font-weight: 600;
+    min-height: var(--tap); display: flex; align-items: center; gap: 8px;
+  }
+  .mobile-summary summary::-webkit-details-marker { display: none; }
+  .mobile-summary[open] summary { border-radius: var(--radius) var(--radius) 0 0; margin-bottom: 0; }
+  .mobile-summary .detail-body {
+    background: rgba(230,184,77,.06); border: 1px solid rgba(230,184,77,.35);
+    border-top: 0; border-radius: 0 0 var(--radius) var(--radius);
+    padding: 12px 14px; margin-bottom: 14px;
+    font-size: 13px; color: #f0d59a; line-height: 1.45;
+  }
+
+  /* Sticky Leave feedback above tab bar */
+  .fb-fab {
+    position: fixed; left: 12px; right: 12px; z-index: 55;
+    bottom: calc(72px + env(safe-area-inset-bottom));
+    min-height: var(--tap); border-radius: 14px; padding: 14px 18px;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    font-size: 15px; font-weight: 800; letter-spacing: .01em;
+    background: linear-gradient(135deg, #c8a96e, #a8884a); color: #1a1408;
+    box-shadow: 0 8px 28px rgba(0,0,0,.45);
+  }
+  .fb-fab:active { filter: brightness(.95); }
+  body { padding-bottom: calc(132px + env(safe-area-inset-bottom)); }
+
+  /* Feedback sheet */
+  .fb-sheet {
+    display: none; position: fixed; inset: 0; z-index: 80;
+    background: rgba(0,0,0,.55); backdrop-filter: blur(4px);
+  }
+  .fb-sheet.open { display: flex; align-items: flex-end; justify-content: center; }
+  .fb-panel {
+    width: 100%; max-width: 560px; max-height: min(92vh, 720px);
+    background: var(--bg); border: 1px solid var(--line);
+    border-radius: 20px 20px 0 0; padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; gap: 10px;
+    box-shadow: 0 -12px 40px rgba(0,0,0,.5);
+  }
+  .fb-handle {
+    width: 40px; height: 4px; border-radius: 999px; background: var(--line);
+    margin: 2px auto 4px;
+  }
+  .fb-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .fb-head h2 { font-size: 18px; margin: 0; }
+  .fb-close {
+    min-width: var(--tap); min-height: var(--tap); border-radius: 12px;
+    background: var(--bg3); border: 1px solid var(--line); color: var(--text);
+    font-size: 18px; font-weight: 700;
+  }
+  .fb-hint { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .fb-chips {
+    display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+  }
+  .fb-chips::-webkit-scrollbar { display: none; }
+  .fb-chip {
+    flex: 0 0 auto; min-height: 40px; padding: 8px 12px; border-radius: 999px;
+    background: var(--bg2); border: 1px solid var(--line);
+    font-size: 12px; font-weight: 700; color: var(--muted); white-space: nowrap;
+  }
+  .fb-chip.on {
+    background: #2a2418; border-color: #4a3d24; color: var(--accent2);
+  }
+  .fb-ta-wrap { position: relative; flex: 1; min-height: 0; display: flex; }
+  .fb-ta-wrap textarea {
+    min-height: 160px; flex: 1; font-size: 16px; /* iOS no-zoom */
+    padding-right: 56px;
+  }
+  .fb-mic {
+    position: absolute; right: 8px; bottom: 8px;
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--bg4); border: 1px solid var(--line); color: var(--accent2);
+    font-size: 18px; display: grid; place-items: center;
+  }
+  .fb-mic.listening {
+    background: rgba(232,93,93,.18); border-color: rgba(232,93,93,.5); color: #ff8a8a;
+  }
+  .fb-mic[hidden] { display: none; }
+  .fb-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .fb-actions .btn { margin-top: 0; }
+  .fb-saved { font-size: 11px; color: var(--dim); text-align: center; min-height: 16px; }
+
+  /* Nitpick: secondary under feedback CTA */
+  .nit-advanced summary {
+    cursor: pointer; list-style: none; font-size: 13px; font-weight: 700;
+    color: var(--muted); padding: 12px 0; min-height: var(--tap);
+    display: flex; align-items: center;
+  }
+  .nit-advanced summary::-webkit-details-marker { display: none; }
+
 </style>
 </head>
 <body>
@@ -283,6 +389,13 @@
   <section class="panel active" data-panel="pipeline">
     <h2>Pipeline</h2>
     <p class="lead">End-to-end Client Delivery OS flow. Tap a step for tools + ground rules. Target SOP ≠ what happened on the Oct 24 Devin/Sagun pass.</p>
+
+    <details class="mobile-summary">
+      <summary>⚠ Oct 24 process failure — tap for detail</summary>
+      <div class="detail-body">
+        Apify IG monthly limit hit → CF fell back to Sandcastles + “adjacent” refs for Devin + Sagun with <em>no Cristian sign-off</em>. That is not the target SOP. Target = Apify first (views SoT), Sandcastles discovery only, then X.
+      </div>
+    </details>
 
     <div class="fail-callout" style="margin-bottom:14px">
       <strong style="color:#ff8a8a">Process failure (Oct 24 batch):</strong>
@@ -354,28 +467,34 @@
     <div id="sagunRefs"></div>
   </section>
 
-  <!-- NITPICK -->
+  <!-- FEEDBACK / NITPICK -->
   <section class="panel" data-panel="nitpick">
-    <h2>Nitpick</h2>
-    <p class="lead">Tap to toggle what you want Ops to fix or lock. Persists on this device. Then copy a ready-to-paste Ops message.</p>
+    <h2>Feedback</h2>
+    <p class="lead">Say what to change. No login. Saves on this phone, then Share or Copy into Ops chat.</p>
 
-    <div class="seg" id="nitSeg">
-      <button type="button" class="on" data-filter="all">All</button>
-      <button type="button" data-filter="open">Open</button>
-      <button type="button" data-filter="done">Done</button>
-      <button type="button" data-filter="inflight">In flight</button>
-    </div>
+    <button type="button" class="btn btn-primary" id="openFeedbackBtn" style="margin-bottom:14px">Leave feedback</button>
 
-    <div id="nitList"></div>
+    <details class="nit-advanced">
+      <summary>Optional checklist (nitpick toggles)</summary>
+      <div class="seg" id="nitSeg">
+        <button type="button" class="on" data-filter="all">All</button>
+        <button type="button" data-filter="open">Open</button>
+        <button type="button" data-filter="done">Done</button>
+        <button type="button" data-filter="inflight">In flight</button>
+      </div>
+      <div id="nitList"></div>
+      <button type="button" class="btn btn-ghost" id="resetBtn">Reset toggles</button>
+    </details>
 
     <div class="card" style="margin-top:8px">
-      <h3>Your notes</h3>
-      <p style="margin-bottom:8px">Freeform — anything to add before you send to Ops.</p>
-      <textarea id="notes" placeholder="e.g. Pause batches when Apify is capped. Don’t invent niches. Approve Austin override separately…"></textarea>
+      <h3>Last Ops paste</h3>
       <div class="preview" id="msgPreview" aria-live="polite"></div>
-      <button type="button" class="btn btn-primary" id="copyBtn" style="margin-top:12px">Copy “Send this to Ops”</button>
-      <button type="button" class="btn btn-ghost" id="resetBtn">Reset toggles</button>
+      <button type="button" class="btn btn-primary" id="copyBtn" style="margin-top:12px">Copy for Ops</button>
+      <button type="button" class="btn btn-ghost" id="shareBtn">Share…</button>
     </div>
+
+    <!-- keep hidden notes field for checklist-only path -->
+    <textarea id="notes" hidden aria-hidden="true"></textarea>
   </section>
 
 </main>
@@ -385,8 +504,46 @@
   <button class="tab" data-tab="tools"><span class="ico">▣</span>Tools</button>
   <button class="tab" data-tab="devin"><span class="ico">D</span>Devin</button>
   <button class="tab" data-tab="sagun"><span class="ico">S</span>Sagun</button>
-  <button class="tab" data-tab="nitpick"><span class="ico">✓</span>Nitpick</button>
+  <button class="tab" data-tab="nitpick"><span class="ico">💬</span>Feedback</button>
 </nav>
+
+
+<button type="button" class="fb-fab" id="fbFab" aria-label="Leave feedback">Leave feedback</button>
+
+<div class="fb-sheet" id="fbSheet" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+  <div class="fb-panel">
+    <div class="fb-handle" aria-hidden="true"></div>
+    <div class="fb-head">
+      <h2 id="fbTitle">Leave feedback</h2>
+      <button type="button" class="fb-close" id="fbClose" aria-label="Close">✕</button>
+    </div>
+    <p class="fb-hint">Pick context (optional), then talk or type. Share into Grok Bot Ops in one tap.</p>
+    <div class="fb-chips" id="fbChips" role="listbox" aria-label="Context">
+      <button type="button" class="fb-chip on" data-ctx="Whole vault">Whole vault</button>
+      <button type="button" class="fb-chip" data-ctx="Pipeline">Pipeline</button>
+      <button type="button" class="fb-chip" data-ctx="Tools">Tools</button>
+      <button type="button" class="fb-chip" data-ctx="Devin">Devin</button>
+      <button type="button" class="fb-chip" data-ctx="Sagun">Sagun</button>
+      <button type="button" class="fb-chip" data-ctx="hook">hook</button>
+      <button type="button" class="fb-chip" data-ctx="components">components</button>
+      <button type="button" class="fb-chip" data-ctx="rehook">rehook</button>
+      <button type="button" class="fb-chip" data-ctx="cadence">cadence</button>
+      <button type="button" class="fb-chip" data-ctx="length">length</button>
+      <button type="button" class="fb-chip" data-ctx="idea">idea</button>
+      <button type="button" class="fb-chip" data-ctx="reward">reward</button>
+      <button type="button" class="fb-chip" data-ctx="emotional next-step">emotional next-step</button>
+    </div>
+    <div class="fb-ta-wrap">
+      <textarea id="fbText" placeholder="What’s wrong or what should change? Speak or type…" autocomplete="off"></textarea>
+      <button type="button" class="fb-mic" id="fbMic" hidden title="Dictate">🎤</button>
+    </div>
+    <div class="fb-saved" id="fbSaved"></div>
+    <div class="fb-actions">
+      <button type="button" class="btn btn-ghost" id="fbCopy">Copy for Ops</button>
+      <button type="button" class="btn btn-primary" id="fbShare">Share</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast">Copied</div>
 
@@ -566,6 +723,9 @@ const NITPICK = [
 
 const LS_KEY = "formatVault.nitpick.v1";
 const LS_NOTES = "formatVault.notes.v1";
+const LS_FB = "formatVault.feedback.v1";
+const LS_FB_CTX = "formatVault.feedbackCtx.v1";
+const LS_FB_LOG = "formatVault.feedbackLog.v1";
 
 function loadToggles() {
   try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; }
@@ -677,32 +837,201 @@ function renderNit() {
   });
 }
 
+function getFbCtx() {
+  return localStorage.getItem(LS_FB_CTX) || "Whole vault";
+}
+function getFbText() {
+  return (document.getElementById("fbText")?.value || localStorage.getItem(LS_FB) || "").trim();
+}
+function buildFeedbackBlock() {
+  const ctx = getFbCtx();
+  const text = getFbText();
+  const lines = [];
+  lines.push("Format Vault feedback");
+  lines.push("Context: " + ctx);
+  if (text) lines.push(text);
+  else lines.push("(no note yet)");
+  return lines.join("\n");
+}
 function buildMessage() {
-  const notes = document.getElementById("notes").value.trim();
+  const fb = getFbText();
+  const notes = (document.getElementById("notes")?.value || "").trim();
   const flagged = NITPICK.filter(n => toggles[n.id]);
   const lines = [];
-  lines.push("Format Vault nitpick → Ops");
-  lines.push("Date: Oct 24, 2026 (America/Chicago)");
+  lines.push("Format Vault feedback");
+  lines.push("Context: " + getFbCtx());
+  lines.push("Date: " + new Date().toLocaleString("en-US", { timeZone: "America/Chicago" }) + " CT");
   lines.push("");
-  lines.push("Context: Oct 24 Devin CORE 8 + Sagun FINAL 7 are Needs Review. Sandcastles was PRIMARY (process failure vs claimed Apify-first). Adjacent Sagun refs had no Cristian sign-off. Handles thin: @teamr3set, @austinreport. No master cross-industry vault; Jev never live; perf→vault GAP.");
-  lines.push("");
+  if (fb) {
+    lines.push(fb);
+    lines.push("");
+  }
   if (flagged.length) {
-    lines.push("Please action / confirm:");
+    lines.push("Checklist toggled:");
     flagged.forEach((n, i) => {
       lines.push(`${i + 1}. [${n.status}] ${n.title}`);
-      lines.push(`   ${n.desc}`);
     });
-  } else {
-    lines.push("No checklist items toggled yet — see freeform notes.");
-  }
-  if (notes) {
     lines.push("");
-    lines.push("Cristian notes:");
-    lines.push(notes);
   }
-  lines.push("");
-  lines.push("CORE DNA stays: hook · components · rehook · cadence · length · idea · reward · emotional next-step. Film prep = teleprompter.");
+  if (notes && notes !== fb) {
+    lines.push("Extra notes:");
+    lines.push(notes);
+    lines.push("");
+  }
+  if (!fb && !flagged.length && !notes) {
+    lines.push("(empty — open Leave feedback and say what to change)");
+  }
   return lines.join("\n");
+}
+async function copyText(msg, okToast) {
+  try {
+    await navigator.clipboard.writeText(msg);
+    toast(okToast || "Copied");
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = msg; document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); toast(okToast || "Copied"); return true; }
+    catch { toast("Copy failed — select text manually"); return false; }
+    finally { ta.remove(); }
+  }
+}
+async function shareOrCopy(msg) {
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "Format Vault feedback", text: msg });
+      toast("Shared");
+      return;
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+    }
+  }
+  await copyText(msg, "Copied for Ops");
+}
+function persistFeedback() {
+  const ta = document.getElementById("fbText");
+  if (!ta) return;
+  localStorage.setItem(LS_FB, ta.value);
+  document.getElementById("notes").value = ta.value;
+  localStorage.setItem(LS_NOTES, ta.value);
+  const el = document.getElementById("fbSaved");
+  if (el) el.textContent = ta.value.trim() ? "Saved on this phone" : "";
+  updatePreview();
+}
+function saveFeedbackLog() {
+  const entry = { t: Date.now(), ctx: getFbCtx(), text: getFbText() };
+  if (!entry.text) return;
+  let log = [];
+  try { log = JSON.parse(localStorage.getItem(LS_FB_LOG) || "[]"); } catch { log = []; }
+  log.unshift(entry);
+  localStorage.setItem(LS_FB_LOG, JSON.stringify(log.slice(0, 50)));
+}
+function openFeedback(preCtx) {
+  const sheet = document.getElementById("fbSheet");
+  sheet.classList.add("open");
+  document.body.style.overflow = "hidden";
+  if (preCtx) {
+    localStorage.setItem(LS_FB_CTX, preCtx);
+    document.querySelectorAll("#fbChips .fb-chip").forEach(c => {
+      c.classList.toggle("on", c.dataset.ctx === preCtx);
+    });
+  }
+  setTimeout(() => document.getElementById("fbText")?.focus(), 80);
+}
+function closeFeedback() {
+  document.getElementById("fbSheet").classList.remove("open");
+  document.body.style.overflow = "";
+  stopMic();
+}
+let recog = null;
+function stopMic() {
+  try { recog && recog.stop(); } catch {}
+  const mic = document.getElementById("fbMic");
+  if (mic) mic.classList.remove("listening");
+}
+function initMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const mic = document.getElementById("fbMic");
+  if (!SR || !mic) return;
+  mic.hidden = false;
+  recog = new SR();
+  recog.lang = "en-US";
+  recog.interimResults = true;
+  recog.continuous = true;
+  let base = "";
+  mic.addEventListener("click", () => {
+    if (mic.classList.contains("listening")) { stopMic(); return; }
+    base = document.getElementById("fbText").value;
+    if (base && !/\s$/.test(base)) base += " ";
+    try {
+      recog.start();
+      mic.classList.add("listening");
+      toast("Listening… tap mic to stop");
+    } catch { toast("Mic unavailable — type instead"); }
+  });
+  recog.onresult = (ev) => {
+    let interim = "";
+    let final = "";
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const t = ev.results[i][0].transcript;
+      if (ev.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    if (final) {
+      base += final + " ";
+      document.getElementById("fbText").value = base;
+      persistFeedback();
+    } else {
+      document.getElementById("fbText").value = base + interim;
+    }
+  };
+  recog.onerror = () => { stopMic(); toast("Mic stopped — keep typing"); };
+  recog.onend = () => { mic.classList.remove("listening"); };
+}
+function initFeedback() {
+  const ta = document.getElementById("fbText");
+  ta.value = localStorage.getItem(LS_FB) || localStorage.getItem(LS_NOTES) || "";
+  document.getElementById("notes").value = ta.value;
+  const ctx = getFbCtx();
+  document.querySelectorAll("#fbChips .fb-chip").forEach(c => {
+    c.classList.toggle("on", c.dataset.ctx === ctx);
+  });
+  persistFeedback();
+  document.getElementById("fbChips").addEventListener("click", e => {
+    const b = e.target.closest(".fb-chip");
+    if (!b) return;
+    document.querySelectorAll("#fbChips .fb-chip").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    localStorage.setItem(LS_FB_CTX, b.dataset.ctx);
+    updatePreview();
+  });
+  ta.addEventListener("input", persistFeedback);
+  const openers = [document.getElementById("fbFab"), document.getElementById("openFeedbackBtn")];
+  openers.forEach(el => el && el.addEventListener("click", () => openFeedback()));
+  document.getElementById("fbClose").addEventListener("click", closeFeedback);
+  document.getElementById("fbSheet").addEventListener("click", e => {
+    if (e.target.id === "fbSheet") closeFeedback();
+  });
+  document.getElementById("fbCopy").addEventListener("click", async () => {
+    persistFeedback();
+    saveFeedbackLog();
+    await copyText(buildFeedbackBlock(), "Copied for Ops");
+  });
+  document.getElementById("fbShare").addEventListener("click", async () => {
+    persistFeedback();
+    saveFeedbackLog();
+    await shareOrCopy(buildFeedbackBlock());
+  });
+  const shareBtn = document.getElementById("shareBtn");
+  if (shareBtn) shareBtn.addEventListener("click", async () => {
+    await shareOrCopy(buildMessage());
+  });
+  // DNA chips → open feedback with that context
+  document.querySelectorAll("#dnaStrip .dna-chip").forEach(chip => {
+    chip.style.cursor = "pointer";
+    chip.addEventListener("click", () => openFeedback(chip.textContent.trim()));
+  });
+  initMic();
 }
 
 function updatePreview() {
@@ -744,19 +1073,11 @@ function init() {
   });
 
   document.getElementById("copyBtn").addEventListener("click", async () => {
-    const msg = buildMessage();
-    try {
-      await navigator.clipboard.writeText(msg);
-      toast("Copied — send to Ops");
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = msg; document.body.appendChild(ta); ta.select();
-      document.execCommand("copy"); ta.remove();
-      toast("Copied — send to Ops");
-    }
+    await copyText(buildMessage(), "Copied for Ops");
   });
 
-  document.getElementById("resetBtn").addEventListener("click", () => {
+  const resetBtn = document.getElementById("resetBtn");
+  if (resetBtn) resetBtn.addEventListener("click", () => {
     toggles = {};
     saveToggles(toggles);
     renderNit();
@@ -764,6 +1085,7 @@ function init() {
     toast("Toggles cleared");
   });
 
+  initFeedback();
   updatePreview();
 }
 

@@ -27,6 +27,7 @@ const names = [
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
+  'parseReadWays', 'labeledChunks', 'prepShownNote', 'prepModel',
 ];
 const src = [
   "const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];",
@@ -152,5 +153,45 @@ assert.ok(pack.audio.some(a => /no music/i.test(a)));
 assert.ok(pack.caption.includes('Full lesson'));
 assert.strictEqual(pack.refs[0].kind, 'yt');
 assert.ok(pack.notes.some(n => /Warm/.test(n)));
+
+const ways = ctx.parseReadWays([
+  'Calm conviction, 3/10. Offer, don\'t instruct.',
+  '3 WAYS TO READ IT (Monica, Oct 15 call): A) Quiet conviction, like a fact you settled years ago. B) Like advising a friend over coffee. Warm, low. C) Slightly wry, then serious.',
+  'MONICA VERSION: Yes, as written.',
+].join('\n'));
+assert.strictEqual(ways.ways.map(w => w.letter).join(''), 'ABC');
+assert.ok(ways.ways[0].text.startsWith('Quiet conviction'));
+assert.ok(ways.ways[2].text.includes('Slightly wry'));
+assert.strictEqual(ways.note, 'Monica, Oct 15 call');
+assert.ok(ways.before.startsWith('Calm conviction'));
+assert.ok(ways.after.startsWith('MONICA VERSION'));
+assert.strictEqual(ctx.parseReadWays('Warm, then lean in.').ways.length, 0);
+
+const prepped = ctx.prepModel(Object.assign({}, reaction, {
+  format: 'J1 · Blunt Declarative Stance',
+  camera: 'Phone vertical 9:16, handheld selfie at eye level.',
+  filming_direction: { Pacing: 'Steady, one take.', Tonality: 'Calm conviction, 3/10.', 'Visual Hook': 'Jan in the car.' },
+  tonality_delivery: ways.before + '\n3 WAYS TO READ IT (Monica, Oct 15 call): A) Quiet. B) Warm. C) Wry.\nMONICA VERSION: Yes.',
+  proof_stats: '7,499,192 views',
+  reel_number: 1,
+}));
+assert.strictEqual(prepped.format, 'J1 · Blunt Declarative Stance');
+assert.strictEqual(prepped.pacing, 'Steady, one take.');
+assert.ok(/eye level/i.test(prepped.framing));
+assert.strictEqual(prepped.waysKind, 'row');
+assert.strictEqual(prepped.ways.length, 3);
+assert.ok(prepped.ref && prepped.ref.kind === 'yt');
+assert.ok(prepped.extras.some(ex => ex.label === 'MONICA VERSION' && ex.text === 'Yes.'));
+assert.ok(prepped.extras.some(ex => ex.label === 'Visual Hook'));
+assert.ok(!prepped.extras.some(ex => ex.label === 'Pacing'));
+assert.ok(prepped.onScreen.some(it => /Their opinion/.test(it.text)));
+assert.ok(prepped.caption.includes('Full lesson'));
+assert.ok(prepped.audio.some(a => /no music/i.test(a)));
+
+const plain = ctx.prepModel(reaction);
+assert.strictEqual(plain.waysKind, 'script');
+assert.strictEqual(plain.ways.map(w => w.letter).join(''), 'ABC');
+assert.ok(plain.ways[0].text.includes('Les Brown'));
+assert.ok(plain.extras.some(ex => ex.label === 'Tonality'));
 
 console.log('hub-logic tests passed');

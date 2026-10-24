@@ -76,7 +76,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button, input, select, textarea { font-family: inherit; }
-body.prompter-open { overflow: hidden; }
+body.prompter-open, body.prep-open { overflow: hidden; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
@@ -731,6 +731,92 @@ body.modal-open { overflow: hidden; }
   .script-pager-count, .pr-script-count { font-size: 12px; }
   .script-pager button, .pr-scriptnav button { font-size: 13px; padding: 0 6px; }
 }
+/* Prep sits on top of the batch and under the teleprompter. Phone-first stepper. */
+#prep {
+  position: fixed; inset: 0; z-index: 75; background: var(--paper); color: var(--ink);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.prep-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: max(10px, env(safe-area-inset-top)) 16px 8px;
+  border-bottom: 1px solid var(--line); background: var(--paper); flex-shrink: 0;
+}
+.prep-close, .prep-back, .prep-next, .prep-go, .prep-dots button {
+  font-weight: 650; letter-spacing: -0.02em;
+}
+.prep-close {
+  min-height: 44px; padding: 0 12px; background: #fff; border: 1px solid var(--line); color: var(--ink);
+}
+.prep-dots {
+  display: flex; justify-content: center; gap: 8px; padding: 8px 12px 2px; flex-shrink: 0;
+}
+.prep-dots button {
+  flex: 1 1 0; max-width: 120px; min-height: 44px; background: transparent; border: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  color: var(--muted); font-size: 12px;
+}
+.prep-dot { width: 10px; height: 10px; border-radius: 999px; background: var(--line); }
+.prep-dots button.is-done .prep-dot { background: var(--ink); }
+.prep-dots button.is-on { color: var(--ink); }
+.prep-dots button.is-on .prep-dot { background: var(--signal); box-shadow: 0 0 0 4px var(--blush); }
+.prep-which {
+  margin: 0; padding: 0 16px 6px; color: var(--muted); font-size: 14px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0;
+}
+.prep-scroll { flex: 1; min-height: 0; overflow: auto; padding: 8px 16px 20px; }
+.prep-scroll h2 {
+  font-size: 28px; line-height: 1.1; letter-spacing: -0.045em; font-weight: 650; margin: 2px 0 8px;
+}
+.prep-lead { margin: 0 0 14px; font-size: 16px; line-height: 1.4; }
+.prep-watch { display: flex; gap: 10px; align-items: stretch; min-width: 0; }
+.prep-frame {
+  flex: 0 0 auto; width: auto; max-width: 46%;
+  height: min(300px, 38dvh);
+  aspect-ratio: 9 / 16; margin: 0; background: var(--black); overflow: hidden;
+}
+.prep-frame iframe { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+.prep-reel {
+  display: flex; align-items: center; justify-content: center; width: 100%;
+  min-height: 56px; margin: 12px 0; background: var(--ink); color: #fff;
+  text-decoration: none; font-size: 17px; font-weight: 650; letter-spacing: -0.02em;
+}
+.prep-reel.is-primary { background: var(--signal); }
+.prep-facts, .prep-extras { display: flex; flex-direction: column; gap: 10px; }
+.prep-fact, .prep-extra {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 8px 10px;
+}
+.prep-fact p, .prep-extra p { margin: 2px 0 0; font-size: 14px; line-height: 1.35; overflow-wrap: anywhere; }
+.prep-block p { margin: 4px 0 0; font-size: 16px; line-height: 1.45; overflow-wrap: anywhere; }
+@media (min-width: 700px) {
+  .prep-frame { height: min(460px, 52dvh); max-width: none; }
+  .prep-scroll { padding-left: max(24px, calc(50% - 280px)); padding-right: max(24px, calc(50% - 280px)); }
+}
+.prep-empty { color: var(--muted); }
+.prep-block { margin-top: 18px; }
+.prep-block h3 {
+  margin: 0 0 8px; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal); font-weight: 500;
+}
+.prep-ways { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.prep-ways li {
+  display: flex; gap: 10px; background: #fff; border: 1px solid var(--line); padding: 12px;
+  font-size: 16px; line-height: 1.4;
+}
+.prep-way-n {
+  font-family: "Geist Mono", ui-monospace, monospace; color: var(--signal); font-weight: 650; flex: 0 0 auto;
+}
+.prep-kicker { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.prep-bar {
+  display: flex; gap: 8px; flex-shrink: 0; background: var(--paper); border-top: 1px solid var(--line);
+  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+}
+.prep-back {
+  min-width: 88px; min-height: 52px; padding: 0 14px; background: #fff; border: 1px solid var(--line); color: var(--ink);
+}
+.prep-back[disabled] { opacity: 0.35; }
+.prep-next, .prep-go {
+  flex: 1; min-height: 56px; padding: 0 14px; background: var(--signal); color: #fff; border: 0; font-size: 17px;
+}
 
 </style>
 
@@ -746,6 +832,7 @@ body.modal-open { overflow: hidden; }
      aria-live region so screen readers announce each new message. -->
 <div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center safe-bottom" role="status" aria-live="polite"></div>
 <div id="prompter-root"></div>
+<div id="prep-root"></div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -786,7 +873,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.23.3';
+const APP_VERSION = '2026.10.23.4';
 // Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
 // What's new popup and on the Help page. Empty hides the video slot.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -800,6 +887,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.23.4',
+    date: 'October 23, 2026',
+    title: 'Prep, then film',
+    items: [
+      'Film opens a short prep. Watch the reference, then read the filming notes.',
+      'The last step is OK, I’m going to film. That opens the full-screen script: hook, body, CTA.',
+    ],
+    steps: [
+      'Tap Film on a card.',
+      'Watch the reference. Copy the format, the pacing, and the framing.',
+      'Read who films it, the setup, on-screen text, audio, caption, and the three ways to read it.',
+      'Tap OK, I’m going to film. Follow the script from the hook to the CTA.',
+    ],
+  },
   {
     version: '2026.10.23.3',
     date: 'October 23, 2026',
@@ -1199,6 +1301,11 @@ function loadLastView(uid) {
 // fine, so this must only ever run once (adding it inside the render function would stack a
 // new listener on every redraw).
 document.addEventListener('keydown', (e) => {
+  if (document.getElementById('prep') && e.key === 'Escape') {
+    e.preventDefault();
+    window.closePrep();
+    return;
+  }
   if (document.getElementById('prompter')) {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -1405,6 +1512,7 @@ async function init() {
           // A pending "Undo" belongs to the session that just ended -- it must not be tappable
           // (and fail, or worse, act under the next person's session) after sign-out.
           hideToast();
+          if (window.closePrep) window.closePrep(true);
           if (window.closePrompter) window.closePrompter();
           unsubscribeLiveChanges(); renderLogin();
         }
@@ -2449,7 +2557,7 @@ window.filmScript = (id) => {
       setNavIndex(scopes[s], i);
     }
   }
-  window.openPrompter(id);
+  window.openPrep(id);
 };
 window.focusScript = (scope, i) => {
   const groups = navSets[scope] || [];
@@ -2585,7 +2693,7 @@ function renderHelpPage() {
       <h2>How filming works</h2>
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
-        <li>The batch is big cards. Tap Film to open the script full screen. Past batches holds older scripts. More holds filters.</li>
+        <li>The batch is big cards. Tap Film for a short prep, then the full-screen script. Past batches holds older scripts. More holds filters.</li>
         <li>Full screen reads Hook, each beat, and the CTA. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
@@ -4354,6 +4462,289 @@ window.prompterToggle = () => {
   else cancelAnimationFrame(prompterRaf);
 };
 
+function parseReadWays(text) {
+  const raw = asText(text).replace(/\r\n/g, '\n').trim();
+  const empty = { before: '', note: '', ways: [], after: '' };
+  if (!raw) return empty;
+  const m = raw.match(/3\s*WAYS TO READ IT\b([^\n:]*)\:\s*([\s\S]*?)(?=\n\s*[A-Z][A-Z0-9 /-]{2,24}\:\s|$)/i);
+  if (!m) return { before: raw, note: '', ways: [], after: '' };
+  const note = String(m[1] || '').replace(/^\s*\(/, '').replace(/\)\s*$/, '').trim();
+  const body = String(m[2] || '').trim();
+  const ways = [];
+  const re = /(?:^|\s)([A-C])\)\s*([\s\S]*?)(?=\s+[A-C]\)\s|$)/gi;
+  let hit;
+  while ((hit = re.exec(body))) {
+    const letter = hit[1].toUpperCase();
+    const line = hit[2].trim();
+    if (line && !ways.some(w => w.letter === letter)) ways.push({ letter: letter, text: line });
+  }
+  return {
+    before: raw.slice(0, m.index).trim(),
+    note: note,
+    ways: ways,
+    after: raw.slice(m.index + m[0].length).trim(),
+  };
+}
+function labeledChunks(text) {
+  const lines = asText(text).replace(/\r\n/g, '\n').split('\n');
+  const out = [];
+  let cur = null;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const hit = line.match(/^\s*([A-Za-z][^:\n]{0,40}):\s*(.*)$/);
+    if (hit) {
+      if (cur && cur.text) out.push(cur);
+      cur = { label: hit[1].trim(), text: (hit[2] || '').trim() };
+    } else if (cur) {
+      if (line.trim()) cur.text = cur.text ? cur.text + '\n' + line.trim() : line.trim();
+    } else if (line.trim()) {
+      out.push({ label: 'Note', text: line.trim() });
+    }
+  }
+  if (cur && cur.text) out.push(cur);
+  return out;
+}
+function prepShownNote(label) {
+  return /^(on-?screen(\s+text)?|captions?|references?|audio|music|sound)$/i.test(label || '');
+}
+function prepModel(s) {
+  s = s || {};
+  const setup = parseSetup(s.filming_setup, s.camera);
+  const fd = fdObject(s) || {};
+  const pacing = asText(fd.Pacing).trim() || pullLabeled(s.filming_setup, ['pacing']) || pullLabeled(s.editor_notes, ['pacing']);
+  const pack = referencePack(s);
+  const read = parseReadWays(s.tonality_delivery);
+  const extras = [];
+  const seen = {};
+  function addExtra(label, text) {
+    const t = asText(text).trim();
+    const name = asText(label).trim();
+    if (!t || !name) return;
+    const key = name.toLowerCase() + '\n' + t.toLowerCase();
+    if (seen[key]) return;
+    seen[key] = true;
+    extras.push({ label: name, text: t });
+  }
+  let ways = read.ways.slice();
+  let waysNote = read.note;
+  let waysBefore = read.before;
+  let waysKind = 'row';
+  if (!ways.length) {
+    waysKind = 'script';
+    waysNote = '';
+    waysBefore = '';
+    if (read.before) addExtra('Tonality', read.before);
+    const flow = scriptFlow(s);
+    let hookText = '';
+    let bodyText = '';
+    let ctaText = '';
+    flow.forEach(sec => {
+      if (sec.kind === 'hook' && !hookText) hookText = sec.text;
+      else if ((sec.kind === 'beat' || sec.kind === 'clip') && !bodyText) bodyText = String(sec.text || '').split('\n')[0];
+      else if (sec.kind === 'cta') ctaText = sec.text;
+    });
+    ways = [
+      { letter: 'A', text: hookText || 'The hook is on the next screen.' },
+      { letter: 'B', text: bodyText || 'The body is on the next screen.' },
+      { letter: 'C', text: ctaText || 'The ending is on the next screen.' },
+    ];
+  }
+  const onCamera = pullLabeled(s.editor_notes, ['on camera']);
+  if (asText(s.cta).trim()) addExtra('CTA', s.cta);
+  Object.keys(fd).forEach(k => {
+    if (/^pacing$/i.test(k)) return;
+    if (/sound|music|audio/i.test(k)) return;
+    const tone = asText(fd[k]).trim();
+    if (/^tonality$/i.test(k) && waysBefore && tone && waysBefore.toLowerCase().indexOf(tone.toLowerCase()) !== -1) return;
+    addExtra(k, fd[k]);
+  });
+  labeledChunks(read.after).forEach(chunk => addExtra(chunk.label, chunk.text));
+  labeledChunks(s.editor_notes).forEach(chunk => {
+    if (prepShownNote(chunk.label)) return;
+    if (/^on camera$/i.test(chunk.label)) return;
+    addExtra(chunk.label, chunk.text);
+  });
+  if (asText(s.clip_directions).trim()) {
+    const clip = asText(s.clip_directions).trim();
+    const link = extractVideoLink(clip);
+    if (!link || clip.replace(link, '').trim().length > 8) addExtra('Clip directions', clip);
+  }
+  if (asText(s.proof_stats).trim()) addExtra('Proof', s.proof_stats);
+  if (asText(s.client_feedback).trim()) addExtra('Client feedback', s.client_feedback);
+  const sous = s.sous_chef_pass && typeof s.sous_chef_pass === 'object' ? s.sous_chef_pass : null;
+  if (sous) {
+    Object.keys(sous).forEach(k => {
+      if (/sound|music/i.test(k)) return;
+      addExtra(k, sous[k]);
+    });
+  }
+  if (s.reel_number != null && String(s.reel_number).trim()) addExtra('Reel number', String(s.reel_number));
+  if (asText(s.date_planned).trim()) addExtra('Date', s.date_planned);
+  if (asText(s.take_label).trim()) addExtra('Take', s.take_label);
+  let rest = asText(s.filming_setup);
+  [setup.location, setup.rig, setup.mic, setup.framing].concat(setup.shots || []).forEach(part => {
+    const p = asText(part).trim();
+    if (!p) return;
+    const at = rest.toLowerCase().indexOf(p.toLowerCase());
+    if (at >= 0) rest = rest.slice(0, at) + ' ' + rest.slice(at + p.length);
+  });
+  rest = rest.replace(/\b(LOCATION|MIC TIP|MIC|SHOT LIST|FRAMING|HANDHELD OPTION)\s*:/gi, ' ').replace(/\s+/g, ' ').trim();
+  if (rest.length < 12) rest = '';
+  return {
+    title: asText(s.title).trim() || 'Script',
+    format: asText(s.format).trim(),
+    pacing: pacing,
+    framing: setup.framing,
+    ref: (pack.refs && pack.refs[0]) || null,
+    person: pack.person || '',
+    camera: asText(s.camera).trim(),
+    onCamera: onCamera,
+    location: setup.location,
+    rig: setup.rig,
+    mic: setup.mic,
+    shots: setup.shots || [],
+    setupRest: rest,
+    onScreen: pack.onScreen || [],
+    audio: pack.audio || [],
+    caption: pack.caption || '',
+    ways: ways,
+    waysNote: waysNote,
+    waysBefore: waysBefore,
+    waysKind: waysKind,
+    extras: extras,
+  };
+}
+function prepText(text) {
+  return escHtml(asText(text)).replace(/\n/g, '<br>');
+}
+function prepFact(label, value) {
+  const body = value ? prepText(value) : '<span class="prep-empty">Not on this script.</span>';
+  return `<div class="prep-fact"><div class="eyebrow">${escHtml(label)}</div><p>${body}</p></div>`;
+}
+function prepParagraphs(items, empty) {
+  if (!items || !items.length) return `<p class="prep-empty">${escHtml(empty)}</p>`;
+  return items.map(item => `<p>${prepText(item)}</p>`).join('');
+}
+function prepStepHtml(model, step) {
+  if (step === 0) {
+    const info = model.ref;
+    const frame = info && info.src
+      ? `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="Reference video" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`
+      : '';
+    let open = '<p class="prep-empty">No reference reel on this script.</p>';
+    if (info && info.watch) {
+      const primary = info.src ? '' : ' is-primary';
+      open = `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open reference reel</a>`;
+    } else if (info && info.label) {
+      open = `<p>${escHtml(info.label)}</p>`;
+    }
+    return `
+      <p class="eyebrow">Step 1 · Reference</p>
+      <h2 id="prep-title">Watch the reference</h2>
+      <p class="prep-lead">Copy the format, the pacing, and the framing.</p>
+      <div class="prep-watch">
+        ${frame}
+        <div class="prep-facts">
+          ${prepFact('Format', model.format)}
+          ${prepFact('Pacing', model.pacing)}
+          ${prepFact('Framing', model.framing)}
+        </div>
+      </div>
+      ${open}`;
+  }
+  if (step === 1) {
+    const who = [model.person, model.camera, model.onCamera].filter(Boolean);
+    const setupBits = [];
+    if (model.location) setupBits.push('Location: ' + model.location);
+    if (model.rig) setupBits.push(model.rig);
+    if (model.mic) setupBits.push('Mic: ' + model.mic);
+    const shots = (model.shots || []).map((item, i) => (i + 1) + '. ' + item);
+    const screen = (model.onScreen || []).map(it => (it.t ? it.t + ' — ' : '') + it.text);
+    const wayLead = model.waysKind === 'script'
+      ? '<p class="prep-lead">This row has no separate read-it note. These three lines are the hook, the body, and the CTA.</p>'
+      : (model.waysNote ? `<p class="prep-kicker">${escHtml(model.waysNote)}</p>` : '');
+    const ways = (model.ways || []).map(w => `<li><span class="prep-way-n">${escHtml(w.letter)}</span><span>${prepText(w.text)}</span></li>`).join('');
+    const extras = (model.extras || []).map(ex => `<div class="prep-extra"><div class="eyebrow">${escHtml(ex.label)}</div><p>${prepText(ex.text)}</p></div>`).join('');
+    return `
+      <p class="eyebrow">Step 2 · Notes</p>
+      <h2 id="prep-title">Filming notes</h2>
+      <section class="prep-block"><h3>Who films</h3>${prepParagraphs(who, 'Not on this script.')}</section>
+      <section class="prep-block"><h3>Setup</h3>${prepParagraphs(setupBits, 'No setup on this script.')}${shots.length ? shots.map(s => `<p>${escHtml(s)}</p>`).join('') : ''}${model.setupRest ? `<p>${prepText(model.setupRest)}</p>` : ''}</section>
+      <section class="prep-block"><h3>On-screen text</h3>${prepParagraphs(screen, 'No on-screen text on this script.')}</section>
+      <section class="prep-block"><h3>Audio</h3>${prepParagraphs(model.audio, 'No audio note on this script.')}</section>
+      <section class="prep-block"><h3>Caption</h3>${model.caption ? `<p>${prepText(model.caption)}</p>` : '<p class="prep-empty">No caption on this script.</p>'}</section>
+      <section class="prep-block"><h3>Three ways to read it</h3>${wayLead}${model.waysBefore ? `<p>${prepText(model.waysBefore)}</p>` : ''}<ol class="prep-ways">${ways}</ol></section>
+      ${extras ? `<section class="prep-block"><h3>Also on this script</h3><div class="prep-extras">${extras}</div></section>` : ''}`;
+  }
+  return `
+    <p class="eyebrow">Step 3 · Film</p>
+    <h2 id="prep-title">You're ready</h2>
+    <p class="prep-lead">The next screen is the full script. It runs the hook, then the body, then the CTA.</p>
+    <p class="prep-fact"><b>${escHtml(model.title)}</b></p>`;
+}
+let prepState = null;
+function clearPrep() {
+  prepState = null;
+  const root = document.getElementById('prep-root');
+  if (root) root.innerHTML = '';
+  document.body.classList.remove('prep-open');
+}
+function renderPrep() {
+  const root = document.getElementById('prep-root');
+  const s = prepState && scripts.find(x => x.id === prepState.id);
+  if (!root || !s) { clearPrep(); return; }
+  const step = prepState.step || 0;
+  const model = prepModel(s);
+  const labels = ['Reference', 'Notes', 'Film'];
+  const dots = labels.map((label, i) => {
+    const cls = i === step ? 'is-on' : (i < step ? 'is-done' : '');
+    return `<button type="button" class="${cls}" role="tab" aria-selected="${i === step ? 'true' : 'false'}" onclick="window.prepGo(${i})"><span class="prep-dot" aria-hidden="true"></span>${label}</button>`;
+  }).join('');
+  const forward = step >= 2
+    ? '<button type="button" class="prep-go" onclick="window.prepFilm()">OK, I\'m going to film</button>'
+    : '<button type="button" class="prep-next" onclick="window.prepMove(1)">Next</button>';
+  root.innerHTML = `<div id="prep" role="dialog" aria-modal="true" aria-labelledby="prep-title">
+    <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
+    <div class="prep-dots" role="tablist" aria-label="Prep steps">${dots}</div>
+    <p class="prep-which">${escHtml(model.title)}</p>
+    <div class="prep-scroll" id="prep-scroll">${prepStepHtml(model, step)}</div>
+    <div class="prep-bar">
+      <button type="button" class="prep-back" ${step === 0 ? 'disabled' : ''} onclick="window.prepMove(-1)">Back</button>
+      ${forward}
+    </div>
+  </div>`;
+  document.body.classList.add('prep-open');
+  const scroller = document.getElementById('prep-scroll');
+  if (scroller) scroller.scrollTop = 0;
+}
+window.openPrep = (id) => {
+  const s = scripts.find(x => x.id === id);
+  if (!s) return;
+  prepState = { id: id, step: 0 };
+  renderPrep();
+};
+window.prepGo = (n) => {
+  if (!prepState) return;
+  const step = Number(n);
+  if (step < 0 || step > 2) return;
+  prepState.step = step;
+  renderPrep();
+};
+window.prepMove = (d) => {
+  if (!prepState) return;
+  window.prepGo((prepState.step || 0) + d);
+};
+window.prepFilm = () => {
+  if (!prepState) return;
+  const id = prepState.id;
+  clearPrep();
+  window.openPrompter(id);
+};
+window.closePrep = (silent) => {
+  const was = !!prepState;
+  clearPrep();
+  if (was && user && silent !== true) renderDash();
+};
 function brandMarkSvg(size) {
   size = size || 28;
   return `<svg class="brand-wave" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>`;
@@ -5373,6 +5764,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     requestFilter = opts.requestFilter || 'all';
     requestDraft = { kind: opts.kind || 'feature', body: '', handles: '' };
     moreOpen = !!opts.moreOpen;
+    clearPrep();
     resetScriptNav();
     openedIds = new Set(opts.openedIds || []);
     modalPinned = opts.autoModal === false || !!opts.modal;

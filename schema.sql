@@ -14,6 +14,7 @@ create table if not exists scripts (
   full_script    text,
   reference_clip text,                -- YouTube URL or account handle
   thumbnail_url  text,                -- optional cover/first frame; UI falls back to oEmbed or og:image. See migrations/2026-10-22_scripts_thumbnail_url.sql
+  pipeline_audit jsonb,               -- admin-only production audit. Clients never get an Audit step. See migrations/2026-10-25_scripts_pipeline_audit.sql
   camera         text,
   cta            text,
   editor_notes   text,

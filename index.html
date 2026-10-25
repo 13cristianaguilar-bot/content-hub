@@ -930,6 +930,56 @@ body.modal-open { overflow: hidden; }
   font-family: "Geist Mono", ui-monospace, monospace; color: var(--signal); font-weight: 650; flex: 0 0 auto;
 }
 .prep-kicker { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.prep-dots.is-4 button { font-size: 11px; letter-spacing: -0.03em; }
+.audit-empty { margin: 0 0 12px; font-size: 15px; line-height: 1.4; }
+.audit-flag {
+  margin: 0 0 12px; padding: 10px 12px;
+  background: var(--blush); border-top: 2px solid var(--signal);
+  font-size: 14px; line-height: 1.4;
+}
+.audit-verdict, .audit-sec { margin-top: 16px; }
+.audit-verdict {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal); padding: 12px;
+}
+.audit-verdict.is-yes { border-top-color: var(--ink); }
+.audit-sec-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.audit-sec-h h3, .audit-verdict h3 {
+  margin: 0; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--signal); font-weight: 500;
+}
+.audit-yesno {
+  margin: 8px 0 4px; font-size: 40px; line-height: 1; letter-spacing: -0.05em; font-weight: 650;
+}
+.audit-verdict.is-no .audit-yesno { color: var(--signal); }
+.audit-verdict p, .audit-row p { margin: 2px 0 0; font-size: 15px; line-height: 1.4; overflow-wrap: anywhere; }
+.audit-blockers { margin: 8px 0 0; padding-left: 1.1rem; }
+.audit-blockers li { margin: 4px 0; font-size: 14px; line-height: 1.35; }
+.audit-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal);
+  padding: 10px 12px; margin-top: 8px;
+}
+.audit-badge {
+  flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 52px; min-height: 22px; padding: 2px 6px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; font-weight: 650;
+}
+.audit-badge.is-pass { background: var(--ink); color: #fff; }
+.audit-badge.is-fail { background: var(--signal); color: #fff; }
+.audit-badge.is-gap { background: var(--blush); color: var(--signal-deep); }
+.audit-k {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 500;
+}
+.audit-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.audit-chips span { background: var(--soft); color: var(--ink); padding: 4px 8px; font-size: 13px; line-height: 1.3; }
+.audit-link {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 44px; margin-top: 8px; padding: 0 12px;
+  background: var(--ink); color: #fff; text-decoration: none;
+  font-weight: 650; letter-spacing: -0.02em;
+}
 .prep-bar {
   display: flex; gap: 8px; flex-shrink: 0; background: var(--paper); border-top: 1px solid var(--line);
   padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
@@ -1958,6 +2008,16 @@ async function fetchScripts() {
   // failure means (see afterLogin() and the realtime handler); `scripts` is left untouched.
   if (error) throw error;
   scripts = data || [];
+  // pipeline_audit is an admin production note. A client session drops it in
+  // memory so Film prep and All fields cannot render it. The Audit step is
+  // also omitted unless role is admin.
+  if (role !== 'admin') {
+    scripts.forEach(row => {
+      if (!row) return;
+      delete row.pipeline_audit;
+      delete row.admin_audit;
+    });
+  }
 }
 
 async function fetchRequests() {
@@ -5334,6 +5394,638 @@ function prepReferenceHtml(model) {
     </div>
     ${open}`;
 }
+// Admin-only production audit. Sits in front of Film prep (Reference, Notes,
+// Film) when role is admin. Client prep never includes this step, and a
+// client fetch drops pipeline_audit before render. Prefer columns that
+// already exist; pipeline_audit (or a legacy admin_audit object) fills the
+// checks Ops records by hand. An empty audit lists every missing check.
+function prepShowsAudit() {
+  return role === 'admin';
+}
+function prepPlan(showAudit) {
+  const labels = showAudit ? ['Audit', 'Reference', 'Notes', 'Film'] : ['Reference', 'Notes', 'Film'];
+  return { labels: labels, last: labels.length - 1 };
+}
+function prepContentIndex(step, showAudit) {
+  const n = Number(step);
+  const i = n === n ? n : 0;
+  if (!showAudit) return i;
+  if (i <= 0) return -1;
+  return i - 1;
+}
+function prepStepBody(s, step, showAudit) {
+  const content = prepContentIndex(step, showAudit);
+  if (content < 0) return prepAuditHtml(s);
+  return prepStepHtml(prepModel(s), content);
+}
+function auditStatus(value) {
+  const t = asText(value).trim().toLowerCase();
+  if (t === 'pass' || t === 'passed' || t === 'yes' || t === 'ok') return 'pass';
+  if (t === 'fail' || t === 'failed' || t === 'no') return 'fail';
+  if (t === 'gap' || t === 'missing') return 'gap';
+  return '';
+}
+function auditCount(n) {
+  if (typeof n === 'number' && isFinite(n)) {
+    return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  return asText(n).trim();
+}
+function auditNumLabel(n) {
+  const s = auditCount(n);
+  return s;
+}
+function auditScoreLabel(n) {
+  if (typeof n === 'number' && isFinite(n)) return String(n) + '×';
+  return asText(n).trim();
+}
+function auditList(value) {
+  if (Array.isArray(value)) return value.map(v => asText(v).trim()).filter(Boolean);
+  const t = asText(value).trim();
+  if (!t) return [];
+  return t.split(/[,·|]/).map(part => part.trim()).filter(Boolean);
+}
+function auditToolLabel(value) {
+  const raw = asText(value).trim();
+  const t = raw.toLowerCase();
+  if (!t) return '';
+  const parts = [];
+  if (/apify/.test(t)) parts.push('Apify');
+  if (/sandcastle/.test(t)) parts.push('Sandcastles');
+  if (/vault|outlier-pipeline|cached/.test(t)) parts.push('Format vault');
+  if (parts.length) return parts.join(' + ');
+  if (t === 'other') return 'Other';
+  return raw;
+}
+function auditSource(s) {
+  s = s || {};
+  let raw = s.pipeline_audit != null ? s.pipeline_audit : s.admin_audit;
+  if (typeof raw === 'string') {
+    const t = raw.trim();
+    if (!t) return { raw: {}, saved: false, broken: false };
+    try { raw = JSON.parse(t); } catch (e) { return { raw: {}, saved: false, broken: true }; }
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { raw: {}, saved: false, broken: false };
+  return { raw: raw, saved: Object.keys(raw).length > 0, broken: false };
+}
+function auditCheck(value, missingWhy) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const status = auditStatus(value.status || value.result);
+    const why = asText(value.why || value.note || value.reason).trim();
+    const detail = asText(value.ref || value.detail || value.text || '').trim();
+    if (status) return { status: status, why: why || detail || missingWhy };
+    if (why || detail) return { status: 'gap', why: 'Not scored. ' + (why || detail) };
+    return { status: 'gap', why: missingWhy };
+  }
+  const text = asText(value).trim();
+  if (!text) return { status: 'gap', why: missingWhy };
+  const lead = text.match(/^(pass|fail|gap|passed|failed)\b\s*[:\-—–]?\s*/i);
+  if (lead) {
+    const status = auditStatus(lead[1]);
+    const rest = text.slice(lead[0].length).trim();
+    return { status: status || 'gap', why: rest || missingWhy };
+  }
+  return { status: 'gap', why: 'Not scored. ' + text };
+}
+function auditFact(value, missingWhy) {
+  if (value && typeof value === 'object' && !Array.isArray(value)) return auditCheck(value, missingWhy);
+  const text = asText(value).trim();
+  if (!text) return { status: 'gap', why: missingWhy };
+  if (/^(pass|fail|gap|passed|failed)\b/i.test(text)) return auditCheck(text, missingWhy);
+  return { status: 'pass', why: text };
+}
+function parseSecondBand(text) {
+  const t = asText(text).replace(/[–—]/g, '-').trim();
+  if (!t) return null;
+  const rangeRe = /(\d{1,3}(?:\.\d+)?)\s*-\s*(\d{1,3}(?:\.\d+)?)\s*(?:s|sec|seconds)\b/gi;
+  let m;
+  while ((m = rangeRe.exec(t))) {
+    const lo = Number(m[1]);
+    const hi = Number(m[2]);
+    if (lo > 0 && hi >= lo && hi < 600) {
+      const label = (Math.round(lo) === lo ? String(lo) : String(lo)) + '–' + (Math.round(hi) === hi ? String(hi) : String(hi)) + 's';
+      return { lo: lo, hi: hi, label: label, exact: false };
+    }
+  }
+  const singleRe = /~?\s*(\d{1,3}(?:\.\d+)?)\s*(?:s|sec|seconds)\b/gi;
+  while ((m = singleRe.exec(t))) {
+    const n = Number(m[1]);
+    if (n > 0 && n < 600) return { lo: n, hi: n, label: '~' + (Math.round(n) === n ? String(n) : String(n)) + 's', exact: true };
+  }
+  return null;
+}
+function parseClockBand(text) {
+  const t = asText(text).trim();
+  if (!t) return null;
+  if (!/duration|ffprobe|length|runtime/i.test(t) && !/^\d{1,2}:\d{2}$/.test(t)) return null;
+  const m = t.match(/(\d{1,2}):(\d{2})/);
+  if (!m || Number(m[2]) > 59) return null;
+  const sec = Number(m[1]) * 60 + Number(m[2]);
+  if (!(sec > 0) || sec >= 600) return null;
+  return { lo: sec, hi: sec, label: m[1] + ':' + m[2], exact: true };
+}
+function spokenReadSeconds(s) {
+  const flow = scriptFlow(s || {});
+  const parts = [];
+  flow.forEach(sec => {
+    if (!sec || sec.kind === 'clip') return;
+    const text = asText(sec.text).trim();
+    if (!text || text === 'No script on this card.' || /^no spoken cta\b/i.test(text)) return;
+    parts.push(text);
+  });
+  const words = wordCount(parts.join(' '));
+  if (!words) return 0;
+  return Math.max(1, Math.round((words / 150) * 60));
+}
+function spokenInBand(seconds, band) {
+  if (!(seconds > 0) || !band) return '';
+  if (band.exact) {
+    const slack = Math.max(5, Math.round(band.lo * 0.15));
+    return Math.abs(seconds - band.lo) <= slack ? 'pass' : 'fail';
+  }
+  return seconds >= band.lo && seconds <= band.hi ? 'pass' : 'fail';
+}
+function auditBlob(s) {
+  s = s || {};
+  const parts = ['hook', 'full_script', 'editor_notes', 'filming_setup', 'clip_directions', 'proof_stats', 'tonality_delivery', 'cta', 'format', 'camera', 'client_feedback'].map(k => asText(s[k]));
+  const fd = fdObject(s);
+  if (fd) parts.push(asText(fd));
+  return parts.filter(Boolean).join('\n');
+}
+function auditRestricted(raw, blob) {
+  raw = raw || {};
+  if (raw.toolRestricted === true || raw.apifyRestricted === true || raw.apifyFallback === true) return true;
+  return /apify[^.\n]{0,80}(hard-?\s*limit|quota|fallback)|hard-?\s*limit[^.\n]{0,60}apify|not live-scraped|quota forced/i.test(asText(blob));
+}
+function collectConfirmGates(s, raw) {
+  const found = [];
+  const seen = {};
+  function add(text, open) {
+    const t = asText(text).replace(/\s+/g, ' ').trim();
+    if (!t) return;
+    const key = t.toLowerCase();
+    if (seen[key]) return;
+    seen[key] = true;
+    found.push({ text: t, open: open !== false });
+  }
+  const blob = auditBlob(s);
+  let m;
+  const confirmRe = /\[CONFIRM\]\s*([^\n\[]*)/gi;
+  while ((m = confirmRe.exec(blob))) add((m[1] || '').trim() || 'Confirm this before sending.', true);
+  const lineRe = /(?:^|\n)\s*CONFIRM\s*:\s*([^\n]+)/gi;
+  while ((m = lineRe.exec(blob))) add(m[1], true);
+  const boxRe = /(?:^|\n)\s*[⬜☐]\s*([^\n]+)/g;
+  while ((m = boxRe.exec(blob))) add(m[1], true);
+  const gates = raw && (raw.gates || raw.confirms);
+  if (Array.isArray(gates)) {
+    gates.forEach(g => {
+      if (g == null) return;
+      if (typeof g === 'string') { add(g, true); return; }
+      const closed = g.open === false || g.done === true || auditStatus(g.status) === 'pass';
+      add(g.item || g.text || g.label, !closed);
+    });
+  }
+  return found;
+}
+function teleprompterIssues(s) {
+  const flow = scriptFlow(s || {});
+  const bits = [];
+  flow.forEach(sec => {
+    if (!sec || sec.kind === 'clip') return;
+    const text = asText(sec.text).trim();
+    if (!text || text === 'No script on this card.' || /^no spoken cta\b/i.test(text)) return;
+    bits.push(text);
+  });
+  const spoken = bits.join('\n');
+  if (!spoken.trim()) return { empty: true, issues: [] };
+  const issues = [];
+  if (/\[CONFIRM\]/i.test(spoken)) issues.push('A [CONFIRM] marker is still in the spoken lines.');
+  if (/HOOKPOINT/i.test(spoken)) issues.push('Hookpoint spec language is in the spoken lines.');
+  if (/\b(VERBAL|VISUAL|TEXT OVERLAY|ENERGY|FRAMEWORK)\s*:/i.test(spoken)) issues.push('A stage-direction label is in the spoken lines.');
+  if (/\[[^\]]*\d{1,2}:\d{2}[^\]]*\]/.test(spoken)) issues.push('A timestamp bracket is still in the spoken lines.');
+  if (/⬜|☐/.test(spoken)) issues.push('An open checkbox is in the spoken lines.');
+  return { empty: false, issues: issues };
+}
+function auditHref(url) {
+  const info = videoInfo(url);
+  if (info && info.watch && /^https:\/\//i.test(info.watch)) {
+    return { href: info.watch, label: info.label || 'Reference' };
+  }
+  const raw = asText(url).trim();
+  const found = raw.match(/https:\/\/[^\s]+/i);
+  const href = found ? found[0].replace(/[),.;]+$/, '') : '';
+  if (!/^https:\/\//i.test(href)) return null;
+  let label = 'Reference';
+  if (/instagram\.com/i.test(href)) label = 'Instagram';
+  else if (/youtube\.com|youtu\.be/i.test(href)) label = 'YouTube';
+  else if (/tiktok\.com/i.test(href)) label = 'TikTok';
+  return { href: href, label: label };
+}
+function auditPick(obj, keys) {
+  if (!obj || typeof obj !== 'object') return undefined;
+  for (let i = 0; i < keys.length; i++) {
+    const value = obj[keys[i]];
+    if (value == null || value === '') continue;
+    return value;
+  }
+  return undefined;
+}
+function pacingWritten(s) {
+  const fd = fdObject(s);
+  return fdPick(fd, 'Pacing') || pullLabeled(s && s.filming_setup, ['pacing']) || pullLabeled(s && s.editor_notes, ['pacing']) || pullLabeled(s && s.tonality_delivery, ['pacing']);
+}
+function framingWritten(s) {
+  const fd = fdObject(s);
+  const fromFd = fdPick(fd, 'Framing');
+  if (fromFd) return fromFd;
+  const setup = parseSetup(s && s.filming_setup, s && s.camera);
+  return asText(setup.framing).trim();
+}
+function buildAudit(s) {
+  s = s || {};
+  const src = auditSource(s);
+  const raw = src.raw || {};
+  const prep = prepModel(s);
+  const fd = fdObject(s) || {};
+  const metrics = referenceMetrics(s.proof_stats, fd);
+  const blockers = [];
+  function keep(section, row) {
+    if (!row || row.status === 'pass') return row;
+    const label = section && row.label && section !== row.label ? section + ' · ' + row.label : (row.label || section);
+    blockers.push({ label: label, why: row.why, status: row.status });
+    return row;
+  }
+  if (src.broken) {
+    blockers.push({ label: 'Audit data', why: 'pipeline_audit on this row is not valid JSON.', status: 'fail' });
+  }
+
+  const formatOnCard = fdPick(fd, 'Format') || asText(s.format).trim();
+  const offerRows = [
+    { label: 'Offer', value: auditPick(raw, ['offer', 'oneLiner']), missing: 'Missing: the offer is not on this script.' },
+    { label: 'ICP', value: auditPick(raw, ['icp', 'buyer']), missing: 'Missing: who this is for is not on this script.' },
+    { label: 'Angle', value: auditPick(raw, ['angle']), missing: formatOnCard
+      ? 'Missing: the angle is not in the audit. The format on the card is "' + tightCopy(formatOnCard) + '".'
+      : 'Missing: the angle is not on this script.' },
+    { label: 'Why this angle', value: auditPick(raw, ['angleWhy', 'why', 'whyThisAngle']), missing: 'Missing: why this angle was chosen is not on this script.' },
+  ].map(item => {
+    const check = auditFact(item.value, item.missing);
+    return keep('Offer', { label: item.label, status: check.status, why: check.why });
+  });
+
+  const words = auditList(auditPick(raw, ['keywords']));
+  const path = asText(auditPick(raw, ['searchPath', 'search', 'path'])).trim();
+  const sourceNote = ((asText(s.proof_stats).match(/(?:^|\n)\s*Source\s*:\s*([^\n]+)/i) || [])[1] || '').trim();
+  const keywordRow = keep('Keywords', {
+    label: 'Keywords',
+    status: words.length ? 'pass' : 'gap',
+    why: words.length ? words.join(', ') : 'Missing: no keywords are saved for the search that found the references.',
+    chips: words,
+  });
+  const pathRow = keep('Keywords', {
+    label: 'Search path',
+    status: path ? 'pass' : 'gap',
+    why: path
+      ? path
+      : (sourceNote
+        ? 'Missing: the search path is not in the audit. The card only notes a source: ' + sourceNote + '.'
+        : 'Missing: the search path that led to the references is not on this script.'),
+  });
+
+  const given = Array.isArray(raw.refs) ? raw.refs : (Array.isArray(raw.reels) ? raw.reels : (Array.isArray(raw.references) ? raw.references : []));
+  const refItems = [];
+  given.forEach(entry => {
+    if (entry == null) return;
+    if (typeof entry === 'string') refItems.push({ url: entry });
+    else if (typeof entry === 'object') refItems.push(entry);
+  });
+  if (!refItems.length) {
+    const primary = videoInfo(s.reference_clip);
+    if (primary && primary.watch) refItems.push({ url: primary.watch, role: 'Format reference' });
+    const react = reactionClipInfo(s);
+    if (react && react.watch) refItems.push({ url: react.watch, role: 'Clip to react to' });
+  }
+  const proofBlob = [asText(s.proof_stats), asText(fdPick(fd, 'Reference Metrics')), asText(raw.toolNote), asText(raw.source), asText(raw.tool)].filter(Boolean).join('\n');
+  const proofTool = auditToolLabel(proofBlob);
+  const restricted = auditRestricted(raw, [proofBlob, asText(raw.toolNote), asText(raw.source)].join('\n'));
+  const shapedRefs = refItems.map((entry, index) => {
+    const views = entry.views != null && entry.views !== '' ? entry.views : entry.viewCount;
+    const outlier = entry.outlier != null && entry.outlier !== '' ? entry.outlier : (entry.score != null && entry.score !== '' ? entry.score : entry.xMedian);
+    return {
+      url: entry.url || entry.href || entry.link || entry.watch,
+      views: views || (index === 0 ? metrics.views : ''),
+      outlier: outlier || (index === 0 ? metrics.xMedian : ''),
+      source: entry.source || entry.tool || (index === 0 ? proofTool : ''),
+      creator: entry.creator || entry.handle,
+      role: entry.role || entry.label,
+      status: entry.status || entry.result,
+      why: entry.why || entry.note,
+    };
+  });
+  const anyStats = shapedRefs.some(entry => auditNumLabel(entry.views) || auditScoreLabel(entry.outlier));
+  const refRows = shapedRefs.map((entry, index) => {
+    const link = auditHref(entry.url);
+    const views = auditNumLabel(entry.views);
+    const outlier = auditScoreLabel(entry.outlier);
+    const source = auditToolLabel(entry.source);
+    const creator = asText(entry.creator || entry.handle).trim();
+    const roleName = asText(entry.role || entry.label).trim() || (creator ? creator : ('Reference ' + (index + 1)));
+    const explicit = auditStatus(entry.status || entry.result);
+    let status = explicit;
+    let why = asText(entry.why || entry.note).trim();
+    const bits = [];
+    if (views) bits.push(views + ' views');
+    if (outlier) bits.push(/outlier/i.test(outlier) ? outlier : outlier + ' outlier');
+    if (source) bits.push(source);
+    const meta = bits.join(' · ');
+    if (!status) {
+      if (!link) {
+        status = 'gap';
+        why = why || 'Missing: this reference has no clickable link.';
+      } else if (views || outlier) {
+        status = 'pass';
+        why = why || meta;
+      } else if (anyStats) {
+        status = 'pass';
+        why = why || 'Linked. Views and outlier are on the format reference.';
+      } else {
+        status = 'gap';
+        why = why || 'Missing: the reel link is here, but views and the outlier score are not.';
+      }
+    } else if (!why) {
+      why = meta || (link ? link.href : 'No link.');
+    }
+    return keep('References', {
+      label: roleName,
+      status: status,
+      why: why,
+      href: link ? link.href : '',
+      linkLabel: link ? ('Open ' + link.label) : '',
+      meta: meta,
+    });
+  });
+  if (!refRows.length) {
+    refRows.push(keep('References', {
+      label: 'Reference reel',
+      status: 'gap',
+      why: 'Missing: no reference reel is on this script.',
+      href: '',
+      linkLabel: '',
+      meta: '',
+    }));
+  }
+  let toolFlag = '';
+  if (restricted) {
+    const note = asText(raw.toolNote).trim();
+    const hay = proofBlob + '\n' + note;
+    const via = [];
+    if (/sandcastle/i.test(hay)) via.push('Sandcastles');
+    if (/vault|outlier-pipeline/i.test(hay)) via.push('the format vault');
+    toolFlag = 'Apify quota forced a fallback. These reels were not live-scraped with Apify'
+      + (via.length ? '. Shown from ' + via.join(' and ') + '.' : '.');
+  }
+
+  const dnaRoot = auditPick(raw, ['dna', 'formatDna', 'format_dna']);
+  const dnaObj = dnaRoot && typeof dnaRoot === 'object' && !Array.isArray(dnaRoot) ? dnaRoot : {};
+  const dnaSpec = [
+    ['hook', 'Hook', ['hook'], 'Missing: nobody marked whether the hook matches the reference.'],
+    ['components', 'Format components', ['components', 'formatComponents', 'format_components'], 'Missing: nobody marked whether the format components match the reference.'],
+    ['rehook', 'Rehook', ['rehook', 'reHook'], 'Missing: nobody marked whether the rehook matches the reference.'],
+    ['cadence', 'Cadence', ['cadence'], 'Missing: nobody marked whether the cadence matches the reference.'],
+    ['length', 'Length vs ref', ['length', 'lengthVsRef', 'length_vs_ref'], 'Missing: nobody marked length against the reference.'],
+    ['idea', 'Idea', ['idea'], 'Missing: nobody marked whether the idea matches the reference.'],
+    ['reward', 'Reward', ['reward'], 'Missing: nobody marked whether the reward matches the reference.'],
+    ['emotionalNext', 'Emotional reward / next step', ['emotionalNext', 'emotional_next', 'emotional', 'nextStep'], 'Missing: nobody marked the emotional reward or next step against the reference.'],
+  ];
+  const dnaRows = dnaSpec.map(spec => {
+    const check = auditCheck(auditPick(dnaObj, spec[2]), spec[3]);
+    return keep('Format DNA', { label: spec[1], status: check.status, why: check.why });
+  });
+
+  const spokenObj = raw.spoken && typeof raw.spoken === 'object' && !Array.isArray(raw.spoken) ? raw.spoken : {};
+  let seconds = Number(spokenObj.scriptSeconds);
+  const timedByOps = seconds > 0 && seconds < 600;
+  if (!timedByOps) seconds = spokenReadSeconds(s);
+  let band = null;
+  const loHi = Number(spokenObj.lo);
+  const hiHi = Number(spokenObj.hi);
+  if (loHi > 0 && hiHi >= loHi && hiHi < 600) {
+    band = { lo: loHi, hi: hiHi, label: loHi + '–' + hiHi + 's', exact: false, kind: 'audit' };
+  }
+  const bandText = asText(auditPick(spokenObj, ['refBand', 'band', 'ffprobeBand'])).trim();
+  if (!band && bandText) {
+    const parsed = parseSecondBand(bandText) || parseClockBand(bandText);
+    if (parsed) band = Object.assign({ kind: 'audit' }, parsed);
+    else band = { kind: 'unparsed', label: bandText, lo: 0, hi: 0, exact: false };
+  }
+  if (!band) {
+    const ff = Number(spokenObj.ffprobeSeconds != null ? spokenObj.ffprobeSeconds : spokenObj.ffprobe);
+    if (ff > 0 && ff < 600) band = { lo: ff, hi: ff, label: Math.round(ff) + 's ffprobe', exact: true, kind: 'ffprobe' };
+  }
+  if (!band) {
+    const dur = asText(s.proof_stats).match(/Duration\s*:\s*([^\n]+)/i);
+    if (dur) {
+      const parsed = parseSecondBand(dur[1]) || parseClockBand('Duration ' + dur[1]);
+      if (parsed) band = Object.assign({ kind: 'duration' }, parsed);
+    }
+  }
+  const pacingText = pacingWritten(s);
+  const pacingBand = !band && pacingText && /spoken|ffprobe|duration|~\s*\d|\d\s*-\s*\d/i.test(pacingText)
+    ? parseSecondBand(pacingText)
+    : null;
+  const explicitSpoken = auditStatus(spokenObj.status);
+  const explicitWhy = asText(spokenObj.why).trim();
+  const lengthLead = !(seconds > 0)
+    ? 'No spoken lines to time.'
+    : ((timedByOps ? 'Spoken length is ' : 'Estimated spoken length is ') + Math.round(seconds) + 's'
+      + (timedByOps ? '' : ' (from the words on the teleprompter).'));
+  let spokenStatus = explicitSpoken;
+  let spokenWhy = explicitWhy;
+  if (band && band.kind === 'unparsed') {
+    if (!spokenStatus) spokenStatus = 'gap';
+    if (!spokenWhy) spokenWhy = lengthLead + ' The saved band "' + band.label + '" is not a seconds range.';
+  } else if (band && (band.kind === 'audit' || band.kind === 'ffprobe' || band.kind === 'duration')) {
+    const judged = spokenInBand(seconds, band);
+    if (!spokenStatus) spokenStatus = judged || 'gap';
+    if (!spokenWhy) {
+      const ffprobeBit = Number(spokenObj.ffprobeSeconds) > 0 ? ' Ffprobe on the reference is ' + Math.round(Number(spokenObj.ffprobeSeconds)) + 's.' : '';
+      if (!(seconds > 0)) spokenWhy = 'No spoken lines to compare with the reference band ' + band.label + '.';
+      else if (spokenStatus === 'pass') spokenWhy = lengthLead + ' That sits inside the reference band ' + band.label + '.' + ffprobeBit;
+      else if (spokenStatus === 'fail') spokenWhy = lengthLead + ' That is outside the reference band ' + band.label + '.' + ffprobeBit;
+      else spokenWhy = lengthLead + ' Reference band ' + band.label + '.' + ffprobeBit;
+    }
+  } else {
+    if (!spokenStatus) spokenStatus = 'gap';
+    if (!spokenWhy) {
+      spokenWhy = lengthLead + (pacingBand ? ' Written pacing says ' + pacingBand.label + '.' : '') + ' No reference ffprobe band is saved.';
+    }
+  }
+  const spokenRow = keep('Spoken length', { label: 'Spoken vs reference', status: spokenStatus, why: spokenWhy.trim() });
+
+  const formatWritten = formatOnCard;
+  let formatStatus = 'gap';
+  let formatWhy = 'Missing: format is not written.';
+  if (prep.formatPrompt) {
+    formatStatus = 'fail';
+    formatWhy = 'Film prep would ask the client to add a format.';
+  } else if (formatWritten) {
+    formatStatus = 'pass';
+    formatWhy = 'Format is on the reference step: ' + tightCopy(formatWritten);
+  }
+  const paceText = pacingWritten(s);
+  let paceStatus = 'gap';
+  let paceWhy = 'Missing: pacing is not written.';
+  if (prep.pacingPrompt) {
+    paceStatus = 'fail';
+    paceWhy = 'Film prep would ask the client to add pacing.';
+  } else if (paceText) {
+    paceStatus = 'pass';
+    paceWhy = 'Pacing is on the reference step: ' + tightCopy(paceText);
+  } else if (prep.pacing) {
+    paceStatus = 'gap';
+    paceWhy = 'Pacing on Film prep is only a guess ("' + tightCopy(prep.pacing) + '"), not written by Ops.';
+  }
+  const frameText = framingWritten(s);
+  let frameStatus = 'gap';
+  let frameWhy = 'Missing: framing is not written.';
+  if (prep.framingPrompt) {
+    frameStatus = 'fail';
+    frameWhy = 'Film prep would ask the client to add framing.';
+  } else if (frameText) {
+    frameStatus = 'pass';
+    frameWhy = 'Framing is on the reference step: ' + tightCopy(frameText);
+  } else if (prep.framing) {
+    frameStatus = 'gap';
+    frameWhy = 'Framing on Film prep is only a guess ("' + tightCopy(prep.framing) + '"), not written by Ops.';
+  }
+  const hasMetricNumbers = !!(metrics.views || metrics.xMedian);
+  let metricStatus = 'gap';
+  let metricWhy = 'Missing: no reference metrics are above the fold.';
+  if (hasMetricNumbers) {
+    metricStatus = 'pass';
+    const metricBits = [];
+    if (metrics.views) metricBits.push(metrics.views + ' views');
+    if (metrics.xMedian) metricBits.push(metrics.xMedian);
+    metricWhy = 'Views and outlier are on the reference step: ' + metricBits.join(' · ') + '.';
+  } else if (prep.showMetrics) {
+    metricWhy = 'Missing: the reference step is above the fold, but views and outlier are blank.';
+  }
+  const clean = teleprompterIssues(s);
+  let cleanStatus = 'gap';
+  let cleanWhy = 'Missing: there are no spoken lines for the teleprompter.';
+  if (!clean.empty && clean.issues.length) {
+    cleanStatus = 'fail';
+    cleanWhy = clean.issues[0];
+  } else if (!clean.empty) {
+    cleanStatus = 'pass';
+    cleanWhy = 'The teleprompter reads the hook, the body, and the CTA. No stage directions in the spoken lines.';
+  }
+  const prepRows = [
+    keep('Film prep', { label: 'Format', status: formatStatus, why: formatWhy }),
+    keep('Film prep', { label: 'Pacing', status: paceStatus, why: paceWhy }),
+    keep('Film prep', { label: 'Framing', status: frameStatus, why: frameWhy }),
+    keep('Film prep', { label: 'Reference metrics', status: metricStatus, why: metricWhy }),
+    keep('Film prep', { label: 'Teleprompter', status: cleanStatus, why: cleanWhy }),
+  ];
+
+  const gates = collectConfirmGates(s, raw);
+  const openGates = gates.filter(g => g.open);
+  const gateRows = [];
+  if (!gates.length) {
+    gateRows.push({ label: 'Open gates', status: 'pass', why: 'No open [CONFIRM] items on this script.' });
+  } else {
+    gates.forEach(g => {
+      gateRows.push(keep('Gates', {
+        label: g.open ? 'Open' : 'Closed',
+        status: g.open ? 'fail' : 'pass',
+        why: g.text,
+      }));
+    });
+  }
+
+  const failCount = blockers.filter(b => b.status === 'fail').length;
+  const gapCount = blockers.filter(b => b.status === 'gap').length;
+  let yes = blockers.length === 0;
+  let readyNote = '';
+  if (raw.ready === true && blockers.length) {
+    yes = false;
+    readyNote = 'The saved audit says ready, but open checks still block a send.';
+  } else if (raw.ready === false && blockers.length === 0) {
+    yes = false;
+    readyNote = asText(raw.readyWhy).trim() || 'Ops marked this not ready to send.';
+  } else if (!yes) {
+    readyNote = asText(raw.readyWhy).trim();
+  }
+  let summary = yes
+    ? 'Ready to send. Nothing is blocking the client.'
+    : (failCount && gapCount
+      ? 'Not ready to send. ' + failCount + ' failed and ' + gapCount + ' still missing.'
+      : (failCount
+        ? 'Not ready to send. ' + failCount + ' failed.'
+        : 'Not ready to send. ' + gapCount + ' checks are still missing.'));
+  if (readyNote) summary = summary + ' ' + readyNote;
+
+  return {
+    saved: src.saved,
+    broken: src.broken,
+    ready: { yes: yes, status: yes ? 'pass' : 'fail', why: summary, note: readyNote, blockers: blockers, failCount: failCount, gapCount: gapCount },
+    offer: { rows: offerRows },
+    keywords: { rows: [keywordRow, pathRow] },
+    refs: { rows: refRows, toolFlag: toolFlag },
+    dna: { rows: dnaRows },
+    spoken: spokenRow,
+    prep: { rows: prepRows },
+    gates: { rows: gateRows, openCount: openGates.length },
+  };
+}
+function auditBadge(status) {
+  const s = status === 'pass' || status === 'fail' ? status : 'gap';
+  const label = s === 'pass' ? 'PASS' : (s === 'fail' ? 'FAIL' : 'GAP');
+  return '<span class="audit-badge is-' + s + '">' + label + '</span>';
+}
+function auditSection(title, rows) {
+  const list = rows || [];
+  const status = list.some(r => r.status === 'fail') ? 'fail' : (list.some(r => r.status !== 'pass') ? 'gap' : 'pass');
+  const body = list.map(auditRowHtml).join('');
+  return '<section class="audit-sec"><div class="audit-sec-h"><h3>' + escHtml(title) + '</h3>' + auditBadge(status) + '</div>' + body + '</section>';
+}
+function auditRowHtml(row) {
+  row = row || {};
+  const chips = (row.chips || []).map(chip => '<span>' + escHtml(chip) + '</span>').join('');
+  const link = row.href
+    ? '<a class="audit-link" href="' + escHtml(row.href) + '" target="_blank" rel="noopener noreferrer">' + escHtml(row.linkLabel || 'Open reference') + '</a><p class="prep-url">' + escHtml(row.href) + '</p>'
+    : '';
+  const meta = row.meta && row.why !== row.meta ? '<p>' + escHtml(row.meta) + '</p>' : '';
+  return '<div class="audit-row">' + auditBadge(row.status) + '<div><div class="audit-k">' + escHtml(row.label || 'Check') + '</div><p>' + escHtml(row.why || '') + '</p>' + meta + (chips ? '<div class="audit-chips">' + chips + '</div>' : '') + link + '</div></div>';
+}
+function prepAuditHtml(s) {
+  const audit = buildAudit(s);
+  const ready = audit.ready || { yes: false, blockers: [], why: '' };
+  const items = (ready.blockers || []).map(b => '<li><b>' + escHtml(b.label) + '</b> — ' + escHtml(b.why) + '</li>').join('');
+  let banner = '';
+  if (audit.broken) banner = '<p class="audit-flag">pipeline_audit on this row is not valid JSON. Every check below is missing until Ops saves it again.</p>';
+  else if (!audit.saved) banner = '<p class="audit-empty">No production audit is saved on this script yet. Each missing check is marked GAP.</p>';
+  const flag = audit.refs && audit.refs.toolFlag ? '<p class="audit-flag">' + escHtml(audit.refs.toolFlag) + '</p>' : '';
+  return ''
+    + '<p class="eyebrow">Audit · Admin only</p>'
+    + '<h2 id="prep-title">How we built this</h2>'
+    + '<p class="prep-lead">What went into this script, and what is still open before it goes to the client. Clients never see this step.</p>'
+    + banner
+    + '<section class="audit-verdict ' + (ready.yes ? 'is-yes' : 'is-no') + '" aria-label="Ready for client send">'
+    + '<div class="audit-sec-h"><h3>Ready for client send</h3>' + auditBadge(ready.yes ? 'pass' : 'fail') + '</div>'
+    + '<p class="audit-yesno">' + (ready.yes ? 'Yes' : 'No') + '</p>'
+    + '<p>' + escHtml(ready.why || '') + '</p>'
+    + (items ? '<ul class="audit-blockers">' + items + '</ul>' : '')
+    + '</section>'
+    + auditSection('Offer, buyer, angle', audit.offer.rows)
+    + auditSection('Keywords and search path', audit.keywords.rows)
+    + flag
+    + auditSection('Reference reels', audit.refs.rows)
+    + auditSection('Format DNA', audit.dna.rows)
+    + auditSection('Spoken length vs reference', [audit.spoken])
+    + auditSection('Film prep completeness', audit.prep.rows)
+    + auditSection('Open gates', audit.gates.rows);
+}
+
 function prepStepHtml(model, step) {
   if (step === 0) return prepReferenceHtml(model);
   if (step === 1) {
@@ -5384,22 +6076,28 @@ function renderPrep() {
   const root = document.getElementById('prep-root');
   const s = prepState && scripts.find(x => x.id === prepState.id);
   if (!root || !s) { clearPrep(); return; }
-  const step = prepState.step || 0;
+  const showAudit = prepShowsAudit();
+  const plan = prepPlan(showAudit);
+  let step = prepState.step || 0;
+  if (step < 0) step = 0;
+  if (step > plan.last) step = plan.last;
+  prepState.step = step;
   const model = prepModel(s);
-  const duo = step === 0 && !!model.react;
-  const labels = ['Reference', 'Notes', 'Film'];
-  const dots = labels.map((label, i) => {
+  const content = prepContentIndex(step, showAudit);
+  const duo = content === 0 && !!model.react;
+  const dots = plan.labels.map((label, i) => {
     const cls = i === step ? 'is-on' : (i < step ? 'is-done' : '');
     return `<button type="button" class="${cls}" role="tab" aria-selected="${i === step ? 'true' : 'false'}" onclick="window.prepGo(${i})"><span class="prep-dot" aria-hidden="true"></span>${label}</button>`;
   }).join('');
-  const forward = step >= 2
+  const forward = step >= plan.last
     ? '<button type="button" class="prep-go" onclick="window.prepFilm()">OK, I\'m going to film</button>'
     : '<button type="button" class="prep-next" onclick="window.prepMove(1)">Next</button>';
+  const body = content < 0 ? prepAuditHtml(s) : prepStepHtml(model, content);
   root.innerHTML = `<div id="prep"${duo ? ' class="is-duo"' : ''} role="dialog" aria-modal="true" aria-labelledby="prep-title">
     <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
-    <div class="prep-dots" role="tablist" aria-label="Prep steps">${dots}</div>
+    <div class="prep-dots${plan.labels.length > 3 ? ' is-4' : ''}" role="tablist" aria-label="Prep steps">${dots}</div>
     <p class="prep-which">${escHtml(model.title)}</p>
-    <div class="prep-scroll" id="prep-scroll">${prepStepHtml(model, step)}</div>
+    <div class="prep-scroll" id="prep-scroll">${body}</div>
     <div class="prep-bar">
       <button type="button" class="prep-back" ${step === 0 ? 'disabled' : ''} onclick="window.prepMove(-1)">Back</button>
       ${forward}
@@ -5417,8 +6115,9 @@ window.openPrep = (id) => {
 };
 window.prepGo = (n) => {
   if (!prepState) return;
+  const plan = prepPlan(prepShowsAudit());
   const step = Number(n);
-  if (step < 0 || step > 2) return;
+  if (step < 0 || step > plan.last) return;
   prepState.step = step;
   renderPrep();
 };
@@ -6940,9 +7639,16 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     opts = opts || {};
     window.__previewLock = true;
     previewMode = true;
-    scripts = rows;
+    scripts = rows || [];
     user = opts.user || { id: 'preview-user', email: 'preview@localhost' };
     role = opts.role || 'admin';
+    if (role !== 'admin') {
+      scripts.forEach(row => {
+        if (!row) return;
+        delete row.pipeline_audit;
+        delete row.admin_audit;
+      });
+    }
     mySlug = opts.mySlug || null;
     previewSlug = opts.previewing ? (opts.viewSlug || null) : null;
     viewAsOpen = !!opts.viewAsOpen;

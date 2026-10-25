@@ -26,7 +26,7 @@ const names = [
   'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
-  'asText', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
+  'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
   'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
   'clipKey', 'sameClip', 'formatPrinciples', 'tightCopy',
@@ -34,6 +34,13 @@ const names = [
   'fdPick', 'referenceMetrics', 'derivePrepPacing', 'derivePrepFraming', 'prepModel',
   'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink',
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
+  'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepStepBody',
+  'auditStatus', 'auditCount', 'auditNumLabel', 'auditScoreLabel', 'auditList', 'auditToolLabel',
+  'auditSource', 'auditCheck', 'auditFact', 'parseSecondBand', 'parseClockBand',
+  'spokenReadSeconds', 'spokenInBand', 'auditBlob', 'auditRestricted',
+  'collectConfirmGates', 'teleprompterIssues', 'auditHref', 'auditPick',
+  'pacingWritten', 'framingWritten', 'buildAudit',
+  'auditBadge', 'auditSection', 'auditRowHtml', 'prepAuditHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -45,6 +52,7 @@ const src = [
   "const WALKTHROUGH_VIDEO_URL = '';",
   "const CLIENTS = { jan: { name: 'Jan Zands', label: 'Jan' } };",
   'let prepState = null;',
+  "var role = 'client';",
   ...names.map(extract),
 ].join('\n');
 const ctx = {};
@@ -628,5 +636,247 @@ assert.strictEqual(parts.conference[1][0].batch, 'CONFERENCE · interviews');
 assert.strictEqual(parts.new.length, 1);
 assert.strictEqual(parts.new[0][0].batch, 'CORE weekly');
 assert.strictEqual(parts.other.length, 2);
+
+assert.strictEqual(ctx.prepPlan(false).labels.join('|'), 'Reference|Notes|Film');
+assert.strictEqual(ctx.prepPlan(false).last, 2);
+assert.strictEqual(ctx.prepPlan(true).labels.join('|'), 'Audit|Reference|Notes|Film');
+assert.strictEqual(ctx.prepPlan(true).last, 3);
+assert.strictEqual(ctx.prepContentIndex(0, false), 0);
+assert.strictEqual(ctx.prepContentIndex(1, false), 1);
+assert.strictEqual(ctx.prepContentIndex(2, false), 2);
+assert.strictEqual(ctx.prepContentIndex(0, true), -1);
+assert.strictEqual(ctx.prepContentIndex(1, true), 0);
+assert.strictEqual(ctx.prepContentIndex(2, true), 1);
+assert.strictEqual(ctx.prepContentIndex(3, true), 2);
+ctx.role = 'client';
+assert.strictEqual(ctx.prepShowsAudit(), false);
+ctx.role = 'admin';
+assert.strictEqual(ctx.prepShowsAudit(), true);
+ctx.role = 'client';
+
+const clientBody = ctx.prepStepBody(reaction, 0, false);
+assert.strictEqual(clientBody, ctx.prepStepHtml(ctx.prepModel(reaction), 0));
+assert.ok(clientBody.includes('Watch the reference'));
+assert.ok(!clientBody.includes('How we built this'));
+assert.ok(!clientBody.includes('Ready for client send'));
+assert.strictEqual(ctx.prepStepBody(reaction, 1, true), ctx.prepStepHtml(ctx.prepModel(reaction), 0));
+assert.strictEqual(ctx.prepStepBody(reaction, 2, true), ctx.prepStepHtml(ctx.prepModel(reaction), 1));
+assert.strictEqual(ctx.prepStepBody(reaction, 3, true), ctx.prepStepHtml(ctx.prepModel(reaction), 2));
+
+const emptyAudit = ctx.buildAudit({ title: 'Bare audit' });
+assert.strictEqual(emptyAudit.saved, false);
+assert.strictEqual(emptyAudit.ready.yes, false);
+assert.ok(emptyAudit.ready.gapCount > 0);
+const emptyLabels = emptyAudit.ready.blockers.map(b => b.label);
+assert.ok(emptyLabels.some(l => l.indexOf('Offer') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('ICP') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Why this angle') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Keywords') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Search path') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Hook') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Format components') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Rehook') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Cadence') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Length vs ref') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Emotional reward') !== -1));
+assert.ok(emptyLabels.some(l => l.indexOf('Spoken') !== -1));
+assert.strictEqual(emptyAudit.gates.rows[0].status, 'pass');
+assert.ok(/No open \[CONFIRM\]/.test(emptyAudit.gates.rows[0].why));
+const emptyHtml = ctx.prepAuditHtml({ title: 'Bare audit' });
+assert.ok(emptyHtml.includes('How we built this'));
+assert.ok(emptyHtml.includes('No production audit is saved'));
+assert.ok(emptyHtml.includes('>No<'));
+assert.ok(emptyHtml.includes('GAP'));
+assert.ok(emptyHtml.includes('Clients never see this step'));
+assert.ok(!emptyHtml.includes('audit-link'));
+
+const words = 'one two three four five six seven eight nine ten '.repeat(4).trim();
+assert.strictEqual(ctx.spokenReadSeconds({ hook: words, full_script: '', cta: '' }), 16);
+assert.strictEqual(ctx.parseSecondBand('Spoken ~100–105s. 0–4s hook.').label, '100–105s');
+assert.strictEqual(ctx.parseSecondBand('vertical 9:16'), null);
+assert.strictEqual(ctx.parseClockBand('Duration: 1:05').lo, 65);
+assert.strictEqual(ctx.spokenInBand(16, { lo: 10, hi: 12, exact: false }), 'fail');
+assert.strictEqual(ctx.spokenInBand(16, { lo: 10, hi: 20, exact: false }), 'pass');
+
+const filled = {
+  id: 'audit-1',
+  title: 'System, not more ideas',
+  client_slug: 'jan',
+  format: 'Talking head',
+  hook: words,
+  full_script: 'The body stays on the idea and does not add a second story.',
+  cta: 'Comment SYSTEM.',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  camera: 'Phone vertical 9:16, eye level.',
+  filming_setup: 'FRAMING: Mid talking-head at a desk.',
+  filming_direction: {
+    Format: 'Numbered-list talking-head.',
+    Pacing: 'Spoken ~40-55s. One beat.',
+    Framing: 'Mid talking-head, vertical 9:16.',
+    'Reference Metrics': '109,468 views · 6.6x Apify median',
+  },
+  proof_stats: '109,468 views\nOutlier / x-median: 6.6x Apify median\nSource: Apify Oct 23.',
+  pipeline_audit: {
+    offer: 'A film-ready system, not another tip.',
+    icp: 'Founders who already know the story.',
+    angle: 'You do not need more ideas.',
+    angleWhy: 'The buyer is drowning in tips. The angle names the gap.',
+    keywords: ['founder talking head', 'content system'],
+    searchPath: 'Apify keyword search on founder talking-head, then kept ranks at or above 3x.',
+    refs: [{
+      url: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+      views: 109468,
+      outlier: '6.6x',
+      source: 'apify',
+      creator: '@frazerbrookesonline',
+    }],
+    dna: {
+      hook: { status: 'pass', why: 'First line keeps the reference hook.' },
+      components: { status: 'pass', why: 'Talking head, one idea, then the ask.' },
+      rehook: { status: 'pass', why: 'The turn is the second sentence.' },
+      cadence: { status: 'pass', why: 'One beat, no extra story.' },
+      length: { status: 'pass', why: 'Inside the reference band.' },
+      idea: { status: 'pass', why: 'Same idea, their buyer.' },
+      reward: { status: 'pass', why: 'One usable distinction.' },
+      emotionalNext: { status: 'fail', why: 'The next step is harder than the reference.' },
+    },
+    spoken: { scriptSeconds: 46, refBand: '40-55s', ffprobeSeconds: 48, status: 'pass', why: 'Spoken 46s sits inside 40–55s. Ffprobe is 48s.' },
+    gates: [],
+    ready: false,
+    readyWhy: 'The next step is still harder than the reference.',
+  },
+};
+const built = ctx.buildAudit(filled);
+assert.strictEqual(built.saved, true);
+assert.strictEqual(built.ready.yes, false);
+assert.ok(built.ready.blockers.some(b => /Emotional reward/.test(b.label) && b.status === 'fail'));
+assert.strictEqual(built.offer.rows[0].status, 'pass');
+assert.strictEqual(built.keywords.rows[0].status, 'pass');
+assert.strictEqual(built.keywords.rows[1].status, 'pass');
+assert.strictEqual(built.refs.rows[0].status, 'pass');
+assert.strictEqual(built.refs.rows[0].href, 'https://www.instagram.com/reel/DUIafE1DJqb/');
+assert.strictEqual(built.spoken.status, 'pass');
+assert.ok(built.prep.rows.every(r => r.status === 'pass'));
+assert.strictEqual(built.gates.openCount, 0);
+const filledHtml = ctx.prepAuditHtml(filled);
+assert.ok(filledHtml.includes('https://www.instagram.com/reel/DUIafE1DJqb/'));
+assert.ok(filledHtml.includes('audit-link'));
+assert.ok(filledHtml.includes('Open Instagram'));
+assert.ok(filledHtml.includes('109,468'));
+assert.ok(filledHtml.includes('Apify'));
+assert.ok(filledHtml.includes('>PASS<'));
+assert.ok(filledHtml.includes('>FAIL<'));
+assert.ok(filledHtml.includes('The next step is harder than the reference.'));
+assert.ok(filledHtml.includes('founder talking head'));
+assert.ok(!filledHtml.includes('No production audit is saved'));
+assert.strictEqual(ctx.prepStepHtml(ctx.prepModel(filled), 0).includes('How we built this'), false);
+
+const fallback = ctx.buildAudit({
+  title: 'Fallback reel',
+  reference_clip: 'https://www.instagram.com/reel/DdbzuysjzzD/',
+  hook: 'I do not care if you post every day.',
+  full_script: 'Half of you will disagree. Here is the reason.',
+  cta: 'Save this.',
+  format: 'Talking head',
+  filming_direction: { Format: 'Contrarian talking-head.', Pacing: 'Spoken ~30-45s.', Framing: 'Handheld selfie, vertical 9:16.' },
+  proof_stats: '7,577,702 views\nOutlier / x-median: 1159.2x Sandcastles\nSource: Format vault. Apify monthly hard-limit exceeded — not live-scraped.',
+  pipeline_audit: {
+    offer: 'Offer',
+    icp: 'Buyer',
+    angle: 'Angle',
+    angleWhy: 'Because the format already printed.',
+    keywords: ['contrarian'],
+    searchPath: 'Vault lookup after Apify quota.',
+    toolRestricted: true,
+    toolNote: 'Apify monthly hard-limit. Fell back to Sandcastles.',
+    dna: {
+      hook: 'pass — opener matches',
+      components: 'pass — talking head plus one claim',
+      rehook: 'pass — half will disagree',
+      cadence: 'pass — claim then reason',
+      length: 'pass — inside 30-45s',
+      idea: 'pass — same idea',
+      reward: 'pass — relief',
+      emotionalNext: 'pass — save',
+    },
+    spoken: { scriptSeconds: 38, refBand: '30-45s', ffprobeSeconds: 38 },
+  },
+});
+assert.ok(fallback.refs.toolFlag.includes('Apify quota forced a fallback'));
+assert.ok(/Sandcastles/.test(fallback.refs.toolFlag));
+assert.strictEqual(fallback.refs.rows[0].status, 'pass');
+assert.ok(/Sandcastles/.test(fallback.refs.rows[0].meta));
+assert.strictEqual(fallback.dna.rows.every(r => r.status === 'pass'), true);
+assert.strictEqual(fallback.spoken.status, 'pass');
+const fallbackHtml = ctx.prepAuditHtml({
+  title: 'Fallback reel',
+  reference_clip: 'https://www.instagram.com/reel/DdbzuysjzzD/',
+  hook: 'I do not care if you post every day.',
+  full_script: 'Half of you will disagree. Here is the reason.',
+  cta: 'Save this.',
+  format: 'Talking head',
+  filming_direction: { Format: 'Contrarian talking-head.', Pacing: 'Spoken ~30-45s.', Framing: 'Handheld selfie, vertical 9:16.' },
+  proof_stats: '7,577,702 views\nOutlier / x-median: 1159.2x Sandcastles\nSource: Format vault. Apify monthly hard-limit exceeded — not live-scraped.',
+  pipeline_audit: fallback && {
+    offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because the format already printed.',
+    keywords: ['contrarian'], searchPath: 'Vault lookup after Apify quota.', toolRestricted: true,
+    toolNote: 'Apify monthly hard-limit. Fell back to Sandcastles.',
+    dna: { hook: 'pass — opener matches', components: 'pass — talking head plus one claim', rehook: 'pass — half will disagree', cadence: 'pass — claim then reason', length: 'pass — inside 30-45s', idea: 'pass — same idea', reward: 'pass — relief', emotionalNext: 'pass — save' },
+    spoken: { scriptSeconds: 38, refBand: '30-45s', ffprobeSeconds: 38 },
+  },
+});
+assert.ok(fallbackHtml.includes('Apify quota forced a fallback'));
+assert.ok(fallbackHtml.includes('https://www.instagram.com/reel/DdbzuysjzzD/'));
+
+const longSpoken = ctx.buildAudit({
+  title: 'Too long',
+  hook: words + ' ' + words,
+  full_script: words,
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  pipeline_audit: { spoken: { refBand: '10-12s', ffprobeSeconds: 11 } },
+});
+assert.strictEqual(longSpoken.spoken.status, 'fail');
+assert.ok(/outside the reference band 10–12s/.test(longSpoken.spoken.why));
+
+const gated = ctx.buildAudit({
+  title: 'Needs a number',
+  hook: 'The number is the hook.',
+  full_script: 'Say the real MRR.',
+  editor_notes: '[CONFIRM] the MRR number before this goes to the client.\n⬜ Check the filming angle.',
+  pipeline_audit: { gates: [{ item: 'Legal name of the offer', open: false }] },
+});
+assert.strictEqual(gated.gates.openCount, 2);
+assert.ok(gated.gates.rows.some(r => r.status === 'fail' && /MRR number/.test(r.why)));
+assert.ok(gated.gates.rows.some(r => r.status === 'fail' && /filming angle/.test(r.why)));
+assert.ok(gated.gates.rows.some(r => r.status === 'pass' && /Legal name/.test(r.why)));
+assert.strictEqual(ctx.teleprompterIssues({
+  hook: 'Clean hook.',
+  full_script: 'Clean body.',
+  cta: 'Comment GO.',
+}).issues.length, 0);
+assert.ok(ctx.teleprompterIssues({
+  hook: '[CONFIRM] say the number',
+  full_script: 'Body.',
+}).issues.length > 0);
+
+const legacy = ctx.buildAudit({
+  title: 'Legacy key',
+  admin_audit: '{"offer":"Legacy offer","icp":"Legacy buyer","angle":"Legacy angle","angleWhy":"Because."}',
+});
+assert.strictEqual(legacy.saved, true);
+assert.strictEqual(legacy.offer.rows[0].status, 'pass');
+assert.strictEqual(legacy.offer.rows[0].why, 'Legacy offer');
+const broken = ctx.buildAudit({ title: 'Broken', pipeline_audit: '{not json' });
+assert.strictEqual(broken.broken, true);
+assert.ok(broken.ready.blockers.some(b => /not valid JSON/.test(b.why)));
+assert.ok(ctx.prepAuditHtml({ title: 'Broken', pipeline_audit: '{not json' }).includes('not valid JSON'));
+
+const sourceOnly = ctx.buildAudit({
+  title: 'Source note only',
+  proof_stats: 'Source: Apify Oct 23. REPLACED — old ref.',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+});
+assert.strictEqual(sourceOnly.keywords.rows[1].status, 'gap');
+assert.ok(/Apify Oct 23/.test(sourceOnly.keywords.rows[1].why));
 
 console.log('hub-logic tests passed');

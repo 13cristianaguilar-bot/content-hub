@@ -37,10 +37,12 @@ const names = [
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepStepBody',
   'auditStatus', 'auditCount', 'auditNumLabel', 'auditScoreLabel', 'auditList', 'auditToolLabel',
   'auditSource', 'auditCheck', 'auditFact', 'parseSecondBand', 'parseClockBand',
-  'spokenReadSeconds', 'spokenInBand', 'auditBlob', 'auditRestricted',
+  'spokenReadSeconds', 'spokenInBand', 'auditBlob', 'auditRestrictYes', 'auditRestricted',
   'collectConfirmGates', 'teleprompterIssues', 'auditHref', 'auditPick',
-  'pacingWritten', 'framingWritten', 'buildAudit',
-  'auditBadge', 'auditSection', 'auditRowHtml', 'prepAuditHtml',
+  'pacingWritten', 'framingWritten', 'parseLegacyAudit', 'unpackAudit', 'auditOwner', 'gateFromText', 'buildAudit',
+  'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
+  'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
+  'prepAuditHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -878,5 +880,344 @@ const sourceOnly = ctx.buildAudit({
 });
 assert.strictEqual(sourceOnly.keywords.rows[1].status, 'gap');
 assert.ok(/Apify Oct 23/.test(sourceOnly.keywords.rows[1].why));
+
+assert.strictEqual(ctx.auditStatus('SOFT'), 'soft_pass');
+assert.strictEqual(ctx.auditStatus('SOFT PASS'), 'soft_pass');
+assert.strictEqual(ctx.auditStatus('HOLD'), 'hold');
+assert.strictEqual(ctx.auditStatus('PASS (top of band)'), 'pass');
+assert.strictEqual(ctx.auditStatus('PASS (soft audience)'), 'soft_pass');
+assert.strictEqual(ctx.auditStatus('PASS-adjacent — grant seekers'), 'soft_pass');
+assert.strictEqual(ctx.auditStatus('Directional PASS (fundraising creators)'), 'soft_pass');
+assert.notStrictEqual(ctx.auditStatus('SOFT'), 'pass');
+assert.notStrictEqual(ctx.auditStatus('HOLD'), 'pass');
+assert.strictEqual(ctx.auditCheck(['SOFT', 'Left long on purpose.'], 'missing').status, 'soft_pass');
+assert.strictEqual(ctx.auditCheck(['SOFT', 'Left long on purpose.'], 'missing').why, 'Left long on purpose.');
+assert.strictEqual(ctx.auditRollup([{ status: 'pass' }, { status: 'soft_pass' }]), 'soft_pass');
+assert.strictEqual(ctx.auditRollup([{ status: 'soft_pass' }, { status: 'hold' }]), 'hold');
+assert.strictEqual(ctx.auditRollup([{ status: 'hold' }, { status: 'fail' }]), 'fail');
+
+const dnaPass = {
+  hook: { status: 'pass', why: 'Hook matches.' },
+  components: { status: 'pass', why: 'Components match.' },
+  rehook: { status: 'pass', why: 'Rehook matches.' },
+  cadence: { status: 'pass', why: 'Cadence matches.' },
+  length: { status: 'pass', why: 'Inside the band.' },
+  idea: { status: 'pass', why: 'Same idea.' },
+  reward: { status: 'pass', why: 'Reward matches.' },
+  emotionalNext: { status: 'pass', why: 'Next step matches.' },
+};
+const softOnly = ctx.buildAudit({
+  title: 'Soft length',
+  hook: 'Clean hook for the teleprompter.',
+  full_script: 'Clean body for the teleprompter.',
+  cta: 'Comment GO.',
+  format: 'Talking head',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  filming_direction: { Format: 'Talking-head.', Pacing: 'Spoken ~20-40s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '10,000 views\nOutlier / x-median: 4x',
+  pipeline_audit: {
+    offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because.',
+    keywords: ['founder'], searchPath: 'Logged search.',
+    refs: [{ url: 'https://www.instagram.com/reel/DUIafE1DJqb/', views: 10000, outlier: '4x', source: 'apify' }],
+    dna: Object.assign({}, dnaPass, { length: { status: 'soft_pass', why: 'Top of the band. Left long on purpose.' } }),
+    spoken: { scriptSeconds: 30, refBand: '20-40s', status: 'soft_pass', why: 'Top of the band. Accepted.' },
+    ready: true,
+  },
+});
+assert.strictEqual(softOnly.ready.yes, true);
+assert.strictEqual(softOnly.dna.rows.filter(r => r.label === 'Length vs ref')[0].status, 'soft_pass');
+assert.strictEqual(softOnly.spoken.status, 'soft_pass');
+assert.ok(!softOnly.ready.blockers.some(b => b.status === 'soft_pass'));
+const softHtml = ctx.prepAuditHtml({
+  title: 'Soft length',
+  hook: 'Clean hook for the teleprompter.',
+  full_script: 'Clean body for the teleprompter.',
+  cta: 'Comment GO.',
+  format: 'Talking head',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  filming_direction: { Format: 'Talking-head.', Pacing: 'Spoken ~20-40s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '10,000 views\nOutlier / x-median: 4x',
+  pipeline_audit: {
+    offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because.',
+    keywords: ['founder'], searchPath: 'Logged search.',
+    refs: [{ url: 'https://www.instagram.com/reel/DUIafE1DJqb/', views: 10000, outlier: '4x', source: 'apify' }],
+    dna: Object.assign({}, dnaPass, { length: { status: 'soft_pass', why: 'Top of the band. Left long on purpose.' } }),
+    spoken: { scriptSeconds: 30, refBand: '20-40s', status: 'soft_pass', why: 'Top of the band. Accepted.' },
+    ready: true,
+  },
+});
+assert.ok(softHtml.includes('>SOFT<'));
+assert.ok(softHtml.includes('>Yes<'));
+assert.ok(softHtml.includes('Top of the band. Left long on purpose.'));
+
+const held = ctx.buildAudit({
+  title: 'Held turn',
+  hook: 'Clean hook for the teleprompter.',
+  full_script: 'Clean body for the teleprompter.',
+  cta: 'Comment GO.',
+  format: 'Talking head',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  filming_direction: { Format: 'Talking-head.', Pacing: 'Spoken ~20-40s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '10,000 views\nOutlier / x-median: 4x',
+  pipeline_audit: {
+    offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because.',
+    keywords: ['founder'], searchPath: 'Logged search.',
+    refs: [{ url: 'https://www.instagram.com/reel/DUIafE1DJqb/', views: 10000, outlier: '4x', source: 'apify' }],
+    dna: Object.assign({}, dnaPass, { rehook: { status: 'hold', why: 'Cristian has to lock the turn.' } }),
+    spoken: { scriptSeconds: 30, refBand: '20-40s', status: 'pass', why: 'Inside.' },
+    ready: true,
+  },
+});
+assert.strictEqual(held.ready.yes, false);
+assert.strictEqual(held.dna.rows.filter(r => r.label === 'Rehook')[0].status, 'hold');
+assert.ok(held.ready.blockers.some(b => b.status === 'hold' && /lock the turn/.test(b.why)));
+assert.ok(ctx.prepAuditHtml({
+  title: 'Held turn',
+  hook: 'Clean hook for the teleprompter.',
+  full_script: 'Clean body for the teleprompter.',
+  cta: 'Comment GO.',
+  format: 'Talking head',
+  reference_clip: 'https://www.instagram.com/reel/DUIafE1DJqb/',
+  filming_direction: { Format: 'Talking-head.', Pacing: 'Spoken ~20-40s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '10,000 views\nOutlier / x-median: 4x',
+  pipeline_audit: held.saved && {
+    offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because.',
+    keywords: ['founder'], searchPath: 'Logged search.',
+    refs: [{ url: 'https://www.instagram.com/reel/DUIafE1DJqb/', views: 10000, outlier: '4x', source: 'apify' }],
+    dna: Object.assign({}, dnaPass, { rehook: { status: 'hold', why: 'Cristian has to lock the turn.' } }),
+    spoken: { scriptSeconds: 30, refBand: '20-40s', status: 'pass', why: 'Inside.' },
+    ready: true,
+  },
+}).includes('>HOLD<'));
+assert.ok(/says ready, but open checks still block/.test(held.ready.why));
+
+const ops = ctx.buildAudit({
+  title: 'Intention vs Impact',
+  hook: 'If your engagement looks good on paper, the mission is not the problem.',
+  full_script: 'Intention and impact are not the same room.',
+  cta: 'Comment BUYIN.',
+  format: 'Talking head',
+  reference_clip: 'https://www.instagram.com/reel/DeJ9TelO4RM/',
+  filming_direction: { Format: 'Contrarian talking-head.', Pacing: 'Spoken ~70-80s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '901,845 views\nOutlier / x-median: 38.2x Sandcastles',
+  pipeline_audit: {
+    offer_icp_angle: {
+      offer: 'ID3A Jam holds intention and impact equally',
+      icp: 'Orgs whose engagement looks good on paper',
+      angle: 'Intention versus impact, transplanted',
+      verdict: 'PASS (soft audience)',
+      why: 'Offer fit is strong. Audience is a format transplant.',
+    },
+    keywords: {
+      documented: 'GAP — no keyword log for this reel',
+      inferred_path: 'Contrarian two-movies reframe. Inferred only.',
+      verdict: 'GAP',
+      why: 'Search path not logged.',
+    },
+    ref: {
+      url: 'https://www.instagram.com/reel/DeJ9TelO4RM/',
+      handle: '@goodmorgantherapy',
+      views: '901,845',
+      likes: '40,071',
+      comments: '333',
+      outlier: '38.2x',
+      source: 'Sandcastles',
+      tool_restriction: 'Y — Sandcastles-only; Apify not used',
+      why_ref: 'Huge views and a clean contrarian reframe.',
+      audience: 'SOFT PASS — therapy creator; format transplant only',
+    },
+    dna: {
+      hook: ['PASS', 'Contrarian open matches.'],
+      components: ['PASS', 'Conflict then reframe.'],
+      rehook: ['PASS', 'The column split is the rehook.'],
+      cadence: ['PASS', 'Office yap.'],
+      length: ['SOFT', 'About one second over the band. Left intact.'],
+      idea: ['PASS', 'Same reframe.'],
+      reward: ['PASS', 'Quiz next step.'],
+      emotional: ['PASS', 'Shame to clarity.'],
+    },
+    spoken: {
+      est: '~80.8s',
+      band: '70–80s',
+      ref_ffprobe: '76.7s',
+      verdict: 'SOFT — 0.8–1s over band',
+      why: 'Left intact on purpose.',
+    },
+    film_prep: {
+      fpf: 'PASS — Format, pacing, and framing are filled.',
+      metrics: 'PASS — views are above the fold.',
+      tele: 'PASS — teleprompter is clean.',
+    },
+    confirms: [
+      'ManyChat keyword BUYIN is placeholder — not live; Cristian must lock it before send',
+      'Austin local proof is still empty. Film the default.',
+    ],
+    blockers: ['ManyChat keyword not locked', 'Austin proof empty (MASS film OK)'],
+    gaps: ['Keywords/search path not logged', 'Soft audience transplant', 'Spoken ~1s over band'],
+    ready: true,
+  },
+});
+assert.strictEqual(ops.keywords.rows[0].status, 'gap');
+assert.strictEqual(ops.keywords.rows[0].chips.length, 0);
+assert.ok(/Inferred only/.test(ops.keywords.rows[0].inferred));
+assert.ok(!/GAP — no keyword log/.test((ops.keywords.rows[0].chips || []).join(' ')));
+assert.strictEqual(ops.keywords.rows[1].status, 'gap');
+assert.strictEqual(ops.refs.rows[0].href, 'https://www.instagram.com/reel/DeJ9TelO4RM/');
+assert.ok(/Huge views/.test(ops.refs.rows[0].why));
+assert.strictEqual(ops.refs.rows[0].audienceStatus, 'soft_pass');
+assert.ok(/therapy creator/.test(ops.refs.rows[0].audienceWhy));
+assert.ok(/Apify quota forced a fallback/.test(ops.refs.toolFlag));
+assert.ok(/Sandcastles/.test(ops.refs.toolFlag));
+assert.strictEqual(ops.dna.rows.filter(r => r.label === 'Length vs ref')[0].status, 'soft_pass');
+assert.strictEqual(ops.spoken.status, 'soft_pass');
+assert.strictEqual(ops.ready.yes, false);
+assert.ok(ops.gates.rows.some(r => r.status === 'hold' && /ManyChat/.test(r.why)));
+assert.ok(ops.gates.rows.some(r => r.status === 'soft_pass' && /Austin/.test(r.why)));
+assert.ok(!ops.ready.blockers.some(b => /Austin/.test(b.why) && b.status !== 'soft_pass'));
+const opsHtml = ctx.prepAuditHtml({
+  title: 'Intention vs Impact',
+  hook: 'If your engagement looks good on paper, the mission is not the problem.',
+  full_script: 'Intention and impact are not the same room.',
+  cta: 'Comment BUYIN.',
+  format: 'Talking head',
+  reference_clip: 'https://www.instagram.com/reel/DeJ9TelO4RM/',
+  filming_direction: { Format: 'Contrarian talking-head.', Pacing: 'Spoken ~70-80s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '901,845 views\nOutlier / x-median: 38.2x Sandcastles',
+  pipeline_audit: {
+    offer_icp_angle: {
+      offer: 'ID3A Jam holds intention and impact equally',
+      icp: 'Orgs whose engagement looks good on paper',
+      angle: 'Intention versus impact, transplanted',
+      verdict: 'PASS (soft audience)',
+      why: 'Offer fit is strong. Audience is a format transplant.',
+    },
+    keywords: {
+      documented: 'GAP — no keyword log for this reel',
+      inferred_path: 'Contrarian two-movies reframe. Inferred only.',
+      verdict: 'GAP',
+      why: 'Search path not logged.',
+    },
+    ref: {
+      url: 'https://www.instagram.com/reel/DeJ9TelO4RM/',
+      handle: '@goodmorgantherapy',
+      views: '901,845',
+      outlier: '38.2x',
+      source: 'Sandcastles',
+      tool_restriction: 'Y — Sandcastles-only; Apify not used',
+      why_ref: 'Huge views and a clean contrarian reframe.',
+      audience: 'SOFT PASS — therapy creator; format transplant only',
+    },
+    dna: {
+      hook: ['PASS', 'Contrarian open matches.'],
+      length: ['SOFT', 'About one second over the band. Left intact.'],
+      emotional: ['PASS', 'Shame to clarity.'],
+    },
+    spoken: { verdict: 'SOFT — 0.8–1s over band', why: 'Left intact on purpose.', band: '70–80s' },
+    confirms: ['ManyChat keyword BUYIN is placeholder — not live; Cristian must lock it before send'],
+    ready: true,
+  },
+});
+assert.ok(opsHtml.includes('https://www.instagram.com/reel/DeJ9TelO4RM/'));
+assert.ok(opsHtml.includes('Open Instagram'));
+assert.ok(opsHtml.includes('Inferred, not documented'));
+assert.ok(opsHtml.includes('>SOFT<'));
+assert.ok(opsHtml.includes('>HOLD<'));
+assert.ok(opsHtml.includes('>No<'));
+assert.ok(opsHtml.includes('Ready to send?'));
+assert.ok(opsHtml.includes('Apify quota forced a fallback'));
+assert.ok(!opsHtml.includes('>GAP — no keyword log'));
+
+const legacyStamp = [
+  'Offer: ID3A Jam buy-in',
+  'ICP: Nonprofit EDs',
+  'Angle: Funders want proof',
+  'Why this angle: The reference already runs the pattern.',
+  'Keywords: GAP — search path not logged',
+  'Search path: GAP — not logged',
+  'Inferred: fundraising outliers',
+  'Reference: https://www.instagram.com/reel/DdovX4Utsqj/',
+  '199,209 views · 67.6x outlier · Sandcastles',
+  'Why this ref: Comment CTA maps to the offer.',
+  'Audience: SOFT PASS — therapy creator, format transplant only',
+  'Hook: PASS — first line matches',
+  'Length: SOFT — top of band, left long on purpose',
+  'Rehook: HOLD — Cristian has to lock the turn',
+  'Apify IG monthly limit. Not live-scraped. Shown from Sandcastles.',
+  'Ready to send: NO',
+].join('\n');
+const stamped = ctx.buildAudit({
+  title: 'Stamped before JSON',
+  hook: 'Fundraising advice I wish every ED had.',
+  full_script: 'The body stays on buy-in.',
+  cta: 'Comment BUYIN.',
+  filming_direction: { 'Admin Audit': legacyStamp, Format: 'Talking-head.', Pacing: 'Spoken ~80-90s.', Framing: 'Eye-level.' },
+});
+assert.strictEqual(stamped.saved, true);
+assert.strictEqual(stamped.legacy, true);
+assert.strictEqual(stamped.refs.rows.filter(r => r.href).length, 1);
+assert.strictEqual(stamped.refs.rows[0].href, 'https://www.instagram.com/reel/DdovX4Utsqj/');
+assert.ok(/199,209/.test(stamped.refs.rows[0].meta));
+assert.ok(!/invented/.test(JSON.stringify(stamped.refs.rows)));
+assert.strictEqual(stamped.dna.rows.filter(r => r.label === 'Hook')[0].status, 'pass');
+assert.strictEqual(stamped.dna.rows.filter(r => r.label === 'Length vs ref')[0].status, 'soft_pass');
+assert.strictEqual(stamped.dna.rows.filter(r => r.label === 'Rehook')[0].status, 'hold');
+assert.strictEqual(stamped.keywords.rows[0].status, 'gap');
+assert.ok(/fundraising outliers/.test(stamped.keywords.rows[0].inferred));
+assert.ok(/quota forced a fallback/.test(stamped.refs.toolFlag));
+assert.strictEqual(stamped.ready.yes, false);
+assert.ok(!JSON.stringify(stamped.refs.rows).includes('https://www.instagram.com/reel/NOTREAL'));
+
+const sharedAudit = {
+  offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because.',
+  keywords: { documented: 'GAP — no keyword log', verdict: 'GAP', why: 'Search path not logged.', inferred_path: 'fundraise outliers' },
+  toolRestricted: true,
+  toolNote: 'Apify monthly hard-limit. Fell back to Sandcastles.',
+  refs: [{ url: 'https://www.instagram.com/reel/DdovX4Utsqj/', views: 199209, outlier: '67.6x', source: 'sandcastles', why_ref: 'The comment CTA fits.' }],
+  dna: dnaPass,
+  spoken: { scriptSeconds: 30, refBand: '20-40s', status: 'pass', why: 'Inside.' },
+  confirms: ['ManyChat keyword BUYIN is placeholder — not live; Cristian must lock it before send'],
+  ready: false,
+};
+const cardBits = {
+  hook: 'Clean hook for the teleprompter.',
+  full_script: 'Clean body for the teleprompter.',
+  cta: 'Comment GO.',
+  format: 'Talking head',
+  filming_direction: { Format: 'Talking-head.', Pacing: 'Spoken ~20-40s.', Framing: 'Eye-level phone, vertical 9:16.' },
+  proof_stats: '10,000 views\nOutlier / x-median: 4x',
+};
+const batch = ctx.batchTopGaps([
+  Object.assign({ id: 'a', title: 'Mission statement' }, cardBits, { pipeline_audit: sharedAudit }),
+  Object.assign({ id: 'b', title: 'Sticky notes' }, cardBits, { pipeline_audit: sharedAudit, reference_clip: 'https://www.instagram.com/reel/DbeOK3pBTZ7/' }),
+  Object.assign({ id: 'c', title: 'Gamma only' }, cardBits, {
+    pipeline_audit: {
+      offer: 'Offer', icp: 'Buyer', angle: 'Angle', angleWhy: 'Because.',
+      keywords: ['logged'], searchPath: 'Logged on this one.',
+      refs: [{ url: 'https://www.instagram.com/reel/DUIafE1DJqb/', views: 10000, outlier: '4x', source: 'apify' }],
+      dna: dnaPass,
+      spoken: { scriptSeconds: 30, refBand: '20-40s', status: 'pass', why: 'Inside.' },
+      gaps: ['Unique proof name for Gamma only'],
+      ready: true,
+    },
+  }),
+]);
+assert.ok(batch.some(item => item.key === 'shared-confirm' && item.titles.join('|') === 'Mission statement|Sticky notes'));
+assert.ok(batch.some(item => item.key === 'shared-keywords' && item.owner === 'Ops'));
+assert.ok(batch.some(item => item.key === 'shared-tool' && /Sandcastles|fallback|Apify/.test(item.why)));
+assert.ok(!batch.some(item => /Unique proof name/.test(item.why) || /Gamma only/.test(item.titles.join(' '))));
+assert.strictEqual(ctx.batchTopGaps([Object.assign({ title: 'Solo' }, cardBits, { pipeline_audit: sharedAudit })]).length, 0);
+ctx.role = 'admin';
+const strip = ctx.batchGapsHtml([
+  [Object.assign({ id: 'a', title: 'Mission statement' }, cardBits, { pipeline_audit: sharedAudit })],
+  [Object.assign({ id: 'b', title: 'Sticky notes' }, cardBits, { pipeline_audit: sharedAudit })],
+]);
+assert.ok(strip.includes('Top Gaps across this batch'));
+assert.ok(strip.includes('Mission statement'));
+assert.ok(strip.includes('Cristian'));
+assert.ok(strip.includes('>HARD<'));
+ctx.role = 'client';
+assert.strictEqual(ctx.batchGapsHtml([[{ title: 'Mission statement', pipeline_audit: sharedAudit }]]), '');
+assert.ok(!ctx.prepStepBody({ title: 'Client card', hook: 'Hook.' }, 0, false).includes('Top Gaps'));
+assert.ok(!ctx.prepStepBody({ title: 'Client card', hook: 'Hook.' }, 0, false).includes('How we built this'));
 
 console.log('hub-logic tests passed');

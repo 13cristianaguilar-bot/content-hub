@@ -51,8 +51,80 @@
 --   )
 --   where id = 'PASTE-SCRIPT-UUID';
 --
--- Status values are pass, fail, or gap. DNA keys are hook, components,
--- rehook, cadence, length, idea, reward, emotionalNext.
+-- Status values are pass, soft_pass, fail, gap, or hold.
+-- SOFT and SOFT PASS map to soft_pass (an intentional accept, with the reason).
+-- HOLD is a Cristian gate. It is not a DNA failure and it is not a pass.
+-- A soft_pass does not flip Ready to yes by itself, and it is never shown as PASS.
+-- ready true still cannot hide an open hard gate, a fail, or a gap.
+-- DNA keys are hook, components, rehook, cadence, length, idea, reward,
+-- emotionalNext (emotional is accepted too).
+--
+-- The v1 keys above still work. Ops can also write the richer shape the
+-- Devin pack already produces. It is the same jsonb column. Old keys stay.
+--
+--   update public.scripts
+--   set pipeline_audit = jsonb_build_object(
+--     'offer_icp_angle', jsonb_build_object(
+--       'offer', 'ID3A Jam buy-in',
+--       'icp', 'Nonprofit EDs who pitch mission decks and stall',
+--       'angle', 'Funders want proof of community buy-in',
+--       'verdict', 'PASS (soft audience)',
+--       'why', 'Offer fit is strong. The reference audience is a format transplant, labeled soft on purpose.'
+--     ),
+--     'keywords', jsonb_build_object(
+--       'documented', 'GAP — the keyword list was not logged',
+--       'inferred_path', 'Fundraising outliers with a comment CTA. Inferred, not documented.',
+--       'verdict', 'GAP',
+--       'why', 'Search path not logged.'
+--     ),
+--     'searchPath', '',
+--     'toolRestricted', true,
+--     'toolNote', 'Apify Instagram monthly limit. Shown from Sandcastles.',
+--     'ref', jsonb_build_object(
+--       'url', 'https://www.instagram.com/reel/DdovX4Utsqj/',
+--       'views', '199,209',
+--       'likes', '11,930',
+--       'comments', '2,315',
+--       'outlier', '67.6x',
+--       'source', 'sandcastles',
+--       'creator', '@susan_ho',
+--       'why_ref', 'Comment-CTA plus fundraise pain. The structure transplants.',
+--       'audience', 'SOFT PASS — fundraising creators, not an exact ICP match',
+--       'tool_restriction', 'Y — Sandcastles only. No Apify cross-check.'
+--     ),
+--     'dna', jsonb_build_object(
+--       'hook', jsonb_build_array('PASS', 'First line keeps the reference hook.'),
+--       'length', jsonb_build_array('SOFT', 'Top of the band. Left long on purpose.'),
+--       'emotional', jsonb_build_array('PASS', 'Next step matches the reference.')
+--     ),
+--     'spoken', jsonb_build_object(
+--       'est', '~90s',
+--       'band', '80-90s',
+--       'ref_ffprobe', '84.6s',
+--       'verdict', 'PASS (top of band)',
+--       'why', 'Inside the band. Do not shorten.'
+--     ),
+--     'film_prep', jsonb_build_object(
+--       'fpf', 'PASS — Format, pacing, and framing are filled.',
+--       'metrics', 'PASS — views and outlier are above the fold.',
+--       'tele', 'PASS — teleprompter is clean.'
+--     ),
+--     'gates', jsonb_build_array(
+--       jsonb_build_object('item', 'ManyChat keyword is still a placeholder', 'severity', 'hard', 'owner', 'Cristian', 'open', true)
+--     ),
+--     'confirms', jsonb_build_array('ManyChat keyword BUYIN is not live. Cristian must lock it before send.'),
+--     'blockers', jsonb_build_array('ManyChat keyword not locked'),
+--     'gaps', jsonb_build_array('Keywords/search path not logged'),
+--     'ready', false,
+--     'readyWhy', 'Do not send until the keyword is live and Cristian says so.'
+--   )
+--   where id = 'PASTE-SCRIPT-UUID';
+--
+-- Leave documented as a GAP string when the keyword list was not logged.
+-- Do not copy inferred_path into documented. Do not invent a reel URL or a score.
+-- If pipeline_audit is null, the Hub will read a structured Admin Audit block
+-- from filming_direction or the legacy admin_audit text. That parse only
+-- keeps links and scores that are actually written there.
 --
 -- toolRestricted true (or a toolNote that says Apify hit a hard limit /
 -- quota and Ops fell back) flags the reference section. Use source

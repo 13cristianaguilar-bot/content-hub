@@ -44,7 +44,7 @@ const names = [
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'prepAuditHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
-  'setLabeledBlock', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
+  'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding',
 ];
@@ -592,6 +592,44 @@ assert.strictEqual(ctx.editFieldLabel('on_screen'), 'On-screen text');
 assert.strictEqual(ctx.editorLabel({ user_metadata: { full_name: 'Monica' }, email: 'x@y.com' }), 'Monica');
 assert.strictEqual(ctx.editorLabel({ email: 'monica@example.com' }), 'Monica');
 assert.strictEqual(ctx.editorLabel({ email: 'preview@localhost' }), 'Client');
+
+const ownScript = {
+  id: '11111111-1111-1111-1111-111111111111',
+  client_slug: 'jan',
+  hook: 'Say this first.',
+  full_script: 'The body line stays on camera.',
+  cta: 'Comment FOLLOW',
+  pipeline_audit: { tele: 'SECRET AUDIT' },
+  editor_notes: 'ON-SCREEN TEXT: do not show this in the final editor',
+};
+const janSession = { role: 'client', mySlug: 'jan', viewSlug: 'jan', previewSlug: null };
+assert.strictEqual(ctx.finalScriptEditAllowed(janSession, ownScript), true);
+assert.strictEqual(ctx.finalScriptEditAllowed(janSession, { id: ownScript.id, client_slug: 'andrew' }), false);
+assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'client', mySlug: 'jan', viewSlug: 'andrew' }, ownScript), false);
+assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'jan', previewSlug: 'jan' }, ownScript), true);
+assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'cristian' }, { id: ownScript.id, client_slug: 'jan' }), false);
+assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'cristian' }, { id: ownScript.id, client_slug: 'cristian' }), true);
+assert.strictEqual(ctx.finalScriptEditAllowed(janSession, { client_slug: 'jan' }), false);
+assert.strictEqual(ctx.finalScriptEditAllowed({}, ownScript), false);
+const finalDraft = ctx.finalScriptEditDraft(ownScript);
+assert.strictEqual(finalDraft.hook, 'Say this first.');
+assert.strictEqual(finalDraft.body, 'The body line stays on camera.');
+assert.strictEqual(finalDraft.cta, 'Comment FOLLOW');
+assert.strictEqual(ctx.scriptEditDiff(ownScript, ctx.finalScriptEditDraft(ownScript)).changes.length, 0);
+finalDraft.body = 'The body line stays on camera. Warmer.';
+const finalDiff = ctx.scriptEditDiff(ownScript, finalDraft);
+assert.deepStrictEqual(Object.keys(finalDiff.patch).sort(), ['full_script']);
+assert.strictEqual(finalDiff.patch.full_script, 'The body line stays on camera. Warmer.');
+assert.strictEqual(finalDiff.changes[0].field, 'body');
+assert.strictEqual('pipeline_audit' in finalDiff.patch, false);
+const editHtml = ctx.prompterEditHtml(ownScript);
+assert.ok(editHtml.includes('id="pr-edit-body"'));
+assert.ok(editHtml.includes('The body line stays on camera.'));
+assert.ok(editHtml.includes('Say this first.'));
+assert.ok(editHtml.includes('Comment FOLLOW'));
+assert.ok(!editHtml.includes('SECRET AUDIT'));
+assert.ok(!editHtml.includes('do not show this'));
+assert.ok(!editHtml.includes('pipeline_audit'));
 
 assert.strictEqual(ctx.homeSlug(''), null);
 assert.strictEqual(ctx.homeSlug(null), null);

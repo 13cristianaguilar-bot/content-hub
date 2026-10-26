@@ -17,7 +17,7 @@
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     pre { font-family: inherit; }
     /* Prevent 300ms tap delay on all interactive elements */
-    button, a, input, select { touch-action: manipulation; }
+    button, a, input, select, textarea { touch-action: manipulation; }
     @keyframes pulse-ring {
       0%, 100% { opacity: 1; box-shadow: 0 0 22px rgba(34,197,94,0.55), 0 0 44px rgba(34,197,94,0.25); }
       50%       { opacity: 0.85; box-shadow: 0 0 36px rgba(34,197,94,0.8), 0 0 72px rgba(34,197,94,0.4); }
@@ -417,6 +417,45 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 }
 .pr-play, .pr-notes-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
 .pr-play { min-width: 84px; }
+.pr-top { flex-wrap: wrap; }
+.pr-top button.pr-edit-btn {
+  background: #fff; color: #111; border-color: #fff; font-weight: 700;
+}
+.pr-saved-bar {
+  flex: 0 0 auto; width: 100%;
+  background: var(--signal); color: #fff; text-align: center;
+  font-weight: 700; font-size: 16px; letter-spacing: -0.02em;
+  padding: 12px 16px;
+}
+#prompter.is-editing .pr-read { overflow: hidden; }
+.pr-editor-wrap {
+  flex: 1; min-height: 0; overflow: auto;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 12px 16px 16px;
+}
+.pr-editor-lead { margin: 0; color: #c8c8c8; font-size: 14px; line-height: 1.4; }
+.pr-editor-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.pr-editor-field.is-script { flex: 1; min-height: 200px; }
+.pr-editor-field span {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #ff6a70; font-weight: 500;
+}
+.pr-editor {
+  width: 100%; box-sizing: border-box; min-height: 72px;
+  background: #141414; color: #fff; border: 1px solid #3a3a3a;
+  font-family: inherit; font-size: 16px; line-height: 1.45; padding: 10px 12px; resize: vertical;
+}
+.pr-editor-body { flex: 1; min-height: 200px; font-size: 18px; }
+.pr-editor:focus { outline: 2px solid var(--signal); border-color: var(--signal); }
+.pr-cancel {
+  min-height: 52px; min-width: 104px; padding: 0 14px;
+  background: transparent; color: #fff; border: 1px solid #3a3a3a;
+  font-weight: 650; font-size: 16px;
+}
+#prompter.is-editing .pr-controls .pr-play { flex: 1; min-height: 52px; font-size: 17px; }
+@media (max-width: 559px) {
+  .pr-title { flex: 1 1 100%; }
+}
 .pr-speed-label {
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9a9a9a;
@@ -1085,7 +1124,7 @@ body.modal-open { overflow: hidden; }
      every renderDash(), and a toast that lived inside it (e.g. "Moved to Passed · Undo") would be
      wiped by the very redraw that the status change it's reporting on triggers. Persistent
      aria-live region so screen readers announce each new message. -->
-<div id="toast-root" class="fixed inset-x-0 bottom-0 z-50 pointer-events-none flex justify-center safe-bottom" role="status" aria-live="polite"></div>
+<div id="toast-root" class="fixed inset-x-0 bottom-0 z-[100] pointer-events-none flex justify-center safe-bottom" role="status" aria-live="polite"></div>
 <div id="prompter-root"></div>
 <div id="prep-root"></div>
 <div id="edit-root"></div>
@@ -1618,6 +1657,7 @@ document.addEventListener('keydown', (e) => {
   if (document.getElementById('prompter')) {
     if (e.key === 'Escape') {
       e.preventDefault();
+      if (prompterState && prompterState.editing) { window.prompterCancelEdit(); return; }
       if (prompterState && prompterState.player) { window.prompterClosePlayer(); return; }
       if (prompterState && prompterState.notes) { window.prompterNotes(false); return; }
       window.closePrompter();
@@ -1625,7 +1665,7 @@ document.addEventListener('keydown', (e) => {
     }
     const tag = e.target && e.target.tagName;
     if (e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
-      if (prompterState && (prompterState.notes || prompterState.player)) return;
+      if (prompterState && (prompterState.notes || prompterState.player || prompterState.editing)) return;
       e.preventDefault(); window.prompterToggle(); return;
     }
   }
@@ -1713,7 +1753,7 @@ document.addEventListener('touchend', (e) => {
   const scope = swipeGesture.scope;
   swipeGesture = null;
   if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
-  if (scope === 'prompter' && prompterState && (prompterState.notes || prompterState.player)) return;
+  if (scope === 'prompter' && prompterState && (prompterState.notes || prompterState.player || prompterState.editing)) return;
   window.stepScript(scope, dx < 0 ? 1 : -1);
 }, { passive: true });
 document.addEventListener('touchcancel', () => { swipeGesture = null; });
@@ -4468,7 +4508,9 @@ function renderCardGroup(group) {
 
 // ─────────────────────────────────────────────
 // TELEPROMPTER — full-screen read of the whole script, in order.
-// Hook, each body beat, then the CTA. Lives outside #app so a dashboard
+// Hook, each body beat, then the CTA. This is the final script screen a client
+// films from. Edit on this screen writes the changed lines back onto the same
+// script row (hook, full_script, cta). Lives outside #app so a dashboard
 // redraw does not close it. Type size, speed, and mirror stick on this device.
 // ─────────────────────────────────────────────
 function normSpoken(value) {
@@ -4680,6 +4722,7 @@ function prompterNotesHtml(s) {
 
 let prompterState = null;
 let prompterRaf = 0;
+let prompterNoticeTimer = 0;
 function prompterHtml(s) {
   const model = scriptReadModel(s.full_script);
   if (model.mode === 'questions') {
@@ -4723,34 +4766,53 @@ function renderPrompter() {
   const root = document.getElementById('prompter-root');
   if (!s || !root) return;
   const st = prompterState;
+  if (st.editing && !prompterMayEdit(s)) st.editing = false;
+  const editing = !!st.editing;
   const qLen = (st.queue && st.queue.length) || 1;
   const qIndex = st.index || 0;
-  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}" role="dialog" aria-modal="true" aria-label="Teleprompter">
-    <div class="pr-top">
-      <div class="pr-title">${escHtml(s.title)}</div>
+  const editBtn = !editing && prompterMayEdit(s)
+    ? `<button type="button" class="pr-edit-btn" onclick="window.prompterEdit()">Edit</button>`
+    : '';
+  const notice = !editing && st.notice
+    ? `<div id="pr-notice" class="pr-saved-bar" role="status">${escHtml(st.notice)}</div>`
+    : '';
+  const readTools = editing ? '' : `
       <button type="button" id="pr-notes-btn" class="pr-notes-btn${st.notes ? ' is-on' : ''}" aria-expanded="${st.notes ? 'true' : 'false'}" onclick="window.prompterNotes()">Notes</button>
-      <button type="button" onclick="window.prompterTop()">Top</button>
-      <button type="button" onclick="window.closePrompter()">Close</button>
-    </div>
-    <div class="pr-scriptnav" role="navigation" aria-label="Scripts in this batch">
-      <button type="button" ${qIndex <= 0 ? 'disabled' : ''} onclick="window.prompterStep(-1)">Previous</button>
-      <span class="pr-script-count">Script ${qIndex + 1} of ${qLen}</span>
-      <button type="button" ${qIndex >= qLen - 1 ? 'disabled' : ''} onclick="window.prompterStep(1)">Next</button>
-    </div>
-    <div class="pr-read">
-      <div class="pr-progress" aria-label="Script sections">${prompterChips(s)}</div>
+      <button type="button" onclick="window.prompterTop()">Top</button>`;
+  const read = editing
+    ? prompterEditHtml(s)
+    : `<div class="pr-progress" aria-label="Script sections">${prompterChips(s)}</div>
       <div class="pr-viewport">
         <div class="pr-focus" aria-hidden="true"></div>
         <div id="prompter-scroll" data-swipe-scope="prompter"><div id="prompter-text" style="font-size:${st.font}px">${prompterHtml(s)}</div></div>
-      </div>
-    </div>
-    <div class="pr-controls">
-      <button type="button" onclick="window.prompterFont(-4)" aria-label="Smaller type">A−</button>
+      </div>`;
+  const controls = editing
+    ? `<button type="button" class="pr-cancel" onclick="window.prompterCancelEdit()">Cancel</button>
+       <button type="button" class="pr-play edit-save" ${editSaving ? 'disabled' : ''} onclick="window.prompterSaveEdit()">Save</button>`
+    : `<button type="button" onclick="window.prompterFont(-4)" aria-label="Smaller type">A−</button>
       <button type="button" onclick="window.prompterFont(4)" aria-label="Larger type">A+</button>
       <button type="button" id="prompter-play" class="pr-play" onclick="window.prompterToggle()">${st.playing ? 'Pause' : 'Play'}</button>
       <span class="pr-speed-label">Speed</span>
       <input class="pr-speed" type="range" min="16" max="120" value="${st.speed}" aria-label="Scroll speed" oninput="window.prompterSpeed(this.value)">
-      <button type="button" onclick="window.prompterMirror()" aria-pressed="${st.mirror}">Mirror</button>
+      <button type="button" onclick="window.prompterMirror()" aria-pressed="${st.mirror}">Mirror</button>`;
+  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${editing ? ' is-editing' : ''}" role="dialog" aria-modal="true" aria-label="${editing ? 'Edit script' : 'Teleprompter'}">
+    <div class="pr-top">
+      <div class="pr-title">${escHtml(s.title)}</div>
+      ${editBtn}
+      ${readTools}
+      <button type="button" onclick="window.closePrompter()">Close</button>
+    </div>
+    ${notice}
+    <div class="pr-scriptnav" role="navigation" aria-label="Scripts in this batch">
+      <button type="button" ${editing || qIndex <= 0 ? 'disabled' : ''} onclick="window.prompterStep(-1)">Previous</button>
+      <span class="pr-script-count">Script ${qIndex + 1} of ${qLen}</span>
+      <button type="button" ${editing || qIndex >= qLen - 1 ? 'disabled' : ''} onclick="window.prompterStep(1)">Next</button>
+    </div>
+    <div class="pr-read">
+      ${read}
+    </div>
+    <div class="pr-controls">
+      ${controls}
     </div>
     <div class="pr-sheet" id="pr-sheet" ${st.notes ? '' : 'hidden'}>
       <div class="pr-top">
@@ -4772,6 +4834,13 @@ function renderPrompter() {
   const scroller = document.getElementById('prompter-scroll');
   if (scroller) scroller.addEventListener('scroll', prompterSyncProgress, { passive: true });
   requestAnimationFrame(prompterSyncProgress);
+  if (editing && st.focusEdit) {
+    st.focusEdit = false;
+    const body = document.getElementById('pr-edit-body');
+    if (body) {
+      try { body.focus({ preventScroll: true }); } catch (e) { body.focus(); }
+    }
+  }
 }
 function prompterLoop(ts) {
   if (!prompterState || !prompterState.playing) return;
@@ -4814,8 +4883,58 @@ window.openPrompter = (id) => {
   }
   renderPrompter();
 };
+window.prompterEdit = () => {
+  if (!prompterState) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  if (!s || !prompterMayEdit(s)) return;
+  prompterPause();
+  prompterState.notes = false;
+  prompterState.player = false;
+  prompterState.editing = true;
+  prompterState.notice = '';
+  prompterState.focusEdit = true;
+  renderPrompter();
+};
+window.prompterCancelEdit = () => {
+  if (!prompterState) return;
+  prompterState.editing = false;
+  prompterState.notice = '';
+  prompterState.focusEdit = false;
+  renderPrompter();
+};
+window.prompterSaveEdit = async () => {
+  if (!prompterState || editSaving) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  if (!s || !prompterMayEdit(s)) return;
+  const hook = document.getElementById('pr-edit-hook');
+  const body = document.getElementById('pr-edit-body');
+  const cta = document.getElementById('pr-edit-cta');
+  if (!hook || !body || !cta) return;
+  const id = s.id;
+  const draft = finalScriptEditDraft(s);
+  draft.hook = hook.value;
+  draft.body = body.value;
+  draft.cta = cta.value;
+  const status = await commitScriptEdit(s, draft, '', { toast: false });
+  if (!prompterState || prompterState.id !== id) return;
+  if (status === 'failed') return;
+  prompterState.editing = false;
+  prompterState.focusEdit = false;
+  prompterState.notice = status === 'saved' ? 'Saved' : '';
+  renderPrompter();
+  if (status === 'saved') {
+    showToast('Saved', { duration: 2500 });
+    clearTimeout(prompterNoticeTimer);
+    prompterNoticeTimer = setTimeout(() => {
+      if (!prompterState || prompterState.editing || prompterState.id !== id) return;
+      prompterState.notice = '';
+      const el = document.getElementById('pr-notice');
+      if (el) el.remove();
+    }, 4000);
+  }
+};
 window.prompterStep = (delta) => {
-  if (!prompterState || !prompterState.queue) return;
+  if (!prompterState || !prompterState.queue || prompterState.editing) return;
   const next = (prompterState.index || 0) + delta;
   if (next < 0 || next >= prompterState.queue.length) return;
   const id = prompterState.queue[next];
@@ -4826,6 +4945,9 @@ window.prompterStep = (delta) => {
   prompterState.lastTs = 0;
   prompterState.notes = false;
   prompterState.player = false;
+  prompterState.editing = false;
+  prompterState.notice = '';
+  prompterState.focusEdit = false;
   cancelAnimationFrame(prompterRaf);
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
   if (prompterState.scope) {
@@ -6703,6 +6825,42 @@ function setLabeledBlock(text, label, value) {
   }
   return lines.slice(0, start).concat(block).concat(lines.slice(end)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
+// Who may open Edit on the final script. Saving is stricter: commitScriptEdit
+// refuses an admin who is only previewing another client's hub.
+function finalScriptEditAllowed(session, script) {
+  session = session || {};
+  script = script || {};
+  const slug = asText(script.client_slug).trim();
+  if (!slug || !script.id) return false;
+  if (session.previewSlug) return session.role === 'admin' && slug === session.previewSlug;
+  if (session.role !== 'client' && session.role !== 'admin') return false;
+  return !!session.mySlug && session.viewSlug === session.mySlug && slug === session.mySlug;
+}
+function finalScriptEditDraft(s) {
+  return {
+    hook: scriptEditValue(s, 'hook'),
+    body: scriptEditValue(s, 'body'),
+    cta: scriptEditValue(s, 'cta'),
+  };
+}
+function prompterMayEdit(s) {
+  return finalScriptEditAllowed({
+    role: role,
+    mySlug: mySlug,
+    viewSlug: viewSlug,
+    previewSlug: previewSlug,
+  }, s);
+}
+function prompterEditHtml(s) {
+  const draft = finalScriptEditDraft(s);
+  return `
+    <div class="pr-editor-wrap">
+      <p class="pr-editor-lead">Change a word or a line. Save keeps this version for filming. Cancel puts the last saved script back.</p>
+      <label class="pr-editor-field"><span>Hook</span><textarea id="pr-edit-hook" class="pr-editor" spellcheck="true">${escHtml(draft.hook)}</textarea></label>
+      <label class="pr-editor-field is-script"><span>Full script</span><textarea id="pr-edit-body" class="pr-editor pr-editor-body" spellcheck="true">${escHtml(draft.body)}</textarea></label>
+      <label class="pr-editor-field"><span>CTA</span><textarea id="pr-edit-cta" class="pr-editor" spellcheck="true">${escHtml(draft.cta)}</textarea></label>
+    </div>`;
+}
 function scriptEditValue(s, field) {
   s = s || {};
   if (field === 'hook') return asText(s.hook).trim();
@@ -6910,41 +7068,55 @@ function finishLocalEdit(s, diff, name, reason, toastMessage) {
   if (prepState && prepState.id === s.id) renderPrep();
   if (toastMessage !== false) showToast(toastMessage || (reason === 'Restored original' ? 'Original restored.' : 'Edits saved.'));
 }
-async function commitScriptEdit(s, values, reason) {
-  if (!s || editSaving) return;
+async function commitScriptEdit(s, values, reason, opts) {
+  opts = opts || {};
+  if (!s || editSaving) return 'failed';
   if (viewingAsClient()) {
     showToast('This is ' + clientLabel(previewSlug) + '’s hub. Changes save only in your workspace.', { tone: 'error' });
-    return;
+    return 'failed';
   }
   if (!canEditScripts() || s.client_slug !== mySlug) {
     showToast('You can only edit your own scripts.', { tone: 'error' });
-    return;
+    return 'failed';
   }
   const diff = scriptEditDiff(s, values);
   const note = asText(reason).trim().slice(0, 500);
+  const successToast = Object.prototype.hasOwnProperty.call(opts, 'toast')
+    ? opts.toast
+    : (note === 'Restored original' ? 'Original restored.' : 'Edits saved.');
   if (!diff.changes.length) {
     showToast(note === 'Restored original' ? 'Already the original.' : 'Nothing changed.');
-    return;
+    return 'noop';
+  }
+  // Clients can update their own row. Never send admin audit columns, and
+  // never let an edit rewrite who owns the script.
+  const patch = {};
+  ['hook', 'full_script', 'cta', 'editor_notes', 'filming_direction'].forEach(key => {
+    if (Object.prototype.hasOwnProperty.call(diff.patch, key)) patch[key] = diff.patch[key];
+  });
+  if (!Object.keys(patch).length) {
+    showToast('Could not save that change.', { tone: 'error' });
+    return 'failed';
   }
   const name = editorLabel(user);
   if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
-    finishLocalEdit(s, diff, name, note);
-    return;
+    finishLocalEdit(s, { patch: patch, changes: diff.changes }, name, note, successToast);
+    return 'saved';
   }
   editSaving = true;
   const saveBtn = document.querySelector('.edit-save, .edit-restore');
   if (saveBtn) saveBtn.disabled = true;
   let data = null, error = null;
   try {
-    ({ data, error } = await sb.from('scripts').update(diff.patch).eq('id', s.id).select('id'));
+    ({ data, error } = await sb.from('scripts').update(patch).eq('id', s.id).eq('client_slug', s.client_slug).select('id'));
   } catch (e) { error = e; }
   if (error || !data || data.length !== 1) {
     editSaving = false;
     if (saveBtn) saveBtn.disabled = false;
     showToast(error ? ('Could not save: ' + (error.message || error)) : SESSION_EXPIRED_MSG, { tone: 'error' });
-    return;
+    return 'failed';
   }
-  Object.assign(s, diff.patch);
+  Object.assign(s, patch);
   const logRows = diff.changes.map(change => ({
     script_id: s.id,
     client: s.client_slug,
@@ -6962,7 +7134,7 @@ async function commitScriptEdit(s, values, reason) {
   if (logError || !logged || !logged.length) {
     finishLocalEdit(s, { patch: {}, changes: diff.changes }, name, note, false);
     showToast('Saved the script. The history log did not save.', { tone: 'error' });
-    return;
+    return 'partial';
   }
   scriptEdits = logged.concat(scriptEdits);
   editsError = '';
@@ -6970,7 +7142,8 @@ async function commitScriptEdit(s, values, reason) {
   clearEdit();
   if (user) renderDash();
   if (prepState && prepState.id === s.id) renderPrep();
-  showToast(note === 'Restored original' ? 'Original restored.' : 'Edits saved.');
+  if (successToast !== false) showToast(successToast);
+  return 'saved';
 }
 window.openScriptEdit = (id) => {
   const s = scripts.find(row => row && row.id === id);

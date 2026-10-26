@@ -616,9 +616,13 @@ img, iframe, video, pre { max-width: 100%; }
   background: var(--ink); color: #fff; padding: 10px 12px; max-width: 560px;
 }
 .preview-banner span { font-size: 14px; font-weight: 650; min-width: 0; }
+.preview-banner .preview-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
 .preview-banner button {
   flex: 0 0 auto; min-height: 44px; padding: 0 12px; background: #fff; color: var(--ink);
   border: 0; font-weight: 650; font-size: 14px;
+}
+.preview-banner button.is-ghost {
+  background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.45);
 }
 .view-as { max-width: 560px; }
 .view-as-toggle {
@@ -1168,20 +1172,37 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.24.2';
-// Paste a YouTube, Vimeo, or direct .mp4 URL to embed a walkthrough in the
-// What's new popup and on the Help page. Empty hides the video slot.
+const APP_VERSION = '2026.10.26.1';
+// Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
+// walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
 
 const FILMING_GUIDE = [
   'Watch the reference reel before you roll.',
-  'Keep the first line as written.',
+  'Film prep, then Full screen. Edit lives on that full-screen teleprompter.',
+  'Keep the first line as written unless you tap Edit.',
   'Shoot vertical.',
   'Do 3 takes.',
   'Say the script number before each take.',
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.26.1',
+    date: 'October 26, 2026',
+    title: 'Edit on the final script',
+    items: [
+      'On the full-screen teleprompter, Edit opens Hook, Full script, and CTA.',
+      'Save keeps your words for filming. Cancel puts the last saved script back.',
+      'Your changes stay on your hub. An admin previewing another client cannot overwrite their lines.',
+    ],
+    steps: [
+      'Tap Film, finish prep, then open the full-screen script.',
+      'Tap Edit. Change the Hook, Full script, or CTA.',
+      'Tap Save to keep it, or Cancel to restore the last saved text.',
+      'Film from the lines you just saved.',
+    ],
+  },
   {
     version: '2026.10.24.2',
     date: 'October 24, 2026',
@@ -1757,10 +1778,6 @@ document.addEventListener('touchend', (e) => {
   window.stepScript(scope, dx < 0 ? 1 : -1);
 }, { passive: true });
 document.addEventListener('touchcancel', () => { swipeGesture = null; });
-
-function helpDismissed() { try { return localStorage.getItem('hub_help_dismissed') === '1'; } catch (e) { return false; } }
-let showHelp = !helpDismissed();
-window.toggleHelp = () => { showHelp = !showHelp; if (!showHelp) { try { localStorage.setItem('hub_help_dismissed', '1'); } catch (e) {} } renderDash(); };
 
 // ─────────────────────────────────────────────
 // ERROR STATE — a real, visible failure with a way out, instead of the page silently
@@ -2862,14 +2879,30 @@ function loadOpened() {
 function persistOpened() {
   try { localStorage.setItem(openedStorageKey(), JSON.stringify(Array.from(openedIds))); } catch (e) {}
 }
-function unseenReleases() {
-  if (!user) return [];
-  const seen = lsGetStr(versionStorageKey(), '');
-  if (!seen) return RELEASES.slice(0, 1);
-  const idx = RELEASES.findIndex(r => r.version === seen);
+function previewOnboardingKey() {
+  return 'hub_preview_onboarding_seen';
+}
+function markPreviewOnboardingSeen() {
+  lsSetStr(previewOnboardingKey(), APP_VERSION);
+}
+function clearPreviewOnboardingSeen() {
+  try { localStorage.removeItem(previewOnboardingKey()); } catch (e) {}
+}
+function unseenReleasesFor(seenVersion, previewing, previewSeenVersion) {
+  if (previewing && previewSeenVersion !== APP_VERSION) return RELEASES.slice(0, 1);
+  if (!seenVersion) return RELEASES.slice(0, 1);
+  const idx = RELEASES.findIndex(r => r.version === seenVersion);
   if (idx === 0) return [];
   if (idx < 0) return RELEASES.slice(0, 1);
   return RELEASES.slice(0, idx);
+}
+function unseenReleases() {
+  if (!user) return [];
+  return unseenReleasesFor(
+    lsGetStr(versionStorageKey(), ''),
+    viewingAsClient(),
+    lsGetStr(previewOnboardingKey(), '')
+  );
 }
 function unseenFreshGroups() {
   const fresh = freshPartition(clientGroups(viewSlug)).fresh;
@@ -3182,7 +3215,7 @@ function headerSubtitle() {
 function renderContextBar() {
   if (viewingAsClient()) {
     const name = clientLabel(previewSlug);
-    return `<div class="preview-banner" role="status"><span>Viewing as ${escHtml(name)}</span><button type="button" onclick="window.backToWorkspace()">Your workspace</button></div>`;
+    return `<div class="preview-banner" role="status"><span>Viewing as ${escHtml(name)}</span><div class="preview-actions"><button type="button" class="is-ghost" onclick="window.replayClientOnboarding()">Replay client onboarding</button><button type="button" onclick="window.backToWorkspace()">Your workspace</button></div></div>`;
   }
   if (role !== 'admin' || hubPage !== 'main' || viewTab !== 'list') return '';
   const own = homeSlug(mySlug);
@@ -3233,7 +3266,8 @@ function renderHelpPage() {
       <h2>How filming works</h2>
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
-        <li>The batch is big cards. Tap Film for a short prep, then the full-screen script. Edit changes your lines and keeps a history. Past batches holds older scripts. More holds filters.</li>
+        <li>The batch is big cards. Film opens a short prep, then the full-screen teleprompter. Past batches holds older scripts. More holds filters.</li>
+        <li>Edit is on that full-screen script, not the card. Tap Edit to change Hook, Full script, or CTA. Save keeps it. Cancel restores the last saved text.</li>
         <li>Full screen reads Hook, each beat, and the CTA. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
@@ -3735,6 +3769,11 @@ function renderSettingsPanel() {
             class="relative w-11 h-6 rounded-full flex-shrink-0 transition-colors ${settingAlwaysShowKey ? 'bg-slate-800' : 'bg-slate-200'}">
             <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${settingAlwaysShowKey ? 'translate-x-5' : ''}"></span>
           </button>
+        </div>
+
+        <div class="border-t border-slate-100 mt-3 pt-3">
+          <button type="button" class="shot-edit" data-focus-id="replay-onboarding" onclick="window.replayClientOnboarding()">Replay client onboarding</button>
+          <p class="text-[11px] text-slate-400 mt-1.5">Shows What’s new the way a client sees it. It also appears once when you open View a client.</p>
         </div>
       </div>
     </div>
@@ -7957,6 +7996,7 @@ window.togglePrevious = () => {
 };
 window.openHelp = () => {
   if (user) lsSetStr(versionStorageKey(), APP_VERSION);
+  if (viewingAsClient()) markPreviewOnboardingSeen();
   hubPage = 'help';
   modal = null;
   modalPinned = false;
@@ -7978,9 +8018,21 @@ window.closeHubPage = () => {
 };
 window.dismissWhatsNew = () => {
   if (user) lsSetStr(versionStorageKey(), APP_VERSION);
+  if (viewingAsClient()) markPreviewOnboardingSeen();
   modal = null;
   modalPinned = false;
   renderDash();
+};
+window.replayClientOnboarding = () => {
+  if (role !== 'admin') return;
+  clearPreviewOnboardingSeen();
+  settingsOpen = false;
+  moreOpen = false;
+  hubPage = 'main';
+  modal = 'whats-new';
+  modalPinned = true;
+  renderDash();
+  window.scrollTo(0, 0);
 };
 window.dismissNewScripts = () => {
   acknowledgeFreshBatch();
@@ -8336,7 +8388,6 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     filtersOpen = opts.filtersOpen !== false && role === 'admin';
     settingsOpen = false;
     listSearch = '';
-    showHelp = false;
     hubPage = opts.hubPage || 'main';
     previousOpen = !!opts.previousOpen;
     requests = opts.requests || [];

@@ -46,12 +46,36 @@ const names = [
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
-  'homeSlug', 'sessionLanding',
+  'homeSlug', 'sessionLanding', 'unseenReleasesFor',
 ];
+const appVersion = (script.match(/const APP_VERSION = '([^']+)'/) || [])[1];
+function extractAssignment(name) {
+  const start = script.indexOf('const ' + name + ' =');
+  if (start < 0) throw new Error('missing const ' + name);
+  let i = script.indexOf('=', start) + 1;
+  while (script[i] === ' ' || script[i] === '\n') i++;
+  if (script[i] === "'" || script[i] === '"') {
+    const q = script[i];
+    const end = script.indexOf(q, i + 1);
+    return script.slice(start, end + 1);
+  }
+  if (script[i] === '[') {
+    let depth = 0;
+    for (let j = i; j < script.length; j++) {
+      if (script[j] === '[') depth++;
+      else if (script[j] === ']') {
+        depth--;
+        if (depth === 0) return script.slice(start, j + 1);
+      }
+    }
+  }
+  throw new Error('unclosed const ' + name);
+}
 const src = [
   "const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];",
-  "const APP_VERSION = '2026.10.23';",
+  extractAssignment('APP_VERSION') + ';',
   "const WALKTHROUGH_VIDEO_URL = '';",
+  extractAssignment('RELEASES'),
   "const CLIENTS = { jan: { name: 'Jan Zands', label: 'Jan' } };",
   'let prepState = null;',
   "var role = 'client';",
@@ -641,6 +665,25 @@ assert.notStrictEqual(adminHome.viewSlug, 'andrew');
 assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian');
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
+
+assert.strictEqual(appVersion, '2026.10.26.1');
+assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
+assert.ok(/Paste a Loom, YouTube/.test(script));
+assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
+const firstUnseen = ctx.unseenReleasesFor('', false, '');
+assert.strictEqual(firstUnseen.length, 1);
+assert.strictEqual(firstUnseen[0].version, '2026.10.26.1');
+assert.strictEqual(firstUnseen[0].version, appVersion);
+assert.ok(/full-screen teleprompter/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/Save keeps your words/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/cannot overwrite/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.26.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', true, '2026.10.26.1').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', true, '2026.10.24.2')[0].version, '2026.10.26.1');
+assert.ok(script.includes('Replay client onboarding'));
+assert.ok(script.includes('hub_preview_onboarding_seen'));
 
 assert.strictEqual(ctx.isConferenceBatch('⭐ Floor Film · AIMW'), true);
 assert.strictEqual(ctx.isConferenceBatch('CONFERENCE · floor-film'), true);

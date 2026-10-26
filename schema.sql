@@ -15,7 +15,7 @@ create table if not exists scripts (
   reference_clip text,                -- YouTube URL or account handle
   thumbnail_url  text,                -- optional cover/first frame; UI falls back to oEmbed or og:image. See migrations/2026-10-22_scripts_thumbnail_url.sql
   pipeline_audit jsonb,               -- admin-only production audit. Clients never get an Audit step. See migrations/2026-10-25_scripts_pipeline_audit.sql
-  client_resources jsonb,             -- optional delivery reminders (thesis, formats, do-not-say). UI works without this column. See migrations/2026-10-26_scripts_client_resources.sql
+  client_resources jsonb,             -- optional delivery reminders (thesis, formats, do-not-say, or rich {id,title,body_md,image,admin_only} cards). UI works without this column. Jan pack is a static fallback. See migrations/2026-10-26_scripts_client_resources.sql
   camera         text,
   cta            text,
   editor_notes   text,

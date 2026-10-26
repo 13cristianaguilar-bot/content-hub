@@ -28,7 +28,10 @@ const names = [
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
-  'resourceKey', 'parseClientResources', 'resourceMap', 'firstResourceText', 'formatDnaReminder', 'reviewRefs',
+  'resourceKey', 'isResourceCard', 'resolveResourceImage', 'normalizeResourceCard',
+  'clientResourcePackSlug', 'clientResourcePack', 'parseClientResources', 'resourceMap',
+  'firstResourceText', 'formatDnaReminder', 'reviewRefs',
+  'resourceCardSrc', 'mergeResourceCards', 'resourceInlineHtml', 'resourceMarkdownHtml', 'prompterResourceCardHtml',
   'prompterRefPrefersOn', 'clientResourceItems', 'prompterRefHtml', 'prompterResourcesHtml', 'prompterEmbed',
   'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
   'clipKey', 'sameClip', 'formatPrinciples', 'tightCopy',
@@ -61,11 +64,23 @@ function extractAssignment(name) {
     const end = script.indexOf(q, i + 1);
     return script.slice(start, end + 1);
   }
-  if (script[i] === '[') {
+  const open = script[i];
+  const close = open === '[' ? ']' : open === '{' ? '}' : '';
+  if (close) {
     let depth = 0;
+    let quote = '';
+    let esc = false;
     for (let j = i; j < script.length; j++) {
-      if (script[j] === '[') depth++;
-      else if (script[j] === ']') {
+      const c = script[j];
+      if (quote) {
+        if (esc) { esc = false; continue; }
+        if (c === '\\') { esc = true; continue; }
+        if (c === quote) quote = '';
+        continue;
+      }
+      if (c === "'" || c === '"') { quote = c; continue; }
+      if (c === open) depth++;
+      else if (c === close) {
         depth--;
         if (depth === 0) return script.slice(start, j + 1);
       }
@@ -79,6 +94,9 @@ const src = [
   "const WALKTHROUGH_VIDEO_URL = '';",
   extractAssignment('RELEASES'),
   "const CLIENTS = { jan: { name: 'Jan Zands', label: 'Jan' } };",
+  extractAssignment('CLIENT_RESOURCE_BASE') + ';',
+  extractAssignment('CLIENT_RESOURCE_PACKS'),
+  extractAssignment('CLIENT_RESOURCE_MANIFESTS'),
   'let prepState = null;',
   "var role = 'client';",
   ...names.map(extract),
@@ -668,23 +686,24 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.26.2');
+assert.strictEqual(appVersion, '2026.10.26.3');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.26.2');
+assert.strictEqual(firstUnseen[0].version, '2026.10.26.3');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/reference reel beside/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Resources opens/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Clients can open it with Reference/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.26.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.26.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', true, '2026.10.26.2').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', true, '2026.10.24.2')[0].version, '2026.10.26.2');
+assert.ok(/visual cards|Signal-branded/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/Jan|Rich Life/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/admin-only/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.26.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.26.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.26.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', true, '2026.10.26.3').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', true, '2026.10.24.2')[0].version, '2026.10.26.3');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1358,5 +1377,60 @@ const resHtml = ctx.prompterResourcesHtml(reviewScript, { includeAudit: false })
 assert.ok(resHtml.includes('Do not say'));
 assert.ok(resHtml.includes('pr-res-item'));
 assert.ok(!resHtml.includes('Content system for founders'));
+assert.ok(!resHtml.includes('monica-stamp.png'));
+
+const richCard = {
+  id: 'monica-stamp',
+  title: 'Monica Stamp — Leadership lens',
+  body_md: 'Pass only if it is about **leadership**.\n\n- Rewrite rank-chase\n- Keep personal development',
+  image: 'png/monica-stamp.png',
+  image_hub: 'hub/monica-stamp.png',
+  tags: ['filter', 'monica'],
+  admin_only: true,
+  order: 1,
+};
+const parsedCard = ctx.parseClientResources([richCard], { base: 'assets/client-resources/jan-rla/' });
+assert.strictEqual(parsedCard.cards.length, 1);
+assert.strictEqual(parsedCard.cards[0].id, 'monica-stamp');
+assert.strictEqual(parsedCard.cards[0].image_hub, 'assets/client-resources/jan-rla/hub/monica-stamp.png');
+assert.strictEqual(parsedCard.cards[0].admin_only, true);
+assert.ok(ctx.parseClientResources({ thesis: 'Keep this shape.' }).items.some(it => it.key === 'thesis'));
+assert.strictEqual(ctx.parseClientResources(null).cards.length, 0);
+assert.strictEqual(ctx.clientResourcePackSlug('jan'), 'jan-rla');
+assert.strictEqual(ctx.clientResourcePackSlug('andrew'), '');
+const janPack = ctx.clientResourcePack('jan');
+assert.strictEqual(janPack.cards.length, 6);
+assert.ok(janPack.cards.some(c => c.id === 'monica-stamp' && /hub\/monica-stamp\.png/.test(c.image_hub)));
+assert.ok(janPack.cards.every(c => c.admin_only === true));
+
+const janAdmin = ctx.clientResourceItems({ client_slug: 'jan', title: 'Growth Reveals Your Circle' }, { role: 'admin', includeAudit: true });
+assert.ok(janAdmin.some(it => it.id === 'monica-stamp' && it.kind === 'card' && /hub\/monica-stamp\.png/.test(it.image_hub)));
+assert.ok(janAdmin.some(it => it.id === 'thesis' && it.kind === 'card'));
+assert.ok(janAdmin.some(it => it.id === 'do-not-say'));
+assert.ok(janAdmin.some(it => it.id === 'format-dna-check'));
+assert.ok(janAdmin.some(it => it.id === 'locked-formats'));
+assert.ok(janAdmin.some(it => it.id === 'review-checklist'));
+const janClient = ctx.clientResourceItems({ client_slug: 'jan' }, { role: 'client', includeAudit: false });
+assert.ok(!janClient.some(it => it.kind === 'card'));
+assert.ok(!janClient.some(it => it.id === 'monica-stamp'));
+const andrewAdmin = ctx.clientResourceItems({ client_slug: 'andrew', title: 'Other client' }, { role: 'admin', includeAudit: true });
+assert.ok(!andrewAdmin.some(it => it.id === 'monica-stamp'));
+
+const janHtml = ctx.prompterResourcesHtml({ client_slug: 'jan' }, { role: 'admin', includeAudit: true });
+assert.ok(janHtml.includes('pr-res-card'));
+assert.ok(janHtml.includes('assets/client-resources/jan-rla/hub/monica-stamp.png'));
+assert.ok(janHtml.includes('Monica Stamp'));
+assert.ok(janHtml.includes('<strong>leadership</strong>') || janHtml.includes('leadership'));
+const compactHtml = ctx.prompterResourcesHtml({ client_slug: 'jan' }, { role: 'admin', includeAudit: true }, { compact: true });
+assert.ok(compactHtml.includes('Monica Stamp'));
+assert.ok(!compactHtml.includes('<img'));
+const missingImg = ctx.prompterResourceCardHtml({
+  id: 'no-art', title: 'Text only', body_md: '- One reminder', kind: 'card',
+});
+assert.ok(missingImg.includes('Text only'));
+assert.ok(missingImg.includes('<li>'));
+assert.ok(!missingImg.includes('<img'));
+assert.ok(!ctx.prompterResourcesHtml({ client_slug: 'jan' }, { role: 'client', includeAudit: false }).includes('pipeline_audit'));
+assert.ok(!ctx.prompterResourcesHtml(reviewScript, { role: 'client', includeAudit: false }).includes('Content system for founders'));
 
 console.log('hub-logic tests passed');

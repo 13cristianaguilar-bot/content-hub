@@ -562,6 +562,24 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
   display: block; font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #c8c8c8; margin-bottom: 4px;
 }
+.pr-res-card {
+  margin: 0 0 14px; background: #121212; border: 1px solid #2a2a2a;
+  border-radius: 14px; overflow: hidden;
+}
+.pr-res-card-img {
+  display: block; width: 100%; height: auto; background: #0b0b0d; border: 0;
+}
+.pr-res-card-body { padding: 12px 14px 14px; }
+.pr-res-card-title {
+  margin: 0 0 8px; font-size: 16px; font-weight: 700; letter-spacing: -0.03em; color: #fff;
+}
+.pr-res-card-md { font-size: 14px; line-height: 1.45; color: #d0d0d0; }
+.pr-res-card-md p { margin: 0 0 8px; }
+.pr-res-card-md p:last-child { margin-bottom: 0; }
+.pr-res-card-md strong { color: #fff; font-weight: 700; }
+.pr-res-card-md ul, .pr-res-card-md ol { margin: 0 0 8px; padding-left: 1.2em; }
+.pr-res-card-md li { margin: 0 0 4px; }
+.pr-res-stack { display: flex; flex-direction: column; gap: 0; }
 .pr-notes-btn.is-on, .pr-ref-btn.is-on, .pr-res-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
 @media (min-width: 900px) {
   .pr-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
@@ -575,6 +593,7 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
     flex: 0 0 40%; max-width: 42%; max-height: none; border-top: 0; border-left: 1px solid #2a2a2a;
   }
   #prompter.has-ref .pr-res-compact { display: block; }
+  #prompter.has-res .pr-res-compact { display: none !important; }
   .pr-res-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
   #prompter.has-res:not(.has-ref) > .pr-top,
   #prompter.has-res:not(.has-ref) > .pr-scriptnav,
@@ -1238,13 +1257,123 @@ const CLIENTS = {
   sagun:  { name: 'Sagun Sedai',    label: 'Sagun'  },
 };
 
+// client_slug → pack folder under assets/client-resources/.
+// Add Andrew/Devin/Sagun by dropping a folder (manifest.json + hub/ + png/)
+// and mapping the slug here, then pasting that manifest into CLIENT_RESOURCE_MANIFESTS.
+const CLIENT_RESOURCE_BASE = 'assets/client-resources/';
+const CLIENT_RESOURCE_PACKS = {
+  jan: 'jan-rla',
+  'jan-rla': 'jan-rla',
+};
+const CLIENT_RESOURCE_MANIFESTS = {
+  'jan-rla': [
+  {
+    "id": "monica-stamp",
+    "title": "Monica Stamp \u2014 Leadership lens",
+    "body_md": "**Monica stamp (exact):** Pass only if the beat is about **leadership**, or **developing as a better leader or person** so you can grow your network marketing business.\n\nOpportunity / Rank / Wealth **without** that tie \u2192 **rewrite** to leadership / personal development. Growing the person and the leader \u2014 not rank-chase.",
+    "image": "png/monica-stamp.png",
+    "image_hub": "hub/monica-stamp.png",
+    "tags": [
+      "filter",
+      "monica",
+      "leadership",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 1,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "thesis",
+    "title": "Thesis \u2014 Leadership + grow as an NM",
+    "body_md": "**Thesis:** Leadership + grow yourself as a network marketer.\n\nSpeak to the **top ~5% of NMs** \u2014 not joiners. Be **direct** (NM audience doesn\u2019t read between the lines). Avoid vague AI hedges.",
+    "image": "png/thesis.png",
+    "image_hub": "hub/thesis.png",
+    "tags": [
+      "thesis",
+      "audience",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 2,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "do-not-say",
+    "title": "Do not say",
+    "body_md": "**Do not say / do not assume:**\n- Viewer is scarred, wounded, or broken\n- Mom-shaming / Rachael Bodie\u2013style hookbait\n- Vague AI hedges (\u201cgently/quietly disagree\u201d, soft mush)\n\nDropped on Call #3: mom/Rachael hookbait script.",
+    "image": "png/do-not-say.png",
+    "image_hub": "hub/do-not-say.png",
+    "tags": [
+      "guardrails",
+      "voice",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 3,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "format-dna-check",
+    "title": "Format DNA check",
+    "body_md": "**Format DNA:** Lock hook / format / idea / reward. Shift only messaging \u00b7 angle \u00b7 voice.\n\n**Dual audit before camera:**\n- **MATCH** \u2014 keeps the DNA (hook pattern, beats, idea, reward)\n- **PASS** \u2014 sounds like Rich Life (thesis, niche words, no banned hooks)\n\nFail either \u2192 rewrite. Both required to film.",
+    "image": "png/format-dna-check.png",
+    "image_hub": "hub/format-dna-check.png",
+    "tags": [
+      "format-dna",
+      "audit",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 4,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "locked-formats",
+    "title": "Locked formats (5)",
+    "body_md": "**Locked formats (Call #3):** Reaction \u00b7 Education \u00b7 Lists \u00b7 Interview \u00b7 Myth-buster.\n\nStay inside these five when transplanting reference DNA into Rich Life scripts.",
+    "image": "png/locked-formats.png",
+    "image_hub": "hub/locked-formats.png",
+    "tags": [
+      "formats",
+      "locked",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 5,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "review-checklist",
+    "title": "Review checklist (beside reference)",
+    "body_md": "**While watching the reference reel (Resources left / Ref right):**\n1. Does the Monica stamp pass?\n2. Is the hook locked (same pattern / tension)?\n3. Is the body shifted to Rich Life (messaging \u00b7 angle \u00b7 voice)?\n4. Does the Hub title sync with the script?\n\nAll four yes \u2192 ready for client / film. Any no \u2192 rewrite.",
+    "image": "png/review-checklist.png",
+    "image_hub": "hub/review-checklist.png",
+    "tags": [
+      "checklist",
+      "review",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 6,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  }
+],
+};
+
 // Calendar/Pipeline views are admin-only for now -- Cristian wants to try them himself
 // before exposing them to clients. Flip to true once validated.
 const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.26.2';
+const APP_VERSION = '2026.10.26.3';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -1259,6 +1388,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.26.3',
+    date: 'October 26, 2026',
+    title: 'Resources as text and visual cards',
+    items: [
+      'Resources now stacks Signal-branded cards — title, scannable bullets, and the card image — next to the script.',
+      'Jan / Rich Life Academy scripts load the Monica stamp, thesis, do-not-say, Format DNA, locked formats, and review checklist automatically.',
+      'Admin-only cards stay admin-only. Clients still never see Audit.',
+    ],
+    steps: [
+      'Open Full screen on a Jan script. Tap Resources.',
+      'Read the bullets, then glance at the card art. Prefer the sidebar crop in the drawer.',
+      'Ref, Edit / Save, Film prep, and the phone half-sheet are unchanged.',
+    ],
+  },
   {
     version: '2026.10.26.2',
     date: 'October 26, 2026',
@@ -4809,20 +4953,73 @@ function referencePack(s) {
 function resourceKey(name) {
   return String(name || '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
 }
-function parseClientResources(raw) {
-  const empty = { items: [], markdown: '' };
+function isResourceCard(item) {
+  if (!item || typeof item !== 'object' || Array.isArray(item)) return false;
+  if (item.body_md != null || item.image_hub != null) return true;
+  if (item.admin_only != null && (item.title != null || item.id != null || item.body != null)) return true;
+  if (item.image != null && (item.title != null || item.id != null)) return true;
+  return false;
+}
+function resolveResourceImage(path, base) {
+  const p = asText(path).trim();
+  if (!p) return '';
+  if (/^(https?:|data:|blob:|\/\/)/i.test(p) || p.charAt(0) === '/') return p;
+  if (p.indexOf('assets/') === 0) return p;
+  const root = asText(base).trim();
+  if (!root) return p;
+  return root.replace(/\/?$/, '/') + p.replace(/^\.\//, '');
+}
+function normalizeResourceCard(item, base) {
+  if (!item || typeof item !== 'object') return null;
+  const title = asText(item.title || item.label || item.name).trim();
+  const body = asText(item.body_md != null ? item.body_md : (item.body || item.text || item.value)).trim();
+  const image = resolveResourceImage(item.image, base);
+  const imageHub = resolveResourceImage(item.image_hub || item.imageHub, base);
+  if (!title && !body && !image && !imageHub) return null;
+  const id = asText(item.id).trim() || resourceKey(title || body.slice(0, 24));
+  return {
+    id: id,
+    key: resourceKey(id || title),
+    title: title,
+    label: title,
+    body_md: body,
+    text: body,
+    image: image,
+    image_hub: imageHub,
+    tags: Array.isArray(item.tags) ? item.tags.map(t => asText(t).trim()).filter(Boolean) : [],
+    admin_only: item.admin_only === true || item.adminOnly === true,
+    order: Number(item.order) || 0,
+    client: asText(item.client).trim(),
+    kind: 'card',
+  };
+}
+function clientResourcePackSlug(clientSlug) {
+  const key = String(clientSlug || '').toLowerCase().trim();
+  return (typeof CLIENT_RESOURCE_PACKS !== 'undefined' && CLIENT_RESOURCE_PACKS[key]) || '';
+}
+function clientResourcePack(clientSlug) {
+  const slug = clientResourcePackSlug(clientSlug);
+  const cards = slug && typeof CLIENT_RESOURCE_MANIFESTS !== 'undefined' ? CLIENT_RESOURCE_MANIFESTS[slug] : null;
+  if (!cards) return { items: [], cards: [], markdown: '' };
+  const base = (typeof CLIENT_RESOURCE_BASE !== 'undefined' ? CLIENT_RESOURCE_BASE : 'assets/client-resources/') + slug + '/';
+  return parseClientResources(cards, { base: base });
+}
+function parseClientResources(raw, opts) {
+  const empty = { items: [], cards: [], markdown: '' };
+  const base = opts && opts.base ? opts.base : '';
   if (raw == null || raw === '') return empty;
   if (typeof raw === 'string') {
     const t = raw.trim();
     if (!t) return empty;
     try {
       const parsed = JSON.parse(t);
-      if (parsed && typeof parsed === 'object') return parseClientResources(parsed);
+      if (parsed && typeof parsed === 'object') return parseClientResources(parsed, opts);
     } catch (e) {}
-    return { items: [], markdown: t };
+    return { items: [], cards: [], markdown: t };
   }
   if (Array.isArray(raw)) {
     const items = [];
+    const cards = [];
     const lines = [];
     raw.forEach(item => {
       if (item == null) return;
@@ -4832,21 +5029,56 @@ function parseClientResources(raw) {
         return;
       }
       if (typeof item !== 'object') return;
+      if (isResourceCard(item)) {
+        const card = normalizeResourceCard(item, base);
+        if (card) {
+          cards.push(card);
+          items.push({ key: card.key, label: card.title || card.id, text: card.text, card: card });
+        }
+        return;
+      }
       const label = asText(item.label || item.title || item.name).trim();
       const text = asText(item.text || item.value || item.body).trim();
       if (label && text) items.push({ key: resourceKey(label), label: label, text: text });
       else if (text) lines.push(text);
     });
-    return { items: items, markdown: lines.join('\n') };
+    return { items: items, cards: cards, markdown: lines.join('\n') };
   }
   if (typeof raw === 'object') {
-    return {
-      items: Object.keys(raw).map(k => {
-        const text = asText(raw[k]).trim();
-        return text ? { key: resourceKey(k), label: asText(k).trim(), text: text } : null;
-      }).filter(Boolean),
-      markdown: '',
-    };
+    if (isResourceCard(raw) && !Array.isArray(raw.cards) && !Array.isArray(raw.items)) {
+      const card = normalizeResourceCard(raw, base);
+      return card
+        ? { items: [{ key: card.key, label: card.title || card.id, text: card.text, card: card }], cards: [card], markdown: '' }
+        : empty;
+    }
+    const items = [];
+    const cards = [];
+    const lines = [];
+    const nested = [];
+    if (Array.isArray(raw.cards)) nested.push(raw.cards);
+    if (Array.isArray(raw.items)) nested.push(raw.items);
+    nested.forEach(list => {
+      const parsed = parseClientResources(list, opts);
+      items.push.apply(items, parsed.items);
+      cards.push.apply(cards, parsed.cards);
+      if (parsed.markdown) lines.push(parsed.markdown);
+    });
+    Object.keys(raw).forEach(k => {
+      if (k === 'cards' || k === 'items' || k === 'markdown') return;
+      const v = raw[k];
+      if (isResourceCard(v)) {
+        const card = normalizeResourceCard(Object.assign({ id: v.id || k }, v), base);
+        if (card) {
+          cards.push(card);
+          items.push({ key: card.key, label: card.title || k, text: card.text, card: card });
+        }
+        return;
+      }
+      const text = asText(v).trim();
+      if (text) items.push({ key: resourceKey(k), label: asText(k).trim(), text: text });
+    });
+    if (typeof raw.markdown === 'string' && raw.markdown.trim()) lines.push(raw.markdown.trim());
+    return { items: items, cards: cards, markdown: lines.join('\n\n') };
   }
   return empty;
 }
@@ -4902,13 +5134,75 @@ function reviewRefs(s, session) {
 function prompterRefPrefersOn(session) {
   return !!(session && session.role === 'admin');
 }
+function resourceCardSrc(card) {
+  if (!card) return '';
+  return asText(card.image_hub || card.image).trim();
+}
+function mergeResourceCards() {
+  const byId = {};
+  const out = [];
+  for (let a = 0; a < arguments.length; a++) {
+    const list = arguments[a] || [];
+    list.forEach(card => {
+      if (!card) return;
+      const id = asText(card.id || card.key).trim();
+      if (id && byId[id]) {
+        const idx = out.indexOf(byId[id]);
+        byId[id] = card;
+        if (idx >= 0) out[idx] = card;
+        return;
+      }
+      if (id) byId[id] = card;
+      out.push(card);
+    });
+  }
+  return out.sort((a, b) => (a.order || 0) - (b.order || 0) || asText(a.id).localeCompare(asText(b.id)));
+}
+function resourceInlineHtml(text) {
+  return escHtml(text).replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+function resourceMarkdownHtml(md) {
+  const text = asText(md).trim();
+  if (!text) return '';
+  return text.split(/\n{2,}/).map(block => {
+    const lines = block.split('\n').filter(l => l.trim());
+    if (!lines.length) return '';
+    if (lines.every(l => /^\s*[-*]\s+/.test(l))) {
+      return '<ul>' + lines.map(l => '<li>' + resourceInlineHtml(l.replace(/^\s*[-*]\s+/, '')) + '</li>').join('') + '</ul>';
+    }
+    if (lines.every(l => /^\s*\d+[.)]\s+/.test(l))) {
+      return '<ol>' + lines.map(l => '<li>' + resourceInlineHtml(l.replace(/^\s*\d+[.)]\s+/, '')) + '</li>').join('') + '</ol>';
+    }
+    return '<p>' + resourceInlineHtml(lines.join('\n')).replace(/\n/g, '<br>') + '</p>';
+  }).join('');
+}
+function prompterResourceCardHtml(card, opts) {
+  const title = asText(card.title || card.label).trim();
+  const body = resourceMarkdownHtml(card.body_md || card.text);
+  const src = opts && opts.compact ? '' : resourceCardSrc(card);
+  const full = asText(card.image).trim();
+  const img = src
+    ? `<img class="pr-res-card-img" src="${escHtml(src)}" alt="${escHtml(title || 'Client resource')}"${full && full !== src ? ` data-full="${escHtml(full)}"` : ''}>`
+    : '';
+  return `<article class="pr-res-card${opts && opts.compact ? ' is-compact' : ''}" data-resource="${escHtml(card.id || '')}">
+      ${img}
+      <div class="pr-res-card-body">
+        ${title ? `<h3 class="pr-res-card-title">${escHtml(title)}</h3>` : ''}
+        ${body ? `<div class="pr-res-card-md">${body}</div>` : ''}
+      </div>
+    </article>`;
+}
 function clientResourceItems(s, session) {
   s = s || {};
   const includeAudit = !!(session && session.includeAudit);
+  const isAdmin = !!(session && (session.role === 'admin' || includeAudit));
   const fd = fdObject(s) || {};
+  const fromPack = clientResourcePack(s.client_slug);
   const fromRow = parseClientResources(s.client_resources);
   const client = (typeof CLIENTS !== 'undefined' && CLIENTS[s.client_slug]) || null;
   const fromClient = parseClientResources(client && client.resources);
+  const cards = mergeResourceCards(fromPack.cards, fromClient.cards, fromRow.cards)
+    .filter(card => isAdmin || !card.admin_only);
   const map = Object.assign({}, resourceMap(fromClient), resourceMap(fromRow));
   const markdown = [fromClient.markdown, fromRow.markdown].filter(Boolean).join('\n\n');
   const audit = includeAudit && s.pipeline_audit && typeof s.pipeline_audit === 'object' && !Array.isArray(s.pipeline_audit)
@@ -4951,12 +5245,17 @@ function clientResourceItems(s, session) {
     pick('format dna', 'dna', 'hook lock'),
     formatDnaReminder(s, audit),
   ]);
-  const items = [];
+  const items = cards.slice();
   const used = {};
+  cards.forEach(card => {
+    used[resourceKey(card.id)] = true;
+    used[resourceKey(card.key)] = true;
+    (card.tags || []).forEach(t => { used[resourceKey(t)] = true; });
+  });
   function push(id, label, text, keys) {
     const t = asText(text).trim();
     if (!t) return;
-    items.push({ id: id, label: label, text: t });
+    items.push({ id: id, label: label, text: t, kind: 'item' });
     (keys || []).forEach(k => { used[resourceKey(k)] = true; });
   }
   push('thesis', 'Brand thesis', thesis, ['thesis', 'brand thesis', 'brand', 'message', 'one liner', 'offer']);
@@ -4974,6 +5273,7 @@ function clientResourceItems(s, session) {
   Object.keys(map).forEach(k => {
     if (used[k] || /audit|admin/.test(k)) return;
     const item = map[k];
+    if (item && item.card) return;
     push('extra-' + k.replace(/\s+/g, '-'), item.label || k, item.text);
   });
   if (markdown) push('notes', 'Client notes', markdown);
@@ -4995,14 +5295,18 @@ function prompterRefHtml(s, session) {
     <div class="pr-ref-toolbar"><span class="pr-ref-kicker">${escHtml(first.label || 'Reference')}</span>${open}</div>
     <div class="pr-ref-frame" id="pr-ref-frame">${prompterEmbed(first)}</div>`;
 }
-function prompterResourcesHtml(s, session) {
+function prompterResourcesHtml(s, session, opts) {
   const items = clientResourceItems(s, session);
   if (!items.length) return '<p class="pr-note-empty">No client reminders on this script yet.</p>';
-  return items.map(item => `
-    <label class="pr-res-item">
+  return '<div class="pr-res-stack">' + items.map(item => {
+    if (item && (item.kind === 'card' || item.image || item.image_hub || item.body_md)) {
+      return prompterResourceCardHtml(item, opts);
+    }
+    return `<label class="pr-res-item">
       <input type="checkbox">
       <span><strong>${escHtml(item.label)}</strong>${escHtml(item.text).replace(/\n/g, '<br>')}</span>
-    </label>`).join('');
+    </label>`;
+  }).join('') + '</div>';
 }
 function flowTextHtml(text) {
   return escHtml(text).split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
@@ -5133,7 +5437,7 @@ function renderPrompter() {
       <input class="pr-speed" type="range" min="16" max="120" value="${st.speed}" aria-label="Scroll speed" oninput="window.prompterSpeed(this.value)">
       <button type="button" onclick="window.prompterMirror()" aria-pressed="${st.mirror}">Mirror</button>`;
   const compactRes = showRef && resItems.length
-    ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session)}</div>`
+    ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session, { compact: true })}</div>`
     : '';
   root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${showRef ? ' has-ref' : ''}${showRes ? ' has-res' : ''}${editing ? ' is-editing' : ''}" role="dialog" aria-modal="true" aria-label="${editing ? 'Edit script' : 'Teleprompter'}">
     <div class="pr-top">
@@ -5397,7 +5701,7 @@ window.prompterRef = (force) => {
       if (!side.innerHTML.trim()) {
         const items = clientResourceItems(s, session);
         const compact = items.length
-          ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session)}</div>`
+          ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session, { compact: true })}</div>`
           : '';
         side.innerHTML = prompterRefHtml(s, session) + compact;
       } else {

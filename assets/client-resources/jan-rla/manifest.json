@@ -1,0 +1,99 @@
+[
+  {
+    "id": "monica-stamp",
+    "title": "Monica Stamp \u2014 Leadership lens",
+    "body_md": "**Monica stamp (exact):** Pass only if the beat is about **leadership**, or **developing as a better leader or person** so you can grow your network marketing business.\n\nOpportunity / Rank / Wealth **without** that tie \u2192 **rewrite** to leadership / personal development. Growing the person and the leader \u2014 not rank-chase.",
+    "image": "png/monica-stamp.png",
+    "image_hub": "hub/monica-stamp.png",
+    "tags": [
+      "filter",
+      "monica",
+      "leadership",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 1,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "thesis",
+    "title": "Thesis \u2014 Leadership + grow as an NM",
+    "body_md": "**Thesis:** Leadership + grow yourself as a network marketer.\n\nSpeak to the **top ~5% of NMs** \u2014 not joiners. Be **direct** (NM audience doesn\u2019t read between the lines). Avoid vague AI hedges.",
+    "image": "png/thesis.png",
+    "image_hub": "hub/thesis.png",
+    "tags": [
+      "thesis",
+      "audience",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 2,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "do-not-say",
+    "title": "Do not say",
+    "body_md": "**Do not say / do not assume:**\n- Viewer is scarred, wounded, or broken\n- Mom-shaming / Rachael Bodie\u2013style hookbait\n- Vague AI hedges (\u201cgently/quietly disagree\u201d, soft mush)\n\nDropped on Call #3: mom/Rachael hookbait script.",
+    "image": "png/do-not-say.png",
+    "image_hub": "hub/do-not-say.png",
+    "tags": [
+      "guardrails",
+      "voice",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 3,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "format-dna-check",
+    "title": "Format DNA check",
+    "body_md": "**Format DNA:** Lock hook / format / idea / reward. Shift only messaging \u00b7 angle \u00b7 voice.\n\n**Dual audit before camera:**\n- **MATCH** \u2014 keeps the DNA (hook pattern, beats, idea, reward)\n- **PASS** \u2014 sounds like Rich Life (thesis, niche words, no banned hooks)\n\nFail either \u2192 rewrite. Both required to film.",
+    "image": "png/format-dna-check.png",
+    "image_hub": "hub/format-dna-check.png",
+    "tags": [
+      "format-dna",
+      "audit",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 4,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "locked-formats",
+    "title": "Locked formats (5)",
+    "body_md": "**Locked formats (Call #3):** Reaction \u00b7 Education \u00b7 Lists \u00b7 Interview \u00b7 Myth-buster.\n\nStay inside these five when transplanting reference DNA into Rich Life scripts.",
+    "image": "png/locked-formats.png",
+    "image_hub": "hub/locked-formats.png",
+    "tags": [
+      "formats",
+      "locked",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 5,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  },
+  {
+    "id": "review-checklist",
+    "title": "Review checklist (beside reference)",
+    "body_md": "**While watching the reference reel (Resources left / Ref right):**\n1. Does the Monica stamp pass?\n2. Is the hook locked (same pattern / tension)?\n3. Is the body shifted to Rich Life (messaging \u00b7 angle \u00b7 voice)?\n4. Does the Hub title sync with the script?\n\nAll four yes \u2192 ready for client / film. Any no \u2192 rewrite.",
+    "image": "png/review-checklist.png",
+    "image_hub": "hub/review-checklist.png",
+    "tags": [
+      "checklist",
+      "review",
+      "admin"
+    ],
+    "admin_only": true,
+    "order": 6,
+    "client": "jan-rla",
+    "client_label": "Jan Zands / Rich Life Academy"
+  }
+]

@@ -15,6 +15,11 @@
 --   text markdown
 --   {"thesis":"...","formats":"...","do_not_say":"...","format_dna":"..."}
 --   [{"label":"Do not say","text":"..."}]
+--   [{"id":"thesis","title":"...","body_md":"...","image":"...","image_hub":"...","admin_only":true,"order":1}]
+--
+-- Jan / Rich Life Academy cards also ship as a static pack
+-- (assets/client-resources/jan-rla/). Hub shows them for client_slug jan
+-- without writing this column. Per-script JSON overrides or adds cards.
 --
 -- Example:
 --

@@ -28,6 +28,8 @@ const names = [
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
+  'resourceKey', 'parseClientResources', 'resourceMap', 'firstResourceText', 'formatDnaReminder', 'reviewRefs',
+  'prompterRefPrefersOn', 'clientResourceItems', 'prompterRefHtml', 'prompterResourcesHtml', 'prompterEmbed',
   'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
   'clipKey', 'sameClip', 'formatPrinciples', 'tightCopy',
   'reactClipKey', 'hasReactClipKey', 'isReactionScript', 'reactionClipInfo', 'reactionClipUrl', 'showsReactClip',
@@ -666,22 +668,23 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.26.1');
+assert.strictEqual(appVersion, '2026.10.26.2');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.26.1');
+assert.strictEqual(firstUnseen[0].version, '2026.10.26.2');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/full-screen teleprompter/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Save keeps your words/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/cannot overwrite/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.26.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', true, '2026.10.26.1').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', true, '2026.10.24.2')[0].version, '2026.10.26.1');
+assert.ok(/reference reel beside/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/Resources opens/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/Clients can open it with Reference/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.26.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.26.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', true, '2026.10.26.2').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', true, '2026.10.24.2')[0].version, '2026.10.26.2');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1300,5 +1303,60 @@ ctx.role = 'client';
 assert.strictEqual(ctx.batchGapsHtml([[{ title: 'Mission statement', pipeline_audit: sharedAudit }]]), '');
 assert.ok(!ctx.prepStepBody({ title: 'Client card', hook: 'Hook.' }, 0, false).includes('Top Gaps'));
 assert.ok(!ctx.prepStepBody({ title: 'Client card', hook: 'Hook.' }, 0, false).includes('How we built this'));
+
+assert.strictEqual(ctx.prompterRefPrefersOn({ role: 'admin' }), true);
+assert.strictEqual(ctx.prompterRefPrefersOn({ role: 'client' }), false);
+assert.strictEqual(ctx.prompterRefPrefersOn({}), false);
+
+const parsedRes = ctx.parseClientResources({
+  thesis: 'Founders need a publishing rhythm, not more tips.',
+  do_not_say: 'No invented revenue.',
+});
+assert.strictEqual(ctx.resourceMap(parsedRes).thesis.text, 'Founders need a publishing rhythm, not more tips.');
+assert.ok(ctx.parseClientResources('Just a markdown reminder.').markdown.includes('markdown reminder'));
+assert.strictEqual(ctx.parseClientResources(null).items.length, 0);
+
+const reviewScript = {
+  client_slug: 'jan',
+  title: 'Growth Reveals Your Circle',
+  format: 'Talking Head',
+  reference_clip: 'https://www.instagram.com/reel/DdbzuysjzzD/',
+  filming_direction: { Format: 'Talking-head list. Keep the same hook shape, pacing, and talk-to-camera energy.' },
+  editor_notes: 'Do not say: I will change your life.\nThesis: Growth shows you who stays.',
+  tonality_delivery: '3 WAYS TO READ IT (Monica stamp): A) Quiet conviction. B) Friend over coffee. C) Wry, then serious.',
+  pipeline_audit: {
+    offer: 'Content system for founders.',
+    refs: [{ url: 'https://www.youtube.com/watch?v=abcdefghijk' }],
+    dna: {
+      hook: { status: 'pass', why: 'First line keeps the reference hook shape.' },
+      idea: { status: 'pass', why: 'Same idea as the reference. Only the buyer changed.' },
+    },
+  },
+  client_resources: { formats: 'Locked: talking-head list.' },
+};
+const clientItems = ctx.clientResourceItems(reviewScript, { includeAudit: false });
+assert.ok(clientItems.some(it => it.id === 'thesis' && /who stays/.test(it.text)));
+assert.ok(clientItems.some(it => it.id === 'avoid' && /change your life/.test(it.text)));
+assert.ok(clientItems.some(it => it.id === 'formats' && /Locked: talking-head/.test(it.text)));
+assert.ok(clientItems.some(it => it.id === 'read' && /Monica/.test(it.label)));
+assert.ok(!clientItems.some(it => /Content system for founders/.test(it.text)));
+const adminItems = ctx.clientResourceItems(reviewScript, { includeAudit: true });
+assert.ok(adminItems.some(it => it.id === 'dna' && /Hook lock/.test(it.text) && /Body shift/.test(it.text)));
+assert.ok(adminItems.some(it => it.id === 'thesis' && /who stays/.test(it.text)));
+
+const clientRefs = ctx.reviewRefs(reviewScript, { includeAudit: false });
+assert.strictEqual(clientRefs.length, 1);
+assert.strictEqual(clientRefs[0].kind, 'ig');
+const adminRefs = ctx.reviewRefs(reviewScript, { includeAudit: true });
+assert.strictEqual(adminRefs.length, 2);
+assert.ok(adminRefs.some(r => r.kind === 'yt'));
+
+const refHtml = ctx.prompterRefHtml(reviewScript, { includeAudit: false });
+assert.ok(refHtml.includes('instagram.com/reel/DdbzuysjzzD/embed/'));
+assert.ok(refHtml.includes('pr-ref-frame'));
+const resHtml = ctx.prompterResourcesHtml(reviewScript, { includeAudit: false });
+assert.ok(resHtml.includes('Do not say'));
+assert.ok(resHtml.includes('pr-res-item'));
+assert.ok(!resHtml.includes('Content system for founders'));
 
 console.log('hub-logic tests passed');

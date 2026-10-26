@@ -412,7 +412,7 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .pr-top { padding-top: max(10px, env(safe-area-inset-top)); border-bottom: 1px solid #2a2a2a; }
 .pr-title { flex: 1; min-width: 0; font-weight: 600; letter-spacing: -0.03em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pr-controls { border-top: 1px solid #2a2a2a; padding-bottom: calc(10px + env(safe-area-inset-bottom)); flex-wrap: wrap; }
-.pr-controls button, .pr-top button, .pr-progress button, .pr-sheet button, .pr-player button {
+.pr-controls button, .pr-top button, .pr-progress button, .pr-sheet button, .pr-player button, .pr-res-sheet button, .pr-side button {
   min-height: 44px; min-width: 44px; background: transparent; color: #fff; border: 1px solid #3a3a3a; padding: 0 12px; font-weight: 600;
 }
 .pr-play, .pr-notes-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
@@ -469,6 +469,7 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .pr-progress button { flex: 0 0 auto; color: #c8c8c8; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
 .pr-progress button.is-current { background: var(--signal); border-color: var(--signal); color: #fff; }
 .pr-viewport { flex: 1; min-height: 0; position: relative; overflow: hidden; }
+.pr-stage { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; }
 #prompter-scroll { height: 100%; min-height: 0; overflow: auto; padding: 22vh 24px 46vh; }
 #prompter-text { line-height: 1.35; letter-spacing: -0.03em; font-weight: 560; }
 #prompter.is-mirror #prompter-text { transform: scaleX(-1); }
@@ -490,11 +491,11 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .pr-sec.is-clip { font-size: 0.72em; color: #9ec1ff; }
 .pr-sec.is-clip.is-current { color: #d6e6ff; }
 .pr-sec.is-clip.is-past { color: #60789f; }
-.pr-sheet, .pr-player {
+.pr-sheet, .pr-player, .pr-res-sheet {
   position: absolute; inset: 0; z-index: 5; background: #0e0e0e; color: #fff;
   display: flex; flex-direction: column; min-height: 0;
 }
-.pr-sheet[hidden], .pr-player[hidden] { display: none !important; }
+.pr-sheet[hidden], .pr-player[hidden], .pr-res-sheet[hidden] { display: none !important; }
 .pr-sheet-body { flex: 1; overflow: auto; padding: 4px 16px 28px; }
 .pr-note { padding: 14px 0; border-top: 1px solid #2a2a2a; }
 .pr-note h3 {
@@ -510,12 +511,83 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
   width: 100%; height: 100%; max-width: none; border: 0; display: block; background: #000;
 }
 .pr-link-fallback { padding: 24px; }
+.pr-side {
+  display: none; flex-direction: column; min-width: 0; min-height: 0;
+  background: #0e0e0e; color: #fff; border-top: 1px solid #2a2a2a;
+}
+#prompter.has-ref .pr-side { display: flex; }
+#prompter .pr-side[hidden] { display: none !important; }
+@media (max-width: 899px) {
+  #prompter.has-ref .pr-scriptnav { display: none; }
+  #prompter.has-ref .pr-side {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    flex: none; width: 100%; height: 46vh; max-height: 46vh;
+    z-index: 4; border-top: 1px solid #2a2a2a;
+  }
+  #prompter.has-ref .pr-read { flex: 1 1 auto; }
+  #prompter.has-ref #prompter-scroll { padding-bottom: 52vh; }
+}
+#prompter.is-editing .pr-side { display: none !important; }
+.pr-ref-toolbar, .pr-ref-tabs {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding: 8px 12px; border-bottom: 1px solid #2a2a2a;
+}
+.pr-ref-tabs { overflow-x: auto; }
+.pr-ref-kicker {
+  flex: 1; min-width: 0;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #ff6a70; font-weight: 500;
+}
+.pr-ref-open, .pr-ref-tab {
+  min-height: 36px; padding: 0 10px; color: #fff; border: 1px solid #3a3a3a; background: transparent; font-weight: 600;
+}
+.pr-ref-tab.is-on { background: var(--signal); border-color: var(--signal); }
+.pr-ref-frame { flex: 1 1 auto; min-height: 140px; background: #000; }
+.pr-ref-frame iframe, .pr-ref-frame .pr-embed { width: 100%; height: 100%; border: 0; display: block; }
+.pr-res-compact {
+  display: none; overflow: auto; flex: 0 1 auto; max-height: 38%;
+  padding: 8px 12px 14px; border-top: 1px solid #2a2a2a;
+}
+.pr-res-kicker {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #ff6a70; font-weight: 500;
+  margin: 4px 0 8px;
+}
+.pr-res-item {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 0; border-top: 1px solid #2a2a2a; font-size: 14px; line-height: 1.4;
+}
+.pr-res-item input { margin-top: 4px; accent-color: var(--signal); flex-shrink: 0; }
+.pr-res-item strong {
+  display: block; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #c8c8c8; margin-bottom: 4px;
+}
+.pr-notes-btn.is-on, .pr-ref-btn.is-on, .pr-res-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
 @media (min-width: 900px) {
   .pr-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
   #prompter.has-notes > .pr-top,
   #prompter.has-notes > .pr-scriptnav,
-  #prompter.has-notes > .pr-read,
+  #prompter.has-notes > .pr-stage,
   #prompter.has-notes > .pr-controls { margin-right: min(440px, 40vw); }
+  #prompter.has-ref .pr-stage { flex-direction: row; }
+  #prompter.has-ref .pr-read { flex: 1.35 1 0; min-width: 0; }
+  #prompter.has-ref .pr-side {
+    flex: 0 0 40%; max-width: 42%; max-height: none; border-top: 0; border-left: 1px solid #2a2a2a;
+  }
+  #prompter.has-ref .pr-res-compact { display: block; }
+  .pr-res-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
+  #prompter.has-res:not(.has-ref) > .pr-top,
+  #prompter.has-res:not(.has-ref) > .pr-scriptnav,
+  #prompter.has-res:not(.has-ref) > .pr-stage,
+  #prompter.has-res:not(.has-ref) > .pr-controls { margin-right: min(440px, 40vw); }
+  #prompter.has-res.has-ref .pr-res-sheet {
+    left: 0; right: auto; width: min(340px, 32vw);
+    border-left: 0; border-right: 1px solid #2a2a2a;
+  }
+  #prompter.has-res.has-ref > .pr-top,
+  #prompter.has-res.has-ref > .pr-scriptnav,
+  #prompter.has-res.has-ref > .pr-stage,
+  #prompter.has-res.has-ref > .pr-controls { margin-left: min(340px, 32vw); }
 }
 .pr-q { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid #2a2a2a; }
 .pr-qn { color: #ff6a70; font-family: "Geist Mono", ui-monospace, monospace; font-size: 0.45em; padding-top: 0.35em; }
@@ -1172,13 +1244,13 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.26.1';
+const APP_VERSION = '2026.10.26.2';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
 
 const FILMING_GUIDE = [
-  'Watch the reference reel before you roll.',
+  'Watch the reference reel before you roll. On Full screen, Reference sits beside the script.',
   'Film prep, then Full screen. Edit lives on that full-screen teleprompter.',
   'Keep the first line as written unless you tap Edit.',
   'Shoot vertical.',
@@ -1187,6 +1259,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.26.2',
+    date: 'October 26, 2026',
+    title: 'Script and reference together',
+    items: [
+      'Full screen keeps the script on the left and the reference reel beside it, so you can check the follow-through without another tab.',
+      'Resources opens the reminders already on this card — thesis, locked formats, do-not-say, Format DNA, how to read it — when those fields exist.',
+      'Admins see the reference pane by default. Clients can open it with Reference so the teleprompter stays full-screen on a phone.',
+    ],
+    steps: [
+      'Open Film prep or Full screen on a script that has a reference URL.',
+      'On a wide screen the reel sits beside the hook, beats, and CTA. Hide it with Reference if you only want the teleprompter.',
+      'On a phone, Reference splits the screen in half. Resources opens a sheet of delivery reminders.',
+    ],
+  },
   {
     version: '2026.10.26.1',
     date: 'October 26, 2026',
@@ -1759,7 +1846,7 @@ document.addEventListener('touchstart', (e) => {
   if (!e.touches || e.touches.length !== 1) { swipeGesture = null; return; }
   const zone = e.target.closest && e.target.closest('[data-swipe-scope]');
   if (!zone) { swipeGesture = null; return; }
-  if (e.target.closest('button, a, input, textarea, select, label, .pr-progress, .pr-controls, .pr-sheet, .pr-player, .script-pager')) {
+  if (e.target.closest('button, a, input, textarea, select, label, .pr-progress, .pr-controls, .pr-sheet, .pr-player, .pr-res-sheet, .pr-side, .script-pager')) {
     swipeGesture = null;
     return;
   }
@@ -4201,7 +4288,7 @@ const SCRIPT_FIELDS = [
   ['take_label', 'Take label'], ['sous_chef_pass', 'Sous chef pass'], ['filming_direction', 'Filming direction'],
   ['client_feedback', 'Client feedback'], ['filming_setup', 'Filming setup'], ['clip_directions', 'Clip directions'],
   ['tonality_delivery', 'Tonality and delivery'], ['proof_stats', 'Proof stats'],
-  ['thumbnail_url', 'Thumbnail'], ['id', 'Id'],
+  ['thumbnail_url', 'Thumbnail'], ['client_resources', 'Client resources'], ['id', 'Id'],
 ];
 
 function shotChecked(id, idx) {
@@ -4719,6 +4806,204 @@ function referencePack(s) {
     refs: refs,
   };
 }
+function resourceKey(name) {
+  return String(name || '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function parseClientResources(raw) {
+  const empty = { items: [], markdown: '' };
+  if (raw == null || raw === '') return empty;
+  if (typeof raw === 'string') {
+    const t = raw.trim();
+    if (!t) return empty;
+    try {
+      const parsed = JSON.parse(t);
+      if (parsed && typeof parsed === 'object') return parseClientResources(parsed);
+    } catch (e) {}
+    return { items: [], markdown: t };
+  }
+  if (Array.isArray(raw)) {
+    const items = [];
+    const lines = [];
+    raw.forEach(item => {
+      if (item == null) return;
+      if (typeof item === 'string') {
+        const t = item.trim();
+        if (t) lines.push(t);
+        return;
+      }
+      if (typeof item !== 'object') return;
+      const label = asText(item.label || item.title || item.name).trim();
+      const text = asText(item.text || item.value || item.body).trim();
+      if (label && text) items.push({ key: resourceKey(label), label: label, text: text });
+      else if (text) lines.push(text);
+    });
+    return { items: items, markdown: lines.join('\n') };
+  }
+  if (typeof raw === 'object') {
+    return {
+      items: Object.keys(raw).map(k => {
+        const text = asText(raw[k]).trim();
+        return text ? { key: resourceKey(k), label: asText(k).trim(), text: text } : null;
+      }).filter(Boolean),
+      markdown: '',
+    };
+  }
+  return empty;
+}
+function resourceMap(parsed) {
+  const map = {};
+  (parsed && parsed.items || []).forEach(item => {
+    if (item && item.key && item.text) map[item.key] = item;
+  });
+  return map;
+}
+function firstResourceText(values) {
+  for (let i = 0; i < values.length; i++) {
+    const t = asText(values[i]).trim();
+    if (t) return t;
+  }
+  return '';
+}
+function formatDnaReminder(s, auditRaw) {
+  const parts = [];
+  const dnaRoot = auditRaw && typeof auditRaw === 'object' && !Array.isArray(auditRaw)
+    ? (auditRaw.dna || auditRaw.formatDna || auditRaw.format_dna)
+    : null;
+  if (dnaRoot && typeof dnaRoot === 'object' && !Array.isArray(dnaRoot)) {
+    const hook = dnaRoot.hook;
+    const idea = dnaRoot.idea;
+    const hookWhy = hook && typeof hook === 'object' ? asText(hook.why).trim() : asText(hook).trim();
+    const ideaWhy = idea && typeof idea === 'object' ? asText(idea.why).trim() : asText(idea).trim();
+    const keep = asText(dnaRoot.keepDna || dnaRoot.keep || dnaRoot.keep_dna).trim();
+    if (hookWhy) parts.push('Hook lock — ' + hookWhy);
+    if (keep) parts.push(keep);
+    else if (ideaWhy) parts.push('Body shift — ' + ideaWhy);
+  }
+  const fd = fdObject(s);
+  const principles = formatPrinciples(fdPick(fd, 'Format') || asText(s && s.format));
+  if (principles && !parts.some(p => p.toLowerCase().indexOf(principles.toLowerCase()) >= 0)) parts.push(principles);
+  return parts.join('\n');
+}
+function reviewRefs(s, session) {
+  const pack = referencePack(s);
+  const refs = (pack.refs || []).slice();
+  const includeAudit = !!(session && session.includeAudit);
+  const raw = includeAudit && s && s.pipeline_audit && typeof s.pipeline_audit === 'object' && !Array.isArray(s.pipeline_audit)
+    ? s.pipeline_audit : null;
+  const list = raw && Array.isArray(raw.refs) ? raw.refs : [];
+  list.forEach(item => {
+    const info = videoInfo(item && (item.url || item.watch || item.href));
+    if (!info || info.kind === 'text') return;
+    if (refs.some(r => (r.watch && info.watch && r.watch === info.watch) || (r.src && info.src && r.src === info.src))) return;
+    refs.push(info);
+  });
+  return refs;
+}
+function prompterRefPrefersOn(session) {
+  return !!(session && session.role === 'admin');
+}
+function clientResourceItems(s, session) {
+  s = s || {};
+  const includeAudit = !!(session && session.includeAudit);
+  const fd = fdObject(s) || {};
+  const fromRow = parseClientResources(s.client_resources);
+  const client = (typeof CLIENTS !== 'undefined' && CLIENTS[s.client_slug]) || null;
+  const fromClient = parseClientResources(client && client.resources);
+  const map = Object.assign({}, resourceMap(fromClient), resourceMap(fromRow));
+  const markdown = [fromClient.markdown, fromRow.markdown].filter(Boolean).join('\n\n');
+  const audit = includeAudit && s.pipeline_audit && typeof s.pipeline_audit === 'object' && !Array.isArray(s.pipeline_audit)
+    ? s.pipeline_audit : null;
+  let offer = '';
+  if (audit) {
+    offer = asText(audit.offer).trim();
+    if (!offer && audit.offer_icp_angle && typeof audit.offer_icp_angle === 'object') {
+      offer = asText(audit.offer_icp_angle.offer).trim();
+    }
+    if (!offer) offer = asText(audit.oneLiner || audit.thesis).trim();
+  }
+  const pick = (...keys) => {
+    for (let i = 0; i < keys.length; i++) {
+      const hit = map[resourceKey(keys[i])];
+      if (hit && hit.text) return hit.text;
+    }
+    return '';
+  };
+  const thesis = firstResourceText([
+    pick('thesis', 'brand thesis', 'brand', 'message', 'one liner', 'offer'),
+    fdPick(fd, 'Thesis'), fdPick(fd, 'Brand'), fdPick(fd, 'Message'), fdPick(fd, 'Offer'),
+    pullLabeled(s.editor_notes, ['thesis', 'brand thesis', 'brand', 'message', 'offer']),
+    pullLabeled(s.tonality_delivery, ['thesis', 'brand thesis', 'brand', 'message']),
+    offer,
+  ]);
+  const formats = firstResourceText([
+    pick('formats', 'locked formats', 'format'),
+    fdPick(fd, 'Format'),
+    asText(s.format).trim(),
+  ]);
+  const avoid = firstResourceText([
+    pick('do not say', "don't say", 'dont say', 'never say', 'avoid'),
+    fdPick(fd, 'Do not say'), fdPick(fd, "Don't say"), fdPick(fd, 'Never say'),
+    pullLabeled(s.editor_notes, ['do not say', "don't say", 'never say', 'avoid saying', 'avoid']),
+    pullLabeled(s.tonality_delivery, ['do not say', "don't say", 'never say']),
+    pullLabeled(s.client_feedback, ['do not say', "don't say", 'never say']),
+  ]);
+  const dna = firstResourceText([
+    pick('format dna', 'dna', 'hook lock'),
+    formatDnaReminder(s, audit),
+  ]);
+  const items = [];
+  const used = {};
+  function push(id, label, text, keys) {
+    const t = asText(text).trim();
+    if (!t) return;
+    items.push({ id: id, label: label, text: t });
+    (keys || []).forEach(k => { used[resourceKey(k)] = true; });
+  }
+  push('thesis', 'Brand thesis', thesis, ['thesis', 'brand thesis', 'brand', 'message', 'one liner', 'offer']);
+  push('formats', 'Locked formats', formats, ['formats', 'locked formats', 'format']);
+  push('avoid', 'Do not say', avoid, ['do not say', "don't say", 'dont say', 'never say', 'avoid']);
+  push('dna', 'Format DNA', dna, ['format dna', 'dna', 'hook lock']);
+  const read = parseReadWays(s.tonality_delivery);
+  if (read.ways && read.ways.length) {
+    const note = asText(read.note).trim();
+    push('read', note ? 'How to read it · ' + note : 'How to read it',
+      read.ways.map(w => (w.letter ? w.letter + ') ' : '') + asText(w.text).trim()).filter(Boolean).join('\n'));
+  } else if (asText(read.before).trim()) {
+    push('delivery', 'Delivery', asText(read.before).trim());
+  }
+  Object.keys(map).forEach(k => {
+    if (used[k] || /audit|admin/.test(k)) return;
+    const item = map[k];
+    push('extra-' + k.replace(/\s+/g, '-'), item.label || k, item.text);
+  });
+  if (markdown) push('notes', 'Client notes', markdown);
+  return items;
+}
+function prompterRefHtml(s, session) {
+  const refs = reviewRefs(s, session);
+  if (!refs.length) return '<p class="pr-note-empty">No reference reel on this script.</p>';
+  const tabs = refs.length > 1
+    ? '<div class="pr-ref-tabs">' + refs.map((info, i) =>
+      `<button type="button" class="pr-ref-tab${i === 0 ? ' is-on' : ''}" onclick="window.prompterShowRef(${i})">${escHtml(info.label || ('Ref ' + (i + 1)))}</button>`
+    ).join('') + '</div>'
+    : '';
+  const first = refs[0];
+  const open = first.watch
+    ? `<a class="pr-ref-open" href="${escHtml(first.watch)}" target="_blank" rel="noopener noreferrer">Open</a>`
+    : '';
+  return `${tabs}
+    <div class="pr-ref-toolbar"><span class="pr-ref-kicker">${escHtml(first.label || 'Reference')}</span>${open}</div>
+    <div class="pr-ref-frame" id="pr-ref-frame">${prompterEmbed(first)}</div>`;
+}
+function prompterResourcesHtml(s, session) {
+  const items = clientResourceItems(s, session);
+  if (!items.length) return '<p class="pr-note-empty">No client reminders on this script yet.</p>';
+  return items.map(item => `
+    <label class="pr-res-item">
+      <input type="checkbox">
+      <span><strong>${escHtml(item.label)}</strong>${escHtml(item.text).replace(/\n/g, '<br>')}</span>
+    </label>`).join('');
+}
 function flowTextHtml(text) {
   return escHtml(text).split(/\n{2,}/).map(p => '<p>' + p.replace(/\n/g, '<br>') + '</p>').join('');
 }
@@ -4807,6 +5092,11 @@ function renderPrompter() {
   const st = prompterState;
   if (st.editing && !prompterMayEdit(s)) st.editing = false;
   const editing = !!st.editing;
+  const session = { role: role, includeAudit: role === 'admin' };
+  const refs = reviewRefs(s, session);
+  const resItems = clientResourceItems(s, session);
+  const showRef = !editing && !!st.ref && refs.length > 0;
+  const showRes = !editing && !!st.resources;
   const qLen = (st.queue && st.queue.length) || 1;
   const qIndex = st.index || 0;
   const editBtn = !editing && prompterMayEdit(s)
@@ -4815,7 +5105,15 @@ function renderPrompter() {
   const notice = !editing && st.notice
     ? `<div id="pr-notice" class="pr-saved-bar" role="status">${escHtml(st.notice)}</div>`
     : '';
+  const refBtn = !editing && refs.length
+    ? `<button type="button" id="pr-ref-btn" class="pr-ref-btn${st.ref ? ' is-on' : ''}" aria-pressed="${st.ref ? 'true' : 'false'}" aria-label="Reference" onclick="window.prompterRef()">Ref</button>`
+    : '';
+  const resBtn = !editing
+    ? `<button type="button" id="pr-res-btn" class="pr-res-btn${st.resources ? ' is-on' : ''}" aria-expanded="${st.resources ? 'true' : 'false'}" onclick="window.prompterResources()">Resources</button>`
+    : '';
   const readTools = editing ? '' : `
+      ${refBtn}
+      ${resBtn}
       <button type="button" id="pr-notes-btn" class="pr-notes-btn${st.notes ? ' is-on' : ''}" aria-expanded="${st.notes ? 'true' : 'false'}" onclick="window.prompterNotes()">Notes</button>
       <button type="button" onclick="window.prompterTop()">Top</button>`;
   const read = editing
@@ -4834,7 +5132,10 @@ function renderPrompter() {
       <span class="pr-speed-label">Speed</span>
       <input class="pr-speed" type="range" min="16" max="120" value="${st.speed}" aria-label="Scroll speed" oninput="window.prompterSpeed(this.value)">
       <button type="button" onclick="window.prompterMirror()" aria-pressed="${st.mirror}">Mirror</button>`;
-  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${editing ? ' is-editing' : ''}" role="dialog" aria-modal="true" aria-label="${editing ? 'Edit script' : 'Teleprompter'}">
+  const compactRes = showRef && resItems.length
+    ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session)}</div>`
+    : '';
+  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${showRef ? ' has-ref' : ''}${showRes ? ' has-res' : ''}${editing ? ' is-editing' : ''}" role="dialog" aria-modal="true" aria-label="${editing ? 'Edit script' : 'Teleprompter'}">
     <div class="pr-top">
       <div class="pr-title">${escHtml(s.title)}</div>
       ${editBtn}
@@ -4847,8 +5148,13 @@ function renderPrompter() {
       <span class="pr-script-count">Script ${qIndex + 1} of ${qLen}</span>
       <button type="button" ${editing || qIndex >= qLen - 1 ? 'disabled' : ''} onclick="window.prompterStep(1)">Next</button>
     </div>
-    <div class="pr-read">
-      ${read}
+    <div class="pr-stage">
+      <div class="pr-read">
+        ${read}
+      </div>
+      <aside class="pr-side" id="pr-side" ${showRef ? '' : 'hidden'} aria-label="Reference">
+        ${showRef ? prompterRefHtml(s, session) + compactRes : ''}
+      </aside>
     </div>
     <div class="pr-controls">
       ${controls}
@@ -4859,6 +5165,13 @@ function renderPrompter() {
         <button type="button" onclick="window.prompterNotes(false)">Back to script</button>
       </div>
       <div class="pr-sheet-body">${prompterNotesHtml(s)}</div>
+    </div>
+    <div class="pr-res-sheet" id="pr-res-sheet" ${showRes ? '' : 'hidden'}>
+      <div class="pr-top">
+        <div class="pr-title">Client resources</div>
+        <button type="button" onclick="window.prompterResources(false)">Back to script</button>
+      </div>
+      <div class="pr-sheet-body">${prompterResourcesHtml(s, session)}</div>
     </div>
     <div class="pr-player" id="pr-player" hidden>
       <div class="pr-top">
@@ -4911,6 +5224,11 @@ window.openPrompter = (id) => {
     lastTs: 0,
     notes: false,
     player: false,
+    ref: reviewRefs(s, { role: role, includeAudit: role === 'admin' }).length
+      ? lsGetBool(role === 'admin' ? 'hub_pr_ref_admin' : 'hub_pr_ref_client', prompterRefPrefersOn({ role: role }))
+      : false,
+    resources: false,
+    refIndex: 0,
     scope: found.scope,
     index: found.index,
     queue: found.queue,
@@ -4929,6 +5247,7 @@ window.prompterEdit = () => {
   prompterPause();
   prompterState.notes = false;
   prompterState.player = false;
+  prompterState.resources = false;
   prompterState.editing = true;
   prompterState.notice = '';
   prompterState.focusEdit = true;
@@ -4984,6 +5303,7 @@ window.prompterStep = (delta) => {
   prompterState.lastTs = 0;
   prompterState.notes = false;
   prompterState.player = false;
+  prompterState.resources = false;
   prompterState.editing = false;
   prompterState.notice = '';
   prompterState.focusEdit = false;
@@ -5055,6 +5375,79 @@ window.prompterNotes = (force) => {
     btn.classList.toggle('is-on', prompterState.notes);
     btn.setAttribute('aria-expanded', prompterState.notes ? 'true' : 'false');
   }
+};
+function prompterRefKey() {
+  return role === 'admin' ? 'hub_pr_ref_admin' : 'hub_pr_ref_client';
+}
+window.prompterRef = (force) => {
+  if (!prompterState) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  const session = { role: role, includeAudit: role === 'admin' };
+  const refs = s ? reviewRefs(s, session) : [];
+  if (!refs.length) return;
+  prompterState.ref = typeof force === 'boolean' ? force : !prompterState.ref;
+  lsSetBool(prompterRefKey(), prompterState.ref);
+  if (!prompterState.ref) prompterState.refIndex = 0;
+  const root = document.getElementById('prompter');
+  const side = document.getElementById('pr-side');
+  if (root) root.classList.toggle('has-ref', !!prompterState.ref);
+  if (side) {
+    side.hidden = !prompterState.ref;
+    if (prompterState.ref) {
+      if (!side.innerHTML.trim()) {
+        const items = clientResourceItems(s, session);
+        const compact = items.length
+          ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session)}</div>`
+          : '';
+        side.innerHTML = prompterRefHtml(s, session) + compact;
+      } else {
+        const info = refs[prompterState.refIndex || 0];
+        const frame = document.getElementById('pr-ref-frame');
+        if (frame && info && !frame.innerHTML.trim()) frame.innerHTML = prompterEmbed(info);
+      }
+    } else {
+      const frame = document.getElementById('pr-ref-frame');
+      if (frame) frame.innerHTML = '';
+    }
+  }
+  const btn = document.getElementById('pr-ref-btn');
+  if (btn) {
+    btn.classList.toggle('is-on', !!prompterState.ref);
+    btn.setAttribute('aria-pressed', prompterState.ref ? 'true' : 'false');
+    btn.textContent = 'Ref';
+  }
+};
+window.prompterResources = (force) => {
+  if (!prompterState) return;
+  prompterState.resources = typeof force === 'boolean' ? force : !prompterState.resources;
+  if (prompterState.resources) prompterPause();
+  const root = document.getElementById('prompter');
+  if (root) root.classList.toggle('has-res', prompterState.resources);
+  const sheet = document.getElementById('pr-res-sheet');
+  if (sheet) sheet.hidden = !prompterState.resources;
+  const btn = document.getElementById('pr-res-btn');
+  if (btn) {
+    btn.classList.toggle('is-on', prompterState.resources);
+    btn.setAttribute('aria-expanded', prompterState.resources ? 'true' : 'false');
+  }
+};
+window.prompterShowRef = (index) => {
+  if (!prompterState) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  const session = { role: role, includeAudit: role === 'admin' };
+  const refs = s ? reviewRefs(s, session) : [];
+  const info = refs[index];
+  if (!info) return;
+  prompterState.refIndex = index;
+  const frame = document.getElementById('pr-ref-frame');
+  if (frame) frame.innerHTML = prompterEmbed(info);
+  const open = document.querySelector('#pr-side .pr-ref-open');
+  if (open && info.watch) open.href = info.watch;
+  const kicker = document.querySelector('#pr-side .pr-ref-kicker');
+  if (kicker) kicker.textContent = info.label || 'Reference';
+  Array.from(document.querySelectorAll('#pr-side .pr-ref-tab')).forEach((btn, i) => {
+    btn.classList.toggle('is-on', i === index);
+  });
 };
 window.prompterPlayRef = (index) => {
   if (!prompterState) return;

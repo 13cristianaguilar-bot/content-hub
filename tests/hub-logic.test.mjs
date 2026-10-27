@@ -43,7 +43,7 @@ const names = [
   'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'unpackHumanQa', 'humanQaFrom',
   'humanQaComplete', 'isClientDeliveryStatus', 'humanQaBlocksStatus', 'humanQaValidate',
   'buildHumanQaStamp', 'applyHumanQa', 'currentAuditObject', 'renderHumanQaBadge',
-  'renderHumanQaGate', 'formatStamp',
+  'renderHumanQaGate', 'renderShotActions', 'formatStamp',
   'auditStatus', 'auditCount', 'auditNumLabel', 'auditScoreLabel', 'auditList', 'auditToolLabel',
   'auditSource', 'auditCheck', 'auditFact', 'parseSecondBand', 'parseClockBand',
   'spokenReadSeconds', 'spokenInBand', 'auditBlob', 'auditRestrictYes', 'auditRestricted',
@@ -1533,6 +1533,28 @@ assert.ok(qaBatchAdmin.includes('Unsigned one'));
 assert.ok(qaBatch === '' || qaBatch.includes('Cristian') === false);
 assert.ok(ctx.scriptGapHtml({ ready: { blockers: [] } }, { title: 'Open' }).includes('Cristian brain check'));
 assert.ok(ctx.scriptGapHtml({ ready: { blockers: [] } }, signedScript).includes('No hard gaps'));
+ctx.role = 'admin';
+const draftBlocked = ctx.renderShotActions({ id: 'act-1', status: 'Draft' });
+assert.ok(draftBlocked.includes('Needs Review'));
+assert.ok(draftBlocked.includes('disabled'));
+assert.ok(!draftBlocked.includes("moveStatus('act-1','Needs Review')"));
+const reviewAdmin = ctx.renderShotActions({ id: 'act-2', status: 'Needs Review' });
+assert.ok(reviewAdmin.includes('Film this'));
+assert.ok(reviewAdmin.includes("moveStatus('act-2','Filming')"));
+assert.ok(reviewAdmin.includes('Request a tweak'));
+assert.ok(reviewAdmin.includes("moveStatus('act-2','Passed')"));
+assert.ok(reviewAdmin.includes('Mark client-ready'));
+assert.ok(reviewAdmin.includes('disabled'));
+const signedReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-3', status: 'Needs Review' }));
+assert.ok(signedReady.includes("moveStatus('act-3','Approved')"));
+ctx.role = 'client';
+const clientReview = ctx.renderShotActions({ id: 'act-4', status: 'Needs Review' });
+assert.ok(clientReview.includes('Film this'));
+assert.ok(clientReview.includes("moveStatus('act-4','Filming')"));
+assert.ok(!clientReview.includes('Mark client-ready'));
+assert.ok(!clientReview.includes('Brain check'));
+const clientDraft = ctx.renderShotActions({ id: 'act-5', status: 'Draft' });
+assert.ok(clientDraft.includes("moveStatus('act-5','Needs Review')"));
 assert.ok(/Finish the Cristian brain check first/.test(script));
 assert.ok(/humanQaBlocksStatus/.test(script));
 assert.ok(/pipeline_audit: nextAudit/.test(script));

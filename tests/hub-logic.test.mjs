@@ -32,7 +32,7 @@ const names = [
   'clientResourcePackSlug', 'clientResourcePack', 'parseClientResources', 'resourceMap',
   'firstResourceText', 'formatDnaReminder', 'reviewRefs',
   'resourceCardSrc', 'mergeResourceCards', 'resourceInlineHtml', 'resourceMarkdownHtml', 'prompterResourceCardHtml',
-  'prompterRefPrefersOn', 'clientResourceItems', 'prompterRefHtml', 'prompterResourcesHtml', 'prompterEmbed',
+  'prompterIsPhone', 'prompterRefPrefersOn', 'prompterRefStartsOn', 'clientResourceItems', 'prompterRefHtml', 'prompterResourcesHtml', 'prompterEmbed',
   'extractProofStats', 'parseReadWays', 'labeledChunks', 'prepShownNote',
   'clipKey', 'sameClip', 'formatPrinciples', 'tightCopy',
   'reactClipKey', 'hasReactClipKey', 'isReactionScript', 'reactionClipInfo', 'reactionClipUrl', 'showsReactClip',
@@ -686,24 +686,25 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.26.3');
+assert.strictEqual(appVersion, '2026.10.27.1');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.26.3');
+assert.strictEqual(firstUnseen[0].version, '2026.10.27.1');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/visual cards|Signal-branded/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Jan|Rich Life/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/admin-only/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.26.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.26.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.26.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', true, '2026.10.26.3').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', true, '2026.10.24.2')[0].version, '2026.10.26.3');
+assert.ok(/phone|tap Ref|overlay/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/60\/40|wide screen|Resources/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/teleprompter|script/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.27.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', true, '2026.10.27.1').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', true, '2026.10.24.2')[0].version, '2026.10.27.1');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1326,6 +1327,17 @@ assert.ok(!ctx.prepStepBody({ title: 'Client card', hook: 'Hook.' }, 0, false).i
 assert.strictEqual(ctx.prompterRefPrefersOn({ role: 'admin' }), true);
 assert.strictEqual(ctx.prompterRefPrefersOn({ role: 'client' }), false);
 assert.strictEqual(ctx.prompterRefPrefersOn({}), false);
+assert.strictEqual(ctx.prompterIsPhone(), false);
+assert.strictEqual(ctx.prompterRefStartsOn({ role: 'admin' }), true);
+assert.strictEqual(ctx.prompterRefStartsOn({ role: 'client' }), false);
+ctx.window = { matchMedia: (q) => ({ matches: /max-width:\s*899px/.test(q) }) };
+assert.strictEqual(ctx.prompterIsPhone(), true);
+assert.strictEqual(ctx.prompterRefStartsOn({ role: 'admin' }), false);
+assert.strictEqual(ctx.prompterRefStartsOn({ role: 'client' }), false);
+ctx.window = { matchMedia: () => ({ matches: false }) };
+assert.strictEqual(ctx.prompterIsPhone(), false);
+assert.strictEqual(ctx.prompterRefStartsOn({ role: 'admin' }), true);
+delete ctx.window;
 
 const parsedRes = ctx.parseClientResources({
   thesis: 'Founders need a publishing rhythm, not more tips.',
@@ -1373,6 +1385,13 @@ assert.ok(adminRefs.some(r => r.kind === 'yt'));
 const refHtml = ctx.prompterRefHtml(reviewScript, { includeAudit: false });
 assert.ok(refHtml.includes('instagram.com/reel/DdbzuysjzzD/embed/'));
 assert.ok(refHtml.includes('pr-ref-frame'));
+assert.ok(refHtml.includes('pr-ref-close'));
+assert.ok(refHtml.includes('Back to script'));
+assert.ok(html.includes('Phone: Ref is a dismissible overlay'));
+assert.ok(!html.includes('height: 46vh; max-height: 46vh;'));
+assert.ok(!html.includes('#prompter.has-ref #prompter-scroll { padding-bottom: 52vh; }'));
+assert.ok(/prompterIsPhone\(\)\s*\n\s*\? false/.test(html));
+assert.ok(html.includes('if (!prompterIsPhone()) lsSetBool(prompterRefKey()'));
 const resHtml = ctx.prompterResourcesHtml(reviewScript, { includeAudit: false });
 assert.ok(resHtml.includes('Do not say'));
 assert.ok(resHtml.includes('pr-res-item'));

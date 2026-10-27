@@ -729,6 +729,11 @@ img, iframe, video, pre { max-width: 100%; }
 .preview-banner button.is-ghost {
   background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.45);
 }
+@media (max-width: 640px) {
+  .preview-banner { flex-direction: column; align-items: stretch; }
+  .preview-banner .preview-actions { justify-content: stretch; }
+  .preview-banner button { width: 100%; }
+}
 .view-as { max-width: 560px; }
 .view-as-toggle {
   width: 100%; min-height: 48px; text-align: left; background: #fff; border: 1px solid var(--line);
@@ -1079,6 +1084,140 @@ body.modal-open { overflow: hidden; }
 }
 .prep-kicker { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
 .prep-dots.is-4 button { font-size: 11px; letter-spacing: -0.03em; }
+.prep-dots.is-5 { gap: 2px; padding-left: 6px; padding-right: 6px; }
+.prep-dots.is-5 button {
+  font-size: 11px; letter-spacing: -0.04em; max-width: none; gap: 4px; white-space: nowrap;
+}
+.prep-stamp {
+  flex: 0 0 auto;
+  max-height: min(52dvh, 480px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: #121212;
+  border-top: 1px solid #2a2a2a;
+  padding: 0 0 env(safe-area-inset-bottom);
+}
+.prep-stamp .qa-gate { margin: 0; min-height: 0; }
+.prep-stamp .qa-gate.is-compact {
+  display: flex; flex-direction: column; overflow: hidden; max-height: min(52dvh, 480px);
+  border: 0; border-top: 3px solid #ed3039; padding: 0;
+}
+.prep-stamp .qa-gate.is-compact.is-done {
+  display: block; overflow: auto; padding: 10px 12px 12px;
+}
+.prep-stamp .qa-body { overflow: auto; min-height: 0; padding: 10px 12px 8px; }
+.prep-stamp .qa-pin {
+  flex: 0 0 auto; padding: 8px 12px 10px; background: #121212;
+  border-top: 1px solid #2a2a2a;
+}
+.review-next {
+  width: 100%; min-height: 48px; margin: 8px 0 0; padding: 0 14px;
+  background: #fff; color: #171717; border: 1px solid #d8d8d8;
+  font-size: 16px; font-weight: 650;
+}
+.review-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px;
+}
+.review-head .prep-lead { margin: 0; min-width: 0; }
+.review-res-btn {
+  flex: 0 0 auto; min-height: 44px; padding: 0 14px;
+  background: #fff; border: 1px solid var(--line); color: var(--ink); font-weight: 650;
+}
+.review-script h3 {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--signal); font-weight: 500; margin: 16px 0 6px;
+}
+.review-hook-full {
+  margin: 0; font-size: 22px; line-height: 1.25; letter-spacing: -0.03em; font-weight: 650;
+}
+.review-body, .review-cta {
+  margin: 0; font-size: 18px; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+.review-res-back {
+  position: absolute; inset: 0; z-index: 6;
+  background: rgba(8, 8, 8, 0.45);
+  display: flex; align-items: flex-end;
+}
+.review-res-sheet {
+  background: var(--paper); color: var(--ink); width: 100%;
+  max-height: min(88dvh, 720px);
+  display: flex; flex-direction: column;
+  border-top: 2px solid var(--signal);
+}
+.review-res-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 16px; border-bottom: 1px solid var(--line); flex-shrink: 0;
+  font-weight: 650;
+}
+.review-res-bar button {
+  min-height: 44px; min-width: 72px; padding: 0 12px;
+  background: #fff; border: 1px solid var(--line); font-weight: 650;
+}
+.review-res-body { overflow: auto; padding: 12px 16px calc(20px + env(safe-area-inset-bottom)); }
+@media (min-width: 900px) {
+  #prep.has-resources {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) min(420px, 42vw);
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+  }
+  #prep.has-resources .prep-top { grid-column: 1 / -1; }
+  #prep.has-resources .prep-dots,
+  #prep.has-resources .prep-scroll,
+  #prep.has-resources .prep-stamp { grid-column: 1; min-width: 0; }
+  #prep.has-resources .review-res-back {
+    position: relative; inset: auto;
+    grid-column: 2; grid-row: 2 / span 3;
+    align-items: stretch; justify-content: stretch;
+    background: transparent; pointer-events: none;
+  }
+  #prep.has-resources .review-res-sheet {
+    width: 100%; max-height: none; height: 100%;
+    pointer-events: auto; border-top: 0; border-left: 2px solid var(--signal);
+  }
+}
+.soft-banner {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--soft); border-top: 2px solid var(--signal);
+  padding: 8px 12px; font-size: 14px; line-height: 1.35;
+}
+.soft-banner p { margin: 0; flex: 1 1 180px; }
+.soft-banner button {
+  min-height: 44px; padding: 0 12px; background: #fff; border: 1px solid var(--line); font-weight: 650;
+}
+.review-queue { max-width: 720px; }
+.review-h {
+  font-size: 28px; line-height: 1.12; letter-spacing: -0.045em; font-weight: 650; margin: 4px 0 6px;
+}
+.review-lead { margin: 0 0 12px; color: var(--muted); font-size: 15px; line-height: 1.4; }
+.review-list { display: flex; flex-direction: column; gap: 10px; }
+.review-card {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal);
+}
+.review-hit {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+  width: 100%; text-align: left; background: transparent; border: 0; padding: 14px 14px 16px;
+  min-height: 44px; color: inherit;
+}
+.review-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+.review-title { font-size: 22px; line-height: 1.15; letter-spacing: -0.04em; font-weight: 650; }
+.review-meta { color: var(--muted); font-size: 14px; line-height: 1.35; }
+.review-hook { color: var(--ink); font-size: 16px; line-height: 1.35; }
+.review-jump {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; max-width: 720px; min-height: 52px; margin: 0 0 10px; padding: 0 14px;
+  background: var(--signal); color: #fff; border: 0; font-size: 16px; font-weight: 650; text-align: left;
+}
+.review-jump span {
+  font-family: "Geist Mono", ui-monospace, monospace; font-size: 13px; letter-spacing: 0.04em;
+}
+.review-empty { margin: 0 0 12px; font-size: 16px; line-height: 1.4; }
+.batch-gaps details > summary { cursor: pointer; list-style: none; }
+.batch-gaps details > summary::-webkit-details-marker { display: none; }
+.batch-gaps details:not([open]) > ul { display: none; }
+.batch-gaps-sum { display: block; margin: 2px 0 0; font-size: 15px; line-height: 1.35; font-weight: 650; color: var(--ink); }
+.batch-gaps details[open] ul { margin-top: 10px; }
 .audit-empty { margin: 0 0 12px; font-size: 15px; line-height: 1.4; }
 .audit-flag {
   margin: 0 0 12px; padding: 10px 12px;
@@ -1274,6 +1413,29 @@ body.modal-open { overflow: hidden; }
 }
 .qa-chip.is-no { background: #ed3039; color: #fff; }
 .qa-chip.is-yes { background: #1f7a3a; color: #fff; }
+.qa-gate.is-compact { padding: 10px 12px 12px; }
+.qa-gate.is-compact h3 { font-size: 18px; margin-bottom: 4px; }
+.qa-gate.is-compact .qa-lead { font-size: 14px; font-weight: 500; }
+.qa-gate.is-compact .qa-check { font-size: 14px; padding-top: 8px; }
+.qa-gate.is-compact .qa-notes { min-height: 64px; }
+.qa-gate.is-compact .qa-go { min-height: 48px; }
+.qa-signed-more { margin-top: 8px; }
+.qa-signed-more > summary {
+  cursor: pointer; min-height: 44px; display: flex; align-items: center;
+  color: #d0d0d0; font-size: 14px; font-weight: 650; list-style: none;
+}
+.qa-signed-more > summary::-webkit-details-marker { display: none; }
+/* Toast stays off Sign and off Close while a script is open. */
+body.prep-open #toast-root {
+  top: max(8px, env(safe-area-inset-top));
+  bottom: auto;
+  left: 12px;
+  right: 112px;
+  padding-top: 0;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
 .tool-btn[disabled], .shot-actions .is-blocked {
   opacity: 0.4; cursor: not-allowed;
 }
@@ -1444,7 +1606,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.27.3';
+const APP_VERSION = '2026.10.27.4';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -1459,6 +1621,20 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.27.4',
+    date: 'October 27, 2026',
+    title: 'Low-energy review queue',
+    items: [
+      'Admin opens on Needs your brain check. The full script is first. A sticky brain check stays at the bottom. Sign moves to the next unsigned script. Nothing is sent to the client until you choose Send.',
+      'Top Gaps is one line until you open it. What’s new is a dismissible banner, so a tired review is not trapped in a popup.',
+    ],
+    steps: [
+      'Open the hub. Tap the first card in Needs your brain check.',
+      'Read the script. Tick the four boxes. Write why it is good to send. Sign.',
+      'The next unsigned script opens. Resources sits with the script when this client has a pack.',
+    ],
+  },
   {
     version: '2026.10.27.3',
     date: 'October 27, 2026',
@@ -1878,6 +2054,8 @@ let previousOpen = false;
 // Set on sign-in and on setClient via defaultSegmentForClient (conference when that client has any).
 let viewSegment = 'conference';
 const VIEW_SEGMENTS = ['conference', 'new', 'other'];
+// Admin list lands on the brain-check queue. Batches (Conference / New / Past) stay one tap away.
+let adminLane = 'review';
 let moreOpen = false;
 let modal = null;              // null | 'whats-new' | 'new-scripts'
 let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
@@ -2222,7 +2400,7 @@ async function init() {
           listSearch = ''; expandedSections.clear();
           hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false; moreOpen = false;
           openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
-          viewSlug = null; previewSlug = null; viewAsOpen = false;
+          viewSlug = null; previewSlug = null; viewAsOpen = false; adminLane = 'review';
           navIndex = 0; previousIndex = 0; flatIndex = 0;
           navSets = { fresh: [], previous: [], flat: [] };
           requests = []; requestsLoaded = false; requestsError = '';
@@ -2333,6 +2511,7 @@ async function afterLogin(u) {
   if (isNewSignIn) {
     loadOpened();
     viewSegment = defaultSegmentForClient(viewSlug);
+    if (role === 'admin') adminLane = 'review';
   }
   renderDash();
   subscribeLiveChanges();
@@ -3280,6 +3459,13 @@ function syncModal() {
     modal = null;
     return;
   }
+  // Admin review must not be trapped by What's new or a new-scripts popup.
+  // Those notes render as a dismissible banner instead. Replay onboarding
+  // still opens the modal, and it pins it so this branch does not clear it.
+  if (role === 'admin') {
+    if (modal === 'whats-new' || modal === 'new-scripts') modal = null;
+    return;
+  }
   const want = unseenReleases().length ? 'whats-new' : (unseenFreshGroups().length ? 'new-scripts' : null);
   if (modal === 'whats-new' && unseenReleases().length) return;
   if (modal === 'new-scripts' && want === 'new-scripts') return;
@@ -3482,6 +3668,100 @@ window.stepScript = (scope, delta) => {
   if (next < 0 || next >= groups.length) return;
   window.focusScript(scope, next);
 };
+function needsBrainCheck(s) {
+  if (!s || typeof s !== 'object') return false;
+  const status = s.status || 'Draft';
+  if (status === 'Posted' || status === 'Archived' || status === 'Passed') return false;
+  return !humanQaDeliveryReady(s);
+}
+function reviewQueueRank(s) {
+  const batch = asText(s && s.batch).toLowerCase();
+  const batchRank = batch.indexOf('final') !== -1 ? 0 : (batch.indexOf('core') !== -1 ? 1 : 2);
+  const status = s && s.status;
+  const statusRank = status === 'Needs Review' ? 0 : (status === 'Draft' ? 1 : 2);
+  return batchRank * 10 + statusRank;
+}
+function reviewQueueFor(rows, opts) {
+  opts = opts || {};
+  const slug = opts.slug || '';
+  return (rows || []).filter(s => s && (!slug || s.client_slug === slug) && needsBrainCheck(s)).slice().sort((a, b) => {
+    const by = reviewQueueRank(a) - reviewQueueRank(b);
+    if (by) return by;
+    const title = asText(a.title).localeCompare(asText(b.title));
+    if (title) return title;
+    return asText(a.id).localeCompare(asText(b.id));
+  });
+}
+function nextStampId(queueIds, currentId, stillNeeds) {
+  const ids = Array.isArray(queueIds) ? queueIds : [];
+  const needs = typeof stillNeeds === 'function' ? stillNeeds : function () { return true; };
+  const start = ids.indexOf(currentId);
+  const order = start >= 0 ? ids.slice(start + 1).concat(ids.slice(0, start)) : ids.slice();
+  for (let i = 0; i < order.length; i++) {
+    if (needs(order[i])) return order[i];
+  }
+  return '';
+}
+function reviewQueueOpts() {
+  if (typeof role !== 'undefined' && role === 'admin' && typeof viewingAsClient === 'function' && viewingAsClient()) {
+    return { slug: previewSlug || '' };
+  }
+  if (typeof role !== 'undefined' && role === 'admin') return { slug: '' };
+  return { slug: typeof viewSlug !== 'undefined' ? (viewSlug || '') : '' };
+}
+function reviewQueueScripts() {
+  return reviewQueueFor(typeof scripts !== 'undefined' ? scripts : [], reviewQueueOpts());
+}
+function renderReviewCard(s, index) {
+  const who = clientLabel(s.client_slug);
+  const batch = asText(s.batch).trim();
+  const hook = clipText(spokenHook(s), 140);
+  const meta = [who, batch, s.status || 'Draft'].filter(Boolean).join(' · ');
+  return `<article class="review-card">
+    <button type="button" class="review-hit" onclick="window.openReview('${escHtml(s.id)}')">
+      <span class="review-top"><span class="batch-card-n">${index + 1}</span>${renderHumanQaBadge(s)}</span>
+      <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
+      <span class="review-meta">${escHtml(meta)}</span>
+      ${hook ? `<span class="review-hook">${escHtml(hook)}</span>` : ''}
+    </button>
+  </article>`;
+}
+function renderReviewQueue() {
+  const rows = reviewQueueScripts();
+  const scoped = viewingAsClient();
+  const who = scoped ? clientLabel(previewSlug) : '';
+  if (!rows.length) {
+    return `<section class="review-queue" aria-label="Needs your brain check">
+      <div class="eyebrow">Needs your brain check</div>
+      <h2 class="review-h">Nothing to stamp</h2>
+      <p class="review-empty">${scoped ? 'No unsigned scripts for ' + escHtml(who) + '.' : 'No unsigned scripts across clients.'}</p>
+      <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
+    </section>`;
+  }
+  return `<section class="review-queue" aria-label="Needs your brain check">
+    <div class="eyebrow">Needs your brain check</div>
+    <h2 class="review-h">${rows.length} script${rows.length === 1 ? '' : 's'} to read and stamp</h2>
+    <p class="review-lead">${scoped ? escHtml(who) + ' only.' : 'Across clients. One tap opens the script.'} Nothing sends until you choose Send.</p>
+    <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
+    <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
+  </section>`;
+}
+function reviewQueueJumpHtml() {
+  if (typeof role === 'undefined' || role !== 'admin') return '';
+  const n = reviewQueueScripts().length;
+  if (!n) return '';
+  return `<button type="button" class="review-jump" onclick="window.showReviewQueue()">Needs your brain check <span>${n}</span></button>`;
+}
+function renderAdminSoftBanner() {
+  if (typeof role === 'undefined' || role !== 'admin' || hubPage !== 'main') return '';
+  const releases = unseenReleases();
+  const fresh = unseenFreshGroups();
+  const bits = [];
+  if (releases.length) bits.push('What’s new: ' + (releases[0].title || 'Updates'));
+  if (fresh.length) bits.push(fresh.length + ' new script' + (fresh.length === 1 ? '' : 's') + ' ready to film');
+  if (!bits.length) return '';
+  return `<div class="soft-banner" role="status"><p>${escHtml(bits.join(' · '))}</p><button type="button" onclick="window.openHelp()">Help</button><button type="button" onclick="window.dismissSoftBanner()">Dismiss</button></div>`;
+}
 function renderListCards(visibleGroups, isAdmin, effectiveMode) {
   navSets = { fresh: [], previous: [], flat: [] };
   const q = listSearch.trim();
@@ -3636,7 +3916,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. The brain check now lives on Full screen — you sign as you start the film read, and again as you finish, before Needs Review or client-ready can move. Audit still has the same stamp. Tick the four boxes and write why it is good to send. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign. That stamp does not send anything. Needs Review and client-ready stay blocked until the four boxes and a real note are saved. The same check is on Full screen when you film. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
     ${RELEASES.map(renderReleaseArticle).join('')}
@@ -3882,9 +4162,14 @@ function renderDashInner() {
   const backToBatch = (hubPage === 'main' && viewTab !== 'list')
     ? `<button type="button" class="past-link" onclick="window.backToBatch()">Back to this batch</button>`
     : '';
-  const segmentBar = (hubPage === 'main' && viewTab === 'list') ? renderSegmentBar(parts) : '';
+  const showReview = isAdmin && adminLane !== 'batches' && hubPage === 'main' && viewTab === 'list'
+    && !listSearch.trim() && viewStatus === 'all' && viewType === 'all' && effectiveMode === 'all';
+  const segmentBar = (hubPage === 'main' && viewTab === 'list' && !showReview) ? renderSegmentBar(parts) : '';
+  const queueJump = (isAdmin && !showReview && hubPage === 'main' && viewTab === 'list') ? reviewQueueJumpHtml() : '';
   const cards = (hubPage !== 'main' || viewTab !== 'list') ? ''
-    : `${segmentBar}<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`;
+    : (showReview
+      ? renderReviewQueue()
+      : `${queueJump}${segmentBar}<div id="list-cards">${renderListCards(visibleGroups, isAdmin, effectiveMode)}</div>`);
 
   // Help and Requests replace the list. Calendar and Pipeline stay admin tools, reached from More.
   const body = hubPage === 'help' ? renderHelpPage()
@@ -3993,6 +4278,7 @@ function renderDashInner() {
 
       <div class="hub-main">
         ${renderContextBar()}
+        ${renderAdminSoftBanner()}
         ${body}
       </div>
     </div>
@@ -6723,6 +7009,8 @@ function renderHumanQaGate(s, surface) {
     ? { status: 'Approved', label: 'Mark client-ready' }
     : ((s.status === 'Draft' || s.status === 'Passed') ? { status: 'Needs Review', label: 'Send to Needs Review' } : null);
   const blocked = action && humanQaBlocksStatus(s, action.status);
+  const compact = surface === 'review';
+  const gateClass = 'qa-gate' + (compact ? ' is-compact' : '');
   if (done || confirmable) {
     const signed = (humanQaChecks(s) || []).map(item =>
       '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
@@ -6733,6 +7021,10 @@ function renderHumanQaGate(s, surface) {
     const confirm = confirmable && id
       ? `<button type="button" class="qa-go" onclick="window.confirmHumanQaFilm('${id}','${filmPhase}')">${filmPhase === 'end' ? 'I finished this film read' : "I'm reading this myself"}</button>`
       : '';
+    const signedList = '<ul class="qa-list">' + signed + '</ul>';
+    const signedBlock = compact
+      ? '<details class="qa-signed-more"><summary>What you ticked</summary>' + signedList + '</details>'
+      : signedList;
     const title = filmPhase === 'end'
       ? (done ? 'End check signed' : 'Finish. Read it one more time.')
       : (filmPhase === 'start'
@@ -6743,14 +7035,14 @@ function renderHumanQaGate(s, surface) {
       : (filmPhase === 'start' && !done
         ? 'The stamp is on file. Confirm you are starting this film read with your own brain.'
         : (escHtml(who) + (when ? ' · ' + escHtml(when) : '')));
-    return `<section class="qa-gate is-done" aria-label="Cristian brain check">
+    return `<section class="${gateClass} is-done" aria-label="Cristian brain check">
       <p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p>
       <h3>${escHtml(title)}</h3>
       <p class="qa-lead">${lead}</p>
       ${qa.notes ? `<div class="qa-stamp"><p>${escHtml(qa.notes)}</p></div>` : ''}
-      <ul class="qa-list">${signed}</ul>
       ${confirm}
       ${send}
+      ${signedBlock}
     </section>`;
   }
   const boxes = (humanQaChecks(s) || []).map(item =>
@@ -6774,17 +7066,17 @@ function renderHumanQaGate(s, surface) {
     ? 'You edited the spoken lines after the last brain check. Tick every box again. Write why this version is good to send.'
     : (filmPhase === 'end'
       ? 'You are leaving Full screen. AI can draft. You decide if the client should see it.'
-      : 'AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.');
-  return `<section class="qa-gate" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>
-    <p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p>
-    <h3>${escHtml(heading)}</h3>
-    <p class="qa-lead">${escHtml(lead)}</p>
-    ${boxes}
-    <label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
-    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="In your own words. Not “AI finished” or “looks fine”."></textarea>
+      : (compact
+        ? 'Tick every box. Write why this is good to send.'
+        : 'AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.'));
+  const notes = `<label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
+    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}"></textarea>
     ${hold}
-    ${submit}
-  </section>`;
+    ${submit}`;
+  const body = compact
+    ? `<div class="qa-body"><p class="qa-kicker">Human QA · Cristian brain check</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}</div><div class="qa-pin">${notes}</div>`
+    : `<p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}${notes}`;
+  return `<section class="${gateClass}" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>${body}</section>`;
 }
 
 // Admin-only production audit. Sits in front of Film prep (Reference, Notes,
@@ -6796,18 +7088,53 @@ function prepShowsAudit() {
   return role === 'admin';
 }
 function prepPlan(showAudit) {
-  const labels = showAudit ? ['Audit', 'Reference', 'Notes', 'Film'] : ['Reference', 'Notes', 'Film'];
+  const labels = showAudit ? ['Read', 'Audit', 'Reference', 'Notes', 'Film'] : ['Reference', 'Notes', 'Film'];
   return { labels: labels, last: labels.length - 1 };
 }
 function prepContentIndex(step, showAudit) {
   const n = Number(step);
   const i = n === n ? n : 0;
   if (!showAudit) return i;
-  if (i <= 0) return -1;
-  return i - 1;
+  if (i <= 0) return -2;
+  if (i === 1) return -1;
+  return i - 2;
+}
+function humanQaNotePlaceholder(s) {
+  if (isRlaClient(s && s.client_slug)) return 'Fits RLA leadership thesis / shareable.';
+  return 'Fits their thesis, not a copy, and it is shareable.';
+}
+function reviewHasResources(s) {
+  try {
+    return clientResourceItems(s, { role: 'admin', includeAudit: true }).length > 0;
+  } catch (e) {
+    return false;
+  }
+}
+function prepReadBodyHtml(s) {
+  s = s || {};
+  const hook = spokenHook(s);
+  const body = asText(s.full_script).trim();
+  const cta = asText(s.cta).trim();
+  const who = [clientLabel(s.client_slug), asText(s.batch).trim(), s.status || 'Draft'].filter(Boolean).join(' · ');
+  const res = reviewHasResources(s)
+    ? '<button type="button" class="review-res-btn" onclick="window.toggleReviewResources()">Resources</button>'
+    : '';
+  return ''
+    + '<p class="eyebrow">Read + stamp · Admin only</p>'
+    + '<h2 id="prep-title">' + escHtml(s.title || 'Script') + '</h2>'
+    + '<div class="review-head"><p class="prep-lead">' + escHtml(who) + '</p>' + res + '</div>'
+    + '<section class="review-script" aria-label="Full script">'
+    + '<h3>Hook</h3>'
+    + (hook ? '<p class="review-hook-full">' + escHtml(hook) + '</p>' : '<p class="prep-empty">No hook on this script.</p>')
+    + '<h3>Full script</h3>'
+    + (body ? '<div class="review-body">' + escHtml(body) + '</div>' : '<p class="prep-empty">No full script on this row.</p>')
+    + '<h3>CTA</h3>'
+    + (cta ? '<p class="review-cta">' + escHtml(cta) + '</p>' : '<p class="prep-empty">No CTA on this script.</p>')
+    + '</section>';
 }
 function prepStepBody(s, step, showAudit) {
   const content = prepContentIndex(step, showAudit);
+  if (content === -2) return prepReadBodyHtml(s);
   if (content < 0) return prepAuditHtml(s);
   return prepStepHtml(prepModel(s), content);
 }
@@ -7802,6 +8129,32 @@ function scriptsFromGroups(groups) {
   });
   return out;
 }
+function gapSummaryLine(items) {
+  const list = items || [];
+  const names = [];
+  function shortGapName(label) {
+    const t = asText(label).replace(/\s+/g, ' ').trim();
+    const low = t.toLowerCase();
+    if (low.indexOf('brain check') !== -1) return 'Brain check';
+    if (low.indexOf('cta') !== -1 || low.indexOf('confirm') !== -1) return 'CTA';
+    if (low.indexOf('keyword') !== -1 || low.indexOf('search path') !== -1) return 'Keywords';
+    if (/\bicp\b/i.test(t)) return 'ICP';
+    if (low.indexOf('offer') !== -1) return 'Offer';
+    if (low.indexOf('angle') !== -1) return 'Angle';
+    if (low.indexOf('audience') !== -1) return 'Audience';
+    if (low.indexOf('hook') !== -1) return 'Hook';
+    if (low.indexOf('apify') !== -1 || low.indexOf('tool') !== -1) return 'Tools';
+    const cut = t.split(/[—–-]/)[0].trim();
+    if (!cut) return '';
+    return cut.length > 22 ? cut.slice(0, 20).trim() + '…' : cut;
+  }
+  list.forEach(item => {
+    const name = shortGapName(item && item.label);
+    if (name && names.indexOf(name) === -1) names.push(name);
+  });
+  const shown = names.slice(0, 4);
+  return list.length + ' open' + (shown.length ? ' · ' + shown.join('/') : '');
+}
 function batchGapsHtml(groups) {
   if (typeof role === 'undefined' || role !== 'admin') return '';
   const rowsList = scriptsFromGroups(groups);
@@ -7826,7 +8179,8 @@ function batchGapsHtml(groups) {
     return '<li>' + badge + owner + '<div><p><b>' + escHtml(item.label) + '</b> — ' + escHtml(item.why) + '</p>'
       + (titles ? '<p class="audit-hits">' + titles + '</p>' : '') + '</div></li>';
   }).join('');
-  return '<section class="batch-gaps" aria-label="Top Gaps across this batch"><h2>Top Gaps across this batch</h2><ul>' + rows + '</ul></section>';
+  return '<section class="batch-gaps" aria-label="Top Gaps across this batch"><details><summary><h2>Top Gaps across this batch</h2><span class="batch-gaps-sum">'
+    + escHtml(gapSummaryLine(items)) + '</span></summary><ul>' + rows + '</ul></details></section>';
 }
 function scriptGapHtml(audit, s) {
   const hard = ((audit && audit.ready && audit.ready.blockers) || []).filter(b => b && b.status !== 'pass' && b.status !== 'soft_pass');
@@ -7941,7 +8295,9 @@ function renderPrep() {
   prepState.step = step;
   const model = prepModel(s);
   const content = prepContentIndex(step, showAudit);
+  const readStep = showAudit && content === -2;
   const duo = content === 0 && !!model.react;
+  const dotClass = plan.labels.length > 4 ? ' is-5' : (plan.labels.length > 3 ? ' is-4' : '');
   const dots = plan.labels.map((label, i) => {
     const cls = i === step ? 'is-on' : (i < step ? 'is-done' : '');
     return `<button type="button" class="${cls}" role="tab" aria-selected="${i === step ? 'true' : 'false'}" onclick="window.prepGo(${i})"><span class="prep-dot" aria-hidden="true"></span>${label}</button>`;
@@ -7949,25 +8305,73 @@ function renderPrep() {
   const forward = step >= plan.last
     ? '<button type="button" class="prep-go" onclick="window.prepFilm()">OK, I\'m going to film</button>'
     : '<button type="button" class="prep-next" onclick="window.prepMove(1)">Next</button>';
-  const body = content < 0 ? prepAuditHtml(s) : prepStepHtml(model, content);
-  root.innerHTML = `<div id="prep"${duo ? ' class="is-duo"' : ''} role="dialog" aria-modal="true" aria-labelledby="prep-title">
-    <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
-    <div class="prep-dots${plan.labels.length > 3 ? ' is-4' : ''}" role="tablist" aria-label="Prep steps">${dots}</div>
-    <p class="prep-which">${escHtml(model.title)}</p>
-    <div class="prep-scroll" id="prep-scroll">${body}</div>
-    <div class="prep-bar">
+  const body = prepStepBody(s, step, showAudit);
+  const nextBtn = readStep && humanQaDeliveryReady(s) ? reviewNextStampHtml(s.id) : '';
+  const stamp = readStep
+    ? `<div class="prep-stamp" id="prep-stamp">${renderHumanQaGate(s, 'review')}${nextBtn}</div>`
+    : '';
+  const bar = readStep ? '' : `<div class="prep-bar">
       <button type="button" class="prep-back" ${step === 0 ? 'disabled' : ''} onclick="window.prepMove(-1)">Back</button>
       ${forward}
-    </div>
+    </div>`;
+  const resOpen = !!(readStep && prepState.resources && reviewHasResources(s));
+  const resSheet = resOpen
+    ? `<div class="review-res-back" onclick="window.toggleReviewResources(false)">
+        <div class="review-res-sheet" role="dialog" aria-label="Resources" onclick="event.stopPropagation()">
+          <div class="review-res-bar"><span>Resources</span><button type="button" onclick="window.toggleReviewResources(false)">Close</button></div>
+          <div class="review-res-body">${prompterResourcesHtml(s, { role: 'admin', includeAudit: true })}</div>
+        </div>
+      </div>`
+    : '';
+  const prepClass = [duo ? 'is-duo' : '', resOpen ? 'has-resources' : ''].filter(Boolean).join(' ');
+  const keptScroll = prepState.scrollTop || 0;
+  root.innerHTML = `<div id="prep"${prepClass ? ` class="${prepClass}"` : ''} role="dialog" aria-modal="true" aria-labelledby="prep-title">
+    <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
+    <div class="prep-dots${dotClass}" role="tablist" aria-label="Prep steps">${dots}</div>
+    ${readStep ? '' : `<p class="prep-which">${escHtml(model.title)}</p>`}
+    <div class="prep-scroll" id="prep-scroll">${body}</div>
+    ${stamp}
+    ${bar}
+    ${resSheet}
   </div>`;
   document.body.classList.add('prep-open');
   const scroller = document.getElementById('prep-scroll');
-  if (scroller) scroller.scrollTop = 0;
+  if (scroller) scroller.scrollTop = keptScroll;
+  prepState.scrollTop = 0;
 }
+function reviewNextStampHtml(currentId) {
+  const queued = (prepState && prepState.queueIds && prepState.queueIds.length)
+    ? prepState.queueIds
+    : reviewQueueScripts().map(row => row.id);
+  const next = nextStampId(queued, currentId, function (id) {
+    const row = (scripts || []).find(item => item && item.id === id);
+    return !!(row && needsBrainCheck(row));
+  });
+  if (!next) return '';
+  return `<button type="button" class="review-next" onclick="window.openReview('${escHtml(next)}')">Next to stamp</button>`;
+}
+function openReview(id) {
+  const s = scripts.find(x => x.id === id);
+  if (!s) return;
+  const queue = reviewQueueScripts();
+  const ids = queue.map(row => row.id);
+  if (ids.indexOf(id) === -1) ids.push(id);
+  prepState = { id: id, step: 0, fromQueue: true, resources: false, queueIds: ids, scrollTop: 0 };
+  renderPrep();
+}
+window.openReview = openReview;
+window.toggleReviewResources = (force) => {
+  if (!prepState) return;
+  const scroller = document.getElementById('prep-scroll');
+  const top = scroller ? scroller.scrollTop : 0;
+  prepState.resources = typeof force === 'boolean' ? force : !prepState.resources;
+  prepState.scrollTop = top;
+  renderPrep();
+};
 window.openPrep = (id) => {
   const s = scripts.find(x => x.id === id);
   if (!s) return;
-  prepState = { id: id, step: 0 };
+  prepState = { id: id, step: 0, fromQueue: false, resources: false, queueIds: [], scrollTop: 0 };
   renderPrep();
 };
 window.prepGo = (n) => {
@@ -7976,6 +8380,8 @@ window.prepGo = (n) => {
   const step = Number(n);
   if (step < 0 || step > plan.last) return;
   prepState.step = step;
+  prepState.resources = false;
+  prepState.scrollTop = 0;
   renderPrep();
 };
 window.prepMove = (d) => {
@@ -9131,6 +9537,7 @@ window.setClient   = slug => {
   listSearch = '';
   previousOpen = false;
   viewSegment = defaultSegmentForClient(slug);
+  adminLane = 'review';
   hubPage = 'main';
   moreOpen = false;
   viewTab = 'list';
@@ -9153,10 +9560,41 @@ window.backToWorkspace = () => {
   listSearch = '';
   previousOpen = false;
   viewSegment = defaultSegmentForClient(viewSlug);
+  adminLane = 'review';
   hubPage = 'main';
   moreOpen = false;
   viewTab = 'list';
   resetScriptNav();
+  renderDash();
+};
+window.showReviewQueue = () => {
+  adminLane = 'review';
+  viewTab = 'list';
+  viewStatus = 'all';
+  viewType = 'all';
+  viewMode = 'all';
+  viewStatusExact = false;
+  listSearch = '';
+  hubPage = 'main';
+  moreOpen = false;
+  resetScriptNav();
+  renderDash();
+  window.scrollTo(0, 0);
+};
+window.showBatches = () => {
+  adminLane = 'batches';
+  viewTab = 'list';
+  hubPage = 'main';
+  moreOpen = false;
+  if (VIEW_SEGMENTS.indexOf(viewSegment) === -1) viewSegment = defaultSegmentForClient(viewSlug);
+  resetScriptNav();
+  renderDash();
+  window.scrollTo(0, 0);
+};
+window.dismissSoftBanner = () => {
+  if (user) lsSetStr(versionStorageKey(), APP_VERSION);
+  if (viewingAsClient()) markPreviewOnboardingSeen();
+  acknowledgeFreshBatch();
   renderDash();
 };
 window.setType     = t => { viewType = t === 'interview' || t === 'broll' ? t : 'all'; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash(); };
@@ -9185,6 +9623,7 @@ window.backToBatch = () => {
 // after every single letter. Falls back to a full redraw if the region isn't on screen.
 window.setListSearch = v => {
   listSearch = v;
+  if (role === 'admin' && v && adminLane !== 'batches') adminLane = 'batches';
   resetScriptNav();
   if (viewTab !== 'list') { viewTab = 'list'; renderDash(); return; }
   const region = document.getElementById('list-cards');
@@ -9199,7 +9638,10 @@ window.clearListSearch  = () => { listSearch = ''; resetScriptNav(); renderDash(
 // "Search all scripts" from a zero-result search inside a narrowed tab -- widen mode + status,
 // keep the query.
 window.searchAllScripts = () => { viewMode = 'all'; viewStatus = 'all'; viewType = 'all'; viewStatusExact = false; moreOpen = false; resetScriptNav(); renderDash(); };
-window.setStatus2  = s    => { viewStatus = s; viewStatusExact = false; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash(); };
+window.setStatus2  = s    => {
+  if (role === 'admin' && s !== 'all') adminLane = 'batches';
+  viewStatus = s; viewStatusExact = false; viewTab = 'list'; moreOpen = false; resetScriptNav(); renderDash();
+};
 window.togglePrevious = () => {
   const y = window.scrollY;
   previousOpen = !previousOpen;
@@ -9387,9 +9829,11 @@ function humanQaFormRoot(id) {
     if (filmStart) return filmStart;
     if (filmEnd) return filmEnd;
   }
+  const review = document.getElementById('qa-review-' + id);
+  if (review && document.body.classList.contains('prep-open')) return review;
   const prep = document.getElementById('qa-prep-' + id);
   if (prep && document.body.classList.contains('prep-open')) return prep;
-  return document.getElementById('qa-card-' + id) || prep || filmStart || filmEnd || document.getElementById('qa-form-' + id);
+  return document.getElementById('qa-card-' + id) || review || prep || filmStart || filmEnd || document.getElementById('qa-form-' + id);
 }
 function humanQaFormPhase(id) {
   const root = humanQaFormRoot(id);
@@ -9432,15 +9876,42 @@ async function persistHumanQaStamp(s, stamp, toastMessage) {
   finishHumanQaUi(s.id, toastMessage);
   return true;
 }
+function stampQueueNext(currentId) {
+  const ids = (prepState && prepState.queueIds) || [];
+  return nextStampId(ids, currentId, function (id) {
+    const row = (scripts || []).find(item => item && item.id === id);
+    return !!(row && needsBrainCheck(row));
+  });
+}
+function advanceReview(currentId) {
+  const ids = (prepState && prepState.queueIds) ? prepState.queueIds.slice() : [];
+  const next = stampQueueNext(currentId);
+  if (!next) {
+    clearPrep();
+    renderDash();
+    showToast('Stamped. Not sent. Review queue is clear.');
+    return;
+  }
+  prepState = { id: next, step: 0, fromQueue: true, resources: false, queueIds: ids, scrollTop: 0 };
+  renderPrep();
+  showToast('Stamped. Not sent. Next script.');
+}
 function finishHumanQaUi(id, toastMessage) {
-  renderDash();
-  if (prepState && prepState.id === id) renderPrep();
   const row = scripts.find(x => x.id === id);
+  const advance = prepState && prepState.fromQueue && prepState.id === id
+    && row && humanQaDeliveryReady(row)
+    && !(prompterState && prompterState.id === id);
+  renderDash();
+  if (advance) {
+    advanceReview(id);
+    return;
+  }
+  if (prepState && prepState.id === id) renderPrep();
   if (prompterState && prompterState.id === id) {
-    if (prompterState.qaPhase === 'end' && humanQaFilmEndDone(row)) {
+    if (prompterState.qaPhase === 'end' && row && humanQaFilmEndDone(row)) {
       window.closePrompter(true);
     } else {
-      if (humanQaFilmStartDone(row) && prompterState.qaPhase === 'start') prompterState.qaPhase = '';
+      if (row && humanQaFilmStartDone(row) && prompterState.qaPhase === 'start') prompterState.qaPhase = '';
       renderPrompter();
     }
   }
@@ -9710,6 +10181,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     viewMode = opts.viewMode || 'all';
     viewTab = opts.viewTab || 'list';
     viewSegment = opts.viewSegment || defaultSegmentForClient(viewSlug);
+    adminLane = opts.adminLane || (role === 'admin' ? 'review' : 'batches');
     filtersOpen = opts.filtersOpen !== false && role === 'admin';
     settingsOpen = false;
     listSearch = '';

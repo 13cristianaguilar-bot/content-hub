@@ -40,6 +40,10 @@ const names = [
   'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink',
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepStepBody',
+  'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'unpackHumanQa', 'humanQaFrom',
+  'humanQaComplete', 'isClientDeliveryStatus', 'humanQaBlocksStatus', 'humanQaValidate',
+  'buildHumanQaStamp', 'applyHumanQa', 'currentAuditObject', 'renderHumanQaBadge',
+  'renderHumanQaGate', 'formatStamp',
   'auditStatus', 'auditCount', 'auditNumLabel', 'auditScoreLabel', 'auditList', 'auditToolLabel',
   'auditSource', 'auditCheck', 'auditFact', 'parseSecondBand', 'parseClockBand',
   'spokenReadSeconds', 'spokenInBand', 'auditBlob', 'auditRestrictYes', 'auditRestricted',
@@ -91,6 +95,8 @@ function extractAssignment(name) {
 const src = [
   "const STATUS_ORDER = ['Draft','Needs Review','Approved','Filming','Posted','Passed'];",
   extractAssignment('APP_VERSION') + ';',
+  extractAssignment('HUMAN_QA_KEYS') + ';',
+  'const HUMAN_QA_NOTE_MIN = 12;',
   "const WALKTHROUGH_VIDEO_URL = '';",
   extractAssignment('RELEASES'),
   "const CLIENTS = { jan: { name: 'Jan Zands', label: 'Jan' } };",
@@ -686,25 +692,25 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.27.1');
+assert.strictEqual(appVersion, '2026.10.27.2');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.27.1');
+assert.strictEqual(firstUnseen[0].version, '2026.10.27.2');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/phone|tap Ref|overlay/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/60\/40|wide screen|Resources/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/teleprompter|script/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.24.2', false, '')[0].version, '2026.10.27.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', true, '2026.10.27.1').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', true, '2026.10.24.2')[0].version, '2026.10.27.1');
+assert.ok(/brain check|personally read|Needs Review/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/Monica|Rich Life|thesis/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/client|filming/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', true, '2026.10.27.2').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', true, '2026.10.24.2')[0].version, '2026.10.27.2');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -765,6 +771,8 @@ assert.strictEqual(clientBody, ctx.prepStepHtml(ctx.prepModel(reaction), 0));
 assert.ok(clientBody.includes('Watch the reference'));
 assert.ok(!clientBody.includes('How we built this'));
 assert.ok(!clientBody.includes('Ready for client send'));
+assert.ok(!clientBody.includes('Cristian brain check'));
+assert.ok(!clientBody.includes('Sign the brain check'));
 assert.strictEqual(ctx.prepStepBody(reaction, 1, true), ctx.prepStepHtml(ctx.prepModel(reaction), 0));
 assert.strictEqual(ctx.prepStepBody(reaction, 2, true), ctx.prepStepHtml(ctx.prepModel(reaction), 1));
 assert.strictEqual(ctx.prepStepBody(reaction, 3, true), ctx.prepStepHtml(ctx.prepModel(reaction), 2));
@@ -1451,5 +1459,82 @@ assert.ok(missingImg.includes('<li>'));
 assert.ok(!missingImg.includes('<img'));
 assert.ok(!ctx.prompterResourcesHtml({ client_slug: 'jan' }, { role: 'client', includeAudit: false }).includes('pipeline_audit'));
 assert.ok(!ctx.prompterResourcesHtml(reviewScript, { role: 'client', includeAudit: false }).includes('Content system for founders'));
+
+assert.strictEqual(ctx.isRlaClient('jan'), true);
+assert.strictEqual(ctx.isRlaClient('jan-rla'), true);
+assert.strictEqual(ctx.isRlaClient('andrew'), false);
+assert.ok(ctx.humanQaChecks({ client_slug: 'jan' }).some(c => /Monica|Rich Life|leadership/i.test(c.label)));
+assert.ok(ctx.humanQaChecks({ client_slug: 'andrew' }).some(c => /thesis filter/i.test(c.label)));
+assert.strictEqual(ctx.humanQaChecks({ client_slug: 'jan' }).map(c => c.key).join(','), 'readFull,notVerbatim,thesisFilter,shareable');
+assert.strictEqual(ctx.humanQaNotesOk('looks fine'), false);
+assert.strictEqual(ctx.humanQaNotesOk('AI finished'), false);
+assert.strictEqual(ctx.humanQaNotesOk('Leadership angle, not a copy of the reel, shareable with their team.'), true);
+assert.strictEqual(ctx.humanQaComplete({}), false);
+assert.strictEqual(ctx.humanQaComplete({ pipeline_audit: {} }), false);
+assert.strictEqual(ctx.isClientDeliveryStatus('Needs Review'), true);
+assert.strictEqual(ctx.isClientDeliveryStatus('Approved'), true);
+assert.strictEqual(ctx.isClientDeliveryStatus('Filming'), false);
+assert.strictEqual(ctx.isClientDeliveryStatus('Draft'), false);
+assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Draft' }, 'Needs Review'), true);
+assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Needs Review' }, 'Approved'), true);
+assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Needs Review' }, 'Filming'), false);
+assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Draft' }, 'Draft'), false);
+const signedQa = ctx.buildHumanQaStamp({
+  readFull: true, notVerbatim: true, thesisFilter: true, shareable: true,
+}, 'Leadership angle, not a copy of the reel, shareable with their team.', 'Cristian Aguilar', '2026-10-27T15:00:00.000Z');
+assert.strictEqual(signedQa.complete, true);
+assert.strictEqual(signedQa.by, 'Cristian Aguilar');
+const signedScript = { id: 'qa-1', title: 'Growth Reveals Your Circle', client_slug: 'jan', status: 'Draft', pipeline_audit: ctx.applyHumanQa({ offer: 'Keep offer' }, signedQa) };
+assert.strictEqual(ctx.humanQaComplete(signedScript), true);
+assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Needs Review'), false);
+assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Approved'), false);
+assert.strictEqual(ctx.currentAuditObject(signedScript).offer, 'Keep offer');
+assert.strictEqual(ctx.currentAuditObject(signedScript).humanQa.notes.indexOf('Leadership') !== -1, true);
+assert.strictEqual(ctx.humanQaValidate({ readFull: true, notVerbatim: true, thesisFilter: true, shareable: false }, signedQa.notes).ok, false);
+assert.strictEqual(ctx.humanQaValidate(signedQa.checks, 'ok').ok, false);
+assert.strictEqual(ctx.humanQaValidate(signedQa.checks, signedQa.notes).ok, true);
+ctx.role = 'admin';
+const unsignedHtml = ctx.prepAuditHtml({ id: 'qa-2', title: 'Bare QA', client_slug: 'jan', status: 'Needs Review' });
+assert.ok(unsignedHtml.includes('Cristian brain check'));
+assert.ok(unsignedHtml.includes('personally read the full script'));
+assert.ok(unsignedHtml.includes('not a verbatim'));
+assert.ok(/Monica|Rich Life|leadership/i.test(unsignedHtml));
+assert.ok(unsignedHtml.includes('Why this is good to send'));
+assert.ok(unsignedHtml.includes('Mark client-ready is blocked'));
+assert.ok(unsignedHtml.includes('Cristian brain check is still open'));
+assert.ok(unsignedHtml.includes('qa-prep-qa-2') || unsignedHtml.includes('submitHumanQa'));
+const signedHtml = ctx.prepAuditHtml(signedScript);
+assert.ok(signedHtml.includes('You signed this one'));
+assert.ok(signedHtml.includes('Cristian Aguilar'));
+assert.ok(signedHtml.includes('Leadership angle'));
+assert.ok(signedHtml.includes('Send to Needs Review'));
+assert.ok(!signedHtml.includes('Sign the brain check'));
+const andrewGate = ctx.renderHumanQaGate({ id: 'qa-3', client_slug: 'andrew', status: 'Draft' }, 'card');
+assert.ok(/thesis filter/i.test(andrewGate));
+assert.ok(!/Monica stamp|Rich Life \/ Monica/i.test(andrewGate));
+assert.ok(andrewGate.includes('qa-card-qa-3'));
+ctx.role = 'admin';
+assert.ok(ctx.renderHumanQaBadge({ client_slug: 'jan' }).includes('Brain check needed'));
+assert.ok(ctx.renderHumanQaBadge(signedScript).includes('Brain check'));
+assert.ok(ctx.renderHumanQaBadge(signedScript).includes('Cristian'));
+ctx.role = 'client';
+assert.strictEqual(ctx.renderHumanQaBadge(signedScript), '');
+const qaBatch = ctx.batchGapsHtml([
+  [{ id: 'a', title: 'Unsigned one', client_slug: 'jan' }],
+  [{ id: 'b', title: 'Unsigned two', client_slug: 'jan' }],
+]);
+ctx.role = 'admin';
+const qaBatchAdmin = ctx.batchGapsHtml([
+  [{ id: 'a', title: 'Unsigned one', client_slug: 'jan' }],
+  [{ id: 'b', title: 'Unsigned two', client_slug: 'jan' }],
+]);
+assert.ok(qaBatchAdmin.includes('Cristian brain check still open'));
+assert.ok(qaBatchAdmin.includes('Unsigned one'));
+assert.ok(qaBatch === '' || qaBatch.includes('Cristian') === false);
+assert.ok(ctx.scriptGapHtml({ ready: { blockers: [] } }, { title: 'Open' }).includes('Cristian brain check'));
+assert.ok(ctx.scriptGapHtml({ ready: { blockers: [] } }, signedScript).includes('No hard gaps'));
+assert.ok(/Finish the Cristian brain check first/.test(script));
+assert.ok(/humanQaBlocksStatus/.test(script));
+assert.ok(/pipeline_audit: nextAudit/.test(script));
 
 console.log('hub-logic tests passed');

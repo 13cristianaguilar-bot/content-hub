@@ -40,10 +40,12 @@ const names = [
   'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink',
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepStepBody',
-  'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'unpackHumanQa', 'humanQaFrom',
-  'humanQaComplete', 'isClientDeliveryStatus', 'humanQaBlocksStatus', 'humanQaValidate',
-  'buildHumanQaStamp', 'applyHumanQa', 'currentAuditObject', 'renderHumanQaBadge',
-  'renderHumanQaGate', 'renderShotActions', 'formatStamp',
+  'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash', 'unpackHumanQa', 'humanQaFrom',
+  'humanQaComplete', 'humanQaStale', 'humanQaDeliveryReady', 'humanQaFilmStartDone', 'humanQaFilmEndDone',
+  'prompterShowsFilmQa', 'prompterShouldForceStart', 'prompterShouldBlockClose',
+  'isClientDeliveryStatus', 'humanQaBlocksStatus', 'humanQaValidate',
+  'buildHumanQaStamp', 'attachHumanQaFilm', 'staleHumanQaAfterScriptChange', 'applyHumanQa', 'currentAuditObject', 'renderHumanQaBadge',
+  'renderHumanQaGate', 'prompterFilmQaHtml', 'humanQaFilmSurface', 'renderShotActions', 'formatStamp',
   'auditStatus', 'auditCount', 'auditNumLabel', 'auditScoreLabel', 'auditList', 'auditToolLabel',
   'auditSource', 'auditCheck', 'auditFact', 'parseSecondBand', 'parseClockBand',
   'spokenReadSeconds', 'spokenInBand', 'auditBlob', 'auditRestrictYes', 'auditRestricted',
@@ -657,6 +659,7 @@ assert.strictEqual(ctx.finalScriptEditAllowed(janSession, ownScript), true);
 assert.strictEqual(ctx.finalScriptEditAllowed(janSession, { id: ownScript.id, client_slug: 'andrew' }), false);
 assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'client', mySlug: 'jan', viewSlug: 'andrew' }, ownScript), false);
 assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'jan', previewSlug: 'jan' }, ownScript), true);
+assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'jan', previewSlug: null }, ownScript), true);
 assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'cristian' }, { id: ownScript.id, client_slug: 'jan' }), false);
 assert.strictEqual(ctx.finalScriptEditAllowed({ role: 'admin', mySlug: 'cristian', viewSlug: 'cristian' }, { id: ownScript.id, client_slug: 'cristian' }), true);
 assert.strictEqual(ctx.finalScriptEditAllowed(janSession, { client_slug: 'jan' }), false);
@@ -692,25 +695,25 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.27.2');
+assert.strictEqual(appVersion, '2026.10.27.3');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.27.2');
+assert.strictEqual(firstUnseen[0].version, '2026.10.27.3');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/brain check|personally read|Needs Review/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Monica|Rich Life|thesis/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/client|filming/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', true, '2026.10.27.2').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', true, '2026.10.24.2')[0].version, '2026.10.27.2');
+assert.ok(/Full screen|brain check|Edit/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/Save|teleprompter|client/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.27.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', true, '2026.10.27.3').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', true, '2026.10.24.2')[0].version, '2026.10.27.3');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1558,5 +1561,83 @@ assert.ok(clientDraft.includes("moveStatus('act-5','Needs Review')"));
 assert.ok(/Finish the Cristian brain check first/.test(script));
 assert.ok(/humanQaBlocksStatus/.test(script));
 assert.ok(/pipeline_audit: nextAudit/.test(script));
+assert.ok(/confirmHumanQaFilm/.test(script));
+assert.ok(/prompterShouldForceStart/.test(script));
+assert.ok(/staleHumanQaAfterScriptChange/.test(script));
+
+const hashScript = { hook: 'Line one', full_script: 'Body two', cta: 'Comment FOLLOW' };
+assert.strictEqual(ctx.humanQaScriptHash(hashScript), 'Line one\n\x1e\nBody two\n\x1e\nComment FOLLOW');
+assert.notStrictEqual(ctx.humanQaScriptHash(hashScript), ctx.humanQaScriptHash({ hook: 'Changed', full_script: 'Body two', cta: 'Comment FOLLOW' }));
+const filmStamp = ctx.attachHumanQaFilm(signedQa, 'start', ctx.humanQaScriptHash(hashScript));
+assert.ok(filmStamp.filmStartAt);
+assert.strictEqual(filmStamp.filmEndAt, '');
+assert.strictEqual(filmStamp.scriptHash, ctx.humanQaScriptHash(hashScript));
+const filmEndStamp = ctx.attachHumanQaFilm(filmStamp, 'end', ctx.humanQaScriptHash(hashScript));
+assert.ok(filmEndStamp.filmEndAt);
+const filmScript = {
+  id: 'qa-film-1',
+  title: 'Growth Reveals Your Circle',
+  client_slug: 'jan',
+  status: 'Draft',
+  hook: hashScript.hook,
+  full_script: hashScript.full_script,
+  cta: hashScript.cta,
+  pipeline_audit: ctx.applyHumanQa({ offer: 'Keep offer' }, filmEndStamp),
+};
+assert.strictEqual(ctx.humanQaFilmStartDone(filmScript), true);
+assert.strictEqual(ctx.humanQaFilmEndDone(filmScript), true);
+assert.strictEqual(ctx.humanQaStale(filmScript), false);
+assert.strictEqual(ctx.humanQaDeliveryReady(filmScript), true);
+const editedFilm = Object.assign({}, filmScript, { full_script: 'Body two. Warmer.' });
+assert.strictEqual(ctx.humanQaStale(editedFilm), true);
+assert.strictEqual(ctx.humanQaDeliveryReady(editedFilm), false);
+assert.strictEqual(ctx.humanQaFilmStartDone(editedFilm), false);
+assert.strictEqual(ctx.humanQaBlocksStatus(editedFilm, 'Needs Review'), true);
+const stalePatch = ctx.staleHumanQaAfterScriptChange(filmScript, { full_script: 'Body two. Warmer.' });
+assert.ok(stalePatch);
+assert.strictEqual(stalePatch.humanQa.complete, false);
+assert.strictEqual(stalePatch.offer, 'Keep offer');
+assert.strictEqual(ctx.staleHumanQaAfterScriptChange(filmScript, { editor_notes: 'only notes' }), null);
+assert.strictEqual(ctx.humanQaNotesOk('looks fine now'), false);
+assert.strictEqual(ctx.humanQaNotesOk('AI finished'), false);
+
+ctx.role = 'admin';
+assert.strictEqual(ctx.prompterShowsFilmQa(), true);
+assert.strictEqual(ctx.prompterShouldForceStart(signedScript), true);
+assert.strictEqual(ctx.prompterShouldForceStart(filmScript), false);
+assert.strictEqual(ctx.prompterShouldBlockClose(filmScript), false);
+const startOnly = Object.assign({}, filmScript, {
+  pipeline_audit: ctx.applyHumanQa({ offer: 'Keep offer' }, filmStamp),
+});
+assert.strictEqual(ctx.humanQaFilmStartDone(startOnly), true);
+assert.strictEqual(ctx.humanQaFilmEndDone(startOnly), false);
+assert.strictEqual(ctx.prompterShouldBlockClose(startOnly), true);
+assert.strictEqual(ctx.prompterShouldForceStart({ client_slug: 'jan' }), true);
+const startHtml = ctx.renderHumanQaGate({ id: 'qa-film-2', client_slug: 'jan', status: 'Draft' }, 'film-start');
+assert.ok(startHtml.includes('qa-film-start-qa-film-2'));
+assert.ok(startHtml.includes('Film start'));
+assert.ok(startHtml.includes('teleprompter stays closed'));
+assert.ok(startHtml.includes('submitHumanQa'));
+const startConfirm = ctx.renderHumanQaGate(signedScript, 'film-start');
+assert.ok(startConfirm.includes("I'm reading this myself"));
+assert.ok(startConfirm.includes('confirmHumanQaFilm'));
+const endHtml = ctx.renderHumanQaGate(startOnly, 'film-end');
+assert.ok(endHtml.includes('I finished this film read'));
+assert.ok(endHtml.includes('Film end'));
+const filmSheet = ctx.prompterFilmQaHtml({ id: 'qa-film-2', client_slug: 'jan', status: 'Draft' }, 'start');
+assert.ok(filmSheet.includes('Start this film read'));
+assert.ok(filmSheet.includes('qa-film-start-qa-film-2'));
+assert.ok(filmSheet.includes('closePrompter(true)'));
+const endSheet = ctx.prompterFilmQaHtml(startOnly, 'end');
+assert.ok(endSheet.includes('Finish this film read'));
+assert.ok(endSheet.includes('prompterQa(false)'));
+ctx.role = 'client';
+assert.strictEqual(ctx.prompterShowsFilmQa(), false);
+assert.strictEqual(ctx.prompterShouldForceStart(signedScript), false);
+assert.strictEqual(ctx.prompterShouldBlockClose(startOnly), false);
+assert.ok(/finalScriptEditAllowed/.test(script));
+assert.ok(/commitScriptEdit/.test(script));
+assert.ok(/You can only edit your own scripts/.test(script));
+assert.ok(/viewSlug === session.viewSlug/.test(script) || /slug === session.viewSlug/.test(script));
 
 console.log('hub-logic tests passed');

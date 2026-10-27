@@ -357,11 +357,21 @@ create policy "script_edits_insert_own"
   for insert
   to authenticated
   with check (
-    client = (select auth.jwt() -> 'app_metadata' ->> 'client_slug')
-    and coalesce((select auth.jwt() -> 'app_metadata' ->> 'client_slug'), '') <> ''
-    and exists (
-      select 1 from public.scripts s
-      where s.id = script_id
-        and s.client_slug = (select auth.jwt() -> 'app_metadata' ->> 'client_slug')
+    (
+      (select auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
+      and exists (
+        select 1 from public.scripts s
+        where s.id = script_id
+          and s.client_slug = client
+      )
+    )
+    or (
+      client = (select auth.jwt() -> 'app_metadata' ->> 'client_slug')
+      and coalesce((select auth.jwt() -> 'app_metadata' ->> 'client_slug'), '') <> ''
+      and exists (
+        select 1 from public.scripts s
+        where s.id = script_id
+          and s.client_slug = (select auth.jwt() -> 'app_metadata' ->> 'client_slug')
+      )
     )
   );

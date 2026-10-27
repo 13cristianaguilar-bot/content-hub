@@ -1210,6 +1210,63 @@ body.modal-open { overflow: hidden; }
   font-size: 17px; font-weight: 650;
 }
 .edit-save[disabled], .edit-restore[disabled] { opacity: 0.45; }
+.qa-gate {
+  margin: 16px 0 0;
+  background: #121212;
+  color: #f4f4f4;
+  border: 1px solid #2a2a2a;
+  border-top: 3px solid #ed3039;
+  padding: 14px 16px 16px;
+}
+.qa-gate.is-done { border-top-color: #1f7a3a; }
+.qa-kicker {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: #ed3039; font-weight: 650; margin: 0 0 6px;
+}
+.qa-gate.is-done .qa-kicker { color: #7dcea0; }
+.qa-gate h3 {
+  margin: 0 0 8px; font-size: 22px; line-height: 1.15; letter-spacing: -0.04em; color: #fff;
+}
+.qa-gate p { margin: 0 0 8px; font-size: 15px; line-height: 1.4; color: #d0d0d0; }
+.qa-gate .qa-lead { color: #f4f4f4; font-weight: 650; }
+.qa-list { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.qa-check {
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 10px 0 0; border-top: 1px solid #2a2a2a; color: #f4f4f4; font-size: 15px; line-height: 1.4;
+}
+.qa-check input { width: 22px; height: 22px; margin-top: 1px; accent-color: #ed3039; flex-shrink: 0; }
+.qa-notes-label {
+  display: block; margin: 14px 0 6px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #ed3039; font-weight: 650;
+}
+.qa-notes {
+  width: 100%; box-sizing: border-box; min-height: 92px;
+  border: 1px solid #3a3a3a; background: #0b0b0d; color: #f4f4f4;
+  font-size: 16px; line-height: 1.4; padding: 10px 12px; resize: vertical;
+}
+.qa-notes:focus { outline: 2px solid #ed3039; border-color: #ed3039; }
+.qa-go {
+  width: 100%; min-height: 52px; margin-top: 12px; padding: 0 14px;
+  background: #ed3039; color: #fff; border: 0; font-size: 16px; font-weight: 650;
+}
+.qa-go[disabled] { opacity: 0.4; }
+.qa-stamp { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a; }
+.qa-stamp p { margin: 0 0 6px; }
+.qa-block {
+  margin: 10px 0 0; padding: 10px 12px; background: #2a0b0e; border: 1px solid #ed3039; color: #fff; font-weight: 650;
+}
+.qa-chip {
+  display: inline-flex; align-items: center; margin-top: 8px;
+  padding: 4px 8px; font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; font-weight: 650;
+}
+.qa-chip.is-no { background: #ed3039; color: #fff; }
+.qa-chip.is-yes { background: #1f7a3a; color: #fff; }
+.tool-btn[disabled], .shot-actions .is-blocked {
+  opacity: 0.4; cursor: not-allowed;
+}
 
 </style>
 
@@ -1377,7 +1434,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.27.1';
+const APP_VERSION = '2026.10.27.2';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -1392,6 +1449,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.27.2',
+    date: 'October 27, 2026',
+    title: 'Cristian brain check before a script goes to a client',
+    items: [
+      'Admin only: you cannot send a script to Needs Review or mark it client-ready until you personally read it and sign the brain check.',
+      'The gate lives on Admin Audit and the review card. Tick: I read the full script, it is not a copy-paste of the reference, it passes the client thesis, and it feels shareable. Then write why it is good to send.',
+      'Jan / Rich Life Academy uses the Monica / leadership thesis on that checklist. Clients never see this. Filming and the phone Ref overlay are unchanged.',
+    ],
+    steps: [
+      'Open Jan’s scripts. Film still starts on Audit for you.',
+      'Read the script with your own brain. Tick the four boxes and write a real note.',
+      'Needs Review and Mark client-ready stay blocked until that stamp is saved. Admin Audit keeps who, when, and the note.',
+    ],
+  },
   {
     version: '2026.10.27.1',
     date: 'October 27, 2026',
@@ -1797,6 +1869,7 @@ let editsError = '';
 let editFilter = 'all';
 let editState = null;
 let editSaving = false;
+let qaSaving = false;
 let requestSending = false;
 let requestFilter = 'all';
 let requestDraft = { kind: 'feature', body: '', handles: '' };
@@ -2429,6 +2502,14 @@ const STATUS_MOVE_MSG = {
 async function setStatus(id, status, extra, opts) {
   opts = opts || {};
   const before = scripts.find(s => s.id === id);
+  // Admin delivery gate: Needs Review and Approved cannot be set until Cristian
+  // signs the brain check. Clients keep Film this / Pass / tweak. Undo still works.
+  if (!opts.isUndo && role === 'admin' && before && humanQaBlocksStatus(before, status)) {
+    showToast('Finish the Cristian brain check first — read the script, tick the boxes, and write why it is good to send.', { tone: 'error' });
+    renderDash();
+    if (prepState && prepState.id === id) renderPrep();
+    return;
+  }
   // Snapshot exactly the fields this write will touch, so Undo restores precisely them.
   const prev = before ? { status: before.status ?? null, client_feedback: before.client_feedback ?? null } : null;
   const payload = extra ? { status, ...extra } : { status };
@@ -3273,6 +3354,7 @@ function renderBatchCard(group, index) {
       </span>
       <span class="batch-card-title">${escHtml(title)}</span>
       <span class="batch-card-who">${escHtml(person)}</span>
+      ${renderHumanQaBadge(s)}
     </button>
     ${editBadgeHtml(s.id)}
     <div class="batch-actions">
@@ -3525,6 +3607,11 @@ function renderHelpPage() {
       </ul>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openRequests()">Requests and feedback</button>
     </article>
+    ${role === 'admin' ? `<article class="page-card">
+      <div class="eyebrow">Admin</div>
+      <h2>Cristian brain check</h2>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Audit, read the script yourself, tick the four boxes, and write why it is good to send. Needs Review and Mark client-ready stay blocked until that stamp is saved.</p>
+    </article>` : ''}
     <div class="eyebrow">What’s new</div>
     ${RELEASES.map(renderReleaseArticle).join('')}
   </div>`;
@@ -4708,21 +4795,34 @@ function renderShotActions(s) {
   const si = STATUS_ORDER.indexOf(s.status);
   const prev = STATUS_ORDER[si - 1];
   const next = STATUS_ORDER[si + 1];
+  const admin = typeof role !== 'undefined' && role === 'admin';
+  const statusBtn = (status, label, cls) => {
+    if (!status || status === 'Passed') return '<div></div>';
+    const blocked = admin && humanQaBlocksStatus(s, status);
+    if (blocked) {
+      return `<button type="button" class="${cls} is-blocked" disabled aria-disabled="true" title="Finish the Cristian brain check first">${escHtml(label)}</button>`;
+    }
+    return `<button type="button" class="${cls}" onclick="moveStatus('${s.id}','${status}')">${escHtml(label)}</button>`;
+  };
   if (needsReview) {
+    const ready = admin
+      ? statusBtn('Approved', 'Mark client-ready', 'tool-btn primary')
+      : '';
     return `<div class="shot-actions">
       <button type="button" class="shot-go" onclick="moveStatus('${s.id}','Filming')">Film this</button>
       <div class="shot-alt">
         <button type="button" onclick="requestTweak('${s.id}')">Request a tweak</button>
         <button type="button" onclick="moveStatus('${s.id}','Passed')">Pass</button>
+        ${ready}
       </div>
     </div>`;
   }
   if (isPosted) return `<div class="shot-actions"><div class="posted-flag">Posted</div></div>`;
-  if (isPassed) return `<div class="shot-actions nav-row"><div class="quiet-flag">Passed</div><button type="button" class="tool-btn" onclick="moveStatus('${s.id}','Needs Review')">Restore</button></div>`;
+  if (isPassed) return `<div class="shot-actions nav-row"><div class="quiet-flag">Passed</div>${statusBtn('Needs Review', 'Restore', 'tool-btn')}</div>`;
   if (isArchived) return `<div class="shot-actions nav-row"><div class="quiet-flag">Archived</div><button type="button" class="tool-btn" onclick="moveStatus('${s.id}','Draft')">Restore</button></div>`;
   return `<div class="shot-actions nav-row">
-    ${prev && prev !== 'Passed' ? `<button type="button" class="tool-btn" onclick="moveStatus('${s.id}','${prev}')">${escHtml(prev)}</button>` : '<div></div>'}
-    ${next && next !== 'Passed' ? `<button type="button" class="tool-btn primary" onclick="moveStatus('${s.id}','${next}')">${escHtml(next)}</button>` : '<div></div>'}
+    ${prev && prev !== 'Passed' ? statusBtn(prev, prev, 'tool-btn') : '<div></div>'}
+    ${next && next !== 'Passed' ? statusBtn(next, next, 'tool-btn primary') : '<div></div>'}
   </div>`;
 }
 
@@ -4774,6 +4874,7 @@ function renderCardGroup(group) {
         </div>
         <h2 class="shot-title">${escHtml(s.title)}</h2>
         ${editBadgeHtml(s.id)}
+        ${renderHumanQaBadge(s)}
         ${renderStatusRail(s.status)}
       </div>
     </div>
@@ -4792,6 +4893,7 @@ function renderCardGroup(group) {
       </div>
     </div>
     ${canEditScripts() || viewingAsClient() ? `<button type="button" class="shot-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
+    ${typeof role !== 'undefined' && role === 'admin' ? renderHumanQaGate(s, 'card') : ''}
     ${renderShotActions(s)}
     ${renderAdvanced(s, group)}
   </article>`;
@@ -6338,6 +6440,155 @@ function prepReferenceHtml(model) {
     </div>
     ${open}`;
 }
+// Cristian brain check — admin delivery gate stored on pipeline_audit.humanQa.
+// Clients never see or write this. Status moves to Needs Review / Approved
+// stay blocked until the four boxes and a real note are saved.
+const HUMAN_QA_KEYS = ['readFull', 'notVerbatim', 'thesisFilter', 'shareable'];
+const HUMAN_QA_NOTE_MIN = 12;
+function isRlaClient(slug) {
+  const key = String(slug || '').toLowerCase().trim();
+  if (key === 'jan' || key === 'jan-rla') return true;
+  return clientResourcePackSlug(key) === 'jan-rla';
+}
+function humanQaChecks(s) {
+  const rla = isRlaClient(s && s.client_slug);
+  return [
+    { key: 'readFull', label: 'I personally read the full script. I did not just trust that the AI said it finished.' },
+    { key: 'notVerbatim', label: 'This is not a verbatim or near-verbatim transcription of the reference reel. Same hook / format / idea / reward — their messaging, not a copy-paste.' },
+    { key: 'thesisFilter', label: rla
+      ? 'It passes the Rich Life / Monica filter: leadership or growing as a person as the path to the business — not rank or wealth chase with no tie, and nothing that contradicts what Jan and Monica teach.'
+      : 'It passes this client’s thesis filter: their message and offer, not a generic rewrite, and nothing that contradicts what they teach.' },
+    { key: 'shareable', label: 'This feels like something their audience would actually pay forward or share with their team.' },
+  ];
+}
+function humanQaNotesOk(notes) {
+  const t = asText(notes).replace(/\s+/g, ' ').trim();
+  if (t.length < HUMAN_QA_NOTE_MIN) return false;
+  return t.split(' ').filter(Boolean).length >= 3;
+}
+function unpackHumanQa(value) {
+  const src = value && typeof value === 'object' && !Array.isArray(value)
+    ? (value.humanQa || value.human_qa || value.cristianQa || value.brainCheck)
+    : null;
+  if (!src || typeof src !== 'object' || Array.isArray(src)) return null;
+  const checks = src.checks && typeof src.checks === 'object' && !Array.isArray(src.checks) ? src.checks : src;
+  const out = {
+    checks: {},
+    notes: asText(src.notes || src.why || src.readNotes).trim(),
+    by: asText(src.by || src.who || src.owner).trim(),
+    at: asText(src.at || src.when || src.signedAt).trim(),
+    complete: src.complete === true,
+  };
+  HUMAN_QA_KEYS.forEach(key => { out.checks[key] = checks[key] === true; });
+  if (!out.complete) {
+    out.complete = HUMAN_QA_KEYS.every(k => out.checks[k]) && humanQaNotesOk(out.notes) && !!(out.by || out.at);
+  }
+  return out;
+}
+function humanQaFrom(s) {
+  const raw = s && s.pipeline_audit;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return unpackHumanQa(raw);
+  const unpacked = unpackAudit(raw);
+  return unpackHumanQa(unpacked && unpacked.raw);
+}
+function humanQaComplete(s) {
+  const qa = humanQaFrom(s);
+  return !!(qa && qa.complete && HUMAN_QA_KEYS.every(k => qa.checks[k]) && humanQaNotesOk(qa.notes));
+}
+function isClientDeliveryStatus(status) {
+  return status === 'Needs Review' || status === 'Approved';
+}
+function humanQaBlocksStatus(s, nextStatus) {
+  return isClientDeliveryStatus(nextStatus) && !humanQaComplete(s);
+}
+function humanQaValidate(checks, notes) {
+  const missing = HUMAN_QA_KEYS.filter(k => !checks || checks[k] !== true);
+  const noteOk = humanQaNotesOk(notes);
+  return { ok: missing.length === 0 && noteOk, missing: missing, noteOk: noteOk };
+}
+function buildHumanQaStamp(checks, notes, who, when) {
+  const stamp = {
+    version: 1,
+    complete: false,
+    checks: {},
+    notes: asText(notes).trim(),
+    by: asText(who).trim() || 'Cristian',
+    at: asText(when).trim() || new Date().toISOString(),
+  };
+  HUMAN_QA_KEYS.forEach(key => { stamp.checks[key] = !!(checks && checks[key]); });
+  stamp.complete = HUMAN_QA_KEYS.every(k => stamp.checks[k]) && humanQaNotesOk(stamp.notes);
+  return stamp;
+}
+function applyHumanQa(audit, stamp) {
+  const base = (audit && typeof audit === 'object' && !Array.isArray(audit)) ? Object.assign({}, audit) : {};
+  base.humanQa = stamp;
+  return base;
+}
+function currentAuditObject(s) {
+  const raw = s && s.pipeline_audit;
+  if (raw == null || raw === '') return {};
+  const unpacked = unpackAudit(raw);
+  if (unpacked && unpacked.broken) return null;
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) return raw;
+  return (unpacked && unpacked.raw) || {};
+}
+function renderHumanQaBadge(s) {
+  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (humanQaComplete(s)) {
+    const qa = humanQaFrom(s) || {};
+    return `<span class="qa-chip is-yes">Brain check · ${escHtml(qa.by || 'Cristian')}</span>`;
+  }
+  return `<span class="qa-chip is-no">Brain check needed</span>`;
+}
+function renderHumanQaGate(s, surface) {
+  s = s || {};
+  const id = asText(s.id).trim();
+  const qa = humanQaFrom(s) || { checks: {}, notes: '', by: '', at: '', complete: false };
+  const done = humanQaComplete(s);
+  const when = qa.at ? formatStamp(qa.at) : '';
+  const who = qa.by || 'Cristian';
+  const action = s.status === 'Needs Review'
+    ? { status: 'Approved', label: 'Mark client-ready' }
+    : ((s.status === 'Draft' || s.status === 'Passed') ? { status: 'Needs Review', label: 'Send to Needs Review' } : null);
+  const blocked = action && humanQaBlocksStatus(s, action.status);
+  if (done) {
+    const signed = (humanQaChecks(s) || []).map(item =>
+      '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
+    ).join('');
+    const send = action && !blocked && id
+      ? `<button type="button" class="qa-go" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`
+      : '';
+    return `<section class="qa-gate is-done" aria-label="Cristian brain check">
+      <p class="qa-kicker">Human QA · Cristian brain check</p>
+      <h3>You signed this one</h3>
+      <p class="qa-lead">${escHtml(who)}${when ? ' · ' + escHtml(when) : ''}</p>
+      ${qa.notes ? `<div class="qa-stamp"><p>${escHtml(qa.notes)}</p></div>` : ''}
+      <ul class="qa-list">${signed}</ul>
+      ${send}
+    </section>`;
+  }
+  const boxes = (humanQaChecks(s) || []).map(item =>
+    `<label class="qa-check"><input type="checkbox" name="qa-${item.key}"><span>${escHtml(item.label)}</span></label>`
+  ).join('');
+  const formId = id ? 'qa-' + (surface || 'form') + '-' + id : '';
+  const submit = id
+    ? `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">Sign the brain check</button>`
+    : '';
+  const hold = action
+    ? `<p class="qa-block">${escHtml(action.label)} is blocked until you tick every box and write why this is good to send.</p>`
+    : '<p class="qa-block">Needs Review and client-ready stay blocked until you sign this.</p>';
+  return `<section class="qa-gate" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>
+    <p class="qa-kicker">Human QA · Cristian brain check</p>
+    <h3>Stop. Read it yourself.</h3>
+    <p class="qa-lead">AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.</p>
+    ${boxes}
+    <label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
+    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="In your own words. Not “AI finished” or “looks fine”."></textarea>
+    ${hold}
+    ${submit}
+  </section>`;
+}
+
 // Admin-only production audit. Sits in front of Film prep (Reference, Notes,
 // Film) when role is admin. Client prep never includes this step, and a
 // client fetch drops pipeline_audit before render. Prefer columns that
@@ -7355,7 +7606,18 @@ function scriptsFromGroups(groups) {
 }
 function batchGapsHtml(groups) {
   if (typeof role === 'undefined' || role !== 'admin') return '';
-  const items = batchTopGaps(scriptsFromGroups(groups));
+  const rowsList = scriptsFromGroups(groups);
+  const items = batchTopGaps(rowsList);
+  const qaTitles = rowsList.filter(s => !humanQaComplete(s)).map(s => asText(s.title).trim() || 'Untitled');
+  if (qaTitles.length) {
+    items.unshift({
+      label: 'Cristian brain check still open',
+      why: 'Do not send these until you personally read them, tick the gate, and write why they are good to send.',
+      severity: 'hard',
+      owner: 'Cristian',
+      titles: qaTitles,
+    });
+  }
   if (!items.length) return '';
   const rows = items.map(item => {
     const badge = item.severity === 'hard'
@@ -7368,8 +7630,11 @@ function batchGapsHtml(groups) {
   }).join('');
   return '<section class="batch-gaps" aria-label="Top Gaps across this batch"><h2>Top Gaps across this batch</h2><ul>' + rows + '</ul></section>';
 }
-function scriptGapHtml(audit) {
+function scriptGapHtml(audit, s) {
   const hard = ((audit && audit.ready && audit.ready.blockers) || []).filter(b => b && b.status !== 'pass' && b.status !== 'soft_pass');
+  if (s && !humanQaComplete(s)) {
+    hard.unshift({ label: 'Cristian brain check', why: 'You have not personally signed this script yet.', status: 'hold' });
+  }
   if (!hard.length) {
     return '<section class="audit-script-gaps" aria-label="Top gaps on this script"><h3>Top gaps on this script</h3><p>No hard gaps on this script.</p></section>';
   }
@@ -7402,13 +7667,14 @@ function prepAuditHtml(s) {
     + '<h2 id="prep-title">How we built this</h2>'
     + '<p class="prep-lead">What went into this script, and what is still open before it goes to the client. Clients never see this step.</p>'
     + banner
+    + renderHumanQaGate(s, 'prep')
     + '<section class="audit-sticky audit-verdict ' + (ready.yes ? 'is-yes' : 'is-no') + '" aria-label="Ready for client send">'
     + '<div class="audit-sec-h"><h3>Ready to send?</h3>' + auditBadge(ready.yes ? 'pass' : 'fail') + '</div>'
     + '<p class="audit-yesno">' + (ready.yes ? 'Yes' : 'No') + '</p>'
-    + '<p class="audit-sticky-line">' + escHtml(line || ready.why || '') + '</p>'
+    + '<p class="audit-sticky-line">' + escHtml((humanQaComplete(s) ? '' : 'Cristian brain check is still open. ') + (line || ready.why || '')) + '</p>'
     + '</section>'
     + auditBatchStrip()
-    + scriptGapHtml(audit)
+    + scriptGapHtml(audit, s)
     + auditSection('Offer', audit.offer.rows)
     + flag
     + auditSection('Keywords and path', audit.keywords.rows)
@@ -8899,6 +9165,67 @@ window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact
 // but a selected day from client A's calendar shouldn't carry over to client B's.
 window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; moreOpen = false; window.scrollTo(0, 0); renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
+function humanQaFormRoot(id) {
+  const prep = document.getElementById('qa-prep-' + id);
+  if (prep && document.body.classList.contains('prep-open')) return prep;
+  return document.getElementById('qa-card-' + id) || prep || document.getElementById('qa-form-' + id);
+}
+function readHumanQaForm(id) {
+  const root = humanQaFormRoot(id);
+  const checks = {};
+  HUMAN_QA_KEYS.forEach(key => {
+    const el = root ? root.querySelector('[name="qa-' + key + '"]') : null;
+    checks[key] = !!(el && el.checked);
+  });
+  const notesEl = root ? root.querySelector('[name="qa-notes"]') : null;
+  return { checks: checks, notes: notesEl ? notesEl.value : '' };
+}
+window.submitHumanQa = async (id) => {
+  if (role !== 'admin' || qaSaving) return;
+  const s = scripts.find(x => x.id === id);
+  if (!s) return;
+  const form = readHumanQaForm(id);
+  const valid = humanQaValidate(form.checks, form.notes);
+  if (!valid.ok) {
+    showToast(valid.missing.length
+      ? 'Tick every box. This is the part where you actually read it.'
+      : 'Write why this is good to send — a real note, not “looks fine”.', { tone: 'error' });
+    return;
+  }
+  const current = currentAuditObject(s);
+  if (current == null) {
+    showToast('pipeline_audit on this row is not valid JSON. Fix that before the brain check can save.', { tone: 'error' });
+    return;
+  }
+  const stamp = buildHumanQaStamp(form.checks, form.notes, editorLabel(user), new Date().toISOString());
+  const nextAudit = applyHumanQa(current, stamp);
+  if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
+    s.pipeline_audit = nextAudit;
+    renderDash();
+    if (prepState && prepState.id === id) renderPrep();
+    showToast('Brain check saved.');
+    return;
+  }
+  qaSaving = true;
+  const go = humanQaFormRoot(id) && humanQaFormRoot(id).querySelector('.qa-go');
+  if (go) go.disabled = true;
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('scripts').update({ pipeline_audit: nextAudit }).eq('id', s.id).select('id'));
+  } catch (e) { error = e; }
+  qaSaving = false;
+  if (error || !data || data.length !== 1) {
+    if (error) console.error(error);
+    showToast(error ? ('Could not save the brain check: ' + (error.message || error)) : SESSION_EXPIRED_MSG, { tone: 'error' });
+    renderDash();
+    if (prepState && prepState.id === id) renderPrep();
+    return;
+  }
+  s.pipeline_audit = nextAudit;
+  renderDash();
+  if (prepState && prepState.id === id) renderPrep();
+  showToast('Brain check saved. You can send this when you are ready.');
+};
 // (No `window.requestTweak = (id) => requestTweak(id)` alias here -- there used to be one, and it
 // broke the Tweak button outright: a top-level `function requestTweak` in a classic script
 // already IS window.requestTweak, so that assignment replaced the real function with an arrow

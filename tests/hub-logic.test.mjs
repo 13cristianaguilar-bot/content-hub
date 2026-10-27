@@ -40,6 +40,7 @@ const names = [
   'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink',
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepStepBody',
+  'humanQaNotePlaceholder', 'reviewHasResources', 'prepReadBodyHtml', 'clientLabel',
   'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash', 'unpackHumanQa', 'humanQaFrom',
   'humanQaComplete', 'humanQaStale', 'humanQaDeliveryReady', 'humanQaFilmStartDone', 'humanQaFilmEndDone',
   'prompterShowsFilmQa', 'prompterShouldForceStart', 'prompterShouldBlockClose',
@@ -52,7 +53,8 @@ const names = [
   'collectConfirmGates', 'teleprompterIssues', 'auditHref', 'auditPick',
   'pacingWritten', 'framingWritten', 'parseLegacyAudit', 'unpackAudit', 'auditOwner', 'gateFromText', 'buildAudit',
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
-  'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
+  'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
+  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'nextStampId',
   'prepAuditHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
@@ -695,25 +697,27 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.27.3');
+assert.strictEqual(appVersion, '2026.10.27.4');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.27.3');
+assert.strictEqual(firstUnseen[0].version, '2026.10.27.4');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/Full screen|brain check|Edit/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Save|teleprompter|client/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.27.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', true, '2026.10.27.3').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', true, '2026.10.24.2')[0].version, '2026.10.27.3');
+assert.ok(/brain check|review queue|stamp/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/client/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/sent/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.27.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.27.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', true, '2026.10.27.4').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', true, '2026.10.24.2')[0].version, '2026.10.27.4');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -754,15 +758,16 @@ assert.strictEqual(parts.other.length, 2);
 
 assert.strictEqual(ctx.prepPlan(false).labels.join('|'), 'Reference|Notes|Film');
 assert.strictEqual(ctx.prepPlan(false).last, 2);
-assert.strictEqual(ctx.prepPlan(true).labels.join('|'), 'Audit|Reference|Notes|Film');
-assert.strictEqual(ctx.prepPlan(true).last, 3);
+assert.strictEqual(ctx.prepPlan(true).labels.join('|'), 'Read|Audit|Reference|Notes|Film');
+assert.strictEqual(ctx.prepPlan(true).last, 4);
 assert.strictEqual(ctx.prepContentIndex(0, false), 0);
 assert.strictEqual(ctx.prepContentIndex(1, false), 1);
 assert.strictEqual(ctx.prepContentIndex(2, false), 2);
-assert.strictEqual(ctx.prepContentIndex(0, true), -1);
-assert.strictEqual(ctx.prepContentIndex(1, true), 0);
-assert.strictEqual(ctx.prepContentIndex(2, true), 1);
-assert.strictEqual(ctx.prepContentIndex(3, true), 2);
+assert.strictEqual(ctx.prepContentIndex(0, true), -2);
+assert.strictEqual(ctx.prepContentIndex(1, true), -1);
+assert.strictEqual(ctx.prepContentIndex(2, true), 0);
+assert.strictEqual(ctx.prepContentIndex(3, true), 1);
+assert.strictEqual(ctx.prepContentIndex(4, true), 2);
 ctx.role = 'client';
 assert.strictEqual(ctx.prepShowsAudit(), false);
 ctx.role = 'admin';
@@ -776,9 +781,24 @@ assert.ok(!clientBody.includes('How we built this'));
 assert.ok(!clientBody.includes('Ready for client send'));
 assert.ok(!clientBody.includes('Cristian brain check'));
 assert.ok(!clientBody.includes('Sign the brain check'));
-assert.strictEqual(ctx.prepStepBody(reaction, 1, true), ctx.prepStepHtml(ctx.prepModel(reaction), 0));
-assert.strictEqual(ctx.prepStepBody(reaction, 2, true), ctx.prepStepHtml(ctx.prepModel(reaction), 1));
-assert.strictEqual(ctx.prepStepBody(reaction, 3, true), ctx.prepStepHtml(ctx.prepModel(reaction), 2));
+assert.strictEqual(ctx.prepStepBody(reaction, 2, true), ctx.prepStepHtml(ctx.prepModel(reaction), 0));
+assert.strictEqual(ctx.prepStepBody(reaction, 3, true), ctx.prepStepHtml(ctx.prepModel(reaction), 1));
+assert.strictEqual(ctx.prepStepBody(reaction, 4, true), ctx.prepStepHtml(ctx.prepModel(reaction), 2));
+const readFirst = ctx.prepStepBody({
+  id: 'r1', title: 'Growth Reveals Your Circle', client_slug: 'jan', status: 'Needs Review',
+  batch: 'Jan FINAL · 10.23.2026', hook: 'Say the hook line.', full_script: 'The body stays on leadership.', cta: 'Comment GROW.',
+}, 0, true);
+assert.ok(readFirst.includes('Read + stamp'));
+assert.ok(readFirst.includes('Say the hook line.'));
+assert.ok(readFirst.includes('The body stays on leadership.'));
+assert.ok(readFirst.includes('Comment GROW.'));
+assert.ok(readFirst.includes('Resources'));
+assert.ok(readFirst.indexOf('Say the hook line.') < readFirst.indexOf('The body stays on leadership.'));
+assert.ok(!readFirst.includes('How we built this'));
+assert.ok(!readFirst.includes('Top Gaps'));
+const andrewRead = ctx.prepStepBody({ id: 'r2', title: 'Other', client_slug: 'andrew', hook: 'Hook.', full_script: 'Body.', cta: 'End.' }, 0, true);
+assert.ok(!andrewRead.includes('review-res-btn'));
+assert.strictEqual(ctx.prepStepBody(reaction, 1, true), ctx.prepAuditHtml(reaction));
 
 const emptyAudit = ctx.buildAudit({ title: 'Bare audit' });
 assert.strictEqual(emptyAudit.saved, false);
@@ -1330,6 +1350,11 @@ assert.ok(strip.includes('Top Gaps across this batch'));
 assert.ok(strip.includes('Mission statement'));
 assert.ok(strip.includes('Cristian'));
 assert.ok(strip.includes('>HARD<'));
+assert.ok(strip.includes('<details>'));
+assert.ok(!/<details[^>]*\bopen\b/.test(strip));
+const stripSum = (strip.match(/class="batch-gaps-sum">([^<]*)</) || [])[1] || '';
+assert.ok(/^\d+ open · /.test(stripSum));
+assert.ok(!stripSum.includes('Mission statement'));
 ctx.role = 'client';
 assert.strictEqual(ctx.batchGapsHtml([[{ title: 'Mission statement', pipeline_audit: sharedAudit }]]), '');
 assert.ok(!ctx.prepStepBody({ title: 'Client card', hook: 'Hook.' }, 0, false).includes('Top Gaps'));
@@ -1516,6 +1541,35 @@ const andrewGate = ctx.renderHumanQaGate({ id: 'qa-3', client_slug: 'andrew', st
 assert.ok(/thesis filter/i.test(andrewGate));
 assert.ok(!/Monica stamp|Rich Life \/ Monica/i.test(andrewGate));
 assert.ok(andrewGate.includes('qa-card-qa-3'));
+assert.ok(andrewGate.includes('Fits their thesis, not a copy, and it is shareable.'));
+const reviewGate = ctx.renderHumanQaGate({ id: 'qa-r', client_slug: 'jan', status: 'Needs Review' }, 'review');
+assert.ok(reviewGate.includes('is-compact'));
+assert.ok(reviewGate.includes('qa-review-qa-r'));
+assert.ok(reviewGate.includes('Fits RLA leadership thesis / shareable.'));
+assert.ok(reviewGate.includes('Sign the brain check'));
+assert.ok(reviewGate.includes('personally read the full script'));
+assert.ok(reviewGate.includes('Mark client-ready is blocked'));
+assert.ok(!reviewGate.includes("moveStatus('qa-r'"));
+const queueRows = [
+  { id: 'core', title: 'Core one', client_slug: 'devin', status: 'Needs Review', batch: 'Devin CORE' },
+  { id: 'final', title: 'Final one', client_slug: 'jan', status: 'Draft', batch: 'Jan FINAL · 10.23.2026' },
+  { id: 'posted', title: 'Old', client_slug: 'jan', status: 'Posted', batch: 'Jan FINAL' },
+  { id: 'conf', title: 'Floor', client_slug: 'jan', status: 'Draft', batch: '⭐ Floor Film' },
+  { id: 'other', title: 'Weekly', client_slug: 'andrew', status: 'Draft', batch: 'Andrew weekly' },
+  { id: 'sent', title: 'Already stamped', client_slug: 'jan', status: 'Needs Review', batch: 'Jan FINAL', pipeline_audit: signedScript.pipeline_audit },
+];
+assert.deepStrictEqual(ctx.reviewQueueFor(queueRows, { slug: '' }).map(s => s.id), ['final', 'core', 'conf', 'other']);
+assert.deepStrictEqual(ctx.reviewQueueFor(queueRows, { slug: 'jan' }).map(s => s.id), ['final', 'conf']);
+assert.strictEqual(ctx.needsBrainCheck(queueRows[2]), false);
+assert.strictEqual(ctx.needsBrainCheck(queueRows[5]), false);
+assert.strictEqual(ctx.nextStampId(['final', 'core', 'conf'], 'final', id => id !== 'final'), 'core');
+assert.strictEqual(ctx.nextStampId(['final', 'core', 'conf'], 'conf', id => id !== 'conf'), 'final');
+assert.strictEqual(ctx.nextStampId(['core', 'conf'], 'final', () => true), 'core');
+assert.strictEqual(ctx.nextStampId(['final', 'core'], 'final', () => false), '');
+assert.ok(script.includes('Stamped. Not sent. Next script.'));
+assert.ok(script.includes('Needs your brain check'));
+assert.ok(script.includes("if (modal === 'whats-new' || modal === 'new-scripts') modal = null;"));
+assert.ok(/humanQaBlocksStatus/.test(script));
 ctx.role = 'admin';
 assert.ok(ctx.renderHumanQaBadge({ client_slug: 'jan' }).includes('Brain check needed'));
 assert.ok(ctx.renderHumanQaBadge(signedScript).includes('Brain check'));

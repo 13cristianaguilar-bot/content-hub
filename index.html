@@ -1090,7 +1090,7 @@ body.modal-open { overflow: hidden; }
 }
 .prep-stamp {
   flex: 0 0 auto;
-  max-height: min(52dvh, 480px);
+  max-height: min(70dvh, 680px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1100,7 +1100,7 @@ body.modal-open { overflow: hidden; }
 }
 .prep-stamp .qa-gate { margin: 0; min-height: 0; }
 .prep-stamp .qa-gate.is-compact {
-  display: flex; flex-direction: column; overflow: hidden; max-height: min(52dvh, 480px);
+  display: flex; flex-direction: column; overflow: hidden; max-height: min(70dvh, 680px);
   border: 0; border-top: 3px solid #ed3039; padding: 0;
 }
 .prep-stamp .qa-gate.is-compact.is-done {
@@ -1401,6 +1401,11 @@ body.modal-open { overflow: hidden; }
   background: #ed3039; color: #fff; border: 0; font-size: 16px; font-weight: 650;
 }
 .qa-go[disabled] { opacity: 0.4; }
+.qa-send {
+  width: 100%; min-height: 48px; margin-top: 8px; padding: 0 14px;
+  background: #fff; color: #171717; border: 1px solid #d8d8d8;
+  font-size: 16px; font-weight: 650;
+}
 .qa-stamp { margin-top: 10px; padding-top: 10px; border-top: 1px solid #2a2a2a; }
 .qa-stamp p { margin: 0 0 6px; }
 .qa-block {
@@ -1425,6 +1430,65 @@ body.modal-open { overflow: hidden; }
   color: #d0d0d0; font-size: 14px; font-weight: 650; list-style: none;
 }
 .qa-signed-more > summary::-webkit-details-marker { display: none; }
+.qa-formats { margin: 8px 0 0; padding: 0; border: 0; min-width: 0; }
+.qa-formats legend, .qa-formats-saved {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #ed3039; font-weight: 650;
+}
+.qa-format-hint { margin: 4px 0 8px; font-size: 13px; line-height: 1.35; color: #bdbdbd; font-weight: 500; }
+.qa-format-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.qa-format {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 4px 8px; border: 1px solid #3a3a3a; color: #f4f4f4; font-size: 13px; line-height: 1.3;
+}
+.qa-format input { accent-color: #ed3039; flex-shrink: 0; }
+.qa-formats-saved { margin: 8px 0 0; color: #f4f4f4; letter-spacing: 0.04em; }
+.prep-qa-hint {
+  margin: 0 0 12px; padding: 10px 12px; background: #121212; color: #f4f4f4;
+  border-top: 3px solid #ed3039; font-size: 14px; line-height: 1.4;
+}
+#prompter.has-qa.has-ref .pr-side { z-index: 9; }
+@media (min-width: 900px) {
+  #prompter.has-qa.has-ref .pr-qa-sheet { right: 40%; }
+}
+.vault-lead { margin: 0 0 12px; font-size: 16px; line-height: 1.4; }
+.vault-client { margin: 0 0 18px; }
+.vault-client h2 { font-size: 28px; line-height: 1.1; letter-spacing: -0.045em; font-weight: 650; margin: 2px 0 6px; }
+.vault-meta { margin: 0 0 8px; color: var(--muted); font-size: 14px; line-height: 1.4; }
+.vault-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.vault-card {
+  background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal);
+  min-width: 0; display: flex; flex-direction: column;
+}
+.vault-thumb {
+  position: relative; aspect-ratio: 4 / 5; background: #171717; color: #fff;
+  display: grid; place-items: center; overflow: hidden;
+}
+.vault-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.vault-mark { font-size: 48px; font-weight: 650; letter-spacing: -0.06em; }
+.vault-empty-flag {
+  position: absolute; left: 10px; bottom: 10px;
+  background: var(--signal); color: #fff; padding: 4px 8px;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 650;
+}
+.vault-body { padding: 12px; }
+.vault-body h3 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.04em; font-weight: 650; line-height: 1.15; }
+.vault-niche { margin: 0 0 8px; font-size: 14px; line-height: 1.35; color: var(--ink); }
+.vault-summary { margin: 0; font-size: 15px; line-height: 1.4; }
+.vault-handles { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.vault-handle {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px; line-height: 1.3; background: var(--soft); color: var(--ink); padding: 4px 8px;
+}
+.vault-empty { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.35; }
+.vault-pool { margin: 0 0 12px; }
+@media (min-width: 700px) {
+  .vault-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 1100px) {
+  .vault-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
 /* Toast stays off Sign and off Close while a script is open. */
 body.prep-open #toast-root {
   top: max(8px, env(safe-area-inset-top));
@@ -1600,13 +1664,179 @@ const CLIENT_RESOURCE_MANIFESTS = {
 ],
 };
 
+// Seed shelf for Format Vault. Keep this object identical to format-vault/catalog.json.
+const FORMAT_VAULT = {
+  "clients": [
+    {
+      "slug": "jan",
+      "name": "Jan Zands",
+      "brand": "Rich Life Academy",
+      "niche": "Network marketing leadership",
+      "industry": "Network marketing",
+      "note": "Locked on Call #3. Keep hook, format, idea, and reward. Shift messaging, angle, and voice.",
+      "creators": [
+        {
+          "name": "Tony Robbins",
+          "handle": "",
+          "note": "Named on Jan reaction titles in the seed batch."
+        },
+        {
+          "name": "Les Brown",
+          "handle": "",
+          "note": "Named on Jan reaction titles in the seed batch."
+        },
+        {
+          "name": "Jim Rohn",
+          "handle": "",
+          "note": "Named on Jan reaction titles in the seed batch."
+        }
+      ],
+      "formats": [
+        {
+          "id": "reaction",
+          "label": "Reaction",
+          "niche": "Leadership and personal development",
+          "summary": "React to a clip, then land the lesson in Rich Life leadership. Same hook pattern. Their message, not a copy of the reel.",
+          "thumbnail": "",
+          "creators": [
+            {
+              "name": "Tony Robbins",
+              "handle": "",
+              "note": "Seed from Jan reaction titles."
+            },
+            {
+              "name": "Les Brown",
+              "handle": "",
+              "note": "Seed from Jan reaction titles."
+            },
+            {
+              "name": "Jim Rohn",
+              "handle": "",
+              "note": "Seed from Jan reaction titles."
+            }
+          ]
+        },
+        {
+          "id": "education",
+          "label": "Education",
+          "niche": "Direct teaching for the top network marketers",
+          "summary": "One idea, said straight. Leadership or growing as a person is the path. No vague hedge.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "lists",
+          "label": "Lists",
+          "niche": "Numbered lessons a team can pass on",
+          "summary": "A counted list. Each beat is something their audience can hand to the team.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "interview",
+          "label": "Interview",
+          "niche": "A conversation that still passes the thesis",
+          "summary": "Question and answer. The prompt stays inside the Rich Life thesis.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "myth-buster",
+          "label": "Myth-buster / contrarian",
+          "niche": "Contrarian to rank-chase, loyal to leadership",
+          "summary": "Name the myth, then flip it toward leadership or growing as a person.",
+          "thumbnail": "",
+          "creators": []
+        }
+      ]
+    },
+    {
+      "slug": "devin",
+      "name": "Devin Shea",
+      "brand": "Devin",
+      "niche": "Fundraising and community",
+      "industry": "Nonprofit",
+      "note": "Locked formats for the brain check. Handles below are already named on Devin refs. Per-format recipes and thumbnails are still open.",
+      "creators": [
+        {
+          "name": "",
+          "handle": "@teamr3set",
+          "note": "Devin niche handle named in the format vault."
+        },
+        {
+          "name": "",
+          "handle": "@susan_ho",
+          "note": "Named on Devin CORE refs."
+        },
+        {
+          "name": "",
+          "handle": "@queenabergen",
+          "note": "Named on Devin CORE refs."
+        },
+        {
+          "name": "",
+          "handle": "@goodmorgantherapy",
+          "note": "Named on Devin CORE refs."
+        },
+        {
+          "name": "",
+          "handle": "@careersbychris",
+          "note": "Named on Devin CORE refs."
+        }
+      ],
+      "formats": [
+        {
+          "id": "tutorials",
+          "label": "Tutorials",
+          "niche": "Fundraising and community",
+          "summary": "Walk through one move the viewer can copy.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "tips-hacks",
+          "label": "Tips / hacks",
+          "niche": "Fundraising and community",
+          "summary": "One practical tip with a fast payoff.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "greenscreen",
+          "label": "Greenscreen",
+          "niche": "Fundraising and community",
+          "summary": "Creator in front of a clip, a page, or a screenshot.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "whiteboard",
+          "label": "Whiteboard",
+          "niche": "Fundraising and community",
+          "summary": "Draw the point while talking.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "reaction",
+          "label": "Reaction",
+          "niche": "Fundraising and community",
+          "summary": "React to a clip, then give the Devin take.",
+          "thumbnail": "",
+          "creators": []
+        }
+      ]
+    }
+  ]
+};
+
 // Calendar/Pipeline views are admin-only for now -- Cristian wants to try them himself
 // before exposing them to clients. Flip to true once validated.
 const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.27.4';
+const APP_VERSION = '2026.10.27.5';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -1621,6 +1851,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.27.5',
+    date: 'October 27, 2026',
+    title: 'One brain check, then Reference stays open',
+    items: [
+      'Admin only: you still sign the brain check once before a script can be marked client-ready or sent. That stamp is not a client message and it does not mark the script client-ready.',
+      'Reference, Audit, Notes, and Film stay open while you compare the script to the reel. Leaving Read does not clear a saved stamp, and you do not sign again just to open those tabs.',
+      'Jan and Devin can note a locked format on the stamp. Format Vault in More is the shelf of those formats, with niche, industry, and creator examples.',
+    ],
+    steps: [
+      'Open a script in Needs your brain check. Open Reference to compare the reel. Your ticks stay when you come back to Read.',
+      'Tick the boxes, write why it is good to send, and Sign once.',
+      'Open Reference, Audit, Notes, or Film. Nothing is sent. Mark client-ready stays blocked until that stamp is saved.',
+    ],
+  },
   {
     version: '2026.10.27.4',
     date: 'October 27, 2026',
@@ -2048,7 +2293,8 @@ let listSearch = '';
 // Fresh list focus, What's new / Requests pages, and the two popups.
 // Same redraw rule as the rest of this state: a realtime refresh rebuilds
 // #app, so anything on screen has to live here, not only in the DOM.
-let hubPage = 'main';          // 'main' | 'help' | 'requests'
+let hubPage = 'main';          // 'main' | 'help' | 'requests' | 'vault' | 'edits'
+let formatVaultFilter = 'all';
 let previousOpen = false;
 // List segments for every client: conference | new | other.
 // Set on sign-in and on setClient via defaultSegmentForClient (conference when that client has any).
@@ -3736,6 +3982,7 @@ function renderReviewQueue() {
       <h2 class="review-h">Nothing to stamp</h2>
       <p class="review-empty">${scoped ? 'No unsigned scripts for ' + escHtml(who) + '.' : 'No unsigned scripts across clients.'}</p>
       <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
+      <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>
     </section>`;
   }
   return `<section class="review-queue" aria-label="Needs your brain check">
@@ -3744,6 +3991,7 @@ function renderReviewQueue() {
     <p class="review-lead">${scoped ? escHtml(who) + ' only.' : 'Across clients. One tap opens the script.'} Nothing sends until you choose Send.</p>
     <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
     <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
+    <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>
   </section>`;
 }
 function reviewQueueJumpHtml() {
@@ -3897,6 +4145,103 @@ function renderReleaseArticle(r) {
     ${video}
   </article>`;
 }
+function formatVaultCatalog() {
+  return FORMAT_VAULT;
+}
+function formatVaultClients(catalog) {
+  const list = catalog && Array.isArray(catalog.clients) ? catalog.clients : [];
+  return list.filter(client => client && client.slug);
+}
+function formatVaultHandle(person) {
+  person = person || {};
+  const handle = asText(person.handle).trim();
+  if (handle) return handle.charAt(0) === '@' ? handle : ('@' + handle);
+  return asText(person.name).trim();
+}
+function formatVaultPeopleHtml(people) {
+  const list = (people || []).map(formatVaultHandle).filter(Boolean);
+  if (!list.length) return '<p class="vault-empty">No creator examples filed yet.</p>';
+  return '<div class="vault-handles">' + list.map(name => '<span class="vault-handle">' + escHtml(name) + '</span>').join('') + '</div>';
+}
+function formatVaultCards(catalog, slug) {
+  const want = asText(slug).trim().toLowerCase();
+  const cards = [];
+  formatVaultClients(catalog).forEach(client => {
+    if (want && want !== 'all' && client.slug !== want) return;
+    (client.formats || []).forEach(format => {
+      if (!format || !format.id) return;
+      cards.push({
+        slug: client.slug,
+        client: client.name || client.slug,
+        brand: client.brand || '',
+        industry: client.industry || '',
+        niche: format.niche || client.niche || '',
+        id: format.id,
+        label: format.label || format.id,
+        summary: format.summary || '',
+        creators: Array.isArray(format.creators) ? format.creators : [],
+        thumbnail: format.thumbnail || '',
+      });
+    });
+  });
+  return cards;
+}
+function formatVaultCardHtml(card) {
+  card = card || {};
+  const thumb = card.thumbnail
+    ? '<img src="' + escHtml(card.thumbnail) + '" alt="">'
+    : '<div class="vault-mark">' + escHtml(asText(card.label || '?').slice(0, 1)) + '</div><span class="vault-empty-flag">No thumbnail yet</span>';
+  const niche = [card.niche, card.industry].filter(Boolean).join(' · ');
+  return '<article class="vault-card">'
+    + '<div class="vault-thumb">' + thumb + '</div>'
+    + '<div class="vault-body">'
+    + '<p class="eyebrow">' + escHtml([card.client, card.brand].filter(Boolean).join(' · ')) + '</p>'
+    + '<h3>' + escHtml(card.label || 'Format') + '</h3>'
+    + (niche ? '<p class="vault-niche">' + escHtml(niche) + '</p>' : '')
+    + (card.summary ? '<p class="vault-summary">' + escHtml(card.summary) + '</p>' : '')
+    + formatVaultPeopleHtml(card.creators)
+    + '</div></article>';
+}
+function renderFormatVaultHtml(catalog, slug) {
+  const filter = asText(slug).trim().toLowerCase() || 'all';
+  const clients = formatVaultClients(catalog).filter(client => filter === 'all' || client.slug === filter);
+  const chips = [{ slug: 'all', name: 'All' }].concat(formatVaultClients(catalog).map(client => ({
+    slug: client.slug,
+    name: client.name || client.slug,
+  })));
+  const filters = '<div class="filter-row" role="tablist" aria-label="Format Vault clients">' + chips.map(chip => {
+    const on = (filter === 'all' ? 'all' : filter) === chip.slug;
+    return '<button type="button" class="' + (on ? 'is-on' : '') + '" aria-pressed="' + (on ? 'true' : 'false') + '" onclick="window.setFormatVaultFilter(\'' + escHtml(chip.slug) + '\')">' + escHtml(chip.name) + '</button>';
+  }).join('') + '</div>';
+  const sections = clients.map(client => {
+    const cards = formatVaultCards(catalog, client.slug);
+    const meta = [client.industry, client.niche].filter(Boolean).join(' · ');
+    const grid = cards.length
+      ? '<div class="vault-grid">' + cards.map(formatVaultCardHtml).join('') + '</div>'
+      : '<p class="vault-empty">No locked formats filed for this client yet.</p>';
+    return '<section class="vault-client" aria-label="' + escHtml(client.name || client.slug) + '">'
+      + '<p class="eyebrow">' + escHtml(client.brand || 'Client') + '</p>'
+      + '<h2>' + escHtml(client.name || client.slug) + '</h2>'
+      + (meta ? '<p class="vault-meta">' + escHtml(meta) + '</p>' : '')
+      + (client.note ? '<p class="vault-summary">' + escHtml(client.note) + '</p>' : '')
+      + '<div class="vault-pool"><div class="eyebrow">Creator examples</div>' + formatVaultPeopleHtml(client.creators) + '</div>'
+      + grid
+      + '</section>';
+  }).join('');
+  const empty = sections ? '' : '<article class="page-card"><p>No formats in this filter yet.</p></article>';
+  return '<div class="page-stack">'
+    + '<button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>'
+    + '<article class="page-card"><div class="eyebrow">Admin</div><h2>Format Vault</h2>'
+    + '<p class="vault-lead">Repeatable formats for Jan and Devin. Each card is the niche, the industry, and the creator examples on file. An empty card means the recipe or thumbnail is not filed yet.</p>'
+    + filters + '</article>'
+    + sections
+    + empty
+    + '</div>';
+}
+function renderFormatVaultPage() {
+  if (typeof role === 'undefined' || role !== 'admin') return '';
+  return renderFormatVaultHtml(typeof FORMAT_VAULT !== 'undefined' ? FORMAT_VAULT : { clients: [] }, formatVaultFilter);
+}
 function renderHelpPage() {
   const guide = FILMING_GUIDE.map(line => `<li>${escHtml(line)}</li>`).join('');
   return `<div class="page-stack">
@@ -3916,7 +4261,8 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign. That stamp does not send anything. Needs Review and client-ready stay blocked until the four boxes and a real note are saved. The same check is on Full screen when you film. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. Reference stays open while you compare the reel. Needs Review and client-ready stay blocked until the four boxes and a real note are saved. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
     ${RELEASES.map(renderReleaseArticle).join('')}
@@ -4173,6 +4519,7 @@ function renderDashInner() {
 
   // Help and Requests replace the list. Calendar and Pipeline stay admin tools, reached from More.
   const body = hubPage === 'help' ? renderHelpPage()
+    : hubPage === 'vault' && isAdmin ? renderFormatVaultPage()
     : hubPage === 'requests' ? renderRequestsPage()
     : hubPage === 'edits' ? renderEditsPage()
     : viewTab === 'calendar' ? backToBatch + renderCalendar()
@@ -4251,6 +4598,7 @@ function renderDashInner() {
           <div class="eyebrow">More</div>
           <button type="button" class="tool-btn" onclick="window.toggleMore(false)">Done</button>
         </div>
+        <button type="button" class="shot-edit" onclick="window.openFormatVault()">Format Vault</button>
         <button type="button" class="shot-edit" onclick="window.openEdits()">Script edits</button>
         ${clientTabs ? `<div class="eyebrow">Clients</div>${clientTabs}` : ''}
         ${viewToggle ? `<div class="eyebrow">View</div>${viewToggle}` : ''}
@@ -5798,9 +6146,11 @@ function prompterFilmQaHtml(s, phase) {
   const leave = end
     ? `<button type="button" onclick="window.prompterQa(false)">Back to script</button>`
     : `<button type="button" onclick="window.closePrompter(true)">Leave</button>`;
+  const ref = `<button type="button" onclick="window.prompterRef()">Reference</button>`;
   return `<div class="pr-qa-sheet" id="pr-qa-sheet">
       <div class="pr-top">
         <div class="pr-title">${end ? 'Finish this film read' : 'Start this film read'}</div>
+        ${ref}
         ${leave}
       </div>
       <div class="pr-sheet-body">${renderHumanQaGate(s, end ? 'film-end' : 'film-start')}</div>
@@ -5863,7 +6213,7 @@ function renderPrompter() {
   const session = { role: role, includeAudit: role === 'admin' };
   const refs = reviewRefs(s, session);
   const resItems = clientResourceItems(s, session);
-  const showRef = !editing && !showQa && !!st.ref && refs.length > 0;
+  const showRef = prompterCanShowReference({ editing: editing, ref: !!st.ref, refCount: refs.length });
   const showRes = !editing && !showQa && !!st.resources;
   const qLen = (st.queue && st.queue.length) || 1;
   const qIndex = st.index || 0;
@@ -6852,6 +7202,46 @@ function humanQaScriptHash(s) {
   s = s || {};
   return [asText(s.hook), asText(s.full_script), asText(s.cta)].join('\n\x1e\n');
 }
+function normalizeQaFormats(value) {
+  const list = Array.isArray(value) ? value : (value ? [value] : []);
+  const out = [];
+  list.forEach(item => {
+    const id = asText(item && item.id != null ? item.id : item).trim();
+    if (!id || out.indexOf(id) !== -1) return;
+    out.push(id);
+  });
+  return out;
+}
+function lockedFormatsForSlug(slug) {
+  let key = String(slug || '').toLowerCase().trim();
+  if (key === 'jan-rla' || isRlaClient(key)) key = 'jan';
+  const clients = (typeof FORMAT_VAULT !== 'undefined' && FORMAT_VAULT && FORMAT_VAULT.clients) || [];
+  const client = clients.filter(row => row && row.slug === key)[0];
+  if (!client) return [];
+  return (client.formats || []).map(format => ({
+    id: asText(format && format.id).trim(),
+    label: asText(format && (format.label || format.id)).trim(),
+  })).filter(format => format.id);
+}
+function humanQaFormatSummary(s, formats) {
+  const ids = normalizeQaFormats(formats);
+  if (!ids.length) return '';
+  const options = lockedFormatsForSlug(s && s.client_slug);
+  return ids.map(id => {
+    const hit = options.filter(option => option.id === id)[0];
+    return hit ? hit.label : id;
+  }).join(' · ');
+}
+function humanQaFormatFieldsHtml(s, picked) {
+  const options = lockedFormatsForSlug(s && s.client_slug);
+  if (!options.length) return '';
+  const on = normalizeQaFormats(picked);
+  const boxes = options.map(item => {
+    const checked = on.indexOf(item.id) !== -1 ? ' checked' : '';
+    return '<label class="qa-format"><input type="checkbox" name="qa-format" value="' + escHtml(item.id) + '"' + checked + '><span>' + escHtml(item.label) + '</span></label>';
+  }).join('');
+  return '<fieldset class="qa-formats"><legend>Locked format</legend><p class="qa-format-hint">Optional. Pick any that fit. Signing still works if you skip this.</p><div class="qa-format-row">' + boxes + '</div></fieldset>';
+}
 function unpackHumanQa(value) {
   const src = value && typeof value === 'object' && !Array.isArray(value)
     ? (value.humanQa || value.human_qa || value.cristianQa || value.brainCheck)
@@ -6867,6 +7257,7 @@ function unpackHumanQa(value) {
     scriptHash: asText(src.scriptHash || src.script_hash).trim(),
     filmStartAt: asText(src.filmStartAt || src.film_start_at).trim(),
     filmEndAt: asText(src.filmEndAt || src.film_end_at).trim(),
+    formats: normalizeQaFormats(src.formats || src.formatIds || src.lockedFormats),
   };
   HUMAN_QA_KEYS.forEach(key => { out.checks[key] = checks[key] === true; });
   if (!out.complete) {
@@ -6906,10 +7297,13 @@ function prompterShowsFilmQa() {
   return typeof role !== 'undefined' && role === 'admin';
 }
 function prompterShouldForceStart(s) {
-  return prompterShowsFilmQa() && !!s && !humanQaFilmStartDone(s);
+  // The delivery stamp is the one signature. Film and Reference stay open
+  // after it is saved. Full screen still asks for that stamp when it is missing.
+  return prompterShowsFilmQa() && !!s && !humanQaDeliveryReady(s);
 }
 function prompterShouldBlockClose(s) {
-  return prompterShowsFilmQa() && !!s && humanQaFilmStartDone(s) && !humanQaFilmEndDone(s);
+  // Closing Full screen does not ask for a second stamp and does not clear humanQa.
+  return prompterShowsFilmQa() && !!s && false;
 }
 function isClientDeliveryStatus(status) {
   return status === 'Needs Review' || status === 'Approved';
@@ -6922,7 +7316,7 @@ function humanQaValidate(checks, notes) {
   const noteOk = humanQaNotesOk(notes);
   return { ok: missing.length === 0 && noteOk, missing: missing, noteOk: noteOk };
 }
-function buildHumanQaStamp(checks, notes, who, when) {
+function buildHumanQaStamp(checks, notes, who, when, formats) {
   const stamp = {
     version: 1,
     complete: false,
@@ -6933,6 +7327,7 @@ function buildHumanQaStamp(checks, notes, who, when) {
     scriptHash: '',
     filmStartAt: '',
     filmEndAt: '',
+    formats: normalizeQaFormats(formats),
   };
   HUMAN_QA_KEYS.forEach(key => { stamp.checks[key] = !!(checks && checks[key]); });
   stamp.complete = HUMAN_QA_KEYS.every(k => stamp.checks[k]) && humanQaNotesOk(stamp.notes);
@@ -6958,7 +7353,7 @@ function staleHumanQaAfterScriptChange(s, patch) {
   if (current == null) return null;
   const qa = unpackHumanQa(current);
   if (!qa) return null;
-  const stamp = buildHumanQaStamp(qa.checks, qa.notes, qa.by, qa.at);
+  const stamp = buildHumanQaStamp(qa.checks, qa.notes, qa.by, qa.at, qa.formats);
   stamp.complete = false;
   stamp.scriptHash = humanQaScriptHash(s);
   stamp.filmStartAt = '';
@@ -7012,11 +7407,13 @@ function renderHumanQaGate(s, surface) {
   const compact = surface === 'review';
   const gateClass = 'qa-gate' + (compact ? ' is-compact' : '');
   if (done || confirmable) {
+    const formatLine = humanQaFormatSummary(s, qa.formats);
+    const formatHtml = formatLine ? '<p class="qa-formats-saved">Format · ' + escHtml(formatLine) + '</p>' : '';
     const signed = (humanQaChecks(s) || []).map(item =>
       '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
     ).join('');
     const send = !filmPhase && action && !blocked && id
-      ? `<button type="button" class="qa-go" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`
+      ? `<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p><button type="button" class="qa-send" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`
       : '';
     const confirm = confirmable && id
       ? `<button type="button" class="qa-go" onclick="window.confirmHumanQaFilm('${id}','${filmPhase}')">${filmPhase === 'end' ? 'I finished this film read' : "I'm reading this myself"}</button>`
@@ -7040,14 +7437,22 @@ function renderHumanQaGate(s, surface) {
       <h3>${escHtml(title)}</h3>
       <p class="qa-lead">${lead}</p>
       ${qa.notes ? `<div class="qa-stamp"><p>${escHtml(qa.notes)}</p></div>` : ''}
+      ${formatHtml}
       ${confirm}
       ${send}
       ${signedBlock}
     </section>`;
   }
+  const draft = (surface === 'review' && typeof prepState !== 'undefined' && prepState && prepState.id === id && prepState.qaDraft)
+    ? prepState.qaDraft
+    : null;
+  const draftChecks = draft && draft.checks ? draft.checks : null;
   const boxes = (humanQaChecks(s) || []).map(item =>
-    `<label class="qa-check"><input type="checkbox" name="qa-${item.key}"><span>${escHtml(item.label)}</span></label>`
+    `<label class="qa-check"><input type="checkbox" name="qa-${item.key}"${draftChecks && draftChecks[item.key] ? ' checked' : ''}><span>${escHtml(item.label)}</span></label>`
   ).join('');
+  const picked = draft && Array.isArray(draft.formats) ? draft.formats : normalizeQaFormats(qa.formats);
+  const formatFields = humanQaFormatFieldsHtml(s, picked);
+  const noteValue = draft ? asText(draft.notes) : '';
   const formId = id ? 'qa-' + (surface || 'form') + '-' + id : '';
   const submit = id
     ? `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">Sign the brain check</button>`
@@ -7067,15 +7472,15 @@ function renderHumanQaGate(s, surface) {
     : (filmPhase === 'end'
       ? 'You are leaving Full screen. AI can draft. You decide if the client should see it.'
       : (compact
-        ? 'Tick every box. Write why this is good to send.'
+        ? 'Tick every box. Write why this is good to send. Open Reference to compare the reel. You only sign once.'
         : 'AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.'));
-  const notes = `<label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
-    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}"></textarea>
+  const notes = `${compact ? formatFields : ''}<label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
+    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}">${escHtml(noteValue)}</textarea>
     ${hold}
     ${submit}`;
   const body = compact
     ? `<div class="qa-body"><p class="qa-kicker">Human QA · Cristian brain check</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}</div><div class="qa-pin">${notes}</div>`
-    : `<p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}${notes}`;
+    : `<p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}${formatFields}${notes}`;
   return `<section class="${gateClass}" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>${body}</section>`;
 }
 
@@ -7098,6 +7503,32 @@ function prepContentIndex(step, showAudit) {
   if (i <= 0) return -2;
   if (i === 1) return -1;
   return i - 2;
+}
+function prepReferenceStep(showAudit) {
+  const plan = prepPlan(!!showAudit);
+  const idx = plan.labels.indexOf('Reference');
+  return idx < 0 ? 0 : idx;
+}
+function prepTabReachable(step, showAudit) {
+  const plan = prepPlan(!!showAudit);
+  const n = Number(step);
+  return n === n && n >= 0 && n <= plan.last;
+}
+function prepShowsStamp(step, showAudit) {
+  return !!showAudit && prepContentIndex(step, !!showAudit) === -2;
+}
+function prepStampBlocksTabs() {
+  return false;
+}
+function prepQaHintHtml(s, readStep, showAudit) {
+  if (!showAudit || readStep) return '';
+  if (humanQaDeliveryReady(s)) return '';
+  return '<p class="prep-qa-hint" role="status">Brain check stays on Read. This tab does not ask you to sign again, and it does not clear a stamp.</p>';
+}
+function prompterCanShowReference(opts) {
+  opts = opts || {};
+  if (opts.editing) return false;
+  return !!opts.ref && (opts.refCount || 0) > 0;
 }
 function humanQaNotePlaceholder(s) {
   if (isRlaClient(s && s.client_slug)) return 'Fits RLA leadership thesis / shareable.';
@@ -8283,7 +8714,15 @@ function clearPrep() {
   if (root) root.innerHTML = '';
   document.body.classList.remove('prep-open');
 }
+function rememberPrepQaDraft() {
+  if (typeof prepState === 'undefined' || !prepState || !prepState.id) return;
+  const root = document.getElementById('qa-review-' + prepState.id);
+  if (!root || root.classList.contains('is-done')) return;
+  if (!root.querySelector('[name="qa-notes"]')) return;
+  prepState.qaDraft = readHumanQaForm(prepState.id);
+}
 function renderPrep() {
+  rememberPrepQaDraft();
   const root = document.getElementById('prep-root');
   const s = prepState && scripts.find(x => x.id === prepState.id);
   if (!root || !s) { clearPrep(); return; }
@@ -8306,6 +8745,7 @@ function renderPrep() {
     ? '<button type="button" class="prep-go" onclick="window.prepFilm()">OK, I\'m going to film</button>'
     : '<button type="button" class="prep-next" onclick="window.prepMove(1)">Next</button>';
   const body = prepStepBody(s, step, showAudit);
+  const hint = prepQaHintHtml(s, readStep, showAudit);
   const nextBtn = readStep && humanQaDeliveryReady(s) ? reviewNextStampHtml(s.id) : '';
   const stamp = readStep
     ? `<div class="prep-stamp" id="prep-stamp">${renderHumanQaGate(s, 'review')}${nextBtn}</div>`
@@ -8329,7 +8769,7 @@ function renderPrep() {
     <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
     <div class="prep-dots${dotClass}" role="tablist" aria-label="Prep steps">${dots}</div>
     ${readStep ? '' : `<p class="prep-which">${escHtml(model.title)}</p>`}
-    <div class="prep-scroll" id="prep-scroll">${body}</div>
+    <div class="prep-scroll" id="prep-scroll">${hint}${body}</div>
     ${stamp}
     ${bar}
     ${resSheet}
@@ -8376,9 +8816,10 @@ window.openPrep = (id) => {
 };
 window.prepGo = (n) => {
   if (!prepState) return;
-  const plan = prepPlan(prepShowsAudit());
+  rememberPrepQaDraft();
+  const showAudit = prepShowsAudit();
+  if (!prepTabReachable(n, showAudit)) return;
   const step = Number(n);
-  if (step < 0 || step > plan.last) return;
   prepState.step = step;
   prepState.resources = false;
   prepState.scrollTop = 0;
@@ -9648,6 +10089,23 @@ window.togglePrevious = () => {
   renderDash();
   requestAnimationFrame(() => window.scrollTo(0, y));
 };
+window.openFormatVault = () => {
+  if (role !== 'admin') return;
+  const slug = (typeof previewSlug !== 'undefined' && previewSlug) || '';
+  formatVaultFilter = (slug === 'jan' || slug === 'devin') ? slug : 'all';
+  hubPage = 'vault';
+  moreOpen = false;
+  modal = null;
+  modalPinned = false;
+  renderDash();
+  window.scrollTo(0, 0);
+};
+window.setFormatVaultFilter = (slug) => {
+  if (role !== 'admin') return;
+  formatVaultFilter = asText(slug).trim() || 'all';
+  hubPage = 'vault';
+  renderDash();
+};
 window.openHelp = () => {
   if (user) lsSetStr(versionStorageKey(), APP_VERSION);
   if (viewingAsClient()) markPreviewOnboardingSeen();
@@ -9897,6 +10355,7 @@ function advanceReview(currentId) {
   showToast('Stamped. Not sent. Next script.');
 }
 function finishHumanQaUi(id, toastMessage) {
+  if (prepState && prepState.id === id) prepState.qaDraft = null;
   const row = scripts.find(x => x.id === id);
   const advance = prepState && prepState.fromQueue && prepState.id === id
     && row && humanQaDeliveryReady(row)
@@ -9925,7 +10384,14 @@ function readHumanQaForm(id) {
     checks[key] = !!(el && el.checked);
   });
   const notesEl = root ? root.querySelector('[name="qa-notes"]') : null;
-  return { checks: checks, notes: notesEl ? notesEl.value : '' };
+  const formats = [];
+  if (root) {
+    const nodes = root.querySelectorAll('[name="qa-format"]');
+    for (let i = 0; i < nodes.length; i++) {
+      if (nodes[i].checked) formats.push(nodes[i].value);
+    }
+  }
+  return { checks: checks, notes: notesEl ? notesEl.value : '', formats: normalizeQaFormats(formats) };
 }
 window.submitHumanQa = async (id) => {
   if (role !== 'admin' || qaSaving) return;
@@ -9939,7 +10405,7 @@ window.submitHumanQa = async (id) => {
       : 'Write why this is good to send — a real note, not “looks fine”.', { tone: 'error' });
     return;
   }
-  let stamp = buildHumanQaStamp(form.checks, form.notes, editorLabel(user), new Date().toISOString());
+  let stamp = buildHumanQaStamp(form.checks, form.notes, editorLabel(user), new Date().toISOString(), form.formats);
   stamp.scriptHash = humanQaScriptHash(s);
   const phase = humanQaFormPhase(id);
   if (phase === 'start' || phase === 'end') stamp = attachHumanQaFilm(stamp, phase, stamp.scriptHash);
@@ -9955,7 +10421,7 @@ window.confirmHumanQaFilm = async (id, phase) => {
   const s = scripts.find(x => x.id === id);
   if (!s || !humanQaDeliveryReady(s)) return;
   const qa = humanQaFrom(s) || {};
-  let stamp = buildHumanQaStamp(qa.checks, qa.notes, qa.by || editorLabel(user), qa.at || new Date().toISOString());
+  let stamp = buildHumanQaStamp(qa.checks, qa.notes, qa.by || editorLabel(user), qa.at || new Date().toISOString(), qa.formats);
   stamp.complete = true;
   stamp = attachHumanQaFilm(stamp, phase === 'end' ? 'end' : 'start', humanQaScriptHash(s));
   const toast = phase === 'end'
@@ -10186,6 +10652,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     settingsOpen = false;
     listSearch = '';
     hubPage = opts.hubPage || 'main';
+    formatVaultFilter = opts.formatVaultFilter || ((opts.previewing && (opts.viewSlug === 'jan' || opts.viewSlug === 'devin')) ? opts.viewSlug : 'all');
     previousOpen = !!opts.previousOpen;
     requests = opts.requests || [];
     requestsLoaded = true;

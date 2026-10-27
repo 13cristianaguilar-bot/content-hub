@@ -1,0 +1,132 @@
+{
+  "clients": [
+    {
+      "slug": "jan",
+      "name": "Jan Zands",
+      "brand": "Rich Life Academy",
+      "niche": "Network marketing leadership",
+      "industry": "Network marketing",
+      "note": "Locked on Call #3. Keep hook, format, idea, and reward. Shift messaging, angle, and voice.",
+      "creators": [
+        {
+          "name": "Tony Robbins",
+          "handle": "",
+          "note": "Named on Jan reaction titles in the seed batch."
+        },
+        {
+          "name": "Les Brown",
+          "handle": "",
+          "note": "Named on Jan reaction titles in the seed batch."
+        },
+        {
+          "name": "Jim Rohn",
+          "handle": "",
+          "note": "Named on Jan reaction titles in the seed batch."
+        }
+      ],
+      "formats": [
+        {
+          "id": "reaction",
+          "label": "Reaction",
+          "niche": "Leadership and personal development",
+          "summary": "React to a clip, then land the lesson in Rich Life leadership. Same hook pattern. Their message, not a copy of the reel.",
+          "thumbnail": "",
+          "creators": [
+            { "name": "Tony Robbins", "handle": "", "note": "Seed from Jan reaction titles." },
+            { "name": "Les Brown", "handle": "", "note": "Seed from Jan reaction titles." },
+            { "name": "Jim Rohn", "handle": "", "note": "Seed from Jan reaction titles." }
+          ]
+        },
+        {
+          "id": "education",
+          "label": "Education",
+          "niche": "Direct teaching for the top network marketers",
+          "summary": "One idea, said straight. Leadership or growing as a person is the path. No vague hedge.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "lists",
+          "label": "Lists",
+          "niche": "Numbered lessons a team can pass on",
+          "summary": "A counted list. Each beat is something their audience can hand to the team.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "interview",
+          "label": "Interview",
+          "niche": "A conversation that still passes the thesis",
+          "summary": "Question and answer. The prompt stays inside the Rich Life thesis.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "myth-buster",
+          "label": "Myth-buster / contrarian",
+          "niche": "Contrarian to rank-chase, loyal to leadership",
+          "summary": "Name the myth, then flip it toward leadership or growing as a person.",
+          "thumbnail": "",
+          "creators": []
+        }
+      ]
+    },
+    {
+      "slug": "devin",
+      "name": "Devin Shea",
+      "brand": "Devin",
+      "niche": "Fundraising and community",
+      "industry": "Nonprofit",
+      "note": "Locked formats for the brain check. Handles below are already named on Devin refs. Per-format recipes and thumbnails are still open.",
+      "creators": [
+        { "name": "", "handle": "@teamr3set", "note": "Devin niche handle named in the format vault." },
+        { "name": "", "handle": "@susan_ho", "note": "Named on Devin CORE refs." },
+        { "name": "", "handle": "@queenabergen", "note": "Named on Devin CORE refs." },
+        { "name": "", "handle": "@goodmorgantherapy", "note": "Named on Devin CORE refs." },
+        { "name": "", "handle": "@careersbychris", "note": "Named on Devin CORE refs." }
+      ],
+      "formats": [
+        {
+          "id": "tutorials",
+          "label": "Tutorials",
+          "niche": "Fundraising and community",
+          "summary": "Walk through one move the viewer can copy.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "tips-hacks",
+          "label": "Tips / hacks",
+          "niche": "Fundraising and community",
+          "summary": "One practical tip with a fast payoff.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "greenscreen",
+          "label": "Greenscreen",
+          "niche": "Fundraising and community",
+          "summary": "Creator in front of a clip, a page, or a screenshot.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "whiteboard",
+          "label": "Whiteboard",
+          "niche": "Fundraising and community",
+          "summary": "Draw the point while talking.",
+          "thumbnail": "",
+          "creators": []
+        },
+        {
+          "id": "reaction",
+          "label": "Reaction",
+          "niche": "Fundraising and community",
+          "summary": "React to a clip, then give the Devin take.",
+          "thumbnail": "",
+          "creators": []
+        }
+      ]
+    }
+  ]
+}

@@ -39,9 +39,12 @@ const names = [
   'fdPick', 'referenceMetrics', 'derivePrepPacing', 'derivePrepFraming', 'prepModel',
   'prepText', 'prepMetricsHtml', 'prepFact', 'prepParagraphs', 'prepFrame', 'prepOpenLink',
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
-  'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepStepBody',
+  'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepReferenceStep', 'prepTabReachable',
+  'prepShowsStamp', 'prepStampBlocksTabs', 'prepQaHintHtml', 'prompterCanShowReference', 'prepStepBody',
   'humanQaNotePlaceholder', 'reviewHasResources', 'prepReadBodyHtml', 'clientLabel',
-  'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash', 'unpackHumanQa', 'humanQaFrom',
+  'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash',
+  'normalizeQaFormats', 'lockedFormatsForSlug', 'humanQaFormatSummary', 'humanQaFormatFieldsHtml',
+  'unpackHumanQa', 'humanQaFrom',
   'humanQaComplete', 'humanQaStale', 'humanQaDeliveryReady', 'humanQaFilmStartDone', 'humanQaFilmEndDone',
   'prompterShowsFilmQa', 'prompterShouldForceStart', 'prompterShouldBlockClose',
   'isClientDeliveryStatus', 'humanQaBlocksStatus', 'humanQaValidate',
@@ -56,6 +59,7 @@ const names = [
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'nextStampId',
   'prepAuditHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'formatVaultPeopleHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -107,6 +111,7 @@ const src = [
   extractAssignment('CLIENT_RESOURCE_BASE') + ';',
   extractAssignment('CLIENT_RESOURCE_PACKS'),
   extractAssignment('CLIENT_RESOURCE_MANIFESTS'),
+  extractAssignment('FORMAT_VAULT'),
   'let prepState = null;',
   "var role = 'client';",
   ...names.map(extract),
@@ -697,27 +702,29 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.27.4');
+assert.strictEqual(appVersion, '2026.10.27.5');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.27.4');
+assert.strictEqual(firstUnseen[0].version, '2026.10.27.5');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 assert.ok(/brain check|review queue|stamp/i.test(firstUnseen[0].items.join(' ')));
 assert.ok(/client/i.test(firstUnseen[0].items.join(' ')));
 assert.ok(/sent/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.27.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.27.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', true, '2026.10.27.4').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', true, '2026.10.24.2')[0].version, '2026.10.27.4');
+assert.ok(/reference/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.27.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', true, '2026.10.27.5').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', true, '2026.10.24.2')[0].version, '2026.10.27.5');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1540,6 +1547,7 @@ assert.ok(!signedHtml.includes('Sign the brain check'));
 const andrewGate = ctx.renderHumanQaGate({ id: 'qa-3', client_slug: 'andrew', status: 'Draft' }, 'card');
 assert.ok(/thesis filter/i.test(andrewGate));
 assert.ok(!/Monica stamp|Rich Life \/ Monica/i.test(andrewGate));
+assert.ok(!andrewGate.includes('name="qa-format"'));
 assert.ok(andrewGate.includes('qa-card-qa-3'));
 assert.ok(andrewGate.includes('Fits their thesis, not a copy, and it is shareable.'));
 const reviewGate = ctx.renderHumanQaGate({ id: 'qa-r', client_slug: 'jan', status: 'Needs Review' }, 'review');
@@ -1549,7 +1557,28 @@ assert.ok(reviewGate.includes('Fits RLA leadership thesis / shareable.'));
 assert.ok(reviewGate.includes('Sign the brain check'));
 assert.ok(reviewGate.includes('personally read the full script'));
 assert.ok(reviewGate.includes('Mark client-ready is blocked'));
+assert.ok(reviewGate.includes('Myth-buster / contrarian'));
+assert.ok(reviewGate.includes('name="qa-format"'));
+assert.ok(reviewGate.includes('Signing still works if you skip this'));
+assert.ok(reviewGate.includes('Open Reference'));
 assert.ok(!reviewGate.includes("moveStatus('qa-r'"));
+const devinGate = ctx.renderHumanQaGate({ id: 'qa-d', client_slug: 'devin', status: 'Draft' }, 'review');
+assert.ok(devinGate.includes('Greenscreen'));
+assert.ok(devinGate.includes('Tips / hacks'));
+assert.ok(devinGate.includes('Whiteboard'));
+assert.strictEqual(ctx.lockedFormatsForSlug('jan').map(f => f.id).join(','), 'reaction,education,lists,interview,myth-buster');
+assert.strictEqual(ctx.lockedFormatsForSlug('jan-rla').map(f => f.id).join(','), 'reaction,education,lists,interview,myth-buster');
+assert.strictEqual(ctx.lockedFormatsForSlug('devin').map(f => f.id).join(','), 'tutorials,tips-hacks,greenscreen,whiteboard,reaction');
+assert.strictEqual(ctx.lockedFormatsForSlug('andrew').length, 0);
+assert.strictEqual(ctx.normalizeQaFormats(['reaction', 'reaction', ' lists ']).join(','), 'reaction,lists');
+const stampedFormats = ctx.buildHumanQaStamp({
+  readFull: true, notVerbatim: true, thesisFilter: true, shareable: true,
+}, 'Leadership angle, not a copy of the reel, shareable with their team.', 'Cristian Aguilar', '2026-10-27T15:00:00.000Z', ['reaction', 'lists']);
+assert.strictEqual(stampedFormats.formats.join(','), 'reaction,lists');
+assert.strictEqual(stampedFormats.complete, true);
+assert.strictEqual(ctx.unpackHumanQa({ humanQa: stampedFormats }).formats.join(','), 'reaction,lists');
+assert.strictEqual(ctx.humanQaFormatSummary({ client_slug: 'jan' }, ['myth-buster', 'reaction']), 'Myth-buster / contrarian · Reaction');
+assert.strictEqual(ctx.humanQaValidate(stampedFormats.checks, stampedFormats.notes).ok, true);
 const queueRows = [
   { id: 'core', title: 'Core one', client_slug: 'devin', status: 'Needs Review', batch: 'Devin CORE' },
   { id: 'final', title: 'Final one', client_slug: 'jan', status: 'Draft', batch: 'Jan FINAL · 10.23.2026' },
@@ -1657,15 +1686,17 @@ assert.strictEqual(ctx.humanQaNotesOk('AI finished'), false);
 
 ctx.role = 'admin';
 assert.strictEqual(ctx.prompterShowsFilmQa(), true);
-assert.strictEqual(ctx.prompterShouldForceStart(signedScript), true);
+assert.strictEqual(ctx.prompterShouldForceStart(signedScript), false);
 assert.strictEqual(ctx.prompterShouldForceStart(filmScript), false);
 assert.strictEqual(ctx.prompterShouldBlockClose(filmScript), false);
+assert.strictEqual(ctx.prompterCanShowReference({ editing: false, ref: true, refCount: 1, showQa: true }), true);
+assert.strictEqual(ctx.prompterCanShowReference({ editing: true, ref: true, refCount: 1 }), false);
 const startOnly = Object.assign({}, filmScript, {
   pipeline_audit: ctx.applyHumanQa({ offer: 'Keep offer' }, filmStamp),
 });
 assert.strictEqual(ctx.humanQaFilmStartDone(startOnly), true);
 assert.strictEqual(ctx.humanQaFilmEndDone(startOnly), false);
-assert.strictEqual(ctx.prompterShouldBlockClose(startOnly), true);
+assert.strictEqual(ctx.prompterShouldBlockClose(startOnly), false);
 assert.strictEqual(ctx.prompterShouldForceStart({ client_slug: 'jan' }), true);
 const startHtml = ctx.renderHumanQaGate({ id: 'qa-film-2', client_slug: 'jan', status: 'Draft' }, 'film-start');
 assert.ok(startHtml.includes('qa-film-start-qa-film-2'));
@@ -1682,6 +1713,8 @@ const filmSheet = ctx.prompterFilmQaHtml({ id: 'qa-film-2', client_slug: 'jan', 
 assert.ok(filmSheet.includes('Start this film read'));
 assert.ok(filmSheet.includes('qa-film-start-qa-film-2'));
 assert.ok(filmSheet.includes('closePrompter(true)'));
+assert.ok(filmSheet.includes('prompterRef()'));
+assert.ok(filmSheet.includes('>Reference</button>'));
 const endSheet = ctx.prompterFilmQaHtml(startOnly, 'end');
 assert.ok(endSheet.includes('Finish this film read'));
 assert.ok(endSheet.includes('prompterQa(false)'));
@@ -1693,5 +1726,59 @@ assert.ok(/finalScriptEditAllowed/.test(script));
 assert.ok(/commitScriptEdit/.test(script));
 assert.ok(/You can only edit your own scripts/.test(script));
 assert.ok(/viewSlug === session.viewSlug/.test(script) || /slug === session.viewSlug/.test(script));
+
+assert.strictEqual(ctx.prepStampBlocksTabs(), false);
+assert.strictEqual(ctx.prepShowsStamp(0, true), true);
+assert.strictEqual(ctx.prepReferenceStep(true), 2);
+assert.strictEqual(ctx.prepShowsStamp(ctx.prepReferenceStep(true), true), false);
+assert.strictEqual(ctx.prepTabReachable(ctx.prepReferenceStep(true), true), true);
+assert.strictEqual(ctx.prepTabReachable(ctx.prepReferenceStep(false), false), true);
+assert.strictEqual(ctx.prepTabReachable(9, true), false);
+const refBody = ctx.prepStepBody({
+  title: 'Growth Reveals Your Circle',
+  client_slug: 'jan',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+}, ctx.prepReferenceStep(true), true);
+assert.ok(refBody.includes('Reference'));
+assert.ok(!refBody.includes('Sign the brain check'));
+assert.ok(ctx.prepQaHintHtml({ client_slug: 'jan', status: 'Draft' }, false, true).includes('does not ask you to sign again'));
+assert.ok(ctx.prepQaHintHtml({ client_slug: 'jan', status: 'Draft' }, false, true).includes('does not clear a stamp'));
+assert.strictEqual(ctx.prepQaHintHtml(signedScript, false, true), '');
+assert.strictEqual(ctx.prepQaHintHtml({ client_slug: 'jan' }, true, true), '');
+const prepGoAt = script.indexOf('window.prepGo =');
+const prepGoSrc = script.slice(prepGoAt, script.indexOf('window.prepMove =', prepGoAt));
+assert.ok(/prepTabReachable/.test(prepGoSrc));
+assert.ok(/rememberPrepQaDraft/.test(prepGoSrc));
+assert.ok(!/pipeline_audit/.test(prepGoSrc));
+assert.ok(!/humanQa\s*=/.test(prepGoSrc));
+const formatStale = ctx.staleHumanQaAfterScriptChange({
+  hook: 'Line one',
+  full_script: 'Body two',
+  cta: 'Comment FOLLOW',
+  pipeline_audit: ctx.applyHumanQa({ offer: 'Keep offer' }, stampedFormats),
+}, { hook: 'Line one changed' });
+assert.strictEqual(formatStale.humanQa.formats.join(','), 'reaction,lists');
+assert.strictEqual(formatStale.humanQa.complete, false);
+const vaultHtml = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'all');
+assert.ok(vaultHtml.includes('Format Vault'));
+assert.ok(vaultHtml.includes('Jan Zands'));
+assert.ok(vaultHtml.includes('Devin Shea'));
+assert.ok(vaultHtml.includes('Myth-buster / contrarian'));
+assert.ok(vaultHtml.includes('Greenscreen'));
+assert.ok(vaultHtml.includes('Network marketing'));
+assert.ok(vaultHtml.includes('Nonprofit'));
+assert.ok(vaultHtml.includes('@teamr3set'));
+assert.ok(vaultHtml.includes('@susan_ho'));
+assert.ok(vaultHtml.includes('Tony Robbins'));
+assert.ok(vaultHtml.includes('No creator examples filed yet'));
+assert.ok(vaultHtml.includes('No thumbnail yet'));
+assert.ok(!vaultHtml.includes('moveStatus'));
+assert.ok(!vaultHtml.includes('Mark client-ready'));
+assert.strictEqual(ctx.formatVaultCards(ctx.formatVaultCatalog(), 'jan').length, 5);
+assert.strictEqual(ctx.formatVaultCards(ctx.formatVaultCatalog(), 'devin').length, 5);
+assert.ok(script.includes("if (role !== 'admin') return;"));
+assert.ok(script.includes('openFormatVault'));
+const catalogFile = JSON.parse(fs.readFileSync(new URL('../format-vault/catalog.json', import.meta.url), 'utf8'));
+assert.strictEqual(JSON.stringify(ctx.formatVaultCatalog()), JSON.stringify(catalogFile));
 
 console.log('hub-logic tests passed');

@@ -584,7 +584,17 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .pr-res-card-md ul, .pr-res-card-md ol { margin: 0 0 8px; padding-left: 1.2em; }
 .pr-res-card-md li { margin: 0 0 4px; }
 .pr-res-stack { display: flex; flex-direction: column; gap: 0; }
-.pr-notes-btn.is-on, .pr-ref-btn.is-on, .pr-res-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
+.pr-notes-btn.is-on, .pr-ref-btn.is-on, .pr-res-btn.is-on, .pr-qa-btn.is-on { background: var(--signal) !important; border-color: var(--signal) !important; color: #fff !important; }
+.pr-qa-btn.is-need {
+  background: #ed3039 !important; border-color: #ed3039 !important; color: #fff !important;
+}
+.pr-qa-sheet {
+  position: absolute; inset: 0; z-index: 8; background: #0e0e0e; color: #fff;
+  display: flex; flex-direction: column; min-height: 0;
+}
+.pr-qa-sheet[hidden] { display: none !important; }
+.pr-qa-sheet .pr-sheet-body { flex: 1; overflow: auto; padding: 4px 16px 28px; }
+#prompter.has-qa .pr-qa-sheet { display: flex; }
 @media (min-width: 900px) {
   .pr-sheet { left: auto; width: min(440px, 40vw); border-left: 1px solid #2a2a2a; }
   #prompter.has-notes > .pr-top,
@@ -1434,14 +1444,14 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.27.2';
+const APP_VERSION = '2026.10.27.3';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
 
 const FILMING_GUIDE = [
   'Watch the reference reel before you roll. On a phone, tap Ref when you want the reel, then Back to script. On a wide screen it sits beside the script.',
-  'Film prep, then Full screen. Edit lives on that full-screen teleprompter.',
+  'Film prep, then Full screen. Edit lives on that full-screen teleprompter. Save writes the new lines to the script.',
   'Keep the first line as written unless you tap Edit.',
   'Shoot vertical.',
   'Do 3 takes.',
@@ -1449,6 +1459,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.27.3',
+    date: 'October 27, 2026',
+    title: 'Brain check on Full screen, then Edit and Save',
+    items: [
+      'Admin only: Full screen now opens on the Cristian brain check, and Close asks you to sign again before this film read is finished.',
+      'If you change Hook, Full script, or CTA after a stamp, the stamp goes stale. You sign again on this screen. Needs Review and client-ready stay blocked until that new stamp is current.',
+      'Edit on Full screen is real. Save writes Hook, Full script, and CTA to the same script row. The teleprompter shows the new words. Clients still get a clean film screen — no brain-check overlay.',
+    ],
+    steps: [
+      'Open Full screen on a Jan script. Tick the four boxes and write why it is good to send, or confirm the stamp already on file.',
+      'Tap Edit. Change a line. Save. Read the new text on the teleprompter.',
+      'Close to finish the film read. Sign or confirm the end check before Needs Review or Mark client-ready can move.',
+    ],
+  },
   {
     version: '2026.10.27.2',
     date: 'October 27, 2026',
@@ -2002,6 +2027,7 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       if (prompterState && prompterState.editing) { window.prompterCancelEdit(); return; }
+      if (prompterState && prompterState.qaPhase === 'end') { window.prompterQa(false); return; }
       if (prompterState && prompterState.player) { window.prompterClosePlayer(); return; }
       if (prompterState && prompterState.notes) { window.prompterNotes(false); return; }
       if (prompterState && prompterState.resources) { window.prompterResources(false); return; }
@@ -2011,7 +2037,7 @@ document.addEventListener('keydown', (e) => {
     }
     const tag = e.target && e.target.tagName;
     if (e.key === ' ' && tag !== 'INPUT' && tag !== 'TEXTAREA' && tag !== 'SELECT') {
-      if (prompterState && (prompterState.notes || prompterState.player || prompterState.editing)) return;
+      if (prompterState && (prompterState.notes || prompterState.player || prompterState.editing || prompterState.qaPhase)) return;
       e.preventDefault(); window.prompterToggle(); return;
     }
   }
@@ -3601,7 +3627,7 @@ function renderHelpPage() {
       <ol class="step-list">${guide}</ol>
       <ul class="guide-list" style="margin-top:14px">
         <li>The batch is big cards. Film opens a short prep, then the full-screen teleprompter. Past batches holds older scripts. More holds filters.</li>
-        <li>Edit is on that full-screen script, not the card. Tap Edit to change Hook, Full script, or CTA. Save keeps it. Cancel restores the last saved text.</li>
+        <li>Edit is on that full-screen script, not the card. Tap Edit to change Hook, Full script, or CTA. Save writes those lines to the script and the teleprompter shows the new text. Cancel restores the last saved text.</li>
         <li>Full screen reads Hook, each beat, and the CTA. On a phone, tap Ref for the reel, then Back to script. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
@@ -3610,7 +3636,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Audit, read the script yourself, tick the four boxes, and write why it is good to send. Needs Review and Mark client-ready stay blocked until that stamp is saved.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. The brain check now lives on Full screen — you sign as you start the film read, and again as you finish, before Needs Review or client-ready can move. Audit still has the same stamp. Tick the four boxes and write why it is good to send. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
     ${RELEASES.map(renderReleaseArticle).join('')}
@@ -5481,6 +5507,19 @@ function prompterNotesHtml(s) {
     <section class="pr-note"><h3>Audio</h3>${audio}</section>
     <section class="pr-note"><h3>Caption</h3>${pack.caption ? `<p>${escHtml(pack.caption)}</p>` : '<p class="pr-note-empty">No caption on this script.</p>'}</section>`;
 }
+function prompterFilmQaHtml(s, phase) {
+  const end = phase === 'end';
+  const leave = end
+    ? `<button type="button" onclick="window.prompterQa(false)">Back to script</button>`
+    : `<button type="button" onclick="window.closePrompter(true)">Leave</button>`;
+  return `<div class="pr-qa-sheet" id="pr-qa-sheet">
+      <div class="pr-top">
+        <div class="pr-title">${end ? 'Finish this film read' : 'Start this film read'}</div>
+        ${leave}
+      </div>
+      <div class="pr-sheet-body">${renderHumanQaGate(s, end ? 'film-end' : 'film-start')}</div>
+    </div>`;
+}
 
 let prompterState = null;
 let prompterRaf = 0;
@@ -5529,27 +5568,37 @@ function renderPrompter() {
   if (!s || !root) return;
   const st = prompterState;
   if (st.editing && !prompterMayEdit(s)) st.editing = false;
+  if (prompterShouldForceStart(s)) st.qaPhase = 'start';
+  else if (st.qaPhase === 'start' && humanQaFilmStartDone(s)) st.qaPhase = '';
+  else if (st.qaPhase === 'end' && !prompterShouldBlockClose(s) && !humanQaFilmEndDone(s)) st.qaPhase = '';
+  const qaPhase = prompterShowsFilmQa() && !st.editing ? (st.qaPhase || '') : '';
+  const showQa = qaPhase === 'start' || qaPhase === 'end';
   const editing = !!st.editing;
   const session = { role: role, includeAudit: role === 'admin' };
   const refs = reviewRefs(s, session);
   const resItems = clientResourceItems(s, session);
-  const showRef = !editing && !!st.ref && refs.length > 0;
-  const showRes = !editing && !!st.resources;
+  const showRef = !editing && !showQa && !!st.ref && refs.length > 0;
+  const showRes = !editing && !showQa && !!st.resources;
   const qLen = (st.queue && st.queue.length) || 1;
   const qIndex = st.index || 0;
-  const editBtn = !editing && prompterMayEdit(s)
+  const editBtn = !editing && !showQa && prompterMayEdit(s)
     ? `<button type="button" class="pr-edit-btn" onclick="window.prompterEdit()">Edit</button>`
     : '';
   const notice = !editing && st.notice
     ? `<div id="pr-notice" class="pr-saved-bar" role="status">${escHtml(st.notice)}</div>`
     : '';
-  const refBtn = !editing && refs.length
+  const refBtn = !editing && !showQa && refs.length
     ? `<button type="button" id="pr-ref-btn" class="pr-ref-btn${st.ref ? ' is-on' : ''}" aria-pressed="${st.ref ? 'true' : 'false'}" aria-label="Reference" onclick="window.prompterRef()">Ref</button>`
     : '';
-  const resBtn = !editing
+  const resBtn = !editing && !showQa
     ? `<button type="button" id="pr-res-btn" class="pr-res-btn${st.resources ? ' is-on' : ''}" aria-expanded="${st.resources ? 'true' : 'false'}" onclick="window.prompterResources()">Resources</button>`
     : '';
+  const qaNeed = prompterShowsFilmQa() && !humanQaFilmEndDone(s);
+  const qaBtn = !editing && prompterShowsFilmQa()
+    ? `<button type="button" id="pr-qa-btn" class="pr-qa-btn${showQa ? ' is-on' : ''}${qaNeed && !showQa ? ' is-need' : ''}" aria-pressed="${showQa ? 'true' : 'false'}" onclick="window.prompterQa()">QA</button>`
+    : '';
   const readTools = editing ? '' : `
+      ${qaBtn}
       ${refBtn}
       ${resBtn}
       <button type="button" id="pr-notes-btn" class="pr-notes-btn${st.notes ? ' is-on' : ''}" aria-expanded="${st.notes ? 'true' : 'false'}" onclick="window.prompterNotes()">Notes</button>
@@ -5573,7 +5622,7 @@ function renderPrompter() {
   const compactRes = showRef && resItems.length
     ? `<div class="pr-res-compact" id="pr-res-compact"><div class="pr-res-kicker">Reminders</div>${prompterResourcesHtml(s, session, { compact: true })}</div>`
     : '';
-  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${showRef ? ' has-ref' : ''}${showRes ? ' has-res' : ''}${editing ? ' is-editing' : ''}" role="dialog" aria-modal="true" aria-label="${editing ? 'Edit script' : 'Teleprompter'}">
+  root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${showRef ? ' has-ref' : ''}${showRes ? ' has-res' : ''}${editing ? ' is-editing' : ''}${showQa ? ' has-qa' : ''}" role="dialog" aria-modal="true" aria-label="${showQa ? (qaPhase === 'end' ? 'Finish film brain check' : 'Start film brain check') : (editing ? 'Edit script' : 'Teleprompter')}">
     <div class="pr-top">
       <div class="pr-title">${escHtml(s.title)}</div>
       ${editBtn}
@@ -5619,6 +5668,7 @@ function renderPrompter() {
       </div>
       <div class="pr-player-frame" id="pr-player-frame"></div>
     </div>
+    ${showQa ? prompterFilmQaHtml(s, qaPhase) : ''}
   </div>`;
   document.body.classList.add('prompter-open');
   const scroller = document.getElementById('prompter-scroll');
@@ -5669,6 +5719,7 @@ window.openPrompter = (id) => {
       : false,
     resources: false,
     refIndex: 0,
+    qaPhase: prompterShouldForceStart(s) ? 'start' : '',
     scope: found.scope,
     index: found.index,
     queue: found.queue,
@@ -5688,6 +5739,7 @@ window.prompterEdit = () => {
   prompterState.notes = false;
   prompterState.player = false;
   prompterState.resources = false;
+  prompterState.qaPhase = '';
   prompterState.editing = true;
   prompterState.notice = '';
   prompterState.focusEdit = true;
@@ -5716,9 +5768,11 @@ window.prompterSaveEdit = async () => {
   const status = await commitScriptEdit(s, draft, '', { toast: false });
   if (!prompterState || prompterState.id !== id) return;
   if (status === 'failed') return;
+  const row = scripts.find(x => x.id === id);
   prompterState.editing = false;
   prompterState.focusEdit = false;
-  prompterState.notice = status === 'saved' ? 'Saved' : '';
+  prompterState.notice = status === 'saved' || status === 'partial' ? 'Saved' : '';
+  if (row && prompterShouldForceStart(row)) prompterState.qaPhase = 'start';
   renderPrompter();
   if (status === 'saved') {
     showToast('Saved', { duration: 2500 });
@@ -5747,6 +5801,8 @@ window.prompterStep = (delta) => {
   prompterState.editing = false;
   prompterState.notice = '';
   prompterState.focusEdit = false;
+  const nextRow = scripts.find(x => x.id === id);
+  prompterState.qaPhase = prompterShouldForceStart(nextRow) ? 'start' : '';
   cancelAnimationFrame(prompterRaf);
   if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {});
   if (prompterState.scope) {
@@ -5801,6 +5857,30 @@ window.prompterJump = (i) => {
   const target = sec.querySelector('p') || sec;
   scroller.scrollTop += target.getBoundingClientRect().top - line.getBoundingClientRect().top;
   prompterSyncProgress();
+};
+window.prompterQa = (force) => {
+  if (!prompterState || !prompterShowsFilmQa()) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  if (!s) return;
+  if (force === false) {
+    if (prompterState.qaPhase === 'start' && prompterShouldForceStart(s)) return;
+    prompterState.qaPhase = '';
+    renderPrompter();
+    return;
+  }
+  prompterPause();
+  prompterState.notes = false;
+  prompterState.player = false;
+  prompterState.resources = false;
+  if (force === 'start' || force === 'end') {
+    prompterState.qaPhase = force;
+  } else if (prompterState.qaPhase) {
+    if (prompterState.qaPhase === 'start' && prompterShouldForceStart(s)) return;
+    prompterState.qaPhase = '';
+  } else {
+    prompterState.qaPhase = humanQaFilmStartDone(s) ? 'end' : 'start';
+  }
+  renderPrompter();
 };
 window.prompterNotes = (force) => {
   if (!prompterState) return;
@@ -5918,7 +5998,20 @@ window.prompterRefFullscreen = () => {
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   else el.requestFullscreen().catch(() => {});
 };
-window.closePrompter = () => {
+window.closePrompter = (force) => {
+  if (!force && prompterState && !prompterState.editing) {
+    const current = scripts.find(x => x.id === prompterState.id);
+    if (prompterShouldBlockClose(current)) {
+      prompterPause();
+      prompterState.notes = false;
+      prompterState.player = false;
+      prompterState.resources = false;
+      prompterState.ref = false;
+      prompterState.qaPhase = 'end';
+      renderPrompter();
+      return;
+    }
+  }
   const wasOpen = !!prompterState;
   const scope = prompterState && prompterState.scope;
   const index = prompterState ? (prompterState.index || 0) : 0;
@@ -5959,7 +6052,7 @@ window.prompterTop = () => {
   if (el) el.scrollTop = 0;
 };
 window.prompterToggle = () => {
-  if (!prompterState) return;
+  if (!prompterState || prompterState.editing || prompterState.qaPhase) return;
   prompterState.playing = !prompterState.playing;
   prompterState.lastTs = 0;
   const btn = document.getElementById('prompter-play');
@@ -6464,7 +6557,14 @@ function humanQaChecks(s) {
 function humanQaNotesOk(notes) {
   const t = asText(notes).replace(/\s+/g, ' ').trim();
   if (t.length < HUMAN_QA_NOTE_MIN) return false;
-  return t.split(' ').filter(Boolean).length >= 3;
+  if (t.split(' ').filter(Boolean).length < 3) return false;
+  const low = t.toLowerCase().replace(/[’']/g, "'").replace(/[.!?]+$/g, '').trim();
+  if (/^(looks fine|looks good|ai finished|ai did it|lgtm|ok|okay|fine|good)(\s+(to me|enough|now|thanks))?$/.test(low)) return false;
+  return true;
+}
+function humanQaScriptHash(s) {
+  s = s || {};
+  return [asText(s.hook), asText(s.full_script), asText(s.cta)].join('\n\x1e\n');
 }
 function unpackHumanQa(value) {
   const src = value && typeof value === 'object' && !Array.isArray(value)
@@ -6478,6 +6578,9 @@ function unpackHumanQa(value) {
     by: asText(src.by || src.who || src.owner).trim(),
     at: asText(src.at || src.when || src.signedAt).trim(),
     complete: src.complete === true,
+    scriptHash: asText(src.scriptHash || src.script_hash).trim(),
+    filmStartAt: asText(src.filmStartAt || src.film_start_at).trim(),
+    filmEndAt: asText(src.filmEndAt || src.film_end_at).trim(),
   };
   HUMAN_QA_KEYS.forEach(key => { out.checks[key] = checks[key] === true; });
   if (!out.complete) {
@@ -6495,11 +6598,38 @@ function humanQaComplete(s) {
   const qa = humanQaFrom(s);
   return !!(qa && qa.complete && HUMAN_QA_KEYS.every(k => qa.checks[k]) && humanQaNotesOk(qa.notes));
 }
+function humanQaStale(s) {
+  const qa = humanQaFrom(s);
+  if (!qa || !qa.complete) return false;
+  const hash = asText(qa.scriptHash).trim();
+  if (!hash) return false;
+  return hash !== humanQaScriptHash(s);
+}
+function humanQaDeliveryReady(s) {
+  return humanQaComplete(s) && !humanQaStale(s);
+}
+function humanQaFilmStartDone(s) {
+  const qa = humanQaFrom(s);
+  return !!(humanQaDeliveryReady(s) && qa && qa.filmStartAt && qa.scriptHash === humanQaScriptHash(s));
+}
+function humanQaFilmEndDone(s) {
+  const qa = humanQaFrom(s);
+  return !!(humanQaFilmStartDone(s) && qa && qa.filmEndAt);
+}
+function prompterShowsFilmQa() {
+  return typeof role !== 'undefined' && role === 'admin';
+}
+function prompterShouldForceStart(s) {
+  return prompterShowsFilmQa() && !!s && !humanQaFilmStartDone(s);
+}
+function prompterShouldBlockClose(s) {
+  return prompterShowsFilmQa() && !!s && humanQaFilmStartDone(s) && !humanQaFilmEndDone(s);
+}
 function isClientDeliveryStatus(status) {
   return status === 'Needs Review' || status === 'Approved';
 }
 function humanQaBlocksStatus(s, nextStatus) {
-  return isClientDeliveryStatus(nextStatus) && !humanQaComplete(s);
+  return isClientDeliveryStatus(nextStatus) && !humanQaDeliveryReady(s);
 }
 function humanQaValidate(checks, notes) {
   const missing = HUMAN_QA_KEYS.filter(k => !checks || checks[k] !== true);
@@ -6514,10 +6644,40 @@ function buildHumanQaStamp(checks, notes, who, when) {
     notes: asText(notes).trim(),
     by: asText(who).trim() || 'Cristian',
     at: asText(when).trim() || new Date().toISOString(),
+    scriptHash: '',
+    filmStartAt: '',
+    filmEndAt: '',
   };
   HUMAN_QA_KEYS.forEach(key => { stamp.checks[key] = !!(checks && checks[key]); });
   stamp.complete = HUMAN_QA_KEYS.every(k => stamp.checks[k]) && humanQaNotesOk(stamp.notes);
   return stamp;
+}
+function attachHumanQaFilm(stamp, phase, scriptHash) {
+  const next = stamp && typeof stamp === 'object' && !Array.isArray(stamp) ? Object.assign({}, stamp) : {};
+  next.scriptHash = asText(scriptHash);
+  const when = asText(next.at).trim() || new Date().toISOString();
+  if (phase === 'start') {
+    next.filmStartAt = when;
+    next.filmEndAt = '';
+  } else if (phase === 'end') {
+    if (!asText(next.filmStartAt).trim()) next.filmStartAt = when;
+    next.filmEndAt = when;
+  }
+  return next;
+}
+function staleHumanQaAfterScriptChange(s, patch) {
+  patch = patch || {};
+  if (!['hook', 'full_script', 'cta'].some(key => Object.prototype.hasOwnProperty.call(patch, key))) return null;
+  const current = currentAuditObject(s);
+  if (current == null) return null;
+  const qa = unpackHumanQa(current);
+  if (!qa) return null;
+  const stamp = buildHumanQaStamp(qa.checks, qa.notes, qa.by, qa.at);
+  stamp.complete = false;
+  stamp.scriptHash = humanQaScriptHash(s);
+  stamp.filmStartAt = '';
+  stamp.filmEndAt = '';
+  return applyHumanQa(current, stamp);
 }
 function applyHumanQa(audit, stamp) {
   const base = (audit && typeof audit === 'object' && !Array.isArray(audit)) ? Object.assign({}, audit) : {};
@@ -6534,36 +6694,62 @@ function currentAuditObject(s) {
 }
 function renderHumanQaBadge(s) {
   if (typeof role === 'undefined' || role !== 'admin') return '';
-  if (humanQaComplete(s)) {
+  if (humanQaDeliveryReady(s)) {
     const qa = humanQaFrom(s) || {};
     return `<span class="qa-chip is-yes">Brain check · ${escHtml(qa.by || 'Cristian')}</span>`;
   }
+  if (humanQaStale(s)) return `<span class="qa-chip is-no">Brain check stale</span>`;
   return `<span class="qa-chip is-no">Brain check needed</span>`;
+}
+function humanQaFilmSurface(surface) {
+  if (surface === 'film-start') return 'start';
+  if (surface === 'film-end') return 'end';
+  return '';
 }
 function renderHumanQaGate(s, surface) {
   s = s || {};
   const id = asText(s.id).trim();
   const qa = humanQaFrom(s) || { checks: {}, notes: '', by: '', at: '', complete: false };
-  const done = humanQaComplete(s);
+  const filmPhase = humanQaFilmSurface(surface);
+  const ready = humanQaDeliveryReady(s);
+  const stale = humanQaStale(s);
+  const startDone = humanQaFilmStartDone(s);
+  const endDone = humanQaFilmEndDone(s);
+  const done = filmPhase === 'start' ? startDone : (filmPhase === 'end' ? endDone : ready);
+  const confirmable = !done && ready && (filmPhase === 'start' || (filmPhase === 'end' && startDone));
   const when = qa.at ? formatStamp(qa.at) : '';
   const who = qa.by || 'Cristian';
   const action = s.status === 'Needs Review'
     ? { status: 'Approved', label: 'Mark client-ready' }
     : ((s.status === 'Draft' || s.status === 'Passed') ? { status: 'Needs Review', label: 'Send to Needs Review' } : null);
   const blocked = action && humanQaBlocksStatus(s, action.status);
-  if (done) {
+  if (done || confirmable) {
     const signed = (humanQaChecks(s) || []).map(item =>
       '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
     ).join('');
-    const send = action && !blocked && id
+    const send = !filmPhase && action && !blocked && id
       ? `<button type="button" class="qa-go" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`
       : '';
+    const confirm = confirmable && id
+      ? `<button type="button" class="qa-go" onclick="window.confirmHumanQaFilm('${id}','${filmPhase}')">${filmPhase === 'end' ? 'I finished this film read' : "I'm reading this myself"}</button>`
+      : '';
+    const title = filmPhase === 'end'
+      ? (done ? 'End check signed' : 'Finish. Read it one more time.')
+      : (filmPhase === 'start'
+        ? (done ? 'Start check signed' : 'You signed this one. Confirm you are reading it yourself now.')
+        : 'You signed this one');
+    const lead = filmPhase === 'end' && !done
+      ? 'Same stamp. Confirm you finished this Full screen read before the script can leave your hands.'
+      : (filmPhase === 'start' && !done
+        ? 'The stamp is on file. Confirm you are starting this film read with your own brain.'
+        : (escHtml(who) + (when ? ' · ' + escHtml(when) : '')));
     return `<section class="qa-gate is-done" aria-label="Cristian brain check">
-      <p class="qa-kicker">Human QA · Cristian brain check</p>
-      <h3>You signed this one</h3>
-      <p class="qa-lead">${escHtml(who)}${when ? ' · ' + escHtml(when) : ''}</p>
+      <p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p>
+      <h3>${escHtml(title)}</h3>
+      <p class="qa-lead">${lead}</p>
       ${qa.notes ? `<div class="qa-stamp"><p>${escHtml(qa.notes)}</p></div>` : ''}
       <ul class="qa-list">${signed}</ul>
+      ${confirm}
       ${send}
     </section>`;
   }
@@ -6574,13 +6760,25 @@ function renderHumanQaGate(s, surface) {
   const submit = id
     ? `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">Sign the brain check</button>`
     : '';
-  const hold = action
-    ? `<p class="qa-block">${escHtml(action.label)} is blocked until you tick every box and write why this is good to send.</p>`
-    : '<p class="qa-block">Needs Review and client-ready stay blocked until you sign this.</p>';
+  const hold = filmPhase === 'end'
+    ? '<p class="qa-block">This film read is not finished until you tick every box and write why this is good to send.</p>'
+    : (filmPhase === 'start'
+      ? '<p class="qa-block">The teleprompter stays closed until you sign this start check.</p>'
+      : (action
+        ? `<p class="qa-block">${escHtml(action.label)} is blocked until you tick every box and write why this is good to send.</p>`
+        : '<p class="qa-block">Needs Review and client-ready stay blocked until you sign this.</p>'));
+  const heading = stale
+    ? 'The script changed. Read it again.'
+    : (filmPhase === 'end' ? 'Finish. Read it yourself.' : 'Stop. Read it yourself.');
+  const lead = stale
+    ? 'You edited the spoken lines after the last brain check. Tick every box again. Write why this version is good to send.'
+    : (filmPhase === 'end'
+      ? 'You are leaving Full screen. AI can draft. You decide if the client should see it.'
+      : 'AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.');
   return `<section class="qa-gate" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>
-    <p class="qa-kicker">Human QA · Cristian brain check</p>
-    <h3>Stop. Read it yourself.</h3>
-    <p class="qa-lead">AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.</p>
+    <p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p>
+    <h3>${escHtml(heading)}</h3>
+    <p class="qa-lead">${escHtml(lead)}</p>
     ${boxes}
     <label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
     <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="In your own words. Not “AI finished” or “looks fine”."></textarea>
@@ -7608,7 +7806,7 @@ function batchGapsHtml(groups) {
   if (typeof role === 'undefined' || role !== 'admin') return '';
   const rowsList = scriptsFromGroups(groups);
   const items = batchTopGaps(rowsList);
-  const qaTitles = rowsList.filter(s => !humanQaComplete(s)).map(s => asText(s.title).trim() || 'Untitled');
+  const qaTitles = rowsList.filter(s => !humanQaDeliveryReady(s)).map(s => asText(s.title).trim() || 'Untitled');
   if (qaTitles.length) {
     items.unshift({
       label: 'Cristian brain check still open',
@@ -7632,7 +7830,7 @@ function batchGapsHtml(groups) {
 }
 function scriptGapHtml(audit, s) {
   const hard = ((audit && audit.ready && audit.ready.blockers) || []).filter(b => b && b.status !== 'pass' && b.status !== 'soft_pass');
-  if (s && !humanQaComplete(s)) {
+  if (s && !humanQaDeliveryReady(s)) {
     hard.unshift({ label: 'Cristian brain check', why: 'You have not personally signed this script yet.', status: 'hold' });
   }
   if (!hard.length) {
@@ -7671,7 +7869,7 @@ function prepAuditHtml(s) {
     + '<section class="audit-sticky audit-verdict ' + (ready.yes ? 'is-yes' : 'is-no') + '" aria-label="Ready for client send">'
     + '<div class="audit-sec-h"><h3>Ready to send?</h3>' + auditBadge(ready.yes ? 'pass' : 'fail') + '</div>'
     + '<p class="audit-yesno">' + (ready.yes ? 'Yes' : 'No') + '</p>'
-    + '<p class="audit-sticky-line">' + escHtml((humanQaComplete(s) ? '' : 'Cristian brain check is still open. ') + (line || ready.why || '')) + '</p>'
+    + '<p class="audit-sticky-line">' + escHtml((humanQaDeliveryReady(s) ? '' : 'Cristian brain check is still open. ') + (line || ready.why || '')) + '</p>'
     + '</section>'
     + auditBatchStrip()
     + scriptGapHtml(audit, s)
@@ -7862,15 +8060,20 @@ function setLabeledBlock(text, label, value) {
   }
   return lines.slice(0, start).concat(block).concat(lines.slice(end)).join('\n').replace(/\n{3,}/g, '\n\n').trim();
 }
-// Who may open Edit on the final script. Saving is stricter: commitScriptEdit
-// refuses an admin who is only previewing another client's hub.
+// Who may open Edit on the final script and persist it. Admin can save the
+// client they are viewing (client tab or preview-as-client). Clients still
+// only edit their own scripts.
 function finalScriptEditAllowed(session, script) {
   session = session || {};
   script = script || {};
   const slug = asText(script.client_slug).trim();
   if (!slug || !script.id) return false;
-  if (session.previewSlug) return session.role === 'admin' && slug === session.previewSlug;
-  if (session.role !== 'client' && session.role !== 'admin') return false;
+  if (session.role === 'admin') {
+    if (session.previewSlug) return slug === session.previewSlug;
+    return !!session.viewSlug && slug === session.viewSlug;
+  }
+  if (session.previewSlug) return false;
+  if (session.role !== 'client') return false;
   return !!session.mySlug && session.viewSlug === session.mySlug && slug === session.mySlug;
 }
 function finalScriptEditDraft(s) {
@@ -8108,12 +8311,18 @@ function finishLocalEdit(s, diff, name, reason, toastMessage) {
 async function commitScriptEdit(s, values, reason, opts) {
   opts = opts || {};
   if (!s || editSaving) return 'failed';
-  if (viewingAsClient()) {
-    showToast('This is ' + clientLabel(previewSlug) + '’s hub. Changes save only in your workspace.', { tone: 'error' });
-    return 'failed';
-  }
-  if (!canEditScripts() || s.client_slug !== mySlug) {
-    showToast('You can only edit your own scripts.', { tone: 'error' });
+  const maySave = finalScriptEditAllowed({
+    role: role,
+    mySlug: mySlug,
+    viewSlug: viewSlug,
+    previewSlug: previewSlug,
+  }, s);
+  if (!maySave) {
+    if (role === 'admin' && previewSlug && s.client_slug !== previewSlug) {
+      showToast('This is ' + clientLabel(previewSlug) + '’s hub. Changes save only in your workspace.', { tone: 'error' });
+    } else {
+      showToast('You can only edit your own scripts.', { tone: 'error' });
+    }
     return 'failed';
   }
   const diff = scriptEditDiff(s, values);
@@ -8131,6 +8340,10 @@ async function commitScriptEdit(s, values, reason, opts) {
   ['hook', 'full_script', 'cta', 'editor_notes', 'filming_direction'].forEach(key => {
     if (Object.prototype.hasOwnProperty.call(diff.patch, key)) patch[key] = diff.patch[key];
   });
+  if (role === 'admin') {
+    const staleAudit = staleHumanQaAfterScriptChange(s, patch);
+    if (staleAudit) patch.pipeline_audit = staleAudit;
+  }
   if (!Object.keys(patch).length) {
     showToast('Could not save that change.', { tone: 'error' });
     return 'failed';
@@ -8179,6 +8392,7 @@ async function commitScriptEdit(s, values, reason, opts) {
   clearEdit();
   if (user) renderDash();
   if (prepState && prepState.id === s.id) renderPrep();
+  if (prompterState && prompterState.id === s.id && !prompterState.editing) renderPrompter();
   if (successToast !== false) showToast(successToast);
   return 'saved';
 }
@@ -9166,9 +9380,71 @@ window.setMode     = m    => { viewMode = m; viewStatus = 'all'; viewStatusExact
 window.setViewTab  = t    => { viewTab = t; calSelectedDay = null; moreOpen = false; window.scrollTo(0, 0); renderDash(); };
 window.moveStatus  = (id, status) => setStatus(id, status);
 function humanQaFormRoot(id) {
+  const filmStart = document.getElementById('qa-film-start-' + id);
+  const filmEnd = document.getElementById('qa-film-end-' + id);
+  if (document.body.classList.contains('prompter-open')) {
+    if (prompterState && prompterState.qaPhase === 'end' && filmEnd) return filmEnd;
+    if (filmStart) return filmStart;
+    if (filmEnd) return filmEnd;
+  }
   const prep = document.getElementById('qa-prep-' + id);
   if (prep && document.body.classList.contains('prep-open')) return prep;
-  return document.getElementById('qa-card-' + id) || prep || document.getElementById('qa-form-' + id);
+  return document.getElementById('qa-card-' + id) || prep || filmStart || filmEnd || document.getElementById('qa-form-' + id);
+}
+function humanQaFormPhase(id) {
+  const root = humanQaFormRoot(id);
+  if (!root || !root.id) {
+    return (prompterState && prompterState.id === id && prompterState.qaPhase) || '';
+  }
+  if (root.id.indexOf('qa-film-end-') === 0) return 'end';
+  if (root.id.indexOf('qa-film-start-') === 0) return 'start';
+  return (prompterState && prompterState.id === id && prompterState.qaPhase) || '';
+}
+async function persistHumanQaStamp(s, stamp, toastMessage) {
+  const current = currentAuditObject(s);
+  if (current == null) {
+    showToast('pipeline_audit on this row is not valid JSON. Fix that before the brain check can save.', { tone: 'error' });
+    return false;
+  }
+  const nextAudit = applyHumanQa(current, stamp);
+  if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
+    s.pipeline_audit = nextAudit;
+    finishHumanQaUi(s.id, toastMessage);
+    return true;
+  }
+  qaSaving = true;
+  const go = humanQaFormRoot(s.id) && humanQaFormRoot(s.id).querySelector('.qa-go');
+  if (go) go.disabled = true;
+  let data = null, error = null;
+  try {
+    ({ data, error } = await sb.from('scripts').update({ pipeline_audit: nextAudit }).eq('id', s.id).select('id'));
+  } catch (e) { error = e; }
+  qaSaving = false;
+  if (error || !data || data.length !== 1) {
+    if (error) console.error(error);
+    showToast(error ? ('Could not save the brain check: ' + (error.message || error)) : SESSION_EXPIRED_MSG, { tone: 'error' });
+    renderDash();
+    if (prepState && prepState.id === s.id) renderPrep();
+    if (prompterState && prompterState.id === s.id) renderPrompter();
+    return false;
+  }
+  s.pipeline_audit = nextAudit;
+  finishHumanQaUi(s.id, toastMessage);
+  return true;
+}
+function finishHumanQaUi(id, toastMessage) {
+  renderDash();
+  if (prepState && prepState.id === id) renderPrep();
+  const row = scripts.find(x => x.id === id);
+  if (prompterState && prompterState.id === id) {
+    if (prompterState.qaPhase === 'end' && humanQaFilmEndDone(row)) {
+      window.closePrompter(true);
+    } else {
+      if (humanQaFilmStartDone(row) && prompterState.qaPhase === 'start') prompterState.qaPhase = '';
+      renderPrompter();
+    }
+  }
+  showToast(toastMessage || 'Brain check saved. You can send this when you are ready.');
 }
 function readHumanQaForm(id) {
   const root = humanQaFormRoot(id);
@@ -9192,39 +9468,29 @@ window.submitHumanQa = async (id) => {
       : 'Write why this is good to send — a real note, not “looks fine”.', { tone: 'error' });
     return;
   }
-  const current = currentAuditObject(s);
-  if (current == null) {
-    showToast('pipeline_audit on this row is not valid JSON. Fix that before the brain check can save.', { tone: 'error' });
-    return;
-  }
-  const stamp = buildHumanQaStamp(form.checks, form.notes, editorLabel(user), new Date().toISOString());
-  const nextAudit = applyHumanQa(current, stamp);
-  if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
-    s.pipeline_audit = nextAudit;
-    renderDash();
-    if (prepState && prepState.id === id) renderPrep();
-    showToast('Brain check saved.');
-    return;
-  }
-  qaSaving = true;
-  const go = humanQaFormRoot(id) && humanQaFormRoot(id).querySelector('.qa-go');
-  if (go) go.disabled = true;
-  let data = null, error = null;
-  try {
-    ({ data, error } = await sb.from('scripts').update({ pipeline_audit: nextAudit }).eq('id', s.id).select('id'));
-  } catch (e) { error = e; }
-  qaSaving = false;
-  if (error || !data || data.length !== 1) {
-    if (error) console.error(error);
-    showToast(error ? ('Could not save the brain check: ' + (error.message || error)) : SESSION_EXPIRED_MSG, { tone: 'error' });
-    renderDash();
-    if (prepState && prepState.id === id) renderPrep();
-    return;
-  }
-  s.pipeline_audit = nextAudit;
-  renderDash();
-  if (prepState && prepState.id === id) renderPrep();
-  showToast('Brain check saved. You can send this when you are ready.');
+  let stamp = buildHumanQaStamp(form.checks, form.notes, editorLabel(user), new Date().toISOString());
+  stamp.scriptHash = humanQaScriptHash(s);
+  const phase = humanQaFormPhase(id);
+  if (phase === 'start' || phase === 'end') stamp = attachHumanQaFilm(stamp, phase, stamp.scriptHash);
+  const toast = phase === 'end'
+    ? 'End check saved. This film read is finished.'
+    : (phase === 'start'
+      ? 'Start check saved. Read the script, then sign again when you finish.'
+      : 'Brain check saved. You can send this when you are ready.');
+  await persistHumanQaStamp(s, stamp, toast);
+};
+window.confirmHumanQaFilm = async (id, phase) => {
+  if (role !== 'admin' || qaSaving) return;
+  const s = scripts.find(x => x.id === id);
+  if (!s || !humanQaDeliveryReady(s)) return;
+  const qa = humanQaFrom(s) || {};
+  let stamp = buildHumanQaStamp(qa.checks, qa.notes, qa.by || editorLabel(user), qa.at || new Date().toISOString());
+  stamp.complete = true;
+  stamp = attachHumanQaFilm(stamp, phase === 'end' ? 'end' : 'start', humanQaScriptHash(s));
+  const toast = phase === 'end'
+    ? 'End check saved. This film read is finished.'
+    : 'Start check saved. Read the script, then sign again when you finish.';
+  await persistHumanQaStamp(s, stamp, toast);
 };
 // (No `window.requestTweak = (id) => requestTweak(id)` alias here -- there used to be one, and it
 // broke the Tweak button outright: a top-level `function requestTweak` in a classic script

@@ -42,8 +42,8 @@ const names = [
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepReferenceStep', 'prepTabReachable',
   'prepShowsStamp', 'prepStampBlocksTabs', 'prepQaHintHtml', 'prompterCanShowReference', 'prepStepBody',
-  'humanQaNotePlaceholder', 'reviewHasResources', 'prepReadBodyHtml', 'clientLabel',
-  'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash',
+  'humanQaNotePlaceholder', 'reviewHasResources', 'reviewReferenceHtml', 'prepReadBodyHtml', 'clientLabel',
+  'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash',
   'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
   'vaultDnaValueFilled', 'vaultDnaAliases', 'formatCountsAsRecipe', 'vaultEmptyTitle', 'vaultEmptyBlocksStatus',
   'humanQaFormatSummary', 'humanQaFormatFieldsHtml',
@@ -64,7 +64,7 @@ const names = [
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
   'prepAuditHtml',
-  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -707,36 +707,41 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.2');
+assert.strictEqual(appVersion, '2026.10.28.3');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.2');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.3');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.ok(/vault-empty|Format Vault/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Accept/.test(firstUnseen[0].items.join(' ')));
-assert.ok(/brain check|review queue|stamp/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/client/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/sent/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/reference/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/Devin/.test(firstUnseen[0].items.join(' ')));
-assert.ok(/keepers/i.test(firstUnseen[0].items.join(' ')));
-assert.ok(/browsable/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '2026.10.28.2').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '2026.10.24.2')[0].version, '2026.10.28.2');
+const releaseNotes = firstUnseen[0].items.join(' ');
+assert.ok(/Format Vault/.test(releaseNotes));
+assert.ok(/sticky|locked/i.test(releaseNotes));
+assert.ok(/poster/i.test(releaseNotes));
+assert.ok(/Accept/.test(releaseNotes));
+assert.ok(/brain check/i.test(releaseNotes));
+assert.ok(/client/i.test(releaseNotes));
+assert.ok(/sent/i.test(releaseNotes));
+assert.ok(/reference/i.test(releaseNotes));
+assert.ok(/Devin/.test(releaseNotes));
+assert.ok(/keepers/i.test(releaseNotes));
+assert.ok(/optional/i.test(releaseNotes));
+assert.ok(/Clients/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.3');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.28.3').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '2026.10.24.2')[0].version, '2026.10.28.3');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1512,7 +1517,7 @@ assert.strictEqual(ctx.isRlaClient('jan-rla'), true);
 assert.strictEqual(ctx.isRlaClient('andrew'), false);
 assert.ok(ctx.humanQaChecks({ client_slug: 'jan' }).some(c => /Monica|Rich Life|leadership/i.test(c.label)));
 assert.ok(ctx.humanQaChecks({ client_slug: 'andrew' }).some(c => /thesis filter/i.test(c.label)));
-assert.strictEqual(ctx.humanQaChecks({ client_slug: 'jan' }).map(c => c.key).join(','), 'readFull,notVerbatim,thesisFilter,shareable');
+assert.strictEqual(ctx.humanQaChecks({ client_slug: 'jan' }).map(c => c.key).join(','), 'nicheShift,thesisVoice,shareable,referenceOpened');
 assert.strictEqual(ctx.humanQaNotesOk('looks fine'), false);
 assert.strictEqual(ctx.humanQaNotesOk('AI finished'), false);
 assert.strictEqual(ctx.humanQaNotesOk('Leadership angle, not a copy of the reel, shareable with their team.'), true);
@@ -1538,13 +1543,17 @@ assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Approved'), false);
 assert.strictEqual(ctx.currentAuditObject(signedScript).offer, 'Keep offer');
 assert.strictEqual(ctx.currentAuditObject(signedScript).humanQa.notes.indexOf('Leadership') !== -1, true);
 assert.strictEqual(ctx.humanQaValidate({ readFull: true, notVerbatim: true, thesisFilter: true, shareable: false }, signedQa.notes).ok, false);
-assert.strictEqual(ctx.humanQaValidate(signedQa.checks, 'ok').ok, false);
+assert.strictEqual(ctx.humanQaValidate(signedQa.checks, '').ok, true);
+assert.strictEqual(ctx.humanQaValidate(signedQa.checks, 'ok').ok, true);
 assert.strictEqual(ctx.humanQaValidate(signedQa.checks, signedQa.notes).ok, true);
+assert.strictEqual(ctx.buildHumanQaStamp(signedQa.checks, '', 'Cristian', '2026-10-28T00:00:00.000Z').complete, true);
+assert.strictEqual(ctx.buildHumanQaStamp({ nicheShift: true, thesisVoice: true, shareable: true }, '', 'Cristian', '2026-10-28T00:00:00.000Z').complete, false);
 ctx.role = 'admin';
 const unsignedHtml = ctx.prepAuditHtml({ id: 'qa-2', title: 'Bare QA', client_slug: 'jan', status: 'Needs Review' });
 assert.ok(unsignedHtml.includes('Cristian brain check'));
-assert.ok(unsignedHtml.includes('personally read the full script'));
-assert.ok(unsignedHtml.includes('not a verbatim'));
+assert.ok(unsignedHtml.includes('DNA niche-shift'));
+assert.ok(unsignedHtml.includes('Reference opened'));
+assert.ok(unsignedHtml.includes('Optional'));
 assert.ok(/Monica|Rich Life|leadership/i.test(unsignedHtml));
 assert.ok(unsignedHtml.includes('Why this is good to send'));
 assert.ok(unsignedHtml.includes('Mark client-ready is blocked'));
@@ -1572,12 +1581,17 @@ assert.ok(!reviewGate.includes('Sign the brain check'));
 assert.ok(reviewGate.includes('dna-strip'));
 assert.ok(reviewGate.includes('Hook locked'));
 assert.ok(!reviewGate.includes('class="audit-dna"'));
-assert.ok(reviewGate.includes('personally read the full script'));
+assert.ok(reviewGate.includes('DNA niche-shift'));
+assert.ok(reviewGate.includes('Thesis / voice'));
+assert.ok(reviewGate.includes('Reference opened'));
+assert.ok(reviewGate.includes('The note is optional'));
+assert.ok(reviewGate.includes('reference reel is on this screen'));
+assert.ok(!reviewGate.includes('write why this is good to send'));
 assert.ok(reviewGate.includes('Mark client-ready is blocked'));
 assert.ok(reviewGate.includes('Myth-buster / contrarian'));
 assert.ok(reviewGate.includes('name="qa-format"'));
 assert.ok(reviewGate.includes('Signing still works if you skip this'));
-assert.ok(reviewGate.includes('Open Reference'));
+assert.ok(!reviewGate.includes('Open Reference to compare'));
 assert.ok(!reviewGate.includes("moveStatus('qa-r'"));
 const devinGate = ctx.renderHumanQaGate({ id: 'qa-d', client_slug: 'devin', status: 'Draft' }, 'review');
 assert.ok(devinGate.includes('Greenscreen'));
@@ -1805,15 +1819,26 @@ assert.ok(vaultHtml.includes('Lane · cross-industry'));
 assert.ok(vaultHtml.includes('Lane · niche'));
 assert.ok(!vaultHtml.includes('Lane · competitors'));
 assert.ok(!/apify|scrapecreators|sandcastles|instagram\.com\/api/i.test(vaultHtml));
-assert.ok(!/<a [^>]*href=/i.test(vaultHtml));
+assert.ok(vaultHtml.includes('class="vault-sticky"'));
+assert.ok(vaultHtml.includes('href="https://www.instagram.com/reel/Dej6DYnye-H/"'));
+assert.ok(vaultHtml.includes('vault-poster'));
+assert.ok(vaultHtml.includes('Tap Devin'));
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Approved'), true);
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Needs Review'), false);
 const devinVault = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'devin');
 assert.ok(devinVault.includes('Dej6DYnye-H'));
+assert.ok(devinVault.includes('class="vault-sticky"'));
+assert.ok(devinVault.includes('>Devin Shea</h2>'));
+assert.ok(devinVault.includes('vault-poster'));
+assert.ok(!devinVault.includes('No thumbnail yet'));
 assert.ok(!devinVault.includes('Keepers are not decided yet.'));
 const janVaultHtml = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'jan');
 assert.ok(janVaultHtml.includes('Keepers are not decided yet.'));
+assert.ok(janVaultHtml.includes('No thumbnail yet'));
+assert.ok(janVaultHtml.includes('Tap Devin'));
+assert.ok(janVaultHtml.includes("setFormatVaultFilter('devin')"));
 assert.ok(!/instagram\.com\/reel\//.test(janVaultHtml));
+assert.ok(!/<a [^>]*href=/i.test(janVaultHtml));
 assert.ok(!ctx.formatVaultCatalog().clients.some(client => client.slug === 'andrew'));
 const tutorialsBrowse = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'devin', 'tutorials');
 assert.ok(tutorialsBrowse.includes('setFormatVaultFormat(\'tutorials\')'));
@@ -1823,6 +1848,9 @@ assert.ok(!tutorialsBrowse.includes('<h3>Competitors</h3>'));
 assert.ok(tutorialsBrowse.includes('class="vault-reel-row"'));
 assert.ok(tutorialsBrowse.includes('Previous reel'));
 assert.ok(tutorialsBrowse.includes('Next reel'));
+assert.ok(tutorialsBrowse.includes('class="vault-sticky"'));
+assert.ok(tutorialsBrowse.includes('vault-poster'));
+assert.ok(tutorialsBrowse.includes('data:image/svg+xml'));
 assert.ok(tutorialsBrowse.includes('href="https://www.instagram.com/reel/Dej6DYnye-H/"'));
 assert.ok(tutorialsBrowse.includes('href="https://www.instagram.com/reel/De7Kwg_hCLn/"'));
 assert.ok(tutorialsBrowse.includes('25.3x'));
@@ -1833,7 +1861,9 @@ assert.ok(tipsBrowse.includes('<h3>Cross-industry</h3>'));
 assert.ok(!tipsBrowse.includes('<h3>Competitors</h3>'));
 const janBrowse = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'jan', 'reaction');
 assert.ok(janBrowse.includes('Keepers are not decided yet.'));
+assert.ok(janBrowse.includes('Tap Devin'));
 assert.ok(!janBrowse.includes('class="vault-reel-row"'));
+assert.ok(!janBrowse.includes('vault-poster'));
 assert.ok(!/<a [^>]*href=/i.test(janBrowse));
 assert.ok(!/<h3>Competitors<\/h3>/.test(tutorialsBrowse + tipsBrowse + janBrowse));
 const recipeCard = ctx.formatVaultCardHtml({
@@ -1856,7 +1886,8 @@ assert.ok(recipeCard.includes('idea · one move'));
 assert.ok(recipeCard.includes('emotionalNext · save it'));
 assert.ok(!recipeCard.includes('components ·'));
 assert.ok(!/apify|scrapecreators|sandcastles/i.test(recipeCard));
-assert.ok(!/<a [^>]*href=/i.test(recipeCard));
+assert.ok(recipeCard.includes('href="https://example.com/reel/ABC123xyz"'));
+assert.ok(recipeCard.includes('vault-poster'));
 assert.ok(vaultHtml.includes('No thumbnail yet'));
 assert.ok(!vaultHtml.includes('moveStatus'));
 assert.ok(!vaultHtml.includes('Mark client-ready'));
@@ -1964,7 +1995,7 @@ const prefilled = ctx.renderHumanQaGate({
 }, 'review');
 assert.ok(prefilled.includes(why));
 assert.ok(prefilled.includes('>Accept</button>'));
-assert.ok(!/<button type="button" class="qa-go" disabled onclick="window.submitHumanQa\('qa-pre'\)">Accept<\/button>/.test(prefilled));
+assert.ok(/<button type="button" class="qa-go" disabled onclick="window.submitHumanQa\('qa-pre'\)">Accept<\/button>/.test(prefilled));
 assert.ok(prefilled.includes("onclick=\"window.submitHumanQa('qa-pre')\""));
 assert.ok(!prefilled.includes('submitHumanQa(\'qa-pre\');'));
 const canned = ctx.renderHumanQaGate({
@@ -2056,6 +2087,38 @@ assert.ok(needsBrainBtn.includes('Mark client-ready'));
 assert.ok(needsBrainBtn.includes('disabled'));
 assert.ok(needsBrainBtn.includes('Finish the Cristian brain check first'));
 assert.ok(!needsBrainBtn.includes("moveStatus('ver-ready','Approved')"));
+const withReel = ctx.prepReadBodyHtml({
+  title: 'Growth Reveals Your Circle',
+  client_slug: 'jan',
+  hook: 'I do not care how long lunch takes.',
+  full_script: 'The spoken body stays on screen.',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+});
+assert.ok(withReel.includes('class="review-ref"'));
+assert.ok(withReel.includes('Open reel'));
+assert.ok(withReel.includes('href="https://www.instagram.com/reel/C96PhruO6BC/"'));
+assert.ok(withReel.includes('vault-poster'));
+assert.ok(withReel.includes('I do not care how long lunch takes.'));
+const noReel = ctx.prepReadBodyHtml({
+  title: 'No reel',
+  client_slug: 'jan',
+  hook: 'Hook only',
+  full_script: 'Body only',
+});
+assert.ok(!noReel.includes('class="review-ref"'));
+assert.ok(!noReel.includes('Open reel'));
+assert.ok(!noReel.includes('instagram.com/reel'));
+assert.ok(script.includes('class="client-jump"'));
+assert.ok(script.includes('window.exitToClients'));
+assert.ok(script.includes('window.openClientResources'));
+assert.ok(script.includes('>Clients</button>'));
+assert.ok(script.includes('>Resources</button>'));
+const exitAt = script.indexOf('window.exitToClients =');
+const exitSrc = script.slice(exitAt, script.indexOf('window.openClientResources =', exitAt));
+assert.ok(/viewAsOpen = true/.test(exitSrc));
+const openVaultAt = script.indexOf('window.openFormatVault =');
+const openVaultSrc = script.slice(openVaultAt, script.indexOf('window.setFormatVaultFilter', openVaultAt));
+assert.ok(/vaultSlugKey\(row\.client_slug\) === 'devin'/.test(openVaultSrc));
 assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Approved'), false);
 assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Needs Review'), false);
 const blocksAt = script.indexOf('function humanQaBlocksStatus');

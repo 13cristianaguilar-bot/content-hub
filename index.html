@@ -1725,7 +1725,19 @@ const FORMAT_VAULT = {
               "handle": "",
               "note": "Seed from Jan reaction titles."
             }
-          ]
+          ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "education",
@@ -1733,7 +1745,19 @@ const FORMAT_VAULT = {
           "niche": "Direct teaching for the top network marketers",
           "summary": "One idea, said straight. Leadership or growing as a person is the path. No vague hedge.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "lists",
@@ -1741,7 +1765,19 @@ const FORMAT_VAULT = {
           "niche": "Numbered lessons a team can pass on",
           "summary": "A counted list. Each beat is something their audience can hand to the team.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "interview",
@@ -1749,7 +1785,19 @@ const FORMAT_VAULT = {
           "niche": "A conversation that still passes the thesis",
           "summary": "Question and answer. The prompt stays inside the Rich Life thesis.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "myth-buster",
@@ -1757,7 +1805,19 @@ const FORMAT_VAULT = {
           "niche": "Contrarian to rank-chase, loyal to leadership",
           "summary": "Name the myth, then flip it toward leadership or growing as a person.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         }
       ]
     },
@@ -1802,7 +1862,19 @@ const FORMAT_VAULT = {
           "niche": "Fundraising and community",
           "summary": "Walk through one move the viewer can copy.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "tips-hacks",
@@ -1810,7 +1882,19 @@ const FORMAT_VAULT = {
           "niche": "Fundraising and community",
           "summary": "One practical tip with a fast payoff.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "greenscreen",
@@ -1818,7 +1902,19 @@ const FORMAT_VAULT = {
           "niche": "Fundraising and community",
           "summary": "Creator in front of a clip, a page, or a screenshot.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "whiteboard",
@@ -1826,7 +1922,19 @@ const FORMAT_VAULT = {
           "niche": "Fundraising and community",
           "summary": "Draw the point while talking.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         },
         {
           "id": "reaction",
@@ -1834,7 +1942,19 @@ const FORMAT_VAULT = {
           "niche": "Fundraising and community",
           "summary": "React to a clip, then give the Devin take.",
           "thumbnail": "",
-          "creators": []
+          "creators": [],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
         }
       ]
     }
@@ -4229,18 +4349,71 @@ function formatVaultHandle(person) {
   if (handle) return handle.charAt(0) === '@' ? handle : ('@' + handle);
   return asText(person.name).trim();
 }
-function formatVaultPeopleHtml(people) {
+function vaultEmptyRecipeCopy() {
+  return 'No recipes filed yet. Run success-recipes and file the sheet.';
+}
+function clientHasEmptyVault(client) {
+  const formats = (client && client.formats) || [];
+  const locked = formats.filter(format => format && asText(format.id).trim()).length;
+  if (!locked) return false;
+  return !formats.some(formatCountsAsRecipe);
+}
+function formatVaultPeopleHtml(people, opts) {
   const list = (people || []).map(formatVaultHandle).filter(Boolean);
-  if (!list.length) return '<p class="vault-empty">No creator examples filed yet.</p>';
+  if (!list.length) {
+    const copy = opts && opts.emptyRecipe ? vaultEmptyRecipeCopy() : 'No creator examples filed yet.';
+    return '<p class="vault-empty">' + escHtml(copy) + '</p>';
+  }
   return '<div class="vault-handles">' + list.map(name => '<span class="vault-handle">' + escHtml(name) + '</span>').join('') + '</div>';
+}
+function formatVaultDnaLines(dna) {
+  if (!dna || typeof dna !== 'object' || Array.isArray(dna)) return [];
+  const aliases = vaultDnaAliases();
+  const lines = [];
+  Object.keys(aliases).forEach(key => {
+    const names = aliases[key];
+    let text = '';
+    for (let i = 0; i < names.length; i++) {
+      const value = dna[names[i]];
+      if (typeof value === 'string' && value.trim()) { text = value.trim(); break; }
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        const why = asText(value.why || value.note || value.text || value.status).trim();
+        if (why) { text = why; break; }
+      }
+    }
+    if (text) lines.push(key + ' · ' + text);
+  });
+  return lines;
+}
+function formatVaultRecipeHtml(card) {
+  card = card || {};
+  const bits = [];
+  const handles = (card.creators || []).map(person => {
+    const handle = asText(person && person.handle).trim();
+    if (!handle) return '';
+    return handle.charAt(0) === '@' ? handle : ('@' + handle);
+  }).filter(Boolean);
+  if (handles.length) bits.push('<p class="vault-recipe">Handle · ' + escHtml(handles.join(' ')) + '</p>');
+  if (card.reelUrl) bits.push('<p class="vault-recipe">Reel · ' + escHtml(card.reelUrl) + '</p>');
+  if (card.shortcode) bits.push('<p class="vault-recipe">Shortcode · ' + escHtml(card.shortcode) + '</p>');
+  formatVaultDnaLines(card.dna).forEach(line => {
+    bits.push('<p class="vault-dna">' + escHtml(line) + '</p>');
+  });
+  if (!bits.length) return '';
+  return '<div class="vault-recipe-block">' + bits.join('') + '</div>';
 }
 function formatVaultCards(catalog, slug) {
   const want = asText(slug).trim().toLowerCase();
   const cards = [];
   formatVaultClients(catalog).forEach(client => {
     if (want && want !== 'all' && client.slug !== want) return;
+    const emptyRecipe = clientHasEmptyVault(client);
     (client.formats || []).forEach(format => {
       if (!format || !format.id) return;
+      const reel = typeof format.reelUrl === 'string' ? format.reelUrl.trim()
+        : (typeof format.reel_url === 'string' ? format.reel_url.trim() : '');
+      const shortcode = typeof format.shortcode === 'string' ? format.shortcode.trim()
+        : (typeof format.short_code === 'string' ? format.short_code.trim() : '');
       cards.push({
         slug: client.slug,
         client: client.name || client.slug,
@@ -4252,6 +4425,10 @@ function formatVaultCards(catalog, slug) {
         summary: format.summary || '',
         creators: Array.isArray(format.creators) ? format.creators : [],
         thumbnail: format.thumbnail || '',
+        reelUrl: reel,
+        shortcode: shortcode,
+        dna: format.dna && typeof format.dna === 'object' && !Array.isArray(format.dna) ? format.dna : null,
+        emptyRecipe: emptyRecipe,
       });
     });
   });
@@ -4270,7 +4447,8 @@ function formatVaultCardHtml(card) {
     + '<h3>' + escHtml(card.label || 'Format') + '</h3>'
     + (niche ? '<p class="vault-niche">' + escHtml(niche) + '</p>' : '')
     + (card.summary ? '<p class="vault-summary">' + escHtml(card.summary) + '</p>' : '')
-    + formatVaultPeopleHtml(card.creators)
+    + formatVaultRecipeHtml(card)
+    + formatVaultPeopleHtml(card.creators, { emptyRecipe: !!card.emptyRecipe })
     + '</div></article>';
 }
 function renderFormatVaultHtml(catalog, slug) {
@@ -4287,15 +4465,20 @@ function renderFormatVaultHtml(catalog, slug) {
   const sections = clients.map(client => {
     const cards = formatVaultCards(catalog, client.slug);
     const meta = [client.industry, client.niche].filter(Boolean).join(' · ');
+    const emptyRecipes = clientHasEmptyVault(client);
     const grid = cards.length
       ? '<div class="vault-grid">' + cards.map(formatVaultCardHtml).join('') + '</div>'
       : '<p class="vault-empty">No locked formats filed for this client yet.</p>';
+    const emptyNote = emptyRecipes
+      ? '<p class="vault-empty vault-recipe-empty">' + escHtml(vaultEmptyRecipeCopy()) + '</p>'
+      : '';
     return '<section class="vault-client" aria-label="' + escHtml(client.name || client.slug) + '">'
       + '<p class="eyebrow">' + escHtml(client.brand || 'Client') + '</p>'
       + '<h2>' + escHtml(client.name || client.slug) + '</h2>'
       + (meta ? '<p class="vault-meta">' + escHtml(meta) + '</p>' : '')
       + (client.note ? '<p class="vault-summary">' + escHtml(client.note) + '</p>' : '')
-      + '<div class="vault-pool"><div class="eyebrow">Creator examples</div>' + formatVaultPeopleHtml(client.creators) + '</div>'
+      + emptyNote
+      + '<div class="vault-pool"><div class="eyebrow">Creator examples</div>' + formatVaultPeopleHtml(client.creators, { emptyRecipe: emptyRecipes }) + '</div>'
       + grid
       + '</section>';
   }).join('');

@@ -64,7 +64,7 @@ const names = [
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
   'prepAuditHtml',
-  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'formatVaultPeopleHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -1787,7 +1787,33 @@ assert.ok(vaultHtml.includes('Nonprofit'));
 assert.ok(vaultHtml.includes('@teamr3set'));
 assert.ok(vaultHtml.includes('@susan_ho'));
 assert.ok(vaultHtml.includes('Tony Robbins'));
-assert.ok(vaultHtml.includes('No creator examples filed yet'));
+assert.ok(vaultHtml.includes('No recipes filed yet. Run success-recipes and file the sheet.'));
+assert.ok(!vaultHtml.includes('No creator examples filed yet'));
+assert.ok(!/apify|scrapecreators|sandcastles|instagram\.com\/api/i.test(vaultHtml));
+assert.ok(!/<a [^>]*href=/i.test(vaultHtml));
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Approved'), true);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Needs Review'), true);
+const recipeCard = ctx.formatVaultCardHtml({
+  client: 'Devin',
+  brand: 'Devin',
+  label: 'Tutorials',
+  niche: 'Fundraising',
+  industry: 'Nonprofit',
+  creators: [{ name: 'Team', handle: '@teamr3set' }],
+  reelUrl: 'https://example.com/reel/ABC123xyz',
+  shortcode: 'ABC123xyz',
+  dna: { hook: 'question open', components: '', rehook: '', cadence: '', length: '', idea: 'one move', reward: '', emotionalNext: 'save it' },
+  emptyRecipe: false,
+});
+assert.ok(recipeCard.includes('Handle · @teamr3set'));
+assert.ok(recipeCard.includes('Reel · https://example.com/reel/ABC123xyz'));
+assert.ok(recipeCard.includes('Shortcode · ABC123xyz'));
+assert.ok(recipeCard.includes('hook · question open'));
+assert.ok(recipeCard.includes('idea · one move'));
+assert.ok(recipeCard.includes('emotionalNext · save it'));
+assert.ok(!recipeCard.includes('components ·'));
+assert.ok(!/apify|scrapecreators|sandcastles/i.test(recipeCard));
+assert.ok(!/<a [^>]*href=/i.test(recipeCard));
 assert.ok(vaultHtml.includes('No thumbnail yet'));
 assert.ok(!vaultHtml.includes('moveStatus'));
 assert.ok(!vaultHtml.includes('Mark client-ready'));

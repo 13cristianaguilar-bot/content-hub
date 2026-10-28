@@ -1500,9 +1500,20 @@ body.prep-open #toast-root {
   align-items: flex-start;
 }
 body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
-.tool-btn[disabled], .shot-actions .is-blocked {
+.tool-btn[disabled], .shot-actions .is-blocked, .qa-go[disabled] {
   opacity: 0.4; cursor: not-allowed;
 }
+.dna-strip, .blocker-badges, .stamp-rail { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+.dna-chip, .blocker-badge {
+  font-size: 12px; font-weight: 700; letter-spacing: 0.03em; padding: 4px 8px; color: #fff;
+}
+.dna-chip.is-pass { background: #1f7a3a; }
+.dna-chip.is-fail, .blocker-badge { background: var(--signal); }
+.stamp-rail button, .stamp-queue-toggle {
+  min-height: 44px; padding: 0 12px; background: #fff; border: 1px solid var(--line); font-weight: 650;
+}
+.pr-skim { border-style: dashed; }
+.pr-sec.is-skim { outline: 2px solid var(--signal); }
 
 </style>
 
@@ -2302,6 +2313,7 @@ let viewSegment = 'conference';
 const VIEW_SEGMENTS = ['conference', 'new', 'other'];
 // Admin list lands on the brain-check queue. Batches (Conference / New / Past) stay one tap away.
 let adminLane = 'review';
+let stampQueueMode = false;
 let moreOpen = false;
 let modal = null;              // null | 'whats-new' | 'new-scripts'
 let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
@@ -3965,8 +3977,50 @@ function reviewQueueOpts() {
   if (typeof role !== 'undefined' && role === 'admin') return { slug: '' };
   return { slug: typeof viewSlug !== 'undefined' ? (viewSlug || '') : '' };
 }
+function stampQueueClientRank(slug) {
+  const key = vaultSlugKey(slug);
+  if (key === 'jan') return 0;
+  if (key === 'devin') return 1;
+  return 9;
+}
+function stampQueueFor(rows, opts) {
+  opts = opts || {};
+  const slug = opts.slug || '';
+  return (rows || []).filter(s => {
+    if (!s || (slug && s.client_slug !== slug)) return false;
+    if (!needsBrainCheck(s)) return false;
+    return stampQueueClientRank(s.client_slug) < 9;
+  }).slice().sort((a, b) => {
+    const by = stampQueueClientRank(a.client_slug) - stampQueueClientRank(b.client_slug);
+    if (by) return by;
+    const title = asText(a.title).localeCompare(asText(b.title));
+    if (title) return title;
+    return asText(a.id).localeCompare(asText(b.id));
+  });
+}
+function stampQueueClients() {
+  const labels = (typeof CLIENTS !== 'undefined' && CLIENTS) || {};
+  return [
+    { slug: 'jan', label: (labels.jan && labels.jan.label) || 'Jan' },
+    { slug: 'devin', label: (labels.devin && labels.devin.label) || 'Devin' },
+  ];
+}
+function stampQueueRailHtml(rows) {
+  const list = rows || [];
+  const buttons = stampQueueClients().map(client => {
+    const mine = list.filter(s => vaultSlugKey(s.client_slug) === client.slug);
+    if (!mine.length) return '';
+    return '<button type="button" class="stamp-rail-btn" onclick="window.openReview(\'' + escHtml(mine[0].id) + '\')">'
+      + escHtml(client.label) + ' <span>' + mine.length + '</span></button>';
+  }).join('');
+  if (!buttons) return '';
+  return '<div class="stamp-rail" role="list" aria-label="Stamp queue">' + buttons + '</div>';
+}
 function reviewQueueScripts() {
-  return reviewQueueFor(typeof scripts !== 'undefined' ? scripts : [], reviewQueueOpts());
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const opts = reviewQueueOpts();
+  if (typeof stampQueueMode !== 'undefined' && stampQueueMode) return stampQueueFor(rows, opts);
+  return reviewQueueFor(rows, opts);
 }
 function renderReviewCard(s, index) {
   const who = clientLabel(s.client_slug);
@@ -3978,6 +4032,7 @@ function renderReviewCard(s, index) {
       <span class="review-top"><span class="batch-card-n">${index + 1}</span>${renderHumanQaBadge(s)}</span>
       <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
       <span class="review-meta">${escHtml(meta)}</span>
+      ${reviewBlockerBadgesHtml(s)}
       ${hook ? `<span class="review-hook">${escHtml(hook)}</span>` : ''}
     </button>
   </article>`;
@@ -3986,10 +4041,14 @@ function renderReviewQueue() {
   const rows = reviewQueueScripts();
   const scoped = viewingAsClient();
   const who = scoped ? clientLabel(previewSlug) : '';
+  const queueOn = typeof stampQueueMode !== 'undefined' && stampQueueMode;
+  const toggle = `<button type="button" class="stamp-queue-toggle" aria-pressed="${queueOn ? 'true' : 'false'}" onclick="window.setStampQueueMode(${queueOn ? 'false' : 'true'})">Stamp Queue Mode</button>`;
+  const rail = queueOn ? stampQueueRailHtml(rows) : '';
   if (!rows.length) {
     return `<section class="review-queue" aria-label="Needs your brain check">
       <div class="eyebrow">Needs your brain check</div>
       <h2 class="review-h">Nothing to stamp</h2>
+      ${toggle}
       <p class="review-empty">${scoped ? 'No unsigned scripts for ' + escHtml(who) + '.' : 'No unsigned scripts across clients.'}</p>
       <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
       <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>
@@ -3999,6 +4058,8 @@ function renderReviewQueue() {
     <div class="eyebrow">Needs your brain check</div>
     <h2 class="review-h">${rows.length} script${rows.length === 1 ? '' : 's'} to read and stamp</h2>
     <p class="review-lead">${scoped ? escHtml(who) + ' only.' : 'Across clients. One tap opens the script.'} Nothing sends until you choose Send.</p>
+    ${toggle}
+    ${rail}
     <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
     <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
     <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>
@@ -6196,7 +6257,72 @@ function prompterChips(s) {
   const labels = model.mode === 'questions'
     ? ['Hook', 'Body'].concat(asText(s.cta).trim() ? ['CTA'] : [])
     : scriptFlow(s).map(sec => sec.label);
-  return labels.map((label, i) => `<button type="button" class="pr-jump" onclick="window.prompterJump(${i})">${escHtml(label)}</button>`).join('');
+  const jumps = labels.map((label, i) => `<button type="button" class="pr-jump" onclick="window.prompterJump(${i})">${escHtml(label)}</button>`).join('');
+  const skims = prompterSkimStops(s).map(seconds =>
+    `<button type="button" class="pr-skim" onclick="window.prompterSkim(${seconds})">${escHtml(skimClockLabel(seconds))}</button>`
+  ).join('');
+  return jumps + skims;
+}
+function clockSeconds(value) {
+  const match = asText(value).match(/(\d{1,2}):(\d{2})/);
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+}
+function skimClockLabel(seconds) {
+  const whole = Math.max(0, Math.round(Number(seconds) || 0));
+  const minutes = Math.floor(whole / 60);
+  const rest = whole % 60;
+  return minutes + ':' + (rest < 10 ? '0' : '') + rest;
+}
+function prompterSkimStops(s) {
+  const flow = scriptFlow(s);
+  let max = 0;
+  let timed = false;
+  flow.forEach(sec => {
+    const n = clockSeconds(sec && sec.time);
+    if (n == null) return;
+    timed = true;
+    if (n > max) max = n;
+  });
+  if (!timed) max = spokenReadSeconds(s);
+  if (!(max > 0)) return [];
+  const cap = Math.max(max, 10);
+  const stops = [];
+  for (let t = 10; t <= cap && stops.length < 18; t += 10) stops.push(t);
+  return stops;
+}
+function prompterSkimTarget(s, offset) {
+  const flow = scriptFlow(s);
+  if (!flow.length) return 0;
+  const seconds = Math.max(0, Number(offset) || 0);
+  const timed = [];
+  flow.forEach((sec, i) => {
+    const start = clockSeconds(sec && sec.time);
+    if (start == null) return;
+    timed.push({ i: i, start: start });
+  });
+  if (timed.length) {
+    let hit = timed[0].i;
+    timed.forEach(item => {
+      if (item.start <= seconds) hit = item.i;
+    });
+    return hit;
+  }
+  const weights = flow.map(sec => {
+    if (!sec || sec.kind === 'clip') return 0;
+    return wordCount(sec.text);
+  });
+  let sum = 0;
+  weights.forEach(weight => { sum += weight; });
+  if (!sum) return 0;
+  const total = Math.max(spokenReadSeconds(s), 10);
+  const ratio = Math.max(0, Math.min(1, seconds / total));
+  let acc = 0;
+  for (let i = 0; i < flow.length; i++) {
+    acc += weights[i] / sum;
+    if (weights[i] > 0 && acc + 1e-9 >= ratio) return i;
+  }
+  return flow.length - 1;
 }
 function queueForScript(id) {
   const scopes = ['fresh', 'flat', 'previous'];
@@ -6508,6 +6634,15 @@ window.prompterJump = (i) => {
   const target = sec.querySelector('p') || sec;
   scroller.scrollTop += target.getBoundingClientRect().top - line.getBoundingClientRect().top;
   prompterSyncProgress();
+};
+window.prompterSkim = (seconds) => {
+  if (!prompterState) return;
+  const s = scripts.find(x => x.id === prompterState.id);
+  if (!s) return;
+  const index = prompterSkimTarget(s, seconds);
+  window.prompterJump(index);
+  const sections = document.querySelectorAll('#prompter .pr-sec');
+  sections.forEach((sec, i) => sec.classList.toggle('is-skim', i === index));
 };
 window.prompterQa = (force) => {
   if (!prompterState || !prompterShowsFilmQa()) return;
@@ -7460,6 +7595,112 @@ function humanQaFilmSurface(surface) {
   if (surface === 'film-end') return 'end';
   return '';
 }
+function humanQaOpsPrefill(s) {
+  const raw = currentAuditObject(s);
+  if (!raw || typeof raw !== 'object') return '';
+  const keys = ['readyWhy', 'ready_why', 'whySend', 'why_send', 'opsNote', 'ops_note'];
+  for (let i = 0; i < keys.length; i++) {
+    const text = asText(raw[keys[i]]).trim();
+    if (text) return text;
+  }
+  return '';
+}
+function pipelineDnaObject(s) {
+  const src = auditSource(s);
+  const raw = (src && src.raw) || {};
+  const dna = raw.dna || raw.formatDna || raw.format_dna;
+  if (dna && typeof dna === 'object' && !Array.isArray(dna)) return dna;
+  return {};
+}
+function dnaFieldIsPass(dna, keys) {
+  const value = auditPick(dna, keys);
+  if (value == null || value === '') return false;
+  return auditCheck(value, 'missing').status === 'pass';
+}
+function thesisResourcePass(s) {
+  let text = '';
+  try {
+    const items = clientResourceItems(s, { role: 'admin', includeAudit: true }) || [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i] || {};
+      const id = asText(item.id || item.key).toLowerCase();
+      const label = asText(item.title || item.label).toLowerCase();
+      if (id !== 'thesis' && label.indexOf('thesis') === -1) continue;
+      const body = asText(item.body_md || item.text || item.title).trim();
+      if (body) { text = body; break; }
+    }
+  } catch (e) {
+    text = '';
+  }
+  if (!text) return false;
+  const status = auditStatus(text);
+  if (status === 'fail' || status === 'gap' || status === 'hold') return false;
+  return true;
+}
+function lengthBandPass(s) {
+  const spoken = (buildAudit(s) || {}).spoken || {};
+  return spoken.status === 'pass';
+}
+function dnaStripHtml(s) {
+  const dna = pipelineDnaObject(s);
+  const chips = [
+    ['Hook locked', dnaFieldIsPass(dna, ['hook', 'hookLocked', 'hook_locked'])],
+    ['Niche-shift', dnaFieldIsPass(dna, ['nicheShift', 'niche_shift', 'niche', 'shift', 'messaging', 'angle', 'voice'])],
+    ['Thesis', thesisResourcePass(s)],
+    ['Length band', lengthBandPass(s)],
+  ];
+  return '<div class="dna-strip" aria-label="DNA strip">' + chips.map(chip =>
+    '<span class="dna-chip ' + (chip[1] ? 'is-pass' : 'is-fail') + '">' + escHtml(chip[0]) + '</span>'
+  ).join('') + '</div>';
+}
+function reviewBlockerBadges(s) {
+  s = s || {};
+  const auditBits = [];
+  const resourceBits = [];
+  try {
+    auditGapItems(s).forEach(item => {
+      auditBits.push(asText(item && item.label) + '\n' + asText(item && item.why));
+    });
+  } catch (e) {}
+  try {
+    const gates = collectConfirmGates(s, (auditSource(s) || {}).raw || {});
+    gates.forEach(gate => auditBits.push(asText(gate && gate.text)));
+  } catch (e) {}
+  const raw = s.pipeline_audit;
+  if (raw && typeof raw === 'object') {
+    try { auditBits.push(JSON.stringify(raw)); } catch (e) {}
+  } else if (typeof raw === 'string') {
+    auditBits.push(raw);
+  }
+  if (asText(s.cta).trim()) auditBits.push(asText(s.cta));
+  try {
+    const items = clientResourceItems(s, { role: 'admin', includeAudit: true }) || [];
+    items.forEach(item => {
+      resourceBits.push([item && item.title, item && item.label, item && item.text, item && item.body_md].map(asText).join('\n'));
+    });
+  } catch (e) {}
+  const auditText = auditBits.join('\n');
+  const resourceText = resourceBits.join('\n');
+  const badges = [];
+  if (/manychat|buyin|\[confirm\]|must lock|before send|green-light/i.test(auditText)) {
+    badges.push({ id: 'buyin', label: 'BUYIN' });
+  }
+  if (/austin/i.test(auditText)) badges.push({ id: 'austin', label: 'Austin empty' });
+  const melRe = /mel\s*rights|\brights\b[^\n]{0,48}\bmel\b|\bmel\b[^\n]{0,48}\brights\b/i;
+  if (melRe.test(auditText) || melRe.test(resourceText)) badges.push({ id: 'mel', label: 'Mel rights' });
+  return badges;
+}
+function reviewBlockerBadgesHtml(s) {
+  const badges = reviewBlockerBadges(s);
+  if (!badges.length) return '';
+  return '<div class="blocker-badges" aria-label="Blockers">' + badges.map(badge =>
+    '<span class="blocker-badge" data-blocker="' + escHtml(badge.id) + '">' + escHtml(badge.label) + '</span>'
+  ).join('') + '</div>';
+}
+function reviewStampAidsHtml(s, surface) {
+  if (surface !== 'review') return '';
+  return reviewBlockerBadgesHtml(s) + dnaStripHtml(s);
+}
 function renderHumanQaGate(s, surface) {
   s = s || {};
   const id = asText(s.id).trim();
@@ -7514,6 +7755,7 @@ function renderHumanQaGate(s, surface) {
       <p class="qa-lead">${lead}</p>
       ${qa.notes ? `<div class="qa-stamp"><p>${escHtml(qa.notes)}</p></div>` : ''}
       ${formatHtml}
+      ${reviewStampAidsHtml(s, surface)}
       ${confirm}
       ${send}
       ${signedBlock}
@@ -7528,10 +7770,13 @@ function renderHumanQaGate(s, surface) {
   ).join('');
   const picked = draft && Array.isArray(draft.formats) ? draft.formats : normalizeQaFormats(qa.formats);
   const formatFields = humanQaFormatFieldsHtml(s, picked);
-  const noteValue = draft ? asText(draft.notes) : '';
+  const noteValue = draft ? asText(draft.notes) : (compact ? humanQaOpsPrefill(s) : '');
   const formId = id ? 'qa-' + (surface || 'form') + '-' + id : '';
+  const acceptOk = humanQaNotesOk(noteValue);
   const submit = id
-    ? `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">Sign the brain check</button>`
+    ? (compact
+      ? `<button type="button" class="qa-go"${acceptOk ? '' : ' disabled'} onclick="window.submitHumanQa('${id}')">Accept</button>`
+      : `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">Sign the brain check</button>`)
     : '';
   const hold = filmPhase === 'end'
     ? '<p class="qa-block">This film read is not finished until you tick every box and write why this is good to send.</p>'
@@ -7550,13 +7795,15 @@ function renderHumanQaGate(s, surface) {
       : (compact
         ? 'Tick every box. Write why this is good to send. Open Reference to compare the reel. You only sign once.'
         : 'AI can draft. You decide if Jan or any other client should see it. Tick every box. Write why this is good to send.'));
+  const noteInput = compact ? ' oninput="window.syncQaAccept(this)"' : '';
+  const aids = reviewStampAidsHtml(s, surface);
   const notes = `${compact ? formatFields : ''}<label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
-    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}">${escHtml(noteValue)}</textarea>
+    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}"${noteInput}>${escHtml(noteValue)}</textarea>
     ${hold}
     ${submit}`;
   const body = compact
-    ? `<div class="qa-body"><p class="qa-kicker">Human QA · Cristian brain check</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}</div><div class="qa-pin">${notes}</div>`
-    : `<p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}${formatFields}${notes}`;
+    ? `<div class="qa-body"><p class="qa-kicker">Human QA · Cristian brain check</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${aids}${boxes}</div><div class="qa-pin">${notes}</div>`
+    : `<p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${aids}${boxes}${formatFields}${notes}`;
   return `<section class="${gateClass}" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>${body}</section>`;
 }
 
@@ -8876,6 +9123,16 @@ function openReview(id) {
   renderPrep();
 }
 window.openReview = openReview;
+window.setStampQueueMode = (on) => {
+  stampQueueMode = !!on;
+  renderDash();
+};
+window.syncQaAccept = (el) => {
+  const root = el && el.closest ? el.closest('.qa-gate') : null;
+  const btn = root ? root.querySelector('.qa-go') : null;
+  if (!btn) return;
+  btn.disabled = !humanQaNotesOk(el && el.value);
+};
 window.toggleReviewResources = (force) => {
   if (!prepState) return;
   const scroller = document.getElementById('prep-scroll');

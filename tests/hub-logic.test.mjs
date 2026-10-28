@@ -27,6 +27,7 @@ const names = [
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
+  'clockSeconds', 'skimClockLabel', 'prompterSkimStops', 'prompterSkimTarget',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
   'resourceKey', 'isResourceCard', 'resolveResourceImage', 'normalizeResourceCard',
   'clientResourcePackSlug', 'clientResourcePack', 'parseClientResources', 'resourceMap',
@@ -51,6 +52,8 @@ const names = [
   'prompterShowsFilmQa', 'prompterShouldForceStart', 'prompterShouldBlockClose',
   'isClientDeliveryStatus', 'humanQaBlocksStatus', 'humanQaValidate',
   'buildHumanQaStamp', 'attachHumanQaFilm', 'staleHumanQaAfterScriptChange', 'applyHumanQa', 'currentAuditObject', 'renderHumanQaBadge',
+  'humanQaOpsPrefill', 'pipelineDnaObject', 'dnaFieldIsPass', 'thesisResourcePass', 'lengthBandPass', 'dnaStripHtml',
+  'reviewBlockerBadges', 'reviewBlockerBadgesHtml', 'reviewStampAidsHtml',
   'renderHumanQaGate', 'prompterFilmQaHtml', 'humanQaFilmSurface', 'renderShotActions', 'formatStamp',
   'auditStatus', 'auditCount', 'auditNumLabel', 'auditScoreLabel', 'auditList', 'auditToolLabel',
   'auditSource', 'auditCheck', 'auditFact', 'parseSecondBand', 'parseClockBand',
@@ -59,7 +62,7 @@ const names = [
   'pacingWritten', 'framingWritten', 'parseLegacyAudit', 'unpackAudit', 'auditOwner', 'gateFromText', 'buildAudit',
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
-  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'nextStampId',
+  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'formatVaultPeopleHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
@@ -1556,7 +1559,12 @@ const reviewGate = ctx.renderHumanQaGate({ id: 'qa-r', client_slug: 'jan', statu
 assert.ok(reviewGate.includes('is-compact'));
 assert.ok(reviewGate.includes('qa-review-qa-r'));
 assert.ok(reviewGate.includes('Fits RLA leadership thesis / shareable.'));
-assert.ok(reviewGate.includes('Sign the brain check'));
+assert.ok(reviewGate.includes('>Accept</button>'));
+assert.ok(reviewGate.includes('disabled'));
+assert.ok(!reviewGate.includes('Sign the brain check'));
+assert.ok(reviewGate.includes('dna-strip'));
+assert.ok(reviewGate.includes('Hook locked'));
+assert.ok(!reviewGate.includes('class="audit-dna"'));
 assert.ok(reviewGate.includes('personally read the full script'));
 assert.ok(reviewGate.includes('Mark client-ready is blocked'));
 assert.ok(reviewGate.includes('Myth-buster / contrarian'));
@@ -1873,5 +1881,94 @@ const sagunReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: '
 assert.ok(sagunReady.includes("moveStatus('act-sagun','Approved')"));
 const cristianReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-cristian', client_slug: 'cristian', status: 'Needs Review' }));
 assert.ok(cristianReady.includes("moveStatus('act-cristian','Approved')"));
+
+const why = 'Leadership angle, not a copy of the reel, shareable with their team.';
+const prefilled = ctx.renderHumanQaGate({
+  id: 'qa-pre',
+  client_slug: 'jan',
+  status: 'Needs Review',
+  pipeline_audit: { readyWhy: why },
+}, 'review');
+assert.ok(prefilled.includes(why));
+assert.ok(prefilled.includes('>Accept</button>'));
+assert.ok(!/<button type="button" class="qa-go" disabled onclick="window.submitHumanQa\('qa-pre'\)">Accept<\/button>/.test(prefilled));
+assert.ok(prefilled.includes("onclick=\"window.submitHumanQa('qa-pre')\""));
+assert.ok(!prefilled.includes('submitHumanQa(\'qa-pre\');'));
+const canned = ctx.renderHumanQaGate({
+  id: 'qa-can',
+  client_slug: 'devin',
+  status: 'Needs Review',
+  pipeline_audit: { readyWhy: 'looks fine' },
+}, 'review');
+assert.ok(/<button type="button" class="qa-go" disabled onclick="window.submitHumanQa\('qa-can'\)">Accept<\/button>/.test(canned));
+const cardSign = ctx.renderHumanQaGate({ id: 'qa-card-sign', client_slug: 'andrew', status: 'Draft' }, 'card');
+assert.ok(cardSign.includes('Sign the brain check'));
+assert.ok(!cardSign.includes('>Accept</button>'));
+const passStrip = ctx.dnaStripHtml({
+  id: 'dna-pass',
+  client_slug: 'jan',
+  hook: 'Leadership is the path for the team.',
+  full_script: 'Leadership is the path for the team. Grow the person before the rank.',
+  cta: 'Comment TEAM',
+  pipeline_audit: {
+    dna: { hook: 'pass', nicheShift: 'fail' },
+    spoken: { lo: 5, hi: 40, scriptSeconds: 12 },
+  },
+});
+assert.ok(passStrip.includes('class="dna-chip is-pass">Hook locked</span>'));
+assert.ok(passStrip.includes('class="dna-chip is-fail">Niche-shift</span>'));
+assert.ok(passStrip.includes('class="dna-chip is-pass">Thesis</span>'));
+assert.ok(passStrip.includes('class="dna-chip is-pass">Length band</span>'));
+assert.ok(!passStrip.includes('audit-dna'));
+const missStrip = ctx.dnaStripHtml({ id: 'dna-miss', client_slug: 'andrew', status: 'Needs Review' });
+assert.ok(missStrip.includes('class="dna-chip is-fail">Hook locked</span>'));
+assert.ok(missStrip.includes('class="dna-chip is-fail">Niche-shift</span>'));
+assert.ok(missStrip.includes('class="dna-chip is-fail">Thesis</span>'));
+assert.ok(missStrip.includes('class="dna-chip is-fail">Length band</span>'));
+assert.strictEqual(ctx.prompterSkimTarget(reaction, 0), 0);
+assert.strictEqual(ctx.prompterSkimTarget(reaction, 10), ctx.prompterSkimTarget(reaction, 12));
+assert.notStrictEqual(ctx.prompterSkimTarget(reaction, 10), ctx.prompterSkimTarget(reaction, 20));
+assert.ok(ctx.prompterSkimStops(reaction).indexOf(10) !== -1);
+const untimed = {
+  hook: 'One two three four five',
+  full_script: 'Six seven eight nine ten eleven twelve thirteen fourteen fifteen',
+  cta: 'Sixteen seventeen',
+};
+assert.strictEqual(ctx.prompterSkimTarget(untimed, 1), 0);
+assert.ok(ctx.prompterSkimTarget(untimed, 40) > ctx.prompterSkimTarget(untimed, 1));
+assert.ok(script.includes('is-skim'));
+assert.ok(script.includes('class="pr-skim"'));
+assert.ok(script.includes('class="pr-jump"'));
+const buyinBadges = ctx.reviewBlockerBadges({ client_slug: 'devin', cta: 'Comment BUYIN', pipeline_audit: { blockers: ['ManyChat must lock before send'] } });
+assert.ok(buyinBadges.some(badge => badge.label === 'BUYIN'));
+const austinBadges = ctx.reviewBlockerBadges({ client_slug: 'devin', pipeline_audit: { gaps: ['Austin proof is empty'] } });
+assert.ok(austinBadges.some(badge => badge.label === 'Austin empty'));
+const melBadges = ctx.reviewBlockerBadges({ client_slug: 'andrew', pipeline_audit: { note: 'Mel rights stay held' } });
+assert.ok(melBadges.some(badge => badge.label === 'Mel rights'));
+assert.strictEqual(ctx.reviewBlockerBadges({ client_slug: 'sagun', title: 'Plain' }).length, 0);
+const signedBuyin = ctx.reviewBlockerBadgesHtml(Object.assign({}, signedScript, {
+  cta: 'Comment BUYIN',
+  pipeline_audit: Object.assign({}, signedScript.pipeline_audit, { blockers: ['BUYIN still open'] }),
+}));
+assert.ok(signedBuyin.includes('BUYIN'));
+assert.ok(signedBuyin.includes('data-blocker="buyin"'));
+assert.deepStrictEqual(ctx.reviewQueueFor(queueRows, { slug: '' }).map(s => s.id), ['final', 'core', 'conf', 'other']);
+assert.deepStrictEqual(ctx.stampQueueFor(queueRows, { slug: '' }).map(s => s.id), ['final', 'conf', 'core']);
+const stampRail = ctx.stampQueueRailHtml(ctx.stampQueueFor(queueRows, { slug: '' }));
+assert.ok(stampRail.includes('Jan'));
+assert.ok(stampRail.includes('Devin'));
+assert.ok(stampRail.includes('stamp-rail'));
+const openAt = script.indexOf('function openReview');
+const openSrc = script.slice(openAt, script.indexOf('window.openReview', openAt));
+assert.ok(/reviewQueueScripts/.test(openSrc));
+const advanceAt = script.indexOf('function advanceReview');
+const advanceSrc = script.slice(advanceAt, script.indexOf('function finishHumanQaUi', advanceAt));
+assert.ok(/stampQueueNext/.test(advanceSrc));
+assert.ok(/nextStampId/.test(script.slice(script.indexOf('function stampQueueNext'), advanceAt)));
+assert.ok(script.includes('Stamp Queue Mode'));
+assert.strictEqual(ctx.prompterShouldBlockClose(signedScript), false);
+assert.strictEqual(ctx.prepStampBlocksTabs(), false);
+assert.strictEqual(ctx.humanQaNotesOk('looks fine'), false);
+assert.strictEqual(ctx.humanQaNotesOk('ok'), false);
 
 console.log('hub-logic tests passed');

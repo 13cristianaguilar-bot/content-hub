@@ -6,7 +6,7 @@
       "brand": "Rich Life Academy",
       "niche": "Network marketing leadership",
       "industry": "Network marketing",
-      "note": "Locked on Call #3. Keep hook, format, idea, and reward. Shift messaging, angle, and voice.",
+      "note": "Locked on Call #3. Keep hook, format, idea, and reward. Shift messaging, angle, and voice. Keepers are not decided yet.",
       "creators": [
         {
           "name": "Tony Robbins",
@@ -149,7 +149,7 @@
       "brand": "Devin",
       "niche": "Fundraising and community",
       "industry": "Nonprofit",
-      "note": "Locked formats for the brain check. Handles below are already named on Devin refs. Per-format recipes and thumbnails are still open.",
+      "note": "Promoted recipes are filed for the locked formats. Thumbnails are still open.",
       "creators": [
         {
           "name": "",
@@ -184,7 +184,112 @@
           "niche": "Fundraising and community",
           "summary": "Walk through one move the viewer can copy.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "cross-industry",
+              "handle": "@williamholmancoaching",
+              "name": "williamholmancoaching",
+              "shortcode": "Dej6DYnye-H",
+              "reelUrl": "https://www.instagram.com/reel/Dej6DYnye-H/",
+              "views": 183290,
+              "outlier": "25.3x",
+              "ageDays": 12,
+              "dna": {
+                "hook": "numbered promise + free plan",
+                "format": "coach teaches steps",
+                "idea": "simple system",
+                "reward": "free program via DM",
+                "cta": "comment KEYWORD",
+                "angle": "Buy-in Readiness score",
+                "messaging": "comment BUYIN"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@fratbuddha",
+              "name": "fratbuddha",
+              "shortcode": "DeAdWCBS2AV",
+              "reelUrl": "https://www.instagram.com/reel/DeAdWCBS2AV/",
+              "views": 5681883,
+              "outlier": "1470.1x",
+              "ageDays": 25,
+              "also": [
+                {
+                  "shortcode": "De7Kwg_hCLn",
+                  "reelUrl": "https://www.instagram.com/reel/De7Kwg_hCLn/",
+                  "views": 118420,
+                  "outlier": "30.6x",
+                  "ageDays": 2
+                }
+              ],
+              "dna": {
+                "hook": "numbered steps / by the end of this video",
+                "format": "talking-head list tutorial",
+                "idea": "simple daily system",
+                "reward": "actionable steps",
+                "cta": "soft",
+                "angle": "3-step Buy-in",
+                "messaging": "Jam prep checklist"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@kienobifilms",
+              "name": "kienobifilms",
+              "shortcode": "De4aGojBRSc",
+              "reelUrl": "https://www.instagram.com/reel/De4aGojBRSc/",
+              "views": 463462,
+              "outlier": "26.7x",
+              "ageDays": 4,
+              "also": [
+                {
+                  "shortcode": "DeMRjZbBmlc",
+                  "reelUrl": "https://www.instagram.com/reel/DeMRjZbBmlc/",
+                  "views": 650931,
+                  "outlier": "37.4x",
+                  "ageDays": 21
+                }
+              ],
+              "dna": {
+                "hook": "break down the layers",
+                "format": "screen/process tutorial",
+                "idea": "demystify craft",
+                "reward": "now I know why",
+                "angle": "layers of buy-in",
+                "messaging": "layers of buy-in"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@callietnguyen",
+              "name": "callietnguyen",
+              "shortcode": "DdZ4zK7IPYo",
+              "reelUrl": "https://www.instagram.com/reel/DdZ4zK7IPYo/",
+              "views": 705607,
+              "outlier": "61.4x",
+              "ageDays": 40,
+              "dna": {
+                "hook": "free workshop",
+                "format": "UGC workshop tutorial + keyword",
+                "cta": "comment WORKSHOP",
+                "messaging": "keyword sibling to williamholmancoaching"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@createwithalena",
+              "name": "createwithalena",
+              "shortcode": "DdRO4Cwxx3o",
+              "reelUrl": "https://www.instagram.com/reel/DdRO4Cwxx3o/",
+              "views": 3691535,
+              "outlier": "74.8x",
+              "ageDays": 44,
+              "dna": {
+                "format": "design tutorial",
+                "idea": "structure reference (edits + why)"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -204,7 +309,131 @@
           "niche": "Fundraising and community",
           "summary": "One practical tip with a fast payoff.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "niche",
+              "handle": "@jonjon.jpeg",
+              "name": "jonjon.jpeg",
+              "shortcode": "Dcj2V8CwNe2",
+              "reelUrl": "https://www.instagram.com/reel/Dcj2V8CwNe2/",
+              "views": 278837,
+              "outlier": "11.2x",
+              "ageDays": 61,
+              "also": [
+                {
+                  "shortcode": "DdZkdzeOZCy",
+                  "reelUrl": "https://www.instagram.com/reel/DdZkdzeOZCy/",
+                  "views": 167020,
+                  "outlier": "6.7x"
+                }
+              ],
+              "dna": {
+                "hook": "familiar neighborhood frustration",
+                "format": "on-location talking head + place B-roll",
+                "idea": "one urbanism principle made concrete",
+                "reward": "now you see the system",
+                "cta": "soft follow/save",
+                "angle": "plans WITH communities",
+                "messaging": "ID3A Jam / Buy-in Readiness / BUYIN"
+              }
+            },
+            {
+              "lane": "niche",
+              "handle": "@strong_towns",
+              "name": "strong_towns",
+              "shortcode": "DdmwEyZgaaG",
+              "reelUrl": "https://www.instagram.com/reel/DdmwEyZgaaG/",
+              "views": 174394,
+              "outlier": "9.3x",
+              "ageDays": 35,
+              "note": "Austin light rail vs highway expansion",
+              "also": [
+                {
+                  "shortcode": "DcJ1oMtDFyF",
+                  "reelUrl": "https://www.instagram.com/reel/DcJ1oMtDFyF/",
+                  "views": 63227,
+                  "outlier": "3.4x"
+                }
+              ],
+              "dna": {
+                "hook": "skip the mega-project / cost hypocrisy",
+                "format": "org talking head",
+                "idea": "incremental + place",
+                "reward": "relief for budget-constrained orgs",
+                "angle": "Austin funder trust via small wins",
+                "messaging": "ID3A co-design / BUYIN"
+              }
+            },
+            {
+              "lane": "niche",
+              "handle": "@lucelianelles",
+              "name": "lucelianelles",
+              "shortcode": "DezeHvbhot6",
+              "reelUrl": "https://www.instagram.com/reel/DezeHvbhot6/",
+              "views": 147186,
+              "outlier": "15.8x",
+              "ageDays": 5,
+              "dna": {
+                "hook": "unfiltered debrief / exact steps",
+                "format": "host + event B-roll",
+                "idea": "intentional gatherings",
+                "reward": "checklist",
+                "cta": "soft / keyword",
+                "angle": "Jam rooms",
+                "messaging": "sessions funders trust"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@raisewithrachelle",
+              "name": "raisewithrachelle",
+              "shortcode": "Dehx5O2huv2",
+              "reelUrl": "https://www.instagram.com/reel/Dehx5O2huv2/",
+              "views": 106357,
+              "outlier": "216.8x",
+              "ageDays": 12,
+              "dna": {
+                "hook": "investor objection",
+                "format": "expert tip list",
+                "idea": "raise mechanics",
+                "reward": "playbook",
+                "cta": "PROCESS",
+                "angle": "foundation/funder yes",
+                "messaging": "BUYIN before the ask"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@martinwang.mp4",
+              "name": "martinwang.mp4",
+              "shortcode": "DdjPyXlxmk2",
+              "reelUrl": "https://www.instagram.com/reel/DdjPyXlxmk2/",
+              "views": 2933037,
+              "outlier": "198.5x",
+              "ageDays": 37,
+              "dna": {
+                "hook": "overlooked setting",
+                "format": "tip talking head",
+                "idea": "one lever",
+                "reward": "could make you…",
+                "angle": "overlooked buy-in habit"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@susan_ho",
+              "name": "susan_ho",
+              "shortcode": "DdovX4Utsqj",
+              "reelUrl": "https://www.instagram.com/reel/DdovX4Utsqj/",
+              "views": 207064,
+              "outlier": "79.5x",
+              "ageDays": 34,
+              "dna": {
+                "hook": "fundraise questions",
+                "format": "conversational objection handling"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -224,7 +453,48 @@
           "niche": "Fundraising and community",
           "summary": "Creator in front of a clip, a page, or a screenshot.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "cross-industry",
+              "handle": "@quiscreates",
+              "name": "quiscreates",
+              "shortcode": "DefR2lHPFs9",
+              "reelUrl": "https://www.instagram.com/reel/DefR2lHPFs9/",
+              "views": 74228,
+              "outlier": "29.1x",
+              "ageDays": 13,
+              "note": "VISUAL classic greenscreen reaction",
+              "dna": {
+                "hook": "hyperbolic claim over background",
+                "format": "greenscreen reaction",
+                "idea": "show the hack in the background",
+                "reward": "shock then save/comment",
+                "cta": "comment flow",
+                "angle": "react to bad top-down plans / show co-design",
+                "messaging": "BUYIN"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@attorneysekou",
+              "name": "attorneysekou",
+              "shortcode": "DeVL2R_sUWx",
+              "reelUrl": "https://www.instagram.com/reel/DeVL2R_sUWx/",
+              "views": 701759,
+              "outlier": "82.0x",
+              "ageDays": 17,
+              "note": "VISUAL GS-family / dual-clip, not always classic floating-face greenscreen",
+              "dna": {
+                "hook": "short spoken line over dramatic footage",
+                "format": "face/voice + full-bleed credited B-roll",
+                "idea": "mindset under pressure",
+                "reward": "emotional push",
+                "cta": "soft",
+                "angle": "funders need to see you will not flinch",
+                "messaging": "BUYIN"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -244,7 +514,55 @@
           "niche": "Fundraising and community",
           "summary": "Draw the point while talking.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "cross-industry",
+              "handle": "@dhruv_wan",
+              "name": "dhruv_wan",
+              "shortcode": "DeWZmg-I0GO",
+              "reelUrl": "https://www.instagram.com/reel/DeWZmg-I0GO/",
+              "views": 541732,
+              "outlier": "67.3x",
+              "ageDays": 17,
+              "note": "VISUAL slides + literal whiteboard",
+              "also": [
+                {
+                  "shortcode": "DelobAXoyMk",
+                  "reelUrl": "https://www.instagram.com/reel/DelobAXoyMk/",
+                  "views": 310643,
+                  "outlier": "38.6x"
+                }
+              ],
+              "dna": {
+                "hook": "frameworks on screen",
+                "format": "talking head + slide overlays + whiteboard set",
+                "idea": "teach one model",
+                "reward": "slides via comment",
+                "cta": "MKT/SALES",
+                "angle": "funder strategy frameworks",
+                "messaging": "comment BUYIN for Buy-in Readiness slides"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@sharransrivatsaa",
+              "name": "sharransrivatsaa",
+              "shortcode": "De4yi-6v7Jn",
+              "reelUrl": "https://www.instagram.com/reel/De4yi-6v7Jn/",
+              "views": 527695,
+              "outlier": "235.5x",
+              "ageDays": 3,
+              "note": "VISUAL talking-head explainer, not a literal marker board",
+              "dna": {
+                "hook": "simple definition question",
+                "format": "founder explainer",
+                "idea": "demystify finance",
+                "reward": "clarity",
+                "angle": "demystify buy-in / ID3A for funders",
+                "messaging": "What is ID3A / Buy-in?"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -264,7 +582,60 @@
           "niche": "Fundraising and community",
           "summary": "React to a clip, then give the Devin take.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "cross-industry",
+              "handle": "@itsjustinlund",
+              "name": "itsjustinlund",
+              "shortcode": "Defc86Vhizk",
+              "reelUrl": "https://www.instagram.com/reel/Defc86Vhizk/",
+              "views": 3451322,
+              "outlier": "510.6x",
+              "ageDays": 13,
+              "dna": {
+                "hook": "react to a scene",
+                "format": "dual-pane / remix",
+                "idea": "translate to niche lesson",
+                "reward": "I'll show you where to start",
+                "cta": "comment keyword",
+                "angle": "react to bad community engagement / top-down plans",
+                "messaging": "BUYIN then Buy-in Readiness"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@brianmayoral",
+              "name": "brianmayoral",
+              "shortcode": "DerwFLMRPp2",
+              "reelUrl": "https://www.instagram.com/reel/DerwFLMRPp2/",
+              "views": 137224,
+              "outlier": "95.0x",
+              "ageDays": 8,
+              "dna": {
+                "hook": "objection moment",
+                "format": "sales reaction/roleplay",
+                "idea": "reframe the no",
+                "reward": "script",
+                "angle": "funder no to Buy-in pivot"
+              }
+            },
+            {
+              "lane": "cross-industry",
+              "handle": "@jess.williamson8",
+              "name": "jess.williamson8",
+              "shortcode": "DeYnogqPuCP",
+              "reelUrl": "https://www.instagram.com/reel/DeYnogqPuCP/",
+              "views": 192276,
+              "outlier": "37.8x",
+              "ageDays": 16,
+              "dna": {
+                "hook": "bare minimum claim",
+                "format": "reaction/stitch energy",
+                "idea": "standards",
+                "reward": "send-to-friend"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {

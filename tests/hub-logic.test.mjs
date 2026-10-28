@@ -43,7 +43,7 @@ const names = [
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepReferenceStep', 'prepTabReachable',
   'prepShowsStamp', 'prepStampBlocksTabs', 'prepQaHintHtml', 'prompterCanShowReference', 'prepStepBody',
   'humanQaNotePlaceholder', 'reviewHasResources', 'reviewReferenceHtml', 'prepReadBodyHtml', 'clientLabel',
-  'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash',
+  'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaReviewAction', 'humanQaContinueWarn', 'humanQaNotesOk', 'humanQaScriptHash',
   'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
   'vaultDnaValueFilled', 'vaultDnaAliases', 'formatCountsAsRecipe', 'vaultEmptyTitle', 'vaultEmptyBlocksStatus',
   'humanQaFormatSummary', 'humanQaFormatFieldsHtml',
@@ -707,41 +707,38 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.3');
+assert.strictEqual(appVersion, '2026.10.28.4');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.3');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.4');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Format Vault/.test(releaseNotes));
-assert.ok(/sticky|locked/i.test(releaseNotes));
-assert.ok(/poster/i.test(releaseNotes));
+assert.ok(/four|boxes/i.test(releaseNotes));
+assert.ok(/Continue/.test(releaseNotes));
 assert.ok(/Accept/.test(releaseNotes));
 assert.ok(/brain check/i.test(releaseNotes));
-assert.ok(/client/i.test(releaseNotes));
-assert.ok(/sent/i.test(releaseNotes));
-assert.ok(/reference/i.test(releaseNotes));
-assert.ok(/Devin/.test(releaseNotes));
-assert.ok(/keepers/i.test(releaseNotes));
 assert.ok(/optional/i.test(releaseNotes));
-assert.ok(/Clients/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.3');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.28.3').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '2026.10.24.2')[0].version, '2026.10.28.3');
+assert.ok(/reel|Instagram|browser/i.test(releaseNotes));
+assert.ok(/sent/.test(releaseNotes));
+assert.ok(/client-ready|client ready/i.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '2026.10.28.4').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.4');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1518,6 +1515,21 @@ assert.strictEqual(ctx.isRlaClient('andrew'), false);
 assert.ok(ctx.humanQaChecks({ client_slug: 'jan' }).some(c => /Monica|Rich Life|leadership/i.test(c.label)));
 assert.ok(ctx.humanQaChecks({ client_slug: 'andrew' }).some(c => /thesis filter/i.test(c.label)));
 assert.strictEqual(ctx.humanQaChecks({ client_slug: 'jan' }).map(c => c.key).join(','), 'nicheShift,thesisVoice,shareable,referenceOpened');
+assert.strictEqual(ctx.humanQaChecks({ client_slug: 'jan' }, { compact: true }).map(c => c.key).join(','), 'nicheShift,thesisVoice,shareable,referenceOpened');
+assert.ok(ctx.humanQaChecks({ client_slug: 'jan' }, { compact: true }).some(c => /Monica|Rich Life/i.test(c.label)));
+const incompleteAction = ctx.humanQaReviewAction({}, '');
+assert.strictEqual(incompleteAction.label, 'Continue');
+assert.strictEqual(incompleteAction.stamp, false);
+assert.strictEqual(incompleteAction.warn, true);
+assert.strictEqual(incompleteAction.allow, true);
+assert.strictEqual(incompleteAction.noteRequired, false);
+const completeAction = ctx.humanQaReviewAction({
+  nicheShift: true, thesisVoice: true, shareable: true, referenceOpened: true,
+}, '');
+assert.strictEqual(completeAction.label, 'Accept');
+assert.strictEqual(completeAction.stamp, true);
+assert.strictEqual(completeAction.warn, false);
+assert.ok(/Mark client-ready still needs all four/.test(ctx.humanQaContinueWarn()));
 assert.strictEqual(ctx.humanQaNotesOk('looks fine'), false);
 assert.strictEqual(ctx.humanQaNotesOk('AI finished'), false);
 assert.strictEqual(ctx.humanQaNotesOk('Leadership angle, not a copy of the reel, shareable with their team.'), true);
@@ -1575,8 +1587,8 @@ const reviewGate = ctx.renderHumanQaGate({ id: 'qa-r', client_slug: 'jan', statu
 assert.ok(reviewGate.includes('is-compact'));
 assert.ok(reviewGate.includes('qa-review-qa-r'));
 assert.ok(reviewGate.includes('Fits RLA leadership thesis / shareable.'));
-assert.ok(reviewGate.includes('>Accept</button>'));
-assert.ok(reviewGate.includes('disabled'));
+assert.ok(reviewGate.includes('>Continue</button>'));
+assert.ok(!/<button type="button" class="qa-go" disabled/.test(reviewGate));
 assert.ok(!reviewGate.includes('Sign the brain check'));
 assert.ok(reviewGate.includes('dna-strip'));
 assert.ok(reviewGate.includes('Hook locked'));
@@ -1585,9 +1597,15 @@ assert.ok(reviewGate.includes('DNA niche-shift'));
 assert.ok(reviewGate.includes('Thesis / voice'));
 assert.ok(reviewGate.includes('Reference opened'));
 assert.ok(reviewGate.includes('The note is optional'));
-assert.ok(reviewGate.includes('reference reel is on this screen'));
+assert.ok(reviewGate.includes('never blocks'));
+assert.ok(reviewGate.includes('Open reel leaves the Hub'));
+assert.ok(reviewGate.includes('qa-note-fold'));
+assert.ok(reviewGate.includes('Why this is good to send, optional'));
+assert.ok(reviewGate.includes('qa-pin'));
+assert.ok(/qa-pin[\s\S]*qa-nicheShift/.test(reviewGate));
+assert.ok(/qa-pin[\s\S]*qa-go/.test(reviewGate));
 assert.ok(!reviewGate.includes('write why this is good to send'));
-assert.ok(reviewGate.includes('Mark client-ready is blocked'));
+assert.ok(reviewGate.includes('Mark client-ready still needs all four'));
 assert.ok(reviewGate.includes('Myth-buster / contrarian'));
 assert.ok(reviewGate.includes('name="qa-format"'));
 assert.ok(reviewGate.includes('Signing still works if you skip this'));
@@ -1994,8 +2012,9 @@ const prefilled = ctx.renderHumanQaGate({
   pipeline_audit: { readyWhy: why },
 }, 'review');
 assert.ok(prefilled.includes(why));
-assert.ok(prefilled.includes('>Accept</button>'));
-assert.ok(/<button type="button" class="qa-go" disabled onclick="window.submitHumanQa\('qa-pre'\)">Accept<\/button>/.test(prefilled));
+assert.ok(prefilled.includes('>Continue</button>'));
+assert.ok(/<button type="button" class="qa-go" onclick="window.submitHumanQa\('qa-pre'\)">Continue<\/button>/.test(prefilled));
+assert.ok(!/<button type="button" class="qa-go" disabled/.test(prefilled));
 assert.ok(prefilled.includes("onclick=\"window.submitHumanQa('qa-pre')\""));
 assert.ok(!prefilled.includes('submitHumanQa(\'qa-pre\');'));
 const canned = ctx.renderHumanQaGate({
@@ -2004,7 +2023,8 @@ const canned = ctx.renderHumanQaGate({
   status: 'Needs Review',
   pipeline_audit: { readyWhy: 'looks fine' },
 }, 'review');
-assert.ok(/<button type="button" class="qa-go" disabled onclick="window.submitHumanQa\('qa-can'\)">Accept<\/button>/.test(canned));
+assert.ok(/<button type="button" class="qa-go" onclick="window.submitHumanQa\('qa-can'\)">Continue<\/button>/.test(canned));
+assert.ok(!/<button type="button" class="qa-go" disabled/.test(canned));
 const cardSign = ctx.renderHumanQaGate({ id: 'qa-card-sign', client_slug: 'andrew', status: 'Draft' }, 'card');
 assert.ok(cardSign.includes('Sign the brain check'));
 assert.ok(!cardSign.includes('>Accept</button>'));
@@ -2068,7 +2088,17 @@ assert.ok(/reviewQueueScripts/.test(openSrc));
 const advanceAt = script.indexOf('function advanceReview');
 const advanceSrc = script.slice(advanceAt, script.indexOf('function finishHumanQaUi', advanceAt));
 assert.ok(/stampQueueNext/.test(advanceSrc));
+assert.ok(/stamped !== false/.test(advanceSrc));
+assert.ok(/Moved on\. Not stamped/.test(advanceSrc));
 assert.ok(/nextStampId/.test(script.slice(script.indexOf('function stampQueueNext'), advanceAt)));
+const submitAt = script.indexOf('window.submitHumanQa = async');
+const submitSrc = script.slice(submitAt, script.indexOf('window.confirmHumanQaFilm = async'));
+assert.ok(/humanQaReviewAction/.test(submitSrc));
+assert.ok(/humanQaFormIsReview/.test(submitSrc));
+assert.ok(/humanQaContinueWarn/.test(submitSrc));
+assert.ok(/window\.confirm/.test(submitSrc));
+assert.ok(/advanceReview\(id, \{ stamped: false \}\)/.test(submitSrc));
+assert.ok(/btn\.disabled = false/.test(script.slice(script.indexOf('window.syncQaAccept ='), script.indexOf('window.toggleReviewResources ='))));
 assert.ok(script.includes('Stamp Queue Mode'));
 assert.strictEqual(ctx.prompterShouldBlockClose(signedScript), false);
 assert.strictEqual(ctx.prepStampBlocksTabs(), false);
@@ -2097,7 +2127,12 @@ const withReel = ctx.prepReadBodyHtml({
 assert.ok(withReel.includes('class="review-ref"'));
 assert.ok(withReel.includes('Open reel'));
 assert.ok(withReel.includes('href="https://www.instagram.com/reel/C96PhruO6BC/"'));
-assert.ok(withReel.includes('vault-poster'));
+assert.ok(withReel.includes('target="_blank"'));
+assert.ok(withReel.includes('rel="noopener noreferrer"'));
+assert.ok(!withReel.includes('vault-poster'));
+assert.ok(!withReel.includes('<iframe'));
+assert.ok(!withReel.includes('/embed/'));
+assert.ok(!withReel.includes('pr-embed'));
 assert.ok(withReel.includes('I do not care how long lunch takes.'));
 const noReel = ctx.prepReadBodyHtml({
   title: 'No reel',

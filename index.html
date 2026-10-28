@@ -1147,19 +1147,53 @@ body.modal-open { overflow: hidden; }
   background: #fff; border: 1px solid var(--line); color: var(--ink); font-weight: 650;
 }
 .review-ref {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  margin: 0 0 12px; padding: 10px 12px; background: #fff; border: 1px solid var(--line);
-  border-top: 2px solid var(--signal); text-decoration: none; color: inherit; min-height: 52px;
+  display: block;
+  margin: 0 0 8px; padding: 8px 10px; background: #fff; border: 1px solid var(--line);
+  border-top: 2px solid var(--signal); color: inherit;
+}
+.review-ref-top {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+}
+.review-ref-meta { min-width: 0; }
+.review-ref-kicker { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0; }
+.review-ref-kicker .eyebrow { margin: 0; }
+.review-format-chip {
+  display: inline-block; margin: 0; padding: 3px 8px;
+  background: var(--ink); color: #fff; font-weight: 650; font-size: 13px;
+  letter-spacing: -0.02em; line-height: 1.2;
+}
+.review-ref-note {
+  margin: 2px 0 0; font-size: 12px; line-height: 1.25; color: var(--muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .review-ref-open {
-  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px;
+  display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 12px;
+  margin-left: auto;
   background: var(--ink); color: #fff; text-decoration: none; font-weight: 650; flex: 0 0 auto;
+}
+.review-ref-row {
+  display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; margin-top: 6px;
+}
+.review-ref-thumb {
+  position: relative; flex: 0 0 44px; scroll-snap-align: start; width: 44px;
+  text-decoration: none; color: inherit;
+}
+.review-ref-poster {
+  width: 44px; height: 56px; object-fit: cover; display: block; background: #171717;
+}
+.review-ref-thumb.is-script .review-ref-poster { outline: 2px solid var(--signal); outline-offset: -2px; }
+.review-ref-score {
+  position: absolute; left: 0; right: 0; bottom: 0; margin: 0; padding: 1px 0 2px;
+  background: rgba(23, 23, 23, 0.78); color: #fff; font-size: 10px; font-weight: 650;
+  letter-spacing: -0.02em; text-align: center; line-height: 1.2;
 }
 .review-script h3 {
   font-family: "Geist Mono", ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--signal); font-weight: 500; margin: 16px 0 6px;
 }
+.review-script h3:first-of-type { margin-top: 8px; }
 .review-hook-full {
   margin: 0; font-size: 22px; line-height: 1.25; letter-spacing: -0.03em; font-weight: 650;
 }
@@ -2412,7 +2446,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.4';
+const APP_VERSION = '2026.10.28.5';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2427,6 +2461,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.5',
+    date: 'October 28, 2026',
+    title: 'Format name and repeat reels on the stamp',
+    items: [
+      'Read shows the locked format on the reference row — Tutorials, Tips / hacks, and the other locked names — without opening Resources.',
+      'When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Each one opens Instagram. One reel on file stays one reel. Jan stays empty until keepers are decided.',
+      'The four brain check boxes and Continue stay visible. The why-note is optional and never blocks. Accept still needs all four boxes. Open reel still leaves the Hub. Nothing is sent. Mark client-ready still needs the brain check.',
+    ],
+    steps: [
+      'Open a Devin script in the stamp queue. The format name sits on the reference row.',
+      'Swipe the creator posters when more than one outlier is on file. Tap one to open Instagram, then come back. The script stays readable.',
+      'Tick the four boxes. Continue can warn, then move on. Mark client-ready stays blocked until all four are saved. Nothing is sent.',
+    ],
+  },
   {
     version: '2026.10.28.4',
     date: 'October 28, 2026',
@@ -5238,7 +5287,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. Tap Open reel to flip to Instagram. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Tap Open reel or a poster to flip to Instagram. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
@@ -8826,14 +8875,244 @@ function reviewHasResources(s) {
     return false;
   }
 }
+function normFormatKey(text) {
+  return asText(text).toLowerCase()
+    .replace(/[_/]+/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+function formatChipLabel(text) {
+  const raw = asText(text).replace(/\s+/g, ' ').trim();
+  if (!raw) return '';
+  const parts = raw.split(/\s*[·•]\s*/).map(part => part.trim()).filter(Boolean);
+  if (!parts.length) return '';
+  let head = parts[0];
+  if (/^[A-J]$/i.test(head) && parts[1]) head = parts[0] + ' · ' + parts[1];
+  if (head.length > 48) {
+    const cut = head.slice(0, 46).replace(/\s+\S*$/, '').trim();
+    head = (cut || head.slice(0, 46)) + '…';
+  }
+  return head;
+}
+function lockedFormatFromText(slug, text) {
+  const options = lockedFormatsForSlug(slug);
+  const head = formatChipLabel(text);
+  const key = normFormatKey(head.split(/\s*[·•]\s*/)[0] || head);
+  if (!key || !options.length) return null;
+  const exact = options.filter(opt => normFormatKey(opt.label) === key || normFormatKey(opt.id) === key)[0];
+  if (exact) return exact;
+  const starts = options.filter(opt => {
+    const label = normFormatKey(opt.label);
+    const id = normFormatKey(opt.id);
+    return (label && key.indexOf(label) === 0) || (id && key.indexOf(id) === 0);
+  })[0];
+  if (starts) return starts;
+  const aliases = [
+    ['tutorials', /^(tutorials?|walkthrough)\b/],
+    ['tips-hacks', /^(tips?|hacks?|tips hacks)\b/],
+    ['greenscreen', /^(greenscreen|green screen)\b/],
+    ['whiteboard', /^(whiteboard|white board)\b/],
+    ['reaction', /^(reactions?|react)\b/],
+    ['myth-buster', /^(myth buster|mythbuster|myth bust|contrarian)\b/],
+    ['lists', /^(lists?|listicle)\b/],
+    ['education', /^education\b/],
+    ['interview', /^interview\b/],
+  ];
+  for (let i = 0; i < aliases.length; i++) {
+    if (!aliases[i][1].test(key)) continue;
+    const hit = options.filter(opt => opt.id === aliases[i][0])[0];
+    if (hit) return hit;
+  }
+  return null;
+}
+function scriptLockedFormat(s) {
+  s = s || {};
+  const raw = asText(s.format).trim();
+  const direction = fdPick(fdObject(s) || {}, 'Format');
+  const mapped = lockedFormatFromText(s.client_slug, raw) || lockedFormatFromText(s.client_slug, direction);
+  if (mapped) return { id: mapped.id, label: mapped.label, locked: true };
+  const qa = humanQaFrom(s);
+  const ids = qa && Array.isArray(qa.formats) ? qa.formats : [];
+  if (ids.length === 1) {
+    const hit = lockedFormatsForSlug(s.client_slug).filter(opt => opt.id === ids[0])[0];
+    if (hit) return { id: hit.id, label: hit.label, locked: true };
+  }
+  const head = formatChipLabel(raw) || formatChipLabel(direction);
+  if (!head) return null;
+  return { id: '', label: head, locked: false };
+}
+function collectIgHandles(text) {
+  const out = [];
+  const re = /@([A-Za-z0-9._]{2,})/g;
+  let found;
+  const raw = asText(text);
+  while ((found = re.exec(raw))) {
+    const handle = found[1].toLowerCase();
+    if (out.indexOf(handle) === -1) out.push(handle);
+  }
+  return out;
+}
+function collectShortcodes(text) {
+  const out = [];
+  const raw = asText(text);
+  function add(code) {
+    const value = asText(code).trim();
+    if (!value || out.indexOf(value) !== -1) return;
+    out.push(value);
+  }
+  const urlRe = /instagram\.com\/(?:[\w.]+\/)?(?:reel|p|tv)\/([\w-]{5,})/gi;
+  let found;
+  while ((found = urlRe.exec(raw))) add(found[1]);
+  const tokenRe = /(?:^|[\s·•|])([A-Za-z0-9_-]{11})(?=$|[\s·•|])/g;
+  while ((found = tokenRe.exec(raw))) {
+    const code = found[1];
+    if (!/[A-Z]/.test(code) && !/\d/.test(code)) continue;
+    add(code);
+  }
+  return out;
+}
+function outlierScore(reel) {
+  const raw = asText(reel && reel.outlier).toLowerCase().replace(/×/g, 'x').replace(/,/g, '');
+  const match = raw.match(/(\d+(?:\.\d+)?)\s*x\b/);
+  if (!match) return null;
+  const n = Number(match[1]);
+  return n === n ? n : null;
+}
+function reelClearsOutlierBar(reel) {
+  const score = outlierScore(reel);
+  if (score == null) return true;
+  return score >= 3;
+}
+function outlierLabel(reel) {
+  const score = outlierScore(reel);
+  if (score == null) return '';
+  const raw = asText(reel && reel.outlier).trim();
+  const match = raw.match(/(\d[\d,]*(?:\.\d+)?)\s*[x×]/i);
+  return match ? (match[1].replace(/,/g, '') + '×') : (String(score) + '×');
+}
+function reviewCreatorProof(s) {
+  s = s || {};
+  const locked = scriptLockedFormat(s);
+  const formats = vaultFormatsForSlug(s.client_slug);
+  const blob = [
+    asText(s.format),
+    fdPick(fdObject(s) || {}, 'Format'),
+    asText(s.reference_clip),
+    asText(s.proof_stats),
+  ].join('\n');
+  const handles = collectIgHandles(blob);
+  const codes = collectShortcodes(blob);
+  const primary = vaultReelShortcode({ reelUrl: asText(s.reference_clip) });
+  if (primary && codes.indexOf(primary) === -1) codes.unshift(primary);
+  let format = null;
+  if (locked && locked.id) format = formats.filter(row => row && row.id === locked.id)[0] || null;
+  function creatorIn(formatRow, codeOnly) {
+    const people = (formatRow && formatRow.creators) || [];
+    let byCode = null;
+    let byHandle = null;
+    people.forEach(person => {
+      const handle = asText(person && person.handle).replace(/^@/, '').trim().toLowerCase();
+      const reels = vaultCreatorReels(person);
+      const codeHit = reels.some(reel => {
+        const code = vaultReelShortcode(reel);
+        return !!(code && codes.indexOf(code) !== -1);
+      });
+      if (codeHit && !byCode) byCode = person;
+      if (!codeOnly && !byHandle && handle && handles.indexOf(handle) !== -1) byHandle = person;
+    });
+    return byCode || byHandle || null;
+  }
+  let person = format ? creatorIn(format, false) : null;
+  if (!person && (!locked || !locked.locked)) {
+    formats.forEach(row => {
+      if (person) return;
+      const hit = creatorIn(row, true);
+      if (!hit) return;
+      person = hit;
+      format = row;
+    });
+  }
+  let display = locked;
+  if (person && format && (!locked || !locked.locked)) {
+    const label = asText(format.label || format.id).trim();
+    if (label) display = { id: format.id, label: label, locked: true };
+  }
+  if (!person || !format) return { format: display, handle: '', reels: [] };
+  const seen = {};
+  const all = vaultCreatorReels(person).filter(reel => {
+    if (!vaultReelWatchUrl(reel)) return false;
+    const key = vaultReelShortcode(reel) || vaultReelWatchUrl(reel);
+    if (!key || seen[key]) return false;
+    seen[key] = true;
+    return true;
+  });
+  const strong = all.filter(reelClearsOutlierBar);
+  const reels = (strong.length ? strong : all).slice();
+  reels.sort((a, b) => {
+    const aPrimary = primary && vaultReelShortcode(a) === primary ? 1 : 0;
+    const bPrimary = primary && vaultReelShortcode(b) === primary ? 1 : 0;
+    if (aPrimary !== bPrimary) return bPrimary - aPrimary;
+    return (outlierScore(b) || 0) - (outlierScore(a) || 0);
+  });
+  return {
+    format: display,
+    handle: formatVaultHandle(person),
+    reels: reels,
+    repeats: strong.length > 1,
+  };
+}
+function reviewRefPosterHtml(reel) {
+  const code = vaultReelShortcode(reel);
+  const src = vaultPosterSrc(reel);
+  const fallback = vaultPosterDataUri(code || 'Reel');
+  const alt = escHtml(code ? ('Reel ' + code) : 'Reel poster');
+  if (src.indexOf('data:image/svg+xml') === 0) {
+    return '<img class="review-ref-poster" src="' + escHtml(src) + '" alt="' + alt + '">';
+  }
+  return '<img class="review-ref-poster" src="' + escHtml(src) + '" alt="' + alt + '" referrerpolicy="no-referrer" data-poster="' + escHtml(fallback) + '" onerror="if(this.dataset.poster){this.onerror=null;this.src=this.dataset.poster}">';
+}
+function reviewCreatorThumbsHtml(proof, watch) {
+  const reels = (proof && proof.reels) || [];
+  if (!reels.length) return { line: '', html: '' };
+  const handle = proof.handle || 'This creator';
+  const many = reels.length > 1;
+  const line = proof.repeats
+    ? (handle + ' repeats · ' + reels.length + ' outliers')
+    : (many
+      ? (handle + ' · ' + reels.length + ' reels on file')
+      : (handle + ' · 1 reel'));
+  const primary = vaultReelShortcode({ reelUrl: watch });
+  const cards = reels.map(reel => {
+    const url = vaultReelWatchUrl(reel);
+    const code = vaultReelShortcode(reel);
+    const score = outlierLabel(reel);
+    const isScript = !!(primary && code === primary);
+    const name = (handle ? handle + ' ' : '') + (score || 'reel') + (isScript ? ' This script' : '');
+    return '<a class="review-ref-thumb' + (isScript ? ' is-script' : '') + '" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer" aria-label="Open reel ' + escHtml(name) + '">'
+      + reviewRefPosterHtml(reel)
+      + (score ? '<span class="review-ref-score">' + escHtml(score) + '</span>' : '')
+      + '</a>';
+  }).join('');
+  return { line: line, html: '<div class="review-ref-row">' + cards + '</div>' };
+}
 function reviewReferenceHtml(s) {
   s = s || {};
   const info = videoInfo(s.reference_clip);
-  if (!info || info.kind === 'text' || !info.watch) return '';
-  return '<a class="review-ref" href="' + escHtml(info.watch) + '" target="_blank" rel="noopener noreferrer" aria-label="Open reference reel">'
-    + '<p class="eyebrow">Reference reel</p>'
-    + '<span class="review-ref-open">Open reel</span>'
-    + '</a>';
+  const watch = info && info.kind !== 'text' && info.watch ? info.watch : '';
+  const proof = reviewCreatorProof(s);
+  const label = proof.format && proof.format.label ? proof.format.label : '';
+  const thumbs = reviewCreatorThumbsHtml(proof, watch);
+  if (!watch && !label && !thumbs.html) return '';
+  const chip = label ? '<span class="review-format-chip">' + escHtml(label) + '</span>' : '';
+  const note = thumbs.line ? '<p class="review-ref-note">' + escHtml(thumbs.line) + '</p>' : '';
+  const open = watch
+    ? '<a class="review-ref-open" href="' + escHtml(watch) + '" target="_blank" rel="noopener noreferrer" aria-label="Open reference reel">Open reel</a>'
+    : '';
+  return '<section class="review-ref" aria-label="Reference reel">'
+    + '<div class="review-ref-top"><div class="review-ref-meta"><p class="review-ref-kicker"><span class="eyebrow">Reference reel</span>' + chip + '</p>' + note + '</div>' + open + '</div>'
+    + thumbs.html
+    + '</section>';
 }
 function prepReadBodyHtml(s) {
   s = s || {};

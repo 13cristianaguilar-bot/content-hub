@@ -42,7 +42,11 @@ const names = [
   'prepPlayer', 'prepTightFact', 'prepReferenceHtml', 'prepStepHtml',
   'prepShowsAudit', 'prepPlan', 'prepContentIndex', 'prepReferenceStep', 'prepTabReachable',
   'prepShowsStamp', 'prepStampBlocksTabs', 'prepQaHintHtml', 'prompterCanShowReference', 'prepStepBody',
-  'humanQaNotePlaceholder', 'reviewHasResources', 'reviewReferenceHtml', 'prepReadBodyHtml', 'clientLabel',
+  'humanQaNotePlaceholder', 'reviewHasResources',
+  'normFormatKey', 'formatChipLabel', 'lockedFormatFromText', 'scriptLockedFormat',
+  'collectIgHandles', 'collectShortcodes', 'outlierScore', 'reelClearsOutlierBar', 'outlierLabel',
+  'reviewCreatorProof', 'reviewRefPosterHtml', 'reviewCreatorThumbsHtml', 'reviewReferenceHtml',
+  'prepReadBodyHtml', 'clientLabel',
   'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaReviewAction', 'humanQaContinueWarn', 'humanQaNotesOk', 'humanQaScriptHash',
   'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
   'vaultDnaValueFilled', 'vaultDnaAliases', 'formatCountsAsRecipe', 'vaultEmptyTitle', 'vaultEmptyBlocksStatus',
@@ -707,13 +711,13 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.4');
+assert.strictEqual(appVersion, '2026.10.28.5');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.4');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.5');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
 assert.ok(/four|boxes/i.test(releaseNotes));
@@ -724,21 +728,22 @@ assert.ok(/optional/i.test(releaseNotes));
 assert.ok(/reel|Instagram|browser/i.test(releaseNotes));
 assert.ok(/sent/.test(releaseNotes));
 assert.ok(/client-ready|client ready/i.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.4');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.5');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '2026.10.28.4').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.4');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', true, '2026.10.28.5').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.5');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2143,6 +2148,99 @@ const noReel = ctx.prepReadBodyHtml({
 assert.ok(!noReel.includes('class="review-ref"'));
 assert.ok(!noReel.includes('Open reel'));
 assert.ok(!noReel.includes('instagram.com/reel'));
+const fratRead = ctx.reviewReferenceHtml({
+  client_slug: 'devin',
+  title: '3-Step Guide to Funder Buy-In (Before the Ask)',
+  format: 'Tutorials · vault D2 · @fratbuddha De7Kwg_hCLn',
+  filming_direction: { Format: '3-step system tutorial (D2 / @fratbuddha). Numbered list talking-head.' },
+  reference_clip: 'https://www.instagram.com/reel/De7Kwg_hCLn/',
+  hook: 'Stop pitching the funder first.',
+  full_script: 'The spoken body stays readable.',
+});
+assert.ok(fratRead.includes('review-format-chip">Tutorials<'));
+assert.ok(!fratRead.includes('vault D2'));
+assert.ok(fratRead.includes('href="https://www.instagram.com/reel/De7Kwg_hCLn/"'));
+assert.ok(fratRead.includes('href="https://www.instagram.com/reel/DeAdWCBS2AV/"'));
+assert.ok(fratRead.includes('@fratbuddha repeats · 2 outliers'));
+assert.ok(fratRead.includes('review-ref-poster'));
+assert.ok(fratRead.includes('review-ref-row'));
+assert.ok(fratRead.includes('This script'));
+assert.ok(fratRead.includes('30.6×'));
+assert.ok(fratRead.includes('1470.1×'));
+assert.ok(!fratRead.includes('vault-poster'));
+assert.ok(!fratRead.includes('vault-reel'));
+assert.ok(!fratRead.includes('<iframe'));
+assert.ok(!fratRead.includes('/embed/'));
+assert.ok(fratRead.includes('target="_blank"'));
+assert.ok(fratRead.includes('rel="noopener noreferrer"'));
+assert.ok(fratRead.includes('>Open reel</a>'));
+const oneReel = ctx.reviewReferenceHtml({
+  client_slug: 'devin',
+  format: 'Tutorials · vault D1 · @williamholmancoaching Dej6DYnye-H',
+  reference_clip: 'https://www.instagram.com/reel/Dej6DYnye-H/',
+});
+assert.ok(oneReel.includes('review-format-chip">Tutorials<'));
+assert.ok(oneReel.includes('@williamholmancoaching · 1 reel'));
+assert.ok(oneReel.includes('Dej6DYnye-H'));
+assert.ok(!oneReel.includes('repeats ·'));
+assert.ok(!oneReel.includes('De7Kwg_hCLn'));
+const tipsRead = ctx.reviewReferenceHtml({
+  client_slug: 'devin',
+  format: 'Tips/hacks · vault D4 · @raisewithrachelle Dehx5O2huv2',
+  reference_clip: 'https://www.instagram.com/reel/Dehx5O2huv2/',
+});
+assert.ok(tipsRead.includes('review-format-chip">Tips / hacks<'));
+assert.ok(!tipsRead.includes('vault D4'));
+assert.ok(tipsRead.includes('· 1 reel'));
+assert.ok(!tipsRead.includes('DeAdWCBS2AV'));
+const janReactionRead = ctx.reviewReferenceHtml({
+  client_slug: 'jan',
+  format: 'Reaction · David Reads Fast stack (C96PhruO6BC) · Mel react-to',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+});
+assert.ok(janReactionRead.includes('review-format-chip">Reaction<'));
+assert.ok(!janReactionRead.includes('David Reads Fast'));
+assert.ok(!janReactionRead.includes('review-ref-row'));
+assert.ok(!janReactionRead.includes('vault-poster'));
+assert.ok(janReactionRead.includes('Open reel'));
+assert.ok(janReactionRead.includes('C96PhruO6BC'));
+const andrewStampRead = ctx.reviewReferenceHtml({
+  client_slug: 'andrew',
+  format: 'Tips · vault A4 · @fratbuddha DeAdWCBS2AV',
+  reference_clip: 'https://www.instagram.com/reel/DeAdWCBS2AV/',
+});
+assert.ok(andrewStampRead.includes('review-format-chip">Tips<'));
+assert.ok(!andrewStampRead.includes('review-ref-row'));
+assert.ok(!andrewStampRead.includes('De7Kwg_hCLn'));
+assert.ok(!andrewStampRead.includes('repeats ·'));
+assert.ok(andrewStampRead.includes('href="https://www.instagram.com/reel/DeAdWCBS2AV/"'));
+assert.strictEqual(ctx.scriptLockedFormat({
+  client_slug: 'jan',
+  format: 'Myth-bust talking-head · Frazer DaLLZdAMta2',
+}).label, 'Myth-buster / contrarian');
+assert.strictEqual(ctx.scriptLockedFormat({
+  client_slug: 'devin',
+  format: 'Greenscreen · vault D8 · @attorneysekou DeVL2R_sUWx',
+}).label, 'Greenscreen');
+assert.strictEqual(ctx.reelClearsOutlierBar({ outlier: '2.9x' }), false);
+assert.strictEqual(ctx.reelClearsOutlierBar({ outlier: '3x' }), true);
+assert.strictEqual(ctx.reelClearsOutlierBar({ outlier: '3.4×' }), true);
+assert.strictEqual(ctx.reelClearsOutlierBar({}), true);
+const lowProof = ctx.reviewCreatorProof({
+  client_slug: 'devin',
+  format: 'Tutorials · vault D2 · @fratbuddha De7Kwg_hCLn',
+  reference_clip: 'https://www.instagram.com/reel/De7Kwg_hCLn/',
+});
+assert.strictEqual(lowProof.repeats, true);
+assert.strictEqual(lowProof.reels.length, 2);
+assert.ok(ctx.prepReadBodyHtml({
+  title: '3-Step Guide to Funder Buy-In (Before the Ask)',
+  client_slug: 'devin',
+  format: 'Tutorials · vault D2 · @fratbuddha De7Kwg_hCLn',
+  hook: 'Stop pitching the funder first.',
+  full_script: 'The spoken body stays readable.',
+  reference_clip: 'https://www.instagram.com/reel/De7Kwg_hCLn/',
+}).includes('Stop pitching the funder first.'));
 assert.ok(script.includes('class="client-jump"'));
 assert.ok(script.includes('window.exitToClients'));
 assert.ok(script.includes('window.openClientResources'));

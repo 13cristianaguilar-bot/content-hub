@@ -1483,6 +1483,26 @@ body.modal-open { overflow: hidden; }
 }
 .vault-empty { margin: 8px 0 0; color: var(--muted); font-size: 14px; line-height: 1.35; }
 .vault-pool { margin: 0 0 12px; }
+.vault-formats { margin-top: 8px; }
+.vault-lane { margin: 12px 0 0; }
+.vault-lane h3 { margin: 0 0 8px; font-size: 16px; letter-spacing: -0.03em; font-weight: 650; }
+.vault-creator { margin: 0 0 14px; }
+.vault-creator h4 { margin: 0 0 6px; font-size: 15px; letter-spacing: -0.02em; }
+.vault-reel-wrap { display: flex; align-items: center; gap: 8px; }
+.vault-reel-row {
+  display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch; flex: 1; min-width: 0; padding-bottom: 4px;
+}
+.vault-reel {
+  flex: 0 0 min(78vw, 280px); scroll-snap-align: start;
+  border: 1px solid var(--line); background: #fff; padding: 12px; min-height: 96px;
+}
+.vault-reel a { color: inherit; word-break: break-all; font-size: 14px; line-height: 1.35; }
+.vault-reel-meta { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.vault-reel-step {
+  flex: 0 0 auto; min-height: 44px; padding: 0 10px;
+  border: 1px solid var(--line); background: #fff; font-size: 13px;
+}
 @media (min-width: 700px) {
   .vault-grid { grid-template-columns: 1fr 1fr; }
 }
@@ -2337,7 +2357,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.1';
+const APP_VERSION = '2026.10.28.2';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2352,6 +2372,22 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.2',
+    date: 'October 28, 2026',
+    title: 'Devin recipes filed, Jan still blocked, reels to browse',
+    items: [
+      'Devin Format Vault recipes are filed. The vault-empty gate clears for Devin only when a locked format has a reel, a shortcode, or filled DNA.',
+      'Jan stays blocked until keepers exist. Keepers are not decided yet, so Mark client-ready stays blocked for Jan.',
+      'Outlier reels are browsable in Format Vault on phone and laptop. Nothing is fetched from Instagram, and nothing is sent.',
+      'One stamp still leaves Reference open. Mark client-ready still requires the brain check. Accept does not stamp by itself.',
+    ],
+    steps: [
+      'Open Format Vault, pick Devin, then a locked format. Niche and cross-industry creators are grouped. Swipe the outlier reels.',
+      'Open Jan. The empty state says keepers are not decided yet. Client-ready stays blocked.',
+      'A stamp still does not send anything. Reference stays open. The brain check still gates client-ready.',
+    ],
+  },
   {
     version: '2026.10.28.1',
     date: 'October 28, 2026',
@@ -2811,6 +2847,7 @@ let listSearch = '';
 // #app, so anything on screen has to live here, not only in the DOM.
 let hubPage = 'main';          // 'main' | 'help' | 'requests' | 'vault' | 'edits'
 let formatVaultFilter = 'all';
+let formatVaultFormatId = '';
 let previousOpen = false;
 // List segments for every client: conference | new | other.
 // Set on sign-in and on setClient via defaultSegmentForClient (conference when that client has any).
@@ -4873,8 +4910,93 @@ function formatVaultCardHtml(card) {
     + formatVaultPeopleHtml(card.creators, { emptyRecipe: !!card.emptyRecipe, client: card.slug })
     + '</div></article>';
 }
-function renderFormatVaultHtml(catalog, slug) {
+function vaultCreatorLane(person) {
+  return asText(person && person.lane).trim().toLowerCase();
+}
+function vaultLaneLabel(lane) {
+  if (lane === 'niche') return 'Niche';
+  if (lane === 'cross-industry') return 'Cross-industry';
+  if (lane === 'competitors') return 'Competitors';
+  return asText(lane);
+}
+function vaultCreatorReels(person) {
+  person = person || {};
+  const reels = [];
+  function push(row) {
+    if (!row || typeof row !== 'object') return;
+    const reelUrl = asText(row.reelUrl || row.reel_url).trim();
+    const shortcode = asText(row.shortcode || row.short_code).trim();
+    if (!reelUrl && !shortcode) return;
+    const reel = {};
+    if (reelUrl) reel.reelUrl = reelUrl;
+    if (shortcode) reel.shortcode = shortcode;
+    if (row.views != null && row.views !== '') reel.views = row.views;
+    if (row.outlier != null && asText(row.outlier).trim()) reel.outlier = asText(row.outlier).trim();
+    if (row.ageDays != null && row.ageDays !== '') reel.ageDays = row.ageDays;
+    reels.push(reel);
+  }
+  push(person);
+  (Array.isArray(person.also) ? person.also : []).forEach(push);
+  return reels;
+}
+function vaultReelRowHtml(reels) {
+  const cards = (reels || []).map(reel => {
+    const url = reel.reelUrl || '';
+    const title = reel.shortcode || url;
+    const meta = [];
+    if (reel.outlier) meta.push(String(reel.outlier));
+    if (reel.views != null && reel.views !== '') meta.push(String(reel.views) + ' views');
+    if (reel.ageDays != null && reel.ageDays !== '') meta.push(String(reel.ageDays) + ' days');
+    const link = url
+      ? '<a href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer">' + escHtml(title) + '</a>'
+      : escHtml(title);
+    return '<article class="vault-reel">' + link + (meta.length ? '<p class="vault-reel-meta">' + escHtml(meta.join(' · ')) + '</p>' : '') + '</article>';
+  }).join('');
+  if (!cards) return '';
+  return '<div class="vault-reel-wrap">'
+    + '<button type="button" class="vault-reel-step" onclick="window.vaultReelStep(this,-1)">Previous reel</button>'
+    + '<div class="vault-reel-row">' + cards + '</div>'
+    + '<button type="button" class="vault-reel-step" onclick="window.vaultReelStep(this,1)">Next reel</button>'
+    + '</div>';
+}
+function formatVaultFormatChips(client, formatId) {
+  const formats = ((client && client.formats) || []).filter(format => format && format.id);
+  return '<div class="filter-row vault-formats" role="tablist" aria-label="Locked formats">' + formats.map(format => {
+    const on = format.id === formatId;
+    return '<button type="button" class="' + (on ? 'is-on' : '') + '" aria-pressed="' + (on ? 'true' : 'false') + '" onclick="window.setFormatVaultFormat(\'' + escHtml(format.id) + '\')">' + escHtml(format.label || format.id) + '</button>';
+  }).join('') + '</div>';
+}
+function formatVaultBrowseHtml(format, client) {
+  format = format || {};
+  const creators = (format.creators || []).filter(person => vaultCreatorReels(person).length || formatVaultDnaLines(person && person.dna).length);
+  if (!creators.length) {
+    return '<p class="vault-empty vault-recipe-empty">' + escHtml(vaultEmptyRecipeCopy(client)) + '</p>';
+  }
+  const groups = {};
+  creators.forEach(person => {
+    const lane = vaultCreatorLane(person);
+    if (!lane) return;
+    if (!groups[lane]) groups[lane] = [];
+    groups[lane].push(person);
+  });
+  const lanes = ['niche', 'cross-industry', 'competitors'].filter(lane => groups[lane] && groups[lane].length);
+  Object.keys(groups).forEach(lane => {
+    if (lanes.indexOf(lane) === -1) lanes.push(lane);
+  });
+  return lanes.map(lane => {
+    const people = groups[lane].map(person => {
+      const dna = formatVaultDnaLines(person.dna).map(line => '<p class="vault-dna">' + escHtml(line) + '</p>').join('');
+      return '<article class="vault-creator"><h4>' + escHtml(formatVaultHandle(person)) + '</h4>'
+        + dna
+        + vaultReelRowHtml(vaultCreatorReels(person))
+        + '</article>';
+    }).join('');
+    return '<section class="vault-lane"><h3>' + escHtml(vaultLaneLabel(lane)) + '</h3>' + people + '</section>';
+  }).join('');
+}
+function renderFormatVaultHtml(catalog, slug, formatId) {
   const filter = asText(slug).trim().toLowerCase() || 'all';
+  const picked = filter === 'all' ? '' : asText(formatId).trim();
   const clients = formatVaultClients(catalog).filter(client => filter === 'all' || client.slug === filter);
   const chips = [{ slug: 'all', name: 'All' }].concat(formatVaultClients(catalog).map(client => ({
     slug: client.slug,
@@ -4888,9 +5010,14 @@ function renderFormatVaultHtml(catalog, slug) {
     const cards = formatVaultCards(catalog, client.slug);
     const meta = [client.industry, client.niche].filter(Boolean).join(' · ');
     const emptyRecipes = clientHasEmptyVault(client);
-    const grid = cards.length
-      ? '<div class="vault-grid">' + cards.map(formatVaultCardHtml).join('') + '</div>'
-      : '<p class="vault-empty">No locked formats filed for this client yet.</p>';
+    const pickedFormat = picked ? (client.formats || []).filter(format => format && format.id === picked)[0] : null;
+    const browse = pickedFormat ? formatVaultBrowseHtml(pickedFormat, client) : '';
+    const picker = filter === 'all' ? '' : formatVaultFormatChips(client, picked);
+    const grid = browse
+      ? browse
+      : (cards.length
+        ? '<div class="vault-grid">' + cards.map(formatVaultCardHtml).join('') + '</div>'
+        : '<p class="vault-empty">No locked formats filed for this client yet.</p>');
     const emptyNote = emptyRecipes
       ? '<p class="vault-empty vault-recipe-empty">' + escHtml(vaultEmptyRecipeCopy(client)) + '</p>'
       : '';
@@ -4900,7 +5027,8 @@ function renderFormatVaultHtml(catalog, slug) {
       + (meta ? '<p class="vault-meta">' + escHtml(meta) + '</p>' : '')
       + (client.note ? '<p class="vault-summary">' + escHtml(client.note) + '</p>' : '')
       + emptyNote
-      + '<div class="vault-pool"><div class="eyebrow">Creator examples</div>' + formatVaultPeopleHtml(client.creators, { emptyRecipe: emptyRecipes, client: client }) + '</div>'
+      + picker
+      + (browse ? '' : '<div class="vault-pool"><div class="eyebrow">Creator examples</div>' + formatVaultPeopleHtml(client.creators, { emptyRecipe: emptyRecipes, client: client }) + '</div>')
       + grid
       + '</section>';
   }).join('');
@@ -4908,7 +5036,7 @@ function renderFormatVaultHtml(catalog, slug) {
   return '<div class="page-stack">'
     + '<button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>'
     + '<article class="page-card"><div class="eyebrow">Admin</div><h2>Format Vault</h2>'
-    + '<p class="vault-lead">Repeatable formats for Jan and Devin. Each card is the niche, the industry, and the creator examples on file. An empty card means the recipe or thumbnail is not filed yet.</p>'
+    + '<p class="vault-lead">Pick a client, then a locked format. Creators are grouped by niche and cross-industry. Swipe the outlier reels. Jan stays empty until keepers are decided.</p>'
     + filters + '</article>'
     + sections
     + empty
@@ -4916,7 +5044,7 @@ function renderFormatVaultHtml(catalog, slug) {
 }
 function renderFormatVaultPage() {
   if (typeof role === 'undefined' || role !== 'admin') return '';
-  return renderFormatVaultHtml(typeof FORMAT_VAULT !== 'undefined' ? FORMAT_VAULT : { clients: [] }, formatVaultFilter);
+  return renderFormatVaultHtml(typeof FORMAT_VAULT !== 'undefined' ? FORMAT_VAULT : { clients: [] }, formatVaultFilter, formatVaultFormatId);
 }
 function renderHelpPage() {
   const guide = FILMING_GUIDE.map(line => `<li>${escHtml(line)}</li>`).join('');
@@ -11038,6 +11166,7 @@ window.openFormatVault = () => {
   if (role !== 'admin') return;
   const slug = (typeof previewSlug !== 'undefined' && previewSlug) || '';
   formatVaultFilter = (slug === 'jan' || slug === 'devin') ? slug : 'all';
+  formatVaultFormatId = '';
   hubPage = 'vault';
   moreOpen = false;
   modal = null;
@@ -11048,8 +11177,23 @@ window.openFormatVault = () => {
 window.setFormatVaultFilter = (slug) => {
   if (role !== 'admin') return;
   formatVaultFilter = asText(slug).trim() || 'all';
+  formatVaultFormatId = '';
   hubPage = 'vault';
   renderDash();
+};
+window.setFormatVaultFormat = (id) => {
+  if (role !== 'admin') return;
+  formatVaultFormatId = asText(id).trim();
+  hubPage = 'vault';
+  renderDash();
+};
+window.vaultReelStep = (btn, dir) => {
+  const wrap = btn && btn.closest ? btn.closest('.vault-reel-wrap') : null;
+  const row = wrap && wrap.querySelector('.vault-reel-row');
+  if (!row) return;
+  const card = row.querySelector('.vault-reel');
+  const width = card ? card.getBoundingClientRect().width : 240;
+  row.scrollBy({ left: (width + 10) * (dir < 0 ? -1 : 1), behavior: 'smooth' });
 };
 window.openHelp = () => {
   if (user) lsSetStr(versionStorageKey(), APP_VERSION);

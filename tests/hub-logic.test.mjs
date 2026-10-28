@@ -64,7 +64,7 @@ const names = [
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
   'prepAuditHtml',
-  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -707,13 +707,13 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.1');
+assert.strictEqual(appVersion, '2026.10.28.2');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.1');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.2');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 assert.ok(/vault-empty|Format Vault/i.test(firstUnseen[0].items.join(' ')));
 assert.ok(/Accept/.test(firstUnseen[0].items.join(' ')));
@@ -721,18 +721,22 @@ assert.ok(/brain check|review queue|stamp/i.test(firstUnseen[0].items.join(' '))
 assert.ok(/client/i.test(firstUnseen[0].items.join(' ')));
 assert.ok(/sent/i.test(firstUnseen[0].items.join(' ')));
 assert.ok(/reference/i.test(firstUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', true, '2026.10.28.1').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', true, '2026.10.24.2')[0].version, '2026.10.28.1');
+assert.ok(/Devin/.test(firstUnseen[0].items.join(' ')));
+assert.ok(/keepers/i.test(firstUnseen[0].items.join(' ')));
+assert.ok(/browsable/i.test(firstUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '').length, 1);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '2026.10.28.2').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', true, '2026.10.24.2')[0].version, '2026.10.28.2');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1811,6 +1815,27 @@ const janVaultHtml = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'jan');
 assert.ok(janVaultHtml.includes('Keepers are not decided yet.'));
 assert.ok(!/instagram\.com\/reel\//.test(janVaultHtml));
 assert.ok(!ctx.formatVaultCatalog().clients.some(client => client.slug === 'andrew'));
+const tutorialsBrowse = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'devin', 'tutorials');
+assert.ok(tutorialsBrowse.includes('setFormatVaultFormat(\'tutorials\')'));
+assert.ok(tutorialsBrowse.includes('<h3>Cross-industry</h3>'));
+assert.ok(!tutorialsBrowse.includes('<h3>Niche</h3>'));
+assert.ok(!tutorialsBrowse.includes('<h3>Competitors</h3>'));
+assert.ok(tutorialsBrowse.includes('class="vault-reel-row"'));
+assert.ok(tutorialsBrowse.includes('Previous reel'));
+assert.ok(tutorialsBrowse.includes('Next reel'));
+assert.ok(tutorialsBrowse.includes('href="https://www.instagram.com/reel/Dej6DYnye-H/"'));
+assert.ok(tutorialsBrowse.includes('href="https://www.instagram.com/reel/De7Kwg_hCLn/"'));
+assert.ok(tutorialsBrowse.includes('25.3x'));
+assert.ok(!/instagram\.com\/api|<iframe/i.test(tutorialsBrowse));
+const tipsBrowse = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'devin', 'tips-hacks');
+assert.ok(tipsBrowse.includes('<h3>Niche</h3>'));
+assert.ok(tipsBrowse.includes('<h3>Cross-industry</h3>'));
+assert.ok(!tipsBrowse.includes('<h3>Competitors</h3>'));
+const janBrowse = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'jan', 'reaction');
+assert.ok(janBrowse.includes('Keepers are not decided yet.'));
+assert.ok(!janBrowse.includes('class="vault-reel-row"'));
+assert.ok(!/<a [^>]*href=/i.test(janBrowse));
+assert.ok(!/<h3>Competitors<\/h3>/.test(tutorialsBrowse + tipsBrowse + janBrowse));
 const recipeCard = ctx.formatVaultCardHtml({
   client: 'Devin',
   brand: 'Devin',

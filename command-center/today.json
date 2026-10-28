@@ -1,60 +1,89 @@
 {
-  "asOf": "2026-10-27T20:00:00-05:00",
+  "asOf": "2026-10-28T07:15:00-05:00",
   "calls": [
     {
       "title": "Cristian and Michael Coaching Call",
       "when": "2026-10-28T17:00:00-05:00",
       "who": "hrostoski@gmail.com",
-      "nextStep": "",
+      "nextStep": "Show up / prep notes",
       "source": "calendar"
     },
     {
-      "title": "Ryan Encinas X Cristian",
+      "title": "Ryan Encinas X Cristian (let’s meet)",
       "when": "2026-11-01T14:00:00-06:00",
       "who": "ryan@theholistichub.org",
-      "nextStep": "",
+      "nextStep": "Confirm agenda",
       "source": "calendar"
     },
     {
       "title": "Cristian X James | 1.1",
       "when": "2026-11-02T11:00:00-06:00",
       "who": "jamesworkonly@gmail.com",
-      "nextStep": "",
+      "nextStep": "Confirm agenda",
       "source": "calendar"
     },
     {
-      "title": "Impromptu Call Oct 27",
-      "when": "",
-      "who": "",
-      "nextStep": "",
+      "title": "Cristian x Paul (YouTube Research)",
+      "when": "2026-11-04T10:00:00-06:00",
+      "who": "paulk@kmadison.com",
+      "nextStep": "Confirm agenda",
+      "source": "calendar"
+    },
+    {
+      "title": "Cristian and Michael Coaching Call",
+      "when": "2026-11-04T17:00:00-06:00",
+      "who": "hrostoski@gmail.com",
+      "nextStep": "Show up / prep notes",
+      "source": "calendar"
+    },
+    {
+      "title": "Impromptu Call (niche outreach coaching)",
+      "when": "2026-10-27",
+      "who": null,
+      "nextStep": "Review Fathom takeaways",
       "source": "fathom",
       "url": "https://fathom.video/calls/878214353"
     },
     {
-      "title": "Jackson x Cristian Oct 21",
-      "when": "",
-      "who": "",
-      "nextStep": "proposal when budget",
+      "title": "Jackson x Cristian (content strategy / retainer talk)",
+      "when": "2026-10-21",
+      "who": "Jackson",
+      "nextStep": "Proposal when he has budget",
       "source": "fathom",
       "url": "https://fathom.video/calls/868229340"
     }
   ],
   "emails": [
     {
-      "to": "",
-      "subject": "Gloria Barrera lawyer",
-      "intent": "",
+      "to": "Gloria Barrera <gloria.barrera@lawhafa.org>",
+      "subject": "Cristian Agui",
+      "intent": "Stale draft in Gmail — mom lawyer thread? Confirm if still needed",
       "status": "draft",
       "source": "gmail"
     },
     {
-      "to": "",
-      "subject": "AIMW check-in",
-      "intent": "",
+      "to": "info@support.aimarketingworld.co",
+      "subject": "Re: FW: check in on Cristian Aguilar",
+      "intent": "Stale AIMW draft — confirm keep or delete",
       "status": "draft",
       "source": "gmail"
     }
   ],
   "podcast": null,
-  "dmBridge": null
+  "dmBridge": null,
+  "notes": {
+    "autoPull": [
+      "google-calendar",
+      "fathom",
+      "gmail-drafts"
+    ],
+    "blankUntil": [
+      "personal-imessage",
+      "ig-dms",
+      "whatsapp-personal",
+      "stripe-cash",
+      "tools-spend-sheet"
+    ],
+    "calendarBookedNotHabits": "Filtered out Reading/Wake/Church/2 Before Noon habits; kept 1:1 and named meetings."
+  }
 }

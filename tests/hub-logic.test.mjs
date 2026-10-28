@@ -64,7 +64,7 @@ const names = [
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
   'prepAuditHtml',
-  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'formatVaultCardHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -1653,6 +1653,9 @@ assert.ok(!signedReady.includes("moveStatus('act-3','Approved')"));
 const andrewSignedReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-andrew', client_slug: 'andrew', status: 'Needs Review' }));
 assert.ok(andrewSignedReady.includes("moveStatus('act-andrew','Approved')"));
 assert.ok(!andrewSignedReady.includes(ctx.vaultEmptyTitle()));
+const devinSignedReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-devin', client_slug: 'devin', status: 'Needs Review' }));
+assert.ok(devinSignedReady.includes("moveStatus('act-devin','Approved')"));
+assert.ok(!devinSignedReady.includes(ctx.vaultEmptyTitle()));
 ctx.role = 'client';
 const clientReview = ctx.renderShotActions({ id: 'act-4', status: 'Needs Review' });
 assert.ok(clientReview.includes('Film this'));
@@ -1790,12 +1793,24 @@ assert.ok(vaultHtml.includes('Nonprofit'));
 assert.ok(vaultHtml.includes('@teamr3set'));
 assert.ok(vaultHtml.includes('@susan_ho'));
 assert.ok(vaultHtml.includes('Tony Robbins'));
-assert.ok(vaultHtml.includes('No recipes filed yet. Run success-recipes and file the sheet.'));
+assert.ok(vaultHtml.includes('Keepers are not decided yet.'));
+assert.ok(!vaultHtml.includes('No recipes filed yet. Run success-recipes and file the sheet.'));
 assert.ok(!vaultHtml.includes('No creator examples filed yet'));
+assert.ok(vaultHtml.includes('https://www.instagram.com/reel/Dej6DYnye-H/'));
+assert.ok(vaultHtml.includes('Lane · cross-industry'));
+assert.ok(vaultHtml.includes('Lane · niche'));
+assert.ok(!vaultHtml.includes('Lane · competitors'));
 assert.ok(!/apify|scrapecreators|sandcastles|instagram\.com\/api/i.test(vaultHtml));
 assert.ok(!/<a [^>]*href=/i.test(vaultHtml));
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Approved'), true);
-assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Needs Review'), true);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Needs Review'), false);
+const devinVault = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'devin');
+assert.ok(devinVault.includes('Dej6DYnye-H'));
+assert.ok(!devinVault.includes('Keepers are not decided yet.'));
+const janVaultHtml = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'jan');
+assert.ok(janVaultHtml.includes('Keepers are not decided yet.'));
+assert.ok(!/instagram\.com\/reel\//.test(janVaultHtml));
+assert.ok(!ctx.formatVaultCatalog().clients.some(client => client.slug === 'andrew'));
 const recipeCard = ctx.formatVaultCardHtml({
   client: 'Devin',
   brand: 'Devin',
@@ -1841,10 +1856,14 @@ assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { emotional: 'warm close' } }
 assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { emotionalNext: { status: '', why: '' } } }), false);
 assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { components: { status: 'pass' } } }), true);
 assert.strictEqual(ctx.vaultFormatsForSlug('jan').some(ctx.formatCountsAsRecipe), false);
-assert.strictEqual(ctx.vaultFormatsForSlug('devin').some(ctx.formatCountsAsRecipe), false);
+assert.strictEqual(ctx.vaultFormatsForSlug('devin').every(ctx.formatCountsAsRecipe), true);
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan', status: 'Needs Review' }, 'Approved'), true);
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan-rla' }, 'Needs Review'), true);
-assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Approved'), true);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Approved'), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ creators: [{ handle: '@williamholmancoaching', reelUrl: 'https://www.instagram.com/reel/Dej6DYnye-H/' }] }), true);
+assert.strictEqual(ctx.formatCountsAsRecipe({ creators: [{ dna: { format: 'coach teaches steps' } }] }), true);
+assert.strictEqual(ctx.formatCountsAsRecipe({ creators: [{ dna: { thumbnail: 'face', creator: 'Tony' } }] }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ creators: [{ name: 'Tony Robbins', handle: '' }] }), false);
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'andrew' }, 'Approved'), false);
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'sagun' }, 'Needs Review'), false);
 assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'cristian' }, 'Approved'), false);

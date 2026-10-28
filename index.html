@@ -1100,7 +1100,7 @@ body.modal-open { overflow: hidden; }
 }
 .prep-stamp {
   flex: 0 0 auto;
-  max-height: min(42dvh, 360px);
+  max-height: min(46dvh, 400px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -1110,26 +1110,29 @@ body.modal-open { overflow: hidden; }
 }
 .prep-stamp .qa-gate { margin: 0; min-height: 0; }
 .prep-stamp .qa-gate.is-compact {
-  display: flex; flex-direction: column; overflow: hidden; max-height: min(42dvh, 360px);
+  display: flex; flex-direction: column; overflow: hidden; max-height: min(46dvh, 400px);
   border: 0; border-top: 3px solid #ed3039; padding: 0;
 }
 @media (max-width: 699px) {
   .prep-stamp,
-  .prep-stamp .qa-gate.is-compact { max-height: min(34dvh, 280px); }
-  .prep-stamp .qa-gate.is-compact h3 { font-size: 16px; }
-  .prep-stamp .qa-lead { font-size: 13px; }
-  .prep-stamp .qa-check { font-size: 13px; padding-top: 6px; }
-  .prep-stamp .qa-notes { min-height: 40px; }
+  .prep-stamp .qa-gate.is-compact { max-height: min(48dvh, 380px); }
+  .prep-stamp .qa-gate.is-compact h3 { font-size: 15px; margin-bottom: 2px; }
+  .prep-stamp .qa-lead { font-size: 12px; }
+  .prep-stamp .qa-pin .qa-check { font-size: 13px; padding-top: 6px; line-height: 1.3; }
+  .prep-stamp .qa-notes { min-height: 56px; }
   .prep-stamp .qa-go { min-height: 44px; }
 }
 .prep-stamp .qa-gate.is-compact.is-done {
   display: block; overflow: auto; padding: 10px 12px 12px;
 }
-.prep-stamp .qa-body { overflow: auto; min-height: 0; padding: 10px 12px 8px; }
+.prep-stamp .qa-body { overflow: auto; min-height: 0; flex: 1 1 auto; padding: 8px 12px 6px; }
 .prep-stamp .qa-pin {
   flex: 0 0 auto; padding: 8px 12px 10px; background: #121212;
   border-top: 1px solid #2a2a2a;
 }
+.prep-stamp .qa-pin .qa-list { margin: 0 0 8px; gap: 2px; }
+.prep-stamp .qa-hint { margin: 0 0 8px; font-size: 12px; line-height: 1.3; color: #bdbdbd; font-weight: 500; }
+.prep-stamp .qa-note-fold { margin-top: 4px; }
 .review-next {
   width: 100%; min-height: 48px; margin: 8px 0 0; padding: 0 14px;
   background: #fff; color: #171717; border: 1px solid #d8d8d8;
@@ -1144,14 +1147,13 @@ body.modal-open { overflow: hidden; }
   background: #fff; border: 1px solid var(--line); color: var(--ink); font-weight: 650;
 }
 .review-ref {
-  display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; align-items: center;
-  margin: 0 0 12px; padding: 8px; background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--signal);
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  margin: 0 0 12px; padding: 10px 12px; background: #fff; border: 1px solid var(--line);
+  border-top: 2px solid var(--signal); text-decoration: none; color: inherit; min-height: 52px;
 }
-.review-ref .vault-poster { width: 84px; aspect-ratio: 9 / 16; object-fit: cover; background: #171717; display: block; }
-.review-ref-copy { min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
 .review-ref-open {
   display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 14px;
-  background: var(--ink); color: #fff; text-decoration: none; font-weight: 650;
+  background: var(--ink); color: #fff; text-decoration: none; font-weight: 650; flex: 0 0 auto;
 }
 .review-script h3 {
   font-family: "Geist Mono", ui-monospace, monospace;
@@ -2410,7 +2412,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.3';
+const APP_VERSION = '2026.10.28.4';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2425,6 +2427,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.4',
+    date: 'October 28, 2026',
+    title: 'Phone brain check — boxes stay up, reel opens out',
+    items: [
+      'On a phone the four brain check boxes and Continue/Accept stay visible. The why-note is a fold and never buries them. The spoken script stays readable above.',
+      'The why-note is optional and never blocks. Continue with empty boxes warns, then lets you move on. Mark client-ready still needs all four boxes.',
+      'Tap Open reel to flip to Instagram or the system browser. There is no in-page player on Read. Nothing is sent.',
+    ],
+    steps: [
+      'Open a script in the stamp queue on a phone. The four boxes and Continue stay on screen. Skip the note if you want.',
+      'Tap Open reel, then flip back to the Hub. Accept when the four boxes are ticked. Continue moves on after a warning.',
+      'Mark client-ready stays blocked until all four boxes are saved. Nothing is sent.',
+    ],
+  },
   {
     version: '2026.10.28.3',
     date: 'October 28, 2026',
@@ -5221,7 +5238,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. The reference reel sits on that screen. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. Tap Open reel to flip to Instagram. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
@@ -8212,7 +8229,8 @@ function prepReferenceHtml(model) {
 }
 // Cristian brain check — admin delivery gate stored on pipeline_audit.humanQa.
 // Clients never see or write this. Status moves to Needs Review / Approved
-// stay blocked until the four boxes are ticked. The why-note is optional.
+// stay blocked until the four boxes are ticked. The why-note is optional
+// and never blocks. Review Continue can advance after a warning.
 const HUMAN_QA_KEYS = ['nicheShift', 'thesisVoice', 'shareable', 'referenceOpened'];
 const HUMAN_QA_NOTE_MIN = 12;
 function isRlaClient(slug) {
@@ -8229,8 +8247,19 @@ function normalizeQaChecks(checks) {
     referenceOpened: checks.referenceOpened === true || checks.readFull === true,
   };
 }
-function humanQaChecks(s) {
+function humanQaChecks(s, opts) {
   const rla = isRlaClient(s && s.client_slug);
+  const compact = !!(opts && opts.compact);
+  if (compact) {
+    return [
+      { key: 'nicheShift', label: 'DNA niche-shift — their angle, not a copy.' },
+      { key: 'thesisVoice', label: rla
+        ? 'Thesis / voice — Rich Life / Monica filter.'
+        : 'Thesis / voice — this client’s filter.' },
+      { key: 'shareable', label: 'Shareable — they would pass this on.' },
+      { key: 'referenceOpened', label: 'Reference opened — I compared the reel.' },
+    ];
+  }
   return [
     { key: 'nicheShift', label: 'DNA niche-shift: same hook, format, idea, and reward — their messaging and angle, not a copy of the reel.' },
     { key: 'thesisVoice', label: rla
@@ -8239,6 +8268,19 @@ function humanQaChecks(s) {
     { key: 'shareable', label: 'Shareable: their audience would pay this forward or share it with their team.' },
     { key: 'referenceOpened', label: 'Reference opened: I opened the reference reel on this screen and compared it to the script.' },
   ];
+}
+function humanQaReviewAction(checks, notes) {
+  const valid = humanQaValidate(checks, notes);
+  return {
+    label: valid.ok ? 'Accept' : 'Continue',
+    stamp: valid.ok,
+    warn: !valid.ok,
+    allow: true,
+    noteRequired: false,
+  };
+}
+function humanQaContinueWarn() {
+  return 'Four boxes are not ticked. Continue anyway? Mark client-ready still needs all four. Nothing is sent.';
 }
 function humanQaNotesOk(notes) {
   const t = asText(notes).replace(/\s+/g, ' ').trim();
@@ -8675,7 +8717,7 @@ function renderHumanQaGate(s, surface) {
     : null;
   const draftChecks = draft && draft.checks ? draft.checks : null;
   const boxChange = compact ? ' onchange="window.syncQaAccept(this)"' : '';
-  const boxes = (humanQaChecks(s) || []).map(item =>
+  const boxes = (humanQaChecks(s, compact ? { compact: true } : null) || []).map(item =>
     `<label class="qa-check"><input type="checkbox" name="qa-${item.key}"${draftChecks && draftChecks[item.key] ? ' checked' : ''}${boxChange}><span>${escHtml(item.label)}</span></label>`
   ).join('');
   const picked = draft && Array.isArray(draft.formats) ? draft.formats : normalizeQaFormats(qa.formats);
@@ -8685,10 +8727,10 @@ function renderHumanQaGate(s, surface) {
     : '';
   const noteValue = draft ? asText(draft.notes) : (compact ? humanQaOpsPrefill(s) : '');
   const formId = id ? 'qa-' + (surface || 'form') + '-' + id : '';
-  const boxesReady = humanQaValidate(draftChecks || {}, '').ok;
+  const reviewAction = humanQaReviewAction(draftChecks || {}, noteValue);
   const submit = id
     ? (compact
-      ? `<button type="button" class="qa-go"${boxesReady ? '' : ' disabled'} onclick="window.submitHumanQa('${id}')">Accept</button>`
+      ? `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">${escHtml(reviewAction.label)}</button>`
       : `<button type="button" class="qa-go" onclick="window.submitHumanQa('${id}')">Sign the brain check</button>`)
     : '';
   const hold = filmPhase === 'end'
@@ -8702,24 +8744,27 @@ function renderHumanQaGate(s, surface) {
     ? 'The script changed. Read it again.'
     : (filmPhase === 'end' ? 'Finish. Read it yourself.' : 'Stop. Read it yourself.');
   const lead = stale
-    ? 'You edited the spoken lines after the last brain check. Tick every box again. The note is optional.'
+    ? 'You edited the spoken lines after the last brain check. Tick every box again. The note is optional and never blocks.'
     : (filmPhase === 'end'
       ? 'You are leaving Full screen. AI can draft. You decide if the client should see it.'
       : (compact
-        ? 'Tick the four boxes. The note is optional. The reference reel is on this screen.'
-        : 'AI can draft. You decide if a client should see it. Tick the four boxes. The note is optional.'));
+        ? 'Tick the four boxes. The note is optional and never blocks. Continue can move on after a warning. Open reel leaves the Hub.'
+        : 'AI can draft. You decide if a client should see it. Tick the four boxes. The note is optional and never blocks.'));
   const noteInput = compact ? ' oninput="window.syncQaAccept(this)"' : '';
   const aids = reviewStampAidsHtml(s, surface);
   const aidsFold = compact && aids
     ? '<details class="qa-fold"><summary>DNA and blockers</summary>' + aids + '</details>'
     : aids;
-  const notes = `<label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
-    <p class="qa-note-optional">Optional. Skipping it is fine.</p>
-    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}"${noteInput}>${escHtml(noteValue)}</textarea>
+  const notesField = `<label class="qa-notes-label" for="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}">Why this is good to send</label>
+    <p class="qa-note-optional">Optional. Skipping it is fine. It never blocks Continue or Accept.</p>
+    <textarea class="qa-notes" ${formId ? `id="${escHtml(formId)}-notes"` : ''} name="qa-notes" data-focus-id="${formId ? escHtml(formId) + '-notes' : 'qa-notes'}" placeholder="${escHtml(humanQaNotePlaceholder(s))}"${noteInput}>${escHtml(noteValue)}</textarea>`;
+  const notesFold = `<details class="qa-fold qa-note-fold"><summary>Why this is good to send, optional</summary>${notesField}</details>`;
+  const hint = '<p class="qa-hint">Mark client-ready still needs all four boxes. Continue does not send.</p>';
+  const notes = `${notesField}
     ${hold}
     ${submit}`;
   const body = compact
-    ? `<div class="qa-body"><p class="qa-kicker">Human QA · Cristian brain check</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${boxes}${aidsFold}${formatFold}</div><div class="qa-pin">${notes}</div>`
+    ? `<div class="qa-body"><p class="qa-kicker">Human QA · Cristian brain check</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${aidsFold}${formatFold}${notesFold}</div><div class="qa-pin"><div class="qa-list">${boxes}</div>${hint}${submit}</div>`
     : `<p class="qa-kicker">Human QA · Cristian brain check${filmPhase ? ' · Film ' + filmPhase : ''}</p><h3>${escHtml(heading)}</h3><p class="qa-lead">${escHtml(lead)}</p>${aids}${boxes}${formatFold}${notes}`;
   return `<section class="${gateClass}" aria-label="Cristian brain check" ${formId ? `id="${escHtml(formId)}"` : ''}>${body}</section>`;
 }
@@ -8785,12 +8830,10 @@ function reviewReferenceHtml(s) {
   s = s || {};
   const info = videoInfo(s.reference_clip);
   if (!info || info.kind === 'text' || !info.watch) return '';
-  const reel = { reelUrl: info.watch, thumbnail: info.thumb || '' };
-  return '<aside class="review-ref" aria-label="Reference reel">'
-    + vaultPosterHtml(reel)
-    + '<div class="review-ref-copy"><p class="eyebrow">Reference reel</p>'
-    + '<a class="review-ref-open" href="' + escHtml(info.watch) + '" target="_blank" rel="noopener noreferrer">Open reel</a>'
-    + '</div></aside>';
+  return '<a class="review-ref" href="' + escHtml(info.watch) + '" target="_blank" rel="noopener noreferrer" aria-label="Open reference reel">'
+    + '<p class="eyebrow">Reference reel</p>'
+    + '<span class="review-ref-open">Open reel</span>'
+    + '</a>';
 }
 function prepReadBodyHtml(s) {
   s = s || {};
@@ -10065,10 +10108,9 @@ window.syncQaAccept = (el) => {
     const box = root.querySelector('[name="qa-' + key + '"]');
     checks[key] = !!(box && box.checked);
   });
-  const ready = humanQaValidate(checks, '').ok;
-  btn.disabled = !ready;
-  const block = root.querySelector('.qa-block');
-  if (block) block.hidden = ready;
+  const next = humanQaReviewAction(checks, '');
+  btn.disabled = false;
+  btn.textContent = next.label;
 };
 window.toggleReviewResources = (force) => {
   if (!prepState) return;
@@ -11667,18 +11709,24 @@ function stampQueueNext(currentId) {
     return !!(row && needsBrainCheck(row));
   });
 }
-function advanceReview(currentId) {
+function advanceReview(currentId, opts) {
+  opts = opts || {};
+  const stamped = opts.stamped !== false;
   const ids = (prepState && prepState.queueIds) ? prepState.queueIds.slice() : [];
   const next = stampQueueNext(currentId);
   if (!next) {
     clearPrep();
     renderDash();
-    showToast('Stamped. Not sent. Review queue is clear.');
+    showToast(stamped
+      ? 'Stamped. Not sent. Review queue is clear.'
+      : 'Moved on. Not stamped. Not sent. Review queue is clear.');
     return;
   }
   prepState = { id: next, step: 0, fromQueue: true, resources: false, queueIds: ids, scrollTop: 0 };
   renderPrep();
-  showToast('Stamped. Not sent. Next script.');
+  showToast(stamped
+    ? 'Stamped. Not sent. Next script.'
+    : 'Moved on. Not stamped. Not sent. Next script.');
 }
 function finishHumanQaUi(id, toastMessage) {
   if (prepState && prepState.id === id) prepState.qaDraft = null;
@@ -11719,13 +11767,22 @@ function readHumanQaForm(id) {
   }
   return { checks: checks, notes: notesEl ? notesEl.value : '', formats: normalizeQaFormats(formats) };
 }
+function humanQaFormIsReview(id) {
+  const root = humanQaFormRoot(id);
+  return !!(root && asText(root.id).indexOf('qa-review-') === 0);
+}
 window.submitHumanQa = async (id) => {
   if (role !== 'admin' || qaSaving) return;
   const s = scripts.find(x => x.id === id);
   if (!s) return;
   const form = readHumanQaForm(id);
-  const valid = humanQaValidate(form.checks, form.notes);
-  if (!valid.ok) {
+  const action = humanQaReviewAction(form.checks, form.notes);
+  if (!action.stamp) {
+    if (humanQaFormIsReview(id)) {
+      if (!window.confirm(humanQaContinueWarn())) return;
+      advanceReview(id, { stamped: false });
+      return;
+    }
     showToast('Tick every box. DNA niche-shift, thesis/voice, shareable, and Reference opened.', { tone: 'error' });
     return;
   }

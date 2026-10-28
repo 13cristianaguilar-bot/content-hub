@@ -2612,7 +2612,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.9';
+const APP_VERSION = '2026.10.28.10';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2627,6 +2627,20 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.10',
+    date: 'October 28, 2026',
+    title: 'Full screen reads the spoken line only',
+    items: [
+      'Full screen drops cover titles, on-screen labels, and “Ref spoken principle” when those notes were pasted into the hook. The teleprompter shows the words you say.',
+      'Notes, Resources, and filming setup stay on their own screens. They do not scroll in the read.',
+    ],
+    steps: [
+      'Open Full screen on a script whose hook still has a cover title or an on-screen line.',
+      'Read the hook. It is the spoken line. The cover title is not in the scroll.',
+      'Open Notes. Filming notes and on-screen text are still there.',
+    ],
+  },
   {
     version: '2026.10.28.9',
     date: 'October 28, 2026',
@@ -6115,6 +6129,7 @@ function renderDossierBody(s) {
   // it shows as its own clickable link on the clip box, which is where it's actually needed.
   const reactInfo = reactionClipInfo(s);
   const sourceClip = (reactInfo && reactInfo.watch) || extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
+  const filmingHook = spokenHook(s);
 
   // 1 + 2 combined into one box, same as the dossier: the reel link and its real numbers belong
   // together as "proof," not two separate stacked boxes. The full verification narrative
@@ -6177,10 +6192,10 @@ function renderDossierBody(s) {
           <span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1.5 rounded-full">④ Full script to the ending</span>
         </div>` : ''}
 
-        ${s.hook ? `
+        ${filmingHook ? `
         <div class="bg-violet-50 border-2 border-violet-200 rounded-xl px-4 py-3.5 mb-2.5">
           <div class="text-xs font-bold text-violet-600 uppercase tracking-widest mb-1.5">Hook</div>
-          <div class="text-lg text-violet-900 font-semibold leading-snug">"${escHtml(s.hook)}"</div>
+          <div class="text-lg text-violet-900 font-semibold leading-snug">"${escHtml(filmingHook)}"</div>
         </div>` : ''}
 
         ${s.full_script ? `
@@ -6810,7 +6825,7 @@ window.loadEmbed = (id, suffix) => {
 function renderHooks(s) {
   const pair = parseHookPair(s.hook);
   if (!pair.raw) return '';
-  const yours = pair.adapted || pair.raw;
+  const yours = spokenHook(s) || pair.adapted || pair.raw;
   const proven = pair.proven && pair.proven !== yours
     ? `<div><div class="eyebrow block-label">Proven hook</div><p class="hook-proven">${escHtml(pair.proven)}</p></div>` : '';
   return `<section class="area-hooks hook-pair">
@@ -6835,8 +6850,9 @@ function renderScriptBlock(s) {
     count = readLabel(model.prose);
     body = `<pre class="shot-script">${escHtml(model.prose)}</pre>`;
   } else {
-    body = `<pre class="shot-script">${escHtml(asText(s.hook))}</pre>`;
-    count = readLabel(s.hook);
+    const spoken = spokenHook(s);
+    body = `<pre class="shot-script">${escHtml(spoken || asText(s.hook))}</pre>`;
+    count = readLabel(spoken || s.hook);
   }
   const delivery = renderDelivery(s);
   return `<section class="area-script">
@@ -7103,12 +7119,100 @@ function renderCardGroup(group) {
 function normSpoken(value) {
   return asText(value).toLowerCase().replace(/[“”"']/g, '').replace(/\s+/g, ' ').trim();
 }
-function spokenHook(s) {
+// Cover titles, on-screen labels, and "Ref spoken principle" sometimes get pasted
+// into the hook. Full screen reads the spoken line. Notes and filming setup stay put.
+function teleprompterLabelRest(line, kind) {
+  const t = String(line || '').trim();
+  const colonAt = t.indexOf(':');
+  if (colonAt >= 0) return t.slice(colonAt + 1).trim();
+  if (kind === 'adapted') {
+    const adapted = t.match(/^adapted\s*\([^)]*\)\s*([\s\S]*)$/i);
+    return adapted ? adapted[1].trim() : '';
+  }
+  if (kind === 'proven') {
+    const proven = t.match(/^proven\s+hook\b(?:\s*\([^)]*\))?\s*([\s\S]*)$/i);
+    return proven ? proven[1].trim() : '';
+  }
+  return '';
+}
+function teleprompterLineKind(line) {
+  const t = String(line || '').trim();
+  if (!t) return 'blank';
+  if (/^cover(?:\s+purple)?\s+title\s*:/i.test(t)) return 'drop';
+  if (/^cover\s+sticky\b/i.test(t)) return 'drop';
+  if (/^on-?screen\b/i.test(t)) return 'drop';
+  if (/^text\s+hook\s*:/i.test(t)) return 'drop';
+  if (/^proven\s+hook\b/i.test(t)) return 'proven';
+  if (/^adapted\s*\(/i.test(t)) return 'adapted';
+  if (/^ref(?:erence)?\s+spoken\s+principle\b/i.test(t)) return 'principle';
+  if (/^spoken\s+principle\s*:/i.test(t)) return 'principle';
+  return 'spoken';
+}
+function splitTeleprompterMeta(line) {
+  const re = /\s+(?=cover(?:\s+purple)?\s+title\s*:|cover\s+sticky\b|on-?screen\s+bold\s+caps\b|on-?screen\s+sticky\b|on-?screen\s+text\b|on-?screen\s*:|text\s+hook\s*:|ref(?:erence)?\s+spoken\s+principle\b|proven\s+hook\b|adapted\s*\()/ig;
+  const text = String(line || '');
+  const parts = [];
+  let last = 0;
+  let m;
+  while ((m = re.exec(text))) {
+    parts.push(text.slice(last, m.index));
+    last = m.index + m[0].length;
+    if (re.lastIndex === m.index) re.lastIndex += 1;
+  }
+  parts.push(text.slice(last));
+  return parts;
+}
+function cleanTeleprompterHook(text) {
+  const raw = asText(text).replace(/\r\n/g, '\n');
+  if (!raw.trim()) return '';
+  const kept = [];
+  const buckets = { adapted: [], principle: [], proven: [] };
+  let mode = 'keep';
+  raw.split('\n').forEach(chunk => {
+    splitTeleprompterMeta(chunk).forEach(piece => {
+      const trimmed = piece.trim();
+      if (!trimmed) {
+        mode = 'keep';
+        if (kept.length && kept[kept.length - 1] !== '') kept.push('');
+        return;
+      }
+      const kind = teleprompterLineKind(trimmed);
+      if (kind === 'drop') {
+        mode = 'drop';
+        return;
+      }
+      if (kind === 'adapted' || kind === 'principle' || kind === 'proven') {
+        const rest = teleprompterLabelRest(trimmed, kind);
+        if (rest) buckets[kind].push(rest);
+        mode = kind;
+        return;
+      }
+      if (mode === 'drop') {
+        if (!/[a-z]/.test(trimmed)) return;
+        mode = 'keep';
+      }
+      if (mode === 'adapted' || mode === 'principle' || mode === 'proven') {
+        buckets[mode].push(trimmed);
+        return;
+      }
+      kept.push(trimmed);
+    });
+  });
+  const join = (rows) => rows.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  const spoken = join(kept);
+  if (spoken) return spoken;
+  return join(buckets.adapted) || join(buckets.principle) || join(buckets.proven);
+}
+function spokenHookOnly(s) {
   const pair = parseHookPair(s && s.hook);
   let text = (pair.adapted || pair.raw || '').trim();
-  text = text.replace(/\n?On-screen bold caps:[\s\S]*$/i, '').trim();
-  text = text.replace(/^[\s\S]*?PROVEN HOOK\b[^:\n]*:\s*/i, '').trim();
-  return text;
+  if (!pair.adapted && /PROVEN HOOK/i.test(text)) {
+    text = text.replace(/^[\s\S]*?PROVEN HOOK\b[^:\n]*:\s*/i, '').trim();
+  }
+  return cleanTeleprompterHook(text);
+}
+function spokenHook(s) {
+  return spokenHookOnly(s);
 }
 function parseBeats(script) {
   const text = asText(script).trim();
@@ -7156,13 +7260,27 @@ function scriptFlow(s) {
   if (hook) {
     const peeled = peelHook(pending[0], hook);
     if (peeled) {
-      sections.push({ kind: 'hook', label: 'Hook', text: peeled.hookText, time: (pending[0] && pending[0].time) || '' });
+      const hookText = cleanTeleprompterHook(peeled.hookText) || hook;
+      sections.push({ kind: 'hook', label: 'Hook', text: hookText, time: (pending[0] && pending[0].time) || '' });
       pending = pending.slice(1);
-      if (peeled.rest) pending.unshift(peeled.rest);
+      if (peeled.rest) {
+        const restText = cleanTeleprompterHook(peeled.rest.text);
+        // A "Ref spoken principle" repeat is the hook again. Do not give it a beat.
+        if (restText && normSpoken(restText) !== normSpoken(hook)) {
+          pending.unshift({ clip: false, time: peeled.rest.time, text: restText });
+        }
+      }
     } else {
       sections.push({ kind: 'hook', label: 'Hook', text: hook, time: '' });
     }
   }
+  pending = pending.map(b => {
+    if (!b || b.clip) return b;
+    let text = cleanTeleprompterHook(b.text);
+    // The body copied the hook's cover / ref block. That is the hook again, not a beat.
+    if (text && hook && normSpoken(text) === normSpoken(hook) && teleprompterLineKind(asText(b.text).trim()) !== 'spoken') text = '';
+    return { clip: false, time: b.time, text: text };
+  }).filter(b => b && (b.clip || b.text));
   const spokenCount = pending.filter(b => !b.clip).length;
   let n = 0;
   pending.forEach(b => {
@@ -7178,7 +7296,7 @@ function scriptFlow(s) {
     else if (b.time) label = 'Body · ' + b.time;
     sections.push({ kind: 'beat', label: label, text: b.text, time: b.time || '' });
   });
-  const ctaRaw = asText(s && s.cta).trim();
+  const ctaRaw = cleanTeleprompterHook(asText(s && s.cta).trim());
   if (ctaRaw) {
     const clean = /^(none|clean|no cta)\b/i.test(ctaRaw) && ctaRaw.length < 64;
     const text = clean ? 'No spoken CTA. End on the last line.' : ctaRaw;

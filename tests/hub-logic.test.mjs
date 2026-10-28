@@ -26,7 +26,9 @@ const names = [
   'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
-  'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
+  'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken',
+  'teleprompterLabelRest', 'teleprompterLineKind', 'splitTeleprompterMeta', 'cleanTeleprompterHook', 'spokenHookOnly', 'spokenHook',
+  'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'clockSeconds', 'skimClockLabel', 'prompterSkimStops', 'prompterSkimTarget',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo',
   'isHostedMediaUrl', 'isAudioMediaUrl', 'explicitPlayableUrl', 'mediaLockOf', 'hubStorageOrigin', 'storagePublicUrl',
@@ -237,6 +239,105 @@ const numbered = ctx.scriptFlow({
   cta: '',
 });
 assert.strictEqual(numbered.map(s => s.label).join('|'), 'Hook|Beat One|Beat Two');
+
+const spokenLine = 'The one who lets you down, sets you free. The one who breaks you, makes you stronger.';
+const dirtyHook = [
+  spokenLine,
+  'Cover purple title: HARD FEEDBACK SETS LEADERS FREE',
+  'LEADERS FREE',
+  'On-screen bold caps: HARD FEEDBACK SETS LEADERS FREE',
+  'On-screen sticky: purple card',
+  'Text Hook: HARD FEEDBACK SETS LEADERS FREE',
+  'Ref spoken principle: The one who lets you down,',
+  'sets you free. The one who breaks you, makes you stronger.',
+].join('\n');
+assert.strictEqual(ctx.cleanTeleprompterHook(dirtyHook), spokenLine);
+assert.strictEqual(ctx.spokenHook({ hook: dirtyHook }), spokenLine);
+assert.strictEqual(ctx.spokenHookOnly({ hook: dirtyHook }), spokenLine);
+assert.strictEqual(ctx.cleanTeleprompterHook('Keep this first line exactly as written.'), 'Keep this first line exactly as written.');
+assert.strictEqual(ctx.cleanTeleprompterHook('First spoken line.\n\nSecond spoken line.'), 'First spoken line.\n\nSecond spoken line.');
+assert.strictEqual(ctx.cleanTeleprompterHook('I do not read the on-screen title out loud.'), 'I do not read the on-screen title out loud.');
+assert.strictEqual(ctx.cleanTeleprompterHook('Spoken principle is the whole idea.'), 'Spoken principle is the whole idea.');
+assert.strictEqual(ctx.cleanTeleprompterHook('The one who breaks you, makes you stronger. Cover purple title: HARD FEEDBACK SETS LEADERS FREE'), 'The one who breaks you, makes you stronger.');
+assert.strictEqual(ctx.cleanTeleprompterHook([
+  'Cover title: SAY THIS IN CAPS',
+  'Cover sticky: purple card',
+  'Ref spoken principle: The one who lets you down, sets you free.',
+].join('\n')), 'The one who lets you down, sets you free.');
+assert.strictEqual(ctx.cleanTeleprompterHook('Ref spoken principle: The one who lets you down,\nsets you free.'), 'The one who lets you down,\nsets you free.');
+assert.strictEqual(ctx.cleanTeleprompterHook([
+  'PROVEN HOOK (original): The old line you do not say.',
+  'ADAPTED (Jan): The one who lets you down, sets you free.',
+  'On-screen: HARD FEEDBACK',
+].join('\n')), 'The one who lets you down, sets you free.');
+assert.strictEqual(ctx.spokenHook({
+  hook: 'PROVEN HOOK: The one who lets you down, sets you free.\nOn-screen sticky: purple card',
+}), spokenLine.slice(0, 'The one who lets you down, sets you free.'.length));
+assert.strictEqual(ctx.cleanTeleprompterHook([
+  spokenLine,
+  'Cover purple title: HARD FEEDBACK SETS',
+  'LEADERS FREE',
+].join('\n')), spokenLine);
+
+const dirtyFlow = ctx.scriptFlow({
+  hook: dirtyHook,
+  full_script: dirtyHook + '\n\nSay the second beat without looking at the title.',
+  cta: 'Follow for the next one.\nCover purple title: HARD FEEDBACK SETS LEADERS FREE',
+  filming_direction: { Pacing: 'Steady, one take.', 'Text Hook': 'HARD FEEDBACK SETS LEADERS FREE' },
+  editor_notes: 'ON-SCREEN TEXT: HARD FEEDBACK SETS LEADERS FREE',
+});
+const dirtyRead = dirtyFlow.map(sec => sec.text).join('\n');
+assert.strictEqual(dirtyFlow[0].kind, 'hook');
+assert.strictEqual(dirtyFlow[0].label, 'Hook');
+assert.strictEqual(dirtyFlow.map(sec => sec.text).join('\n'), [
+  spokenLine,
+  'Say the second beat without looking at the title.',
+  'Follow for the next one.',
+].join('\n'));
+const coverFirst = ctx.scriptFlow({
+  hook: dirtyHook,
+  full_script: [
+    'Cover purple title: HARD FEEDBACK SETS LEADERS FREE',
+    'Ref spoken principle: ' + spokenLine,
+    '',
+    'Say the second beat without looking at the title.',
+  ].join('\n'),
+  cta: 'Follow for the next one.',
+});
+assert.strictEqual(coverFirst.map(sec => sec.text).join('\n'), [
+  spokenLine,
+  'Say the second beat without looking at the title.',
+  'Follow for the next one.',
+].join('\n'));
+assert.ok(dirtyRead.includes(spokenLine));
+assert.ok(dirtyRead.includes('Say the second beat without looking at the title.'));
+assert.ok(dirtyRead.includes('Follow for the next one.'));
+assert.ok(!/cover purple/i.test(dirtyRead));
+assert.ok(!/ref spoken/i.test(dirtyRead));
+assert.ok(!/on-screen/i.test(dirtyRead));
+assert.ok(!/proven hook/i.test(dirtyRead));
+assert.ok(!/text hook/i.test(dirtyRead));
+assert.ok(!/HARD FEEDBACK SETS LEADERS FREE/.test(dirtyRead));
+assert.ok(!/purple card/i.test(dirtyRead));
+const dirtyPack = ctx.referencePack({
+  hook: dirtyHook,
+  filming_direction: { Pacing: 'Steady, one take.', 'Text Hook': 'HARD FEEDBACK SETS LEADERS FREE' },
+  editor_notes: 'ON-SCREEN TEXT: HARD FEEDBACK SETS LEADERS FREE',
+});
+assert.ok(dirtyPack.notes.some(n => n.indexOf('Pacing: Steady, one take.') === 0));
+assert.ok(dirtyPack.notes.some(n => n.indexOf('Text Hook: HARD FEEDBACK SETS LEADERS FREE') === 0));
+assert.ok(dirtyPack.onScreen.some(it => it.text.indexOf('HARD FEEDBACK SETS LEADERS FREE') >= 0));
+assert.strictEqual(ctx.scriptEditValue({ hook: dirtyHook }, 'hook'), dirtyHook);
+const dirtyDossier = ctx.renderDossierBody({
+  id: 'hard-feedback',
+  hook: dirtyHook,
+  full_script: 'Say the second beat without looking at the title.',
+  filming_setup: 'LOCATION: Car.',
+});
+assert.ok(dirtyDossier.includes(spokenLine));
+assert.ok(!/Cover purple title/i.test(dirtyDossier));
+assert.ok(!/Ref spoken principle/i.test(dirtyDossier));
+assert.ok(dirtyDossier.includes('Filming setup'));
 
 const pack = ctx.referencePack(reaction);
 assert.strictEqual(pack.person, 'Jan Zands');
@@ -720,42 +821,43 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.9');
+assert.strictEqual(appVersion, '2026.10.28.10');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.9');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.10');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Mark client-ready/.test(releaseNotes));
-assert.ok(/Continue/.test(releaseNotes));
-assert.ok(/Needs Review/.test(releaseNotes));
-assert.ok(/stamp/.test(releaseNotes));
-assert.ok(/Nothing left in this queue/.test(releaseNotes));
-assert.ok(/does not send/i.test(releaseNotes));
-assert.ok(/Approved/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.9');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.9');
+assert.ok(/Full screen/.test(releaseNotes));
+assert.ok(/spoken line|words you say/i.test(releaseNotes));
+assert.ok(/cover title/i.test(releaseNotes));
+assert.ok(/on-screen/i.test(releaseNotes));
+assert.ok(/Ref spoken principle/.test(releaseNotes));
+assert.ok(/Notes/.test(releaseNotes));
+assert.ok(/filming setup/i.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.10');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', true, '2026.10.28.9').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', true, '2026.10.28.10').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.10');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 

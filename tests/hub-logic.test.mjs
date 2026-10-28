@@ -70,7 +70,8 @@ const names = [
   'pacingWritten', 'framingWritten', 'parseLegacyAudit', 'unpackAudit', 'auditOwner', 'gateFromText', 'buildAudit',
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
-  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
+  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
+  'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
@@ -719,40 +720,41 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.6');
+assert.strictEqual(appVersion, '2026.10.28.7');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.6');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.7');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/four|boxes/i.test(releaseNotes));
-assert.ok(/Continue/.test(releaseNotes));
-assert.ok(/Accept/.test(releaseNotes));
 assert.ok(/brain check/i.test(releaseNotes));
-assert.ok(/optional/i.test(releaseNotes));
-assert.ok(/reel|Instagram|browser/i.test(releaseNotes));
-assert.ok(/sent/.test(releaseNotes));
-assert.ok(/client-ready|client ready/i.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.6');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.6');
+assert.ok(/Mark client-ready/.test(releaseNotes));
+assert.ok(/batch list/.test(releaseNotes));
+assert.ok(/Read screen/.test(releaseNotes));
+assert.ok(/four boxes/.test(releaseNotes));
+assert.ok(/Format Vault/.test(releaseNotes));
+assert.ok(/does not send/i.test(releaseNotes));
+assert.ok(/Clients never see/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.7');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.7');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', true, '2026.10.28.6').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', true, '2026.10.28.7').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.7');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2096,6 +2098,48 @@ assert.ok(signedBuyin.includes('BUYIN'));
 assert.ok(signedBuyin.includes('data-blocker="buyin"'));
 assert.deepStrictEqual(ctx.reviewQueueFor(queueRows, { slug: '' }).map(s => s.id), ['final', 'core', 'conf', 'other']);
 assert.deepStrictEqual(ctx.stampQueueFor(queueRows, { slug: '' }).map(s => s.id), ['final', 'conf', 'core']);
+assert.deepStrictEqual(ctx.readyQueueFor(queueRows, { slug: '' }).map(s => s.id), ['sent']);
+assert.deepStrictEqual(ctx.readyQueueFor(queueRows, { slug: 'devin' }).map(s => s.id), []);
+const readyMixed = queueRows.concat([
+  { id: 'andy', title: 'Andrew stamped', client_slug: 'andrew', status: 'Needs Review', batch: 'Andrew weekly', pipeline_audit: signedScript.pipeline_audit },
+]);
+assert.deepStrictEqual(ctx.readyQueueFor(readyMixed, { slug: '' }).map(s => s.id), ['sent', 'andy']);
+assert.deepStrictEqual(ctx.readyQueueFor(readyMixed, { slug: '', stampClientsOnly: true }).map(s => s.id), ['sent']);
+ctx.role = 'admin';
+const janListReady = Object.assign({}, signedScript, { id: 'list-jan', status: 'Needs Review' });
+const janListBtn = ctx.listClientReadyHtml(janListReady);
+assert.ok(janListBtn.includes('class="list-ready"'));
+assert.ok(janListBtn.includes('Mark client-ready'));
+assert.ok(janListBtn.includes('This stamp did not send anything and did not mark it client-ready.'));
+assert.ok(janListBtn.includes('disabled'));
+assert.ok(janListBtn.includes('openFormatVault()'));
+assert.ok(!janListBtn.includes("moveStatus('list-jan','Approved')"));
+const andrewListReady = Object.assign({}, signedScript, { id: 'list-andrew', client_slug: 'andrew', status: 'Needs Review' });
+const andrewListBtn = ctx.listClientReadyHtml(andrewListReady);
+assert.ok(andrewListBtn.includes("moveStatus('list-andrew','Approved')"));
+assert.ok(andrewListBtn.includes('Mark client-ready'));
+assert.ok(andrewListBtn.includes('This stamp did not send anything and did not mark it client-ready.'));
+assert.ok(!andrewListBtn.includes('disabled'));
+assert.strictEqual(ctx.listClientReadyHtml(Object.assign({}, andrewListReady, { status: 'Draft' })), '');
+assert.strictEqual(ctx.listClientReadyHtml({ id: 'unsigned-list', client_slug: 'andrew', status: 'Needs Review' }), '');
+ctx.role = 'client';
+assert.strictEqual(ctx.listClientReadyHtml(andrewListReady), '');
+ctx.role = 'admin';
+const readReady = ctx.renderHumanQaGate(andrewListReady, 'review');
+assert.ok(readReady.includes('You signed this one'));
+assert.ok(readReady.includes('Mark client-ready'));
+assert.ok(readReady.includes("moveStatus('list-andrew','Approved')"));
+assert.ok(readReady.includes('This stamp did not send anything and did not mark it client-ready.'));
+assert.ok(!readReady.includes('class="list-ready"'));
+const batchCardAt = script.indexOf('function renderBatchCard');
+const batchCardSrc = script.slice(batchCardAt, script.indexOf('function renderBatchCards', batchCardAt));
+assert.ok(batchCardSrc.includes('class="batch-film"'));
+assert.ok(/batch-film[\s\S]*listClientReadyHtml/.test(batchCardSrc));
+const reviewCardAt = script.indexOf('function renderReviewCard');
+const reviewCardSrc = script.slice(reviewCardAt, script.indexOf('function renderReadyQueueHtml', reviewCardAt));
+assert.ok(/review-hit[\s\S]*listClientReadyHtml/.test(reviewCardSrc));
+assert.ok(script.includes('Stamped, not client-ready'));
+assert.ok(/function renderReviewQueue[\s\S]*readyQueueScripts/.test(script));
 const stampRail = ctx.stampQueueRailHtml(ctx.stampQueueFor(queueRows, { slug: '' }));
 assert.ok(stampRail.includes('Jan'));
 assert.ok(stampRail.includes('Devin'));

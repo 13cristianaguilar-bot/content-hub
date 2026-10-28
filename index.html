@@ -1334,6 +1334,22 @@ body.modal-open { overflow: hidden; }
   font-family: "Geist Mono", ui-monospace, monospace; font-size: 13px; letter-spacing: 0.04em;
 }
 .review-empty { margin: 0 0 12px; font-size: 16px; line-height: 1.4; }
+.review-ready-queue { margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); }
+.review-ready-h {
+  font-size: 22px; line-height: 1.15; letter-spacing: -0.04em; font-weight: 650; margin: 0 0 6px;
+}
+.list-ready { display: flex; flex-direction: column; gap: 6px; }
+.review-card .list-ready { padding: 0 14px 14px; }
+.list-ready .qa-lead {
+  margin: 0; color: var(--muted); font-size: 13px; line-height: 1.35; font-weight: 500;
+}
+.list-ready .qa-send { margin-top: 0; background: var(--ink); color: #fff; border: 0; }
+.list-ready .qa-send.is-blocked { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.list-ready .qa-vault {
+  min-height: 44px; padding: 0 2px; background: transparent; border: 0;
+  color: var(--ink); font-weight: 650; text-align: left; text-decoration: underline;
+  text-underline-offset: 3px;
+}
 .batch-gaps details > summary { cursor: pointer; list-style: none; }
 .batch-gaps details > summary::-webkit-details-marker { display: none; }
 .batch-gaps details:not([open]) > ul { display: none; }
@@ -1665,7 +1681,7 @@ body.prep-open #toast-root {
   align-items: flex-start;
 }
 body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
-.tool-btn[disabled], .shot-actions .is-blocked, .qa-go[disabled] {
+.tool-btn[disabled], .shot-actions .is-blocked, .qa-go[disabled], .qa-send[disabled] {
   opacity: 0.4; cursor: not-allowed;
 }
 .dna-strip, .blocker-badges, .stamp-rail { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
@@ -1849,7 +1865,7 @@ const FORMAT_VAULT = {
       "brand": "Rich Life Academy",
       "niche": "Network marketing leadership",
       "industry": "Network marketing",
-      "note": "Locked on Call #3. Keep hook, format, idea, and reward. Shift messaging, angle, and voice. Keepers are not decided yet.",
+      "note": "Locked on Call #3. Keep hook, format, idea, and reward. Shift messaging, angle, and voice. Keepers: Candace · Pierini · Lorin.",
       "creators": [
         {
           "name": "Tony Robbins",
@@ -1865,6 +1881,21 @@ const FORMAT_VAULT = {
           "name": "Jim Rohn",
           "handle": "",
           "note": "Named on Jan reaction titles in the seed batch."
+        },
+        {
+          "name": "Candace",
+          "handle": "@candasifamabarnes",
+          "note": "Keeper. Car talking-head + aphorism."
+        },
+        {
+          "name": "Pierini",
+          "handle": "@edupierinicoach",
+          "note": "Keeper. Education · studio CU + purple title + mic."
+        },
+        {
+          "name": "Lorin Krenn",
+          "handle": "@lorinkrenn",
+          "note": "Keeper. Chair talking-head + belief text box."
         }
       ],
       "formats": [
@@ -1910,7 +1941,24 @@ const FORMAT_VAULT = {
           "niche": "Direct teaching for the top network marketers",
           "summary": "One idea, said straight. Leadership or growing as a person is the path. No vague hedge.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "niche",
+              "handle": "@edupierinicoach",
+              "name": "Pierini",
+              "shortcode": "DeJhq0AINpW",
+              "reelUrl": "https://www.instagram.com/reel/DeJhq0AINpW/",
+              "dna": {
+                "hook": "direct lesson, said straight",
+                "format": "studio close-up + purple title + mic",
+                "components": "Education · studio CU + purple title + mic",
+                "idea": "one leadership idea taught clean",
+                "reward": "a line the team can use",
+                "cadence": "teach, then land the point",
+                "emotionalNext": "pass it to the team"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -1970,7 +2018,69 @@ const FORMAT_VAULT = {
           "niche": "Contrarian to rank-chase, loyal to leadership",
           "summary": "Name the myth, then flip it toward leadership or growing as a person.",
           "thumbnail": "",
-          "creators": [],
+          "creators": [
+            {
+              "lane": "niche",
+              "handle": "@lorinkrenn",
+              "name": "Lorin Krenn",
+              "shortcode": "DbbGzGzu-Ys",
+              "reelUrl": "https://www.instagram.com/reel/DbbGzGzu-Ys/",
+              "dna": {
+                "hook": "name the belief, then break it",
+                "format": "chair talking-head + belief text box",
+                "components": "Chair TH + Belief Text Box",
+                "idea": "the myth is the rank chase",
+                "reward": "the flip toward leadership",
+                "emotionalNext": "share the correction"
+              }
+            }
+          ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
+        },
+        {
+          "id": "car-aphorism",
+          "label": "Car talking-head + aphorism",
+          "niche": "Aphorism from the car, passed to the team",
+          "summary": "Talking head in the car. One aphorism. Same machine, three outlier reels.",
+          "thumbnail": "",
+          "creators": [
+            {
+              "lane": "niche",
+              "handle": "@candasifamabarnes",
+              "name": "Candace",
+              "shortcode": "DcBWZ8oC51Q",
+              "reelUrl": "https://www.instagram.com/reel/DcBWZ8oC51Q/",
+              "also": [
+                {
+                  "shortcode": "Dbv-LIFiURH",
+                  "reelUrl": "https://www.instagram.com/reel/Dbv-LIFiURH/"
+                },
+                {
+                  "shortcode": "DbzHPbyC7DJ",
+                  "reelUrl": "https://www.instagram.com/reel/DbzHPbyC7DJ/"
+                }
+              ],
+              "dna": {
+                "hook": "one aphorism, said from the car",
+                "format": "car talking-head + aphorism",
+                "components": "Car TH + Aphorism",
+                "idea": "one line worth repeating",
+                "reward": "a sentence they can hand off",
+                "emotionalNext": "send it to the team"
+              }
+            }
+          ],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -2502,7 +2612,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.6';
+const APP_VERSION = '2026.10.28.8';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2517,6 +2627,36 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.8',
+    date: 'October 28, 2026',
+    title: 'Jan keepers filed, Mark client-ready works',
+    items: [
+      'Jan Format Vault keepers are on file: Candace, Pierini, and Lorin. Education, Myth-buster / contrarian, and Car talking-head + aphorism each have a recipe.',
+      'After the four boxes are saved, Mark client-ready on a stamped Jan script is enabled on Read, on Stamped, not client-ready, and on the admin batch list. It moves the script to Approved. It does not send.',
+      'The Format Vault gate stays. A client with locked formats and no recipe still cannot mark client-ready. Clients never see this button, including when you are viewing as that client.',
+    ],
+    steps: [
+      'Open a stamped Jan script on Read. Mark client-ready is enabled. Tap it. The script moves to Approved. Nothing is sent.',
+      'On Needs your brain check, the Stamped, not client-ready row has the same button.',
+      'Open Format Vault, pick Jan, then Education, Myth-buster / contrarian, or Car talking-head + aphorism. The keeper reel is there.',
+    ],
+  },
+  {
+    version: '2026.10.28.7',
+    date: 'October 28, 2026',
+    title: 'Mark client-ready from the stamp list',
+    items: [
+      'After the brain check, Mark client-ready is on the stamped row in Needs your brain check and on the batch list. You can mark it without opening the card.',
+      'The same button stays on the script Read screen. It still needs the four boxes saved, and a Format Vault recipe when that client has locked formats.',
+      'Mark client-ready does not send anything. The stamp does not send anything. Clients never see this button.',
+    ],
+    steps: [
+      'Stamp a script, then go back to Needs your brain check. The stamped row has Mark client-ready.',
+      'Tap it there, or open Read and use the same button. Nothing is sent. Film on the batch card stays where it was.',
+      'If Format Vault has no recipe, the list button stays disabled, same as on Read.',
+    ],
+  },
   {
     version: '2026.10.28.6',
     date: 'October 28, 2026',
@@ -4594,6 +4734,7 @@ function renderBatchCard(group, index) {
       ${canEditScripts() || viewingAsClient() ? `<button type="button" class="batch-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
       <button type="button" class="batch-film" onclick="window.filmScript('${s.id}')">Film</button>
     </div>
+    ${(typeof viewingAsClient === 'function' && viewingAsClient()) ? '' : listClientReadyHtml(s)}
   </article>`;
 }
 function renderBatchCards(groups) {
@@ -4713,6 +4854,25 @@ function reviewQueueFor(rows, opts) {
     return asText(a.id).localeCompare(asText(b.id));
   });
 }
+// Stamped Needs Review rows stay off the stamp queue so Next still opens an
+// unsigned script. They get Mark client-ready on this list instead.
+function readyQueueFor(rows, opts) {
+  opts = opts || {};
+  const slug = opts.slug || '';
+  const stampClientsOnly = !!opts.stampClientsOnly;
+  return (rows || []).filter(s => {
+    if (!s || (slug && s.client_slug !== slug)) return false;
+    if (stampClientsOnly && stampQueueClientRank(s.client_slug) >= 9) return false;
+    if ((s.status || '') !== 'Needs Review') return false;
+    return humanQaDeliveryReady(s);
+  }).slice().sort((a, b) => {
+    const by = reviewQueueRank(a) - reviewQueueRank(b);
+    if (by) return by;
+    const title = asText(a.title).localeCompare(asText(b.title));
+    if (title) return title;
+    return asText(a.id).localeCompare(asText(b.id));
+  });
+}
 function nextStampId(queueIds, currentId, stillNeeds) {
   const ids = Array.isArray(queueIds) ? queueIds : [];
   const needs = typeof stillNeeds === 'function' ? stillNeeds : function () { return true; };
@@ -4775,6 +4935,12 @@ function reviewQueueScripts() {
   if (typeof stampQueueMode !== 'undefined' && stampQueueMode) return stampQueueFor(rows, opts);
   return reviewQueueFor(rows, opts);
 }
+function readyQueueScripts() {
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const opts = reviewQueueOpts();
+  if (typeof stampQueueMode !== 'undefined' && stampQueueMode) opts.stampClientsOnly = true;
+  return readyQueueFor(rows, opts);
+}
 function renderReviewCard(s, index) {
   const who = clientLabel(s.client_slug);
   const batch = asText(s.batch).trim();
@@ -4788,23 +4954,36 @@ function renderReviewCard(s, index) {
       ${reviewBlockerBadgesHtml(s)}
       ${hook ? `<span class="review-hook">${escHtml(hook)}</span>` : ''}
     </button>
+    ${listClientReadyHtml(s)}
   </article>`;
+}
+function renderReadyQueueHtml(rows) {
+  if (!rows || !rows.length) return '';
+  const n = rows.length;
+  return `<section class="review-ready-queue" aria-label="Stamped, not client-ready">
+    <h2 class="review-ready-h">Stamped, not client-ready</h2>
+    <p class="review-lead">${n} script${n === 1 ? '' : 's'} you already signed. Mark client-ready on the row. It does not send.</p>
+    <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
+  </section>`;
 }
 function renderReviewQueue() {
   const rows = reviewQueueScripts();
+  const readyHtml = renderReadyQueueHtml(readyQueueScripts());
   const scoped = viewingAsClient();
   const who = scoped ? clientLabel(previewSlug) : '';
   const queueOn = typeof stampQueueMode !== 'undefined' && stampQueueMode;
   const toggle = `<button type="button" class="stamp-queue-toggle" aria-pressed="${queueOn ? 'true' : 'false'}" onclick="window.setStampQueueMode(${queueOn ? 'false' : 'true'})">Stamp Queue Mode</button>`;
   const rail = queueOn ? stampQueueRailHtml(rows) : '';
+  const links = `<button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
+      <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>`;
   if (!rows.length) {
     return `<section class="review-queue" aria-label="Needs your brain check">
       <div class="eyebrow">Needs your brain check</div>
-      <h2 class="review-h">Nothing to stamp</h2>
+      <h2 class="review-h">${readyHtml ? 'Nothing left to stamp' : 'Nothing to stamp'}</h2>
       ${toggle}
       <p class="review-empty">${scoped ? 'No unsigned scripts for ' + escHtml(who) + '.' : 'No unsigned scripts across clients.'}</p>
-      <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
-      <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>
+      ${readyHtml}
+      ${links}
     </section>`;
   }
   return `<section class="review-queue" aria-label="Needs your brain check">
@@ -4814,8 +4993,8 @@ function renderReviewQueue() {
     ${toggle}
     ${rail}
     <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
-    <button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
-    <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>
+    ${readyHtml}
+    ${links}
   </section>`;
 }
 function reviewQueueJumpHtml() {
@@ -4983,8 +5162,6 @@ function formatVaultHandle(person) {
   return asText(person.name).trim();
 }
 function vaultEmptyRecipeCopy(client) {
-  const slug = typeof client === 'string' ? client : (client && client.slug);
-  if (slug && vaultSlugKey(slug) === 'jan') return 'Keepers are not decided yet.';
   return 'No recipes filed yet. Run success-recipes and file the sheet.';
 }
 function clientHasEmptyVault(client) {
@@ -5316,7 +5493,7 @@ function renderFormatVaultHtml(catalog, slug, formatId) {
   return '<div class="page-stack">'
     + '<button type="button" class="back-btn" onclick="window.closeHubPage()">← Scripts</button>'
     + sticky
-    + '<article class="page-card"><p class="vault-lead">Pick a client, then a locked format. Creators are grouped by niche and cross-industry. Swipe the outlier reels. Jan stays empty until keepers are decided.</p></article>'
+    + '<article class="page-card"><p class="vault-lead">Pick a client, then a locked format. Creators are grouped by niche and cross-industry. Swipe the outlier reels. Jan keepers on file: Candace, Pierini, and Lorin.</p></article>'
     + sections
     + empty
     + '</div>';
@@ -5361,7 +5538,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Press play in the small player when a file is on the reel. Tap Open on Instagram or a poster when it is not. A reaction script also shows Clip to react to on that row. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. After the stamp, Mark client-ready is on that list row and on the admin batch list. It stays off when you are viewing as the client. It stays on Read. It does not send. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Press play in the small player when a file is on the reel. Tap Open on Instagram or a poster when it is not. A reaction script also shows Clip to react to on that row. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
@@ -9011,6 +9188,30 @@ function reviewStampAidsHtml(s, surface) {
   if (surface !== 'review') return '';
   return reviewBlockerBadgesHtml(s) + dnaStripHtml(s);
 }
+function deliveryStatusAction(s) {
+  if (!s) return null;
+  if (s.status === 'Needs Review') return { status: 'Approved', label: 'Mark client-ready' };
+  if (s.status === 'Draft' || s.status === 'Passed') return { status: 'Needs Review', label: 'Send to Needs Review' };
+  return null;
+}
+function deliveryActionHtml(s) {
+  const action = deliveryStatusAction(s);
+  const id = asText(s && s.id).trim();
+  if (!action || !id) return '';
+  if (humanQaBlocksStatus(s, action.status)) return '';
+  const lead = '<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p>';
+  if (vaultEmptyBlocksStatus(s, action.status)) {
+    return lead + '<button type="button" class="qa-send is-blocked" disabled aria-disabled="true" title="' + escHtml(vaultEmptyTitle()) + '">' + escHtml(action.label) + '</button><button type="button" class="qa-vault" onclick="window.openFormatVault()">Format Vault</button>';
+  }
+  return lead + '<button type="button" class="qa-send" onclick="moveStatus(\'' + id + '\',\'' + action.status + '\')">' + escHtml(action.label) + '</button>';
+}
+function listClientReadyHtml(s) {
+  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!s || s.status !== 'Needs Review' || !humanQaDeliveryReady(s)) return '';
+  const html = deliveryActionHtml(s);
+  if (!html) return '';
+  return '<div class="list-ready">' + html + '</div>';
+}
 function renderHumanQaGate(s, surface) {
   s = s || {};
   const id = asText(s.id).trim();
@@ -9024,11 +9225,7 @@ function renderHumanQaGate(s, surface) {
   const confirmable = !done && ready && (filmPhase === 'start' || (filmPhase === 'end' && startDone));
   const when = qa.at ? formatStamp(qa.at) : '';
   const who = qa.by || 'Cristian';
-  const action = s.status === 'Needs Review'
-    ? { status: 'Approved', label: 'Mark client-ready' }
-    : ((s.status === 'Draft' || s.status === 'Passed') ? { status: 'Needs Review', label: 'Send to Needs Review' } : null);
-  const brainBlocked = action && humanQaBlocksStatus(s, action.status);
-  const vaultBlocked = action && vaultEmptyBlocksStatus(s, action.status);
+  const action = deliveryStatusAction(s);
   const compact = surface === 'review';
   const gateClass = 'qa-gate' + (compact ? ' is-compact' : '');
   if (done || confirmable) {
@@ -9037,11 +9234,7 @@ function renderHumanQaGate(s, surface) {
     const signed = (humanQaChecks(s) || []).map(item =>
       '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
     ).join('');
-    const vaultSend = `<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p><button type="button" class="qa-send is-blocked" disabled aria-disabled="true" title="${escHtml(vaultEmptyTitle())}">${escHtml(action.label)}</button><button type="button" class="qa-vault" onclick="window.openFormatVault()">Format Vault</button>`;
-    const openSend = `<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p><button type="button" class="qa-send" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`;
-    const send = !filmPhase && action && id
-      ? (brainBlocked ? '' : (vaultBlocked ? vaultSend : openSend))
-      : '';
+    const send = filmPhase ? '' : deliveryActionHtml(s);
     const confirm = confirmable && id
       ? `<button type="button" class="qa-go" onclick="window.confirmHumanQaFilm('${id}','${filmPhase}')">${filmPhase === 'end' ? 'I finished this film read' : "I'm reading this myself"}</button>`
       : '';

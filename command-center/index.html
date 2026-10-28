@@ -4,11 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080808">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Signal CC">
 <title>Signal Marketing · Command Center</title>
-<meta name="description" content="Signal Marketing Command Center — floor KPIs, priorities, schedule, today triage. signals.marketing">
+<meta name="description" content="Signal Marketing Command Center — daily ops for Today, Money, Clients, Team, and Projects. America/Chicago. signals.marketing">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23080808' width='32' height='32' rx='7'/%3E%3Cpath fill='%23ed3039' d='M6 22h3V14H6zm5 0h3V9h-3zm5 0h3V6h-3zm5 0h3V11h-3z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -19,7 +22,7 @@
     --surface: #101010; --surface-2: #161212; --surface-3: #1c1616;
     --line: #242424; --line-hot: rgba(237, 48, 57, 0.45);
     --ok: #3dd68c; --warn: #f0b429; --danger: #ff8a8a;
-    --tap: 52px; --radius: 14px;
+    --tap: 48px; --radius: 14px;
     --safe-b: env(safe-area-inset-bottom, 0px);
     --safe-t: env(safe-area-inset-top, 0px);
   }
@@ -30,14 +33,20 @@
     min-height: 100%; min-height: 100dvh;
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
     background-image:
       radial-gradient(120% 70% at 50% -15%, rgba(237,48,57,0.28), transparent 55%),
       radial-gradient(80% 40% at 100% 20%, rgba(237,48,57,0.08), transparent 50%);
     background-attachment: fixed;
   }
-  body { padding: calc(12px + var(--safe-t)) 14px calc(88px + var(--safe-b)); max-width: 520px; margin: 0 auto; }
+  body { padding: calc(12px + var(--safe-t)) 14px calc(96px + var(--safe-b)); max-width: 520px; margin: 0 auto; }
   a { color: var(--red-soft); text-decoration: none; }
-  button { font: inherit; color: inherit; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button:focus, a:focus, input:focus, select:focus, textarea:focus { outline: none; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--red-soft); outline-offset: 2px;
+  }
+  time { display: block; }
 
   .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
   .brand { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
@@ -55,14 +64,15 @@
   .brand-text strong { color: var(--fg); font-size: 12px; letter-spacing: 0.08em; }
   .brand-text em { font-style: normal; color: var(--red-soft); font-size: 10px; letter-spacing: 0.04em; text-transform: lowercase; }
   .pill-live {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
     color: var(--red-soft); background: rgba(237,48,57,0.12); border: 1px solid var(--line-hot);
     padding: 6px 10px; border-radius: 999px; white-space: nowrap;
   }
   .pill-live .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-right: 6px; vertical-align: middle; box-shadow: 0 0 8px var(--red); animation: pulse 1.6s ease infinite; }
   @keyframes pulse { 50% { opacity: .45; } }
 
-  h1 { font-size: 26px; font-weight: 900; letter-spacing: -0.035em; margin: 2px 0 6px; line-height: 1.05; }
+  .kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red-soft); margin-bottom: 2px; }
+  h1 { font-size: 42px; font-weight: 900; letter-spacing: -0.045em; margin: 0 0 4px; line-height: 0.95; white-space: nowrap; }
   h1 em { font-style: normal; color: var(--red); }
   .sub { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
 
@@ -76,9 +86,9 @@
     box-shadow: 0 0 0 1px rgba(237,48,57,0.15) inset;
   }
 
-  .tabs { display: flex; gap: 6px; margin: 0 0 12px; flex-wrap: wrap; }
+  .tabs { display: flex; gap: 6px; margin: 0 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .tab {
-    flex: 1; min-width: 70px; text-align: center; padding: 11px 6px; border-radius: 12px;
+    flex: 1 0 auto; min-width: 64px; text-align: center; padding: 11px 8px; border-radius: 12px;
     border: 1px solid var(--line); background: var(--surface); color: var(--muted);
     font-size: 12px; font-weight: 700; cursor: pointer;
   }
@@ -86,7 +96,7 @@
   .panel { display: none; }
   .panel.on { display: block; }
   .panel-purpose {
-    font-size: 12px; color: var(--dim); margin: -4px 0 12px; line-height: 1.4;
+    font-size: 12px; color: var(--dim); margin: -2px 0 12px; line-height: 1.4;
     padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--line);
   }
   .panel-purpose strong { color: var(--muted); font-weight: 700; }
@@ -107,85 +117,117 @@
     font-size: 12px; color: var(--muted); text-transform: uppercase;
     letter-spacing: .08em; margin-bottom: 8px; font-weight: 700;
   }
-  .row {
-    display: flex; justify-content: space-between; gap: 10px; align-items: center;
-    padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px;
-  }
-  .row:last-child { border-bottom: 0; }
-  .row .l { color: var(--fg); flex: 1; }
-  .row .r { color: var(--muted); font-size: 12px; white-space: nowrap; }
-  .row.now { background: rgba(237,48,57,0.1); margin: 0 -10px; padding: 10px; border-radius: 10px; border-bottom-color: transparent; }
-  .row.done .l { color: var(--dim); text-decoration: line-through; }
-  .row .t { color: var(--red-soft); font-weight: 700; width: 72px; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+  .card-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .card-h h3, .card-h .who { margin: 0; }
+  .who { font-size: 16px; font-weight: 750; letter-spacing: -0.02em; color: var(--fg); text-transform: none; }
 
   .badge { display: inline-block; font-size: 11px; font-weight: 750; padding: 3px 8px; border-radius: 999px; }
   .badge.danger { background: #3a1717; color: var(--danger); }
   .badge.warn { background: #3a2e12; color: var(--warn); }
   .badge.ok { background: #123a28; color: var(--ok); }
   .badge.muted { background: #1a1a1a; color: var(--dim); }
+  .onphone {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--dim); border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; white-space: nowrap;
+  }
 
-  .kpi-grid { display: grid; gap: 10px; }
-  .kpi {
-    background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
-    padding: 14px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;
+  .empty {
+    border: 1px dashed var(--line); border-radius: 12px; padding: 14px;
+    color: var(--muted); font-size: 13px; line-height: 1.45; margin-bottom: 8px;
   }
-  .kpi .label { font-size: 13px; color: var(--muted); margin-bottom: 2px; font-weight: 600; }
-  .kpi .val { font-size: 36px; font-weight: 850; letter-spacing: -0.03em; color: var(--fg); line-height: 1; cursor: pointer; }
-  .kpi .val.hot { color: var(--red-soft); }
-  .kpi .goal { font-size: 11px; color: var(--dim); margin-top: 4px; }
-  .btns { display: flex; gap: 8px; }
-  .btn {
-    width: var(--tap); height: var(--tap); border-radius: 14px; border: 1px solid var(--line);
-    background: var(--surface-3); color: var(--fg); font-size: 24px; font-weight: 700;
-    cursor: pointer; display: flex; align-items: center; justify-content: center; user-select: none;
+  .empty strong { display: block; color: var(--fg); font-size: 14px; margin-bottom: 4px; font-weight: 700; }
+  .fine { font-size: 12px; color: var(--dim); line-height: 1.4; }
+  label.fine { display: block; margin: 8px 0 4px; }
+  .feed-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+  .feed-title { font-size: 15px; font-weight: 750; line-height: 1.35; overflow-wrap: anywhere; }
+  .feed-meta, .feed-link { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.4; overflow-wrap: anywhere; }
+  .feed-link { display: inline-block; }
+  .feed-row { padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .feed-row:last-child { border-bottom: 0; }
+  .badge-row { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+  .src {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--red-soft); border: 1px solid var(--line-hot); border-radius: 999px; padding: 3px 7px; white-space: nowrap;
   }
-  .btn.plus { background: rgba(237,48,57,0.18); border-color: var(--line-hot); color: var(--red-soft); }
-  .btn:active { transform: scale(0.96); }
+  .overlay {
+    margin-top: 14px; border: 1px solid var(--line); border-radius: var(--radius);
+    background: rgba(255,255,255,0.02); padding: 4px 12px 12px;
+  }
+  .overlay summary {
+    cursor: pointer; font-size: 13px; font-weight: 750; min-height: 48px;
+    display: flex; align-items: center; color: var(--fg);
+  }
+  .overlay[open] summary { color: var(--red-soft); }
 
-  .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-  .actions button, .actions a.btn-wide {
-    flex: 1; min-width: 120px; height: 44px; border-radius: 12px; border: 1px solid var(--line);
-    background: var(--surface-3); color: var(--fg); font-size: 13px; font-weight: 650; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; text-decoration: none;
+  .field, select.field, textarea.field {
+    width: 100%; background: #0c0c0c; border: 1px solid var(--line); border-radius: 12px;
+    padding: 12px; font-size: 16px; color: var(--fg);
   }
-  .actions button.primary, .actions a.btn-wide.primary {
+  textarea.field { min-height: 84px; resize: vertical; line-height: 1.4; }
+  select.field { min-height: var(--tap); font-weight: 700; }
+  select.st[data-tone="unset"] { color: var(--dim); }
+  select.st[data-tone="progress"], select.st[data-tone="waiting"] { color: var(--warn); }
+  select.st[data-tone="delivered"] { color: var(--ok); }
+  select.st[data-tone="blocked"] { color: var(--danger); }
+
+  .money-big { font-size: 34px; font-weight: 850; letter-spacing: -0.03em; line-height: 1.05; margin: 2px 0 4px; overflow-wrap: anywhere; }
+  .money-big.blank { color: var(--dim); font-weight: 700; }
+  .money-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+
+  .add-row { display: flex; gap: 8px; margin-top: 8px; align-items: stretch; }
+  .add-row .field { flex: 1; min-width: 0; width: auto; }
+  .add-row button, .texty, .btn-wide {
+    border-radius: 12px; border: 1px solid var(--line); background: var(--surface-3);
+    color: var(--fg); font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .add-row button {
+    flex: 0 0 auto; min-width: 72px; min-height: var(--tap); padding: 0 14px;
+    border-color: var(--line-hot); background: rgba(237,48,57,0.18); color: var(--red-soft);
+  }
+  .add-row button:active, .btn-wide:active, .tab:active, .texty:active { transform: scale(0.98); }
+  .texty {
+    background: transparent; color: var(--dim); border-color: transparent;
+    min-height: 36px; padding: 6px 0; font-size: 12px;
+  }
+  .btn-wide {
+    display: flex; align-items: center; justify-content: center; min-height: 48px;
+    text-decoration: none; width: 100%; margin-top: 8px;
+  }
+  .btn-wide.primary {
     background: var(--red); color: #fff; border-color: var(--red);
     box-shadow: 0 8px 24px -12px var(--red-glow);
   }
 
-  .prio-item {
-    display: flex; gap: 12px; align-items: flex-start; padding: 10px 0;
-    border-bottom: 1px solid var(--line); cursor: pointer;
-  }
-  .prio-item:last-child { border-bottom: 0; }
-  .prio-item input { width: 22px; height: 22px; margin-top: 2px; accent-color: var(--red); flex-shrink: 0; }
-  .prio-item .body { flex: 1; }
-  .prio-item .title { font-size: 14px; font-weight: 650; color: var(--fg); line-height: 1.35; }
-  .prio-item .meta { font-size: 12px; color: var(--dim); margin-top: 3px; line-height: 1.35; }
-  .prio-item.done .title { color: var(--dim); text-decoration: line-through; }
-  .prio-item .go {
-    flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--red-soft);
-    border: 1px solid var(--line-hot); background: rgba(237,48,57,0.12);
-    padding: 6px 10px; border-radius: 999px; text-decoration: none; align-self: center;
+  .check { display: flex; gap: 4px; align-items: flex-start; padding: 4px 0; border-bottom: 1px solid var(--line); }
+  .check:last-child { border-bottom: 0; }
+  .check label { display: flex; gap: 10px; align-items: flex-start; flex: 1; padding: 8px 0; cursor: pointer; }
+  .check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--red); flex-shrink: 0; }
+  .check .txt, .win .txt { font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
+  .check.done .txt { color: var(--dim); text-decoration: line-through; }
+  .x {
+    border: 0; background: transparent; color: var(--dim); width: 44px; height: 44px;
+    font-size: 20px; cursor: pointer; flex-shrink: 0;
   }
 
-  .blank {
-    border: 1px dashed var(--line); border-radius: 12px; padding: 16px;
-    text-align: center; color: var(--dim); font-size: 13px; line-height: 1.45; margin-bottom: 10px;
+  .track { height: 8px; border-radius: 99px; background: #141414; border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
+  .track > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #9a1c24, var(--red)); border-radius: 99px; }
+  .goal .track { margin-top: 8px; }
+  .win { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; display: flex; gap: 8px; align-items: flex-start; }
+  .win:last-child { border-bottom: 0; }
+  .win .txt { flex: 1; line-height: 1.35; padding-top: 10px; }
+  .lane { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: var(--red); text-transform: uppercase; margin-bottom: 6px; }
+
+  .go {
+    flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--red-soft);
+    border: 1px solid var(--line-hot); background: rgba(237,48,57,0.12);
+    padding: 6px 10px; border-radius: 999px; text-decoration: none;
   }
-  .blank strong { color: var(--muted); display: block; margin-bottom: 4px; }
-  .snap { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 12px; }
-  .snap div {
-    background: var(--surface-3); border: 1px solid var(--line); border-radius: 10px;
-    padding: 8px 4px; text-align: center;
-  }
-  .snap .n { font-size: 18px; font-weight: 800; color: var(--red-soft); line-height: 1; }
-  .snap .l { font-size: 9px; color: var(--dim); margin-top: 4px; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
 
   .toast {
     position: fixed; left: 50%; bottom: calc(78px + var(--safe-b)); transform: translateX(-50%);
     background: #1a1a1a; color: #fff; padding: 10px 14px; border-radius: 999px; font-size: 13px;
     opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 30; border: 1px solid var(--line);
+    max-width: calc(100% - 32px); text-align: center;
   }
   .toast.on { opacity: 1; }
 
@@ -203,13 +245,16 @@
   .dock a, .dock button {
     text-align: center; padding: 8px 4px; border-radius: 12px; border: 0; background: transparent;
     font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-    color: var(--muted); line-height: 1.25; cursor: pointer; width: 100%;
+    color: var(--muted); line-height: 1.25; cursor: pointer; width: 100%; text-decoration: none;
   }
   .dock a.on, .dock button.on { background: rgba(237,48,57,0.16); color: var(--fg); }
   .dock a span, .dock button span { display: block; font-size: 16px; margin-bottom: 2px; }
 
-  footer { margin-top: 16px; font-size: 11px; color: var(--dim); line-height: 1.4; text-align: center; }
-  .linkish { color: var(--red-soft); text-decoration: underline; text-underline-offset: 2px; font-size: 13px; }
+  footer { margin-top: 16px; font-size: 11px; color: var(--dim); line-height: 1.45; text-align: center; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -221,118 +266,282 @@
         <em><a href="https://signals.marketing" style="color:inherit">signals.marketing</a></em>
       </div>
     </div>
-    <div class="pill-live" id="livePill"><span class="dot" aria-hidden="true"></span><span id="liveClock">LIVE</span></div>
+    <div class="pill-live" id="livePill"><span class="dot" aria-hidden="true"></span><span id="liveClock">CT</span></div>
   </div>
 
-  <h1>Floor <em>Command</em></h1>
-  <p class="sub">Sat Oct 24 · last day AI Marketing World (CT). Tap KPIs as you go. One Home Screen icon runs the floor.</p>
+  <time id="opsDay" datetime="">
+    <div class="kicker" id="heroDow">America/Chicago</div>
+    <h1><span id="heroMon">—</span> <em id="heroDom">—</em></h1>
+  </time>
+  <p class="sub" id="heroSub">Loading Chicago time.</p>
 
   <nav class="product-nav" aria-label="Signal product">
-    <button type="button" class="on" data-goto="kpis">Floor</button>
-    <button type="button" data-goto="today">Today</button>
-    <a href="../signal/">Lead magnet</a>
-    <a href="../">Content Hub</a>
+    <button type="button" data-dock="floor">Floor</button>
+    <button type="button" data-dock="today">Today</button>
+    <a href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Surge Today</a>
+    <a href="../signal/">Magnet</a>
+    <a href="../">Hub</a>
   </nav>
 
-  <div class="tabs" role="tablist">
-    <button class="tab on" data-tab="kpis" type="button" role="tab">KPIs</button>
-    <button class="tab" data-tab="priorities" type="button" role="tab">Priorities</button>
-    <button class="tab" data-tab="schedule" type="button" role="tab">Schedule</button>
-    <button class="tab" data-tab="today" type="button" role="tab">Today</button>
+  <div class="tabs" role="tablist" aria-label="Ops panels">
+    <button class="tab on" data-tab="today" type="button" role="tab" aria-selected="true">Today</button>
+    <button class="tab" data-tab="money" type="button" role="tab" aria-selected="false">Money</button>
+    <button class="tab" data-tab="clients" type="button" role="tab" aria-selected="false">Clients</button>
+    <button class="tab" data-tab="team" type="button" role="tab" aria-selected="false">Team</button>
+    <button class="tab" data-tab="projects" type="button" role="tab" aria-selected="false">Projects</button>
   </div>
 
-  <section id="panel-kpis" class="panel on">
-    <p class="panel-purpose"><strong>KPIs</strong> — tap + / − (or the number) to count. Saves on this phone for today.</p>
+  <section id="panel-today" class="panel on" role="tabpanel" data-feed-state="checking">
+    <p class="lane">Lane 01 · Today</p>
+    <p class="panel-purpose"><strong>Today</strong> — calls from Calendar and Fathom, drafts from Gmail. Personal DMs are not connected.</p>
     <div class="callout">
-      <h2>Make money today</h2>
-      <p>Run Signal lead-magnet conversations. Promise a postable piece in <strong>~15 minutes</strong> — before they leave the hall. Book the call on the spot.</p>
+      <h2>Today's run</h2>
+      <p id="todayRunLabel">Checking the live feed.</p>
     </div>
-    <div class="kpi-grid" id="kpiGrid"></div>
-    <div class="actions">
-      <a class="btn-wide primary" href="../signal/">Open Lead Magnet →</a>
-      <button type="button" id="shareCounts">Copy counts</button>
-      <button type="button" id="resetDay">Reset today</button>
-    </div>
+    <p class="fine" id="feedNote">Waiting on live feed.</p>
+
+    <article class="card">
+      <div class="card-h">
+        <h3>Calls</h3>
+        <span class="src">Calendar · Fathom</span>
+      </div>
+      <div class="empty" id="empty-feed-calls"><strong>No booked calls in the feed</strong>Names show up only when today.json has them.</div>
+      <div class="list" id="feed-calls"></div>
+    </article>
+
+    <article class="card">
+      <div class="card-h">
+        <h3>Emails to send</h3>
+        <span class="src">Gmail</span>
+      </div>
+      <p class="fine" style="margin-bottom:8px">Stale drafts stay labeled Draft. A draft is not a send-tonight task.</p>
+      <div class="empty" id="empty-feed-emails"><strong>No emails in the feed</strong>Nothing is queued from Gmail until the file lists it.</div>
+      <div class="list" id="feed-emails"></div>
+    </article>
+
+    <article class="card">
+      <div class="card-h">
+        <h3>Podcast</h3>
+      </div>
+      <div class="empty" id="empty-feed-podcast"><strong>No podcast booking in the feed</strong>Nothing is filled in until the file has a booking.</div>
+      <div class="list" id="feed-podcast"></div>
+    </article>
+
+    <article class="card" id="dm-bridge">
+      <div class="card-h">
+        <h3>DMs</h3>
+        <span class="badge muted">Bridge TBD</span>
+      </div>
+      <div class="empty"><strong>Bridge TBD</strong>iMessage, Instagram DMs, Messenger, and WhatsApp personal have no connector. Nothing from those inboxes is listed.</div>
+    </article>
+
+    <details class="overlay">
+      <summary>Phone checklist · optional</summary>
+      <p class="fine">Saved in this browser only. The feed above is the list. Add a row only for a check that is not in the feed.</p>
+      <article class="card">
+        <div class="card-h">
+          <h3>Calls</h3>
+          <span class="badge muted" id="count-calls" hidden></span>
+        </div>
+        <div class="empty" id="empty-calls"><strong>No phone-only rows</strong>On this phone. Not the Calendar feed.</div>
+        <div class="list" id="list-calls"></div>
+        <form class="add-row" data-add="calls">
+          <input class="field" type="text" maxlength="140" placeholder="Add a phone-only check" aria-label="Add a phone-only call check" autocomplete="off">
+          <button type="submit">Add</button>
+        </form>
+        <button type="button" class="texty" data-clear="calls" hidden>Clear phone checks</button>
+      </article>
+      <article class="card">
+        <div class="card-h">
+          <h3>Emails</h3>
+          <span class="badge muted" id="count-emails" hidden></span>
+        </div>
+        <div class="empty" id="empty-emails"><strong>No phone-only rows</strong>On this phone. Not the Gmail feed.</div>
+        <div class="list" id="list-emails"></div>
+        <form class="add-row" data-add="emails">
+          <input class="field" type="text" maxlength="140" placeholder="Add a phone-only check" aria-label="Add a phone-only email check" autocomplete="off">
+          <button type="submit">Add</button>
+        </form>
+        <button type="button" class="texty" data-clear="emails" hidden>Clear phone checks</button>
+      </article>
+      <article class="card">
+        <div class="card-h">
+          <h3>Podcast</h3>
+          <span class="badge muted" id="count-podcast" hidden></span>
+        </div>
+        <div class="empty" id="empty-podcast"><strong>No phone-only rows</strong>On this phone. Not the feed.</div>
+        <div class="list" id="list-podcast"></div>
+        <form class="add-row" data-add="podcast">
+          <input class="field" type="text" maxlength="140" placeholder="Add a phone-only check" aria-label="Add a phone-only podcast check" autocomplete="off">
+          <button type="submit">Add</button>
+        </form>
+        <button type="button" class="texty" data-clear="podcast" hidden>Clear phone checks</button>
+      </article>
+    </details>
+    <p class="fine" style="margin-top:12px">Live agent board stays on <a href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Surge Today</a>. This page does not read it.</p>
   </section>
 
-  <section id="panel-priorities" class="panel">
-    <p class="panel-purpose"><strong>Priorities</strong> — check off as you clear them. Stored on this phone.</p>
+  <section id="panel-money" class="panel" role="tabpanel">
+    <p class="lane">Lane 02 · Money</p>
+    <p class="panel-purpose"><strong>Money</strong> — cash in, cash out, tools spend. Blank. No Drive Sheet is pointed here, and Stripe is not authorized.</p>
     <div class="callout">
-      <h2>Two needle-movers</h2>
-      <p>1. Floor conversations → book calls (path to 10 retainers).<br>
-      2. Clear Devin at lunch: CORE batch grade 94 — review, then tell Ops to send.</p>
+      <h2>Books not connected</h2>
+      <p>No balance is loaded. Figures stay blank until a Sheet you point at and Stripe are connected. Neither is in this build.</p>
     </div>
-    <div class="card" id="prioList"></div>
-    <div class="card">
-      <h3>Client status</h3>
-      <div class="row"><div class="l">Devin · ready to send (94)</div><span class="badge danger">Overdue</span></div>
-      <div class="row"><div class="l">Jan · Needs Review (97)</div><span class="badge warn">Review</span></div>
-      <div class="row"><div class="l">Sagun Stories Week 1 (94)</div><span class="badge warn">Renegotiate</span></div>
-      <div class="row"><div class="l">Andrew CORE (95)</div><span class="badge ok">Healthy</span></div>
-    </div>
+
+    <article class="card">
+      <div class="card-h"><h3>Cash in</h3><span class="onphone">On this phone</span></div>
+      <div class="money-big blank" id="fig-cashIn">—</div>
+      <div class="money-sub" id="sub-cashIn">Not logged</div>
+      <label class="fine" for="in-cashIn">Phone-local scratch only. Not Stripe. Not a Sheet.</label>
+      <input class="field" id="in-cashIn" data-bind="money.cashIn" inputmode="decimal" maxlength="40" placeholder="Not logged" autocomplete="off" spellcheck="false">
+    </article>
+    <article class="card">
+      <div class="card-h"><h3>Cash out</h3><span class="onphone">On this phone</span></div>
+      <div class="money-big blank" id="fig-cashOut">—</div>
+      <div class="money-sub" id="sub-cashOut">Not logged</div>
+      <label class="fine" for="in-cashOut">Phone-local scratch only. Not Stripe. Not a Sheet.</label>
+      <input class="field" id="in-cashOut" data-bind="money.cashOut" inputmode="decimal" maxlength="40" placeholder="Not logged" autocomplete="off" spellcheck="false">
+    </article>
+    <article class="card">
+      <div class="card-h"><h3>Tools spend</h3><span class="onphone">On this phone</span></div>
+      <div class="money-big blank" id="fig-tools">—</div>
+      <div class="money-sub" id="sub-tools">Not logged</div>
+      <label class="fine" for="in-tools">Phone-local scratch only. Not Stripe. Not a Sheet.</label>
+      <input class="field" id="in-tools" data-bind="money.tools" inputmode="decimal" maxlength="40" placeholder="Not logged" autocomplete="off" spellcheck="false">
+    </article>
+    <article class="card">
+      <div class="card-h"><h3>Note</h3><span class="onphone">On this phone</span></div>
+      <label class="fine" for="in-money-note">Phone-local only. Not synced.</label>
+      <textarea class="field" id="in-money-note" data-bind="money.note" maxlength="500" placeholder="Optional note. Stays in this browser."></textarea>
+    </article>
   </section>
 
-  <section id="panel-schedule" class="panel">
-    <p class="panel-purpose"><strong>Schedule</strong> — Sat Oct 24 CT · last AIMW day. Red row = now.</p>
-    <div class="card sched" id="schedList">
-      <h3>Today CT · volunteer + floor</h3>
-    </div>
-    <div class="card">
-      <h3>Personal (open)</h3>
-      <div class="row"><div class="l">Read / Bible / silence + journal</div><div class="r">Open</div></div>
-      <div class="row"><div class="l">Walk / workout between shifts</div><div class="r">Open</div></div>
-      <div class="row"><div class="l">Mom lawyer $2,500 — 3 lines</div><div class="r">Open</div></div>
-    </div>
+  <section id="panel-clients" class="panel" role="tabpanel">
+    <p class="lane">Lane 03 · Clients</p>
+    <p class="panel-purpose"><strong>Clients</strong> — delivery tracking. Status stays Not set until you change it. Open Hub for the queue.</p>
+
+    <article class="card">
+      <div class="card-h"><div class="who">Jan · Rich Life</div><a class="go" href="../">Check Hub</a></div>
+      <label class="fine" for="st-jan">Status · you set this</label>
+      <select class="field st" id="st-jan" data-bind="client.jan.status" data-tone="unset">
+        <option value="unset">Not set</option>
+        <option value="progress">In progress</option>
+        <option value="waiting">Waiting</option>
+        <option value="delivered">Delivered</option>
+        <option value="blocked">Blocked</option>
+      </select>
+      <label class="fine" for="note-jan">Note · on this phone</label>
+      <input class="field" id="note-jan" data-bind="client.jan.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Andrew George</div><a class="go" href="../">Check Hub</a></div>
+      <label class="fine" for="st-andrew">Status · you set this</label>
+      <select class="field st" id="st-andrew" data-bind="client.andrew.status" data-tone="unset">
+        <option value="unset">Not set</option>
+        <option value="progress">In progress</option>
+        <option value="waiting">Waiting</option>
+        <option value="delivered">Delivered</option>
+        <option value="blocked">Blocked</option>
+      </select>
+      <label class="fine" for="note-andrew">Note · on this phone</label>
+      <input class="field" id="note-andrew" data-bind="client.andrew.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Devin · R3SET</div><a class="go" href="../">Check Hub</a></div>
+      <label class="fine" for="st-devin">Status · you set this</label>
+      <select class="field st" id="st-devin" data-bind="client.devin.status" data-tone="unset">
+        <option value="unset">Not set</option>
+        <option value="progress">In progress</option>
+        <option value="waiting">Waiting</option>
+        <option value="delivered">Delivered</option>
+        <option value="blocked">Blocked</option>
+      </select>
+      <label class="fine" for="note-devin">Note · on this phone</label>
+      <input class="field" id="note-devin" data-bind="client.devin.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Sagun · Austin Report</div><a class="go" href="../">Check Hub</a></div>
+      <label class="fine" for="st-sagun">Status · you set this</label>
+      <select class="field st" id="st-sagun" data-bind="client.sagun.status" data-tone="unset">
+        <option value="unset">Not set</option>
+        <option value="progress">In progress</option>
+        <option value="waiting">Waiting</option>
+        <option value="delivered">Delivered</option>
+        <option value="blocked">Blocked</option>
+      </select>
+      <label class="fine" for="note-sagun">Note · on this phone</label>
+      <input class="field" id="note-sagun" data-bind="client.sagun.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Personal brand</div><a class="go" href="../">Check Hub</a></div>
+      <label class="fine" for="st-brand">Status · you set this</label>
+      <select class="field st" id="st-brand" data-bind="client.brand.status" data-tone="unset">
+        <option value="unset">Not set</option>
+        <option value="progress">In progress</option>
+        <option value="waiting">Waiting</option>
+        <option value="delivered">Delivered</option>
+        <option value="blocked">Blocked</option>
+      </select>
+      <label class="fine" for="note-brand">Note · on this phone</label>
+      <input class="field" id="note-brand" data-bind="client.brand.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
+    </article>
   </section>
 
-  <section id="panel-today" class="panel">
-    <p class="panel-purpose"><strong>Today</strong> — floor snapshot + triage. Full agents/money board needs Surge login (no token to republish).</p>
+  <section id="panel-team" class="panel" role="tabpanel">
+    <p class="lane">Lane 04 · Team</p>
+    <p class="panel-purpose"><strong>Team</strong> — desks, not agent IDs. Notes here are phone-local. The live board is on Surge.</p>
     <div class="callout">
-      <h2>Signal Today · floor mode</h2>
-      <p>Same look as Floor Command. Live agent cash / desk triage stays on Surge until you’re signed in there.</p>
+      <h2>Live agent board</h2>
+      <p>Ops, Content, Fulfillment, Growth, and Systems work in the open is on Surge Today. This page does not invent what an agent is doing.</p>
+      <a class="btn-wide primary" href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Open Surge Today</a>
     </div>
-    <div class="card">
-      <h3>Floor KPI snapshot</h3>
-      <div class="snap" id="todaySnap"></div>
-      <div class="actions" style="margin-top:4px">
-        <button type="button" class="primary" data-goto="kpis">Edit KPIs</button>
-        <a class="btn-wide" href="../signal/">Magnet</a>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Money</h3>
-      <div class="blank">
-        <strong>Blank until logged in</strong>
-        Surge Today holds cash / goals. Open it when you can sign in — this phone floor board does not invent balances.
-      </div>
-      <a class="linkish" href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener">Open Surge Today board →</a>
-    </div>
-    <div class="card">
-      <h3>Agents / desks</h3>
-      <div class="blank">
-        <strong>Blank until logged in</strong>
-        Agent triage (Brief, AI Team, Clients) lives on the Surge React board. Floor work does not need it — use Magnet + KPIs.
-      </div>
-      <div class="row" style="margin-top:8px"><div class="l">Floor conversations</div><span class="badge ok">Use Magnet</span></div>
-      <div class="row"><div class="l">Client scripts</div><span class="badge muted">Hub</span></div>
-      <div class="row"><div class="l">Surge republish</div><span class="badge warn">Needs SURGE_TOKEN</span></div>
-    </div>
-    <div class="card">
-      <h3>Quick links</h3>
-      <div class="row"><div class="l"><a class="linkish" href="../signal/">Signal lead magnet</a></div><div class="r">Floor</div></div>
-      <div class="row"><div class="l"><a class="linkish" href="../">Content Hub</a></div><div class="r">Clients</div></div>
-      <div class="row"><div class="l"><a class="linkish" href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener">Surge Today (login)</a></div><div class="r">Agents</div></div>
-      <div class="row"><div class="l"><a class="linkish" href="https://signals.marketing">signals.marketing</a></div><div class="r">Brand</div></div>
-    </div>
+    <article class="card">
+      <div class="card-h"><div class="who">Ops</div><span class="onphone">On this phone</span></div>
+      <textarea class="field" data-bind="desk.ops" maxlength="500" placeholder="Nothing logged for Ops." aria-label="Ops desk note, phone-local"></textarea>
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Content</div><span class="onphone">On this phone</span></div>
+      <textarea class="field" data-bind="desk.content" maxlength="500" placeholder="Nothing logged for Content." aria-label="Content desk note, phone-local"></textarea>
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Fulfillment</div><span class="onphone">On this phone</span></div>
+      <textarea class="field" data-bind="desk.fulfillment" maxlength="500" placeholder="Nothing logged for Fulfillment." aria-label="Fulfillment desk note, phone-local"></textarea>
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Growth</div><span class="onphone">On this phone</span></div>
+      <textarea class="field" data-bind="desk.growth" maxlength="500" placeholder="Nothing logged for Growth." aria-label="Growth desk note, phone-local"></textarea>
+    </article>
+    <article class="card">
+      <div class="card-h"><div class="who">Systems</div><span class="onphone">On this phone</span></div>
+      <textarea class="field" data-bind="desk.systems" maxlength="500" placeholder="Nothing logged for Systems." aria-label="Systems desk note, phone-local"></textarea>
+    </article>
   </section>
 
-  <div class="toast" id="toast"></div>
-  <footer>Signal Marketing · Command Center · Add to Home Screen · KPIs + checks save in this browser · Surge Today needs login/token to match brand fully</footer>
+  <section id="panel-projects" class="panel" role="tabpanel">
+    <p class="lane">Lane 05 · Projects</p>
+    <p class="panel-purpose"><strong>Projects</strong> — goals, then tasks, then wins you write. The bar moves only when you add tasks. No score is invented.</p>
+    <p class="fine" id="projectSummary" hidden></p>
+    <div class="empty" id="goalEmpty"><strong>No goals on this phone</strong>Add one when you want a run. Progress shows up only from tasks you add.</div>
+    <div id="goalList"></div>
+    <form class="add-row" data-add="goal">
+      <input class="field" type="text" maxlength="80" placeholder="Name a goal" aria-label="Goal name" autocomplete="off">
+      <button type="submit">Add</button>
+    </form>
+    <p class="fine" style="margin-top:8px">Checking a task does not add points. Log a win in your own words.</p>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <footer>
+    Signal Marketing · Command Center<br>
+    Add to Home Screen from the browser share sheet.<br>
+    Checks, money, desks, and goals save in this browser only.
+  </footer>
 
   <nav class="dock" aria-label="Quick nav">
     <div class="dock-inner">
-      <button type="button" class="on" data-goto="kpis"><span>■</span>Floor</button>
-      <button type="button" data-goto="today"><span>◎</span>Today</button>
+      <button type="button" data-dock="floor"><span>■</span>Floor</button>
+      <button type="button" data-dock="today"><span>◎</span>Today</button>
       <a href="../signal/"><span>◆</span>Magnet</a>
       <a href="../"><span>▦</span>Hub</a>
     </div>
@@ -340,222 +549,900 @@
 
 <script>
 (function () {
-  var DAY = '2026-10-24';
-  var KEY = 'cc_floor_kpis_' + DAY;
-  var PRIO_KEY = 'cc_floor_prios_' + DAY;
-  var DEFS = [
-    { id: 'videos', label: 'Videos filmed', goal: 'Film at AIMW today', short: 'Vids' },
-    { id: 'magnets', label: 'Lead magnets promised', goal: 'Promise → deliver in ~15 min', short: 'LM' },
-    { id: 'contacts', label: 'Contacts captured', goal: 'IG + site + phone/email', short: 'Contacts' },
-    { id: 'calls', label: 'Calls booked', goal: 'Book on the spot', short: 'Calls' },
-    { id: 'deals', label: 'Deals closed', goal: 'Retainers / paid yes', short: 'Closes' }
-  ];
-  var PRIOS = [
-    { id: 'floor', title: 'Floor + book calls (Signal pack)', meta: 'Needle #1 · use Magnet · ~15 min SLA', badge: 'Today', go: '../signal/', goLabel: 'Magnet' },
-    { id: '2bn', title: '2 Before Noon', meta: 'Phone block during SA-1 · by noon CT', badge: 'By noon' },
-    { id: 'devin', title: 'Devin CORE review → tell Ops to send', meta: 'Grade 94 · paid + a month overdue · 15-min read', badge: 'Overdue', go: '../', goLabel: 'Hub' },
-    { id: 'jan', title: 'Jan rewrite review (97)', meta: 'Mel/Telegram holds stay held', badge: 'Weekend' },
-    { id: 'andrew', title: 'Andrew CORE: S8 / S7 / S2 / camera', meta: 'Blocked items — don’t invent status', badge: 'Blocked' },
-    { id: 'railway', title: 'Railway credential rotation', meta: 'Security · ASAP when off floor', badge: 'ASAP' },
-    { id: 'jan750', title: 'Jan $750', meta: 'Due Nov 1', badge: 'Nov 1' },
-    { id: 'janren', title: 'Jan renewal talk', meta: 'Before Nov 15', badge: 'Nov 15' },
-    { id: 'found', title: 'Foundation homework', meta: 'Before Tue call', badge: 'Tue' }
-  ];
-  // Minutes from midnight CT windows for schedule highlight
-  var SCHED = [
-    { start: 9*60, end: 12*60, t: '9–12', l: 'Volunteer SA-1 · Ballroom Doors · floor chats' },
-    { start: 10*60, end: 10*60+30, t: '10:00', l: '2 Before Noon (phone) — nest inside SA-1' },
-    { start: 12*60, end: 13*60+15, t: '12–1:15', l: 'Acquisition.com LIVE' },
-    { start: 13*60+30, end: 17*60, t: '1:30–5', l: 'Volunteer SA-3 · Closeout · keep booking' }
-  ];
+  var KEY = 'cc_ops_v1';
+  var MAX_ROWS = 80;
+  var MAX_GOALS = 30;
+  var PANELS = { today: 1, money: 1, clients: 1, team: 1, projects: 1 };
+  var FLOOR = { money: 1, clients: 1, team: 1, projects: 1 };
+  var LISTS = { calls: 1, emails: 1, podcast: 1 };
+  var STATUSES = { unset: 1, progress: 1, waiting: 1, delivered: 1, blocked: 1 };
+  var CLIENTS = ['jan', 'andrew', 'devin', 'sagun', 'brand'];
+  var DESKS = ['ops', 'content', 'fulfillment', 'growth', 'systems'];
+  var MONEY_KEYS = ['cashIn', 'cashOut', 'tools'];
+  var lastFloor = 'money';
+  var active = 'today';
+
+  function blankState() {
+    return {
+      v: 1,
+      calls: [],
+      emails: [],
+      podcast: [],
+      money: { cashIn: '', cashOut: '', tools: '', note: '' },
+      clients: {
+        jan: { status: 'unset', note: '' },
+        andrew: { status: 'unset', note: '' },
+        devin: { status: 'unset', note: '' },
+        sagun: { status: 'unset', note: '' },
+        brand: { status: 'unset', note: '' }
+      },
+      desks: { ops: '', content: '', fulfillment: '', growth: '', systems: '' },
+      projects: []
+    };
+  }
+
+  function uid() {
+    return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+  }
+
+  function byId(list, id) {
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  function allowedStatus(v) { return STATUSES[v] ? v : 'unset'; }
+
+  function asText(v, max) {
+    var s = (v == null ? '' : String(v)).slice(0, max);
+    return s;
+  }
+
+  function normalize(raw) {
+    var base = blankState();
+    if (!raw || typeof raw !== 'object') return base;
+    ['calls', 'emails', 'podcast'].forEach(function (key) {
+      if (!Array.isArray(raw[key])) return;
+      base[key] = raw[key].filter(function (row) {
+        return row && typeof row.text === 'string' && row.text.trim();
+      }).slice(0, MAX_ROWS).map(function (row) {
+        return { id: asText(row.id, 24) || uid(), text: asText(row.text, 140).trim(), done: !!row.done };
+      });
+    });
+    if (raw.money && typeof raw.money === 'object') {
+      MONEY_KEYS.forEach(function (k) { base.money[k] = asText(raw.money[k], 40); });
+      base.money.note = asText(raw.money.note, 500);
+    }
+    CLIENTS.forEach(function (id) {
+      var src = raw.clients && raw.clients[id];
+      if (!src || typeof src !== 'object') return;
+      base.clients[id].status = allowedStatus(src.status);
+      base.clients[id].note = asText(src.note, 240);
+    });
+    DESKS.forEach(function (id) {
+      if (raw.desks && typeof raw.desks[id] === 'string') base.desks[id] = asText(raw.desks[id], 500);
+    });
+    if (Array.isArray(raw.projects)) {
+      base.projects = raw.projects.filter(function (g) { return g && typeof g.title === 'string'; }).slice(0, MAX_GOALS).map(function (g) {
+        var tasks = Array.isArray(g.tasks) ? g.tasks : [];
+        var wins = Array.isArray(g.wins) ? g.wins : [];
+        return {
+          id: asText(g.id, 24) || uid(),
+          title: asText(g.title, 80),
+          tasks: tasks.filter(function (t) { return t && typeof t.text === 'string' && t.text.trim(); }).slice(0, MAX_ROWS).map(function (t) {
+            return { id: asText(t.id, 24) || uid(), text: asText(t.text, 140).trim(), done: !!t.done };
+          }),
+          wins: wins.filter(function (w) { return w && typeof w.text === 'string' && w.text.trim(); }).slice(0, MAX_ROWS).map(function (w) {
+            return { id: asText(w.id, 24) || uid(), text: asText(w.text, 140).trim() };
+          })
+        };
+      });
+    }
+    return base;
+  }
 
   function load() {
-    try {
-      var raw = localStorage.getItem(KEY);
-      if (!raw) return { videos: 0, magnets: 0, contacts: 0, calls: 0, deals: 0 };
-      var o = JSON.parse(raw);
-      DEFS.forEach(function (d) { if (typeof o[d.id] !== 'number') o[d.id] = 0; });
-      return o;
-    } catch (e) {
-      return { videos: 0, magnets: 0, contacts: 0, calls: 0, deals: 0 };
-    }
+    try { return normalize(JSON.parse(localStorage.getItem(KEY) || 'null')); }
+    catch (e) { return blankState(); }
   }
-  function save(s) { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
-  function loadPrios() {
-    try { return JSON.parse(localStorage.getItem(PRIO_KEY) || '{}') || {}; } catch (e) { return {}; }
-  }
-  function savePrios(m) { try { localStorage.setItem(PRIO_KEY, JSON.stringify(m)); } catch (e) {} }
+
   var state = load();
-  var prioDone = loadPrios();
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); }
+    catch (e) { toast('Could not save on this phone'); }
+  }
 
   function toast(msg) {
     var el = document.getElementById('toast');
     el.textContent = msg;
     el.classList.add('on');
     clearTimeout(toast._t);
-    toast._t = setTimeout(function () { el.classList.remove('on'); }, 1400);
+    toast._t = setTimeout(function () { el.classList.remove('on'); }, 1600);
   }
 
-  function ctParts() {
-    var fmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', hour12: true,
-      weekday: 'short', month: 'short', day: 'numeric'
+  function chicagoParts(d) {
+    var dateFmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Chicago',
+      weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
     });
-    var parts = fmt.formatToParts(new Date());
+    var timeFmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Chicago',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
     var map = {};
-    parts.forEach(function (p) { map[p.type] = p.value; });
-    var hourFmt = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: 'numeric', hour12: false });
-    var hp = hourFmt.formatToParts(new Date());
-    var hm = {};
-    hp.forEach(function (p) { hm[p.type] = p.value; });
-    var h = parseInt(hm.hour, 10);
-    var m = parseInt(hm.minute, 10);
-    if (h === 24) h = 0;
-    return { label: (map.weekday || '') + ' ' + (map.month || '') + ' ' + (map.day || '') + ' · ' + (map.hour || '') + ':' + (map.minute || '') + ' ' + (map.dayPeriod || '') + ' CT', mins: h * 60 + m };
+    dateFmt.formatToParts(d).forEach(function (p) { map[p.type] = p.value; });
+    var iso = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(d);
+    return {
+      dow: map.weekday || '',
+      year: map.year || '',
+      mon: map.month || '',
+      dom: map.day || '',
+      time: timeFmt.format(d),
+      iso: iso
+    };
   }
 
-  function tickClock() {
-    var p = ctParts();
-    document.getElementById('liveClock').textContent = p.label.replace(/^.*?·\s*/, '') || 'LIVE';
-    renderSched(p.mins);
+  function tick() {
+    var dow = document.getElementById('heroDow');
+    var mon = document.getElementById('heroMon');
+    var dom = document.getElementById('heroDom');
+    var sub = document.getElementById('heroSub');
+    var clock = document.getElementById('liveClock');
+    var stamp = document.getElementById('opsDay');
+    try {
+      var p = chicagoParts(new Date());
+      dow.textContent = p.dow.toUpperCase() + ' · ' + p.year;
+      mon.textContent = p.mon;
+      dom.textContent = p.dom;
+      sub.textContent = p.time + ' · Chicago';
+      clock.textContent = p.time;
+      stamp.setAttribute('datetime', p.iso);
+      document.title = p.dow.slice(0, 3) + ', ' + p.mon + ' ' + p.dom + ' · Signal Command';
+    } catch (e) {
+      dow.textContent = 'America/Chicago';
+      mon.textContent = '';
+      dom.textContent = '—';
+      sub.textContent = 'Chicago time unavailable on this browser.';
+      clock.textContent = 'CT';
+    }
   }
 
-  function renderSnap() {
-    var el = document.getElementById('todaySnap');
-    if (!el) return;
-    el.innerHTML = DEFS.map(function (d) {
-      return '<div><div class="n">' + (state[d.id] || 0) + '</div><div class="l">' + d.short + '</div></div>';
-    }).join('');
+  function stats(items) {
+    var done = 0;
+    items.forEach(function (it) { if (it.done) done++; });
+    return { total: items.length, done: done, open: items.length - done };
   }
 
-  function render() {
-    var grid = document.getElementById('kpiGrid');
-    grid.innerHTML = '';
-    DEFS.forEach(function (d) {
-      var n = state[d.id] || 0;
-      var card = document.createElement('div');
-      card.className = 'kpi';
-      card.innerHTML =
-        '<div><div class="label">' + d.label + '</div>' +
-        '<div class="val' + (n > 0 ? ' hot' : '') + '" data-act="+" data-id="' + d.id + '" title="Tap to +1">' + n + '</div>' +
-        '<div class="goal">' + d.goal + '</div></div>' +
-        '<div class="btns">' +
-        '<button type="button" class="btn" data-act="-" data-id="' + d.id + '" aria-label="minus">−</button>' +
-        '<button type="button" class="btn plus" data-act="+" data-id="' + d.id + '" aria-label="plus">+</button>' +
-        '</div>';
-      grid.appendChild(card);
+  var feed = blankFeed();
+  var feedState = 'checking';
+
+  function blankFeed() {
+    return { asOf: '', calls: [], emails: [], podcast: null, dmBridge: null };
+  }
+
+  function safeUrl(v) {
+    var s = asText(v, 300).trim();
+    if (/^https:\/\/\S+$/i.test(s)) return s;
+    return '';
+  }
+
+  function normalizeFeed(raw) {
+    var out = blankFeed();
+    if (!raw || typeof raw !== 'object') return out;
+    out.asOf = asText(raw.asOf, 80).trim();
+    if (Array.isArray(raw.calls)) {
+      raw.calls.forEach(function (row) {
+        if (!row || typeof row !== 'object' || out.calls.length >= 40) return;
+        var item = {
+          title: asText(row.title, 180).trim(),
+          when: asText(row.when, 80).trim(),
+          who: asText(row.who, 160).trim(),
+          nextStep: asText(row.nextStep, 240).trim(),
+          source: row.source === 'calendar' || row.source === 'fathom' ? row.source : '',
+          url: safeUrl(row.url)
+        };
+        if (item.title || item.when || item.who || item.nextStep || item.url) out.calls.push(item);
+      });
+    }
+    if (Array.isArray(raw.emails)) {
+      raw.emails.forEach(function (row) {
+        if (!row || typeof row !== 'object' || out.emails.length >= 40) return;
+        var item = {
+          to: asText(row.to, 160).trim(),
+          subject: asText(row.subject, 180).trim(),
+          intent: asText(row.intent, 240).trim(),
+          status: row.status === 'draft' || row.status === 'needs-send' ? row.status : '',
+          source: row.source === 'gmail' ? 'gmail' : ''
+        };
+        if (item.to || item.subject || item.intent) out.emails.push(item);
+      });
+    }
+    if (raw.podcast && typeof raw.podcast === 'object') {
+      var pod = {
+        guest: asText(raw.podcast.guest, 140).trim(),
+        status: asText(raw.podcast.status, 80).trim(),
+        nextAction: asText(raw.podcast.nextAction, 240).trim()
+      };
+      if (pod.guest || pod.status || pod.nextAction) out.podcast = pod;
+    }
+    out.dmBridge = null;
+    return out;
+  }
+
+  function formatZoneTime(value) {
+    if (!value) return '';
+    var d = new Date(value);
+    if (isNaN(d.getTime())) return value;
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/Chicago',
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
+      }).format(d) + ' Chicago';
+    } catch (e) {
+      return value;
+    }
+  }
+
+  function sourceLabel(src) {
+    if (src === 'calendar') return 'Calendar';
+    if (src === 'fathom') return 'Fathom';
+    if (src === 'gmail') return 'Gmail';
+    return '';
+  }
+
+  function statusLabel(st) {
+    if (st === 'draft') return 'Draft';
+    if (st === 'needs-send') return 'Needs send';
+    return '';
+  }
+
+  function addMeta(parent, text) {
+    if (!text) return;
+    var line = document.createElement('div');
+    line.className = 'feed-meta';
+    line.textContent = text;
+    parent.appendChild(line);
+  }
+
+  function clearNode(node) {
+    while (node.firstChild) node.removeChild(node.firstChild);
+  }
+
+  function renderCall(item) {
+    var row = document.createElement('div');
+    row.className = 'feed-row';
+    var top = document.createElement('div');
+    top.className = 'feed-top';
+    var title = document.createElement('div');
+    title.className = 'feed-title';
+    title.textContent = item.title || item.who || formatZoneTime(item.when) || item.url;
+    top.appendChild(title);
+    var src = sourceLabel(item.source);
+    if (src) {
+      var chip = document.createElement('span');
+      chip.className = 'src';
+      chip.textContent = src;
+      top.appendChild(chip);
+    }
+    row.appendChild(top);
+    var when = formatZoneTime(item.when);
+    if (when && when !== title.textContent) addMeta(row, when);
+    if (item.who && item.who !== title.textContent) addMeta(row, item.who);
+    if (item.nextStep) addMeta(row, 'Next: ' + item.nextStep);
+    if (item.url) {
+      var link = document.createElement('a');
+      link.className = 'feed-link';
+      link.href = item.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = item.url;
+      row.appendChild(link);
+    }
+    return row;
+  }
+
+  function renderEmail(item) {
+    var row = document.createElement('div');
+    row.className = 'feed-row';
+    row.setAttribute('data-status', item.status || '');
+    var top = document.createElement('div');
+    top.className = 'feed-top';
+    var title = document.createElement('div');
+    title.className = 'feed-title';
+    title.textContent = item.subject || item.to || item.intent;
+    top.appendChild(title);
+    var badges = document.createElement('div');
+    badges.className = 'badge-row';
+    var st = statusLabel(item.status);
+    if (st) {
+      var badge = document.createElement('span');
+      badge.className = 'badge ' + (item.status === 'draft' ? 'muted' : 'warn');
+      badge.textContent = st;
+      badges.appendChild(badge);
+    }
+    var src = sourceLabel(item.source);
+    if (src) {
+      var chip = document.createElement('span');
+      chip.className = 'src';
+      chip.textContent = src;
+      badges.appendChild(chip);
+    }
+    if (badges.childNodes.length) top.appendChild(badges);
+    row.appendChild(top);
+    if (item.to && item.to !== title.textContent) addMeta(row, item.to);
+    if (item.intent) addMeta(row, item.intent);
+    if (item.status === 'draft') addMeta(row, 'Stale draft. Not a send-tonight item.');
+    return row;
+  }
+
+  function paintFeed() {
+    var calls = document.getElementById('feed-calls');
+    var emails = document.getElementById('feed-emails');
+    var podcast = document.getElementById('feed-podcast');
+    clearNode(calls);
+    clearNode(emails);
+    clearNode(podcast);
+    feed.calls.forEach(function (item) { calls.appendChild(renderCall(item)); });
+    feed.emails.forEach(function (item) { emails.appendChild(renderEmail(item)); });
+    document.getElementById('empty-feed-calls').hidden = feed.calls.length > 0;
+    document.getElementById('empty-feed-emails').hidden = feed.emails.length > 0;
+    if (feed.podcast) {
+      var row = document.createElement('div');
+      row.className = 'feed-row';
+      var title = document.createElement('div');
+      title.className = 'feed-title';
+      title.textContent = feed.podcast.guest || feed.podcast.status || feed.podcast.nextAction;
+      row.appendChild(title);
+      if (feed.podcast.guest && feed.podcast.status) addMeta(row, feed.podcast.status);
+      if (feed.podcast.nextAction) addMeta(row, 'Next: ' + feed.podcast.nextAction);
+      podcast.appendChild(row);
+      document.getElementById('empty-feed-podcast').hidden = true;
+    } else {
+      document.getElementById('empty-feed-podcast').hidden = false;
+    }
+    document.getElementById('panel-today').setAttribute('data-feed-state', feedState);
+    paintTodayHud();
+  }
+
+  /*
+   * today.json — same folder. The Command Center bot overwrites this file from
+   * Calendar, Fathom, and Gmail. Fetch on load. Do not invent rows.
+   * {
+   *   "asOf": "ISO Chicago",
+   *   "calls": [{ "title": "", "when": "", "who": "", "nextStep": "", "source": "calendar|fathom", "url": "https:// optional, fathom only" }],
+   *   "emails": [{ "to": "", "subject": "", "intent": "", "status": "draft|needs-send", "source": "gmail" }],
+   *   "podcast": { "guest": "", "status": "", "nextAction": "" } | null,
+   *   "dmBridge": null
+   * }
+   * 200: render those fields. Missing or failed fetch: empty shells + "Waiting on live feed."
+   * dmBridge is never rendered. Personal inboxes stay Bridge TBD.
+   */
+  function loadTodayFeed() {
+    fetch('./today.json?v=' + Date.now(), { cache: 'no-store' }).then(function (res) {
+      if (!res.ok) throw new Error(String(res.status));
+      return res.json();
+    }).then(function (data) {
+      feed = normalizeFeed(data);
+      feedState = 'live';
+      paintFeed();
+    }).catch(function () {
+      feed = blankFeed();
+      feedState = 'waiting';
+      paintFeed();
     });
-    renderSnap();
   }
 
-  function renderPrios() {
-    var host = document.getElementById('prioList');
-    host.innerHTML = '<h3>Time-sensitive · tap to check</h3>' + PRIOS.map(function (p) {
-      var done = !!prioDone[p.id];
-      var go = p.go ? '<a class="go" href="' + p.go + '" onclick="event.stopPropagation()">' + (p.goLabel || 'Open') + '</a>' : '';
-      return '<label class="prio-item' + (done ? ' done' : '') + '">' +
-        '<input type="checkbox" data-prio="' + p.id + '"' + (done ? ' checked' : '') + ' />' +
-        '<div class="body"><div class="title">' + p.title + '</div><div class="meta">' + p.meta + '</div></div>' +
-        go + '</label>';
-    }).join('');
-  }
-
-  function renderSched(mins) {
-    var host = document.getElementById('schedList');
-    if (!host) return;
-    var html = '<h3>Today CT · volunteer + floor</h3>';
-    SCHED.forEach(function (s) {
-      var isNow = mins >= s.start && mins < s.end;
-      html += '<div class="row' + (isNow ? ' now' : '') + '"><div class="t">' + s.t + '</div><div class="l">' + s.l + (isNow ? ' · <strong style="color:var(--red-soft)">NOW</strong>' : '') + '</div></div>';
+  function paintTodayHud() {
+    var label = document.getElementById('todayRunLabel');
+    var note = document.getElementById('feedNote');
+    var callsN = feed.calls.length;
+    var emailsN = feed.emails.length;
+    var drafts = 0;
+    var needs = 0;
+    feed.emails.forEach(function (item) {
+      if (item.status === 'draft') drafts++;
+      else if (item.status === 'needs-send') needs++;
     });
-    host.innerHTML = html;
+    if (feedState === 'checking') {
+      label.textContent = 'Checking the live feed.';
+      note.textContent = 'Checking today.json.';
+    } else if (feedState === 'waiting') {
+      label.textContent = 'Nothing loaded from the feed.';
+      note.textContent = 'Waiting on live feed.';
+    } else if (!callsN && !emailsN && !feed.podcast) {
+      label.textContent = 'Nothing in Calls, Emails, or Podcast.';
+      note.textContent = feed.asOf ? ('Feed loaded · ' + formatZoneTime(feed.asOf) + '.') : 'Feed loaded. No rows.';
+    } else {
+      var parts = [];
+      if (callsN) parts.push(callsN + (callsN === 1 ? ' call' : ' calls'));
+      if (drafts) parts.push(drafts + (drafts === 1 ? ' stale draft' : ' stale drafts'));
+      if (needs) parts.push(needs + (needs === 1 ? ' email to send' : ' emails to send'));
+      var other = emailsN - drafts - needs;
+      if (other > 0) parts.push(other + (other === 1 ? ' email' : ' emails'));
+      if (feed.podcast) parts.push('podcast booking set');
+      label.textContent = parts.join(' · ') + '.';
+      note.textContent = feed.asOf ? ('Feed loaded · ' + formatZoneTime(feed.asOf) + '.') : 'Feed loaded.';
+    }
+    ['calls', 'emails', 'podcast'].forEach(function (name) {
+      var n = state[name].length;
+      var badge = document.getElementById('count-' + name);
+      if (badge) {
+        badge.hidden = n === 0;
+        badge.textContent = n ? String(n) : '';
+      }
+      var empty = document.getElementById('empty-' + name);
+      if (empty) empty.hidden = n > 0;
+      var clearer = document.querySelector('[data-clear="' + name + '"]');
+      if (clearer) clearer.hidden = n === 0;
+    });
   }
 
-  function bump(id, act) {
-    if (act === '+') state[id] = (state[id] || 0) + 1;
-    else state[id] = Math.max(0, (state[id] || 0) - 1);
-    save(state);
-    render();
-    if (navigator.vibrate) try { navigator.vibrate(8); } catch (err) {}
+  function paintList(name) {
+    var host = document.getElementById('list-' + name);
+    while (host.firstChild) host.removeChild(host.firstChild);
+    state[name].forEach(function (item) {
+      var row = document.createElement('div');
+      row.className = 'check' + (item.done ? ' done' : '');
+      var lab = document.createElement('label');
+      var cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!item.done;
+      cb.setAttribute('data-toggle', name);
+      cb.setAttribute('data-id', item.id);
+      var txt = document.createElement('span');
+      txt.className = 'txt';
+      txt.textContent = item.text;
+      lab.appendChild(cb);
+      lab.appendChild(txt);
+      var del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'x';
+      del.setAttribute('aria-label', 'Remove');
+      del.textContent = '\u00d7';
+      del.setAttribute('data-del', name);
+      del.setAttribute('data-id', item.id);
+      row.appendChild(lab);
+      row.appendChild(del);
+      host.appendChild(row);
+    });
+    paintTodayHud();
   }
 
-  document.getElementById('kpiGrid').addEventListener('click', function (e) {
-    var t = e.target.closest('[data-act]');
-    if (!t) return;
-    bump(t.getAttribute('data-id'), t.getAttribute('data-act'));
-  });
+  function figureFor(raw) {
+    var s = String(raw || '').trim();
+    if (!s) return { big: '\u2014', sub: 'Not logged', blank: true };
+    var cleaned = s.replace(/[$,]/g, '');
+    if (/^\d+(\.\d{1,2})?$/.test(cleaned)) {
+      var n = Number(cleaned);
+      return {
+        big: n.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
+        sub: 'Logged on this phone',
+        blank: false
+      };
+    }
+    return { big: s, sub: 'Logged on this phone', blank: false };
+  }
 
-  document.getElementById('prioList').addEventListener('change', function (e) {
-    var inp = e.target;
-    if (!inp || !inp.getAttribute('data-prio')) return;
-    prioDone[inp.getAttribute('data-prio')] = !!inp.checked;
-    savePrios(prioDone);
-    renderPrios();
-    toast(inp.checked ? 'Checked' : 'Unchecked');
-  });
+  function paintMoney(key) {
+    var fig = figureFor(state.money[key]);
+    var big = document.getElementById('fig-' + key);
+    var sub = document.getElementById('sub-' + key);
+    big.textContent = fig.big;
+    big.classList.toggle('blank', fig.blank);
+    sub.textContent = fig.sub;
+  }
 
-  document.getElementById('resetDay').addEventListener('click', function () {
-    if (!confirm('Reset all floor KPIs for today to 0?')) return;
-    state = { videos: 0, magnets: 0, contacts: 0, calls: 0, deals: 0 };
-    save(state);
-    render();
-    toast('Reset');
-  });
+  function paintStatus(sel) {
+    var v = allowedStatus(sel.value);
+    sel.value = v;
+    sel.setAttribute('data-tone', v);
+  }
 
-  document.getElementById('shareCounts').addEventListener('click', function () {
-    var lines = ['Signal Floor KPIs · ' + DAY + ' CT'];
-    DEFS.forEach(function (d) { lines.push(d.label + ': ' + state[d.id]); });
-    var text = lines.join('\n');
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { toast('Copied'); }).catch(function () { prompt('Copy:', text); });
-    } else { prompt('Copy:', text); }
-  });
+  function mountValues() {
+    MONEY_KEYS.forEach(function (k) {
+      document.getElementById('in-' + k).value = state.money[k];
+      paintMoney(k);
+    });
+    document.getElementById('in-money-note').value = state.money.note;
+    CLIENTS.forEach(function (id) {
+      var sel = document.querySelector('[data-bind="client.' + id + '.status"]');
+      var note = document.querySelector('[data-bind="client.' + id + '.note"]');
+      sel.value = state.clients[id].status;
+      paintStatus(sel);
+      note.value = state.clients[id].note;
+    });
+    DESKS.forEach(function (id) {
+      document.querySelector('[data-bind="desk.' + id + '"]').value = state.desks[id];
+    });
+  }
+
+  function taskStats(tasks) {
+    return stats(tasks);
+  }
+
+  function paintGoals() {
+    var host = document.getElementById('goalList');
+    var empty = document.getElementById('goalEmpty');
+    var summary = document.getElementById('projectSummary');
+    while (host.firstChild) host.removeChild(host.firstChild);
+    empty.hidden = state.projects.length > 0;
+    if (!state.projects.length) {
+      summary.hidden = true;
+      summary.textContent = '';
+    } else {
+      var open = 0;
+      var done = 0;
+      state.projects.forEach(function (g) {
+        var s = taskStats(g.tasks);
+        open += s.open;
+        done += s.done;
+      });
+      summary.hidden = false;
+      summary.textContent = state.projects.length + (state.projects.length === 1 ? ' goal' : ' goals') + ' · ' + open + ' open tasks · ' + done + ' done';
+    }
+    state.projects.forEach(function (g) {
+      var card = document.createElement('article');
+      card.className = 'card goal';
+      var head = document.createElement('div');
+      head.className = 'card-h';
+      var who = document.createElement('div');
+      who.className = 'who';
+      who.textContent = 'Goal';
+      var phone = document.createElement('span');
+      phone.className = 'onphone';
+      phone.textContent = 'On this phone';
+      head.appendChild(who);
+      head.appendChild(phone);
+
+      var title = document.createElement('input');
+      title.className = 'field';
+      title.type = 'text';
+      title.maxLength = 80;
+      title.value = g.title;
+      title.setAttribute('aria-label', 'Goal name');
+      title.setAttribute('data-bind', 'goal.' + g.id + '.title');
+      title.autocomplete = 'off';
+
+      var s = taskStats(g.tasks);
+      var meta = document.createElement('p');
+      meta.className = 'fine';
+      meta.textContent = s.total ? (s.done + ' of ' + s.total + ' tasks') : 'No tasks yet';
+      var track = document.createElement('div');
+      track.className = 'track';
+      var fill = document.createElement('span');
+      fill.style.width = s.total ? Math.round((s.done / s.total) * 100) + '%' : '0%';
+      track.appendChild(fill);
+
+      var list = document.createElement('div');
+      list.className = 'list';
+      g.tasks.forEach(function (task) {
+        var row = document.createElement('div');
+        row.className = 'check' + (task.done ? ' done' : '');
+        var lab = document.createElement('label');
+        var cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = !!task.done;
+        cb.setAttribute('data-toggle-task', g.id);
+        cb.setAttribute('data-id', task.id);
+        var txt = document.createElement('span');
+        txt.className = 'txt';
+        txt.textContent = task.text;
+        lab.appendChild(cb);
+        lab.appendChild(txt);
+        var del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'x';
+        del.setAttribute('aria-label', 'Remove task');
+        del.textContent = '\u00d7';
+        del.setAttribute('data-del-task', g.id);
+        del.setAttribute('data-id', task.id);
+        row.appendChild(lab);
+        row.appendChild(del);
+        list.appendChild(row);
+      });
+
+      var taskForm = document.createElement('form');
+      taskForm.className = 'add-row';
+      taskForm.setAttribute('data-add-task', g.id);
+      var taskInput = document.createElement('input');
+      taskInput.className = 'field';
+      taskInput.type = 'text';
+      taskInput.maxLength = 140;
+      taskInput.placeholder = 'Add a task';
+      taskInput.setAttribute('aria-label', 'Add a task');
+      taskInput.autocomplete = 'off';
+      var taskBtn = document.createElement('button');
+      taskBtn.type = 'submit';
+      taskBtn.textContent = 'Add';
+      taskForm.appendChild(taskInput);
+      taskForm.appendChild(taskBtn);
+
+      var winLabel = document.createElement('p');
+      winLabel.className = 'fine';
+      winLabel.style.marginTop = '12px';
+      winLabel.textContent = 'Wins';
+      var wins = document.createElement('div');
+      if (!g.wins.length) {
+        var none = document.createElement('p');
+        none.className = 'empty';
+        var strong = document.createElement('strong');
+        strong.textContent = 'No wins logged';
+        none.appendChild(strong);
+        none.appendChild(document.createTextNode('Log one when you want it on the board.'));
+        wins.appendChild(none);
+      } else {
+        g.wins.forEach(function (w) {
+          var row = document.createElement('div');
+          row.className = 'win';
+          var txt = document.createElement('div');
+          txt.className = 'txt';
+          txt.textContent = w.text;
+          var del = document.createElement('button');
+          del.type = 'button';
+          del.className = 'x';
+          del.setAttribute('aria-label', 'Remove win');
+          del.textContent = '\u00d7';
+          del.setAttribute('data-del-win', g.id);
+          del.setAttribute('data-id', w.id);
+          row.appendChild(txt);
+          row.appendChild(del);
+          wins.appendChild(row);
+        });
+      }
+      var winForm = document.createElement('form');
+      winForm.className = 'add-row';
+      winForm.setAttribute('data-add-win', g.id);
+      var winInput = document.createElement('input');
+      winInput.className = 'field';
+      winInput.type = 'text';
+      winInput.maxLength = 140;
+      winInput.placeholder = 'Log a win';
+      winInput.setAttribute('aria-label', 'Log a win');
+      winInput.autocomplete = 'off';
+      var winBtn = document.createElement('button');
+      winBtn.type = 'submit';
+      winBtn.textContent = 'Log';
+      winForm.appendChild(winInput);
+      winForm.appendChild(winBtn);
+
+      var remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'texty';
+      remove.textContent = 'Remove goal';
+      remove.setAttribute('data-del-goal', g.id);
+
+      card.appendChild(head);
+      card.appendChild(title);
+      card.appendChild(meta);
+      card.appendChild(track);
+      card.appendChild(list);
+      card.appendChild(taskForm);
+      card.appendChild(winLabel);
+      card.appendChild(wins);
+      card.appendChild(winForm);
+      card.appendChild(remove);
+      host.appendChild(card);
+    });
+  }
+
+  function applyBind(bind, value) {
+    var parts = bind.split('.');
+    if (parts[0] === 'money' && Object.prototype.hasOwnProperty.call(state.money, parts[1])) {
+      state.money[parts[1]] = asText(value, parts[1] === 'note' ? 500 : 40);
+      if (parts[1] !== 'note') paintMoney(parts[1]);
+      return true;
+    }
+    if (parts[0] === 'client' && state.clients[parts[1]]) {
+      if (parts[2] === 'note') state.clients[parts[1]].note = asText(value, 240);
+      if (parts[2] === 'status') state.clients[parts[1]].status = allowedStatus(value);
+      return true;
+    }
+    if (parts[0] === 'desk' && Object.prototype.hasOwnProperty.call(state.desks, parts[1])) {
+      state.desks[parts[1]] = asText(value, 500);
+      return true;
+    }
+    if (parts[0] === 'goal') {
+      var g = byId(state.projects, parts[1]);
+      if (!g) return false;
+      if (parts[2] === 'title') g.title = asText(value, 80);
+      return true;
+    }
+    return false;
+  }
 
   function showTab(name) {
-    if (!name) name = 'kpis';
-    if (['kpis', 'priorities', 'schedule', 'today'].indexOf(name) === -1) name = 'kpis';
-    document.querySelectorAll('.tab').forEach(function (t) {
-      t.classList.toggle('on', t.getAttribute('data-tab') === name);
+    if (!PANELS[name]) name = 'today';
+    if (FLOOR[name]) lastFloor = name;
+    active = name;
+    document.querySelectorAll('.tab').forEach(function (tab) {
+      var on = tab.getAttribute('data-tab') === name;
+      tab.classList.toggle('on', on);
+      tab.setAttribute('aria-selected', on ? 'true' : 'false');
     });
-    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('on'); });
-    var panel = document.getElementById('panel-' + name);
-    if (panel) panel.classList.add('on');
-    document.querySelectorAll('.product-nav [data-goto]').forEach(function (b) {
-      b.classList.toggle('on', b.getAttribute('data-goto') === name || (name === 'kpis' && b.getAttribute('data-goto') === 'kpis'));
+    document.querySelectorAll('.panel').forEach(function (panel) {
+      panel.classList.toggle('on', panel.id === 'panel-' + name);
     });
-    document.querySelectorAll('.dock [data-goto]').forEach(function (b) {
-      b.classList.toggle('on', b.getAttribute('data-goto') === name || (name !== 'today' && name !== 'kpis' ? false : b.getAttribute('data-goto') === name));
+    document.querySelectorAll('[data-dock="floor"]').forEach(function (el) {
+      el.classList.toggle('on', name !== 'today');
     });
-    // Floor dock stays on for kpis/priorities/schedule; Today dock for today
-    document.querySelectorAll('.dock [data-goto="kpis"]').forEach(function (b) {
-      b.classList.toggle('on', name !== 'today');
+    document.querySelectorAll('[data-dock="today"]').forEach(function (el) {
+      el.classList.toggle('on', name === 'today');
     });
-    document.querySelectorAll('.dock [data-goto="today"]').forEach(function (b) {
-      b.classList.toggle('on', name === 'today');
-    });
-    if (name === 'today') renderSnap();
     try { history.replaceState(null, '', '#' + name); } catch (e) {}
   }
 
-  document.querySelectorAll('.tab').forEach(function (tab) {
-    tab.addEventListener('click', function () { showTab(tab.getAttribute('data-tab')); });
-  });
-  document.querySelectorAll('[data-goto]').forEach(function (el) {
-    el.addEventListener('click', function (e) {
-      var g = el.getAttribute('data-goto');
-      if (!g) return;
-      if (el.tagName === 'A' && el.getAttribute('href') && el.getAttribute('href').indexOf('#') !== 0 && !el.hasAttribute('data-goto')) return;
-      e.preventDefault();
-      showTab(g);
-    });
+  function addRow(name, text) {
+    var value = String(text || '').trim();
+    if (!LISTS[name] || !value) return;
+    if (state[name].length >= MAX_ROWS) { toast('This list is full'); return; }
+    state[name].push({ id: uid(), text: value.slice(0, 140), done: false });
+    save();
+    paintList(name);
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (err) {} }
+  }
+
+  document.body.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form || !form.getAttribute) return;
+    var add = form.getAttribute('data-add');
+    var addTask = form.getAttribute('data-add-task');
+    var addWin = form.getAttribute('data-add-win');
+    if (!add && !addTask && !addWin) return;
+    e.preventDefault();
+    var input = form.querySelector('input');
+    var value = input ? input.value : '';
+    if (add === 'goal') {
+      var title = String(value || '').trim();
+      if (!title) return;
+      if (state.projects.length >= MAX_GOALS) { toast('Goal list is full'); return; }
+      state.projects.unshift({ id: uid(), title: title.slice(0, 80), tasks: [], wins: [] });
+      save();
+      input.value = '';
+      paintGoals();
+      toast('Goal added');
+      return;
+    }
+    if (add && LISTS[add]) {
+      addRow(add, value);
+      input.value = '';
+      return;
+    }
+    if (addTask) {
+      var g = byId(state.projects, addTask);
+      var taskText = String(value || '').trim();
+      if (!g || !taskText) return;
+      if (g.tasks.length >= MAX_ROWS) { toast('Task list is full'); return; }
+      g.tasks.push({ id: uid(), text: taskText.slice(0, 140), done: false });
+      save();
+      paintGoals();
+      return;
+    }
+    if (addWin) {
+      var goal = byId(state.projects, addWin);
+      var winText = String(value || '').trim();
+      if (!goal || !winText) return;
+      if (goal.wins.length >= MAX_ROWS) { toast('Win list is full'); return; }
+      goal.wins.unshift({ id: uid(), text: winText.slice(0, 140) });
+      save();
+      paintGoals();
+      toast('Win logged');
+    }
   });
 
-  var hash = (location.hash || '').replace(/^#/, '');
-  showTab(hash || 'kpis');
-  render();
-  renderPrios();
-  tickClock();
-  setInterval(tickClock, 30000);
+  document.body.addEventListener('input', function (e) {
+    var el = e.target;
+    if (!el || !el.getAttribute) return;
+    var bind = el.getAttribute('data-bind');
+    if (!bind) return;
+    if (applyBind(bind, el.value)) save();
+  });
+
+  document.body.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el || !el.getAttribute) return;
+    var bind = el.getAttribute('data-bind');
+    if (bind && bind.indexOf('.status') !== -1) {
+      applyBind(bind, el.value);
+      paintStatus(el);
+      save();
+      return;
+    }
+    var listName = el.getAttribute('data-toggle');
+    if (listName && state[listName]) {
+      var row = byId(state[listName], el.getAttribute('data-id'));
+      if (!row) return;
+      row.done = !!el.checked;
+      save();
+      paintList(listName);
+      return;
+    }
+    var goalId = el.getAttribute('data-toggle-task');
+    if (goalId) {
+      var g = byId(state.projects, goalId);
+      var task = g && byId(g.tasks, el.getAttribute('data-id'));
+      if (!task) return;
+      task.done = !!el.checked;
+      save();
+      paintGoals();
+    }
+  });
+
+  document.body.addEventListener('click', function (e) {
+    var el = e.target.closest('[data-dock], [data-tab], [data-del], [data-clear], [data-del-task], [data-del-win], [data-del-goal]');
+    if (!el) return;
+    if (el.getAttribute('data-tab')) {
+      showTab(el.getAttribute('data-tab'));
+      return;
+    }
+    if (el.getAttribute('data-dock') === 'today') {
+      showTab('today');
+      return;
+    }
+    if (el.getAttribute('data-dock') === 'floor') {
+      showTab(active === 'today' ? lastFloor : active);
+      return;
+    }
+    var del = el.getAttribute('data-del');
+    if (del && state[del]) {
+      state[del] = state[del].filter(function (row) { return row.id !== el.getAttribute('data-id'); });
+      save();
+      paintList(del);
+      return;
+    }
+    var clear = el.getAttribute('data-clear');
+    if (clear && state[clear]) {
+      if (!state[clear].length) return;
+      if (!confirm('Clear these rows on this phone?')) return;
+      state[clear] = [];
+      save();
+      paintList(clear);
+      toast('Cleared');
+      return;
+    }
+    var delTask = el.getAttribute('data-del-task');
+    if (delTask) {
+      var g = byId(state.projects, delTask);
+      if (!g) return;
+      g.tasks = g.tasks.filter(function (t) { return t.id !== el.getAttribute('data-id'); });
+      save();
+      paintGoals();
+      return;
+    }
+    var delWin = el.getAttribute('data-del-win');
+    if (delWin) {
+      var gw = byId(state.projects, delWin);
+      if (!gw) return;
+      gw.wins = gw.wins.filter(function (w) { return w.id !== el.getAttribute('data-id'); });
+      save();
+      paintGoals();
+      return;
+    }
+    var delGoal = el.getAttribute('data-del-goal');
+    if (delGoal) {
+      if (!confirm('Remove this goal from this phone?')) return;
+      state.projects = state.projects.filter(function (g) { return g.id !== delGoal; });
+      save();
+      paintGoals();
+      toast('Goal removed');
+    }
+  });
+
+  window.addEventListener('hashchange', function () {
+    var h = (location.hash || '').replace(/^#/, '');
+    if (PANELS[h] && h !== active) showTab(h);
+  });
+
+  ['calls', 'emails', 'podcast'].forEach(paintList);
+  mountValues();
+  paintGoals();
+  var start = (location.hash || '').replace(/^#/, '');
+  showTab(PANELS[start] ? start : 'today');
+  loadTodayFeed();
+  tick();
+  setInterval(tick, 15000);
 })();
 </script>
 </body>

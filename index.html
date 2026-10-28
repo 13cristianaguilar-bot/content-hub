@@ -519,13 +519,16 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 #prompter .pr-side[hidden] { display: none !important; }
 .pr-ref-close { display: none; }
 @media (max-width: 899px) {
-  /* Phone: Ref is a dismissible overlay over the script, not a docked half-sheet. */
+  /* Phone: Ref is a compact dock above the script, not a full-screen takeover. */
+  #prompter.has-ref .pr-stage { flex-direction: column; }
   #prompter.has-ref .pr-side {
-    position: absolute; inset: 0;
-    flex: none; width: 100%; height: auto; max-height: none;
-    z-index: 6; border-top: 0;
+    position: relative; inset: auto; order: 0;
+    flex: 0 0 auto; width: 100%;
+    max-height: min(188px, 30dvh); overflow: hidden;
+    z-index: 2; border-top: 0; border-bottom: 1px solid #2a2a2a;
   }
-  #prompter.has-ref .pr-read { flex: 1 1 auto; }
+  #prompter.has-ref .pr-read { order: 1; flex: 1 1 auto; min-height: 120px; }
+  #prompter.has-ref .pr-ref-frame { flex: 1 1 auto; min-height: 0; max-height: 140px; }
   .pr-ref-close { display: inline-flex; align-items: center; }
   .pr-ref-btn:not(.is-on) {
     background: #fff; color: #111; border-color: #fff; font-weight: 700;
@@ -1171,6 +1174,59 @@ body.modal-open { overflow: hidden; }
   margin-left: auto;
   background: var(--ink); color: #fff; text-decoration: none; font-weight: 650; flex: 0 0 auto;
 }
+.review-ref-duo {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; align-items: start;
+}
+.review-ref-slot { min-width: 0; }
+.review-ref-duo .review-ref-open {
+  min-height: 36px; padding: 4px 8px; font-size: 12px; line-height: 1.15; text-align: center;
+}
+.review-ref-duo .hub-player { position: static; margin-top: 4px; max-height: 104px; }
+.review-ref-duo .hub-player-media,
+.review-ref-duo .hub-player-frame,
+.review-ref-duo .hub-player.is-wide .hub-player-frame {
+  width: 100%; height: 96px; max-height: 96px;
+}
+.hub-player {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+  background: #111; color: #fff;
+}
+.review-ref .hub-player {
+  position: sticky; top: 0; z-index: 3;
+  margin-top: 6px; max-height: 140px;
+}
+.hub-player-media, .hub-player-frame {
+  width: 78px; height: 128px; max-height: 128px; flex: 0 0 auto;
+  object-fit: cover; background: #000; border: 0; display: block;
+}
+.hub-player.is-wide .hub-player-frame { width: min(168px, 46vw); height: 96px; max-height: 96px; }
+.hub-player.is-audio { max-height: none; }
+.hub-player.is-audio .hub-player-media {
+  width: 100%; height: 40px; max-height: 40px; flex: 1 1 auto;
+}
+.hub-player-poster {
+  width: 78px; height: 128px; object-fit: cover; flex: 0 0 auto; background: #171717; display: block;
+}
+.hub-player-note, .hub-player-fail {
+  margin: 0; flex: 1 1 auto; min-width: 0;
+  font-size: 12px; line-height: 1.3; color: #d0d0d0;
+}
+.hub-player-open {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 44px; padding: 0 10px; flex: 0 0 auto;
+  color: #fff; font-weight: 650; text-decoration: none;
+}
+.prep-frame .hub-player { width: 100%; height: 100%; align-items: stretch; }
+.prep-frame .hub-player-media,
+.prep-frame .hub-player-frame,
+.prep-frame .hub-player-poster { width: 100%; height: 100%; max-height: none; }
+.prep-frame .hub-player.is-audio .hub-player-media { height: 44px; max-height: 44px; }
+.pr-ref-frame .hub-player { width: 100%; height: 100%; justify-content: center; background: #000; }
+.pr-ref-frame .hub-player-media,
+.pr-ref-frame .hub-player-frame { width: auto; max-width: 100%; height: 100%; max-height: 100%; }
+.embed-slot .hub-player { max-height: 168px; margin-top: 0; }
+.embed-slot .hub-player-media,
+.embed-slot .hub-player-frame { height: 152px; max-height: 152px; }
 .review-ref-row {
   display: flex; gap: 8px; overflow-x: auto; scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch; margin-top: 6px;
@@ -2446,13 +2502,13 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.5';
+const APP_VERSION = '2026.10.28.6';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
 
 const FILMING_GUIDE = [
-  'Watch the reference reel before you roll. On a phone, tap Ref when you want the reel, then Back to script. On a wide screen it sits beside the script.',
+  'Watch the reference in the Hub when a file is on the reel. On a phone, Ref is a short dock above the script. Open on Instagram if the file is missing.',
   'Film prep, then Full screen. Edit lives on that full-screen teleprompter. Save writes the new lines to the script.',
   'Keep the first line as written unless you tap Edit.',
   'Shoot vertical.',
@@ -2461,6 +2517,24 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.6',
+    date: 'October 28, 2026',
+    title: 'Play the reference inside the Hub',
+    items: [
+      'Read keeps a compact player when the reel has a hosted file. The spoken script stays on the same screen. The four boxes stay pinned. The why-note stays a fold.',
+      'Instagram pages are not embedded. If there is no hosted file, the poster stays and Open on Instagram is the fallback.',
+      'Reference and Read keep your place when you flip between them. Nothing is sent. Mark client-ready still needs the brain check.',
+      'The why-note is optional and never blocks. Continue can move on after a warning. Accept still needs all four boxes.',
+      'A reaction script shows Format reference and Clip to react to on Read. YouTube plays in the Hub. The spoken script stays readable.',
+    ],
+    steps: [
+      'Open a script in Needs your brain check that has a reference. If a file is on the row, press play in the small player. The hook stays readable. The four boxes stay on screen.',
+      'If the reel is only an Instagram link, tap Open on Instagram. Come back. Your boxes are still there.',
+      'Flip to Reference, then back to Read. The script is where you left it. Nothing is sent.',
+      'Open a Jan reaction script. Format reference and Clip to react to both sit above the hook. The four boxes stay on screen.',
+    ],
+  },
   {
     version: '2026.10.28.5',
     date: 'October 28, 2026',
@@ -5279,7 +5353,7 @@ function renderHelpPage() {
       <ul class="guide-list" style="margin-top:14px">
         <li>The batch is big cards. Film opens a short prep, then the full-screen teleprompter. Past batches holds older scripts. More holds filters.</li>
         <li>Edit is on that full-screen script, not the card. Tap Edit to change Hook, Full script, or CTA. Save writes those lines to the script and the teleprompter shows the new text. Cancel restores the last saved text.</li>
-        <li>Full screen reads Hook, each beat, and the CTA. On a phone, tap Ref for the reel, then Back to script. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
+        <li>Full screen reads Hook, each beat, and the CTA. On a phone, tap Ref for a short player above the script, then Back to script. Open on Instagram if the reel has no hosted file. Notes keeps the reference, on-camera person, shot directions, on-screen text, audio, and caption.</li>
         <li>Film this means you are shooting it as written. Request a tweak sends it back. Pass skips it.</li>
       </ul>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openRequests()">Requests and feedback</button>
@@ -5287,7 +5361,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Tap Open reel or a poster to flip to Instagram. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Press play in the small player when a file is on the reel. Tap Open on Instagram or a poster when it is not. A reaction script also shows Clip to react to on that row. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
@@ -6097,6 +6171,222 @@ function videoInfo(url) {
   if (/^https?:\/\//i.test(s)) return { kind: 'link', watch: s, label: 'Link' };
   return { kind: 'text', label: raw, watch: '' };
 }
+// A hosted file plays in the Hub. An Instagram page does not — mobile Safari
+// blocks that embed — so those reels stay a poster plus Open on Instagram.
+function isHostedMediaUrl(url) {
+  const u = asText(url).trim();
+  if (!/^https?:\/\//i.test(u)) return false;
+  if (/\.(mp4|webm|m4v|mov|m3u8|mp3|m4a|aac|ogg|wav)(\?|#|$)/i.test(u)) return true;
+  return /\/storage\/v1\/object\/(public|sign)\//i.test(u);
+}
+function isAudioMediaUrl(url) {
+  return /\.(mp3|m4a|aac|ogg|wav)(\?|#|$)/i.test(asText(url).trim());
+}
+function explicitPlayableUrl(url) {
+  const u = asText(url).trim();
+  if (!/^https?:\/\//i.test(u)) return '';
+  if (isHostedMediaUrl(u)) return u;
+  if (/instagram\.com|tiktok\.com|(?:^|\/\/)(?:www\.)?(?:youtube\.com|youtu\.be)|facebook\.com|fb\.watch/i.test(u)) return '';
+  return u;
+}
+function mediaLockOf(s) {
+  const audit = s && s.pipeline_audit;
+  if (!audit || typeof audit !== 'object' || Array.isArray(audit)) return null;
+  const lock = audit.media_lock || audit.mediaLock;
+  if (lock && typeof lock === 'object' && !Array.isArray(lock)) return lock;
+  return null;
+}
+function hubStorageOrigin() {
+  try {
+    if (typeof SUPABASE_URL === 'string' && SUPABASE_URL) return SUPABASE_URL.replace(/\/$/, '');
+  } catch (e) {}
+  return '';
+}
+function storagePublicUrl(path, bucket) {
+  const raw = asText(path).trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return explicitPlayableUrl(raw);
+  const b = asText(bucket).trim();
+  const origin = hubStorageOrigin();
+  if (!b || !origin) return '';
+  const parts = raw.replace(/^\/+/, '').split('/').filter(Boolean).map(function (part) {
+    return encodeURIComponent(part);
+  });
+  if (!parts.length) return '';
+  return origin + '/storage/v1/object/public/' + encodeURIComponent(b) + '/' + parts.join('/');
+}
+function pushUnique(list, value) {
+  const t = asText(value).trim();
+  if (!t || list.indexOf(t) !== -1) return;
+  list.push(t);
+}
+function resolveMediaValue(value, bucket) {
+  const raw = asText(value).trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return explicitPlayableUrl(raw);
+  return storagePublicUrl(raw, bucket);
+}
+function referenceHostedFile(s, watch) {
+  s = s || {};
+  const list = [];
+  function add(value, bucket) {
+    pushUnique(list, resolveMediaValue(value, bucket));
+  }
+  const primary = videoInfo(s.reference_clip);
+  const primaryWatch = primary && primary.watch ? primary.watch : '';
+  const want = asText(watch).trim();
+  const forPrimary = !want || !primaryWatch || want === primaryWatch;
+  const lock = mediaLockOf(s);
+  const bucket = lock ? (lock.bucket || lock.storage_bucket || lock.storageBucket) : '';
+  if (forPrimary) {
+    add(s.reference_video_url);
+    add(s.reference_audio_url);
+    const fd = fdObject(s);
+    if (fd) {
+      add(fdPick(fd, 'Reference video'));
+      add(fdPick(fd, 'Reference Video URL'));
+      add(fdPick(fd, 'Hosted reel'));
+    }
+    if (lock) {
+      ['media_url', 'video_url', 'audio_url', 'url', 'src', 'media_path', 'audio_path', 'path', 'file'].forEach(function (key) {
+        add(lock[key], bucket);
+      });
+    }
+  }
+  const audit = s.pipeline_audit;
+  if (audit && typeof audit === 'object' && !Array.isArray(audit)) {
+    const rows = [];
+    if (Array.isArray(audit.refs)) rows.push.apply(rows, audit.refs);
+    if (audit.ref && typeof audit.ref === 'object') rows.push(audit.ref);
+    const want = asText(watch).trim();
+    rows.forEach(function (row) {
+      if (!row || typeof row !== 'object') return;
+      const url = asText(row.url || row.watch || row.href).trim();
+      const parsed = url ? videoInfo(url) : null;
+      const rowWatch = parsed && parsed.watch ? parsed.watch : url;
+      if (want && rowWatch && rowWatch !== want && url !== want) return;
+      const rowBucket = row.bucket || row.storage_bucket || bucket;
+      ['media_url', 'video_url', 'audio_url', 'media_path', 'audio_path', 'file', 'mp4', 'cdn'].forEach(function (key) {
+        add(row[key], rowBucket);
+      });
+    });
+  }
+  const wantCode = vaultReelShortcode({ reelUrl: watch });
+  const clients = (typeof FORMAT_VAULT !== 'undefined' && FORMAT_VAULT && FORMAT_VAULT.clients) || [];
+  if (wantCode) {
+    clients.forEach(function (client) {
+      (client.formats || []).forEach(function (format) {
+        (format.creators || []).forEach(function (person) {
+          const rows = [person].concat(Array.isArray(person && person.also) ? person.also : []);
+          rows.forEach(function (row) {
+            if (!row || vaultReelShortcode(row) !== wantCode) return;
+            ['videoUrl', 'video_url', 'mp4', 'media', 'media_url', 'media_path', 'cdn', 'audio_url'].forEach(function (key) {
+              add(row[key]);
+            });
+          });
+        });
+      });
+    });
+  }
+  const clip = asText(s.reference_clip).trim();
+  const clipInfo = clip ? videoInfo(clip) : null;
+  const clipWatch = clipInfo && clipInfo.watch ? clipInfo.watch : '';
+  if (!watch || clipWatch === watch || clip === watch) {
+    if (isHostedMediaUrl(clip)) pushUnique(list, clip);
+    const thumb = asText(s.thumbnail_url).trim();
+    if (isHostedMediaUrl(thumb)) pushUnique(list, thumb);
+  }
+  for (let i = 0; i < list.length; i++) {
+    if (isHostedMediaUrl(list[i])) return list[i];
+  }
+  for (let i = 0; i < list.length; i++) {
+    if (!list[i] || /\.(jpe?g|png|gif|webp|avif)(\?|#|$)/i.test(list[i])) continue;
+    return list[i];
+  }
+  return '';
+}
+function referencePosterUrl(s, info) {
+  const stored = asText(s && s.thumbnail_url).trim();
+  if (/^https?:\/\//i.test(stored) && !isHostedMediaUrl(stored)) return stored;
+  const lock = mediaLockOf(s);
+  if (lock) {
+    const poster = asText(lock.poster || lock.poster_url || lock.thumbnail || lock.thumbnail_url).trim();
+    if (/^https?:\/\//i.test(poster) && !isHostedMediaUrl(poster)) return poster;
+  }
+  if (info && info.thumb) return info.thumb;
+  const watch = info && info.watch ? info.watch : '';
+  if (watch) {
+    const src = vaultPosterSrc({ reelUrl: watch, shortcode: vaultReelShortcode({ reelUrl: watch }) });
+    if (src && src.indexOf('data:image/svg+xml') !== 0) return src;
+  }
+  return '';
+}
+function attachReferenceMedia(info, s) {
+  if (!info || info.kind === 'text') return info;
+  const file = referenceHostedFile(s, info.watch || '');
+  if (file) info.file = file;
+  const poster = referencePosterUrl(s, info);
+  if (poster && !info.poster) info.poster = poster;
+  return info;
+}
+function openReferenceLabel(info) {
+  if (!info) return 'Open reference';
+  if (info.kind === 'ig') return 'Open on Instagram';
+  if (info.kind === 'yt') return 'Open on YouTube';
+  if (info.kind === 'tt') return 'Open on TikTok';
+  return 'Open reference';
+}
+function referenceOpenLink(info, className) {
+  if (!info || !info.watch || info.kind === 'text') return '';
+  const cls = className || 'hub-player-open';
+  return '<a class="' + cls + '" href="' + escHtml(info.watch) + '" target="_blank" rel="noopener noreferrer">' + escHtml(openReferenceLabel(info)) + '</a>';
+}
+function hubPlayerHtml(info, opts) {
+  opts = opts || {};
+  info = info || {};
+  const file = asText(opts.file != null ? opts.file : info.file).trim();
+  const poster = asText(opts.poster != null ? opts.poster : info.poster).trim();
+  const shape = info.kind === 'yt' ? ' is-wide' : ' is-reel';
+  const open = opts.link === false ? '' : referenceOpenLink(info, opts.openClass || 'hub-player-open');
+  if (file) {
+    const audio = isAudioMediaUrl(file);
+    const tag = audio ? 'audio' : 'video';
+    const posterAttr = !audio && poster ? ' poster="' + escHtml(poster) + '"' : '';
+    return '<div class="hub-player is-file' + (audio ? ' is-audio' : shape) + '">'
+      + '<' + tag + ' class="hub-player-media" controls playsinline webkit-playsinline preload="metadata"' + posterAttr
+      + ' src="' + escHtml(file) + '" onerror="window.hubPlayerFailed(this)"></' + tag + '>'
+      + '<p class="hub-player-fail" hidden>This file will not play here.</p>'
+      + open
+      + '</div>';
+  }
+  if (info.src && info.kind !== 'ig') {
+    return '<div class="hub-player is-embed' + shape + '">'
+      + '<iframe class="hub-player-frame" src="' + escHtml(info.src) + '" title="Reference video" loading="lazy" allow="autoplay; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>'
+      + open
+      + '</div>';
+  }
+  if (!opts.inlineFallback) return '';
+  const img = poster
+    ? '<img class="hub-player-poster" src="' + escHtml(poster) + '" alt="" referrerpolicy="no-referrer">'
+    : '';
+  const note = info.kind === 'ig'
+    ? 'No hosted file on this reel. It stays on Instagram.'
+    : 'This reference does not play inside the Hub.';
+  return '<div class="hub-player is-fallback' + shape + '">'
+    + img
+    + '<p class="hub-player-note">' + escHtml(note) + '</p>'
+    + open
+    + '</div>';
+}
+window.hubPlayerFailed = function (el) {
+  if (!el) return;
+  const box = el.closest ? el.closest('.hub-player') : null;
+  if (!box) return;
+  el.hidden = true;
+  box.classList.add('is-failed');
+  const note = box.querySelector('.hub-player-fail');
+  if (note) note.hidden = false;
+};
 // Resolved covers for reference URLs that have no stored thumbnail_url yet.
 // Keyed by the canonical watch URL. Empty string means we already tried.
 const thumbCache = new Map();
@@ -6214,8 +6504,12 @@ window.thumbNext = (img) => {
     if (poster) poster.classList.remove('has-frame');
   });
 };
-function embedHtml(info) {
-  if (!info || !info.src) return '';
+function embedHtml(info, s) {
+  if (!info) return '';
+  const playable = attachReferenceMedia(Object.assign({}, info), s || {});
+  const player = hubPlayerHtml(playable, { inlineFallback: playable.kind === 'ig' || !playable.src, link: false });
+  if (player) return player;
+  if (!info.src || info.kind === 'ig') return '';
   return `<iframe class="embed-frame" src="${escHtml(info.src)}" title="Reference video" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>`;
 }
 
@@ -6228,7 +6522,7 @@ const SCRIPT_FIELDS = [
   ['take_label', 'Take label'], ['sous_chef_pass', 'Sous chef pass'], ['filming_direction', 'Filming direction'],
   ['client_feedback', 'Client feedback'], ['filming_setup', 'Filming setup'], ['clip_directions', 'Clip directions'],
   ['tonality_delivery', 'Tonality and delivery'], ['proof_stats', 'Proof stats'],
-  ['thumbnail_url', 'Thumbnail'], ['client_resources', 'Client resources'], ['id', 'Id'],
+  ['thumbnail_url', 'Thumbnail'], ['reference_video_url', 'Reference video'], ['client_resources', 'Client resources'], ['id', 'Id'],
 ];
 
 function shotChecked(id, idx) {
@@ -6303,7 +6597,7 @@ window.loadEmbed = (id, suffix) => {
     ? (reactionClipInfo(s) || videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats)))
     : videoInfo(s.reference_clip);
   const slot = document.getElementById('embed-' + id + suffix);
-  if (slot && info) slot.innerHTML = embedHtml(info);
+  if (slot && info) slot.innerHTML = embedHtml(info, s);
 };
 
 function renderHooks(s) {
@@ -6749,10 +7043,10 @@ function referencePack(s) {
   const caption = pullLabeled(s.editor_notes, ['caption', 'captions']) || pullLabeled(s.client_feedback, ['caption', 'captions']);
   const refs = [];
   const primary = videoInfo(s.reference_clip);
-  if (primary) refs.push(primary);
+  if (primary) refs.push(attachReferenceMedia(primary, s));
   const extraUrl = extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats);
   const extra = extraUrl ? videoInfo(extraUrl) : null;
-  if (extra && (!primary || extra.watch !== primary.watch)) refs.push(extra);
+  if (extra && (!primary || extra.watch !== primary.watch)) refs.push(attachReferenceMedia(extra, s));
   const spoken = spokenHook(s);
   return {
     person: client ? client.name : (s.client_slug || ''),
@@ -6943,7 +7237,7 @@ function reviewRefs(s, session) {
     const info = videoInfo(item && (item.url || item.watch || item.href));
     if (!info || info.kind === 'text') return;
     if (refs.some(r => (r.watch && info.watch && r.watch === info.watch) || (r.src && info.src && r.src === info.src))) return;
-    refs.push(info);
+    refs.push(attachReferenceMedia(info, s));
   });
   return refs;
 }
@@ -7116,7 +7410,7 @@ function prompterRefHtml(s, session) {
     : '';
   const first = refs[0];
   const open = first.watch
-    ? `<a class="pr-ref-open" href="${escHtml(first.watch)}" target="_blank" rel="noopener noreferrer">Open</a>`
+    ? `<a class="pr-ref-open" href="${escHtml(first.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(openReferenceLabel(first))}</a>`
     : '';
   return `${tabs}
     <div class="pr-ref-toolbar"><span class="pr-ref-kicker">${escHtml(first.label || 'Reference')}</span>${open}<button type="button" class="pr-ref-close" onclick="window.prompterRef(false)">Back to script</button></div>
@@ -7140,11 +7434,10 @@ function flowTextHtml(text) {
 }
 function prompterEmbed(info) {
   if (!info) return '<p class="pr-note-empty">No reference reel on this script.</p>';
-  if (info.src) {
-    return `<iframe class="pr-embed" src="${escHtml(info.src)}" title="Reference video" allow="autoplay; fullscreen; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>`;
-  }
+  const player = hubPlayerHtml(info, { inlineFallback: true, link: false });
+  if (player) return player;
   if (info.watch) {
-    return `<div class="pr-link-fallback"><p>This reference does not play inside the page.</p><p><a href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(info.label || 'Open reference')}</a></p></div>`;
+    return `<div class="pr-link-fallback"><p>This reference does not play inside the page.</p><p><a href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(openReferenceLabel(info))}</a></p></div>`;
   }
   return `<p class="pr-link-fallback">${escHtml(info.label || 'No reference reel on this script.')}</p>`;
 }
@@ -7716,15 +8009,22 @@ window.prompterShowRef = (index) => {
 window.prompterPlayRef = (index) => {
   if (!prompterState) return;
   const s = scripts.find(x => x.id === prompterState.id);
-  const pack = s ? referencePack(s) : null;
-  const info = pack && pack.refs[index];
+  const session = { role: role, includeAudit: role === 'admin' };
+  const refs = s ? reviewRefs(s, session) : [];
+  const info = refs[index];
   if (!info) return;
   prompterPause();
-  prompterState.player = true;
-  const frame = document.getElementById('pr-player-frame');
-  if (frame) frame.innerHTML = prompterEmbed(info);
-  const player = document.getElementById('pr-player');
-  if (player) player.hidden = false;
+  prompterState.notes = false;
+  prompterState.player = false;
+  prompterState.refIndex = index || 0;
+  const root = document.getElementById('prompter');
+  if (root) root.classList.remove('has-notes');
+  const sheet = document.getElementById('pr-sheet');
+  if (sheet) sheet.hidden = true;
+  const notesBtn = document.getElementById('pr-notes-btn');
+  if (notesBtn) notesBtn.classList.remove('is-on');
+  window.prompterRef(true);
+  window.prompterShowRef(index || 0);
 };
 window.prompterClosePlayer = () => {
   if (!prompterState) return;
@@ -7923,9 +8223,13 @@ function reactionClipInfo(s) {
     if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
   }
   if (!info) {
-    const lines = asText(s && s.clip_directions).split('\n');
+    const lines = [
+      asText(s && s.clip_directions),
+      asText(s && s.proof_stats),
+      asText(s && s.editor_notes),
+    ].join('\n').split('\n');
     for (let i = 0; i < lines.length; i++) {
-      if (!/react\s*to|reaction\s*clip|source\s*clip/i.test(lines[i])) continue;
+      if (!/react[\s-]*to|reaction\s*clip|source\s*clip/i.test(lines[i])) continue;
       const parsed = videoInfo(lines[i]);
       if (parsed && parsed.kind !== 'text' && parsed.watch) { info = parsed; break; }
     }
@@ -8147,7 +8451,7 @@ function prepModel(s) {
     showMetrics: showMetrics,
     principles: reactInfo ? formatPrinciples(fdPick(fd, 'Format') || asText(s.format)) : '',
     ref: (pack.refs && pack.refs[0]) || null,
-    react: reactInfo,
+    react: reactInfo ? attachReferenceMedia(reactInfo, s) : null,
     person: pack.person || '',
     camera: asText(s.camera).trim(),
     onCamera: onCamera,
@@ -8193,27 +8497,33 @@ function prepParagraphs(items, empty) {
   return items.map(item => `<p>${prepText(item)}</p>`).join('');
 }
 function prepFrame(info, title) {
-  if (!info || !info.src) return '';
+  if (!info) return '';
+  const player = hubPlayerHtml(info, {
+    inlineFallback: info.kind === 'ig' || !!(info.file) || !info.src,
+    link: false,
+  });
+  if (player) return `<div class="prep-frame">${player}</div>`;
+  if (!info.src || info.kind === 'ig') return '';
   return `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="${escHtml(title)}" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`;
 }
 function prepOpenLink(info, label) {
   if (!info) return '';
   if (info.watch) {
-    const primary = info.src ? '' : ' is-primary';
-    return `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(label)}</a><p class="prep-url">${escHtml(info.watch)}</p>`;
+    const primary = info.src && info.kind !== 'ig' && !info.file ? '' : ' is-primary';
+    const text = info.kind === 'ig' ? 'Open on Instagram' : (label || openReferenceLabel(info));
+    return `<a class="prep-reel${primary}" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(text)}</a><p class="prep-url">${escHtml(info.watch)}</p>`;
   }
   if (info.label) return `<p>${escHtml(info.label)}</p>`;
   return '';
 }
 function prepPlayer(info, label, cue) {
   const react = /react/i.test(label);
-  const frame = info && info.src
-    ? `<div class="prep-frame"><iframe src="${escHtml(info.src)}" title="${escHtml(label)}" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe></div>`
-    : '';
+  const frame = info ? prepFrame(info, label) : '';
   let open = '';
   if (info && info.watch) {
-    open = `<a class="prep-openlink" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">Open</a>`;
-  } else if (info && info.label && !info.src) {
+    const text = info.kind === 'ig' ? 'Open on Instagram' : 'Open';
+    open = `<a class="prep-openlink" href="${escHtml(info.watch)}" target="_blank" rel="noopener noreferrer">${escHtml(text)}</a>`;
+  } else if (info && info.label && !info.src && !info.file) {
     open = `<p>${escHtml(info.label)}</p>`;
   } else if (!info) {
     open = '<p class="prep-empty">No video on this script.</p>';
@@ -8797,7 +9107,7 @@ function renderHumanQaGate(s, surface) {
     : (filmPhase === 'end'
       ? 'You are leaving Full screen. AI can draft. You decide if the client should see it.'
       : (compact
-        ? 'Tick the four boxes. The note is optional and never blocks. Continue can move on after a warning. Open reel leaves the Hub.'
+        ? 'Tick the four boxes. The note is optional and never blocks. Continue can move on after a warning. Play stays in the Hub when a file is on the reel. Open on Instagram if it is not.'
         : 'AI can draft. You decide if a client should see it. Tick the four boxes. The note is optional and never blocks.'));
   const noteInput = compact ? ' oninput="window.syncQaAccept(this)"' : '';
   const aids = reviewStampAidsHtml(s, surface);
@@ -9096,21 +9406,44 @@ function reviewCreatorThumbsHtml(proof, watch) {
   }).join('');
   return { line: line, html: '<div class="review-ref-row">' + cards + '</div>' };
 }
+function reviewClipSlotHtml(label, info, s) {
+  if (!info || info.kind === 'text' || !info.watch) return '';
+  const file = referenceHostedFile(s, info.watch);
+  const poster = referencePosterUrl(s, info);
+  const player = (file || (info.src && info.kind !== 'ig'))
+    ? hubPlayerHtml(Object.assign({}, info, { file: file, poster: poster }), { file: file, poster: poster, link: false })
+    : '';
+  return '<div class="review-ref-slot">'
+    + '<div class="review-ref-top"><p class="review-ref-kicker"><span class="eyebrow">' + escHtml(label) + '</span></p>'
+    + referenceOpenLink(info, 'review-ref-open')
+    + '</div>'
+    + player
+    + '</div>';
+}
 function reviewReferenceHtml(s) {
   s = s || {};
   const info = videoInfo(s.reference_clip);
   const watch = info && info.kind !== 'text' && info.watch ? info.watch : '';
+  const react = reactionClipInfo(s);
   const proof = reviewCreatorProof(s);
   const label = proof.format && proof.format.label ? proof.format.label : '';
   const thumbs = reviewCreatorThumbsHtml(proof, watch);
-  if (!watch && !label && !thumbs.html) return '';
+  if (!watch && !label && !thumbs.html && !(react && react.watch)) return '';
   const chip = label ? '<span class="review-format-chip">' + escHtml(label) + '</span>' : '';
   const note = thumbs.line ? '<p class="review-ref-note">' + escHtml(thumbs.line) + '</p>' : '';
-  const open = watch
-    ? '<a class="review-ref-open" href="' + escHtml(watch) + '" target="_blank" rel="noopener noreferrer" aria-label="Open reference reel">Open reel</a>'
+  const duo = !!(react && react.watch);
+  const file = watch ? referenceHostedFile(s, watch) : '';
+  const poster = referencePosterUrl(s, info);
+  const player = !duo && (file || (info && info.src && info.kind !== 'ig'))
+    ? hubPlayerHtml(Object.assign({}, info || {}, { file: file, poster: poster }), { file: file, poster: poster, link: false })
     : '';
+  const slots = duo
+    ? '<div class="review-ref-duo">' + reviewClipSlotHtml('Format reference', watch ? info : null, s) + reviewClipSlotHtml('Clip to react to', react, s) + '</div>'
+    : player;
+  const open = duo || !watch ? '' : referenceOpenLink(info, 'review-ref-open');
   return '<section class="review-ref" aria-label="Reference reel">'
     + '<div class="review-ref-top"><div class="review-ref-meta"><p class="review-ref-kicker"><span class="eyebrow">Reference reel</span>' + chip + '</p>' + note + '</div>' + open + '</div>'
+    + slots
     + thumbs.html
     + '</section>';
 }
@@ -10295,6 +10628,13 @@ function rememberPrepQaDraft() {
   if (!root.querySelector('[name="qa-notes"]')) return;
   prepState.qaDraft = readHumanQaForm(prepState.id);
 }
+function rememberPrepScroll() {
+  if (typeof prepState === 'undefined' || !prepState) return;
+  const scroller = document.getElementById('prep-scroll');
+  if (!scroller) return;
+  if (!prepState.scrolls) prepState.scrolls = {};
+  prepState.scrolls[String(prepState.step || 0)] = scroller.scrollTop;
+}
 function renderPrep() {
   rememberPrepQaDraft();
   const root = document.getElementById('prep-root');
@@ -10338,7 +10678,7 @@ function renderPrep() {
       </div>`
     : '';
   const prepClass = [duo ? 'is-duo' : '', resOpen ? 'has-resources' : ''].filter(Boolean).join(' ');
-  const keptScroll = prepState.scrollTop || 0;
+  const keptScroll = (prepState.scrolls && prepState.scrolls[String(step)]) || 0;
   root.innerHTML = `<div id="prep"${prepClass ? ` class="${prepClass}"` : ''} role="dialog" aria-modal="true" aria-labelledby="prep-title">
     <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
     <div class="prep-dots${dotClass}" role="tablist" aria-label="Prep steps">${dots}</div>
@@ -10351,7 +10691,6 @@ function renderPrep() {
   document.body.classList.add('prep-open');
   const scroller = document.getElementById('prep-scroll');
   if (scroller) scroller.scrollTop = keptScroll;
-  prepState.scrollTop = 0;
 }
 function reviewNextStampHtml(currentId) {
   const queued = (prepState && prepState.queueIds && prepState.queueIds.length)
@@ -10393,10 +10732,8 @@ window.syncQaAccept = (el) => {
 };
 window.toggleReviewResources = (force) => {
   if (!prepState) return;
-  const scroller = document.getElementById('prep-scroll');
-  const top = scroller ? scroller.scrollTop : 0;
+  rememberPrepScroll();
   prepState.resources = typeof force === 'boolean' ? force : !prepState.resources;
-  prepState.scrollTop = top;
   renderPrep();
 };
 window.openPrep = (id) => {
@@ -10408,12 +10745,12 @@ window.openPrep = (id) => {
 window.prepGo = (n) => {
   if (!prepState) return;
   rememberPrepQaDraft();
+  rememberPrepScroll();
   const showAudit = prepShowsAudit();
   if (!prepTabReachable(n, showAudit)) return;
   const step = Number(n);
   prepState.step = step;
   prepState.resources = false;
-  prepState.scrollTop = 0;
   renderPrep();
 };
 window.prepMove = (d) => {

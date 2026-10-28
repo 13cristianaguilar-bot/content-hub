@@ -2612,7 +2612,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.8';
+const APP_VERSION = '2026.10.28.9';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2627,6 +2627,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.9',
+    date: 'October 28, 2026',
+    title: 'Continue after client-ready',
+    items: [
+      'After Mark client-ready, Read opens the next stamped Needs Review script so you can mark that one too. If none are left, it opens the next script that still needs a stamp.',
+      'If nothing is left in this queue, you land on Needs your brain check. The toast says Client-ready. Nothing left in this queue.',
+      'An Approved script you reopen has Continue. Continue does not send anything. Mark client-ready does not send anything.',
+    ],
+    steps: [
+      'On a stamped Jan script, tap Mark client-ready. The next stamped script opens on Read.',
+      'When that queue is done, you are back on Needs your brain check. Nothing was sent.',
+      'Reopen an Approved script. Continue is on the signed brain check.',
+    ],
+  },
   {
     version: '2026.10.28.8',
     date: 'October 28, 2026',
@@ -3898,7 +3913,22 @@ async function setStatus(id, status, extra, opts) {
   if (s) Object.assign(s, payload);
   renderDash();
 
-  if (opts.isUndo) { showToast('Undone'); return; }
+  if (opts.isUndo) {
+    if (prepState && prepState.id === id) renderPrep();
+    showToast('Undone');
+    return;
+  }
+  const advanceClientReady = status === 'Approved'
+    && role === 'admin'
+    && prepState
+    && prepState.fromQueue
+    && prepState.id === id
+    && !(typeof prompterState !== 'undefined' && prompterState && prompterState.id === id);
+  if (advanceClientReady) {
+    advanceAfterClientReady(id);
+    return;
+  }
+  if (prepState && prepState.id === id) renderPrep();
   if (prev) {
     // Only restore client_feedback if this write changed it (a Tweak) -- a plain status move
     // must not overwrite a tweak note that someone else edited meanwhile.
@@ -9235,6 +9265,7 @@ function renderHumanQaGate(s, surface) {
       '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
     ).join('');
     const send = filmPhase ? '' : deliveryActionHtml(s);
+    const next = (!filmPhase && compact && ready && id) ? reviewNextStampHtml(id) : '';
     const confirm = confirmable && id
       ? `<button type="button" class="qa-go" onclick="window.confirmHumanQaFilm('${id}','${filmPhase}')">${filmPhase === 'end' ? 'I finished this film read' : "I'm reading this myself"}</button>`
       : '';
@@ -9261,6 +9292,7 @@ function renderHumanQaGate(s, surface) {
       ${reviewStampAidsHtml(s, surface)}
       ${confirm}
       ${send}
+      ${next}
       ${signedBlock}
     </section>`;
   }
@@ -10853,9 +10885,8 @@ function renderPrep() {
     : '<button type="button" class="prep-next" onclick="window.prepMove(1)">Next</button>';
   const body = prepStepBody(s, step, showAudit);
   const hint = prepQaHintHtml(s, readStep, showAudit);
-  const nextBtn = readStep && humanQaDeliveryReady(s) ? reviewNextStampHtml(s.id) : '';
   const stamp = readStep
-    ? `<div class="prep-stamp" id="prep-stamp">${renderHumanQaGate(s, 'review')}${nextBtn}</div>`
+    ? `<div class="prep-stamp" id="prep-stamp">${renderHumanQaGate(s, 'review')}</div>`
     : '';
   const bar = readStep ? '' : `<div class="prep-bar">
       <button type="button" class="prep-back" ${step === 0 ? 'disabled' : ''} onclick="window.prepMove(-1)">Back</button>
@@ -10885,16 +10916,37 @@ function renderPrep() {
   const scroller = document.getElementById('prep-scroll');
   if (scroller) scroller.scrollTop = keptScroll;
 }
+function reviewContinueOpts() {
+  const opts = (typeof reviewQueueOpts === 'function') ? reviewQueueOpts() : { slug: '' };
+  if (typeof stampQueueMode !== 'undefined' && stampQueueMode) opts.stampClientsOnly = true;
+  return opts;
+}
+function reviewContinueNext(currentId, rows, opts) {
+  opts = opts || {};
+  const list = Array.isArray(rows) ? rows : [];
+  const current = asText(currentId);
+  const readyIds = readyQueueFor(list, opts).map(function (row) { return row.id; });
+  const readyNext = nextStampId(readyIds, current, function (id) { return id !== current; });
+  if (readyNext) return { id: readyNext, kind: 'ready' };
+  const unsignedRows = opts.stampClientsOnly ? stampQueueFor(list, opts) : reviewQueueFor(list, opts);
+  const stampIds = unsignedRows.map(function (row) { return row.id; });
+  const stampNext = nextStampId(stampIds, current, function (id) { return id !== current; });
+  if (stampNext) return { id: stampNext, kind: 'stamp' };
+  return { id: '', kind: '' };
+}
 function reviewNextStampHtml(currentId) {
-  const queued = (prepState && prepState.queueIds && prepState.queueIds.length)
-    ? prepState.queueIds
-    : reviewQueueScripts().map(row => row.id);
-  const next = nextStampId(queued, currentId, function (id) {
-    const row = (scripts || []).find(item => item && item.id === id);
-    return !!(row && needsBrainCheck(row));
-  });
-  if (!next) return '';
-  return `<button type="button" class="review-next" onclick="window.openReview('${escHtml(next)}')">Next to stamp</button>`;
+  if (typeof role !== 'undefined' && role !== 'admin') return '';
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const next = reviewContinueNext(currentId, rows, reviewContinueOpts());
+  let label = '';
+  if (next.kind === 'ready') label = 'Continue';
+  else if (next.kind === 'stamp') label = 'Next to stamp';
+  else {
+    const current = rows.find(function (item) { return item && item.id === currentId; });
+    if (!current || current.status === 'Needs Review') return '';
+    label = 'Continue';
+  }
+  return '<button type="button" class="review-next" onclick="window.continueReview()">' + escHtml(label) + '</button>';
 }
 function openReview(id) {
   const s = scripts.find(x => x.id === id);
@@ -12511,6 +12563,34 @@ async function persistHumanQaStamp(s, stamp, toastMessage) {
   finishHumanQaUi(s.id, toastMessage);
   return true;
 }
+function exitClientReadyQueue() {
+  clearPrep();
+  adminLane = 'review';
+  hubPage = 'main';
+  renderDash();
+  showToast('Client-ready. Nothing left in this queue.');
+}
+function advanceAfterClientReady(currentId) {
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const next = reviewContinueNext(currentId, rows, reviewContinueOpts());
+  if (!next.id) {
+    exitClientReadyQueue();
+    return;
+  }
+  openReview(next.id);
+  showToast(next.kind === 'ready' ? 'Client-ready. Next script.' : 'Client-ready. Next to stamp.');
+}
+window.continueReview = () => {
+  if (typeof role !== 'undefined' && role !== 'admin') return;
+  if (typeof prepState === 'undefined' || !prepState) return;
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const next = reviewContinueNext(prepState.id, rows, reviewContinueOpts());
+  if (!next.id) {
+    exitClientReadyQueue();
+    return;
+  }
+  openReview(next.id);
+};
 function stampQueueNext(currentId) {
   const ids = (prepState && prepState.queueIds) || [];
   return nextStampId(ids, currentId, function (id) {

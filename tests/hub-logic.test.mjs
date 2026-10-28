@@ -70,7 +70,7 @@ const names = [
   'pacingWritten', 'framingWritten', 'parseLegacyAudit', 'unpackAudit', 'auditOwner', 'gateFromText', 'buildAudit',
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
-  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId',
+  'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId', 'reviewQueueOpts', 'reviewContinueOpts', 'reviewContinueNext', 'reviewNextStampHtml',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
@@ -720,46 +720,42 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.8');
+assert.strictEqual(appVersion, '2026.10.28.9');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.8');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.9');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/four boxes/.test(releaseNotes));
 assert.ok(/Mark client-ready/.test(releaseNotes));
-assert.ok(/batch list/.test(releaseNotes));
-assert.ok(/Read/.test(releaseNotes));
-assert.ok(/Format Vault/.test(releaseNotes));
+assert.ok(/Continue/.test(releaseNotes));
+assert.ok(/Needs Review/.test(releaseNotes));
+assert.ok(/stamp/.test(releaseNotes));
+assert.ok(/Nothing left in this queue/.test(releaseNotes));
 assert.ok(/does not send/i.test(releaseNotes));
-assert.ok(/Clients never see/.test(releaseNotes));
-assert.ok(/Candace/.test(releaseNotes));
-assert.ok(/Pierini/.test(releaseNotes));
-assert.ok(/Lorin/.test(releaseNotes));
-assert.ok(/viewing as that client/.test(releaseNotes));
 assert.ok(/Approved/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.8');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.8');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.9');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.9');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', true, '2026.10.28.8').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.8');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', true, '2026.10.28.9').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.9');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2172,6 +2168,71 @@ assert.ok(janReadReady.includes("moveStatus('list-jan','Approved')"));
 assert.ok(janReadReady.includes('This stamp did not send anything and did not mark it client-ready.'));
 assert.ok(!janReadReady.includes('disabled'));
 assert.ok(!janReadReady.includes('class="list-ready"'));
+const continueRows = [
+  Object.assign({}, signedScript, { id: 'ready-a', title: 'Alpha', status: 'Approved', client_slug: 'jan' }),
+  Object.assign({}, signedScript, { id: 'ready-b', title: 'Beta', status: 'Needs Review', client_slug: 'jan' }),
+  Object.assign({}, signedScript, { id: 'ready-c', title: 'Gamma', status: 'Needs Review', client_slug: 'devin' }),
+  { id: 'open-jan', title: 'Unsigned Jan', client_slug: 'jan', status: 'Needs Review', batch: 'Jan FINAL' },
+  { id: 'open-andrew', title: 'Unsigned Andrew', client_slug: 'andrew', status: 'Draft', batch: 'Andrew weekly' },
+];
+const continueReady = ctx.reviewContinueNext('ready-a', continueRows, { slug: 'jan' });
+assert.strictEqual(continueReady.id, 'ready-b');
+assert.strictEqual(continueReady.kind, 'ready');
+const continueStamp = ctx.reviewContinueNext('ready-b', continueRows, { slug: 'jan' });
+assert.strictEqual(continueStamp.id, 'open-jan');
+assert.strictEqual(continueStamp.kind, 'stamp');
+const continueAny = ctx.reviewContinueNext('ready-a', continueRows, { slug: '' });
+assert.strictEqual(continueAny.id, 'ready-b');
+assert.strictEqual(continueAny.kind, 'ready');
+const continueAfterReady = ctx.reviewContinueNext('ready-b', [
+  Object.assign({}, signedScript, { id: 'ready-b', title: 'Beta', status: 'Approved', client_slug: 'jan' }),
+  { id: 'open-jan', title: 'Unsigned Jan', client_slug: 'jan', status: 'Needs Review', batch: 'Jan FINAL' },
+], { slug: 'jan' });
+assert.strictEqual(continueAfterReady.id, 'open-jan');
+assert.strictEqual(continueAfterReady.kind, 'stamp');
+const continueClear = ctx.reviewContinueNext('ready-a', [
+  Object.assign({}, signedScript, { id: 'ready-a', title: 'Alpha', status: 'Approved', client_slug: 'jan' }),
+], { slug: 'jan' });
+assert.strictEqual(continueClear.id, '');
+assert.strictEqual(continueClear.kind, '');
+assert.strictEqual(ctx.reviewContinueNext('ready-a', continueRows, { slug: 'jan', stampClientsOnly: true }).id, 'ready-b');
+ctx.role = 'admin';
+ctx.scripts = continueRows;
+const approvedGate = ctx.renderHumanQaGate(continueRows[0], 'review');
+assert.ok(approvedGate.includes('You signed this one'));
+assert.ok(approvedGate.includes('class="review-next"'));
+assert.ok(approvedGate.includes('>Continue</button>'));
+assert.ok(approvedGate.includes('continueReview()'));
+assert.ok(!approvedGate.includes('Mark client-ready'));
+assert.ok(!approvedGate.includes("moveStatus('ready-a','Approved')"));
+assert.ok(/moveStatus[\s\S]*review-next|review-next/.test(approvedGate) || approvedGate.indexOf('Continue') > -1);
+const readyWithNext = ctx.renderHumanQaGate(continueRows[1], 'review');
+assert.ok(readyWithNext.includes("moveStatus('ready-b','Approved')"));
+assert.ok(readyWithNext.includes('>Continue</button>'));
+assert.ok(readyWithNext.indexOf('Mark client-ready') < readyWithNext.indexOf('>Continue</button>'));
+ctx.scripts = [
+  Object.assign({}, signedScript, { id: 'ready-a', title: 'Alpha', status: 'Approved', client_slug: 'jan' }),
+  { id: 'open-jan', title: 'Unsigned Jan', client_slug: 'jan', status: 'Needs Review', batch: 'Jan FINAL' },
+];
+const stampNextGate = ctx.renderHumanQaGate(ctx.scripts[0], 'review');
+assert.ok(stampNextGate.includes('>Next to stamp</button>'));
+assert.ok(stampNextGate.includes('continueReview()'));
+assert.ok(!stampNextGate.includes('Mark client-ready'));
+ctx.scripts = [Object.assign({}, signedScript, { id: 'ready-a', title: 'Alpha', status: 'Approved', client_slug: 'jan' })];
+const clearGate = ctx.renderHumanQaGate(ctx.scripts[0], 'review');
+assert.ok(clearGate.includes('>Continue</button>'));
+assert.ok(clearGate.includes('continueReview()'));
+assert.ok(!clearGate.includes('Mark client-ready'));
+ctx.scripts = undefined;
+const setStatusAtLater = script.indexOf('async function setStatus');
+const setStatusBody = script.slice(setStatusAtLater, script.indexOf('async function requestTweak', setStatusAtLater));
+assert.ok(/if \(prepState && prepState\.id === id\) renderPrep\(\)/.test(setStatusBody));
+assert.ok(/advanceAfterClientReady\(id\)/.test(setStatusBody));
+assert.ok(/prepState\.fromQueue/.test(setStatusBody));
+assert.ok(script.includes('Client-ready. Nothing left in this queue.'));
+assert.ok(script.includes('Client-ready. Next script.'));
+assert.ok(/function advanceAfterClientReady[\s\S]*openReview\(next\.id\)/.test(script));
+assert.ok(/window\.continueReview = \(\) => \{[\s\S]*exitClientReadyQueue\(\)/.test(script));
 const andrewListReady = Object.assign({}, signedScript, { id: 'list-andrew', client_slug: 'andrew', status: 'Needs Review' });
 const andrewListBtn = ctx.listClientReadyHtml(andrewListReady);
 assert.ok(andrewListBtn.includes("moveStatus('list-andrew','Approved')"));

@@ -28,7 +28,11 @@ const names = [
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken', 'spokenHook', 'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'clockSeconds', 'skimClockLabel', 'prompterSkimStops', 'prompterSkimTarget',
-  'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo', 'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
+  'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo',
+  'isHostedMediaUrl', 'isAudioMediaUrl', 'explicitPlayableUrl', 'mediaLockOf', 'hubStorageOrigin', 'storagePublicUrl',
+  'pushUnique', 'resolveMediaValue', 'referenceHostedFile', 'referencePosterUrl', 'attachReferenceMedia',
+  'openReferenceLabel', 'referenceOpenLink', 'hubPlayerHtml',
+  'extractVideoLink', 'fdObject', 'pullLabeled', 'referencePack',
   'resourceKey', 'isResourceCard', 'resolveResourceImage', 'normalizeResourceCard',
   'clientResourcePackSlug', 'clientResourcePack', 'parseClientResources', 'resourceMap',
   'firstResourceText', 'formatDnaReminder', 'reviewRefs',
@@ -45,7 +49,7 @@ const names = [
   'humanQaNotePlaceholder', 'reviewHasResources',
   'normFormatKey', 'formatChipLabel', 'lockedFormatFromText', 'scriptLockedFormat',
   'collectIgHandles', 'collectShortcodes', 'outlierScore', 'reelClearsOutlierBar', 'outlierLabel',
-  'reviewCreatorProof', 'reviewRefPosterHtml', 'reviewCreatorThumbsHtml', 'reviewReferenceHtml',
+  'reviewCreatorProof', 'reviewRefPosterHtml', 'reviewCreatorThumbsHtml', 'reviewClipSlotHtml', 'reviewReferenceHtml',
   'prepReadBodyHtml', 'clientLabel',
   'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaReviewAction', 'humanQaContinueWarn', 'humanQaNotesOk', 'humanQaScriptHash',
   'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
@@ -347,7 +351,9 @@ const melHtml = ctx.prepReferenceHtml(melPrep);
 assert.ok(melHtml.indexOf('Clip to react to') < melHtml.indexOf('Format to match'));
 assert.ok(melHtml.includes('Scroll if needed — this is what you react to.'));
 assert.ok(melHtml.includes('youtube.com/embed/wFbr2UUZ2Xo'));
-assert.ok(melHtml.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(!melHtml.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(melHtml.includes('Open on Instagram'));
+assert.ok(melHtml.includes('No hosted file'));
 assert.ok(melHtml.includes('Keep the same'));
 assert.ok(melHtml.includes('Mel card on top'));
 assert.ok(melHtml.includes('Full pacing note'));
@@ -494,7 +500,9 @@ assert.ok(s5Html.indexOf('Clip to react to') < s5Html.indexOf('Format to match')
 assert.ok(s5Html.includes('Scroll if needed — this is what you react to.'));
 assert.ok(s5Html.includes('https://www.instagram.com/reel/C96PhruO6BC/'));
 assert.ok(s5Html.includes('https://www.youtube.com/watch?v=V_uebI9QpMg'));
-assert.ok(s5Html.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(!s5Html.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(s5Html.includes('Open on Instagram'));
+assert.ok(!s5Html.includes('class="embed-frame"'));
 assert.ok(s5Html.includes('youtube.com/embed/V_uebI9QpMg'));
 assert.ok(s5Html.includes('Outlier metrics'));
 assert.ok(s5Html.includes('id="react-clip"'));
@@ -711,13 +719,13 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.5');
+assert.strictEqual(appVersion, '2026.10.28.6');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.5');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.6');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
 assert.ok(/four|boxes/i.test(releaseNotes));
@@ -728,22 +736,23 @@ assert.ok(/optional/i.test(releaseNotes));
 assert.ok(/reel|Instagram|browser/i.test(releaseNotes));
 assert.ok(/sent/.test(releaseNotes));
 assert.ok(/client-ready|client ready/i.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.5');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.6');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.6');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', true, '2026.10.28.5').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.5');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', true, '2026.10.28.6').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.6');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1445,11 +1454,14 @@ assert.strictEqual(adminRefs.length, 2);
 assert.ok(adminRefs.some(r => r.kind === 'yt'));
 
 const refHtml = ctx.prompterRefHtml(reviewScript, { includeAudit: false });
-assert.ok(refHtml.includes('instagram.com/reel/DdbzuysjzzD/embed/'));
+assert.ok(!refHtml.includes('instagram.com/reel/DdbzuysjzzD/embed/'));
+assert.ok(!refHtml.includes('<iframe'));
+assert.ok(refHtml.includes('Open on Instagram'));
+assert.ok(refHtml.includes('No hosted file'));
 assert.ok(refHtml.includes('pr-ref-frame'));
 assert.ok(refHtml.includes('pr-ref-close'));
 assert.ok(refHtml.includes('Back to script'));
-assert.ok(html.includes('Phone: Ref is a dismissible overlay'));
+assert.ok(html.includes('Phone: Ref is a compact dock'));
 assert.ok(!html.includes('height: 46vh; max-height: 46vh;'));
 assert.ok(!html.includes('#prompter.has-ref #prompter-scroll { padding-bottom: 52vh; }'));
 assert.ok(/prompterIsPhone\(\)\s*\n\s*\? false/.test(html));
@@ -1603,7 +1615,8 @@ assert.ok(reviewGate.includes('Thesis / voice'));
 assert.ok(reviewGate.includes('Reference opened'));
 assert.ok(reviewGate.includes('The note is optional'));
 assert.ok(reviewGate.includes('never blocks'));
-assert.ok(reviewGate.includes('Open reel leaves the Hub'));
+assert.ok(reviewGate.includes('Open on Instagram if it is not'));
+assert.ok(reviewGate.includes('Play stays in the Hub'));
 assert.ok(reviewGate.includes('qa-note-fold'));
 assert.ok(reviewGate.includes('Why this is good to send, optional'));
 assert.ok(reviewGate.includes('qa-pin'));
@@ -2130,7 +2143,8 @@ const withReel = ctx.prepReadBodyHtml({
   reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
 });
 assert.ok(withReel.includes('class="review-ref"'));
-assert.ok(withReel.includes('Open reel'));
+assert.ok(withReel.includes('Open on Instagram'));
+assert.ok(withReel.includes('class="review-ref-open"'));
 assert.ok(withReel.includes('href="https://www.instagram.com/reel/C96PhruO6BC/"'));
 assert.ok(withReel.includes('target="_blank"'));
 assert.ok(withReel.includes('rel="noopener noreferrer"'));
@@ -2146,6 +2160,7 @@ const noReel = ctx.prepReadBodyHtml({
   full_script: 'Body only',
 });
 assert.ok(!noReel.includes('class="review-ref"'));
+assert.ok(!noReel.includes('Open on Instagram'));
 assert.ok(!noReel.includes('Open reel'));
 assert.ok(!noReel.includes('instagram.com/reel'));
 const fratRead = ctx.reviewReferenceHtml({
@@ -2173,7 +2188,8 @@ assert.ok(!fratRead.includes('<iframe'));
 assert.ok(!fratRead.includes('/embed/'));
 assert.ok(fratRead.includes('target="_blank"'));
 assert.ok(fratRead.includes('rel="noopener noreferrer"'));
-assert.ok(fratRead.includes('>Open reel</a>'));
+assert.ok(fratRead.includes('>Open on Instagram</a>'));
+assert.ok(!fratRead.includes('<video'));
 const oneReel = ctx.reviewReferenceHtml({
   client_slug: 'devin',
   format: 'Tutorials · vault D1 · @williamholmancoaching Dej6DYnye-H',
@@ -2202,8 +2218,46 @@ assert.ok(janReactionRead.includes('review-format-chip">Reaction<'));
 assert.ok(!janReactionRead.includes('David Reads Fast'));
 assert.ok(!janReactionRead.includes('review-ref-row'));
 assert.ok(!janReactionRead.includes('vault-poster'));
-assert.ok(janReactionRead.includes('Open reel'));
+assert.ok(janReactionRead.includes('Open on Instagram'));
 assert.ok(janReactionRead.includes('C96PhruO6BC'));
+assert.ok(!janReactionRead.includes('Clip to react to'));
+const melStamp = ctx.reviewReferenceHtml({
+  client_slug: 'jan',
+  title: 'Reaction: Mel Robbins — Your Self-Doubt Is Lying to You',
+  format: 'Reaction · David Reads Fast stack (C96PhruO6BC) · Mel react-to',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  clip_directions: 'REACT TO / SOURCE CLIP (Mel Robbins): https://www.youtube.com/shorts/wFbr2UUZ2Xo',
+  filming_direction: { 'Reaction Clip': 'https://www.youtube.com/shorts/wFbr2UUZ2Xo' },
+  hook: 'I do not care how long lunch takes.',
+  full_script: 'The spoken body stays on screen.',
+});
+assert.ok(melStamp.includes('Format reference'));
+assert.ok(melStamp.includes('Clip to react to'));
+assert.ok(melStamp.indexOf('Format reference') < melStamp.indexOf('Clip to react to'));
+assert.ok(melStamp.includes('review-ref-duo'));
+assert.ok(melStamp.includes('youtube.com/embed/wFbr2UUZ2Xo'));
+assert.ok(melStamp.includes('https://www.youtube.com/shorts/wFbr2UUZ2Xo'));
+assert.ok(melStamp.includes('>Open on YouTube</a>'));
+assert.ok(melStamp.includes('>Open on Instagram</a>'));
+assert.ok(melStamp.includes('C96PhruO6BC'));
+assert.ok(!melStamp.includes('instagram.com/reel/C96PhruO6BC/embed/'));
+assert.ok(melStamp.includes('review-format-chip">Reaction<'));
+const melBody = ctx.prepReadBodyHtml({
+  client_slug: 'jan',
+  title: 'Reaction: Mel Robbins — Your Self-Doubt Is Lying to You',
+  format: 'Reaction · David Reads Fast stack (C96PhruO6BC) · Mel react-to',
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  filming_direction: { 'Reaction Clip': 'https://www.youtube.com/shorts/wFbr2UUZ2Xo' },
+  hook: 'I do not care how long lunch takes.',
+  full_script: 'The spoken body stays on screen.',
+});
+assert.ok(melBody.indexOf('Clip to react to') < melBody.indexOf('I do not care how long lunch takes.'));
+assert.ok(melBody.includes('The spoken body stays on screen.'));
+assert.ok(melBody.includes('youtube.com/embed/wFbr2UUZ2Xo'));
+assert.strictEqual(ctx.reactionClipUrl({
+  reference_clip: 'https://www.instagram.com/reel/C96PhruO6BC/',
+  proof_stats: 'REACT-TO (Mel Short): https://www.youtube.com/shorts/wFbr2UUZ2Xo',
+}), 'https://www.youtube.com/shorts/wFbr2UUZ2Xo');
 const andrewStampRead = ctx.reviewReferenceHtml({
   client_slug: 'andrew',
   format: 'Tips · vault A4 · @fratbuddha DeAdWCBS2AV',
@@ -2258,5 +2312,66 @@ const blocksAt = script.indexOf('function humanQaBlocksStatus');
 const blocksSrc = script.slice(blocksAt, script.indexOf('function humanQaValidate', blocksAt));
 assert.ok(/return isClientDeliveryStatus\(nextStatus\) && !humanQaDeliveryReady\(s\)/.test(blocksSrc));
 assert.ok(!/vaultEmpty/.test(blocksSrc));
+
+const hostedRead = ctx.prepReadBodyHtml({
+  title: 'Buy-in with a file',
+  client_slug: 'devin',
+  format: 'Tutorials · vault D1 · @williamholmancoaching Dej6DYnye-H',
+  reference_clip: 'https://www.instagram.com/reel/Dej6DYnye-H/',
+  reference_video_url: 'https://cdn.example.com/reels/dej.mp4',
+  thumbnail_url: 'https://cdn.example.com/reels/dej.jpg',
+  hook: 'Stop pitching the funder first.',
+  full_script: 'The spoken body stays readable beside the player.',
+});
+assert.ok(hostedRead.includes('class="hub-player is-file'));
+assert.ok(hostedRead.includes('playsinline'));
+assert.ok(hostedRead.includes('src="https://cdn.example.com/reels/dej.mp4"'));
+assert.ok(hostedRead.includes('poster="https://cdn.example.com/reels/dej.jpg"'));
+assert.ok(hostedRead.includes('>Open on Instagram</a>'));
+assert.ok(hostedRead.includes('target="_blank"'));
+assert.ok(!hostedRead.includes('/embed/'));
+assert.ok(!hostedRead.includes('class="embed-frame"'));
+assert.ok(hostedRead.includes('Stop pitching the funder first.'));
+assert.ok(hostedRead.includes('The spoken body stays readable beside the player.'));
+assert.ok(hostedRead.includes('review-format-chip">Tutorials<'));
+assert.ok(hostedRead.includes('qa-pin') === false);
+const lockFile = ctx.referenceHostedFile({
+  reference_clip: 'https://www.instagram.com/reel/Dej6DYnye-H/',
+  pipeline_audit: { media_lock: { media_path: 'https://files.example.com/a.mp4', poster: 'https://files.example.com/a.jpg' } },
+}, 'https://www.instagram.com/reel/Dej6DYnye-H/');
+assert.strictEqual(lockFile, 'https://files.example.com/a.mp4');
+assert.strictEqual(ctx.referenceHostedFile({
+  reference_clip: 'https://www.instagram.com/reel/Dej6DYnye-H/',
+  thumbnail_url: 'https://cdn.example.com/only-poster.jpg',
+}, 'https://www.instagram.com/reel/Dej6DYnye-H/'), '');
+const audioHtml = ctx.hubPlayerHtml({ kind: 'ig', watch: 'https://www.instagram.com/reel/Dej6DYnye-H/' }, {
+  file: 'https://cdn.example.com/voice.m4a',
+});
+assert.ok(audioHtml.includes('<audio'));
+assert.ok(audioHtml.includes('playsinline'));
+assert.ok(audioHtml.includes('Open on Instagram'));
+assert.ok(!audioHtml.includes('<iframe'));
+const igOnly = ctx.hubPlayerHtml(ctx.videoInfo('https://www.instagram.com/reel/Dej6DYnye-H/'), { inlineFallback: true, link: false });
+assert.ok(!igOnly.includes('<iframe'));
+assert.ok(!igOnly.includes('/embed/'));
+assert.ok(igOnly.includes('No hosted file'));
+const ytPlayer = ctx.hubPlayerHtml(ctx.videoInfo('https://www.youtube.com/watch?v=abcdefghijk'), { link: false });
+assert.ok(ytPlayer.includes('youtube.com/embed/abcdefghijk'));
+assert.ok(ytPlayer.includes('hub-player-frame'));
+ctx.SUPABASE_URL = 'https://example.supabase.co';
+assert.strictEqual(ctx.referenceHostedFile({
+  reference_clip: 'https://www.instagram.com/reel/Dej6DYnye-H/',
+  pipeline_audit: { media_lock: { bucket: 'reference-media', media_path: 'devin/reel.mp4' } },
+}, 'https://www.instagram.com/reel/Dej6DYnye-H/'), 'https://example.supabase.co/storage/v1/object/public/reference-media/devin/reel.mp4');
+assert.strictEqual(ctx.referenceHostedFile({
+  reference_clip: 'https://www.instagram.com/reel/Dej6DYnye-H/',
+  reference_video_url: 'https://cdn.example.com/primary.mp4',
+  pipeline_audit: { media_lock: { media_path: 'https://files.example.com/other.mp4' } },
+}, 'https://www.youtube.com/watch?v=abcdefghijk'), '');
+assert.ok(html.includes('max-height: min(188px, 30dvh)'));
+assert.ok(!html.includes('position: absolute; inset: 0;\n    flex: none; width: 100%; height: auto; max-height: none;'));
+assert.ok(script.includes('function rememberPrepScroll'));
+assert.ok(/prepState\.scrolls\[String\(prepState\.step/.test(script));
+assert.ok(/prepState\.scrolls && prepState\.scrolls\[String\(step\)\]/.test(script));
 
 console.log('hub-logic tests passed');

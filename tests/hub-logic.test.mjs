@@ -43,7 +43,9 @@ const names = [
   'prepShowsStamp', 'prepStampBlocksTabs', 'prepQaHintHtml', 'prompterCanShowReference', 'prepStepBody',
   'humanQaNotePlaceholder', 'reviewHasResources', 'prepReadBodyHtml', 'clientLabel',
   'isRlaClient', 'humanQaChecks', 'humanQaNotesOk', 'humanQaScriptHash',
-  'normalizeQaFormats', 'lockedFormatsForSlug', 'humanQaFormatSummary', 'humanQaFormatFieldsHtml',
+  'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
+  'vaultDnaValueFilled', 'vaultDnaAliases', 'formatCountsAsRecipe', 'vaultEmptyTitle', 'vaultEmptyBlocksStatus',
+  'humanQaFormatSummary', 'humanQaFormatFieldsHtml',
   'unpackHumanQa', 'humanQaFrom',
   'humanQaComplete', 'humanQaStale', 'humanQaDeliveryReady', 'humanQaFilmStartDone', 'humanQaFilmEndDone',
   'prompterShowsFilmQa', 'prompterShouldForceStart', 'prompterShouldBlockClose',
@@ -1632,7 +1634,14 @@ assert.ok(reviewAdmin.includes("moveStatus('act-2','Passed')"));
 assert.ok(reviewAdmin.includes('Mark client-ready'));
 assert.ok(reviewAdmin.includes('disabled'));
 const signedReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-3', status: 'Needs Review' }));
-assert.ok(signedReady.includes("moveStatus('act-3','Approved')"));
+assert.ok(signedReady.includes('Mark client-ready'));
+assert.ok(signedReady.includes('disabled'));
+assert.ok(signedReady.includes(ctx.vaultEmptyTitle()));
+assert.ok(signedReady.includes('openFormatVault()'));
+assert.ok(!signedReady.includes("moveStatus('act-3','Approved')"));
+const andrewSignedReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-andrew', client_slug: 'andrew', status: 'Needs Review' }));
+assert.ok(andrewSignedReady.includes("moveStatus('act-andrew','Approved')"));
+assert.ok(!andrewSignedReady.includes(ctx.vaultEmptyTitle()));
 ctx.role = 'client';
 const clientReview = ctx.renderShotActions({ id: 'act-4', status: 'Needs Review' });
 assert.ok(clientReview.includes('Film this'));
@@ -1780,5 +1789,89 @@ assert.ok(script.includes("if (role !== 'admin') return;"));
 assert.ok(script.includes('openFormatVault'));
 const catalogFile = JSON.parse(fs.readFileSync(new URL('../format-vault/catalog.json', import.meta.url), 'utf8'));
 assert.strictEqual(JSON.stringify(ctx.formatVaultCatalog()), JSON.stringify(catalogFile));
+
+assert.strictEqual(ctx.formatCountsAsRecipe({ id: 'reaction', thumbnail: 'Tony Robbins', creators: [{ name: 'Tony Robbins', handle: '' }] }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ reelUrl: '   ' }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ reelUrl: 'https://www.instagram.com/reel/C96PhruO6BC/' }), true);
+assert.strictEqual(ctx.formatCountsAsRecipe({ shortcode: 'C96PhruO6BC' }), true);
+assert.strictEqual(ctx.formatCountsAsRecipe({ shortcode: '  ' }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: {} }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { hook: '' } }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { hook: '   ' } }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { thumbnail: 'face', creator: 'Tony' } }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { hook: 'locked pattern' } }), true);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { emotional: 'warm close' } }), true);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { emotionalNext: { status: '', why: '' } } }), false);
+assert.strictEqual(ctx.formatCountsAsRecipe({ dna: { components: { status: 'pass' } } }), true);
+assert.strictEqual(ctx.vaultFormatsForSlug('jan').some(ctx.formatCountsAsRecipe), false);
+assert.strictEqual(ctx.vaultFormatsForSlug('devin').some(ctx.formatCountsAsRecipe), false);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan', status: 'Needs Review' }, 'Approved'), true);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan-rla' }, 'Needs Review'), true);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'devin' }, 'Approved'), true);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'andrew' }, 'Approved'), false);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'sagun' }, 'Needs Review'), false);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'cristian' }, 'Approved'), false);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Filming'), false);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Draft'), false);
+assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Approved'), false);
+assert.strictEqual(ctx.humanQaBlocksStatus(signedScript, 'Needs Review'), false);
+const checkboxProof = {
+  client_slug: 'jan',
+  status: 'Needs Review',
+  pipeline_audit: ctx.applyHumanQa({ offer: 'Keep offer' }, stampedFormats),
+};
+assert.strictEqual(ctx.humanQaDeliveryReady(checkboxProof), true);
+assert.strictEqual(ctx.humanQaBlocksStatus(checkboxProof, 'Approved'), false);
+assert.strictEqual(ctx.vaultEmptyBlocksStatus(checkboxProof, 'Approved'), true);
+assert.strictEqual(ctx.prompterShouldForceStart(signedScript), false);
+assert.strictEqual(ctx.prompterShouldBlockClose(signedScript), false);
+assert.strictEqual(ctx.prepStampBlocksTabs(), false);
+assert.strictEqual(ctx.humanQaNotesOk(''), false);
+assert.strictEqual(ctx.humanQaNotesOk('looks fine'), false);
+const janVaultClient = ctx.formatVaultCatalog().clients.filter(c => c.slug === 'jan')[0];
+const reactionFormat = janVaultClient.formats.filter(f => f.id === 'reaction')[0];
+const savedThumb = reactionFormat.thumbnail;
+const savedCreators = reactionFormat.creators;
+try {
+  reactionFormat.reelUrl = 'https://www.instagram.com/reel/C96PhruO6BC/';
+  assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Approved'), false);
+  delete reactionFormat.reelUrl;
+  reactionFormat.shortcode = 'C96PhruO6BC';
+  assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Approved'), false);
+  delete reactionFormat.shortcode;
+  reactionFormat.dna = { hook: '  ' };
+  assert.strictEqual(ctx.formatCountsAsRecipe(reactionFormat), false);
+  reactionFormat.dna = { hook: 'question then lesson' };
+  assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Needs Review'), false);
+  delete reactionFormat.dna;
+  reactionFormat.thumbnail = 'Tony Robbins face';
+  reactionFormat.creators = [{ name: 'Tony Robbins', handle: '' }];
+  assert.strictEqual(ctx.formatCountsAsRecipe(reactionFormat), false);
+  assert.strictEqual(ctx.vaultEmptyBlocksStatus({ client_slug: 'jan' }, 'Approved'), true);
+} finally {
+  delete reactionFormat.reelUrl;
+  delete reactionFormat.shortcode;
+  delete reactionFormat.dna;
+  reactionFormat.thumbnail = savedThumb;
+  reactionFormat.creators = savedCreators;
+}
+const signedGate = ctx.renderHumanQaGate(signedScript, 'card');
+assert.ok(signedGate.includes('Send to Needs Review'));
+assert.ok(signedGate.includes('disabled'));
+assert.ok(signedGate.includes('openFormatVault()'));
+assert.ok(!signedGate.includes("moveStatus('qa-1','Needs Review')"));
+const andrewGateReady = ctx.renderHumanQaGate(Object.assign({}, signedScript, { client_slug: 'andrew' }), 'card');
+assert.ok(andrewGateReady.includes("moveStatus('qa-1','Needs Review')"));
+const setStatusAt = script.indexOf('async function setStatus');
+const setStatusSrc = script.slice(setStatusAt, script.indexOf('async function requestTweak'));
+assert.ok(/humanQaBlocksStatus/.test(setStatusSrc));
+assert.ok(/vaultEmptyBlocksStatus/.test(setStatusSrc));
+assert.ok(/openFormatVault/.test(setStatusSrc));
+assert.ok(!/humanQa\s*=/.test(setStatusSrc));
+ctx.role = 'admin';
+const sagunReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-sagun', client_slug: 'sagun', status: 'Needs Review' }));
+assert.ok(sagunReady.includes("moveStatus('act-sagun','Approved')"));
+const cristianReady = ctx.renderShotActions(Object.assign({}, signedScript, { id: 'act-cristian', client_slug: 'cristian', status: 'Needs Review' }));
+assert.ok(cristianReady.includes("moveStatus('act-cristian','Approved')"));
 
 console.log('hub-logic tests passed');

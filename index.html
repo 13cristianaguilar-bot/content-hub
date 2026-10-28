@@ -2961,6 +2961,16 @@ async function setStatus(id, status, extra, opts) {
     if (prepState && prepState.id === id) renderPrep();
     return;
   }
+  if (!opts.isUndo && role === 'admin' && before && vaultEmptyBlocksStatus(before, status)) {
+    showToast(vaultEmptyTitle() + '. File a recipe before this can move.', {
+      tone: 'error',
+      actionLabel: 'Format Vault',
+      onAction: function () { window.openFormatVault(); },
+    });
+    renderDash();
+    if (prepState && prepState.id === id) renderPrep();
+    return;
+  }
   // Snapshot exactly the fields this write will touch, so Undo restores precisely them.
   const prev = before ? { status: before.status ?? null, client_feedback: before.client_feedback ?? null } : null;
   const payload = extra ? { status, ...extra } : { status };
@@ -5458,9 +5468,14 @@ function renderShotActions(s) {
   const admin = typeof role !== 'undefined' && role === 'admin';
   const statusBtn = (status, label, cls) => {
     if (!status || status === 'Passed') return '<div></div>';
-    const blocked = admin && humanQaBlocksStatus(s, status);
-    if (blocked) {
-      return `<button type="button" class="${cls} is-blocked" disabled aria-disabled="true" title="Finish the Cristian brain check first">${escHtml(label)}</button>`;
+    const brain = admin && humanQaBlocksStatus(s, status);
+    const vault = admin && vaultEmptyBlocksStatus(s, status);
+    if (brain || vault) {
+      const title = brain ? 'Finish the Cristian brain check first' : vaultEmptyTitle();
+      const vaultBtn = vault
+        ? '<button type="button" class="tool-btn" onclick="window.openFormatVault()">Format Vault</button>'
+        : '';
+      return `<button type="button" class="${cls} is-blocked" disabled aria-disabled="true" title="${escHtml(title)}">${escHtml(label)}</button>${vaultBtn}`;
     }
     return `<button type="button" class="${cls}" onclick="moveStatus('${s.id}','${status}')">${escHtml(label)}</button>`;
   };
@@ -7212,9 +7227,13 @@ function normalizeQaFormats(value) {
   });
   return out;
 }
-function lockedFormatsForSlug(slug) {
+function vaultSlugKey(slug) {
   let key = String(slug || '').toLowerCase().trim();
   if (key === 'jan-rla' || isRlaClient(key)) key = 'jan';
+  return key;
+}
+function lockedFormatsForSlug(slug) {
+  const key = vaultSlugKey(slug);
   const clients = (typeof FORMAT_VAULT !== 'undefined' && FORMAT_VAULT && FORMAT_VAULT.clients) || [];
   const client = clients.filter(row => row && row.slug === key)[0];
   if (!client) return [];
@@ -7222,6 +7241,60 @@ function lockedFormatsForSlug(slug) {
     id: asText(format && format.id).trim(),
     label: asText(format && (format.label || format.id)).trim(),
   })).filter(format => format.id);
+}
+function vaultFormatsForSlug(slug) {
+  const key = vaultSlugKey(slug);
+  const clients = (typeof FORMAT_VAULT !== 'undefined' && FORMAT_VAULT && FORMAT_VAULT.clients) || [];
+  const client = clients.filter(row => row && row.slug === key)[0];
+  return (client && Array.isArray(client.formats)) ? client.formats : [];
+}
+function vaultDnaValueFilled(value) {
+  if (value == null) return false;
+  if (typeof value === 'string') return value.trim() !== '';
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value).trim() !== '';
+  if (Array.isArray(value)) return value.some(vaultDnaValueFilled);
+  if (typeof value === 'object') {
+    const keys = Object.keys(value);
+    if (!keys.length) return false;
+    return keys.some(key => vaultDnaValueFilled(value[key]));
+  }
+  return false;
+}
+function vaultDnaAliases() {
+  return {
+    hook: ['hook'],
+    components: ['components', 'formatComponents', 'format_components'],
+    rehook: ['rehook', 'reHook'],
+    cadence: ['cadence'],
+    length: ['length', 'lengthVsRef', 'length_vs_ref'],
+    idea: ['idea'],
+    reward: ['reward'],
+    emotionalNext: ['emotionalNext', 'emotional_next', 'emotional', 'nextStep'],
+  };
+}
+function formatCountsAsRecipe(format) {
+  if (!format || typeof format !== 'object' || Array.isArray(format)) return false;
+  const reelFields = [format.reelUrl, format.reel_url, format.reelURL];
+  if (typeof format.reel === 'string') reelFields.push(format.reel);
+  if (format.reel && typeof format.reel === 'object') {
+    reelFields.push(format.reel.url, format.reel.href, format.reel.watch);
+  }
+  if (reelFields.some(value => typeof value === 'string' && value.trim())) return true;
+  const codeFields = [format.shortcode, format.shortCode, format.short_code];
+  if (codeFields.some(value => typeof value === 'string' && value.trim())) return true;
+  const dna = format.dna && typeof format.dna === 'object' && !Array.isArray(format.dna) ? format.dna : null;
+  if (!dna) return false;
+  const aliases = vaultDnaAliases();
+  return Object.keys(aliases).some(key => aliases[key].some(name => vaultDnaValueFilled(dna[name])));
+}
+function vaultEmptyTitle() {
+  return 'Format Vault has no recipe for the locked formats on this client';
+}
+function vaultEmptyBlocksStatus(s, nextStatus) {
+  if (!isClientDeliveryStatus(nextStatus)) return false;
+  const slug = s && s.client_slug;
+  if (!lockedFormatsForSlug(slug).length) return false;
+  return !vaultFormatsForSlug(slug).some(formatCountsAsRecipe);
 }
 function humanQaFormatSummary(s, formats) {
   const ids = normalizeQaFormats(formats);
@@ -7403,7 +7476,8 @@ function renderHumanQaGate(s, surface) {
   const action = s.status === 'Needs Review'
     ? { status: 'Approved', label: 'Mark client-ready' }
     : ((s.status === 'Draft' || s.status === 'Passed') ? { status: 'Needs Review', label: 'Send to Needs Review' } : null);
-  const blocked = action && humanQaBlocksStatus(s, action.status);
+  const brainBlocked = action && humanQaBlocksStatus(s, action.status);
+  const vaultBlocked = action && vaultEmptyBlocksStatus(s, action.status);
   const compact = surface === 'review';
   const gateClass = 'qa-gate' + (compact ? ' is-compact' : '');
   if (done || confirmable) {
@@ -7412,8 +7486,10 @@ function renderHumanQaGate(s, surface) {
     const signed = (humanQaChecks(s) || []).map(item =>
       '<li class="qa-check"><span>' + escHtml(item.label) + '</span></li>'
     ).join('');
-    const send = !filmPhase && action && !blocked && id
-      ? `<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p><button type="button" class="qa-send" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`
+    const vaultSend = `<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p><button type="button" class="qa-send is-blocked" disabled aria-disabled="true" title="${escHtml(vaultEmptyTitle())}">${escHtml(action.label)}</button><button type="button" class="qa-vault" onclick="window.openFormatVault()">Format Vault</button>`;
+    const openSend = `<p class="qa-lead">This stamp did not send anything and did not mark it client-ready.</p><button type="button" class="qa-send" onclick="moveStatus('${id}','${action.status}')">${escHtml(action.label)}</button>`;
+    const send = !filmPhase && action && id
+      ? (brainBlocked ? '' : (vaultBlocked ? vaultSend : openSend))
       : '';
     const confirm = confirmable && id
       ? `<button type="button" class="qa-go" onclick="window.confirmHumanQaFilm('${id}','${filmPhase}')">${filmPhase === 'end' ? 'I finished this film read' : "I'm reading this myself"}</button>`

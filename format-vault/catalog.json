@@ -97,7 +97,8 @@
                 "reward": "a line the team can use",
                 "cadence": "teach, then land the point",
                 "emotionalNext": "pass it to the team"
-              }
+              },
+              "thumbnail": "thumbs/DeJhq0AINpW.jpg"
             }
           ],
           "reelUrl": "",
@@ -173,7 +174,8 @@
                 "idea": "the myth is the rank chase",
                 "reward": "the flip toward leadership",
                 "emotionalNext": "share the correction"
-              }
+              },
+              "thumbnail": "thumbs/DbbGzGzu-Ys.jpg"
             }
           ],
           "reelUrl": "",
@@ -205,11 +207,13 @@
               "also": [
                 {
                   "shortcode": "Dbv-LIFiURH",
-                  "reelUrl": "https://www.instagram.com/reel/Dbv-LIFiURH/"
+                  "reelUrl": "https://www.instagram.com/reel/Dbv-LIFiURH/",
+                  "thumbnail": "thumbs/Dbv-LIFiURH.jpg"
                 },
                 {
                   "shortcode": "DbzHPbyC7DJ",
-                  "reelUrl": "https://www.instagram.com/reel/DbzHPbyC7DJ/"
+                  "reelUrl": "https://www.instagram.com/reel/DbzHPbyC7DJ/",
+                  "thumbnail": "thumbs/DbzHPbyC7DJ.jpg"
                 }
               ],
               "dna": {
@@ -219,9 +223,389 @@
                 "idea": "one line worth repeating",
                 "reward": "a sentence they can hand off",
                 "emotionalNext": "send it to the team"
-              }
+              },
+              "thumbnail": "thumbs/DcBWZ8oC51Q.jpg"
             }
           ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
+        }
+      ]
+    },
+    {
+      "slug": "andrew",
+      "name": "Andrew George",
+      "brand": "SaaSuite",
+      "niche": "HighLevel agencies and SaaS operators",
+      "industry": "SaaS",
+      "note": "Chosen formats: Tips, Visual, Comparison, Transformations. Clones is pending research. The shelf is the confirmed repeats, tagged original, competitor, or other industry.",
+      "creators": [
+        {
+          "name": "Andrew George",
+          "handle": "@andrewpreneurship",
+          "note": "Original repeat creator."
+        },
+        {
+          "name": "",
+          "handle": "@pavels_life",
+          "note": "Competitor. HighLevel and agency."
+        },
+        {
+          "name": "",
+          "handle": "@fratbuddha",
+          "note": "Other industry. Confirmed tips repeat."
+        }
+      ],
+      "formats": [
+        {
+          "id": "tips",
+          "label": "Tips",
+          "niche": "HighLevel agencies and SaaS operators",
+          "summary": "A repeated tip, said straight.",
+          "thumbnail": "",
+          "creators": [
+            {
+              "lane": "original",
+              "handle": "@andrewpreneurship",
+              "name": "andrewpreneurship",
+              "shortcode": "DYU9NJjDWqa",
+              "reelUrl": "https://www.instagram.com/reel/DYU9NJjDWqa/",
+              "views": 152708,
+              "outlier": "391.6x",
+              "ageDays": 166,
+              "dna": {
+                "hook": "Most software companies don’t rely on onboarding calls to teach users their platform 👀 They use…",
+                "format": "Tips",
+                "idea": "Free asset / guide via comment keyword"
+              },
+              "also": [
+                {
+                  "shortcode": "Dd-efVyxITU",
+                  "reelUrl": "https://www.instagram.com/reel/Dd-efVyxITU/",
+                  "views": 2016,
+                  "outlier": "5.2x",
+                  "ageDays": 26,
+                  "thumbnail": "thumbs/Dd-efVyxITU.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DYU9NJjDWqa.jpg"
+            },
+            {
+              "lane": "competitor",
+              "handle": "@pavels_life",
+              "name": "pavels_life",
+              "shortcode": "C4iPzWRqHX6",
+              "reelUrl": "https://www.instagram.com/reel/C4iPzWRqHX6/",
+              "views": 551099,
+              "outlier": "141.4x",
+              "ageDays": 956,
+              "dna": {
+                "hook": "Don't miss the wave, comment “website”",
+                "format": "Tips",
+                "idea": "Free asset / guide via comment keyword"
+              },
+              "also": [
+                {
+                  "shortcode": "C4IkEsAqMmh",
+                  "reelUrl": "https://www.instagram.com/reel/C4IkEsAqMmh/",
+                  "views": 466104,
+                  "outlier": "119.6x",
+                  "ageDays": 966,
+                  "thumbnail": "thumbs/C4IkEsAqMmh.jpg"
+                },
+                {
+                  "shortcode": "DeMiLEKqxfN",
+                  "reelUrl": "https://www.instagram.com/reel/DeMiLEKqxfN/",
+                  "views": 34767,
+                  "outlier": "8.9x",
+                  "ageDays": 20,
+                  "thumbnail": "thumbs/DeMiLEKqxfN.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/C4iPzWRqHX6.jpg"
+            },
+            {
+              "lane": "other",
+              "handle": "@fratbuddha",
+              "name": "fratbuddha",
+              "shortcode": "DeAdWCBS2AV",
+              "reelUrl": "https://www.instagram.com/reel/DeAdWCBS2AV/",
+              "views": 5687925,
+              "outlier": "1361.7x",
+              "ageDays": 25,
+              "dna": {
+                "hook": "By the end of this video, you will have five highly tactical ways and methods to get rid of all…",
+                "format": "Tips",
+                "idea": "Actionable steps / checklist"
+              },
+              "also": [
+                {
+                  "shortcode": "De7Kwg_hCLn",
+                  "reelUrl": "https://www.instagram.com/reel/De7Kwg_hCLn/",
+                  "views": 119461,
+                  "outlier": "28.6x",
+                  "ageDays": 2,
+                  "thumbnail": "thumbs/De7Kwg_hCLn.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DeAdWCBS2AV.jpg"
+            }
+          ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
+        },
+        {
+          "id": "visual",
+          "label": "Visual",
+          "niche": "HighLevel agencies and SaaS operators",
+          "summary": "A setting, demo, or product shown on screen.",
+          "thumbnail": "",
+          "creators": [
+            {
+              "lane": "other",
+              "handle": "@martinwang.mp4",
+              "name": "martinwang.mp4",
+              "shortcode": "DdjPyXlxmk2",
+              "reelUrl": "https://www.instagram.com/reel/DdjPyXlxmk2/",
+              "views": 2937859,
+              "outlier": "198.7x",
+              "ageDays": 36,
+              "dna": {
+                "hook": "Why do people not do this 😭 No, settings will not make a bad video go viral But it COULD make…",
+                "format": "Visual",
+                "idea": "Reach / algo quick win"
+              },
+              "also": [
+                {
+                  "shortcode": "DQA_xy2gHIb",
+                  "reelUrl": "https://www.instagram.com/reel/DQA_xy2gHIb/",
+                  "views": 693246,
+                  "outlier": "46.9x",
+                  "ageDays": 373,
+                  "thumbnail": "thumbs/DQA_xy2gHIb.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DdjPyXlxmk2.jpg"
+            },
+            {
+              "lane": "other",
+              "handle": "@creatingwithjerry",
+              "name": "creatingwithjerry",
+              "shortcode": "DYEZ3w2TTPh",
+              "reelUrl": "https://www.instagram.com/reel/DYEZ3w2TTPh/",
+              "views": 1024548,
+              "outlier": "67.8x",
+              "ageDays": 172,
+              "dna": {
+                "hook": "try these settings for your next video, and youll have more chances of going viral :)) save for…",
+                "format": "Visual",
+                "idea": "Reach / algo quick win"
+              },
+              "also": [
+                {
+                  "shortcode": "Dbb_f-7Id--",
+                  "reelUrl": "https://www.instagram.com/reel/Dbb_f-7Id--/",
+                  "views": 497338,
+                  "outlier": "32.9x",
+                  "ageDays": 89,
+                  "thumbnail": "thumbs/Dbb_f-7Id--.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DYEZ3w2TTPh.jpg"
+            },
+            {
+              "lane": "other",
+              "handle": "@polinabatee",
+              "name": "polinabatee",
+              "shortcode": "DcqSKwzMfnE",
+              "reelUrl": "https://www.instagram.com/reel/DcqSKwzMfnE/",
+              "views": 309533,
+              "outlier": "56.6x",
+              "ageDays": 58,
+              "dna": {
+                "hook": "From 500 reach to 1M+ — these settings work on any account 💯 Want the keyword prompt and the…",
+                "format": "Visual",
+                "idea": "Free asset / guide via comment keyword"
+              },
+              "also": [
+                {
+                  "shortcode": "Da0dxPeseaB",
+                  "reelUrl": "https://www.instagram.com/reel/Da0dxPeseaB/",
+                  "views": 92363,
+                  "outlier": "16.9x",
+                  "ageDays": 104,
+                  "thumbnail": "thumbs/Da0dxPeseaB.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DcqSKwzMfnE.jpg"
+            }
+          ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
+        },
+        {
+          "id": "comparison",
+          "label": "Comparison",
+          "niche": "HighLevel agencies and SaaS operators",
+          "summary": "Two paths, then the one to take.",
+          "thumbnail": "",
+          "creators": [
+            {
+              "lane": "other",
+              "handle": "@polinabatee",
+              "name": "polinabatee",
+              "shortcode": "DbTGaGLRsfz",
+              "reelUrl": "https://www.instagram.com/reel/DbTGaGLRsfz/",
+              "views": 2835289,
+              "outlier": "518.9x",
+              "ageDays": 92,
+              "dna": {
+                "hook": "You might be posting your Reels the wrong way 👀 Most creators hit the plus button, upload the…",
+                "format": "Comparison",
+                "idea": "Reach / algo quick win"
+              },
+              "also": [
+                {
+                  "shortcode": "DcQinOooeHH",
+                  "reelUrl": "https://www.instagram.com/reel/DcQinOooeHH/",
+                  "views": 247719,
+                  "outlier": "45.3x",
+                  "ageDays": 68,
+                  "thumbnail": "thumbs/DcQinOooeHH.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DbTGaGLRsfz.jpg"
+            },
+            {
+              "lane": "other",
+              "handle": "@thechriscordero",
+              "name": "thechriscordero",
+              "shortcode": "DeCtrfOAivs",
+              "reelUrl": "https://www.instagram.com/reel/DeCtrfOAivs/",
+              "views": 688669,
+              "outlier": "202.4x",
+              "ageDays": 24,
+              "dna": {
+                "hook": "Comment \"VIDEO\" and I'll send you the detailed prompts. Same brief. Two AI models wrote the…",
+                "format": "Comparison",
+                "idea": "Free asset / guide via comment keyword"
+              },
+              "thumbnail": "thumbs/DeCtrfOAivs.jpg"
+            }
+          ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
+        },
+        {
+          "id": "transformations",
+          "label": "Transformations",
+          "niche": "HighLevel agencies and SaaS operators",
+          "summary": "A before and the change that follows.",
+          "thumbnail": "",
+          "creators": [
+            {
+              "lane": "other",
+              "handle": "@thechriscordero",
+              "name": "thechriscordero",
+              "shortcode": "CuRltiVLl49",
+              "reelUrl": "https://www.instagram.com/reel/CuRltiVLl49/",
+              "views": 1389607,
+              "outlier": "408.5x",
+              "ageDays": 1211,
+              "dna": {
+                "hook": "Automate your captions using this code ⬇️ CORDERO10 for 10% off Unlock the power of…",
+                "format": "Transformations",
+                "idea": "Actionable steps / checklist"
+              },
+              "thumbnail": "thumbs/CuRltiVLl49.jpg"
+            },
+            {
+              "lane": "other",
+              "handle": "@susan_ho",
+              "name": "susan_ho",
+              "shortcode": "DdovX4Utsqj",
+              "reelUrl": "https://www.instagram.com/reel/DdovX4Utsqj/",
+              "views": 207185,
+              "outlier": "79.6x",
+              "ageDays": 34,
+              "dna": {
+                "hook": "Send this to a female founder friend. Anybody else get these kinds of questions during your…",
+                "format": "Transformations",
+                "idea": "Free asset / guide via comment keyword"
+              },
+              "also": [
+                {
+                  "shortcode": "DaXs6qKNnNl",
+                  "reelUrl": "https://www.instagram.com/reel/DaXs6qKNnNl/",
+                  "views": 74639,
+                  "outlier": "28.7x",
+                  "ageDays": 115,
+                  "thumbnail": "thumbs/DaXs6qKNnNl.jpg"
+                }
+              ],
+              "thumbnail": "thumbs/DdovX4Utsqj.jpg"
+            }
+          ],
+          "reelUrl": "",
+          "shortcode": "",
+          "dna": {
+            "hook": "",
+            "components": "",
+            "rehook": "",
+            "cadence": "",
+            "length": "",
+            "idea": "",
+            "reward": "",
+            "emotionalNext": ""
+          }
+        },
+        {
+          "id": "clones",
+          "label": "Clones",
+          "niche": "HighLevel agencies and SaaS operators",
+          "summary": "Pending research.",
+          "thumbnail": "",
+          "creators": [],
           "reelUrl": "",
           "shortcode": "",
           "dna": {
@@ -243,7 +627,7 @@
       "brand": "Devin",
       "niche": "Fundraising and community",
       "industry": "Nonprofit",
-      "note": "Promoted recipes are filed for the locked formats. Thumbnails are still open.",
+      "note": "Promoted recipes are filed for the locked formats. Covers are the saved files.",
       "creators": [
         {
           "name": "",
@@ -296,7 +680,8 @@
                 "cta": "comment KEYWORD",
                 "angle": "Buy-in Readiness score",
                 "messaging": "comment BUYIN"
-              }
+              },
+              "thumbnail": "thumbs/Dej6DYnye-H.jpg"
             },
             {
               "lane": "cross-industry",
@@ -313,7 +698,8 @@
                   "reelUrl": "https://www.instagram.com/reel/De7Kwg_hCLn/",
                   "views": 118420,
                   "outlier": "30.6x",
-                  "ageDays": 2
+                  "ageDays": 2,
+                  "thumbnail": "thumbs/De7Kwg_hCLn.jpg"
                 }
               ],
               "dna": {
@@ -324,7 +710,8 @@
                 "cta": "soft",
                 "angle": "3-step Buy-in",
                 "messaging": "Jam prep checklist"
-              }
+              },
+              "thumbnail": "thumbs/DeAdWCBS2AV.jpg"
             },
             {
               "lane": "cross-industry",
@@ -341,7 +728,8 @@
                   "reelUrl": "https://www.instagram.com/reel/DeMRjZbBmlc/",
                   "views": 650931,
                   "outlier": "37.4x",
-                  "ageDays": 21
+                  "ageDays": 21,
+                  "thumbnail": "thumbs/DeMRjZbBmlc.jpg"
                 }
               ],
               "dna": {
@@ -351,7 +739,8 @@
                 "reward": "now I know why",
                 "angle": "layers of buy-in",
                 "messaging": "layers of buy-in"
-              }
+              },
+              "thumbnail": "thumbs/De4aGojBRSc.jpg"
             },
             {
               "lane": "cross-industry",
@@ -367,7 +756,8 @@
                 "format": "UGC workshop tutorial + keyword",
                 "cta": "comment WORKSHOP",
                 "messaging": "keyword sibling to williamholmancoaching"
-              }
+              },
+              "thumbnail": "thumbs/DdZ4zK7IPYo.jpg"
             },
             {
               "lane": "cross-industry",
@@ -381,7 +771,8 @@
               "dna": {
                 "format": "design tutorial",
                 "idea": "structure reference (edits + why)"
-              }
+              },
+              "thumbnail": "thumbs/DdRO4Cwxx3o.jpg"
             }
           ],
           "reelUrl": "",
@@ -418,7 +809,8 @@
                   "shortcode": "DdZkdzeOZCy",
                   "reelUrl": "https://www.instagram.com/reel/DdZkdzeOZCy/",
                   "views": 167020,
-                  "outlier": "6.7x"
+                  "outlier": "6.7x",
+                  "thumbnail": "thumbs/DdZkdzeOZCy.jpg"
                 }
               ],
               "dna": {
@@ -429,7 +821,8 @@
                 "cta": "soft follow/save",
                 "angle": "plans WITH communities",
                 "messaging": "ID3A Jam / Buy-in Readiness / BUYIN"
-              }
+              },
+              "thumbnail": "thumbs/Dcj2V8CwNe2.jpg"
             },
             {
               "lane": "niche",
@@ -446,7 +839,8 @@
                   "shortcode": "DcJ1oMtDFyF",
                   "reelUrl": "https://www.instagram.com/reel/DcJ1oMtDFyF/",
                   "views": 63227,
-                  "outlier": "3.4x"
+                  "outlier": "3.4x",
+                  "thumbnail": "thumbs/DcJ1oMtDFyF.jpg"
                 }
               ],
               "dna": {
@@ -456,7 +850,8 @@
                 "reward": "relief for budget-constrained orgs",
                 "angle": "Austin funder trust via small wins",
                 "messaging": "ID3A co-design / BUYIN"
-              }
+              },
+              "thumbnail": "thumbs/DdmwEyZgaaG.jpg"
             },
             {
               "lane": "niche",
@@ -475,7 +870,8 @@
                 "cta": "soft / keyword",
                 "angle": "Jam rooms",
                 "messaging": "sessions funders trust"
-              }
+              },
+              "thumbnail": "thumbs/DezeHvbhot6.jpg"
             },
             {
               "lane": "cross-industry",
@@ -494,7 +890,8 @@
                 "cta": "PROCESS",
                 "angle": "foundation/funder yes",
                 "messaging": "BUYIN before the ask"
-              }
+              },
+              "thumbnail": "thumbs/Dehx5O2huv2.jpg"
             },
             {
               "lane": "cross-industry",
@@ -511,7 +908,8 @@
                 "idea": "one lever",
                 "reward": "could make you…",
                 "angle": "overlooked buy-in habit"
-              }
+              },
+              "thumbnail": "thumbs/DdjPyXlxmk2.jpg"
             },
             {
               "lane": "cross-industry",
@@ -525,7 +923,8 @@
               "dna": {
                 "hook": "fundraise questions",
                 "format": "conversational objection handling"
-              }
+              },
+              "thumbnail": "thumbs/DdovX4Utsqj.jpg"
             }
           ],
           "reelUrl": "",
@@ -566,7 +965,8 @@
                 "cta": "comment flow",
                 "angle": "react to bad top-down plans / show co-design",
                 "messaging": "BUYIN"
-              }
+              },
+              "thumbnail": "thumbs/DefR2lHPFs9.jpg"
             },
             {
               "lane": "cross-industry",
@@ -586,7 +986,8 @@
                 "cta": "soft",
                 "angle": "funders need to see you will not flinch",
                 "messaging": "BUYIN"
-              }
+              },
+              "thumbnail": "thumbs/DeVL2R_sUWx.jpg"
             }
           ],
           "reelUrl": "",
@@ -624,7 +1025,8 @@
                   "shortcode": "DelobAXoyMk",
                   "reelUrl": "https://www.instagram.com/reel/DelobAXoyMk/",
                   "views": 310643,
-                  "outlier": "38.6x"
+                  "outlier": "38.6x",
+                  "thumbnail": "thumbs/DelobAXoyMk.jpg"
                 }
               ],
               "dna": {
@@ -635,7 +1037,8 @@
                 "cta": "MKT/SALES",
                 "angle": "funder strategy frameworks",
                 "messaging": "comment BUYIN for Buy-in Readiness slides"
-              }
+              },
+              "thumbnail": "thumbs/DeWZmg-I0GO.jpg"
             },
             {
               "lane": "cross-industry",
@@ -654,7 +1057,8 @@
                 "reward": "clarity",
                 "angle": "demystify buy-in / ID3A for funders",
                 "messaging": "What is ID3A / Buy-in?"
-              }
+              },
+              "thumbnail": "thumbs/De4yi-6v7Jn.jpg"
             }
           ],
           "reelUrl": "",
@@ -694,7 +1098,8 @@
                 "cta": "comment keyword",
                 "angle": "react to bad community engagement / top-down plans",
                 "messaging": "BUYIN then Buy-in Readiness"
-              }
+              },
+              "thumbnail": "thumbs/Defc86Vhizk.jpg"
             },
             {
               "lane": "cross-industry",
@@ -711,7 +1116,8 @@
                 "idea": "reframe the no",
                 "reward": "script",
                 "angle": "funder no to Buy-in pivot"
-              }
+              },
+              "thumbnail": "thumbs/DerwFLMRPp2.jpg"
             },
             {
               "lane": "cross-industry",
@@ -727,7 +1133,8 @@
                 "format": "reaction/stitch energy",
                 "idea": "standards",
                 "reward": "send-to-friend"
-              }
+              },
+              "thumbnail": "thumbs/DeYnogqPuCP.jpg"
             }
           ],
           "reelUrl": "",

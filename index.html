@@ -1769,6 +1769,37 @@ body.client-view-open { overflow: hidden; }
 }
 .pr-skim { border-style: dashed; }
 .pr-sec.is-skim { outline: 2px solid var(--signal); }
+.reel-embed {
+  position: relative; width: min(280px, 100%); aspect-ratio: 9 / 16;
+  background: #111; margin: 8px 0 0;
+}
+.review-format-card .reel-embed { margin: 8px 14px 0; width: min(220px, calc(100% - 28px)); }
+.reel-embed-hit {
+  position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0;
+  background: #111; cursor: pointer; display: block;
+}
+.reel-embed-poster { width: 100%; height: 100%; object-fit: cover; display: block; }
+.reel-embed-play {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.55); color: #fff; font-weight: 700; font-size: 14px;
+  padding: 8px 14px; pointer-events: none;
+}
+.reel-embed-frame { width: 100%; height: 100%; border: 0; display: block; background: #000; }
+button.repeat-thumb {
+  border: 0; background: transparent; padding: 0; font: inherit; color: inherit;
+  cursor: pointer; text-align: left;
+}
+.reel-modal {
+  position: fixed; inset: 0; z-index: 90; background: rgba(10, 10, 10, 0.72);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.reel-modal-stage { width: min(360px, 100%); aspect-ratio: 9 / 16; background: #000; }
+.reel-modal-stage .reel-embed-frame { width: 100%; height: 100%; }
+.reel-modal-close {
+  position: absolute; top: 12px; right: 12px; min-height: 44px; padding: 0 14px;
+  background: #fff; color: var(--ink); border: 0; font-weight: 700;
+}
+body.reel-modal-open { overflow: hidden; }
 
 </style>
 
@@ -1787,6 +1818,7 @@ body.client-view-open { overflow: hidden; }
 <div id="prep-root"></div>
 <div id="edit-root"></div>
 <div id="client-view-root"></div>
+<div id="reel-modal-root"></div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -3094,7 +3126,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.16';
+const APP_VERSION = '2026.10.28.17';
 (function () {
   try {
     if (typeof location === 'undefined' || !location) return;
@@ -3119,6 +3151,19 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.17',
+    date: 'November 3, 2026',
+    title: 'Play the reference reel',
+    items: [
+      'Andrew and Jan session cards play the reference reel in the page. Tap the saved cover and the video loads there, in Review and in the client view.',
+      'The other covers in the repeat strip open that reel on the page. Clients still see only the confirmed repeats.',
+    ],
+    steps: [
+      'Open Needs your brain check. Pick Andrew. Tap Tips. The cover is the reel. Tap it to play.',
+      'Tap Client view. The same reel plays there. Tap a repeat cover to open that video.',
+    ],
+  },
   {
     version: '2026.10.28.16',
     date: 'November 3, 2026',
@@ -5701,12 +5746,95 @@ function reviewSpokenScript(s) {
     return text;
   }).filter(Boolean).join('\n\n');
 }
+function reelEmbedCode(value) {
+  const id = asText(value).trim();
+  if (!/^[\w.-]{5,}$/.test(id)) return '';
+  return id;
+}
+function igReelEmbedSrc(code) {
+  const id = reelEmbedCode(code);
+  if (!id) return '';
+  return 'https://www.instagram.com/reel/' + id + '/embed/';
+}
+function igReelShortcode(s) {
+  const info = videoInfo(s && s.reference_clip);
+  if (!info || info.kind !== 'ig' || !info.watch) return '';
+  return reelEmbedCode(vaultReelShortcode({ reelUrl: info.watch }));
+}
+function sessionUsesReelEmbed(s) {
+  const member = typeof reviewFormatMember === 'function' ? reviewFormatMember(s) : null;
+  if (!member || (member.client !== 'andrew' && member.client !== 'jan')) return false;
+  return !!igReelShortcode(s);
+}
+function reelEmbedFrameHtml(code) {
+  const src = igReelEmbedSrc(code);
+  if (!src || src.indexOf('/embed/captioned') !== -1) return '';
+  return '<iframe class="reel-embed-frame" src="' + escHtml(src) + '" title="Reference reel" loading="lazy" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" allowfullscreen></iframe>';
+}
+function sessionReelPlayerHtml(code) {
+  const id = reelEmbedCode(code);
+  const src = igReelEmbedSrc(id);
+  if (!src) return '';
+  const poster = hubThumbSrc(id);
+  const img = poster ? '<img class="reel-embed-poster" alt="" src="' + escHtml(poster) + '">' : '';
+  return '<div class="reel-embed is-pending">'
+    + '<button type="button" class="reel-embed-hit" data-code="' + escHtml(id) + '" data-embed="' + escHtml(src) + '" onclick="window.loadReelEmbed(this)" aria-label="Play reel">'
+    + img
+    + '<span class="reel-embed-play" aria-hidden="true">Play</span>'
+    + '</button>'
+    + '</div>';
+}
+function reelEmbedModalHtml(code) {
+  const frame = reelEmbedFrameHtml(code);
+  if (!frame) return '';
+  return '<div class="reel-modal" role="dialog" aria-modal="true" aria-label="Reference reel">'
+    + '<button type="button" class="reel-modal-close" onclick="window.closeReelEmbedModal()">Close</button>'
+    + '<div class="reel-modal-stage">' + frame + '</div>'
+    + '</div>';
+}
 function reviewInlineReelHtml(s) {
   const info = videoInfo(s && s.reference_clip);
   if (!info || info.kind === 'text' || !info.watch) return '<p class="review-ref-note">No reference reel on this row.</p>';
+  if (info.kind === 'ig') {
+    const player = sessionReelPlayerHtml(vaultReelShortcode({ reelUrl: info.watch }));
+    if (player) return player;
+  }
   const playable = attachReferenceMedia(Object.assign({}, info), s || {});
   return hubPlayerHtml(playable, { inlineFallback: true });
 }
+window.loadReelEmbed = function (btn) {
+  const box = btn && btn.closest ? btn.closest('.reel-embed') : null;
+  if (!box || box.querySelector('iframe')) return;
+  const src = asText(btn.getAttribute('data-embed')).trim();
+  if (!/^https:\/\/www\.instagram\.com\/reel\/[\w.-]+\/embed\/$/.test(src)) return;
+  const frame = document.createElement('iframe');
+  frame.className = 'reel-embed-frame';
+  frame.src = src;
+  frame.title = 'Reference reel';
+  frame.loading = 'lazy';
+  frame.allow = 'autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share';
+  frame.setAttribute('allowfullscreen', '');
+  box.classList.remove('is-pending');
+  box.classList.add('is-playing');
+  box.replaceChildren(frame);
+};
+window.openReelEmbedModal = function (code) {
+  const html = reelEmbedModalHtml(code);
+  if (!html) return;
+  let root = document.getElementById('reel-modal-root');
+  if (!root) {
+    root = document.createElement('div');
+    root.id = 'reel-modal-root';
+    document.body.appendChild(root);
+  }
+  root.innerHTML = html;
+  document.body.classList.add('reel-modal-open');
+};
+window.closeReelEmbedModal = function () {
+  const root = document.getElementById('reel-modal-root');
+  if (root) root.innerHTML = '';
+  document.body.classList.remove('reel-modal-open');
+};
 function reviewExplicitProof(s) {
   const member = reviewFormatMember(s);
   const code = vaultReelShortcode({ reelUrl: asText(s && s.reference_clip) });
@@ -5782,17 +5910,7 @@ function reviewRepeatStripHtml(s) {
   if (!proof) return '<div class="repeat-proof"><span class="repeat-badge is-pending">Repeat proof pending</span></div>';
   const cls = proof.kind === 'one' ? 'is-one' : 'is-repeat';
   const note = proof.note ? '<p class="repeat-note">' + escHtml(proof.note) + '</p>' : '';
-  const thumbs = (proof.reels || []).map(reel => {
-    const id = asText(reel.shortcode).trim();
-    const url = 'https://www.instagram.com/reel/' + id + '/';
-    const src = hubThumbSrc(id);
-    const mark = reel.note ? '<span class="repeat-unconfirmed">' + escHtml(reel.note) + '</span>' : '';
-    return '<a class="repeat-thumb" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer">'
-      + vaultCoverImgHtml(src, id, 'repeat-cover', { live: false })
-      + (reel.outlier ? '<span class="repeat-mult">' + escHtml(reel.outlier) + '</span>' : '')
-      + mark
-      + '</a>';
-  }).join('');
+  const thumbs = (proof.reels || []).map(reviewProofThumbHtml).join('');
   return '<div class="repeat-proof"><span class="repeat-badge ' + cls + '">' + escHtml(proof.label) + '</span>'
     + note
     + (thumbs ? '<div class="repeat-row">' + thumbs + '</div>' : '')
@@ -5843,14 +5961,15 @@ function reviewReferenceThumb(s, proof) {
   return { shortcode: code, outlier: outlier };
 }
 function reviewProofThumbHtml(reel) {
-  const id = asText(reel && reel.shortcode).trim();
+  const id = reelEmbedCode(reel && reel.shortcode);
   if (!id) return '';
-  const url = 'https://www.instagram.com/reel/' + id + '/';
   const src = hubThumbSrc(id);
-  return '<a class="repeat-thumb" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer">'
+  const mark = reel && reel.note ? '<span class="repeat-unconfirmed">' + escHtml(reel.note) + '</span>' : '';
+  return '<button type="button" class="repeat-thumb" onclick="window.openReelEmbedModal(\'' + id + '\')">'
     + vaultCoverImgHtml(src, id, 'repeat-cover', { live: false })
     + (reel.outlier ? '<span class="repeat-mult">' + escHtml(reel.outlier) + '</span>' : '')
-    + '</a>';
+    + mark
+    + '</button>';
 }
 function clientProofStripHtml(s) {
   const proof = reviewClientProof(s);
@@ -7974,6 +8093,13 @@ function renderReferenceBlock(s) {
       </div>
       <div id="embed-${s.id}${idSuffix}" class="embed-slot">${open ? embedHtml(info) : ''}</div>`;
   };
+  if (sessionUsesReelEmbed(s)) {
+    const proof = clientSeesHubProof() ? clientProofStripHtml(s) : '';
+    const extraPlayer = extra && extra.kind === 'ig'
+      ? sessionReelPlayerHtml(vaultReelShortcode({ reelUrl: extra.watch }))
+      : (extra ? blockFor(extra, '-x', react ? 'React to' : 'Reference') : '');
+    return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${sessionReelPlayerHtml(igReelShortcode(s))}${extraPlayer}${proof}</section>`;
+  }
   const extraKicker = react ? 'React to' : 'Reference';
   const proof = clientSeesHubProof() ? clientProofStripHtml(s) : '';
   return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '', 'Format reference')}${extra ? blockFor(extra, '-x', extraKicker) : ''}${proof}</section>`;
@@ -8232,12 +8358,15 @@ function renderCardGroup(group) {
   const groupIds = group.map(g => g.id).filter(Boolean);
   const showNew = groupIds.some(id => freshScriptIds.has(id) && !openedIds.has(id));
   const newBadge = showNew ? `<span class="new-badge">New</span>` : '';
+  const sessionCode = sessionUsesReelEmbed(s) ? igReelShortcode(s) : '';
   const coverInfo = videoInfo(s.reference_clip)
     || videoInfo(extractVideoLink(s.clip_directions) || extractVideoLink(s.proof_stats) || '');
-  const cover = displayThumb(s, coverInfo);
-  const listThumb = coverInfo && coverInfo.watch
-    ? `<img class="list-thumb" alt="" referrerpolicy="no-referrer" ${cover ? `src="${escHtml(cover)}"` : 'hidden'} data-ref="${escHtml(coverInfo.watch)}" data-kind="${escHtml(coverInfo.kind)}" onerror="window.thumbNext(this)">`
-    : '';
+  const cover = sessionCode ? hubThumbSrc(sessionCode) : displayThumb(s, coverInfo);
+  const listThumb = sessionCode
+    ? `<img class="list-thumb" alt="" src="${escHtml(cover)}">`
+    : (coverInfo && coverInfo.watch
+      ? `<img class="list-thumb" alt="" referrerpolicy="no-referrer" ${cover ? `src="${escHtml(cover)}"` : 'hidden'} data-ref="${escHtml(coverInfo.watch)}" data-kind="${escHtml(coverInfo.kind)}" onerror="window.thumbNext(this)">`
+      : '');
 
   return `<article class="shot ${isArchived ? 'is-quiet' : ''} ${stype === 'broll' ? 'is-broll' : ''}" data-script-ids="${escHtml(groupIds.join(','))}">
     ${takeTabs}
@@ -10936,6 +11065,12 @@ function reviewClipSlotHtml(label, info, s) {
 }
 function reviewReferenceHtml(s) {
   s = s || {};
+  if (sessionUsesReelEmbed(s)) {
+    return '<section class="review-ref" aria-label="Reference reel">'
+      + sessionReelPlayerHtml(igReelShortcode(s))
+      + reviewRepeatStripHtml(s)
+      + '</section>';
+  }
   const info = videoInfo(s.reference_clip);
   const watch = info && info.kind !== 'text' && info.watch ? info.watch : '';
   const react = reactionClipInfo(s);

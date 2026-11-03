@@ -73,6 +73,7 @@ const names = [
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId', 'reviewQueueOpts', 'reviewContinueOpts', 'reviewContinueNext', 'reviewNextStampHtml',
+  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewFormatStampRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reviewInlineReelHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
@@ -821,43 +822,44 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.10');
+assert.strictEqual(appVersion, '2026.10.28.11');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.10');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.11');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Full screen/.test(releaseNotes));
-assert.ok(/spoken line|words you say/i.test(releaseNotes));
-assert.ok(/cover title/i.test(releaseNotes));
-assert.ok(/on-screen/i.test(releaseNotes));
-assert.ok(/Ref spoken principle/.test(releaseNotes));
-assert.ok(/Notes/.test(releaseNotes));
-assert.ok(/filming setup/i.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.10');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.10');
+assert.ok(/Andrew/.test(releaseNotes));
+assert.ok(/Jan/.test(releaseNotes));
+assert.ok(/Tips/.test(releaseNotes));
+assert.ok(/Candace/.test(releaseNotes));
+assert.ok(/Older Needs Review/.test(releaseNotes));
+assert.ok(/reference caption/.test(releaseNotes));
+assert.ok(/Nothing is deleted/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.11');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', true, '2026.10.28.10').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.10');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', true, '2026.10.28.11').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.11');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2640,5 +2642,134 @@ assert.ok(!html.includes('position: absolute; inset: 0;\n    flex: none; width: 
 assert.ok(script.includes('function rememberPrepScroll'));
 assert.ok(/prepState\.scrolls\[String\(prepState\.step/.test(script));
 assert.ok(/prepState\.scrolls && prepState\.scrolls\[String\(step\)\]/.test(script));
+
+assert.strictEqual(ctx.reviewBatchIsStale('⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026'), true);
+assert.strictEqual(ctx.reviewBatchIsStale('⭐ CONFERENCE · Simple TH · AIMW/GHL · 10.24.2026'), true);
+assert.strictEqual(ctx.reviewBatchIsStale('zz DRAFT soft-ref · Andrew CORE · 10.24.2026'), true);
+assert.strictEqual(ctx.reviewBatchIsStale('Andrew Batch-03 · 7.23.2026'), true);
+assert.strictEqual(ctx.reviewBatchIsStale('Andrew Batch-04 · 8.20.2026'), true);
+assert.strictEqual(ctx.reviewBatchIsStale('Andrew Batch-05 · Mastermind Series'), true);
+assert.strictEqual(ctx.reviewBatchIsStale('Andrew CORE · 10.28.2026'), false);
+assert.strictEqual(ctx.reviewBatchIsStale('Andrew NOLAN · 10.30.2026'), false);
+assert.strictEqual(ctx.reviewBatchIsStale('Jan FINAL · 10.23.2026'), false);
+assert.strictEqual(ctx.reviewBatchIsStale('Jan NOLAN · 10.30.2026'), false);
+assert.strictEqual(ctx.reviewBatchIsStale('Devin CORE · 10.27.2026'), false);
+
+function formatRow(id, slug, batch, reel, format, title, extra) {
+  return Object.assign({
+    id: id,
+    client_slug: slug,
+    batch: batch,
+    reel_number: reel,
+    format: format,
+    title: title,
+    status: 'Needs Review',
+    hook: 'Spoken hook for ' + id + '.',
+    full_script: 'Spoken body for ' + id + '.\nThe second line stays on camera.',
+    cta: 'Comment SAAS → setup / onboarding hub. (Ops locked Oct 28; Cristian stamp.)',
+    reference_clip: 'https://www.instagram.com/reel/DYU9NJjDWqa/',
+  }, extra || {});
+}
+const formatRows = [
+  formatRow('r1', 'andrew', 'Andrew CORE · 10.28.2026', 1, 'Tips · vault A1 · @andrewpreneurship DYU9NJjDWqa', 'Stop onboarding calls'),
+  formatRow('r2', 'andrew', 'Andrew CORE · 10.28.2026', 2, 'Visual · vault A8 · @creatingwithjerry DYEZ3w2TTPh', 'Settings first'),
+  formatRow('r3', 'andrew', 'Andrew CORE · 10.28.2026', 3, 'Comparison · vault A13 · @polinabatee DbTGaGLRsfz', 'Wrong vs right'),
+  formatRow('r4', 'andrew', 'Andrew CORE · 10.28.2026', 4, 'Transformations · vault A15 · @andrewpreneurship DYU9NJjDWqa', 'Feature dump'),
+  formatRow('r5', 'andrew', 'Andrew CORE · 10.28.2026', 5, 'Tips · vault A2 · @pavels_life DeMiLEKqxfN', 'Give it away'),
+  formatRow('r7', 'andrew', 'Andrew CORE · 10.28.2026', 7, 'Tips · vault A4 · @fratbuddha DeAdWCBS2AV', 'Five ways'),
+  formatRow('r8', 'andrew', 'Andrew CORE · 10.28.2026', 8, 'Visual · vault A9 · @martinwang.mp4 DdjPyXlxmk2', 'Overlooked setting'),
+  formatRow('r9', 'andrew', 'Andrew CORE · 10.28.2026', 9, 'Comparison · vault A14 · @thechriscordero DeCtrfOAivs', 'Same brief'),
+  formatRow('r10', 'andrew', 'Andrew CORE · 10.28.2026', 10, 'Transformations · vault A17 · @polinabatee DcqSKwzMfnE', 'Clear path'),
+  formatRow('a1', 'andrew', 'Andrew NOLAN · 10.30.2026', 1, "'If I woke up tomorrow' exact-system · @nolan_killeen", 'Spreadsheet', {
+    hook: 'If I woke up tomorrow running my sales out of a spreadsheet, this is the exact system.',
+    full_script: 'If I woke up tomorrow running my sales out of a spreadsheet, this is the exact system.\nThe system I use now has allowed me to grow countless agencies.',
+    cta: "Follow for more, and I'll see you in the next one. | Caption: Comment SAAS and I'll send you the link.",
+    reference_clip: 'https://www.instagram.com/reel/DefDJ3cI74L/',
+  }),
+  formatRow('a2', 'andrew', 'Andrew NOLAN · 10.30.2026', 2, 'Cold-open warning · @nolan_killeen', 'Three stages'),
+  formatRow('a3', 'andrew', 'Andrew NOLAN · 10.30.2026', 3, 'Environment-design rapid list · @nolan_killeen', 'Keep customers'),
+  formatRow('stale', 'andrew', 'Andrew Batch-03 · 7.23.2026', 14, 'Comparison', 'Old GHL'),
+  formatRow('conf', 'andrew', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 105, 'Walk', 'LevelUp hallway'),
+  formatRow('candace', 'jan', 'Jan FINAL · 10.23.2026', 3, 'Car TH + Aphorism · @candasifamabarnes DcBWZ8oC51Q', 'Where you stand', { status: 'Approved' }),
+  formatRow('pierini', 'jan', 'Jan FINAL · 10.23.2026', 7, 'Education · studio CU + purple title + mic · Pierini DeJhq0AINpW', 'Hard feedback', { status: 'Approved' }),
+  formatRow('lorin', 'jan', 'Jan FINAL · 10.23.2026', 2, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Inside out', { status: 'Approved' }),
+  formatRow('jan-other', 'jan', 'Jan FINAL · 10.23.2026', 6, 'Talking-head / reframe explainer · Frazer DUIafE1DJqb', 'Growth', { status: 'Approved' }),
+  formatRow('jn1', 'jan', 'Jan NOLAN · 10.30.2026', 1, "Philosopher series · @nolan_killeen", 'Three questions'),
+  formatRow('jn2', 'jan', 'Jan NOLAN · 10.30.2026', 2, "'If I woke up tomorrow' · @nolan_killeen", 'Lead from peace'),
+  formatRow('jn3', 'jan', 'Jan NOLAN · 10.30.2026', 3, "Philosopher series · @nolan_killeen", 'Clear conversation'),
+  formatRow('ready-lorin', 'jan', 'Jan FINAL · 10.23.2026', 8, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Still to send', {
+    pipeline_audit: signedScript.pipeline_audit,
+  }),
+];
+const andrewGroups = ctx.reviewFormatGroups(formatRows, 'andrew');
+const idsOf = (rows) => Array.from(rows || []).map(s => String(s.id)).join(',');
+assert.strictEqual(Array.from(andrewGroups).map(g => String(g.label)).join('|'), 'Tips|Visual|Comparison|Transformations|Nolan|Clones');
+assert.strictEqual(idsOf(andrewGroups[0].rows), 'r1,r7');
+assert.strictEqual(idsOf(andrewGroups[1].rows), 'r8');
+assert.strictEqual(idsOf(andrewGroups[2].rows), 'r3,r9');
+assert.strictEqual(idsOf(andrewGroups[3].rows), 'r4,r10');
+assert.strictEqual(idsOf(andrewGroups[4].rows), 'a1,a3');
+assert.strictEqual(andrewGroups[5].pending, true);
+assert.strictEqual(andrewGroups[5].rows.length, 0);
+assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'r2')), null);
+assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'a2')), null);
+assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'r5')), null);
+const janGroups = ctx.reviewFormatGroups(formatRows, 'jan');
+assert.strictEqual(Array.from(janGroups).map(g => String(g.id)).join('|'), 'candace|pierini|lorin|nolan');
+assert.strictEqual(idsOf(janGroups[0].rows), 'candace');
+assert.strictEqual(idsOf(janGroups[1].rows), 'pierini');
+assert.strictEqual(idsOf(janGroups[2].rows), 'lorin,ready-lorin');
+assert.strictEqual(idsOf(janGroups[3].rows), 'jn1,jn2,jn3');
+assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'jan-other')), null);
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r3')), 'hook taken from reference caption — verify against reference video');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r8')), 'hook taken from reference caption — verify against reference video');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r10')), 'hook taken from reference caption — verify against reference video');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r1')), '');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'a1')), '');
+assert.strictEqual(ctx.reviewCreatorHandle(formatRows.find(s => s.id === 'r8')), '@martinwang.mp4');
+assert.strictEqual(ctx.reviewCreatorHandle(formatRows.find(s => s.id === 'pierini')), '@edupierinicoach');
+assert.strictEqual(ctx.reviewReelLabel(formatRows.find(s => s.id === 'a1')), 'A1');
+assert.strictEqual(ctx.reviewReelLabel(formatRows.find(s => s.id === 'r7')), 'R7');
+const a1Spoken = ctx.reviewSpokenScript(formatRows.find(s => s.id === 'a1'));
+assert.ok(a1Spoken.includes('countless agencies'));
+assert.ok(!/highlevel/i.test(a1Spoken));
+assert.ok(!/ops locked/i.test(a1Spoken));
+assert.ok(!/caption:/i.test(a1Spoken));
+const andrewHtml = ctx.renderFormatReviewHtml(formatRows, 'andrew', []);
+assert.ok(andrewHtml.includes('>Tips<'));
+assert.ok(andrewHtml.includes('>Visual<'));
+assert.ok(andrewHtml.includes('>Comparison<'));
+assert.ok(andrewHtml.includes('>Transformations<'));
+assert.ok(andrewHtml.includes('>Nolan<'));
+assert.ok(andrewHtml.includes('pending research'));
+assert.ok(andrewHtml.includes('@andrewpreneurship'));
+assert.ok(andrewHtml.includes('@fratbuddha'));
+assert.ok(andrewHtml.includes('class="hub-player'));
+assert.ok(andrewHtml.includes('Open on Instagram'));
+assert.ok(andrewHtml.includes('Spoken body for r1.'));
+assert.ok(andrewHtml.includes('hook taken from reference caption — verify against reference video'));
+assert.ok(!andrewHtml.includes('Settings first'));
+assert.ok(!andrewHtml.includes('Give it away'));
+assert.ok(!andrewHtml.includes('Three stages'));
+assert.ok(!andrewHtml.includes('Old GHL'));
+assert.ok(!andrewHtml.includes('LevelUp hallway'));
+const readyLorin = formatRows.find(s => s.id === 'ready-lorin');
+ctx.role = 'admin';
+const janFormatHtml = ctx.renderFormatReviewHtml(formatRows, 'jan', [readyLorin]);
+assert.ok(janFormatHtml.indexOf('Stamped, not client-ready') < janFormatHtml.indexOf('>Candace<'));
+assert.ok(janFormatHtml.includes('Mark client-ready'));
+assert.ok(janFormatHtml.includes('Still to send'));
+assert.ok(janFormatHtml.includes('@candasifamabarnes'));
+assert.ok(janFormatHtml.includes('@edupierinicoach'));
+assert.ok(janFormatHtml.includes('@lorinkrenn'));
+assert.ok(janFormatHtml.includes('@nolan_killeen'));
+assert.ok(!janFormatHtml.includes('review-title">Growth'));
+const flaggedRead = ctx.prepReadBodyHtml(formatRows.find(s => s.id === 'r3'));
+assert.ok(flaggedRead.includes('hook taken from reference caption — verify against reference video'));
+assert.ok(script.includes("'andrew', 'Andrew'"));
+assert.ok(script.includes("'jan', 'Jan'"));
+assert.ok(script.includes('All current'));
+assert.ok(script.includes('Older Needs Review'));
+assert.ok(script.includes('pending research'));
 
 console.log('hub-logic tests passed');

@@ -3052,7 +3052,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.13';
+const APP_VERSION = '2026.10.28.14';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -3067,6 +3067,19 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.14',
+    date: 'November 3, 2026',
+    title: 'Review session covers',
+    items: [
+      'Review session version cards use the saved reel cover. The Instagram cover link is only the fallback if that file fails.',
+      'Andrew and Jan session cards resolve the cover from the reference reel. The stamp reference uses the same cover.',
+    ],
+    steps: [
+      'Open Needs your brain check. Pick Andrew. Tap Tips. The version cards show the saved covers.',
+      'Tap Jan, then Candace. The cover is the saved file.',
+    ],
+  },
   {
     version: '2026.10.28.13',
     date: 'November 3, 2026',
@@ -6201,6 +6214,11 @@ function vaultIgMediaUrl(code) {
   if (!short) return '';
   return 'https://www.instagram.com/p/' + short + '/media/?size=l';
 }
+function vaultSavedThumbPath(code) {
+  const short = asText(code).trim();
+  if (!/^[\w.-]{5,}$/.test(short)) return '';
+  return 'thumbs/' + short + '.jpg';
+}
 function vaultThumbIsPermanent(stored) {
   const value = asText(stored).trim();
   if (!value) return false;
@@ -6212,11 +6230,24 @@ function vaultPosterSrc(reel) {
   reel = reel || {};
   const stored = asText(reel.thumbnail || reel.thumb).trim();
   if (vaultThumbIsPermanent(stored)) return stored;
+  const saved = vaultSavedThumbPath(vaultReelShortcode(reel));
+  if (saved) return saved;
   const media = vaultIgMediaUrl(vaultReelShortcode(reel));
   if (media) return media;
   const info = videoInfo(vaultReelWatchUrl(reel));
   if (info && info.thumb && vaultThumbIsPermanent(info.thumb)) return info.thumb;
   return vaultPosterDataUri('Reel');
+}
+function vaultCoverImgHtml(src, code, className) {
+  const live = vaultIgMediaUrl(code);
+  const svg = vaultPosterDataUri(code || 'Reel');
+  const alt = escHtml(code ? ('Reel ' + code) : 'Reel cover');
+  const cls = className || 'vault-poster';
+  if (!src || String(src).indexOf('data:image/svg+xml') === 0) {
+    return '<img class="' + cls + '" src="' + escHtml(src || svg) + '" alt="' + alt + '">';
+  }
+  const step = src !== live && live ? live : svg;
+  return '<img class="' + cls + '" src="' + escHtml(src) + '" alt="' + alt + '" referrerpolicy="no-referrer" data-step="' + escHtml(step) + '" data-poster="' + escHtml(svg) + '" onerror="if(this.dataset.step){var n=this.dataset.step;this.dataset.step=this.dataset.poster||\'\';this.dataset.poster=\'\';this.src=n}else if(this.dataset.poster){this.onerror=null;this.src=this.dataset.poster}">';
 }
 function vaultPosterHtml(reel) {
   const code = vaultReelShortcode(reel);
@@ -7455,9 +7486,10 @@ function hubPlayerHtml(info, opts) {
       + '</div>';
   }
   if (!opts.inlineFallback) return '';
-  const img = poster
-    ? '<img class="hub-player-poster" src="' + escHtml(poster) + '" alt="" referrerpolicy="no-referrer">'
-    : '';
+  const code = info.kind === 'ig' ? vaultReelShortcode({ reelUrl: info.watch }) : '';
+  const saved = vaultSavedThumbPath(code);
+  const src = saved || poster;
+  const img = src ? vaultCoverImgHtml(src, code, 'hub-player-poster') : '';
   const note = info.kind === 'ig'
     ? 'No hosted file on this reel. It stays on Instagram.'
     : 'This reference does not play inside the Hub.';

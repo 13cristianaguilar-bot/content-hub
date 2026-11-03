@@ -73,7 +73,7 @@ const names = [
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId', 'reviewQueueOpts', 'reviewContinueOpts', 'reviewContinueNext', 'reviewNextStampHtml',
-  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewRevisionKey', 'reviewRevisionSets', 'reviewRevisionSet', 'reviewPreviousRevisions', 'reviewIsPreviousRevision', 'reviewCardRows', 'reviewPreviousHtml', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reelEmbedCode', 'igReelEmbedSrc', 'igReelShortcode', 'sessionUsesReelEmbed', 'reelEmbedFrameHtml', 'sessionReelPlayerHtml', 'reelEmbedModalHtml', 'reviewInlineReelHtml', 'reviewExplicitProof', 'reviewCatalogProof', 'reviewRepeatStripHtml', 'reviewStatusChip', 'reviewStatusChipHtml', 'reviewConfirmedReels', 'reviewClientProof', 'reviewReferenceThumb', 'reviewProofThumbHtml', 'clientProofStripHtml', 'clientSeesHubProof', 'reviewSessionNextId', 'reviewReadActionsHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
+  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewRevisionKey', 'reviewRevisionSets', 'reviewRevisionSet', 'reviewPreviousRevisions', 'reviewIsPreviousRevision', 'reviewCardRows', 'reviewPreviousHtml', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'hasSpokenAudioMediaLock', 'reviewCaptionFlag', 'reviewHookTitle', 'reviewTitleWords', 'reviewTitleWordHit', 'reviewTitleMatchesHook', 'reviewDisplayTitle', 'reviewSpokenScript', 'reelEmbedCode', 'igReelEmbedSrc', 'igReelShortcode', 'sessionUsesReelEmbed', 'reelEmbedFrameHtml', 'sessionReelPlayerHtml', 'reelEmbedModalHtml', 'reviewInlineReelHtml', 'reviewExplicitProof', 'reviewCatalogProof', 'reviewProofClass', 'reviewRepeatStripHtml', 'reviewStatusChip', 'reviewStatusChipHtml', 'reviewConfirmedReels', 'reviewClientProof', 'reviewReferenceThumb', 'reviewProofThumbHtml', 'clientProofStripHtml', 'clientSeesHubProof', 'reviewSessionNextId', 'reviewReadActionsHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultSavedThumbPath', 'hubThumbSrc', 'vaultThumbIsPermanent', 'vaultPosterSrc', 'vaultCoverImgHtml', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
@@ -849,40 +849,40 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.19');
+assert.strictEqual(appVersion, '2026.10.28.20');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.19');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.20');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/spoken line/.test(releaseNotes));
-assert.ok(/brain check/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.19', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.19');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.19');
+assert.ok(/current hook/.test(releaseNotes));
+assert.ok(/Not yet proven/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.20', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.20');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.19', true, '2026.10.28.19').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.20', true, '2026.10.28.20').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.20');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2811,9 +2811,17 @@ assert.strictEqual(idsOf(janGroups[1].rows), 'pierini-rev');
 assert.strictEqual(idsOf(janGroups[2].rows), 'lorin-rev,ready-lorin');
 assert.strictEqual(idsOf(janGroups[3].rows), 'jn1,jn2,jn3');
 assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'jan-other')), null);
-assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r3')), 'hook taken from reference caption — verify against reference video');
-assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r8')), 'hook taken from reference caption — verify against reference video');
-assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r10')), 'hook taken from reference caption — verify against reference video');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r3')), '');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r8')), '');
+assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r10')), '');
+assert.strictEqual(ctx.reviewCaptionFlag(Object.assign({}, formatRows.find(s => s.id === 'r3'), {
+  pipeline_audit: { media_lock: { hook_source: 'spoken', spoken_hook_quote: 'Do not post your reels through this plus button.' } },
+})), '');
+assert.strictEqual(ctx.hasSpokenAudioMediaLock({ pipeline_audit: { media_lock: { hook_source: 'spoken' } } }), true);
+assert.strictEqual(ctx.reviewCaptionFlag({
+  pipeline_audit: { media_lock: { hook_source: 'caption_unverified', spoken_hook_verified: false, caption_text: 'This is not the time to get distracted.' } },
+}), 'hook taken from reference caption — verify against reference video');
+assert.strictEqual(ctx.reviewCaptionFlag({ pipeline_audit: { media_lock: { hook_source: 'none' } } }), '');
 assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r1')), '');
 assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'a1')), '');
 assert.strictEqual(ctx.reviewCreatorHandle(formatRows.find(s => s.id === 'r8')), '@martinwang.mp4');
@@ -2843,7 +2851,7 @@ assert.ok(andrewHtml.includes('>Review</button>'));
 assert.ok(andrewHtml.includes("openSessionReview('r1')"));
 assert.ok(andrewHtml.includes('Needs Review'));
 assert.ok(!andrewHtml.includes('Spoken body for r1.'));
-assert.ok(andrewHtml.includes('hook taken from reference caption — verify against reference video'));
+assert.ok(!andrewHtml.includes('hook taken from reference caption — verify against reference video'));
 assert.ok(!andrewHtml.includes('Settings first'));
 assert.ok(!andrewHtml.includes('Give it away'));
 assert.ok(!andrewHtml.includes('Three stages'));
@@ -2854,14 +2862,46 @@ ctx.role = 'admin';
 const janFormatHtml = ctx.renderFormatReviewHtml(formatRows, 'jan', [readyLorin]);
 assert.ok(janFormatHtml.indexOf('Stamped, not client-ready') < janFormatHtml.indexOf('>Candace<'));
 assert.ok(janFormatHtml.includes('Mark client-ready'));
-assert.ok(janFormatHtml.includes('Still to send'));
+assert.ok(janFormatHtml.includes('Spoken hook for ready-lorin'));
 assert.ok(janFormatHtml.includes('@candasifamabarnes'));
 assert.ok(janFormatHtml.includes('@edupierinicoach'));
 assert.ok(janFormatHtml.includes('@lorinkrenn'));
 assert.ok(janFormatHtml.includes('@nolan_killeen'));
 assert.ok(!janFormatHtml.includes('review-title">Growth'));
 const flaggedRead = ctx.prepReadBodyHtml(formatRows.find(s => s.id === 'r3'));
-assert.ok(flaggedRead.includes('hook taken from reference caption — verify against reference video'));
+assert.ok(flaggedRead.includes('Spoken hook for r3'));
+assert.ok(!flaggedRead.includes('Wrong vs right'));
+assert.ok(!flaggedRead.includes('hook taken from reference caption — verify against reference video'));
+const spokenRead = ctx.prepReadBodyHtml(Object.assign({}, formatRows.find(s => s.id === 'r3'), {
+  title: 'Comment SAAS — Wrong CRM Setup vs Right Setup',
+  hook: 'Do not onboard your new clients on a live call.',
+  pipeline_audit: { media_lock: { hook_source: 'spoken', spoken_hook_quote: 'Do not post your reels through this plus button.' } },
+}));
+assert.ok(spokenRead.includes('Do not onboard your new clients on a live call'));
+assert.ok(!spokenRead.includes('Wrong CRM Setup'));
+assert.ok(!spokenRead.includes('hook taken from reference caption'));
+const captionRead = ctx.prepReadBodyHtml({
+  title: 'This Is Not the Time to Get Distracted',
+  hook: 'This is not the time to get distracted.',
+  client_slug: 'devin',
+  batch: 'Devin CORE · 10.27.2026',
+  pipeline_audit: { media_lock: { hook_source: 'caption_unverified', caption_text: 'This is not the time to get distracted.' } },
+});
+assert.ok(captionRead.includes('hook taken from reference caption — verify against reference video'));
+const r3Proof = ctx.reviewCatalogProof(formatRows.find(s => s.id === 'r3'));
+assert.strictEqual(r3Proof.kind, 'unproven');
+assert.strictEqual(r3Proof.label, 'Not yet proven: 2 outliers');
+assert.strictEqual(r3Proof.reels.length, 2);
+const r3Strip = ctx.reviewRepeatStripHtml(formatRows.find(s => s.id === 'r3'));
+assert.ok(r3Strip.includes('is-unproven'));
+assert.ok(r3Strip.includes('Not yet proven: 2 outliers'));
+assert.ok(r3Strip.includes('thumbs/DbTGaGLRsfz.jpg'));
+assert.ok(r3Strip.includes('thumbs/DcQinOooeHH.jpg'));
+assert.ok(!r3Strip.includes('Repeatable:'));
+assert.strictEqual(ctx.reviewDisplayTitle({
+  title: 'Where You\'re Standing Was Once the Goal (rev Nov 3)',
+  hook: 'Do you realize where you\'re standing right now was once the goal?',
+}), 'Where You\'re Standing Was Once the Goal (rev Nov 3)');
 assert.ok(flaggedRead.includes('Comment SAAS'));
 assert.ok(!/ops locked/i.test(flaggedRead));
 assert.ok(!flaggedRead.includes('Cristian stamp'));
@@ -3034,9 +3074,9 @@ assert.ok(candaceHtml.includes('thumbs/DcBWZ8oC51Q.jpg'));
 assert.ok(candaceHtml.includes('Repeatable: 3 outliers'));
 assert.ok(candaceHtml.includes('thumbs/Dbv-LIFiURH.jpg'));
 const janNolanHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'jan', 'nolan');
-assert.ok(janNolanHtml.includes('Three questions'));
-assert.ok(janNolanHtml.includes('Lead from peace'));
-assert.ok(janNolanHtml.includes('Clear conversation'));
+assert.ok(janNolanHtml.includes('Spoken hook for jn1'));
+assert.ok(janNolanHtml.includes('Spoken hook for jn2'));
+assert.ok(janNolanHtml.includes('Spoken hook for jn3'));
 assert.ok(janNolanHtml.includes('thumbs/Dd32dTVO4sT.jpg'));
 assert.ok(janNolanHtml.includes('thumbs/Dd9YOj_oanp.jpg'));
 assert.ok(janNolanHtml.includes('thumbs/DdcGABkJGz5.jpg'));

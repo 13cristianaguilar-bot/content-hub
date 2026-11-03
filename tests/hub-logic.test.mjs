@@ -52,7 +52,7 @@ const names = [
   'normFormatKey', 'formatChipLabel', 'lockedFormatFromText', 'scriptLockedFormat',
   'collectIgHandles', 'collectShortcodes', 'outlierScore', 'reelClearsOutlierBar', 'outlierLabel',
   'reviewCreatorProof', 'reviewRefPosterHtml', 'reviewCreatorThumbsHtml', 'reviewClipSlotHtml', 'reviewReferenceHtml',
-  'cadenceSeconds', 'cadenceClock', 'cadenceDur', 'cadenceRange', 'cadenceWords', 'cadenceRoleLabel', 'cadenceBeatMismatch', 'cadenceMapOf', 'cadenceMapVisible', 'cadenceMapHtml', 'prepReadBodyHtml', 'clientLabel',
+  'cadenceSeconds', 'cadenceClock', 'cadenceDur', 'cadenceRange', 'cadenceWords', 'cadenceRoleLabel', 'cadenceBeatMismatch', 'cadenceBeat', 'cadenceMapOf', 'cadenceMapVisible', 'cadenceMapHtml', 'prepReadBodyHtml', 'clientLabel',
   'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaReviewAction', 'humanQaContinueWarn', 'humanQaNotesOk', 'humanQaScriptHash',
   'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
   'vaultDnaValueFilled', 'vaultDnaAliases', 'formatCountsAsRecipe', 'vaultEmptyTitle', 'vaultEmptyBlocksStatus',
@@ -849,40 +849,40 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.21');
+assert.strictEqual(appVersion, '2026.10.28.22');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.21');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.22');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
 assert.ok(/Cadence vs reference/.test(releaseNotes));
-assert.ok(/reference seconds/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.21', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.21');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.21');
+assert.ok(/reference length/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.22');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.21', true, '2026.10.28.21').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', true, '2026.10.28.22').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.22');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2966,6 +2966,24 @@ ctx.previewSlug = null;
 ctx.clientViewOpen = true;
 assert.strictEqual(ctx.cadenceMapHtml(cadenceRow), '');
 ctx.clientViewOpen = false;
+const reelMap = {
+  ffprobe_seconds: 25.66,
+  est_script_seconds: 25.8,
+  beats: [
+    { role: 'hook', start: 0, end: 2.66, reel_line: 'Do not post your Reels through this plus button.', reel_words: 9, script_line: 'Do not onboard your new clients on a live call.', script_words: 10, est_seconds: 3.1 },
+    { role: 'CTA', start: 23.62, end: 25.5, reel_line: 'Comment, hack and I will send you this guide.', reel_words: 9, script_line: 'Comment SAAS and I will send you this full guide.', script_words: 9, est_seconds: 2.8 },
+  ],
+};
+assert.strictEqual(ctx.cadenceBeatMismatch(reelMap.beats[0]), false);
+assert.strictEqual(ctx.cadenceBeatMismatch(reelMap.beats[1]), true);
+const reelRead = ctx.prepReadBodyHtml(Object.assign({}, formatRows.find(s => s.id === 'r3'), {
+  pipeline_audit: { cadence_map: reelMap },
+}));
+assert.ok(reelRead.includes('0:00–0:02.7'));
+assert.ok(reelRead.includes('0:23.6–0:25.5'));
+assert.ok(reelRead.includes('Reference 25.7s · Script 25.8s · 1 off'));
+assert.ok(reelRead.includes('Do not post your Reels through this plus button.'));
+assert.strictEqual((reelRead.match(/<tr class="is-off">/g) || []).length, 1);
 const r3Proof = ctx.reviewCatalogProof(formatRows.find(s => s.id === 'r3'));
 assert.strictEqual(r3Proof.kind, 'unproven');
 assert.strictEqual(r3Proof.label, 'Not yet proven: 2 outliers');

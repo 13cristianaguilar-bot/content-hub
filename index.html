@@ -3199,7 +3199,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.21';
+const APP_VERSION = '2026.10.28.22';
 (function () {
   try {
     if (typeof location === 'undefined' || !location) return;
@@ -3224,6 +3224,18 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.22',
+    date: 'November 3, 2026',
+    title: 'Cadence map from the reel',
+    items: [
+      'Cadence vs reference reads the reel timestamps on the script: the spoken line, its start and end, the word count, and the estimated seconds.',
+      'The summary is the reference length against the estimated script length. A beat outside about a quarter of its reference span is highlighted.',
+    ],
+    steps: [
+      'Open Andrew R3. Cadence vs reference is under the reference. Open it to see the eight beats.',
+    ],
+  },
   {
     version: '2026.10.28.21',
     date: 'November 3, 2026',
@@ -11412,10 +11424,12 @@ function cadenceSeconds(value) {
 }
 function cadenceClock(sec) {
   if (sec == null || !isFinite(sec) || sec < 0) return '';
-  const whole = Math.floor(sec);
-  const m = Math.floor(whole / 60);
-  const s = whole % 60;
-  return m + ':' + String(s).padStart(2, '0');
+  let m = Math.floor(sec / 60);
+  let rem = Math.round((sec - m * 60) * 10) / 10;
+  if (rem >= 60) { m += 1; rem = 0; }
+  const whole = Math.floor(rem);
+  const tenth = Math.round((rem - whole) * 10);
+  return m + ':' + String(whole).padStart(2, '0') + (tenth ? '.' + tenth : '');
 }
 function cadenceDur(sec) {
   if (sec == null || !isFinite(sec)) return '';
@@ -11424,7 +11438,7 @@ function cadenceDur(sec) {
   return text + 's';
 }
 function cadenceRange(beat) {
-  beat = beat || {};
+  beat = cadenceBeat(beat);
   const start = cadenceSeconds(beat.ref_start);
   const end = cadenceSeconds(beat.ref_end);
   if (start != null && end != null && end >= start) return { start: start, end: end };
@@ -11450,7 +11464,7 @@ function cadenceRoleLabel(role) {
   return raw.charAt(0).toUpperCase() + raw.slice(1);
 }
 function cadenceBeatMismatch(beat) {
-  beat = beat || {};
+  beat = cadenceBeat(beat);
   if (beat.mismatch === true || beat.match === false || beat.ok === false) return true;
   const status = asText(beat.status || beat.verdict).trim().toLowerCase();
   if (status === 'fail' || status === 'gap' || status === 'mismatch' || status === 'hold') return true;
@@ -11459,10 +11473,28 @@ function cadenceBeatMismatch(beat) {
   const est = cadenceSeconds(beat.est_sec);
   if (range && est != null) {
     const span = range.end - range.start;
-    const slack = Math.max(0.4, span * 0.15);
+    const slack = Math.max(0.4, span * 0.25);
     return Math.abs(est - span) > slack;
   }
   return !!(asText(beat.ref_line).trim() && !asText(beat.script_line).trim());
+}
+function cadenceBeat(beat) {
+  beat = beat || {};
+  const refLine = asText(beat.ref_line).trim() ? beat.ref_line : beat.reel_line;
+  return {
+    role: beat.role,
+    ref_line: refLine,
+    ref_start: beat.ref_start != null ? beat.ref_start : beat.start,
+    ref_end: beat.ref_end != null ? beat.ref_end : beat.end,
+    ref_words: beat.ref_words != null ? beat.ref_words : beat.reel_words,
+    script_line: beat.script_line,
+    script_words: beat.script_words,
+    est_sec: beat.est_sec != null ? beat.est_sec : beat.est_seconds,
+    mismatch: beat.mismatch,
+    match: beat.match,
+    ok: beat.ok,
+    status: beat.status || beat.verdict,
+  };
 }
 function cadenceMapOf(s) {
   const audit = s && s.pipeline_audit;
@@ -11472,9 +11504,11 @@ function cadenceMapOf(s) {
     try { map = JSON.parse(map); } catch (e) { return null; }
   }
   if (!map || typeof map !== 'object' || Array.isArray(map)) return null;
-  const beats = Array.isArray(map.beats) ? map.beats.filter(beat => beat && typeof beat === 'object') : [];
-  if (!beats.length && cadenceSeconds(map.ref_total_sec) == null && cadenceSeconds(map.script_est_sec) == null) return null;
-  return { beats: beats, ref_total_sec: map.ref_total_sec, script_est_sec: map.script_est_sec };
+  const beats = Array.isArray(map.beats) ? map.beats.filter(beat => beat && typeof beat === 'object').map(cadenceBeat) : [];
+  const refTotal = map.ref_total_sec != null ? map.ref_total_sec : map.ffprobe_seconds;
+  const scriptTotal = map.script_est_sec != null ? map.script_est_sec : map.est_script_seconds;
+  if (!beats.length && cadenceSeconds(refTotal) == null && cadenceSeconds(scriptTotal) == null) return null;
+  return { beats: beats, ref_total_sec: refTotal, script_est_sec: scriptTotal };
 }
 function cadenceMapVisible() {
   if (typeof role === 'undefined' || role !== 'admin') return false;
@@ -11516,7 +11550,7 @@ function cadenceMapHtml(s) {
     const estimates = map.beats.map(beat => cadenceSeconds(beat.est_sec)).filter(sec => sec != null);
     scriptTotal = estimates.length ? estimates.reduce((sum, sec) => sum + sec, 0) : null;
   }
-  const totalsOff = refTotal != null && scriptTotal != null && Math.abs(scriptTotal - refTotal) > Math.max(0.4, refTotal * 0.15);
+  const totalsOff = refTotal != null && scriptTotal != null && Math.abs(scriptTotal - refTotal) > Math.max(0.4, refTotal * 0.25);
   const summary = [
     refTotal != null ? ('Reference ' + cadenceDur(refTotal)) : '',
     scriptTotal != null ? ('Script ' + cadenceDur(scriptTotal)) : '',

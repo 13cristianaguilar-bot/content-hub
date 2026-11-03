@@ -1727,6 +1727,28 @@ body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
   display: block; margin: 4px 0 0; white-space: pre-wrap;
   font: inherit; font-size: 15px; line-height: 1.4; color: var(--ink);
 }
+.review-card-title { margin: 12px 14px 0; }
+.review-card-actions, .review-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.review-card-actions { padding: 12px 14px 14px; }
+.review-actions { margin: 12px 0; }
+.review-open {
+  min-height: 44px; padding: 0 18px; background: var(--ink); color: #fff;
+  border: 0; font-weight: 700; letter-spacing: -0.02em;
+}
+.review-status-chip {
+  display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px;
+  border-radius: 999px; font-size: 12px; font-weight: 700;
+}
+.review-status-chip.is-review { background: var(--soft); color: var(--ink); }
+.review-status-chip.is-approved { background: #e5f6ea; color: #0d7a32; }
+.review-status-chip.is-ready { background: var(--ink); color: #fff; }
+.review-status-chip.is-hold { background: #fff4d6; color: #8a5a00; }
+#client-view {
+  position: fixed; inset: 0; z-index: 80; background: var(--paper); color: var(--ink);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.client-view-scroll { flex: 1 1 auto; overflow: auto; padding: 16px; }
+body.client-view-open { overflow: hidden; }
 .review-flag {
   margin: 8px 14px 0; color: var(--signal); font-size: 13px; font-weight: 650; line-height: 1.35;
 }
@@ -1764,6 +1786,7 @@ body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
 <div id="prompter-root"></div>
 <div id="prep-root"></div>
 <div id="edit-root"></div>
+<div id="client-view-root"></div>
 
 <script>
 // ─────────────────────────────────────────────
@@ -3071,7 +3094,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.15';
+const APP_VERSION = '2026.10.28.16';
 (function () {
   try {
     if (typeof location === 'undefined' || !location) return;
@@ -3096,6 +3119,20 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.16',
+    date: 'November 3, 2026',
+    title: 'Review the version',
+    items: [
+      'Each version has Review. It opens the brain check with the full script. Edit, Request changes, Mark client-ready, and Next are on that screen. Back returns to the same session.',
+      'The status chip shows Needs Review, Approved, or Client-ready, and it updates after you act.',
+      'Client view is the script the client sees, including the repeat strip: the cover, the badge, and the confirmed repeats. Unconfirmed notes stay off that screen.',
+    ],
+    steps: [
+      'Open Needs your brain check. Pick Andrew. Tap Tips. Tap Review.',
+      'Tap Client view. The repeat strip is on the script. Tap Back, then Back again to the session.',
+    ],
+  },
   {
     version: '2026.10.28.15',
     date: 'November 3, 2026',
@@ -3795,6 +3832,8 @@ let editsLoaded = false;
 let editsError = '';
 let editFilter = 'all';
 let editState = null;
+let clientViewId = '';
+let clientViewOpen = false;
 let editSaving = false;
 let qaSaving = false;
 let requestSending = false;
@@ -5677,6 +5716,7 @@ function reviewExplicitProof(s) {
       kind: 'repeat',
       label: 'Repeatable: 3+ outliers',
       note: '',
+      reference: { shortcode: 'DeAdWCBS2AV', outlier: '1361.7×' },
       reels: [
         { shortcode: 'De7Kwg_hCLn', outlier: '28.6×' },
         { shortcode: 'DeuuA22s9kh', outlier: '26.6×' },
@@ -5691,6 +5731,7 @@ function reviewExplicitProof(s) {
       kind: 'one',
       label: 'One-off hit',
       note: 'same tag, structure unconfirmed',
+      reference: { shortcode: 'DYU9NJjDWqa', outlier: '391.6×' },
       reels: [
         { shortcode: 'Dd-efVyxITU', outlier: '5.2×' },
         { shortcode: 'Dd-j3DXtSwg', outlier: '5.15×' },
@@ -5757,6 +5798,91 @@ function reviewRepeatStripHtml(s) {
     + (thumbs ? '<div class="repeat-row">' + thumbs + '</div>' : '')
     + '</div>';
 }
+function reviewStatusChip(s) {
+  const status = (s && s.status) || 'Draft';
+  if (status === 'Approved' || status === 'Filming' || status === 'Posted') return { label: 'Client-ready', tone: 'is-ready' };
+  if (status === 'Draft' && asText(s && s.client_feedback).trim()) return { label: 'HOLD', tone: 'is-hold' };
+  if (status === 'Needs Review' && humanQaDeliveryReady(s)) return { label: 'Approved', tone: 'is-approved' };
+  return { label: status === 'Needs Review' ? 'Needs Review' : status, tone: 'is-review' };
+}
+function reviewStatusChipHtml(s) {
+  const chip = reviewStatusChip(s);
+  return '<span class="review-status-chip ' + chip.tone + '">' + escHtml(chip.label) + '</span>';
+}
+function reviewConfirmedReels(proof) {
+  return ((proof && proof.reels) || []).filter(reel => asText(reel && reel.note).toLowerCase().indexOf('unconfirmed') === -1);
+}
+function reviewClientProof(s) {
+  const proof = reviewExplicitProof(s) || reviewCatalogProof(s);
+  if (!proof) return null;
+  if (proof.kind === 'one') {
+    return { kind: 'one', label: 'One-off hit', line: 'This one hit once.', reference: proof.reference || null, reels: [] };
+  }
+  const reels = reviewConfirmedReels(proof);
+  if (!reels.length) return null;
+  return {
+    kind: 'repeat',
+    label: proof.label,
+    line: 'Same format, more than once.',
+    reference: proof.reference || null,
+    reels: reels,
+  };
+}
+function reviewReferenceThumb(s, proof) {
+  if (proof && proof.reference && proof.reference.shortcode) return proof.reference;
+  const code = vaultReelShortcode({ reelUrl: asText(s && s.reference_clip) });
+  if (!code) return null;
+  let outlier = '';
+  vaultFormatsForSlug(s && s.client_slug).forEach(format => {
+    (format.creators || []).forEach(creator => {
+      vaultCreatorReels(creator).forEach(reel => {
+        if (!outlier && vaultReelShortcode(reel) === code) outlier = outlierLabel(reel);
+      });
+    });
+  });
+  return { shortcode: code, outlier: outlier };
+}
+function reviewProofThumbHtml(reel) {
+  const id = asText(reel && reel.shortcode).trim();
+  if (!id) return '';
+  const url = 'https://www.instagram.com/reel/' + id + '/';
+  const src = hubThumbSrc(id);
+  return '<a class="repeat-thumb" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer">'
+    + vaultCoverImgHtml(src, id, 'repeat-cover', { live: false })
+    + (reel.outlier ? '<span class="repeat-mult">' + escHtml(reel.outlier) + '</span>' : '')
+    + '</a>';
+}
+function clientProofStripHtml(s) {
+  const proof = reviewClientProof(s);
+  if (!proof) return '';
+  const ref = reviewReferenceThumb(s, proof);
+  const thumbs = [];
+  if (ref && ref.shortcode) thumbs.push(ref);
+  (proof.reels || []).forEach(reel => {
+    if (!reel || !reel.shortcode) return;
+    if (ref && reel.shortcode === ref.shortcode) return;
+    thumbs.push(reel);
+  });
+  const cls = proof.kind === 'one' ? 'is-one' : 'is-repeat';
+  const line = proof.line ? '<p class="repeat-note">' + escHtml(proof.line) + '</p>' : '';
+  const row = thumbs.map(reviewProofThumbHtml).join('');
+  return '<div class="repeat-proof is-client"><span class="repeat-badge ' + cls + '">' + escHtml(proof.label) + '</span>'
+    + line
+    + (row ? '<div class="repeat-row">' + row + '</div>' : '')
+    + '</div>';
+}
+function clientSeesHubProof() {
+  if (typeof clientViewOpen !== 'undefined' && clientViewOpen) return true;
+  if (typeof role === 'undefined' || role !== 'admin') return true;
+  if (typeof viewingAsClient === 'function' && viewingAsClient()) return true;
+  return false;
+}
+function reviewSessionNextId(currentId, ids) {
+  const list = ids || [];
+  const at = list.indexOf(currentId);
+  if (at < 0) return '';
+  return list[at + 1] || '';
+}
 function reviewSessionRows(rows, client) {
   const out = [];
   reviewFormatGroups(rows, client).forEach(group => {
@@ -5809,24 +5935,22 @@ function readyQueueScripts() {
 function renderFormatReviewCard(s, formatLabel) {
   const handle = reviewCreatorHandle(s);
   const reel = reviewReelLabel(s);
-  const status = s.status || 'Draft';
-  const approved = status === 'Approved';
   const flag = reviewCaptionFlag(s);
-  const spoken = reviewSpokenScript(s);
+  const id = escHtml(s && s.id);
   return `<article class="review-card review-format-card">
     <div class="review-format-top">
       <span class="review-format-chip">${escHtml(formatLabel || 'Format')}</span>
       ${handle ? `<span class="review-handle">${escHtml(handle)}</span>` : ''}
       ${reel ? `<span class="review-meta">${escHtml(reel)}</span>` : ''}
-      ${approved ? '<span class="review-status">Approved</span>' : `<span class="review-meta">${escHtml(status)}</span>`}
+      ${reviewStatusChipHtml(s)}
     </div>
     ${reviewInlineReelHtml(s)}
     ${reviewRepeatStripHtml(s)}
     ${flag ? `<p class="review-flag">${escHtml(flag)}</p>` : ''}
-    <button type="button" class="review-hit" onclick="window.openReview('${escHtml(s.id)}')">
-      <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
-      ${spoken ? `<span class="review-script-mini">${escHtml(spoken)}</span>` : ''}
-    </button>
+    <h3 class="review-title review-card-title">${escHtml((s && s.title) || 'Untitled')}</h3>
+    <div class="review-card-actions">
+      <button type="button" class="review-open" onclick="window.openSessionReview('${id}')">Review</button>
+    </div>
     ${listClientReadyHtml(s)}
   </article>`;
 }
@@ -7826,7 +7950,8 @@ function renderReferenceBlock(s) {
   const same = extraInfo && primary && primary.watch && extraInfo.watch === primary.watch;
   const extra = react || (extraInfo && !same ? extraInfo : null);
   if (!primary && !extra) {
-    return `<section class="area-ref"><div class="eyebrow block-label">Reference</div><p class="shot-intro">No reference video on this script.</p></section>`;
+    const proof = clientSeesHubProof() ? clientProofStripHtml(s) : '';
+    return `<section class="area-ref"><div class="eyebrow block-label">Reference</div><p class="shot-intro">No reference video on this script.</p>${proof}</section>`;
   }
   const blockFor = (info, idSuffix, kicker) => {
     if (!info) return '';
@@ -7850,7 +7975,8 @@ function renderReferenceBlock(s) {
       <div id="embed-${s.id}${idSuffix}" class="embed-slot">${open ? embedHtml(info) : ''}</div>`;
   };
   const extraKicker = react ? 'React to' : 'Reference';
-  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '', 'Format reference')}${extra ? blockFor(extra, '-x', extraKicker) : ''}</section>`;
+  const proof = clientSeesHubProof() ? clientProofStripHtml(s) : '';
+  return `<section class="area-ref"><div class="eyebrow block-label">Reference</div>${blockFor(primary, '', 'Format reference')}${extra ? blockFor(extra, '-x', extraKicker) : ''}${proof}</section>`;
 }
 window.loadEmbed = (id, suffix) => {
   suffix = suffix || '';
@@ -10835,6 +10961,24 @@ function reviewReferenceHtml(s) {
     + thumbs.html
     + '</section>';
 }
+function reviewReadActionsHtml(s) {
+  s = s || {};
+  const id = asText(s.id).trim();
+  if (!id) return '';
+  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (typeof viewingAsClient === 'function' && viewingAsClient()) return '';
+  const safe = escHtml(id);
+  const editing = typeof prepState !== 'undefined' && prepState && prepState.editing && prepState.id === id;
+  if (editing) {
+    return prompterEditHtml(s)
+      + '<div class="review-actions"><button type="button" class="review-open" onclick="window.saveReviewEdit()">Save</button><button type="button" class="tool-btn" onclick="window.cancelReviewEdit()">Cancel</button></div>';
+  }
+  return '<div class="review-actions">'
+    + '<button type="button" class="tool-btn" onclick="window.beginReviewEdit()">Edit</button>'
+    + '<button type="button" class="tool-btn" onclick="requestTweak(\'' + safe + '\')">Request changes</button>'
+    + '<button type="button" class="tool-btn" onclick="window.openClientScriptView(\'' + safe + '\')">Client view</button>'
+    + '</div>';
+}
 function prepReadBodyHtml(s) {
   s = s || {};
   const hook = spokenHook(s);
@@ -10844,20 +10988,25 @@ function prepReadBodyHtml(s) {
   const res = reviewHasResources(s)
     ? '<button type="button" class="review-res-btn" onclick="window.toggleReviewResources()">Resources</button>'
     : '';
+  const editing = typeof prepState !== 'undefined' && prepState && prepState.editing && s.id && prepState.id === s.id;
+  const script = editing
+    ? ''
+    : '<section class="review-script" aria-label="Full script">'
+      + '<h3>Hook</h3>'
+      + (hook ? '<p class="review-hook-full">' + escHtml(hook) + '</p>' : '<p class="prep-empty">No hook on this script.</p>')
+      + '<h3>Full script</h3>'
+      + (body ? '<div class="review-body">' + escHtml(body) + '</div>' : '<p class="prep-empty">No full script on this row.</p>')
+      + '<h3>CTA</h3>'
+      + (cta ? '<p class="review-cta">' + escHtml(cta) + '</p>' : '<p class="prep-empty">No CTA on this script.</p>')
+      + '</section>';
   return ''
     + '<p class="eyebrow">Read + stamp · Admin only</p>'
     + '<h2 id="prep-title">' + escHtml(s.title || 'Script') + '</h2>'
     + '<div class="review-head"><p class="prep-lead">' + escHtml(who) + '</p>' + res + '</div>'
     + reviewReferenceHtml(s)
     + ((typeof reviewCaptionFlag === 'function' && reviewCaptionFlag(s)) ? '<p class="review-flag">' + escHtml(reviewCaptionFlag(s)) + '</p>' : '')
-    + '<section class="review-script" aria-label="Full script">'
-    + '<h3>Hook</h3>'
-    + (hook ? '<p class="review-hook-full">' + escHtml(hook) + '</p>' : '<p class="prep-empty">No hook on this script.</p>')
-    + '<h3>Full script</h3>'
-    + (body ? '<div class="review-body">' + escHtml(body) + '</div>' : '<p class="prep-empty">No full script on this row.</p>')
-    + '<h3>CTA</h3>'
-    + (cta ? '<p class="review-cta">' + escHtml(cta) + '</p>' : '<p class="prep-empty">No CTA on this script.</p>')
-    + '</section>';
+    + reviewReadActionsHtml(s)
+    + script;
 }
 function prepStepBody(s, step, showAudit) {
   const content = prepContentIndex(step, showAudit);
@@ -12067,8 +12216,9 @@ function renderPrep() {
     : '';
   const prepClass = [duo ? 'is-duo' : '', resOpen ? 'has-resources' : ''].filter(Boolean).join(' ');
   const keptScroll = (prepState.scrolls && prepState.scrolls[String(step)]) || 0;
+  const leaveLabel = prepState.session ? 'Back' : 'Close';
   root.innerHTML = `<div id="prep"${prepClass ? ` class="${prepClass}"` : ''} role="dialog" aria-modal="true" aria-labelledby="prep-title">
-    <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">Close</button></header>
+    <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">${leaveLabel}</button></header>
     <div class="prep-dots${dotClass}" role="tablist" aria-label="Prep steps">${dots}</div>
     ${readStep ? '' : `<p class="prep-which">${escHtml(model.title)}</p>`}
     <div class="prep-scroll" id="prep-scroll">${hint}${body}</div>
@@ -12104,6 +12254,11 @@ function reviewContinueNext(currentId, rows, opts) {
 }
 function reviewNextStampHtml(currentId) {
   if (typeof role !== 'undefined' && role !== 'admin') return '';
+  if (typeof prepState !== 'undefined' && prepState && prepState.session && prepState.id === currentId) {
+    const next = reviewSessionNextId(currentId, prepState.queueIds || []);
+    if (!next) return '';
+    return '<button type="button" class="review-next" onclick="window.continueReview()">Next</button>';
+  }
   const rows = typeof scripts !== 'undefined' ? scripts : [];
   const next = reviewContinueNext(currentId, rows, reviewContinueOpts());
   let label = '';
@@ -12116,6 +12271,21 @@ function reviewNextStampHtml(currentId) {
   }
   return '<button type="button" class="review-next" onclick="window.continueReview()">' + escHtml(label) + '</button>';
 }
+function openSessionReview(id) {
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const s = rows.find(x => x && x.id === id);
+  if (!s) return;
+  const member = reviewFormatMember(s);
+  const client = (member && member.client) || (typeof reviewActiveClient === 'function' ? reviewActiveClient() : '');
+  if (client === 'andrew' || client === 'jan') {
+    reviewClient = client;
+    if (member && member.group) reviewFormat = member.group;
+  }
+  const ids = client ? reviewSessionRows(rows, client).map(row => row.id) : [];
+  if (ids.indexOf(id) === -1) ids.push(id);
+  prepState = { id: id, step: 0, fromQueue: true, session: true, editing: false, resources: false, queueIds: ids, scrollTop: 0 };
+  renderPrep();
+}
 function openReview(id) {
   const s = scripts.find(x => x.id === id);
   if (!s) return;
@@ -12126,6 +12296,83 @@ function openReview(id) {
   renderPrep();
 }
 window.openReview = openReview;
+window.openSessionReview = openSessionReview;
+function clientFacingCardHtml(s) {
+  const savedRole = role;
+  const savedPreview = previewSlug;
+  const savedView = viewSlug;
+  const savedMy = mySlug;
+  role = 'client';
+  previewSlug = null;
+  viewSlug = s && s.client_slug;
+  mySlug = s && s.client_slug;
+  clientViewOpen = true;
+  let html = '';
+  try { html = renderCardGroup([s]); }
+  finally {
+    role = savedRole;
+    previewSlug = savedPreview;
+    viewSlug = savedView;
+    mySlug = savedMy;
+    clientViewOpen = false;
+  }
+  return html;
+}
+function renderClientScriptView() {
+  const root = document.getElementById('client-view-root');
+  if (!root) return;
+  const s = (scripts || []).find(x => x && x.id === clientViewId);
+  if (!s) {
+    root.innerHTML = '';
+    document.body.classList.remove('client-view-open');
+    return;
+  }
+  root.innerHTML = '<div id="client-view" role="dialog" aria-modal="true" aria-label="Client view">'
+    + '<header class="prep-top">' + brandLockup('') + '<button type="button" class="prep-close" onclick="window.closeClientScriptView()">Back</button></header>'
+    + '<div class="client-view-scroll">' + clientFacingCardHtml(s) + '</div></div>';
+  document.body.classList.add('client-view-open');
+}
+window.openClientScriptView = (id) => {
+  const s = (scripts || []).find(x => x && x.id === id);
+  if (!s) return;
+  clientViewId = id;
+  renderClientScriptView();
+};
+window.closeClientScriptView = () => {
+  clientViewId = '';
+  const root = document.getElementById('client-view-root');
+  if (root) root.innerHTML = '';
+  document.body.classList.remove('client-view-open');
+};
+window.beginReviewEdit = () => {
+  if (!prepState) return;
+  const s = (scripts || []).find(x => x && x.id === prepState.id);
+  if (!s || !finalScriptEditAllowed(scriptEditSession(s), s)) return;
+  prepState.editing = true;
+  renderPrep();
+};
+window.cancelReviewEdit = () => {
+  if (!prepState) return;
+  prepState.editing = false;
+  renderPrep();
+};
+window.saveReviewEdit = async () => {
+  if (!prepState || editSaving) return;
+  const s = (scripts || []).find(x => x && x.id === prepState.id);
+  if (!s) return;
+  const hook = document.getElementById('pr-edit-hook');
+  const body = document.getElementById('pr-edit-body');
+  const cta = document.getElementById('pr-edit-cta');
+  if (!hook || !body || !cta) return;
+  const draft = finalScriptEditDraft(s);
+  draft.hook = hook.value;
+  draft.body = body.value;
+  draft.cta = cta.value;
+  const status = await commitScriptEdit(s, draft, '');
+  if (!prepState || prepState.id !== s.id) return;
+  if (status !== 'failed') prepState.editing = false;
+  renderPrep();
+};
 window.setStampQueueMode = (on) => {
   stampQueueMode = !!on;
   renderDash();
@@ -12266,6 +12513,19 @@ function setLabeledBlock(text, label, value) {
 // Who may open Edit on the final script and persist it. Admin can save the
 // client they are viewing (client tab or preview-as-client). Clients still
 // only edit their own scripts.
+function scriptEditSession(s) {
+  const session = {
+    role: typeof role === 'undefined' ? '' : role,
+    mySlug: typeof mySlug === 'undefined' ? '' : mySlug,
+    viewSlug: typeof viewSlug === 'undefined' ? '' : viewSlug,
+    previewSlug: typeof previewSlug === 'undefined' ? null : previewSlug,
+  };
+  if (typeof prepState !== 'undefined' && prepState && prepState.session && s && prepState.id === s.id) {
+    const member = reviewFormatMember(s);
+    if (member && member.client) session.reviewClient = member.client;
+  }
+  return session;
+}
 function finalScriptEditAllowed(session, script) {
   session = session || {};
   script = script || {};
@@ -12273,6 +12533,7 @@ function finalScriptEditAllowed(session, script) {
   if (!slug || !script.id) return false;
   if (session.role === 'admin') {
     if (session.previewSlug) return slug === session.previewSlug;
+    if (session.reviewClient && vaultSlugKey(slug) === vaultSlugKey(session.reviewClient)) return true;
     return !!session.viewSlug && slug === session.viewSlug;
   }
   if (session.previewSlug) return false;
@@ -12287,12 +12548,7 @@ function finalScriptEditDraft(s) {
   };
 }
 function prompterMayEdit(s) {
-  return finalScriptEditAllowed({
-    role: role,
-    mySlug: mySlug,
-    viewSlug: viewSlug,
-    previewSlug: previewSlug,
-  }, s);
+  return finalScriptEditAllowed(scriptEditSession(s), s);
 }
 function prompterEditHtml(s) {
   const draft = finalScriptEditDraft(s);
@@ -12514,12 +12770,7 @@ function finishLocalEdit(s, diff, name, reason, toastMessage) {
 async function commitScriptEdit(s, values, reason, opts) {
   opts = opts || {};
   if (!s || editSaving) return 'failed';
-  const maySave = finalScriptEditAllowed({
-    role: role,
-    mySlug: mySlug,
-    viewSlug: viewSlug,
-    previewSlug: previewSlug,
-  }, s);
+  const maySave = finalScriptEditAllowed(scriptEditSession(s), s);
   if (!maySave) {
     if (role === 'admin' && previewSlug && s.client_slug !== previewSlug) {
       showToast('This is ' + clientLabel(previewSlug) + '’s hub. Changes save only in your workspace.', { tone: 'error' });
@@ -13760,6 +14011,18 @@ function exitClientReadyQueue() {
   showToast('Client-ready. Nothing left in this queue.');
 }
 function advanceAfterClientReady(currentId) {
+  if (prepState && prepState.session) {
+    const nextId = reviewSessionNextId(currentId, prepState.queueIds || []);
+    if (!nextId) {
+      clearPrep();
+      renderDash();
+      showToast('Client-ready. This session is done.');
+      return;
+    }
+    openSessionReview(nextId);
+    showToast('Client-ready. Next script.');
+    return;
+  }
   const rows = typeof scripts !== 'undefined' ? scripts : [];
   const next = reviewContinueNext(currentId, rows, reviewContinueOpts());
   if (!next.id) {
@@ -13772,6 +14035,17 @@ function advanceAfterClientReady(currentId) {
 window.continueReview = () => {
   if (typeof role !== 'undefined' && role !== 'admin') return;
   if (typeof prepState === 'undefined' || !prepState) return;
+  if (prepState.session) {
+    const nextId = reviewSessionNextId(prepState.id, prepState.queueIds || []);
+    if (!nextId) {
+      clearPrep();
+      renderDash();
+      showToast('This session is done.');
+      return;
+    }
+    openSessionReview(nextId);
+    return;
+  }
   const rows = typeof scripts !== 'undefined' ? scripts : [];
   const next = reviewContinueNext(prepState.id, rows, reviewContinueOpts());
   if (!next.id) {
@@ -13790,6 +14064,27 @@ function stampQueueNext(currentId) {
 function advanceReview(currentId, opts) {
   opts = opts || {};
   const stamped = opts.stamped !== false;
+  if (prepState && prepState.session) {
+    const ids = prepState.queueIds ? prepState.queueIds.slice() : [];
+    const nextId = reviewSessionNextId(currentId, ids);
+    if (!nextId) {
+      clearPrep();
+      renderDash();
+      showToast(stamped
+        ? 'Stamped. Not sent. This session is done.'
+        : 'Moved on. Not stamped. Not sent. This session is done.');
+      return;
+    }
+    const nextRow = (scripts || []).find(item => item && item.id === nextId);
+    const member = reviewFormatMember(nextRow);
+    if (member && member.group) reviewFormat = member.group;
+    prepState = { id: nextId, step: 0, fromQueue: true, session: true, editing: false, resources: false, queueIds: ids, scrollTop: 0 };
+    renderPrep();
+    showToast(stamped
+      ? 'Stamped. Not sent. Next script.'
+      : 'Moved on. Not stamped. Not sent. Next script.');
+    return;
+  }
   const ids = (prepState && prepState.queueIds) ? prepState.queueIds.slice() : [];
   const next = stampQueueNext(currentId);
   if (!next) {
@@ -13809,7 +14104,7 @@ function advanceReview(currentId, opts) {
 function finishHumanQaUi(id, toastMessage) {
   if (prepState && prepState.id === id) prepState.qaDraft = null;
   const row = scripts.find(x => x.id === id);
-  const advance = prepState && prepState.fromQueue && prepState.id === id
+  const advance = prepState && prepState.fromQueue && !prepState.session && prepState.id === id
     && row && humanQaDeliveryReady(row)
     && !(prompterState && prompterState.id === id);
   renderDash();

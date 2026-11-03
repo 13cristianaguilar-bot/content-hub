@@ -76,7 +76,7 @@ const names = [
   'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reviewInlineReelHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
-  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultThumbIsPermanent', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -824,47 +824,45 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.12');
+assert.strictEqual(appVersion, '2026.10.28.13');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.12');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.13');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Review session/.test(releaseNotes));
+assert.ok(/Format Vault/.test(releaseNotes));
 assert.ok(/Andrew/.test(releaseNotes));
-assert.ok(/Jan/.test(releaseNotes));
 assert.ok(/Tips/.test(releaseNotes));
-assert.ok(/Candace/.test(releaseNotes));
-assert.ok(/formats you chose/i.test(releaseNotes));
-assert.ok(/Approved/.test(releaseNotes));
-assert.ok(/Older Needs Review/.test(releaseNotes));
-assert.ok(/Nothing is deleted/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.12', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.12');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.12');
+assert.ok(/Clones/.test(releaseNotes));
+assert.ok(/pending research/i.test(releaseNotes));
+assert.ok(/Devin/.test(releaseNotes));
+assert.ok(/fallback/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.13', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.13');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.12', true, '2026.10.28.12').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.13', true, '2026.10.28.13').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.13');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -1709,7 +1707,10 @@ assert.ok(!signedHtml.includes('Sign the brain check'));
 const andrewGate = ctx.renderHumanQaGate({ id: 'qa-3', client_slug: 'andrew', status: 'Draft' }, 'card');
 assert.ok(/thesis filter/i.test(andrewGate));
 assert.ok(!/Monica stamp|Rich Life \/ Monica/i.test(andrewGate));
-assert.ok(!andrewGate.includes('name="qa-format"'));
+assert.ok(andrewGate.includes('name="qa-format"'));
+assert.ok(andrewGate.includes('>Tips</span>'));
+assert.ok(andrewGate.includes('>Clones</span>'));
+assert.ok(andrewGate.includes('Signing still works if you skip this.'));
 assert.ok(andrewGate.includes('qa-card-qa-3'));
 assert.ok(andrewGate.includes('Fits their thesis, not a copy, and it is shareable.'));
 const reviewGate = ctx.renderHumanQaGate({ id: 'qa-r', client_slug: 'jan', status: 'Needs Review' }, 'review');
@@ -1749,7 +1750,7 @@ assert.strictEqual(ctx.lockedFormatsForSlug('jan').map(f => f.id).join(','), 're
 assert.strictEqual(ctx.lockedFormatsForSlug('jan-rla').map(f => f.id).join(','), 'reaction,education,lists,interview,myth-buster,car-aphorism');
 assert.strictEqual(ctx.lockedFormatsForSlug('jan').filter(f => f.id === 'car-aphorism')[0].label, 'Car talking-head + aphorism');
 assert.strictEqual(ctx.lockedFormatsForSlug('devin').map(f => f.id).join(','), 'tutorials,tips-hacks,greenscreen,whiteboard,reaction');
-assert.strictEqual(ctx.lockedFormatsForSlug('andrew').length, 0);
+assert.strictEqual(ctx.lockedFormatsForSlug('andrew').map(f => f.id).join(','), 'tips,visual,comparison,transformations,clones');
 assert.strictEqual(ctx.normalizeQaFormats(['reaction', 'reaction', ' lists ']).join(','), 'reaction,lists');
 const stampedFormats = ctx.buildHumanQaStamp({
   readFull: true, notVerbatim: true, thesisFilter: true, shareable: true,
@@ -2001,7 +2002,26 @@ assert.ok(janVaultHtml.includes('@edupierinicoach'));
 assert.ok(janVaultHtml.includes('@lorinkrenn'));
 assert.ok(janVaultHtml.includes('@candasifamabarnes'));
 assert.ok(janVaultHtml.includes('Car talking-head + aphorism'));
-assert.ok(!ctx.formatVaultCatalog().clients.some(client => client.slug === 'andrew'));
+assert.ok(ctx.formatVaultCatalog().clients.some(client => client.slug === 'andrew'));
+assert.strictEqual(ctx.formatVaultCards(ctx.formatVaultCatalog(), 'andrew').length, 5);
+const andrewTips = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'andrew', 'tips');
+assert.ok(andrewTips.includes('Original repeat creator'));
+assert.ok(andrewTips.includes('Competitor'));
+assert.ok(andrewTips.includes('Other industry'));
+assert.ok(andrewTips.includes('thumbs/DYU9NJjDWqa.jpg'));
+assert.ok(andrewTips.includes('@andrewpreneurship'));
+assert.ok(andrewTips.includes('@pavels_life'));
+assert.ok(andrewTips.includes('@fratbuddha'));
+assert.ok(!/cdninstagram|fbcdn|scontent/i.test(andrewTips));
+const andrewClones = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'andrew', 'clones');
+assert.ok(andrewClones.includes('Pending research.'));
+assert.ok(!andrewClones.includes('class="vault-reel-row"'));
+assert.strictEqual(ctx.vaultPosterSrc({ thumbnail: 'thumbs/DYU9NJjDWqa.jpg', shortcode: 'DYU9NJjDWqa' }), 'thumbs/DYU9NJjDWqa.jpg');
+assert.strictEqual(ctx.vaultThumbIsPermanent('https://scontent.cdninstagram.com/v/abc.jpg'), false);
+assert.ok(ctx.vaultPosterSrc({ thumbnail: 'https://scontent.cdninstagram.com/v/abc.jpg', shortcode: 'DYU9NJjDWqa' }).includes('/p/DYU9NJjDWqa/media/?size=l'));
+assert.ok(ctx.vaultPosterHtml({ thumbnail: 'thumbs/DYU9NJjDWqa.jpg', shortcode: 'DYU9NJjDWqa' }).includes('data-step="https://www.instagram.com/p/DYU9NJjDWqa/media/?size=l"'));
+const withThumb = ctx.vaultCreatorReels({ shortcode: 'DYU9NJjDWqa', reelUrl: 'https://www.instagram.com/reel/DYU9NJjDWqa/', thumbnail: 'thumbs/DYU9NJjDWqa.jpg' });
+assert.strictEqual(withThumb[0].thumbnail, 'thumbs/DYU9NJjDWqa.jpg');
 const tutorialsBrowse = ctx.renderFormatVaultHtml(ctx.formatVaultCatalog(), 'devin', 'tutorials');
 assert.ok(tutorialsBrowse.includes('setFormatVaultFormat(\'tutorials\')'));
 assert.ok(tutorialsBrowse.includes('<h3>Cross-industry</h3>'));
@@ -2538,10 +2558,15 @@ const andrewStampRead = ctx.reviewReferenceHtml({
   reference_clip: 'https://www.instagram.com/reel/DeAdWCBS2AV/',
 });
 assert.ok(andrewStampRead.includes('review-format-chip">Tips<'));
-assert.ok(!andrewStampRead.includes('review-ref-row'));
-assert.ok(!andrewStampRead.includes('De7Kwg_hCLn'));
-assert.ok(!andrewStampRead.includes('repeats ·'));
+assert.ok(andrewStampRead.includes('review-ref-row'));
+assert.ok(andrewStampRead.includes('@fratbuddha repeats · 2 outliers'));
+assert.ok(andrewStampRead.includes('De7Kwg_hCLn'));
+assert.ok(andrewStampRead.includes('1361.7×'));
+assert.ok(andrewStampRead.includes('28.6×'));
+assert.ok(andrewStampRead.includes('thumbs/DeAdWCBS2AV.jpg'));
+assert.ok(andrewStampRead.includes('data-step="https://www.instagram.com/p/DeAdWCBS2AV/media/?size=l"'));
 assert.ok(andrewStampRead.includes('href="https://www.instagram.com/reel/DeAdWCBS2AV/"'));
+assert.ok(!andrewStampRead.includes('cdninstagram'));
 assert.strictEqual(ctx.scriptLockedFormat({
   client_slug: 'jan',
   format: 'Myth-bust talking-head · Frazer DaLLZdAMta2',

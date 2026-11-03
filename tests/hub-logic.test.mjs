@@ -73,7 +73,7 @@ const names = [
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId', 'reviewQueueOpts', 'reviewContinueOpts', 'reviewContinueNext', 'reviewNextStampHtml',
-  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reelEmbedCode', 'igReelEmbedSrc', 'igReelShortcode', 'sessionUsesReelEmbed', 'reelEmbedFrameHtml', 'sessionReelPlayerHtml', 'reelEmbedModalHtml', 'reviewInlineReelHtml', 'reviewExplicitProof', 'reviewCatalogProof', 'reviewRepeatStripHtml', 'reviewStatusChip', 'reviewStatusChipHtml', 'reviewConfirmedReels', 'reviewClientProof', 'reviewReferenceThumb', 'reviewProofThumbHtml', 'clientProofStripHtml', 'clientSeesHubProof', 'reviewSessionNextId', 'reviewReadActionsHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
+  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewRevisionKey', 'reviewRevisionSets', 'reviewRevisionSet', 'reviewPreviousRevisions', 'reviewIsPreviousRevision', 'reviewCardRows', 'reviewPreviousHtml', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reelEmbedCode', 'igReelEmbedSrc', 'igReelShortcode', 'sessionUsesReelEmbed', 'reelEmbedFrameHtml', 'sessionReelPlayerHtml', 'reelEmbedModalHtml', 'reviewInlineReelHtml', 'reviewExplicitProof', 'reviewCatalogProof', 'reviewRepeatStripHtml', 'reviewStatusChip', 'reviewStatusChipHtml', 'reviewConfirmedReels', 'reviewClientProof', 'reviewReferenceThumb', 'reviewProofThumbHtml', 'clientProofStripHtml', 'clientSeesHubProof', 'reviewSessionNextId', 'reviewReadActionsHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultSavedThumbPath', 'hubThumbSrc', 'vaultThumbIsPermanent', 'vaultPosterSrc', 'vaultCoverImgHtml', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
@@ -824,42 +824,40 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.17');
+assert.strictEqual(appVersion, '2026.10.28.18');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.17');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.18');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/reference reel/.test(releaseNotes));
-assert.ok(/saved cover/.test(releaseNotes));
-assert.ok(/client view/.test(releaseNotes));
-assert.ok(/confirmed repeats/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.17', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.17');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.17');
+assert.ok(/Needs Review revision/.test(releaseNotes));
+assert.ok(/Previous/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.18', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.18');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.17', true, '2026.10.28.17').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.17');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.18', true, '2026.10.28.18').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.18');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2727,10 +2725,33 @@ const formatRows = [
   formatRow('conf', 'andrew', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 105, 'Walk', 'LevelUp hallway'),
   formatRow('candace', 'jan', 'Jan FINAL · 10.23.2026', 3, 'Car TH + Aphorism · @candasifamabarnes DcBWZ8oC51Q', 'Where you stand', {
     status: 'Approved',
+    created_at: '2026-10-23T18:23:01Z',
     reference_clip: 'https://www.instagram.com/reel/DcBWZ8oC51Q/',
   }),
-  formatRow('pierini', 'jan', 'Jan FINAL · 10.23.2026', 7, 'Education · studio CU + purple title + mic · Pierini DeJhq0AINpW', 'Hard feedback', { status: 'Approved' }),
-  formatRow('lorin', 'jan', 'Jan FINAL · 10.23.2026', 2, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Inside out', { status: 'Approved' }),
+  formatRow('candace-rev', 'jan', 'Jan FINAL · 10.23.2026', 3, 'Car TH + Aphorism · @candasifamabarnes DcBWZ8oC51Q', 'Where you stand revised', {
+    status: 'Needs Review',
+    created_at: '2026-11-03T22:40:16Z',
+    hook: 'Where you are standing was once the goal, revised.',
+    reference_clip: 'https://www.instagram.com/reel/DcBWZ8oC51Q/',
+  }),
+  formatRow('pierini', 'jan', 'Jan FINAL · 10.23.2026', 7, 'Education · studio CU + purple title + mic · Pierini DeJhq0AINpW', 'Hard feedback', {
+    status: 'Approved',
+    created_at: '2026-10-28T17:33:47Z',
+  }),
+  formatRow('pierini-rev', 'jan', 'Jan FINAL · 10.23.2026', 7, 'Education · studio CU + purple title + mic · Pierini DeJhq0AINpW', 'Hard feedback revised', {
+    status: 'Needs Review',
+    created_at: '2026-11-03T22:40:16Z',
+    hook: 'The leader who lets you down sets you free, revised.',
+  }),
+  formatRow('lorin', 'jan', 'Jan FINAL · 10.23.2026', 2, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Inside out', {
+    status: 'Approved',
+    created_at: '2026-10-23T18:23:01Z',
+  }),
+  formatRow('lorin-rev', 'jan', 'Jan FINAL · 10.23.2026', 2, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Inside out revised', {
+    status: 'Needs Review',
+    created_at: '2026-11-03T22:40:16Z',
+    hook: 'Leaders who build from the inside out face a unique pushback in this business.',
+  }),
   formatRow('jan-other', 'jan', 'Jan FINAL · 10.23.2026', 6, 'Talking-head / reframe explainer · Frazer DUIafE1DJqb', 'Growth', { status: 'Approved' }),
   formatRow('jn1', 'jan', 'Jan NOLAN · 10.30.2026', 1, "Philosopher series · @nolan_killeen", 'Three questions', {
     reference_clip: 'https://www.instagram.com/reel/Dd32dTVO4sT/',
@@ -2760,9 +2781,9 @@ assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'a2')), 
 assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'r5')), null);
 const janGroups = ctx.reviewFormatGroups(formatRows, 'jan');
 assert.strictEqual(Array.from(janGroups).map(g => String(g.id)).join('|'), 'candace|pierini|lorin|nolan');
-assert.strictEqual(idsOf(janGroups[0].rows), 'candace');
-assert.strictEqual(idsOf(janGroups[1].rows), 'pierini');
-assert.strictEqual(idsOf(janGroups[2].rows), 'lorin,ready-lorin');
+assert.strictEqual(idsOf(janGroups[0].rows), 'candace-rev');
+assert.strictEqual(idsOf(janGroups[1].rows), 'pierini-rev');
+assert.strictEqual(idsOf(janGroups[2].rows), 'lorin-rev,ready-lorin');
 assert.strictEqual(idsOf(janGroups[3].rows), 'jn1,jn2,jn3');
 assert.strictEqual(ctx.reviewFormatMember(formatRows.find(s => s.id === 'jan-other')), null);
 assert.strictEqual(ctx.reviewCaptionFlag(formatRows.find(s => s.id === 'r3')), 'hook taken from reference caption — verify against reference video');
@@ -2870,6 +2891,7 @@ assert.ok(tipsHtml.includes('thumbs/DexFXAnskil.jpg'));
 assert.ok(tipsHtml.includes('28.6×'));
 assert.ok(tipsHtml.includes('5.2×'));
 assert.ok(!tipsHtml.includes('No hosted file'));
+assert.ok(!tipsHtml.includes('>Previous</button>'));
 assert.ok(tipsHtml.includes("openReelEmbedModal('De7Kwg_hCLn')"));
 assert.ok(tipsHtml.includes("openReelEmbedModal('Dewle2Ss-eQ')"));
 assert.ok(!/cdninstagram|fbcdn|scontent/i.test(tipsHtml));
@@ -2960,8 +2982,21 @@ assert.ok(nolanHtml.includes('thumbs/DdZxJ23p3d3.jpg'));
 assert.ok(nolanHtml.includes('Repeat proof pending'));
 assert.ok(!nolanHtml.includes('Three stages'));
 const candaceHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'jan', 'candace');
-assert.ok(candaceHtml.includes('Client-ready'));
-assert.ok(candaceHtml.includes('Where you stand'));
+assert.ok(candaceHtml.includes('Where you stand revised'));
+assert.ok(candaceHtml.includes('Needs Review'));
+assert.ok(candaceHtml.includes("openSessionReview('candace-rev')\">Review"));
+assert.ok(candaceHtml.includes("openSessionReview('candace')\">Previous"));
+assert.strictEqual(ctx.reviewPreviousRevisions(formatRows, formatRows.find(s => s.id === 'candace-rev')).map(s => s.id).join(','), 'candace');
+assert.strictEqual(ctx.reviewIsPreviousRevision(formatRows, formatRows.find(s => s.id === 'candace')), true);
+assert.strictEqual(ctx.reviewIsPreviousRevision(formatRows, formatRows.find(s => s.id === 'candace-rev')), false);
+ctx.scripts = formatRows;
+const candacePrev = ctx.prepReadBodyHtml(formatRows.find(s => s.id === 'candace'));
+assert.ok(candacePrev.includes('Previous'));
+assert.ok(candacePrev.includes('Spoken hook for candace.'));
+const candaceNow = ctx.prepReadBodyHtml(formatRows.find(s => s.id === 'candace-rev'));
+assert.ok(candaceNow.includes('Where you are standing was once the goal, revised.'));
+assert.ok(!candaceNow.includes('review-previous-kicker'));
+ctx.scripts = undefined;
 assert.ok(candaceHtml.includes('thumbs/DcBWZ8oC51Q.jpg'));
 assert.ok(candaceHtml.includes('Repeatable: 3 outliers'));
 assert.ok(candaceHtml.includes('thumbs/Dbv-LIFiURH.jpg'));

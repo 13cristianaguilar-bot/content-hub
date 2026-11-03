@@ -1,25 +1,34 @@
 {
-  "asOf": "2026-11-02T07:05:00-06:00",
+  "asOf": "2026-11-03T07:10:00-06:00",
   "calls": [
-    {
-      "title": "Ryan Encinas X Cristian (let’s meet)",
-      "when": "2026-11-01T14:00:00-06:00",
-      "who": "ryan@theholistichub.org",
-      "nextStep": "Happened yesterday — no Fathom recording found; log outcome/next step",
-      "source": "calendar"
-    },
     {
       "title": "Cristian X James | 1.1",
       "when": "2026-11-02T11:00:00-06:00",
-      "who": "jamesworkonly@gmail.com",
-      "nextStep": "Confirm agenda",
-      "source": "calendar"
+      "who": "James Hill (jamesworkonly@gmail.com)",
+      "nextStep": "Send James your overview (offer, ICP, site) and an offerings/pricing doc; James schedules Feb 3 11:30 follow-up",
+      "source": "calendar+fathom",
+      "url": "https://fathom.video/calls/883744841"
+    },
+    {
+      "title": "Poison Ivy Expert content strategy (Impromptu Google Meet)",
+      "when": "2026-11-02",
+      "who": "Steve",
+      "nextStep": "Review Steve's match poster; send calendar link with dates so he picks a time ~2 weeks out (brain dump starts mid-January)",
+      "source": "fathom",
+      "url": "https://fathom.video/calls/886093186"
     },
     {
       "title": "Cristian x Paul (YouTube Research)",
       "when": "2026-11-04T10:00:00-06:00",
       "who": "paulk@kmadison.com",
       "nextStep": "Confirm agenda",
+      "source": "calendar"
+    },
+    {
+      "title": "Cristian x Rees",
+      "when": "2026-11-04T12:00:00-06:00",
+      "who": "rees@astragtm.io",
+      "nextStep": "New booking — prep context",
       "source": "calendar"
     },
     {
@@ -94,6 +103,6 @@
       "tools-spend-sheet"
     ],
     "calendarBookedNotHabits": "Filtered out Reading/Wake/Church/2 Before Noon habits; kept 1:1 and named meetings.",
-    "lastIngestDelta": "Nov 2: no new booked 1:1s, Fathom recordings, or Gmail drafts since Oct 30. Ryan Encinas (Nov 1) now past with no Fathom recording. Filtered group/webinar/community blocks (Prime AI, Foundation group call, creator-career webinar, Bible study)."
+    "lastIngestDelta": "Nov 3: new booking Cristian x Rees (Nov 4 12pm CT, rees@astragtm.io). James 1:1 (Nov 2) recorded in Fathom with action items. New Fathom: Poison Ivy Expert/Steve strategy call (Nov 2). Ryan Encinas (Nov 1) dropped as past. No new Gmail drafts."
   }
 }

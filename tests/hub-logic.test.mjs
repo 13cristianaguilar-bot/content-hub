@@ -76,7 +76,7 @@ const names = [
   'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reviewInlineReelHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
-  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultThumbIsPermanent', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
+  'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultSavedThumbPath', 'vaultThumbIsPermanent', 'vaultPosterSrc', 'vaultCoverImgHtml', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
@@ -824,45 +824,43 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.13');
+assert.strictEqual(appVersion, '2026.10.28.14');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.13');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.14');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Format Vault/.test(releaseNotes));
+assert.ok(/Review session/.test(releaseNotes));
+assert.ok(/saved reel cover/.test(releaseNotes));
 assert.ok(/Andrew/.test(releaseNotes));
-assert.ok(/Tips/.test(releaseNotes));
-assert.ok(/Clones/.test(releaseNotes));
-assert.ok(/pending research/i.test(releaseNotes));
-assert.ok(/Devin/.test(releaseNotes));
+assert.ok(/Jan/.test(releaseNotes));
 assert.ok(/fallback/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.13', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.13');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.14', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.14');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.14');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.13', true, '2026.10.28.13').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.13');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.14', true, '2026.10.28.14').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.14');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2018,7 +2016,8 @@ assert.ok(andrewClones.includes('Pending research.'));
 assert.ok(!andrewClones.includes('class="vault-reel-row"'));
 assert.strictEqual(ctx.vaultPosterSrc({ thumbnail: 'thumbs/DYU9NJjDWqa.jpg', shortcode: 'DYU9NJjDWqa' }), 'thumbs/DYU9NJjDWqa.jpg');
 assert.strictEqual(ctx.vaultThumbIsPermanent('https://scontent.cdninstagram.com/v/abc.jpg'), false);
-assert.ok(ctx.vaultPosterSrc({ thumbnail: 'https://scontent.cdninstagram.com/v/abc.jpg', shortcode: 'DYU9NJjDWqa' }).includes('/p/DYU9NJjDWqa/media/?size=l'));
+assert.strictEqual(ctx.vaultPosterSrc({ thumbnail: 'https://scontent.cdninstagram.com/v/abc.jpg', shortcode: 'DYU9NJjDWqa' }), 'thumbs/DYU9NJjDWqa.jpg');
+assert.strictEqual(ctx.vaultSavedThumbPath('DYU9NJjDWqa'), 'thumbs/DYU9NJjDWqa.jpg');
 assert.ok(ctx.vaultPosterHtml({ thumbnail: 'thumbs/DYU9NJjDWqa.jpg', shortcode: 'DYU9NJjDWqa' }).includes('data-step="https://www.instagram.com/p/DYU9NJjDWqa/media/?size=l"'));
 const withThumb = ctx.vaultCreatorReels({ shortcode: 'DYU9NJjDWqa', reelUrl: 'https://www.instagram.com/reel/DYU9NJjDWqa/', thumbnail: 'thumbs/DYU9NJjDWqa.jpg' });
 assert.strictEqual(withThumb[0].thumbnail, 'thumbs/DYU9NJjDWqa.jpg');
@@ -2654,6 +2653,9 @@ const igOnly = ctx.hubPlayerHtml(ctx.videoInfo('https://www.instagram.com/reel/D
 assert.ok(!igOnly.includes('<iframe'));
 assert.ok(!igOnly.includes('/embed/'));
 assert.ok(igOnly.includes('No hosted file'));
+assert.ok(igOnly.includes('src="thumbs/Dej6DYnye-H.jpg"'));
+assert.ok(igOnly.includes('data-step="https://www.instagram.com/p/Dej6DYnye-H/media/?size=l"'));
+assert.ok(igOnly.includes('data-poster="data:image/svg+xml'));
 const ytPlayer = ctx.hubPlayerHtml(ctx.videoInfo('https://www.youtube.com/watch?v=abcdefghijk'), { link: false });
 assert.ok(ytPlayer.includes('youtube.com/embed/abcdefghijk'));
 assert.ok(ytPlayer.includes('hub-player-frame'));
@@ -2706,7 +2708,9 @@ const formatRows = [
   formatRow('r3', 'andrew', 'Andrew CORE · 10.28.2026', 3, 'Comparison · vault A13 · @polinabatee DbTGaGLRsfz', 'Wrong vs right'),
   formatRow('r4', 'andrew', 'Andrew CORE · 10.28.2026', 4, 'Transformations · vault A15 · @andrewpreneurship DYU9NJjDWqa', 'Feature dump'),
   formatRow('r5', 'andrew', 'Andrew CORE · 10.28.2026', 5, 'Tips · vault A2 · @pavels_life DeMiLEKqxfN', 'Give it away'),
-  formatRow('r7', 'andrew', 'Andrew CORE · 10.28.2026', 7, 'Tips · vault A4 · @fratbuddha DeAdWCBS2AV', 'Five ways'),
+  formatRow('r7', 'andrew', 'Andrew CORE · 10.28.2026', 7, 'Tips · vault A4 · @fratbuddha DeAdWCBS2AV', 'Five ways', {
+    reference_clip: 'https://www.instagram.com/reel/DeAdWCBS2AV/',
+  }),
   formatRow('r8', 'andrew', 'Andrew CORE · 10.28.2026', 8, 'Visual · vault A9 · @martinwang.mp4 DdjPyXlxmk2', 'Overlooked setting'),
   formatRow('r9', 'andrew', 'Andrew CORE · 10.28.2026', 9, 'Comparison · vault A14 · @thechriscordero DeCtrfOAivs', 'Same brief'),
   formatRow('r10', 'andrew', 'Andrew CORE · 10.28.2026', 10, 'Transformations · vault A17 · @polinabatee DcqSKwzMfnE', 'Clear path'),
@@ -2717,16 +2721,27 @@ const formatRows = [
     reference_clip: 'https://www.instagram.com/reel/DefDJ3cI74L/',
   }),
   formatRow('a2', 'andrew', 'Andrew NOLAN · 10.30.2026', 2, 'Cold-open warning · @nolan_killeen', 'Three stages'),
-  formatRow('a3', 'andrew', 'Andrew NOLAN · 10.30.2026', 3, 'Environment-design rapid list · @nolan_killeen', 'Keep customers'),
+  formatRow('a3', 'andrew', 'Andrew NOLAN · 10.30.2026', 3, 'Environment-design rapid list · @nolan_killeen', 'Keep customers', {
+    reference_clip: 'https://www.instagram.com/reel/DdZxJ23p3d3/',
+  }),
   formatRow('stale', 'andrew', 'Andrew Batch-03 · 7.23.2026', 14, 'Comparison', 'Old GHL'),
   formatRow('conf', 'andrew', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 105, 'Walk', 'LevelUp hallway'),
-  formatRow('candace', 'jan', 'Jan FINAL · 10.23.2026', 3, 'Car TH + Aphorism · @candasifamabarnes DcBWZ8oC51Q', 'Where you stand', { status: 'Approved' }),
+  formatRow('candace', 'jan', 'Jan FINAL · 10.23.2026', 3, 'Car TH + Aphorism · @candasifamabarnes DcBWZ8oC51Q', 'Where you stand', {
+    status: 'Approved',
+    reference_clip: 'https://www.instagram.com/reel/DcBWZ8oC51Q/',
+  }),
   formatRow('pierini', 'jan', 'Jan FINAL · 10.23.2026', 7, 'Education · studio CU + purple title + mic · Pierini DeJhq0AINpW', 'Hard feedback', { status: 'Approved' }),
   formatRow('lorin', 'jan', 'Jan FINAL · 10.23.2026', 2, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Inside out', { status: 'Approved' }),
   formatRow('jan-other', 'jan', 'Jan FINAL · 10.23.2026', 6, 'Talking-head / reframe explainer · Frazer DUIafE1DJqb', 'Growth', { status: 'Approved' }),
-  formatRow('jn1', 'jan', 'Jan NOLAN · 10.30.2026', 1, "Philosopher series · @nolan_killeen", 'Three questions'),
-  formatRow('jn2', 'jan', 'Jan NOLAN · 10.30.2026', 2, "'If I woke up tomorrow' · @nolan_killeen", 'Lead from peace'),
-  formatRow('jn3', 'jan', 'Jan NOLAN · 10.30.2026', 3, "Philosopher series · @nolan_killeen", 'Clear conversation'),
+  formatRow('jn1', 'jan', 'Jan NOLAN · 10.30.2026', 1, "Philosopher series · @nolan_killeen", 'Three questions', {
+    reference_clip: 'https://www.instagram.com/reel/Dd32dTVO4sT/',
+  }),
+  formatRow('jn2', 'jan', 'Jan NOLAN · 10.30.2026', 2, "'If I woke up tomorrow' · @nolan_killeen", 'Lead from peace', {
+    reference_clip: 'https://www.instagram.com/reel/Dd9YOj_oanp/',
+  }),
+  formatRow('jn3', 'jan', 'Jan NOLAN · 10.30.2026', 3, "Philosopher series · @nolan_killeen", 'Clear conversation', {
+    reference_clip: 'https://www.instagram.com/reel/DdcGABkJGz5/',
+  }),
   formatRow('ready-lorin', 'jan', 'Jan FINAL · 10.23.2026', 8, 'Chair TH + Belief Text Box · @lorinkrenn DbbGzGzu-Ys', 'Still to send', {
     pipeline_audit: signedScript.pipeline_audit,
   }),
@@ -2827,17 +2842,27 @@ assert.ok(tipsHtml.includes('Spoken body for r7.'));
 assert.ok(!tipsHtml.includes('Spoken body for r8.'));
 assert.ok(!tipsHtml.includes('batch-card-n'));
 assert.ok(tipsHtml.includes('class="hub-player'));
+assert.ok(tipsHtml.includes('src="thumbs/DYU9NJjDWqa.jpg"'));
+assert.ok(tipsHtml.includes('src="thumbs/DeAdWCBS2AV.jpg"'));
+assert.ok(tipsHtml.includes('data-step="https://www.instagram.com/p/DYU9NJjDWqa/media/?size=l"'));
+assert.ok(!/cdninstagram|fbcdn|scontent/i.test(tipsHtml));
 const nolanHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'andrew', 'nolan');
 assert.ok(nolanHtml.includes('>A1<'));
 assert.ok(nolanHtml.includes('>A3<'));
+assert.ok(nolanHtml.includes('src="thumbs/DefDJ3cI74L.jpg"'));
+assert.ok(nolanHtml.includes('src="thumbs/DdZxJ23p3d3.jpg"'));
 assert.ok(!nolanHtml.includes('Three stages'));
 const candaceHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'jan', 'candace');
 assert.ok(candaceHtml.includes('Approved'));
 assert.ok(candaceHtml.includes('Where you stand'));
+assert.ok(candaceHtml.includes('src="thumbs/DcBWZ8oC51Q.jpg"'));
 const janNolanHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'jan', 'nolan');
 assert.ok(janNolanHtml.includes('Three questions'));
 assert.ok(janNolanHtml.includes('Lead from peace'));
 assert.ok(janNolanHtml.includes('Clear conversation'));
+assert.ok(janNolanHtml.includes('src="thumbs/Dd32dTVO4sT.jpg"'));
+assert.ok(janNolanHtml.includes('src="thumbs/Dd9YOj_oanp.jpg"'));
+assert.ok(janNolanHtml.includes('src="thumbs/DdcGABkJGz5.jpg"'));
 const janSessionHtml = ctx.renderReviewSessionHtml(formatRows, 'jan');
 assert.ok(janSessionHtml.includes('7 scripts in this session'));
 assert.ok(janSessionHtml.includes('>Candace<'));

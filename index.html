@@ -1735,6 +1735,14 @@ body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
   min-height: 44px; padding: 0 18px; background: var(--ink); color: #fff;
   border: 0; font-weight: 700; letter-spacing: -0.02em;
 }
+.review-previous {
+  min-height: 44px; padding: 0 14px; background: #fff; color: var(--ink);
+  border: 1px solid var(--line); font-weight: 650;
+}
+.review-previous-kicker {
+  margin: 0 0 8px; font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--muted);
+}
 .review-status-chip {
   display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px;
   border-radius: 999px; font-size: 12px; font-weight: 700;
@@ -3126,7 +3134,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.17';
+const APP_VERSION = '2026.10.28.18';
 (function () {
   try {
     if (typeof location === 'undefined' || !location) return;
@@ -3151,6 +3159,17 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.18',
+    date: 'November 3, 2026',
+    title: 'Review the newest revision',
+    items: [
+      'Review session opens the newest Needs Review revision of each script. The approved script stays on that card as Previous.',
+    ],
+    steps: [
+      'Open Needs your brain check. Pick Jan. Tap Lorin, Pierini, or Candace. The card is the new revision. Previous opens the approved one.',
+    ],
+  },
   {
     version: '2026.10.28.17',
     date: 'November 3, 2026',
@@ -5690,11 +5709,70 @@ function reviewFormatGroups(rows, client) {
     buckets[member.group].push(s);
   });
   order.forEach(id => {
-    buckets[id].sort((a, b) => reviewFormatMember(a).order - reviewFormatMember(b).order);
+    const sets = reviewRevisionSets(buckets[id]);
+    const seen = {};
+    const currents = [];
+    buckets[id].forEach(s => {
+      const key = reviewRevisionKey(s);
+      if (seen[key]) return;
+      seen[key] = true;
+      const hit = sets[key];
+      if (hit && hit.current) currents.push(hit.current);
+    });
+    currents.sort((a, b) => reviewFormatMember(a).order - reviewFormatMember(b).order);
+    buckets[id] = currents;
   });
   const groups = order.map(id => ({ id: id, label: labels[id], rows: buckets[id] }));
   if (client === 'andrew') groups.push({ id: 'clones', label: 'Clones', rows: [], pending: true });
   return groups;
+}
+function reviewRevisionKey(s) {
+  if (!s) return '';
+  return [vaultSlugKey(s.client_slug), asText(s.batch), String(Number(s.reel_number) || 0)].join('\n');
+}
+function reviewRevisionSets(rows) {
+  const buckets = {};
+  (rows || []).forEach(s => {
+    if (!s || !s.id) return;
+    const key = reviewRevisionKey(s);
+    if (!buckets[key]) buckets[key] = [];
+    buckets[key].push(s);
+  });
+  const map = {};
+  Object.keys(buckets).forEach(key => {
+    const list = buckets[key].slice().sort((a, b) => {
+      const at = asText(a.created_at);
+      const bt = asText(b.created_at);
+      if (at !== bt) return bt.localeCompare(at);
+      return asText(b.id).localeCompare(asText(a.id));
+    });
+    const nr = list.filter(s => (s.status || '') === 'Needs Review');
+    const current = nr.length ? nr[0] : list[0];
+    map[key] = { current: current, previous: list.filter(s => s.id !== current.id) };
+  });
+  return map;
+}
+function reviewRevisionSet(rows, s) {
+  if (!s) return null;
+  return reviewRevisionSets(rows)[reviewRevisionKey(s)] || null;
+}
+function reviewPreviousRevisions(rows, s) {
+  const hit = reviewRevisionSet(rows, s);
+  if (!hit || !hit.current || hit.current.id !== s.id) return [];
+  return hit.previous || [];
+}
+function reviewIsPreviousRevision(rows, s) {
+  const hit = reviewRevisionSet(rows, s);
+  return !!(hit && hit.current && s && hit.current.id !== s.id);
+}
+function reviewCardRows(rows) {
+  if (rows && rows.length) return rows;
+  return typeof scripts !== 'undefined' ? scripts : [];
+}
+function reviewPreviousHtml(s, rows) {
+  const prev = reviewPreviousRevisions(reviewCardRows(rows), s);
+  if (!prev.length) return '';
+  return prev.map(p => '<button type="button" class="review-previous" onclick="window.openSessionReview(\'' + escHtml(p.id) + '\')">Previous</button>').join('');
 }
 function reviewFormatStampRows(rows, client, opts) {
   opts = opts || {};
@@ -6051,7 +6129,7 @@ function readyQueueScripts() {
   }
   return list.filter(s => !reviewBatchIsStale(s && s.batch));
 }
-function renderFormatReviewCard(s, formatLabel) {
+function renderFormatReviewCard(s, formatLabel, rows) {
   const handle = reviewCreatorHandle(s);
   const reel = reviewReelLabel(s);
   const flag = reviewCaptionFlag(s);
@@ -6069,6 +6147,7 @@ function renderFormatReviewCard(s, formatLabel) {
     <h3 class="review-title review-card-title">${escHtml((s && s.title) || 'Untitled')}</h3>
     <div class="review-card-actions">
       <button type="button" class="review-open" onclick="window.openSessionReview('${id}')">Review</button>
+      ${reviewPreviousHtml(s, rows)}
     </div>
     ${listClientReadyHtml(s)}
   </article>`;
@@ -6093,7 +6172,7 @@ function renderFormatReviewHtml(rows, client, readyRows) {
         <div class="review-list">${ready.map(s => {
           const member = reviewFormatMember(s);
           const hit = groups.filter(group => member && group.id === member.group)[0];
-          return renderFormatReviewCard(s, hit ? hit.label : (member && member.group) || '');
+          return renderFormatReviewCard(s, hit ? hit.label : (member && member.group) || '', rows);
         }).join('')}</div>
       </section>`
     : '';
@@ -6107,7 +6186,7 @@ function renderFormatReviewHtml(rows, client, readyRows) {
     if (!group.rows.length) return '';
     return `<section class="review-group" aria-label="${escHtml(group.label)}">
       <h3>${escHtml(group.label)}</h3>
-      <div class="review-list">${group.rows.map(s => renderFormatReviewCard(s, group.label)).join('')}</div>
+      <div class="review-list">${group.rows.map(s => renderFormatReviewCard(s, group.label, rows)).join('')}</div>
     </section>`;
   }).join('');
   return top + body;
@@ -6141,7 +6220,7 @@ function renderReviewFormatVersionsHtml(rows, client, formatId) {
   const list = group.rows || [];
   if (group.pending && !list.length) return '<p class="review-pending">pending research</p>';
   if (!list.length) return '<p class="review-pending">No versions in this format.</p>';
-  return `<div class="review-list">${list.map(s => renderFormatReviewCard(s, group.label)).join('')}</div>`;
+  return `<div class="review-list">${list.map(s => renderFormatReviewCard(s, group.label, rows)).join('')}</div>`;
 }
 function renderOlderLink() {
   const on = typeof reviewArchive !== 'undefined' && reviewArchive;
@@ -11134,8 +11213,12 @@ function prepReadBodyHtml(s) {
       + '<h3>CTA</h3>'
       + (cta ? '<p class="review-cta">' + escHtml(cta) + '</p>' : '<p class="prep-empty">No CTA on this script.</p>')
       + '</section>';
+  const pool = typeof scripts !== 'undefined' ? scripts : [];
+  const previous = (typeof prepState !== 'undefined' && prepState && prepState.previous && prepState.id === s.id)
+    || reviewIsPreviousRevision(pool, s);
   return ''
     + '<p class="eyebrow">Read + stamp · Admin only</p>'
+    + (previous ? '<p class="review-previous-kicker">Previous</p>' : '')
     + '<h2 id="prep-title">' + escHtml(s.title || 'Script') + '</h2>'
     + '<div class="review-head"><p class="prep-lead">' + escHtml(who) + '</p>' + res + '</div>'
     + reviewReferenceHtml(s)
@@ -12417,8 +12500,9 @@ function openSessionReview(id) {
     if (member && member.group) reviewFormat = member.group;
   }
   const ids = client ? reviewSessionRows(rows, client).map(row => row.id) : [];
-  if (ids.indexOf(id) === -1) ids.push(id);
-  prepState = { id: id, step: 0, fromQueue: true, session: true, editing: false, resources: false, queueIds: ids, scrollTop: 0 };
+  const previous = reviewIsPreviousRevision(rows, s);
+  if (!previous && ids.indexOf(id) === -1) ids.push(id);
+  prepState = { id: id, step: 0, fromQueue: true, session: true, editing: false, previous: previous, resources: false, queueIds: ids, scrollTop: 0 };
   renderPrep();
 }
 function openReview(id) {

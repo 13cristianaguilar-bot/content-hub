@@ -52,7 +52,7 @@ const names = [
   'normFormatKey', 'formatChipLabel', 'lockedFormatFromText', 'scriptLockedFormat',
   'collectIgHandles', 'collectShortcodes', 'outlierScore', 'reelClearsOutlierBar', 'outlierLabel',
   'reviewCreatorProof', 'reviewRefPosterHtml', 'reviewCreatorThumbsHtml', 'reviewClipSlotHtml', 'reviewReferenceHtml',
-  'prepReadBodyHtml', 'clientLabel',
+  'cadenceSeconds', 'cadenceClock', 'cadenceDur', 'cadenceRange', 'cadenceWords', 'cadenceRoleLabel', 'cadenceBeatMismatch', 'cadenceMapOf', 'cadenceMapVisible', 'cadenceMapHtml', 'prepReadBodyHtml', 'clientLabel',
   'isRlaClient', 'normalizeQaChecks', 'humanQaChecks', 'humanQaReviewAction', 'humanQaContinueWarn', 'humanQaNotesOk', 'humanQaScriptHash',
   'normalizeQaFormats', 'vaultSlugKey', 'lockedFormatsForSlug', 'vaultFormatsForSlug',
   'vaultDnaValueFilled', 'vaultDnaAliases', 'formatCountsAsRecipe', 'vaultEmptyTitle', 'vaultEmptyBlocksStatus',
@@ -849,40 +849,40 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.20');
+assert.strictEqual(appVersion, '2026.10.28.21');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.20');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.21');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/current hook/.test(releaseNotes));
-assert.ok(/Not yet proven/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.20', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.20');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.20');
+assert.ok(/Cadence vs reference/.test(releaseNotes));
+assert.ok(/reference seconds/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.21', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.21');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.21');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.20', true, '2026.10.28.20').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.20');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.21', true, '2026.10.28.21').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.21');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2888,6 +2888,84 @@ const captionRead = ctx.prepReadBodyHtml({
   pipeline_audit: { media_lock: { hook_source: 'caption_unverified', caption_text: 'This is not the time to get distracted.' } },
 });
 assert.ok(captionRead.includes('hook taken from reference caption — verify against reference video'));
+assert.ok(!flaggedRead.includes('Cadence vs reference'));
+const cadenceMap = {
+  ref_total_sec: 8,
+  script_est_sec: 11,
+  beats: [
+    {
+      role: 'do_not_hook',
+      ref_line: 'Do not post your reels through this plus button.',
+      ref_start: 0,
+      ref_end: 3,
+      ref_words: 9,
+      script_line: 'Do not onboard your new clients on a live call.',
+      script_words: 10,
+      est_sec: 4,
+    },
+    {
+      role: 'payoff',
+      ref_line: 'When you post like this, you get more views.',
+      ref_start: 3,
+      ref_end: 8,
+      ref_words: 10,
+      script_line: 'Onboard like this, and they are set up.',
+      script_words: 9,
+      est_sec: 5,
+    },
+  ],
+};
+assert.strictEqual(ctx.cadenceMapOf(null), null);
+assert.strictEqual(ctx.cadenceMapOf({ pipeline_audit: {} }), null);
+assert.strictEqual(ctx.cadenceMapOf({ pipeline_audit: { cadence_map: {} } }), null);
+assert.strictEqual(ctx.cadenceMapOf({ pipeline_audit: { cadence_map: JSON.stringify(cadenceMap) } }).beats.length, 2);
+assert.strictEqual(ctx.cadenceBeatMismatch(cadenceMap.beats[0]), true);
+assert.strictEqual(ctx.cadenceBeatMismatch(cadenceMap.beats[1]), false);
+assert.strictEqual(ctx.cadenceBeatMismatch(Object.assign({}, cadenceMap.beats[0], { match: true })), false);
+assert.strictEqual(ctx.cadenceBeatMismatch(Object.assign({}, cadenceMap.beats[1], { mismatch: true })), true);
+const ranged = ctx.cadenceRange({ ref_start: '0-3' });
+assert.strictEqual(ranged.start, 0);
+assert.strictEqual(ranged.end, 3);
+assert.strictEqual(ctx.cadenceSeconds('1:05'), 65);
+assert.strictEqual(ctx.cadenceClock(65), '1:05');
+assert.strictEqual(ctx.cadenceBeatMismatch({ ref_line: 'A reference line with no script.', script_line: '' }), true);
+const cadenceRow = Object.assign({}, formatRows.find(s => s.id === 'r3'), {
+  pipeline_audit: { cadence_map: cadenceMap },
+});
+const cadenceRead = ctx.prepReadBodyHtml(cadenceRow);
+assert.ok(cadenceRead.includes('Cadence vs reference'));
+assert.ok(cadenceRead.includes('Do not post your reels through this plus button.'));
+assert.ok(cadenceRead.includes('Do not onboard your new clients on a live call.'));
+assert.ok(cadenceRead.includes('When you post like this, you get more views.'));
+assert.ok(cadenceRead.includes('Onboard like this, and they are set up.'));
+assert.ok(cadenceRead.includes('0:00–0:03'));
+assert.ok(cadenceRead.includes('0:03–0:08'));
+assert.ok(cadenceRead.includes('Do not hook'));
+assert.ok(cadenceRead.includes('9 words'));
+assert.ok(cadenceRead.includes('10 words'));
+assert.ok(cadenceRead.includes('4s'));
+assert.ok(cadenceRead.includes('5s'));
+assert.ok(cadenceRead.includes('Reference 8s · Script 11s · 1 off'));
+assert.ok(cadenceRead.includes('<details class="cadence-map is-off">'));
+assert.ok(!/<details class="cadence-map[^"]*" open/.test(cadenceRead));
+const offRows = cadenceRead.match(/<tr class="is-off">/g) || [];
+assert.strictEqual(offRows.length, 1);
+assert.ok(cadenceRead.includes('Spoken body for r3.'));
+assert.ok(cadenceRead.includes('Comment SAAS'));
+const cadenceCard = ctx.renderFormatReviewCard(cadenceRow, 'Comparison', formatRows);
+assert.ok(cadenceCard.includes('cadence-map is-off'));
+assert.ok(cadenceCard.includes('Reference 8s · Script 11s · 1 off'));
+assert.ok(cadenceCard.includes('Do not hook'));
+assert.ok(!/<details class="cadence-map[^"]*" open/.test(cadenceCard));
+ctx.role = 'client';
+assert.strictEqual(ctx.cadenceMapHtml(cadenceRow), '');
+ctx.role = 'admin';
+ctx.previewSlug = 'andrew';
+assert.strictEqual(ctx.cadenceMapHtml(cadenceRow), '');
+ctx.previewSlug = null;
+ctx.clientViewOpen = true;
+assert.strictEqual(ctx.cadenceMapHtml(cadenceRow), '');
+ctx.clientViewOpen = false;
 const r3Proof = ctx.reviewCatalogProof(formatRows.find(s => s.id === 'r3'));
 assert.strictEqual(r3Proof.kind, 'unproven');
 assert.strictEqual(r3Proof.label, 'Not yet proven: 2 outliers');

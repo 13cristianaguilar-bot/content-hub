@@ -1743,7 +1743,8 @@ body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
   border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
 }
 .repeat-badge.is-repeat { background: #e5f6ea; color: #0d7a32; }
-.repeat-badge.is-one { background: #fff4d6; color: #8a5a00; }
+.repeat-badge.is-one,
+.repeat-badge.is-unproven { background: #fff4d6; color: #8a5a00; }
 .repeat-badge.is-pending { background: var(--soft); color: var(--muted); }
 .repeat-note { margin: 0; font-size: 12px; line-height: 1.3; color: var(--muted); }
 .repeat-row { display: flex; gap: 8px; width: 100%; overflow-x: auto; }
@@ -3165,7 +3166,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.19';
+const APP_VERSION = '2026.10.28.20';
 (function () {
   try {
     if (typeof location === 'undefined' || !location) return;
@@ -3190,6 +3191,19 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.20',
+    date: 'November 3, 2026',
+    title: 'Current title, spoken lock, real repeats',
+    items: [
+      'The heading on Read, the session, the client card, and Full screen follows the current hook when the stored title is from an older draft.',
+      'The red caption warning shows only when Media Lock says the hook came from the reference caption. A spoken-audio lock keeps it off the screen.',
+      'Repeatable means 3 or more confirmed outliers. Fewer reads Not yet proven, in amber, and the covers match that count.',
+    ],
+    steps: [
+      'Open Andrew R3. The title is the onboard hook. There is no caption warning. The badge says Not yet proven, with two covers.',
+    ],
+  },
   {
     version: '2026.10.28.19',
     date: 'November 3, 2026',
@@ -5438,7 +5452,7 @@ function renderScriptNav(groups, index, scope) {
     return `<li><button type="button" class="script-nav-btn${on ? ' is-on' : ''}" aria-current="${on ? 'true' : 'false'}" data-script-ids="${escHtml(ids.join(','))}" onclick="window.focusScript('${scope}', ${i})">
       <span class="script-nav-n">${i + 1}</span>
       <span class="script-nav-copy">
-        <span class="script-nav-title">${escHtml(s.title || ('Script ' + (i + 1)))}</span>
+        <span class="script-nav-title">${escHtml(reviewDisplayTitle(s) || ('Script ' + (i + 1)))}</span>
         <span class="script-nav-meta">${escHtml(onCameraLine(s))} · ${escHtml(s.status || 'Draft')}</span>
       </span>
       ${showNew ? '<span class="new-badge">New</span>' : ''}
@@ -5452,7 +5466,7 @@ function renderBatchCard(group, index) {
   const ids = group.map(g => g.id).filter(Boolean);
   const showNew = ids.some(id => freshScriptIds.has(id) && !openedIds.has(id));
   const person = clientLabel(s.client_slug);
-  const title = s.title || ('Script ' + (index + 1));
+  const title = reviewDisplayTitle(s) || ('Script ' + (index + 1));
   return `<article class="batch-card" data-script-ids="${escHtml(ids.join(','))}">
     <button type="button" class="batch-card-hit" onclick="window.filmScript('${s.id}')">
       <span class="batch-card-top">
@@ -5846,13 +5860,73 @@ function reviewReelLabel(s) {
   if (member.group === 'nolan') return String(n);
   return 'R' + n;
 }
+function hasSpokenAudioMediaLock(s) {
+  const lock = mediaLockOf(s);
+  if (!lock) return false;
+  if (lock.spoken_hook_verified === true) return true;
+  const source = asText(lock.hook_source).trim().toLowerCase().replace(/[\s-]+/g, '_');
+  return source === 'spoken' || source === 'spoken_audio' || source === 'transcribed' || source === 'transcript';
+}
 function reviewCaptionFlag(s) {
-  const member = reviewFormatMember(s);
-  if (!member || member.client !== 'andrew' || member.group === 'nolan') return '';
-  const reel = Number(s && s.reel_number);
-  if (reel !== 3 && reel !== 8 && reel !== 10) return '';
-  if (!/core/i.test(asText(s && s.batch)) || !/10[./]28/.test(asText(s && s.batch))) return '';
+  if (hasSpokenAudioMediaLock(s)) return '';
+  const lock = mediaLockOf(s);
+  if (!lock) return '';
+  const source = asText(lock.hook_source).trim().toLowerCase();
+  if (source.indexOf('caption') === -1) return '';
   return 'hook taken from reference caption — verify against reference video';
+}
+function reviewHookTitle(s) {
+  let text = spokenHook(s).replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  text = text.replace(/^["“”']+|["“”']+$/g, '').trim();
+  const cut = text.search(/[.!?](?:\s|$)/);
+  if (cut > 0) text = text.slice(0, cut).trim();
+  return text.replace(/[:;,\s]+$/g, '').trim();
+}
+function reviewTitleWords(value) {
+  const stop = {
+    comment: 1, saas: 1, suite: 1, free: 1, follow: 1, your: 1, youre: 1,
+    this: 1, that: 1, with: 1, from: 1, into: 1, they: 1, them: 1, their: 1,
+    have: 1, been: 1, were: 1, will: 1, just: 1, only: 1, more: 1, when: 1,
+    what: 1, which: 1, about: 1, would: 1, could: 1, should: 1, there: 1,
+    here: 1, than: 1, then: 1, also: 1, very: 1, some: 1, such: 1, and: 1,
+    the: 1, for: 1, you: 1, are: 1, was: 1,
+  };
+  return asText(value)
+    .replace(/\(\s*rev\b[^)]*\)/gi, ' ')
+    .toLowerCase()
+    .replace(/['’]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(word => word.length >= 4 && !stop[word]);
+}
+function reviewTitleWordHit(word, hookWords) {
+  return hookWords.some(hookWord => {
+    if (hookWord === word) return true;
+    const short = word.length <= hookWord.length ? word : hookWord;
+    const long = word.length <= hookWord.length ? hookWord : word;
+    return short.length >= 4 && long.indexOf(short) === 0;
+  });
+}
+function reviewTitleMatchesHook(title, hook) {
+  const norm = value => asText(value).toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9]+/g, ' ').trim();
+  const stored = norm(title);
+  const line = norm(hook);
+  if (!stored || !line) return true;
+  if (line.indexOf(stored) !== -1 || stored.indexOf(line) !== -1) return true;
+  const words = reviewTitleWords(title);
+  if (!words.length) return false;
+  const hookWords = reviewTitleWords(hook).concat(norm(hook).split(/\s+/).filter(word => word.length >= 4));
+  const hits = words.filter(word => reviewTitleWordHit(word, hookWords));
+  return hits.length === words.length || hits.length >= 2;
+}
+function reviewDisplayTitle(s) {
+  const stored = asText(s && s.title).trim();
+  const derived = reviewHookTitle(s);
+  if (!derived) return stored || 'Script';
+  if (stored && reviewTitleMatchesHook(stored, spokenHook(s) || derived)) return stored;
+  return derived;
 }
 function reviewSpokenScript(s) {
   const sections = scriptFlow(s);
@@ -6010,26 +6084,37 @@ function reviewCatalogProof(s) {
     });
   });
   if (!person) return null;
-  const reels = vaultCreatorReels(person);
-  const others = reels.filter(reel => {
+  const seen = {};
+  const confirmed = [];
+  vaultCreatorReels(person).forEach(reel => {
     const id = vaultReelShortcode(reel);
-    return id && id !== code;
+    if (!id || seen[id]) return;
+    if (asText(reel && reel.note).toLowerCase().indexOf('unconfirmed') !== -1) return;
+    if (!reelClearsOutlierBar(reel)) return;
+    seen[id] = true;
+    confirmed.push({ shortcode: id, outlier: outlierLabel(reel) });
   });
-  if (!others.length) return null;
+  if (!confirmed.length) return null;
+  const n = confirmed.length;
+  if (n >= 3) {
+    return { kind: 'repeat', label: 'Repeatable: ' + n + ' outliers', note: '', reels: confirmed };
+  }
   return {
-    kind: 'repeat',
-    label: 'Repeatable: ' + reels.length + ' outliers',
+    kind: 'unproven',
+    label: 'Not yet proven: ' + n + ' outlier' + (n === 1 ? '' : 's'),
     note: '',
-    reels: others.slice(0, 5).map(reel => ({
-      shortcode: vaultReelShortcode(reel),
-      outlier: outlierLabel(reel),
-    })),
+    reels: confirmed,
   };
+}
+function reviewProofClass(kind) {
+  if (kind === 'one') return 'is-one';
+  if (kind === 'unproven') return 'is-unproven';
+  return 'is-repeat';
 }
 function reviewRepeatStripHtml(s) {
   const proof = reviewExplicitProof(s) || reviewCatalogProof(s);
   if (!proof) return '<div class="repeat-proof"><span class="repeat-badge is-pending">Repeat proof pending</span></div>';
-  const cls = proof.kind === 'one' ? 'is-one' : 'is-repeat';
+  const cls = reviewProofClass(proof.kind);
   const note = proof.note ? '<p class="repeat-note">' + escHtml(proof.note) + '</p>' : '';
   const thumbs = (proof.reels || []).map(reviewProofThumbHtml).join('');
   return '<div class="repeat-proof"><span class="repeat-badge ' + cls + '">' + escHtml(proof.label) + '</span>'
@@ -6059,6 +6144,9 @@ function reviewClientProof(s) {
   }
   const reels = reviewConfirmedReels(proof);
   if (!reels.length) return null;
+  if (proof.kind === 'unproven') {
+    return { kind: 'unproven', label: proof.label, line: '', reference: proof.reference || null, reels: reels };
+  }
   return {
     kind: 'repeat',
     label: proof.label,
@@ -6103,7 +6191,7 @@ function clientProofStripHtml(s) {
     if (ref && reel.shortcode === ref.shortcode) return;
     thumbs.push(reel);
   });
-  const cls = proof.kind === 'one' ? 'is-one' : 'is-repeat';
+  const cls = reviewProofClass(proof.kind);
   const line = proof.line ? '<p class="repeat-note">' + escHtml(proof.line) + '</p>' : '';
   const row = thumbs.map(reviewProofThumbHtml).join('');
   return '<div class="repeat-proof is-client"><span class="repeat-badge ' + cls + '">' + escHtml(proof.label) + '</span>'
@@ -6187,7 +6275,7 @@ function renderFormatReviewCard(s, formatLabel, rows) {
     ${reviewInlineReelHtml(s)}
     ${reviewRepeatStripHtml(s)}
     ${flag ? `<p class="review-flag">${escHtml(flag)}</p>` : ''}
-    <h3 class="review-title review-card-title">${escHtml((s && s.title) || 'Untitled')}</h3>
+    <h3 class="review-title review-card-title">${escHtml(reviewDisplayTitle(s) || 'Untitled')}</h3>
     <div class="review-card-actions">
       <button type="button" class="review-open" onclick="window.openSessionReview('${id}')">Review</button>
       ${reviewPreviousHtml(s, rows)}
@@ -6287,7 +6375,7 @@ function renderOlderCard(s) {
   const meta = [who, batch, s.status || 'Draft'].filter(Boolean).join(' · ');
   return `<article class="review-card">
     <button type="button" class="review-hit" onclick="window.openReview('${escHtml(s.id)}')">
-      <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
+      <span class="review-title">${escHtml(reviewDisplayTitle(s) || 'Untitled')}</span>
       <span class="review-meta">${escHtml(meta)}</span>
       ${hook ? `<span class="review-hook">${escHtml(hook)}</span>` : ''}
     </button>
@@ -6302,7 +6390,7 @@ function renderReviewCard(s, index) {
   return `<article class="review-card">
     <button type="button" class="review-hit" onclick="window.openReview('${escHtml(s.id)}')">
       <span class="review-top"><span class="batch-card-n">${index + 1}</span>${renderHumanQaBadge(s)}</span>
-      <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
+      <span class="review-title">${escHtml(reviewDisplayTitle(s) || 'Untitled')}</span>
       <span class="review-meta">${escHtml(meta)}</span>
       ${reviewBlockerBadgesHtml(s)}
       ${hook ? `<span class="review-hook">${escHtml(hook)}</span>` : ''}
@@ -8504,7 +8592,7 @@ function renderCardGroup(group) {
           </div>
           ${dateChip}
         </div>
-        <h2 class="shot-title">${escHtml(s.title)}</h2>
+        <h2 class="shot-title">${escHtml(reviewDisplayTitle(s))}</h2>
         ${editBadgeHtml(s.id)}
         ${renderHumanQaBadge(s)}
         ${renderStatusRail(s.status)}
@@ -9425,7 +9513,7 @@ function renderPrompter() {
     : '';
   root.innerHTML = `<div id="prompter" class="${st.mirror ? 'is-mirror' : ''}${st.notes ? ' has-notes' : ''}${showRef ? ' has-ref' : ''}${showRes ? ' has-res' : ''}${editing ? ' is-editing' : ''}${showQa ? ' has-qa' : ''}" role="dialog" aria-modal="true" aria-label="${showQa ? (qaPhase === 'end' ? 'Finish film brain check' : 'Start film brain check') : (editing ? 'Edit script' : 'Teleprompter')}">
     <div class="pr-top">
-      <div class="pr-title">${escHtml(s.title)}</div>
+      <div class="pr-title">${escHtml(reviewDisplayTitle(s))}</div>
       ${editBtn}
       ${readTools}
       <button type="button" onclick="window.closePrompter()">Close</button>
@@ -11292,7 +11380,7 @@ function prepReadBodyHtml(s) {
   return ''
     + '<p class="eyebrow">Read + stamp · Admin only</p>'
     + (previous ? '<p class="review-previous-kicker">Previous</p>' : '')
-    + '<h2 id="prep-title">' + escHtml(s.title || 'Script') + '</h2>'
+    + '<h2 id="prep-title">' + escHtml(reviewDisplayTitle(s) || 'Script') + '</h2>'
     + '<div class="review-head"><p class="prep-lead">' + escHtml(who) + '</p>' + res + '</div>'
     + reviewReferenceHtml(s)
     + ((typeof reviewCaptionFlag === 'function' && reviewCaptionFlag(s)) ? '<p class="review-flag">' + escHtml(reviewCaptionFlag(s)) + '</p>' : '')

@@ -1138,6 +1138,37 @@ body.modal-open { overflow: hidden; }
 .prep-stamp .qa-pin .qa-list { margin: 0 0 8px; gap: 2px; }
 .prep-stamp .qa-hint { margin: 0 0 8px; font-size: 12px; line-height: 1.3; color: #bdbdbd; font-weight: 500; }
 .prep-stamp .qa-note-fold { margin-top: 4px; }
+.prep-stamp.is-docked {
+  flex: none;
+  max-height: none;
+  overflow: visible;
+  margin: 28px 0 0;
+  background: transparent;
+  border-top: 0;
+  padding: 0;
+}
+.prep-stamp.is-docked .qa-gate,
+.prep-stamp.is-docked .qa-gate.is-compact,
+.prep-stamp.is-docked .qa-gate.is-compact.is-done {
+  display: block;
+  max-height: none;
+  overflow: visible;
+}
+.prep-stamp.is-docked .qa-body,
+.prep-stamp.is-docked .qa-pin {
+  overflow: visible;
+  max-height: none;
+  flex: none;
+}
+.prep-stamp.is-docked .qa-check span,
+.prep-stamp.is-docked .qa-hint,
+.prep-stamp.is-docked .qa-lead,
+.prep-stamp.is-docked .qa-fold > summary {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.prep-stamp.is-docked .qa-go { position: static; }
 .review-next {
   width: 100%; min-height: 48px; margin: 8px 0 0; padding: 0 14px;
   background: #fff; color: #171717; border: 1px solid #d8d8d8;
@@ -3134,7 +3165,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.18';
+const APP_VERSION = '2026.10.28.19';
 (function () {
   try {
     if (typeof location === 'undefined' || !location) return;
@@ -3159,6 +3190,18 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.19',
+    date: 'November 3, 2026',
+    title: 'Spoken CTA, readable brain check',
+    items: [
+      'The CTA on Read, the session, the client view, and Full screen is the spoken line. Ops notes, stamp notes, and arrow routing stay stored and stay off the screen.',
+      'The Cristian brain check sits under the script instead of covering it. The full script stays readable, and Continue stays at the end of the check.',
+    ],
+    steps: [
+      'Open Andrew R3. The CTA reads Comment SAAS. Scroll and the brain check is under the script, with every line visible.',
+    ],
+  },
   {
     version: '2026.10.28.18',
     date: 'November 3, 2026',
@@ -5818,8 +5861,8 @@ function reviewSpokenScript(s) {
     let text = asText(sec.text).trim();
     if (!text || text === 'No script on this card.') return '';
     if (sec.kind === 'cta') {
-      text = text.split(/\s+\|\s+Caption\s*:/i)[0].replace(/\s*\([^)]*ops locked[^)]*\)/ig, '').trim();
-      if (!text || /ops locked|cristian stamp|caption\s*:/i.test(text)) return '';
+      text = spokenCta(text);
+      if (!text || /^no spoken cta\b/i.test(text)) return '';
     }
     return text;
   }).filter(Boolean).join('\n\n');
@@ -8301,14 +8344,16 @@ function renderOnScreen(s) {
 }
 
 function renderCtaBlock(cta) {
-  const raw = asText(cta).trim();
-  if (!raw) return '';
-  if (/^(none|clean|no cta)\b/i.test(raw) && raw.length < 48) {
+  const stored = asText(cta).trim();
+  if (!stored) return '';
+  const raw = spokenCta(stored);
+  if (!raw || (/^(none|clean|no cta)\b/i.test(raw) && raw.length < 64)) {
     return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="shot-intro">No spoken CTA. End on the last line.</p></section>`;
   }
   const comment = raw.match(/^\s*comment\s+(\S+)/i);
   if (comment) {
-    return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="cta-kicker">Comment</p><p class="cta-word">${escHtml(comment[1])}</p><p class="cta-full">${escHtml(raw)}</p></section>`;
+    const rest = raw.replace(/^\s*comment\s+\S+\s*/i, '').trim();
+    return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="cta-kicker">Comment</p><p class="cta-word">${escHtml(comment[1])}</p>${rest ? `<p class="cta-full">${escHtml(rest)}</p>` : ''}</section>`;
   }
   return `<section class="area-cta"><div class="eyebrow block-label">Call to action</div><p class="cta-line">${escHtml(raw)}</p></section>`;
 }
@@ -8591,6 +8636,33 @@ function spokenHookOnly(s) {
 function spokenHook(s) {
   return spokenHookOnly(s);
 }
+function spokenCta(value) {
+  let text = cleanTeleprompterHook(asText(value)).trim();
+  if (!text) return '';
+  const say = text.match(/say\s+["“][^"”]+["”][^[\].]*/i);
+  if (/^\s*caption\s+opens\b/i.test(text) && say) {
+    text = say[0].trim();
+  } else {
+    const arrow = text.search(/\s*(?:→|->)\s*/);
+    if (arrow >= 0) text = text.slice(0, arrow);
+    const pipe = text.search(/\s+\|\s+/);
+    if (pipe >= 0) text = text.slice(0, pipe);
+    let prev = '';
+    while (prev !== text) {
+      prev = text;
+      text = text.replace(/\s*\[[^\]]*\]/g, ' ');
+      text = text.replace(/\s*\([^)]*\)/g, ' ');
+    }
+    text = text.replace(/\s*(?:PROPOSED\b|Alts\b|Keyword to confirm\b|Soft disqualify\b|Caption structure\b|Caption opens\b|keyword magnet\b|Alt\b)[\s\S]*$/i, '');
+    text = text.replace(/^\s*caption\s*:\s*/i, '');
+    text = text.replace(/\s*[—–-]+\s*$/g, '');
+  }
+  const wrapped = text.match(/^\s*["“]([\s\S]*?)["”]\s*$/);
+  if (wrapped && wrapped[1].trim()) text = wrapped[1].trim();
+  text = text.replace(/[ \t]{2,}/g, ' ').replace(/\s+([.!?])/g, '$1').trim();
+  text = text.replace(/[:;,\s]+$/g, '').trim();
+  return text;
+}
 function parseBeats(script) {
   const text = asText(script).trim();
   if (!text) return [];
@@ -8673,7 +8745,7 @@ function scriptFlow(s) {
     else if (b.time) label = 'Body · ' + b.time;
     sections.push({ kind: 'beat', label: label, text: b.text, time: b.time || '' });
   });
-  const ctaRaw = cleanTeleprompterHook(asText(s && s.cta).trim());
+  const ctaRaw = spokenCta(s && s.cta);
   if (ctaRaw) {
     const clean = /^(none|clean|no cta)\b/i.test(ctaRaw) && ctaRaw.length < 64;
     const text = clean ? 'No spoken CTA. End on the last line.' : ctaRaw;
@@ -9196,7 +9268,7 @@ function prompterHtml(s) {
     const rest = model.rest ? flowTextHtml(model.rest) : '';
     return `<section class="pr-sec" data-flow="0"><div class="pr-label">Hook</div>${hook ? flowTextHtml(hook) : ''}${model.intro ? flowTextHtml(model.intro) : ''}</section>
       <section class="pr-sec" data-flow="1"><div class="pr-label">Body</div>${questions}${rest}</section>`
-      + (asText(s.cta).trim() ? `<section class="pr-sec" data-flow="2"><div class="pr-label">CTA</div>${flowTextHtml(asText(s.cta))}</section>` : '');
+      + (spokenCta(s.cta) ? `<section class="pr-sec" data-flow="2"><div class="pr-label">CTA</div>${flowTextHtml(spokenCta(s.cta))}</section>` : '');
   }
   return scriptFlow(s).map((sec, i) => `
     <section class="pr-sec${sec.kind === 'clip' ? ' is-clip' : ''}" data-flow="${i}">
@@ -9207,7 +9279,7 @@ function prompterHtml(s) {
 function prompterChips(s) {
   const model = scriptReadModel(s.full_script);
   const labels = model.mode === 'questions'
-    ? ['Hook', 'Body'].concat(asText(s.cta).trim() ? ['CTA'] : [])
+    ? ['Hook', 'Body'].concat(spokenCta(s.cta) ? ['CTA'] : [])
     : scriptFlow(s).map(sec => sec.label);
   const jumps = labels.map((label, i) => `<button type="button" class="pr-jump" onclick="window.prompterJump(${i})">${escHtml(label)}</button>`).join('');
   const skims = prompterSkimStops(s).map(seconds =>
@@ -10098,7 +10170,8 @@ function prepModel(s) {
     ];
   }
   const onCamera = pullLabeled(s.editor_notes, ['on camera']);
-  if (asText(s.cta).trim()) addExtra('CTA', s.cta);
+  const spokenLine = spokenCta(s.cta);
+  if (spokenLine && !/^(none|clean|no cta)\b/i.test(spokenLine)) addExtra('CTA', spokenLine);
   Object.keys(fd).forEach(k => {
     if (/^(pacing|framing|format|reference metrics)$/i.test(k)) return;
     if (/^admin audit$/i.test(k)) return;
@@ -11197,7 +11270,7 @@ function prepReadBodyHtml(s) {
   s = s || {};
   const hook = spokenHook(s);
   const body = asText(s.full_script).trim();
-  const cta = asText(s.cta).trim();
+  const cta = spokenCta(s.cta);
   const who = [clientLabel(s.client_slug), asText(s.batch).trim(), s.status || 'Draft'].filter(Boolean).join(' · ');
   const res = reviewHasResources(s)
     ? '<button type="button" class="review-res-btn" onclick="window.toggleReviewResources()">Resources</button>'
@@ -12417,7 +12490,7 @@ function renderPrep() {
   const body = prepStepBody(s, step, showAudit);
   const hint = prepQaHintHtml(s, readStep, showAudit);
   const stamp = readStep
-    ? `<div class="prep-stamp" id="prep-stamp">${renderHumanQaGate(s, 'review')}</div>`
+    ? `<div class="prep-stamp is-docked" id="prep-stamp">${renderHumanQaGate(s, 'review')}</div>`
     : '';
   const bar = readStep ? '' : `<div class="prep-bar">
       <button type="button" class="prep-back" ${step === 0 ? 'disabled' : ''} onclick="window.prepMove(-1)">Back</button>
@@ -12439,8 +12512,7 @@ function renderPrep() {
     <header class="prep-top">${brandLockup('')}<button type="button" class="prep-close" onclick="window.closePrep()">${leaveLabel}</button></header>
     <div class="prep-dots${dotClass}" role="tablist" aria-label="Prep steps">${dots}</div>
     ${readStep ? '' : `<p class="prep-which">${escHtml(model.title)}</p>`}
-    <div class="prep-scroll" id="prep-scroll">${hint}${body}</div>
-    ${stamp}
+    <div class="prep-scroll" id="prep-scroll">${hint}${body}${stamp}</div>
     ${bar}
     ${resSheet}
   </div>`;

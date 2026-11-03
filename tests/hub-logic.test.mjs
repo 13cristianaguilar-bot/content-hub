@@ -27,7 +27,7 @@ const names = [
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken',
-  'teleprompterLabelRest', 'teleprompterLineKind', 'splitTeleprompterMeta', 'cleanTeleprompterHook', 'spokenHookOnly', 'spokenHook',
+  'teleprompterLabelRest', 'teleprompterLineKind', 'splitTeleprompterMeta', 'cleanTeleprompterHook', 'spokenHookOnly', 'spokenHook', 'spokenCta', 'renderCtaBlock',
   'parseBeats', 'peelHook', 'beatName', 'scriptFlow',
   'clockSeconds', 'skimClockLabel', 'prompterSkimStops', 'prompterSkimTarget',
   'parseSetup', 'parseShots', 'parseOnScreen', 'videoInfo',
@@ -226,6 +226,31 @@ assert.strictEqual(flow.filter(s => s.kind === 'hook').length, 1);
 assert.strictEqual(flow[1].label, 'Clip 0:05');
 assert.strictEqual(flow[flow.length - 1].label, 'CTA');
 assert.strictEqual(flow[flow.length - 1].text, 'App Download');
+assert.strictEqual(ctx.spokenCta('Comment SAAS → setup / onboarding hub. (Ops locked Oct 28; Cristian stamp.)'), 'Comment SAAS');
+assert.strictEqual(ctx.spokenCta('Comment SCORE → Buy-in Readiness score + two fixes (~2 min). (Decided Oct 28: SCORE over READY; BUYIN reserved until ManyChat live.)'), 'Comment SCORE');
+assert.strictEqual(ctx.spokenCta('Comment BUYIN [CONFIRM — ManyChat keyword not live] → Buy-in Readiness (~2 min). Alts Cristian may lock: READY | SCORE.'), 'Comment BUYIN');
+assert.strictEqual(ctx.spokenCta('"Are they cooked? Comment below." (engagement only)'), 'Are they cooked? Comment below.');
+assert.strictEqual(ctx.spokenCta('"Screenshot this." (single CTA, no keyword)'), 'Screenshot this.');
+assert.strictEqual(ctx.spokenCta('Caption: Comment SAAS and I\'ll send you the link.'), 'Comment SAAS and I\'ll send you the link.');
+assert.strictEqual(ctx.spokenCta('Follow for more, and I\'ll see you in the next one. | Caption: Comment SAAS and I\'ll send you the link.'), 'Follow for more, and I\'ll see you in the next one.');
+assert.strictEqual(ctx.spokenCta('Comment "NOTES" (proposed). PROPOSED lead magnet: AI Marketing World Notes. Keyword to confirm.'), 'Comment "NOTES".');
+assert.strictEqual(ctx.spokenCta('Comment RICH. I\'ll send you The Rich Life Blueprint (for leading with encouragement).'), 'Comment RICH. I\'ll send you The Rich Life Blueprint.');
+assert.strictEqual(ctx.spokenCta('Comment SYSTEM [CONFIRM ManyChat live] for the Signal System Checklist + Prompt Pack (C05).'), 'Comment SYSTEM for the Signal System Checklist + Prompt Pack.');
+assert.strictEqual(ctx.spokenCta('Follow for more career stops — keyword magnet [CONFIRM Cristian].'), 'Follow for more career stops');
+assert.strictEqual(ctx.spokenCta('Comment FEATURE [CONFIRM keyword]. Alt [CONFIRM]: NEWSLETTER.'), 'Comment FEATURE.');
+assert.strictEqual(ctx.spokenCta('Comment FEATURE [CONFIRM]. Soft disqualify 0-2K on camera.'), 'Comment FEATURE.');
+assert.strictEqual(ctx.spokenCta('Follow for part 2. (Mirrors the reference\'s \'follow to see part 2\'.)'), 'Follow for part 2.');
+assert.strictEqual(ctx.spokenCta('Caption opens "HERE\'S WHAT I DID" then [💬 Say "NOTES" and I\'ll send you my notes!]. PROPOSED lead magnet: notes.'), 'Say "NOTES" and I\'ll send you my notes!');
+assert.strictEqual(ctx.spokenCta('Comment SAAS'), 'Comment SAAS');
+assert.strictEqual(ctx.spokenCta('None — End Clean'), 'None — End Clean');
+const saasCard = ctx.renderCtaBlock('Comment SAAS → setup / onboarding hub. (Ops locked Oct 28; Cristian stamp.)');
+assert.ok(saasCard.includes('SAAS'));
+assert.ok(!/ops locked/i.test(saasCard));
+assert.ok(!saasCard.includes('Cristian stamp'));
+assert.ok(!saasCard.includes('onboarding hub'));
+assert.ok(!saasCard.includes('→'));
+const storedCta = 'Comment SAAS → setup / onboarding hub. (Ops locked Oct 28; Cristian stamp.)';
+assert.strictEqual(ctx.scriptEditValue({ cta: storedCta }, 'cta'), storedCta);
 
 const separate = ctx.scriptFlow({
   hook: 'Keep this first line exactly as written.',
@@ -824,40 +849,40 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.18');
+assert.strictEqual(appVersion, '2026.10.28.19');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.18');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.19');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Needs Review revision/.test(releaseNotes));
-assert.ok(/Previous/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.18', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.18');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.18');
+assert.ok(/spoken line/.test(releaseNotes));
+assert.ok(/brain check/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.19', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.19');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.19');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.18', true, '2026.10.28.18').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.18');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.19', true, '2026.10.28.19').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.19');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2837,6 +2862,14 @@ assert.ok(janFormatHtml.includes('@nolan_killeen'));
 assert.ok(!janFormatHtml.includes('review-title">Growth'));
 const flaggedRead = ctx.prepReadBodyHtml(formatRows.find(s => s.id === 'r3'));
 assert.ok(flaggedRead.includes('hook taken from reference caption — verify against reference video'));
+assert.ok(flaggedRead.includes('Comment SAAS'));
+assert.ok(!/ops locked/i.test(flaggedRead));
+assert.ok(!flaggedRead.includes('Cristian stamp'));
+assert.ok(!flaggedRead.includes('onboarding hub'));
+assert.ok(/prep-scroll" id="prep-scroll">\$\{hint\}\$\{body\}\$\{stamp\}/.test(script));
+assert.ok(script.includes('prep-stamp is-docked'));
+assert.ok(html.includes('.prep-stamp.is-docked'));
+assert.ok(html.includes('max-height: none'));
 const sessionIds = idsOf(ctx.reviewSessionRows(formatRows, 'andrew'));
 assert.strictEqual(sessionIds, 'r1,r7,r8,r3,r9,r4,r10,a1,a3');
 assert.strictEqual(ctx.reviewSessionRows(formatRows, 'jan').length, 7);

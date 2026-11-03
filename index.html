@@ -9,6 +9,8 @@
   <meta name="apple-mobile-web-app-title" content="Content Hub">
   <!-- Android browser chrome color -->
   <meta name="theme-color" content="#fafafa">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
   <title>Content Hub · signals.marketing</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1704,6 +1706,23 @@ body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
 }
 .review-handle { font-size: 14px; font-weight: 650; }
 .review-format-card .hub-player { margin: 8px 14px 0; }
+.repeat-proof { margin: 8px 14px 0; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+.repeat-badge {
+  display: inline-flex; align-items: center; min-height: 22px; padding: 0 8px;
+  border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.01em;
+}
+.repeat-badge.is-repeat { background: #e5f6ea; color: #0d7a32; }
+.repeat-badge.is-one { background: #fff4d6; color: #8a5a00; }
+.repeat-badge.is-pending { background: var(--soft); color: var(--muted); }
+.repeat-note { margin: 0; font-size: 12px; line-height: 1.3; color: var(--muted); }
+.repeat-row { display: flex; gap: 8px; width: 100%; overflow-x: auto; }
+.repeat-thumb {
+  display: flex; flex-direction: column; gap: 2px; width: 54px; flex: 0 0 auto;
+  color: inherit; text-decoration: none;
+}
+.repeat-cover { width: 54px; height: 72px; object-fit: cover; background: #171717; display: block; }
+.repeat-mult { font-size: 11px; font-weight: 700; line-height: 1.2; }
+.repeat-unconfirmed { font-size: 10px; line-height: 1.2; color: var(--muted); }
 .review-script-mini {
   display: block; margin: 4px 0 0; white-space: pre-wrap;
   font: inherit; font-size: 15px; line-height: 1.4; color: var(--ink);
@@ -3052,7 +3071,17 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.14';
+const APP_VERSION = '2026.10.28.15';
+(function () {
+  try {
+    if (typeof location === 'undefined' || !location) return;
+    if (/type=recovery|error_description/.test(location.hash || '')) return;
+    var params = new URLSearchParams(location.search);
+    if (params.get('cv') === APP_VERSION) return;
+    params.set('cv', APP_VERSION);
+    location.replace(location.pathname + '?' + params.toString() + (location.hash || ''));
+  } catch (e) {}
+})();
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -3067,6 +3096,19 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.15',
+    date: 'November 3, 2026',
+    title: 'Review covers load',
+    items: [
+      'Review session cards show the saved cover next to Open on Instagram.',
+      'Each version has a repeat strip: Repeatable, One-off hit, or Repeat proof pending.',
+    ],
+    steps: [
+      'Open Needs your brain check. Pick Andrew. Tap Tips. R1 and R7 show the covers and the repeat strip.',
+      'Tap Jan, then a format. The cover is the saved file.',
+    ],
+  },
   {
     version: '2026.10.28.14',
     date: 'November 3, 2026',
@@ -5626,6 +5668,95 @@ function reviewInlineReelHtml(s) {
   const playable = attachReferenceMedia(Object.assign({}, info), s || {});
   return hubPlayerHtml(playable, { inlineFallback: true });
 }
+function reviewExplicitProof(s) {
+  const member = reviewFormatMember(s);
+  const code = vaultReelShortcode({ reelUrl: asText(s && s.reference_clip) });
+  if (!member || member.client !== 'andrew' || member.group !== 'tips') return null;
+  if (code === 'DeAdWCBS2AV') {
+    return {
+      kind: 'repeat',
+      label: 'Repeatable: 3+ outliers',
+      note: '',
+      reels: [
+        { shortcode: 'De7Kwg_hCLn', outlier: '28.6×' },
+        { shortcode: 'DeuuA22s9kh', outlier: '26.6×' },
+        { shortcode: 'De9hV83syfK', outlier: '3.27×' },
+        { shortcode: 'Dewle2Ss-eQ', outlier: '22.5×', note: 'unconfirmed' },
+        { shortcode: 'DexFXAnskil', outlier: '13.4×', note: 'unconfirmed' },
+      ],
+    };
+  }
+  if (code === 'DYU9NJjDWqa') {
+    return {
+      kind: 'one',
+      label: 'One-off hit',
+      note: 'same tag, structure unconfirmed',
+      reels: [
+        { shortcode: 'Dd-efVyxITU', outlier: '5.2×' },
+        { shortcode: 'Dd-j3DXtSwg', outlier: '5.15×' },
+        { shortcode: 'DdcOVNAN_9J', outlier: '4.7×' },
+      ],
+    };
+  }
+  return null;
+}
+function reviewCatalogProof(s) {
+  const member = reviewFormatMember(s);
+  const code = vaultReelShortcode({ reelUrl: asText(s && s.reference_clip) });
+  const formats = vaultFormatsForSlug(s && s.client_slug);
+  const group = member && member.group;
+  const named = formats.filter(format => format && format.id === group);
+  const pool = named.length ? named : formats;
+  const handle = reviewCreatorHandle(s).replace(/^@/, '').toLowerCase();
+  let person = null;
+  pool.forEach(format => {
+    if (person) return;
+    (format.creators || []).forEach(creator => {
+      if (person) return;
+      const reels = vaultCreatorReels(creator);
+      const byCode = !!(code && reels.some(reel => vaultReelShortcode(reel) === code));
+      const who = asText(creator.handle).replace(/^@/, '').toLowerCase();
+      if (byCode || (handle && who === handle)) person = creator;
+    });
+  });
+  if (!person) return null;
+  const reels = vaultCreatorReels(person);
+  const others = reels.filter(reel => {
+    const id = vaultReelShortcode(reel);
+    return id && id !== code;
+  });
+  if (!others.length) return null;
+  return {
+    kind: 'repeat',
+    label: 'Repeatable: ' + reels.length + ' outliers',
+    note: '',
+    reels: others.slice(0, 5).map(reel => ({
+      shortcode: vaultReelShortcode(reel),
+      outlier: outlierLabel(reel),
+    })),
+  };
+}
+function reviewRepeatStripHtml(s) {
+  const proof = reviewExplicitProof(s) || reviewCatalogProof(s);
+  if (!proof) return '<div class="repeat-proof"><span class="repeat-badge is-pending">Repeat proof pending</span></div>';
+  const cls = proof.kind === 'one' ? 'is-one' : 'is-repeat';
+  const note = proof.note ? '<p class="repeat-note">' + escHtml(proof.note) + '</p>' : '';
+  const thumbs = (proof.reels || []).map(reel => {
+    const id = asText(reel.shortcode).trim();
+    const url = 'https://www.instagram.com/reel/' + id + '/';
+    const src = hubThumbSrc(id);
+    const mark = reel.note ? '<span class="repeat-unconfirmed">' + escHtml(reel.note) + '</span>' : '';
+    return '<a class="repeat-thumb" href="' + escHtml(url) + '" target="_blank" rel="noopener noreferrer">'
+      + vaultCoverImgHtml(src, id, 'repeat-cover', { live: false })
+      + (reel.outlier ? '<span class="repeat-mult">' + escHtml(reel.outlier) + '</span>' : '')
+      + mark
+      + '</a>';
+  }).join('');
+  return '<div class="repeat-proof"><span class="repeat-badge ' + cls + '">' + escHtml(proof.label) + '</span>'
+    + note
+    + (thumbs ? '<div class="repeat-row">' + thumbs + '</div>' : '')
+    + '</div>';
+}
 function reviewSessionRows(rows, client) {
   const out = [];
   reviewFormatGroups(rows, client).forEach(group => {
@@ -5690,6 +5821,7 @@ function renderFormatReviewCard(s, formatLabel) {
       ${approved ? '<span class="review-status">Approved</span>' : `<span class="review-meta">${escHtml(status)}</span>`}
     </div>
     ${reviewInlineReelHtml(s)}
+    ${reviewRepeatStripHtml(s)}
     ${flag ? `<p class="review-flag">${escHtml(flag)}</p>` : ''}
     <button type="button" class="review-hit" onclick="window.openReview('${escHtml(s.id)}')">
       <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
@@ -6219,6 +6351,19 @@ function vaultSavedThumbPath(code) {
   if (!/^[\w.-]{5,}$/.test(short)) return '';
   return 'thumbs/' + short + '.jpg';
 }
+function hubThumbSrc(code) {
+  const path = vaultSavedThumbPath(code);
+  if (!path) return '';
+  const version = (typeof APP_VERSION === 'string' && APP_VERSION) ? APP_VERSION : '';
+  const bust = version ? (path + '?v=' + encodeURIComponent(version)) : path;
+  try {
+    if (typeof location !== 'undefined' && location && location.href) {
+      const base = String(location.href).replace(/[#?].*$/, '').replace(/[^/]*$/, '');
+      if (base) return new URL(bust, base).href;
+    }
+  } catch (e) {}
+  return bust;
+}
 function vaultThumbIsPermanent(stored) {
   const value = asText(stored).trim();
   if (!value) return false;
@@ -6238,8 +6383,9 @@ function vaultPosterSrc(reel) {
   if (info && info.thumb && vaultThumbIsPermanent(info.thumb)) return info.thumb;
   return vaultPosterDataUri('Reel');
 }
-function vaultCoverImgHtml(src, code, className) {
-  const live = vaultIgMediaUrl(code);
+function vaultCoverImgHtml(src, code, className, opts) {
+  opts = opts || {};
+  const live = opts.live === false ? '' : vaultIgMediaUrl(code);
   const svg = vaultPosterDataUri(code || 'Reel');
   const alt = escHtml(code ? ('Reel ' + code) : 'Reel cover');
   const cls = className || 'vault-poster';
@@ -7487,15 +7633,13 @@ function hubPlayerHtml(info, opts) {
   }
   if (!opts.inlineFallback) return '';
   const code = info.kind === 'ig' ? vaultReelShortcode({ reelUrl: info.watch }) : '';
-  const saved = vaultSavedThumbPath(code);
+  const saved = hubThumbSrc(code);
   const src = saved || poster;
-  const img = src ? vaultCoverImgHtml(src, code, 'hub-player-poster') : '';
-  const note = info.kind === 'ig'
-    ? 'No hosted file on this reel. It stays on Instagram.'
-    : 'This reference does not play inside the Hub.';
+  const img = src ? vaultCoverImgHtml(src, code, 'hub-player-poster', { live: false }) : '';
+  const note = info.kind === 'ig' ? '' : 'This reference does not play inside the Hub.';
   return '<div class="hub-player is-fallback' + shape + '">'
     + img
-    + '<p class="hub-player-note">' + escHtml(note) + '</p>'
+    + (note ? '<p class="hub-player-note">' + escHtml(note) + '</p>' : '')
     + open
     + '</div>';
 }

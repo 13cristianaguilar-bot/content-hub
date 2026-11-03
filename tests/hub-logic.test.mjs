@@ -73,14 +73,14 @@ const names = [
   'auditBadge', 'auditRollup', 'auditSection', 'auditRowHtml',
   'gapIdentity', 'auditGapItems', 'batchTopGaps', 'scriptsFromGroups', 'gapSummaryLine', 'batchGapsHtml', 'scriptGapHtml', 'auditBatchStrip',
   'needsBrainCheck', 'reviewQueueRank', 'reviewQueueFor', 'readyQueueFor', 'stampQueueClientRank', 'stampQueueFor', 'stampQueueClients', 'stampQueueRailHtml', 'nextStampId', 'reviewQueueOpts', 'reviewContinueOpts', 'reviewContinueNext', 'reviewNextStampHtml',
-  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewFormatStampRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reviewInlineReelHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml',
+  'reviewActiveClient', 'reviewBatchIsStale', 'reviewFormatMember', 'reviewFormatGroups', 'reviewFormatStampRows', 'reviewSessionRows', 'reviewOutsideRows', 'reviewCreatorHandle', 'reviewReelLabel', 'reviewCaptionFlag', 'reviewSpokenScript', 'reviewInlineReelHtml', 'renderFormatReviewCard', 'renderFormatReviewHtml', 'renderReviewSessionHtml', 'renderReviewFormatVersionsHtml', 'renderReviewPicker',
   'deliveryStatusAction', 'deliveryActionHtml', 'listClientReadyHtml',
   'prepAuditHtml',
   'formatVaultCatalog', 'formatVaultClients', 'formatVaultHandle', 'vaultEmptyRecipeCopy', 'clientHasEmptyVault', 'formatVaultPeopleHtml', 'formatVaultDnaLines', 'formatVaultCreatorLines', 'formatVaultRecipeHtml', 'formatVaultCards', 'vaultReelShortcode', 'vaultReelWatchUrl', 'vaultPosterDataUri', 'vaultIgMediaUrl', 'vaultPosterSrc', 'vaultPosterHtml', 'vaultCardReels', 'vaultDevinJumpHtml', 'formatVaultCardHtml', 'vaultCreatorLane', 'vaultLaneLabel', 'vaultCreatorReels', 'vaultReelRowHtml', 'formatVaultFormatChips', 'formatVaultBrowseHtml', 'renderFormatVaultHtml',
   'dossierBlock', 'linkOrText', 'copyScriptButton', 'renderDossierBody',
   'setLabeledBlock', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
-  'homeSlug', 'sessionLanding', 'unseenReleasesFor',
+  'homeSlug', 'sessionLanding', 'viewingAsClient', 'unseenReleasesFor',
 ];
 const appVersion = (script.match(/const APP_VERSION = '([^']+)'/) || [])[1];
 function extractAssignment(name) {
@@ -131,6 +131,8 @@ const src = [
   extractAssignment('FORMAT_VAULT'),
   'let prepState = null;',
   "var role = 'client';",
+  "var previewSlug = null;",
+  "var reviewClient = '';",
   ...names.map(extract),
 ].join('\n');
 const ctx = {};
@@ -822,44 +824,47 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.11');
+assert.strictEqual(appVersion, '2026.10.28.12');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.11');
+assert.strictEqual(firstUnseen[0].version, '2026.10.28.12');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
+assert.ok(/Review session/.test(releaseNotes));
 assert.ok(/Andrew/.test(releaseNotes));
 assert.ok(/Jan/.test(releaseNotes));
 assert.ok(/Tips/.test(releaseNotes));
 assert.ok(/Candace/.test(releaseNotes));
+assert.ok(/formats you chose/i.test(releaseNotes));
+assert.ok(/Approved/.test(releaseNotes));
 assert.ok(/Older Needs Review/.test(releaseNotes));
-assert.ok(/reference caption/.test(releaseNotes));
 assert.ok(/Nothing is deleted/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.11');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.12', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.12');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.12');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', true, '2026.10.28.11').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.11');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.12', true, '2026.10.28.12').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.12');
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 
@@ -2386,7 +2391,7 @@ assert.ok(/humanQaContinueWarn/.test(submitSrc));
 assert.ok(/window\.confirm/.test(submitSrc));
 assert.ok(/advanceReview\(id, \{ stamped: false \}\)/.test(submitSrc));
 assert.ok(/btn\.disabled = false/.test(script.slice(script.indexOf('window.syncQaAccept ='), script.indexOf('window.toggleReviewResources ='))));
-assert.ok(script.includes('Stamp Queue Mode'));
+assert.ok(!script.includes('Stamp Queue Mode'));
 assert.strictEqual(ctx.prompterShouldBlockClose(signedScript), false);
 assert.strictEqual(ctx.prepStampBlocksTabs(), false);
 assert.strictEqual(ctx.humanQaNotesOk('looks fine'), false);
@@ -2766,10 +2771,76 @@ assert.ok(janFormatHtml.includes('@nolan_killeen'));
 assert.ok(!janFormatHtml.includes('review-title">Growth'));
 const flaggedRead = ctx.prepReadBodyHtml(formatRows.find(s => s.id === 'r3'));
 assert.ok(flaggedRead.includes('hook taken from reference caption — verify against reference video'));
-assert.ok(script.includes("'andrew', 'Andrew'"));
-assert.ok(script.includes("'jan', 'Jan'"));
-assert.ok(script.includes('All current'));
+const sessionIds = idsOf(ctx.reviewSessionRows(formatRows, 'andrew'));
+assert.strictEqual(sessionIds, 'r1,r7,r8,r3,r9,r4,r10,a1,a3');
+assert.strictEqual(ctx.reviewSessionRows(formatRows, 'jan').length, 7);
+const outside = idsOf(ctx.reviewOutsideRows(formatRows, 'andrew'));
+assert.ok(outside.split(',').includes('r2'));
+assert.ok(outside.split(',').includes('r5'));
+assert.ok(outside.split(',').includes('a2'));
+assert.ok(outside.split(',').includes('stale'));
+assert.ok(outside.split(',').includes('conf'));
+assert.ok(!outside.split(',').includes('r1'));
+assert.ok(!idsOf(ctx.reviewOutsideRows(formatRows, 'jan')).split(',').includes('candace'));
+const sessionHtml = ctx.renderReviewSessionHtml(formatRows, 'andrew');
+assert.ok(sessionHtml.includes('Formats you chose + Nolan'));
+assert.ok(sessionHtml.includes('9 scripts in this session'));
+assert.ok(sessionHtml.includes('>Tips<'));
+assert.ok(sessionHtml.includes('>Visual<'));
+assert.ok(sessionHtml.includes('>Comparison<'));
+assert.ok(sessionHtml.includes('>Transformations<'));
+assert.ok(sessionHtml.includes('>Nolan<'));
+assert.ok(sessionHtml.includes('>Clones<'));
+assert.ok(sessionHtml.includes('pending research'));
+assert.ok(sessionHtml.includes("setReviewFormat('tips')"));
+assert.ok(!sessionHtml.includes('Spoken body for r1.'));
+assert.ok(!sessionHtml.includes('Settings first'));
+assert.ok(!sessionHtml.includes('batch-card-n'));
+const tipsHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'andrew', 'tips');
+assert.ok(tipsHtml.includes('Spoken body for r1.'));
+assert.ok(tipsHtml.includes('Spoken body for r7.'));
+assert.ok(!tipsHtml.includes('Spoken body for r8.'));
+assert.ok(!tipsHtml.includes('batch-card-n'));
+assert.ok(tipsHtml.includes('class="hub-player'));
+const nolanHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'andrew', 'nolan');
+assert.ok(nolanHtml.includes('>A1<'));
+assert.ok(nolanHtml.includes('>A3<'));
+assert.ok(!nolanHtml.includes('Three stages'));
+const candaceHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'jan', 'candace');
+assert.ok(candaceHtml.includes('Approved'));
+assert.ok(candaceHtml.includes('Where you stand'));
+const janNolanHtml = ctx.renderReviewFormatVersionsHtml(formatRows, 'jan', 'nolan');
+assert.ok(janNolanHtml.includes('Three questions'));
+assert.ok(janNolanHtml.includes('Lead from peace'));
+assert.ok(janNolanHtml.includes('Clear conversation'));
+const janSessionHtml = ctx.renderReviewSessionHtml(formatRows, 'jan');
+assert.ok(janSessionHtml.includes('7 scripts in this session'));
+assert.ok(janSessionHtml.includes('>Candace<'));
+assert.ok(janSessionHtml.includes('>Pierini<'));
+assert.ok(janSessionHtml.includes('>Lorin<'));
+assert.ok(janSessionHtml.includes('>Nolan<'));
+assert.ok(!janSessionHtml.includes('review-title">Growth'));
+const picker = ctx.renderReviewPicker();
+assert.ok(picker.includes('Andrew George'));
+assert.ok(picker.includes('Jan Zands'));
+assert.ok(picker.includes("setReviewClient('andrew')"));
+ctx.role = 'admin';
+ctx.previewSlug = 'andrew';
+ctx.reviewClient = '';
+assert.strictEqual(ctx.reviewActiveClient(), 'andrew');
+ctx.previewSlug = 'jan';
+assert.strictEqual(ctx.reviewActiveClient(), 'jan');
+ctx.previewSlug = null;
+ctx.reviewClient = 'andrew';
+assert.strictEqual(ctx.reviewActiveClient(), 'andrew');
+ctx.reviewClient = '';
+ctx.role = 'client';
+assert.ok(script.includes('Review session'));
+assert.ok(script.includes('Formats you chose + Nolan'));
 assert.ok(script.includes('Older Needs Review'));
 assert.ok(script.includes('pending research'));
+assert.ok(!script.includes('All current'));
+assert.ok(!script.includes('Stamp Queue Mode'));
+assert.ok(!script.includes('scripts to read and stamp'));
 
 console.log('hub-logic tests passed');

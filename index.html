@@ -1690,9 +1690,29 @@ body.prep-open #toast-root > div { margin-bottom: 0; width: 100%; }
 }
 .dna-chip.is-pass { background: #1f7a3a; }
 .dna-chip.is-fail, .blocker-badge { background: var(--signal); }
-.stamp-rail button, .stamp-queue-toggle {
+.stamp-rail button, .stamp-queue-toggle, .review-filters button {
   min-height: 44px; padding: 0 12px; background: #fff; border: 1px solid var(--line); font-weight: 650;
 }
+.review-filters { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.review-filters button.is-on { background: var(--ink); color: #fff; }
+.review-filters button span { opacity: 0.7; }
+.review-group { margin: 16px 0 4px; }
+.review-group h3 { margin: 0 0 8px; font-size: 15px; letter-spacing: -0.02em; }
+.review-format-top {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  padding: 12px 14px 0;
+}
+.review-handle { font-size: 14px; font-weight: 650; }
+.review-format-card .hub-player { margin: 8px 14px 0; }
+.review-script-mini {
+  display: block; margin: 4px 0 0; white-space: pre-wrap;
+  font: inherit; font-size: 15px; line-height: 1.4; color: var(--ink);
+}
+.review-flag {
+  margin: 8px 14px 0; color: var(--signal); font-size: 13px; font-weight: 650; line-height: 1.35;
+}
+.review-pending { margin: 0 0 8px; color: var(--muted); font-size: 14px; }
+.review-archive { margin-top: 18px; }
 .pr-skim { border-style: dashed; }
 .pr-sec.is-skim { outline: 2px solid var(--signal); }
 
@@ -2612,7 +2632,7 @@ const CLIENT_VIEW_TABS = false;
 
 // Bump this when the What's new popup should show again. It must match
 // the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.10';
+const APP_VERSION = '2026.10.28.11';
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -2627,6 +2647,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.10.28.11',
+    date: 'November 3, 2026',
+    title: 'Andrew and Jan, grouped by format',
+    items: [
+      'Needs your brain check has Andrew and Jan. Andrew is Tips, Visual, Comparison, Transformations, and Nolan. Jan is Candace, Pierini, and Lorin, then Nolan. Each card shows the format, the creator handle, the reference reel, and the spoken script.',
+      'Older Needs Review stays filed. Conference batches past LevelUp, the replaced CORE 10.24 rows, and July–September leftovers stay off the list until you turn Older Needs Review on. Nothing is deleted.',
+      'Andrew R3, R8, and R10 carry a flag: the hook was taken from the reference caption. Check it against the reference video. Nothing is stamped and nothing is marked client-ready.',
+    ],
+    steps: [
+      'Open Needs your brain check. Tap Andrew. Read a card. The reel plays in the Hub when a file is on it. Open on Instagram when it is not.',
+      'Tap Jan. Stamped keepers that still need Mark client-ready sit at the top. Candace, Pierini, Lorin, and Nolan follow.',
+      'Tap Older Needs Review to see the filed rows. Tap it again to hide them.',
+    ],
+  },
   {
     version: '2026.10.28.10',
     date: 'October 28, 2026',
@@ -3236,6 +3271,8 @@ const VIEW_SEGMENTS = ['conference', 'new', 'other'];
 // Admin list lands on the brain-check queue. Batches (Conference / New / Past) stay one tap away.
 let adminLane = 'review';
 let stampQueueMode = false;
+let reviewClient = '';
+let reviewArchive = false;
 let moreOpen = false;
 let modal = null;              // null | 'whats-new' | 'new-scripts'
 let modalPinned = false;      // preview/screenshot lock; real sessions leave this false
@@ -4973,17 +5010,270 @@ function stampQueueRailHtml(rows) {
   if (!buttons) return '';
   return '<div class="stamp-rail" role="list" aria-label="Stamp queue">' + buttons + '</div>';
 }
+function reviewActiveClient() {
+  if (typeof reviewClient === 'undefined') return '';
+  return reviewClient === 'andrew' || reviewClient === 'jan' ? reviewClient : '';
+}
+// Conference work from LevelUp is over. CORE 10.24 was replaced. July–September
+// batches are leftovers. They stay in the database and off the default queue.
+function reviewBatchIsStale(batch) {
+  const raw = asText(batch);
+  const s = raw.toLowerCase();
+  if (!s.trim()) return false;
+  if (isConferenceBatch(raw)) return true;
+  if (/core/.test(s) && /10[./]24/.test(s)) return true;
+  if (/mastermind/.test(s)) return true;
+  if (/batch-0[2-5]/.test(s)) return true;
+  const date = parseBatchDate(raw);
+  if (date) {
+    const month = Number(date.slice(5, 7));
+    if (month >= 7 && month <= 9) return true;
+  }
+  return false;
+}
+function reviewFormatMember(s) {
+  if (!s) return null;
+  const status = s.status || 'Draft';
+  if (status === 'Posted' || status === 'Archived' || status === 'Passed') return null;
+  const slug = vaultSlugKey(s.client_slug);
+  const batch = asText(s.batch);
+  const reel = Number(s.reel_number);
+  if (slug === 'andrew') {
+    const core = /core/i.test(batch) && /10[./]28/.test(batch);
+    const nolan = /nolan/i.test(batch) && /10[./]30/.test(batch);
+    if (core) {
+      const allow = [1, 7, 8, 3, 9, 4, 10];
+      const at = allow.indexOf(reel);
+      if (at < 0) return null;
+      const head = asText(s.format).split(/\s*[·•|]/)[0].trim().toLowerCase();
+      let group = '';
+      if (head.indexOf('tip') === 0) group = 'tips';
+      else if (head.indexOf('visual') === 0) group = 'visual';
+      else if (head.indexOf('comparison') === 0) group = 'comparison';
+      else if (head.indexOf('transform') === 0) group = 'transformations';
+      if (!group) return null;
+      return { client: 'andrew', group: group, order: at };
+    }
+    if (nolan && (reel === 1 || reel === 3)) return { client: 'andrew', group: 'nolan', order: 100 + reel };
+    return null;
+  }
+  if (slug === 'jan') {
+    if (/nolan/i.test(batch) && /10[./]30/.test(batch) && reel >= 1) {
+      return { client: 'jan', group: 'nolan', order: reel };
+    }
+    if (!/final/i.test(batch)) return null;
+    const blob = [s.format, s.title, s.reference_clip, s.editor_notes].join(' ').toLowerCase();
+    let group = '';
+    if (/candace|candasifamabarnes/.test(blob)) group = 'candace';
+    else if (/pierini|edupierinicoach/.test(blob)) group = 'pierini';
+    else if (/lorin|lorinkrenn/.test(blob)) group = 'lorin';
+    if (!group) return null;
+    return { client: 'jan', group: group, order: reel, keeper: true };
+  }
+  return null;
+}
+function reviewFormatGroups(rows, client) {
+  const order = client === 'jan'
+    ? ['candace', 'pierini', 'lorin', 'nolan']
+    : ['tips', 'visual', 'comparison', 'transformations', 'nolan'];
+  const labels = {
+    tips: 'Tips',
+    visual: 'Visual',
+    comparison: 'Comparison',
+    transformations: 'Transformations',
+    nolan: 'Nolan',
+    candace: 'Candace',
+    pierini: 'Pierini',
+    lorin: 'Lorin',
+    clones: 'Clones',
+  };
+  const buckets = {};
+  order.forEach(id => { buckets[id] = []; });
+  (rows || []).forEach(s => {
+    const member = reviewFormatMember(s);
+    if (!member || member.client !== client || !buckets[member.group]) return;
+    buckets[member.group].push(s);
+  });
+  order.forEach(id => {
+    buckets[id].sort((a, b) => reviewFormatMember(a).order - reviewFormatMember(b).order);
+  });
+  const groups = order.map(id => ({ id: id, label: labels[id], rows: buckets[id] }));
+  if (client === 'andrew') groups.push({ id: 'clones', label: 'Clones', rows: [], pending: true });
+  return groups;
+}
+function reviewFormatStampRows(rows, client, opts) {
+  opts = opts || {};
+  const slug = opts.slug || '';
+  const scoped = (rows || []).filter(s => !slug || (s && s.client_slug === slug));
+  const out = [];
+  reviewFormatGroups(scoped, client).forEach(group => {
+    group.rows.forEach(s => { if (needsBrainCheck(s)) out.push(s); });
+  });
+  return out;
+}
+function reviewCreatorHandle(s) {
+  const blob = [s && s.format, s && s.editor_notes, s && s.reference_clip, s && s.title].join('\n');
+  const handles = collectIgHandles(blob);
+  if (handles.length) return '@' + handles[0];
+  const low = blob.toLowerCase();
+  if (low.indexOf('pierini') !== -1) return '@edupierinicoach';
+  if (low.indexOf('candace') !== -1) return '@candasifamabarnes';
+  if (low.indexOf('lorin') !== -1) return '@lorinkrenn';
+  if (low.indexOf('nolan') !== -1) return '@nolan_killeen';
+  return '';
+}
+function reviewReelLabel(s) {
+  const member = reviewFormatMember(s);
+  const n = Number(s && s.reel_number);
+  if (!member || !n) return '';
+  if (member.client === 'andrew' && member.group === 'nolan') return 'A' + n;
+  if (member.group === 'nolan') return String(n);
+  return 'R' + n;
+}
+function reviewCaptionFlag(s) {
+  const member = reviewFormatMember(s);
+  if (!member || member.client !== 'andrew' || member.group === 'nolan') return '';
+  const reel = Number(s && s.reel_number);
+  if (reel !== 3 && reel !== 8 && reel !== 10) return '';
+  if (!/core/i.test(asText(s && s.batch)) || !/10[./]28/.test(asText(s && s.batch))) return '';
+  return 'hook taken from reference caption — verify against reference video';
+}
+function reviewSpokenScript(s) {
+  const sections = scriptFlow(s);
+  return sections.map(sec => {
+    if (!sec || sec.kind === 'clip') return '';
+    let text = asText(sec.text).trim();
+    if (!text || text === 'No script on this card.') return '';
+    if (sec.kind === 'cta') {
+      text = text.split(/\s+\|\s+Caption\s*:/i)[0].replace(/\s*\([^)]*ops locked[^)]*\)/ig, '').trim();
+      if (!text || /ops locked|cristian stamp|caption\s*:/i.test(text)) return '';
+    }
+    return text;
+  }).filter(Boolean).join('\n\n');
+}
+function reviewInlineReelHtml(s) {
+  const info = videoInfo(s && s.reference_clip);
+  if (!info || info.kind === 'text' || !info.watch) return '<p class="review-ref-note">No reference reel on this row.</p>';
+  const playable = attachReferenceMedia(Object.assign({}, info), s || {});
+  return hubPlayerHtml(playable, { inlineFallback: true });
+}
+function reviewArchiveRows() {
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const opts = reviewQueueOpts();
+  const client = reviewActiveClient();
+  function keep(s) {
+    if (!s || !reviewBatchIsStale(s.batch)) return false;
+    if (client && vaultSlugKey(s.client_slug) !== client) return false;
+    return true;
+  }
+  const ready = readyQueueFor(rows, opts).filter(keep);
+  const unsigned = reviewQueueFor(rows, opts).filter(keep);
+  return ready.concat(unsigned);
+}
 function reviewQueueScripts() {
   const rows = typeof scripts !== 'undefined' ? scripts : [];
   const opts = reviewQueueOpts();
-  if (typeof stampQueueMode !== 'undefined' && stampQueueMode) return stampQueueFor(rows, opts);
-  return reviewQueueFor(rows, opts);
+  const client = reviewActiveClient();
+  if (client) return reviewFormatStampRows(rows, client, opts);
+  let list = (typeof stampQueueMode !== 'undefined' && stampQueueMode) ? stampQueueFor(rows, opts) : reviewQueueFor(rows, opts);
+  return list.filter(s => !reviewBatchIsStale(s && s.batch));
 }
 function readyQueueScripts() {
   const rows = typeof scripts !== 'undefined' ? scripts : [];
   const opts = reviewQueueOpts();
-  if (typeof stampQueueMode !== 'undefined' && stampQueueMode) opts.stampClientsOnly = true;
-  return readyQueueFor(rows, opts);
+  if (typeof stampQueueMode !== 'undefined' && stampQueueMode && !reviewActiveClient()) opts.stampClientsOnly = true;
+  let list = readyQueueFor(rows, opts);
+  const client = reviewActiveClient();
+  if (client) {
+    return list.filter(s => {
+      const member = reviewFormatMember(s);
+      return member && member.client === client;
+    });
+  }
+  return list.filter(s => !reviewBatchIsStale(s && s.batch));
+}
+function renderFormatReviewCard(s, formatLabel) {
+  const handle = reviewCreatorHandle(s);
+  const reel = reviewReelLabel(s);
+  const status = s.status || 'Draft';
+  const meta = [reel, status].filter(Boolean).join(' · ');
+  const flag = reviewCaptionFlag(s);
+  const spoken = reviewSpokenScript(s);
+  return `<article class="review-card review-format-card">
+    <div class="review-format-top">
+      <span class="review-format-chip">${escHtml(formatLabel || 'Format')}</span>
+      ${handle ? `<span class="review-handle">${escHtml(handle)}</span>` : ''}
+      ${meta ? `<span class="review-meta">${escHtml(meta)}</span>` : ''}
+    </div>
+    ${reviewInlineReelHtml(s)}
+    ${flag ? `<p class="review-flag">${escHtml(flag)}</p>` : ''}
+    <button type="button" class="review-hit" onclick="window.openReview('${escHtml(s.id)}')">
+      <span class="review-title">${escHtml(s.title || 'Untitled')}</span>
+      ${spoken ? `<span class="review-script-mini">${escHtml(spoken)}</span>` : ''}
+    </button>
+    ${listClientReadyHtml(s)}
+  </article>`;
+}
+function renderFormatReviewHtml(rows, client, readyRows) {
+  const ready = (readyRows || []).filter(s => {
+    const member = reviewFormatMember(s);
+    return member && member.client === client;
+  });
+  const readyIds = {};
+  ready.forEach(s => { if (s && s.id) readyIds[s.id] = true; });
+  const groups = reviewFormatGroups(rows, client).map(group => ({
+    id: group.id,
+    label: group.label,
+    pending: !!group.pending,
+    rows: (group.rows || []).filter(s => !readyIds[s.id]),
+  }));
+  const top = ready.length
+    ? `<section class="review-ready-queue" aria-label="Stamped, not client-ready">
+        <h2 class="review-ready-h">Stamped, not client-ready</h2>
+        <p class="review-lead">${ready.length} script${ready.length === 1 ? '' : 's'} you already signed. Mark client-ready on the row. It does not send.</p>
+        <div class="review-list">${ready.map(s => {
+          const member = reviewFormatMember(s);
+          const hit = groups.filter(group => member && group.id === member.group)[0];
+          return renderFormatReviewCard(s, hit ? hit.label : (member && member.group) || '');
+        }).join('')}</div>
+      </section>`
+    : '';
+  const body = groups.map(group => {
+    if (group.pending && !group.rows.length) {
+      return `<section class="review-group" aria-label="${escHtml(group.label)}">
+        <h3>${escHtml(group.label)}</h3>
+        <p class="review-pending">pending research</p>
+      </section>`;
+    }
+    if (!group.rows.length) return '';
+    return `<section class="review-group" aria-label="${escHtml(group.label)}">
+      <h3>${escHtml(group.label)}</h3>
+      <div class="review-list">${group.rows.map(s => renderFormatReviewCard(s, group.label)).join('')}</div>
+    </section>`;
+  }).join('');
+  return top + body;
+}
+function renderReviewFilters() {
+  const client = reviewActiveClient();
+  const choices = [['', 'All current'], ['andrew', 'Andrew'], ['jan', 'Jan']];
+  const chips = choices.map(([id, label]) => {
+    const on = client === id;
+    return '<button type="button" role="tab" class="' + (on ? 'is-on' : '') + '" aria-selected="' + (on ? 'true' : 'false') + '" onclick="window.setReviewClient(\'' + id + '\')">' + label + '</button>';
+  }).join('');
+  const archiveOn = typeof reviewArchive !== 'undefined' && reviewArchive;
+  const n = reviewArchiveRows().length;
+  const archive = '<button type="button" class="' + (archiveOn ? 'is-on' : '') + '" aria-pressed="' + (archiveOn ? 'true' : 'false') + '" onclick="window.setReviewArchive(' + (archiveOn ? 'false' : 'true') + ')">Older Needs Review' + (n ? ' <span>' + n + '</span>' : '') + '</button>';
+  return '<div class="review-filters" role="tablist" aria-label="Review queue">' + chips + archive + '</div>';
+}
+function renderReviewArchiveHtml() {
+  if (typeof reviewArchive === 'undefined' || !reviewArchive) return '';
+  const rows = reviewArchiveRows();
+  if (!rows.length) return '<section class="review-archive" aria-label="Older Needs Review"><h2 class="review-ready-h">Older Needs Review</h2><p class="review-pending">Nothing filed in this view.</p></section>';
+  return `<section class="review-archive" aria-label="Older Needs Review">
+    <h2 class="review-ready-h">Older Needs Review</h2>
+    <p class="review-lead">Filed. Conference batches past LevelUp, replaced CORE 10.24, and July–September leftovers. Nothing was deleted.</p>
+    <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
+  </section>`;
 }
 function renderReviewCard(s, index) {
   const who = clientLabel(s.client_slug);
@@ -5012,21 +5302,42 @@ function renderReadyQueueHtml(rows) {
 }
 function renderReviewQueue() {
   const rows = reviewQueueScripts();
-  const readyHtml = renderReadyQueueHtml(readyQueueScripts());
+  const readyRows = readyQueueScripts();
+  const readyHtml = renderReadyQueueHtml(readyRows);
   const scoped = viewingAsClient();
   const who = scoped ? clientLabel(previewSlug) : '';
-  const queueOn = typeof stampQueueMode !== 'undefined' && stampQueueMode;
+  const client = reviewActiveClient();
+  const queueOn = typeof stampQueueMode !== 'undefined' && stampQueueMode && !client;
   const toggle = `<button type="button" class="stamp-queue-toggle" aria-pressed="${queueOn ? 'true' : 'false'}" onclick="window.setStampQueueMode(${queueOn ? 'false' : 'true'})">Stamp Queue Mode</button>`;
   const rail = queueOn ? stampQueueRailHtml(rows) : '';
+  const filters = renderReviewFilters();
+  const archive = renderReviewArchiveHtml();
   const links = `<button type="button" class="past-link" onclick="window.showBatches()">Conference and batches</button>
       <button type="button" class="past-link" onclick="window.openFormatVault()">Format Vault</button>`;
+  if (client) {
+    const label = client === 'andrew' ? 'Andrew' : 'Jan';
+    const opts = reviewQueueOpts();
+    const scoped = (typeof scripts !== 'undefined' ? scripts : []).filter(s => !opts.slug || (s && s.client_slug === opts.slug));
+    const n = reviewFormatGroups(scoped, client).reduce((sum, group) => sum + ((group.rows && group.rows.length) || 0), 0);
+    return `<section class="review-queue" aria-label="Needs your brain check">
+      <div class="eyebrow">Needs your brain check</div>
+      <h2 class="review-h">${escHtml(label)} by format</h2>
+      <p class="review-lead">${n} script${n === 1 ? '' : 's'} in this queue. Nothing sends until you choose Send.</p>
+      ${filters}
+      ${renderFormatReviewHtml(scoped, client, readyRows)}
+      ${archive}
+      ${links}
+    </section>`;
+  }
   if (!rows.length) {
     return `<section class="review-queue" aria-label="Needs your brain check">
       <div class="eyebrow">Needs your brain check</div>
       <h2 class="review-h">${readyHtml ? 'Nothing left to stamp' : 'Nothing to stamp'}</h2>
+      ${filters}
       ${toggle}
       <p class="review-empty">${scoped ? 'No unsigned scripts for ' + escHtml(who) + '.' : 'No unsigned scripts across clients.'}</p>
       ${readyHtml}
+      ${archive}
       ${links}
     </section>`;
   }
@@ -5034,10 +5345,12 @@ function renderReviewQueue() {
     <div class="eyebrow">Needs your brain check</div>
     <h2 class="review-h">${rows.length} script${rows.length === 1 ? '' : 's'} to read and stamp</h2>
     <p class="review-lead">${scoped ? escHtml(who) + ' only.' : 'Across clients. One tap opens the script.'} Nothing sends until you choose Send.</p>
+    ${filters}
     ${toggle}
     ${rail}
     <div class="review-list">${rows.map((s, i) => renderReviewCard(s, i)).join('')}</div>
     ${readyHtml}
+    ${archive}
     ${links}
   </section>`;
 }
@@ -5582,7 +5895,7 @@ function renderHelpPage() {
     ${role === 'admin' ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
-      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. After the stamp, Mark client-ready is on that list row and on the admin batch list. It stays off when you are viewing as the client. It stays on Read. It does not send. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Press play in the small player when a file is on the reel. Tap Open on Instagram or a poster when it is not. A reaction script also shows Clip to react to on that row. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
+      <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. After the stamp, Mark client-ready is on that list row and on the admin batch list. It stays off when you are viewing as the client. It stays on Read. It does not send. Tap Andrew or Jan to review by format. Each card shows the format, the creator handle, the reference reel, and the spoken script. Older Needs Review keeps conference batches past LevelUp, replaced CORE 10.24, and July–September leftovers filed until you turn it on. Nothing is deleted. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Press play in the small player when a file is on the reel. Tap Open on Instagram or a poster when it is not. A reaction script also shows Clip to react to on that row. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
@@ -9804,6 +10117,7 @@ function prepReadBodyHtml(s) {
     + '<h2 id="prep-title">' + escHtml(s.title || 'Script') + '</h2>'
     + '<div class="review-head"><p class="prep-lead">' + escHtml(who) + '</p>' + res + '</div>'
     + reviewReferenceHtml(s)
+    + ((typeof reviewCaptionFlag === 'function' && reviewCaptionFlag(s)) ? '<p class="review-flag">' + escHtml(reviewCaptionFlag(s)) + '</p>' : '')
     + '<section class="review-script" aria-label="Full script">'
     + '<h3>Hook</h3>'
     + (hook ? '<p class="review-hook-full">' + escHtml(hook) + '</p>' : '<p class="prep-empty">No hook on this script.</p>')
@@ -11041,12 +11355,16 @@ function reviewContinueOpts() {
 }
 function reviewContinueNext(currentId, rows, opts) {
   opts = opts || {};
-  const list = Array.isArray(rows) ? rows : [];
+  let list = Array.isArray(rows) ? rows : [];
+  const client = (typeof reviewActiveClient === 'function') ? reviewActiveClient() : '';
+  if (client) list = list.filter(s => { const member = reviewFormatMember(s); return member && member.client === client; });
   const current = asText(currentId);
   const readyIds = readyQueueFor(list, opts).map(function (row) { return row.id; });
   const readyNext = nextStampId(readyIds, current, function (id) { return id !== current; });
   if (readyNext) return { id: readyNext, kind: 'ready' };
-  const unsignedRows = opts.stampClientsOnly ? stampQueueFor(list, opts) : reviewQueueFor(list, opts);
+  const unsignedRows = client
+    ? reviewFormatStampRows(list, client, opts)
+    : (opts.stampClientsOnly ? stampQueueFor(list, opts) : reviewQueueFor(list, opts));
   const stampIds = unsignedRows.map(function (row) { return row.id; });
   const stampNext = nextStampId(stampIds, current, function (id) { return id !== current; });
   if (stampNext) return { id: stampNext, kind: 'stamp' };
@@ -11078,6 +11396,14 @@ function openReview(id) {
 window.openReview = openReview;
 window.setStampQueueMode = (on) => {
   stampQueueMode = !!on;
+  renderDash();
+};
+window.setReviewClient = (id) => {
+  reviewClient = id === 'andrew' || id === 'jan' ? id : '';
+  renderDash();
+};
+window.setReviewArchive = (on) => {
+  reviewArchive = !!on;
   renderDash();
 };
 window.syncQaAccept = (el) => {

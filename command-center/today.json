@@ -1,6 +1,65 @@
 {
-  "asOf": "2026-11-03T07:10:00-06:00",
+  "asOf": "2026-11-04T07:05:00-06:00",
   "calls": [
+    {
+      "title": "Cristian x Paul (YouTube Research)",
+      "when": "2026-11-04T09:00:00-06:00",
+      "who": "paulk@kmadison.com",
+      "nextStep": "Moved to 9am CT \u2014 confirm agenda",
+      "source": "calendar"
+    },
+    {
+      "title": "Cristian x Rees",
+      "when": "2026-11-04T12:00:00-06:00",
+      "who": "rees@astragtm.io, jorge@astragtm.io",
+      "nextStep": "New booking \u2014 prep context",
+      "source": "calendar"
+    },
+    {
+      "title": "Cristian and Michael Coaching Call",
+      "when": "2026-11-04T17:00:00-06:00",
+      "who": "hrostoski@gmail.com",
+      "nextStep": "Show up / prep notes",
+      "source": "calendar"
+    },
+    {
+      "title": "Steve x Cristian",
+      "when": "2026-11-06T12:00:00-06:00",
+      "who": "slapitka@localhandyman.com",
+      "nextStep": "New booking \u2014 prep context",
+      "source": "calendar"
+    },
+    {
+      "title": "Cristian and Michael Coaching Call",
+      "when": "2026-11-11T17:00:00-06:00",
+      "who": "hrostoski@gmail.com",
+      "nextStep": "Weekly coaching",
+      "source": "calendar"
+    },
+    {
+      "title": "Core model + belief-based marketing (Impromptu Call)",
+      "when": "2026-11-03",
+      "who": null,
+      "nextStep": "Record interviews w/ female patients re: beauty/confidence/self-care; then draft 3-word promise, build model, test content",
+      "source": "fathom",
+      "url": "https://fathom.video/calls/887901710"
+    },
+    {
+      "title": "Personal growth doc review (Impromptu Call)",
+      "when": "2026-11-03",
+      "who": null,
+      "nextStep": "Rewrite the growth doc bolder; place key excerpts as daily reminders",
+      "source": "fathom",
+      "url": "https://fathom.video/calls/887872969"
+    },
+    {
+      "title": "Impromptu Call",
+      "when": "2026-11-03",
+      "who": null,
+      "nextStep": "No Fathom summary yet",
+      "source": "fathom",
+      "url": "https://fathom.video/calls/887879551"
+    },
     {
       "title": "Cristian X James | 1.1",
       "when": "2026-11-02T11:00:00-06:00",
@@ -16,27 +75,6 @@
       "nextStep": "Review Steve's match poster; send calendar link with dates so he picks a time ~2 weeks out (brain dump starts mid-January)",
       "source": "fathom",
       "url": "https://fathom.video/calls/886093186"
-    },
-    {
-      "title": "Cristian x Paul (YouTube Research)",
-      "when": "2026-11-04T10:00:00-06:00",
-      "who": "paulk@kmadison.com",
-      "nextStep": "Confirm agenda",
-      "source": "calendar"
-    },
-    {
-      "title": "Cristian x Rees",
-      "when": "2026-11-04T12:00:00-06:00",
-      "who": "rees@astragtm.io",
-      "nextStep": "New booking — prep context",
-      "source": "calendar"
-    },
-    {
-      "title": "Cristian and Michael Coaching Call",
-      "when": "2026-11-04T17:00:00-06:00",
-      "who": "hrostoski@gmail.com",
-      "nextStep": "Show up / prep notes",
-      "source": "calendar"
     },
     {
       "title": "RichLife app ad review + script process (Impromptu Zoom)",
@@ -55,14 +93,6 @@
       "url": "https://fathom.video/calls/880410461"
     },
     {
-      "title": "Impromptu Call (niche outreach coaching)",
-      "when": "2026-10-27",
-      "who": null,
-      "nextStep": "Review Fathom takeaways",
-      "source": "fathom",
-      "url": "https://fathom.video/calls/878214353"
-    },
-    {
       "title": "Jackson x Cristian (content strategy / retainer talk)",
       "when": "2026-10-21",
       "who": "Jackson",
@@ -75,14 +105,14 @@
     {
       "to": "Gloria Barrera <gloria.barrera@lawhafa.org>",
       "subject": "Cristian Agui",
-      "intent": "Stale draft in Gmail — mom lawyer thread? Confirm if still needed",
+      "intent": "Stale draft in Gmail \u2014 mom lawyer thread? Confirm if still needed",
       "status": "draft",
       "source": "gmail"
     },
     {
       "to": "info@support.aimarketingworld.co",
       "subject": "Re: FW: check in on Cristian Aguilar",
-      "intent": "Stale AIMW draft — confirm keep or delete",
+      "intent": "Stale AIMW draft \u2014 confirm keep or delete",
       "status": "draft",
       "source": "gmail"
     }
@@ -103,6 +133,6 @@
       "tools-spend-sheet"
     ],
     "calendarBookedNotHabits": "Filtered out Reading/Wake/Church/2 Before Noon habits; kept 1:1 and named meetings.",
-    "lastIngestDelta": "Nov 3: new booking Cristian x Rees (Nov 4 12pm CT, rees@astragtm.io). James 1:1 (Nov 2) recorded in Fathom with action items. New Fathom: Poison Ivy Expert/Steve strategy call (Nov 2). Ryan Encinas (Nov 1) dropped as past. No new Gmail drafts."
+    "lastIngestDelta": "Nov 4: Paul (YouTube Research) moved to 9am CT today; Rees call now also includes jorge@astragtm.io; new booking Steve x Cristian Nov 6 12pm CT (slapitka@localhandyman.com); Michael coaching Nov 11 5pm CT now in window. Three new Fathom impromptu calls Nov 3. No new Gmail drafts."
   }
 }

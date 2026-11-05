@@ -203,6 +203,23 @@ Or: **Table Editor** → `scripts` table → **+ Insert row** (manual one at a t
 
 ---
 
+## Preview as client
+
+The admin screen stays the admin screen. Needs your brain check, Read + stamp, Human QA, Mark client-ready, Format Vault, and the other stamp tools do not change.
+
+**See what they see** is a separate option. It stays off until an admin opens it.
+
+1. On the admin screen, open **View a client**.
+2. Next to that client, tap **See what they see**. If you are already in their admin workspace, the same button is on the Viewing as banner.
+3. The film list and Film prep match that client's own login: Conference, New to film, and Other/Past, then Reference, Notes, and Film. Read + stamp and Human QA are not on this screen.
+4. A banner says **Viewing as [name]** with **Exit**. Exit returns to the full admin screen.
+
+**Their scripts, prep, and edits** is still the admin workspace for that client. It keeps the stamp tools.
+
+This does not change Supabase auth or anyone's password. It only changes what the admin screen draws. The page version is `2026.11.05.2`, so GitHub Pages loads the new file instead of a cached copy.
+
+---
+
 ## Updating the app
 
 Edit `index.html` locally → then:

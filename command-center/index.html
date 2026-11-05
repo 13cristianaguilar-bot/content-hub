@@ -740,7 +740,7 @@
           when: asText(row.when, 80).trim(),
           who: asText(row.who, 160).trim(),
           nextStep: asText(row.nextStep, 240).trim(),
-          source: row.source === 'calendar' || row.source === 'fathom' ? row.source : '',
+          source: row.source === 'calendar' || row.source === 'fathom' || row.source === 'calendar+fathom' ? row.source : '',
           url: safeUrl(row.url)
         };
         if (item.title || item.when || item.who || item.nextStep || item.url) out.calls.push(item);
@@ -789,6 +789,7 @@
   function sourceLabel(src) {
     if (src === 'calendar') return 'Calendar';
     if (src === 'fathom') return 'Fathom';
+    if (src === 'calendar+fathom') return 'Calendar · Fathom';
     if (src === 'gmail') return 'Gmail';
     return '';
   }
@@ -912,7 +913,7 @@
    * Calendar, Fathom, and Gmail. Fetch on load. Do not invent rows.
    * {
    *   "asOf": "ISO Chicago",
-   *   "calls": [{ "title": "", "when": "", "who": "", "nextStep": "", "source": "calendar|fathom", "url": "https:// optional, fathom only" }],
+   *   "calls": [{ "title": "", "when": "", "who": "", "nextStep": "", "source": "calendar|fathom|calendar+fathom", "url": "https:// optional" }],
    *   "emails": [{ "to": "", "subject": "", "intent": "", "status": "draft|needs-send", "source": "gmail" }],
    *   "podcast": { "guest": "", "status": "", "nextAction": "" } | null,
    *   "dmBridge": null

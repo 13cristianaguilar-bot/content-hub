@@ -151,6 +151,28 @@ Send each client:
 
 They'll only see their own scripts. You see everyone's.
 
+Sign in once on a phone. Closing the tab and opening the Hub link again stays signed in. The password is still required the first time on that phone or browser. There is no "remember me" checkbox — staying signed in is the default.
+
+### If a phone still asks for the password every visit
+
+The app saves the session in `localStorage` (not `sessionStorage`) under `sb-udkbnlpnfyjuwlstfxhr-auth-token`, with `persistSession` and `autoRefreshToken` on. Checked against the live project on November 5, 2026: active sessions have no `not_after`, so nothing on the server is expiring them early. Confirm these in the dashboard anyway if phones start dropping sessions after this ships:
+
+Supabase → **Authentication** → **Sessions** (`/dashboard/project/udkbnlpnfyjuwlstfxhr/auth/sessions`):
+
+| Setting | What to use | Why |
+|---|---|---|
+| Time-box user sessions | **0** (never) or at least 30 days | A short time-box forces a password again even when the phone still has the refresh token. |
+| Inactivity timeout | **0** (never) or at least 30 days | A phone that isn't opened within the window is signed out on the next visit. |
+| Single session per user | **Off** | Signing in on a laptop revokes the phone. |
+| Refresh token reuse interval | Leave at **10 seconds**. Raise to **60** only if a double page-load still signs people out. | Covers a refresh whose response was lost. Don't turn reuse detection off. |
+
+JWT expiry (access token) is separate: **Project Settings → JWT Keys → Legacy JWT Secret**, or Authentication settings. The default **3600 seconds (1 hour)** is right. The phone refreshes it in the background. Don't set it under 5 minutes — that makes refresh fail more often and looks like a logout. Raising it does not keep anyone signed in longer than the refresh token does.
+
+Two limits the app cannot remove:
+
+- **Safari deletes script-writable storage** (localStorage included) after about 7 days of Safari use with no tap or click on this site. Opening the Hub and using it resets that clock. A phone that doesn't open the Hub for a week may have to sign in again. That is an iOS rule, not a JWT setting.
+- **WhatsApp's in-app browser** often keeps a separate, empty store from Safari. A session saved inside WhatsApp can vanish when that browser is dismissed, and it is not the Safari session. Use **Open in Safari** (or Chrome) for the link that should stay signed in. Saved-password autofill is there for the case iOS still asks.
+
 ---
 
 ## Adding Andrew's Batch-02 scripts

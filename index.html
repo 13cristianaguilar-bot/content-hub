@@ -399,6 +399,9 @@ body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
 .signout-btn {
   min-height: 44px; padding: 0 10px; background: transparent; border: 0; color: var(--muted); font-size: 13px; font-weight: 600;
 }
+.auth-stay {
+  margin: 14px 0 0; text-align: center; font-size: 13px; line-height: 1.4; color: var(--muted);
+}
 .icon-btn {
   width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center;
   background: transparent; border: 1px solid var(--line); color: var(--ink); flex-shrink: 0;
@@ -1913,7 +1916,88 @@ const authUrlParams = new URLSearchParams(window.location.hash.replace(/^#/, '')
 let passwordRecoveryPending = authUrlParams.get('type') === 'recovery';
 let authLinkError = authUrlParams.get('error_description');
 
-const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Bump when What's new should show again. Must match RELEASES[0].version.
+// Defined here, not beside RELEASES, because the cache-bust below has to run
+// before the auth client exists.
+const APP_VERSION = '2026.11.05.1';
+
+// Opening the shared Hub link (no ?cv=) used to build the auth client and then
+// location.replace() to add ?cv=. On a phone that second navigation can refresh
+// the access token on the way out and drop the rotated refresh token, so the
+// next open looks signed out. A document that is about to navigate must not
+// touch auth storage. Recovery links are left alone so their one-time token
+// is still in the URL when the client starts.
+let hubLeavingForCacheBust = false;
+(function () {
+  try {
+    if (typeof location === 'undefined' || !location) return;
+    const authCallback = (location.hash || '') + '&' + (location.search || '');
+    if (/type=recovery|error_description|access_token=|code=/.test(authCallback)) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('cv') === APP_VERSION) return;
+    params.set('cv', APP_VERSION);
+    hubLeavingForCacheBust = true;
+    location.replace(location.pathname + '?' + params.toString() + (location.hash || ''));
+  } catch (e) {}
+})();
+
+// Same key supabase-js derives from the project URL (`sb-<ref>-auth-token`).
+// Explicit so a CDN upgrade cannot pick a new key and sign every phone out.
+// Do not rename — renaming orphans the saved session.
+const HUB_AUTH_STORAGE_KEY = 'sb-udkbnlpnfyjuwlstfxhr-auth-token';
+const hubAuthMemory = Object.create(null);
+
+function hubAuthArea() {
+  // localStorage survives a closed tab. sessionStorage does not — never use it
+  // for the session. Private mode and some in-app browsers throw on access;
+  // the memory fallback keeps this page working, but only a real localStorage
+  // write is still there on the next visit.
+  try {
+    if (typeof localStorage === 'undefined' || !localStorage) return null;
+    const probe = '__hub_auth_probe';
+    localStorage.setItem(probe, '1');
+    localStorage.removeItem(probe);
+    return localStorage;
+  } catch (e) {
+    return null;
+  }
+}
+function hubAuthGetItem(area, memory, key) {
+  if (area) {
+    try { return area.getItem(key); } catch (e) {}
+  }
+  if (memory && Object.prototype.hasOwnProperty.call(memory, key)) return memory[key];
+  return null;
+}
+function hubAuthSetItem(area, memory, key, value) {
+  if (memory) memory[key] = value;
+  if (!area) return;
+  try { area.setItem(key, value); } catch (e) {}
+}
+function hubAuthRemoveItem(area, memory, key) {
+  if (memory) delete memory[key];
+  if (!area) return;
+  try { area.removeItem(key); } catch (e) {}
+}
+
+const hubAuthStorage = {
+  getItem: (key) => hubAuthGetItem(hubAuthArea(), hubAuthMemory, key),
+  setItem: (key, value) => hubAuthSetItem(hubAuthArea(), hubAuthMemory, key, value),
+  removeItem: (key) => hubAuthRemoveItem(hubAuthArea(), hubAuthMemory, key),
+};
+
+let sb = null;
+if (!hubLeavingForCacheBust && window.supabase) {
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      storage: hubAuthStorage,
+      storageKey: HUB_AUTH_STORAGE_KEY,
+    },
+  });
+}
 
 // ─────────────────────────────────────────────
 // CLIENT CONFIG (add more clients here)
@@ -3197,19 +3281,9 @@ const FORMAT_VAULT = {
 // before exposing them to clients. Flip to true once validated.
 const CLIENT_VIEW_TABS = false;
 
-// Bump this when the What's new popup should show again. It must match
-// the first entry in RELEASES. Per-user dismissal lives in localStorage.
-const APP_VERSION = '2026.10.28.22';
-(function () {
-  try {
-    if (typeof location === 'undefined' || !location) return;
-    if (/type=recovery|error_description/.test(location.hash || '')) return;
-    var params = new URLSearchParams(location.search);
-    if (params.get('cv') === APP_VERSION) return;
-    params.set('cv', APP_VERSION);
-    location.replace(location.pathname + '?' + params.toString() + (location.hash || ''));
-  } catch (e) {}
-})();
+// APP_VERSION and the ?cv= cache-bust live above createClient(). The bust must
+// finish before the auth client starts, or the redirect can rotate a refresh
+// token and throw the new session away. Per-user dismissal lives in localStorage.
 // Paste a Loom, YouTube, Vimeo, or direct .mp4 URL here to enable the
 // walkthrough video UI in What’s new and Help. Leave empty to hide it.
 const WALKTHROUGH_VIDEO_URL = '';
@@ -3224,6 +3298,18 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.11.05.1',
+    date: 'November 5, 2026',
+    title: 'Stay signed in',
+    items: [
+      'Sign in once on this phone. Closing the tab and opening the Hub link again keeps you signed in.',
+      'The sign-in form works with the phone\'s saved passwords, so iPhone can fill them in.',
+    ],
+    steps: [
+      'Sign in. Close the tab. Open the Hub link again. You should land already signed in.',
+    ],
+  },
   {
     version: '2026.10.28.22',
     date: 'November 3, 2026',
@@ -4309,6 +4395,8 @@ const SESSION_EXPIRED_MSG = "That didn't save — your session may have expired.
 // INIT
 // ─────────────────────────────────────────────
 async function init() {
+  // Cache-bust navigation, or the CDN script failed. The next document owns auth.
+  if (!sb) return;
   try {
     const { data: { session } } = await sb.auth.getSession();
     if (window.__previewLock) return;
@@ -4316,49 +4404,79 @@ async function init() {
     else if (session) await afterLogin(session.user);
     else { passwordRecoveryPending = false; renderLogin(); } // expired/invalid reset link -> plain login
 
-    sb.auth.onAuthStateChange(async (event, session) => {
-      if (window.__previewLock) return;
-      try {
-        // Belt-and-braces with the URL check at the top of the script (PKCE-style links carry
-        // no `type=recovery` in the URL, only this event).
-        if (event === 'PASSWORD_RECOVERY') passwordRecoveryPending = true;
-        if (session && passwordRecoveryPending) {
-          // Hold on the set-new-password screen -- don't let INITIAL_SESSION/SIGNED_IN/
-          // USER_UPDATED drop the user into the dashboard before they've actually set it.
-          // Only render it if it isn't already up, so a stray event can't wipe a half-typed form.
-          if (!document.getElementById('npw')) renderSetNewPassword();
-          return;
-        }
-        if (session) await afterLogin(session.user);
-        else {
-          user = null; role = null; mySlug = null;
-          passwordRecoveryPending = false;
-          // Reset admin-only calendar state so it can't leak into the next person who signs in
-          // on this same tab/device (the app never reloads on auth change -- these are plain
-          // module-level `let`s that would otherwise survive across sessions).
-          calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
-          settingsOpen = false; calShowKey = false;
-          listSearch = ''; expandedSections.clear();
-          hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false; moreOpen = false;
-          openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
-          viewSlug = null; previewSlug = null; viewAsOpen = false; adminLane = 'review';
-          navIndex = 0; previousIndex = 0; flatIndex = 0;
-          navSets = { fresh: [], previous: [], flat: [] };
-          requests = []; requestsLoaded = false; requestsError = '';
-          scriptEdits = []; editsLoaded = false; editsError = ''; editFilter = 'all';
-          document.body.classList.remove('modal-open', 'more-open', 'edit-open');
-          // A pending "Undo" belongs to the session that just ended -- it must not be tappable
-          // (and fail, or worse, act under the next person's session) after sign-out.
-          hideToast();
-          if (window.closeEdit) window.closeEdit(true);
-          if (window.closePrep) window.closePrep(true);
-          if (window.closePrompter) window.closePrompter();
-          unsubscribeLiveChanges(); renderLogin();
-        }
-      } catch (e) { renderError(e); }
+    sb.auth.onAuthStateChange((event, session) => {
+      // Don't load scripts inside this callback. A refresh started from here
+      // can be discarded (supabase-js refreshingDeferred), and the phone then
+      // looks signed out even though sign-in succeeded.
+      setTimeout(() => { applyAuthEvent(event, session); }, 0);
     });
   } catch (e) { renderError(e); }
 }
+
+function applyAuthEvent(event, session) {
+  if (window.__previewLock) return;
+  try {
+    // Belt-and-braces with the URL check at the top of the script (PKCE-style links carry
+    // no `type=recovery` in the URL, only this event).
+    if (event === 'PASSWORD_RECOVERY') passwordRecoveryPending = true;
+    if (session && passwordRecoveryPending) {
+      // Hold on the set-new-password screen -- don't let INITIAL_SESSION/SIGNED_IN/
+      // USER_UPDATED drop the user into the dashboard before they've actually set it.
+      // Only render it if it isn't already up, so a stray event can't wipe a half-typed form.
+      if (!document.getElementById('npw')) renderSetNewPassword();
+      return;
+    }
+    if (session) {
+      afterLogin(session.user).catch((e) => renderError(e));
+      return;
+    }
+    // A missing session on boot is the login screen. A missing session later
+    // is an explicit sign-out or a refresh token the server rejected. Do not
+    // treat a still-present stored session as signed out.
+    if (event !== 'SIGNED_OUT') return;
+    user = null; role = null; mySlug = null;
+    passwordRecoveryPending = false;
+    // Reset admin-only calendar state so it can't leak into the next person who signs in
+    // on this same tab/device (the app never reloads on auth change -- these are plain
+    // module-level `let`s that would otherwise survive across sessions).
+    calSelectedDay = null; calShowUnscheduled = false; viewStatusExact = false;
+    settingsOpen = false; calShowKey = false;
+    listSearch = ''; expandedSections.clear();
+    hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false; moreOpen = false;
+    openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
+    viewSlug = null; previewSlug = null; viewAsOpen = false; adminLane = 'review';
+    navIndex = 0; previousIndex = 0; flatIndex = 0;
+    navSets = { fresh: [], previous: [], flat: [] };
+    requests = []; requestsLoaded = false; requestsError = '';
+    scriptEdits = []; editsLoaded = false; editsError = ''; editFilter = 'all';
+    document.body.classList.remove('modal-open', 'more-open', 'edit-open');
+    // A pending "Undo" belongs to the session that just ended -- it must not be tappable
+    // (and fail, or worse, act under the next person's session) after sign-out.
+    hideToast();
+    if (window.closeEdit) window.closeEdit(true);
+    if (window.closePrep) window.closePrep(true);
+    if (window.closePrompter) window.closePrompter();
+    unsubscribeLiveChanges(); renderLogin();
+  } catch (e) { renderError(e); }
+}
+
+// iOS can restore a frozen page, or hide the tab long enough that the first
+// session read lost a race. If the login form is up and storage still has a
+// session, continue in — don't make them type the password again.
+function resumeStoredSession() {
+  if (!sb || user || passwordRecoveryPending) return;
+  if (!document.getElementById('em')) return;
+  sb.auth.getSession().then(({ data }) => {
+    const session = data && data.session;
+    if (!session || user || passwordRecoveryPending) return;
+    if (!document.getElementById('em')) return;
+    return afterLogin(session.user);
+  }).catch((e) => { console.error(e); });
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') resumeStoredSession();
+});
+window.addEventListener('pageshow', () => { resumeStoredSession(); });
 
 async function afterLogin(u) {
   if (window.__previewLock) return;
@@ -4799,18 +4917,22 @@ function renderLogin() {
         <!-- A real <form> (not loose inputs + an onclick button): Enter now submits from the
              email field too, not just the password field, and iOS/Chrome password managers
              recognise it as a login form and offer to fill/save credentials. -->
-        <form onsubmit="event.preventDefault(); doLogin()" class="auth-panel">
+        <!-- method/action/name/autocomplete are what iOS Safari needs to offer
+             Save Password and autofill. autocomplete="username" is required even
+             though the username is an email address. -->
+        <form method="post" action="" autocomplete="on" onsubmit="event.preventDefault(); doLogin()" class="auth-panel">
           <div id="err" class="hidden text-xs text-red-700 bg-red-50 px-3 py-2 mb-3"></div>
           <div class="mb-3">
             <label for="em">Email</label>
-            <input id="em" type="email" autocomplete="email" placeholder="you@example.com">
+            <input id="em" name="username" type="email" autocomplete="username" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="you@example.com">
           </div>
           <div class="mb-4">
             <label for="pw">Password</label>
-            <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••">
+            <input id="pw" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
           </div>
           <button id="lb" type="submit" class="brand-btn">Sign in</button>
-          <div class="text-center pt-3">
+          <p class="auth-stay">Sign in once — you'll stay signed in on this phone/browser.</p>
+          <div class="text-center pt-1">
             <button id="fpb" type="button" onclick="doForgotPassword()" class="signout-btn">Forgot password?</button>
           </div>
         </form>
@@ -14779,7 +14901,12 @@ window.confirmHumanQaFilm = async (id, phase) => {
 // already IS window.requestTweak, so that assignment replaced the real function with an arrow
 // whose `requestTweak(id)` call resolved back to... itself. Infinite recursion -> RangeError on
 // every Tweak tap, prompt never shown. Top-level function declarations need no window alias.)
-window.doLogout    = () => { unsubscribeLiveChanges(); sb.auth.signOut(); };
+window.doLogout    = () => {
+  unsubscribeLiveChanges();
+  // This phone only. The default global scope revokes every session for the
+  // account, which signed the shared client login out on every other phone.
+  if (sb) sb.auth.signOut({ scope: 'local' });
+};
 
 // Item 1 -- Filters pill (List, admin only). Persisted.
 window.toggleFiltersOpen = () => { filtersOpen = !filtersOpen; lsSetBool('hub_filters_open', filtersOpen); renderDash(); };

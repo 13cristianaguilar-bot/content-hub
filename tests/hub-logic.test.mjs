@@ -81,6 +81,7 @@ const names = [
   'setLabeledBlock', 'scriptEditSession', 'finalScriptEditAllowed', 'finalScriptEditDraft', 'prompterEditHtml', 'scriptEditValue', 'scriptEditDiff', 'editOriginalMap', 'restoreEditValues',
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding', 'viewingAsClient', 'unseenReleasesFor',
+  'hubAuthGetItem', 'hubAuthSetItem', 'hubAuthRemoveItem',
 ];
 const appVersion = (script.match(/const APP_VERSION = '([^']+)'/) || [])[1];
 function extractAssignment(name) {
@@ -849,40 +850,78 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.10.28.22');
+assert.strictEqual(appVersion, '2026.11.05.1');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.10.28.22');
+assert.strictEqual(firstUnseen[0].version, '2026.11.05.1');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Cadence vs reference/.test(releaseNotes));
-assert.ok(/reference length/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.10.28.22');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.10.28.22');
+assert.ok(/signed in/.test(releaseNotes));
+assert.ok(/saved passwords/.test(releaseNotes));
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.05.1');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', true, '2026.10.28.22').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.10.28.22');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', true, '2026.11.05.1').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.05.1');
+assert.ok(script.includes('persistSession: true'));
+assert.ok(script.includes('autoRefreshToken: true'));
+assert.ok(script.includes('storageKey: HUB_AUTH_STORAGE_KEY'));
+assert.ok(script.includes('sb-udkbnlpnfyjuwlstfxhr-auth-token'));
+assert.ok(!/sessionStorage\.(get|set|remove)Item/.test(script));
+const bustAt = script.indexOf('hubLeavingForCacheBust = true');
+const clientAt = script.indexOf('window.supabase.createClient(');
+assert.ok(bustAt > 0 && clientAt > bustAt);
+assert.ok(script.includes('autocomplete="username"'));
+assert.ok(script.includes('autocomplete="current-password"'));
+assert.ok(script.includes('name="username"'));
+assert.ok(script.includes('name="password"'));
+assert.ok(script.includes("Sign in once — you'll stay signed in on this phone/browser."));
+assert.ok(script.includes("signOut({ scope: 'local' })"));
+const mem = Object.create(null);
+const disk = {
+  m: {},
+  getItem(k) { return Object.prototype.hasOwnProperty.call(this.m, k) ? this.m[k] : null; },
+  setItem(k, v) { this.m[k] = v; },
+  removeItem(k) { delete this.m[k]; },
+};
+ctx.hubAuthSetItem(disk, mem, 'sb-udkbnlpnfyjuwlstfxhr-auth-token', '{"refresh_token":"abc"}');
+assert.strictEqual(disk.m['sb-udkbnlpnfyjuwlstfxhr-auth-token'], '{"refresh_token":"abc"}');
+assert.strictEqual(ctx.hubAuthGetItem(disk, mem, 'sb-udkbnlpnfyjuwlstfxhr-auth-token'), '{"refresh_token":"abc"}');
+delete disk.m['sb-udkbnlpnfyjuwlstfxhr-auth-token'];
+assert.strictEqual(ctx.hubAuthGetItem(disk, mem, 'sb-udkbnlpnfyjuwlstfxhr-auth-token'), null);
+const throwing = {
+  getItem() { throw new Error('private'); },
+  setItem() { throw new Error('private'); },
+  removeItem() { throw new Error('private'); },
+};
+const priv = Object.create(null);
+ctx.hubAuthSetItem(throwing, priv, 'k', 'saved');
+assert.strictEqual(ctx.hubAuthGetItem(throwing, priv, 'k'), 'saved');
+ctx.hubAuthRemoveItem(throwing, priv, 'k');
+assert.strictEqual(ctx.hubAuthGetItem(throwing, priv, 'k'), null);
+assert.strictEqual(ctx.hubAuthGetItem(null, priv, 'k'), null);
 assert.ok(script.includes('Replay client onboarding'));
 assert.ok(script.includes('hub_preview_onboarding_seen'));
 

@@ -763,6 +763,12 @@ img, iframe, video, pre { max-width: 100%; }
   border-top: 2px solid var(--signal); padding: 10px 14px; color: var(--ink); font-weight: 650; font-size: 16px;
 }
 .view-as-item small { display: block; margin-top: 2px; font-weight: 500; color: var(--muted); font-size: 13px; }
+.view-as-row { display: flex; flex-direction: column; gap: 8px; }
+.view-as-row .view-as-item { width: 100%; }
+.view-as-preview {
+  width: 100%; min-height: 48px; padding: 8px 14px; background: var(--ink); color: #fff;
+  border: 0; font-weight: 650; font-size: 15px; letter-spacing: -0.02em; text-align: left;
+}
 .past-block { display: flex; flex-direction: column; gap: 18px; max-width: 560px; }
 .past-batch-name { margin: 0; font-size: 14px; font-weight: 650; color: var(--muted); }
 .more-back {
@@ -1919,7 +1925,7 @@ let authLinkError = authUrlParams.get('error_description');
 // Bump when What's new should show again. Must match RELEASES[0].version.
 // Defined here, not beside RELEASES, because the cache-bust below has to run
 // before the auth client exists.
-const APP_VERSION = '2026.11.05.1';
+const APP_VERSION = '2026.11.05.2';
 
 // Opening the shared Hub link (no ?cv=) used to build the auth client and then
 // location.replace() to add ?cv=. On a phone that second navigation can refresh
@@ -3299,6 +3305,19 @@ const FILMING_GUIDE = [
 
 const RELEASES = [
   {
+    version: '2026.11.05.2',
+    date: 'November 5, 2026',
+    title: 'See what the client sees',
+    items: [
+      'Admins can open See what they see. That screen matches the client film list and Film prep.',
+      'The admin review, stamp, and brain check stay on the normal admin screen. Exit on the banner returns there.',
+    ],
+    steps: [
+      'On the admin screen, open View a client and tap See what they see.',
+      'Film opens Reference, Notes, and Film. Exit returns to the full admin screen.',
+    ],
+  },
+  {
     version: '2026.11.05.1',
     date: 'November 5, 2026',
     title: 'Stay signed in',
@@ -4010,6 +4029,10 @@ let scripts  = [];
 let viewSlug = null;   // whose scripts are on screen; never defaults to a client
 let previewSlug = null; // admin is viewing this client's hub; null is their own workspace
 let viewAsOpen = false;
+// Opt-in client-parity preview. Off by default. The admin review, stamp, and
+// brain check stay up until an admin taps See what they see. Does not change
+// role, app_metadata, or the Supabase session.
+let clientParity = false;
 let viewStatus = 'all';
 let viewType = 'all'; // 'all' | 'interview' | 'broll' — default stays all so unlettered scripts stay visible
 let viewMode = 'all'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
@@ -4444,7 +4467,7 @@ function applyAuthEvent(event, session) {
     listSearch = ''; expandedSections.clear();
     hubPage = 'main'; modal = null; modalPinned = false; previousOpen = false; moreOpen = false;
     openedIds = new Set(); freshScriptIds = new Set(); previewMode = false;
-    viewSlug = null; previewSlug = null; viewAsOpen = false; adminLane = 'review';
+    viewSlug = null; previewSlug = null; viewAsOpen = false; clientParity = false; adminLane = 'review';
     navIndex = 0; previousIndex = 0; flatIndex = 0;
     navSets = { fresh: [], previous: [], flat: [] };
     requests = []; requestsLoaded = false; requestsError = '';
@@ -4505,6 +4528,7 @@ async function afterLogin(u) {
     viewSlug = homeSlug(mySlug);
     previewSlug = null;
     viewAsOpen = false;
+    clientParity = false;
     viewMode = 'all';
   }
 
@@ -4533,6 +4557,7 @@ async function afterLogin(u) {
     if (role === 'admin') {
       previewSlug = null;
       viewAsOpen = false;
+      clientParity = false;
       viewSlug = homeSlug(mySlug);
       if (viewSlug && settingOpenOnSignIn === 'last') {
         const saved = loadLastView(u.id);
@@ -6671,13 +6696,13 @@ function renderReviewQueue() {
   </section>`;
 }
 function reviewQueueJumpHtml() {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   const n = reviewQueueScripts().length;
   if (!n) return '';
   return `<button type="button" class="review-jump" onclick="window.showReviewQueue()">Needs your brain check <span>${n}</span></button>`;
 }
 function renderAdminSoftBanner() {
-  if (typeof role === 'undefined' || role !== 'admin' || hubPage !== 'main') return '';
+  if (!uiIsAdmin() || hubPage !== 'main') return '';
   const releases = unseenReleases();
   const fresh = unseenFreshGroups();
   const bits = [];
@@ -6770,6 +6795,10 @@ function emptyHubCopy() {
   return 'No scripts yet.';
 }
 function headerSubtitle() {
+  if (clientParityOn()) {
+    if (viewSlug && CLIENTS[viewSlug]) return CLIENTS[viewSlug].name;
+    return clientLabel(previewSlug);
+  }
   if (role === 'admin' && !previewSlug) return 'Your workspace';
   if (viewingAsClient()) return 'Viewing as ' + (CLIENTS[previewSlug] ? CLIENTS[previewSlug].label : clientLabel(previewSlug));
   if (viewSlug && CLIENTS[viewSlug]) return CLIENTS[viewSlug].name;
@@ -6777,15 +6806,20 @@ function headerSubtitle() {
   return '';
 }
 function renderContextBar() {
+  if (clientParityOn()) {
+    const name = clientLabel(previewSlug);
+    return `<div class="preview-banner is-slim" role="status"><span>Viewing as ${escHtml(name)}</span><button type="button" onclick="window.exitClientPreview()">Exit</button></div>`;
+  }
   if (viewingAsClient()) {
     const name = clientLabel(previewSlug);
-    return `<div class="preview-banner is-slim" role="status"><span>Viewing as ${escHtml(name)}</span><button type="button" class="is-ghost" onclick="window.replayClientOnboarding()">Replay client onboarding</button></div>`;
+    const slug = String(previewSlug || '').replace(/[^a-z0-9_-]/gi, '');
+    return `<div class="preview-banner" role="status"><span>Viewing as ${escHtml(name)}</span><div class="preview-actions"><button type="button" onclick="window.previewAsClient('${slug}')">See what they see</button><button type="button" class="is-ghost" onclick="window.replayClientOnboarding()">Replay client onboarding</button></div></div>`;
   }
   if (role !== 'admin' || hubPage !== 'main' || viewTab !== 'list') return '';
   const own = homeSlug(mySlug);
   const others = Object.keys(CLIENTS).filter(slug => slug !== own);
   const list = viewAsOpen ? `<div class="view-as-list" id="view-as-list">${others.map(slug =>
-    `<button type="button" class="view-as-item" data-view-as="${escHtml(slug)}" onclick="window.setClient('${slug}')">${escHtml(CLIENTS[slug].name)}<small>Their scripts, prep, and edits</small></button>`
+    `<div class="view-as-row"><button type="button" class="view-as-item" data-view-as="${escHtml(slug)}" onclick="window.setClient('${slug}')">${escHtml(CLIENTS[slug].name)}<small>Their scripts, prep, and edits</small></button><button type="button" class="view-as-preview" data-preview-as="${escHtml(slug)}" onclick="window.previewAsClient('${slug}')">See what they see</button></div>`
   ).join('')}</div>` : '';
   return `<div class="view-as" id="view-as"><button type="button" class="view-as-toggle" id="view-as-toggle" aria-expanded="${viewAsOpen ? 'true' : 'false'}" onclick="window.toggleViewAs()">View a client</button>${list}</div>`;
 }
@@ -7220,7 +7254,7 @@ function renderFormatVaultHtml(catalog, slug, formatId) {
     + '</div>';
 }
 function renderFormatVaultPage() {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   return renderFormatVaultHtml(typeof FORMAT_VAULT !== 'undefined' ? FORMAT_VAULT : { clients: [] }, formatVaultFilter, formatVaultFormatId);
 }
 function renderClientJumpBar() {
@@ -7231,7 +7265,7 @@ function renderClientJumpBar() {
     + '</nav>';
 }
 function renderClientResourcesPage() {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   const slug = (typeof previewSlug !== 'undefined' && previewSlug) || (typeof viewSlug !== 'undefined' ? viewSlug : '') || '';
   const html = prompterResourcesHtml({ client_slug: slug, title: clientLabel(slug) }, { role: 'admin', includeAudit: true });
   return '<div class="page-stack">'
@@ -7256,7 +7290,7 @@ function renderHelpPage() {
       </ul>
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openRequests()">Requests and feedback</button>
     </article>
-    ${role === 'admin' ? `<article class="page-card">
+    ${uiIsAdmin() ? `<article class="page-card">
       <div class="eyebrow">Admin</div>
       <h2>Cristian brain check</h2>
       <p>Do not tell a client scripts are ready because the AI said it finished. Open Needs your brain check, read the script, and sign once. That stamp does not send anything and it does not mark the script client-ready. After the stamp, Mark client-ready is on that list row and on the admin batch list. It stays off when you are viewing as the client. It stays on Read. It does not send. Pick Andrew or Jan. The Review session is the formats you chose, plus Nolan. Tap a format to read the versions. Each version shows the creator handle, the reference reel, and the spoken script. Older Needs Review keeps the other rows filed until you turn it on. Nothing is deleted. The reference row names the locked format. When Format Vault has more than one 3× outlier for that creator in the same format, swipe the posters. Press play in the small player when a file is on the reel. Tap Open on Instagram or a poster when it is not. A reaction script also shows Clip to react to on that row. Needs Review and client-ready stay blocked until the four boxes are ticked. The why-note is optional and never blocks. Continue can move on after a warning. If you edit the spoken lines, the stamp goes stale and you sign again. Clients never see this.</p>
@@ -7269,7 +7303,7 @@ function renderHelpPage() {
 function requestsMigrationHint() {
   const missing = /client_requests|schema cache|does not exist|PGRST205|404/i.test(requestsError || '');
   if (!missing) return `<p class="fresh-batch">${escHtml(requestsError)}</p>`;
-  if (role === 'admin') {
+  if (uiIsAdmin()) {
     return `<p>Requests are not on in the database yet. Run <b>migrations/2026-10-23_client_requests.sql</b> in the Supabase SQL editor, then reload.</p>`;
   }
   return `<p>Sending a request is not available yet. Text Cristian and he can turn it on.</p>`;
@@ -7420,7 +7454,7 @@ function renderDashInner() {
   document.body.classList.toggle('modal-open', !!modal && hubPage === 'main');
   document.body.classList.toggle('more-open', moreOpen && role === 'admin' && hubPage === 'main');
 
-  const isAdmin  = role === 'admin';
+  const isAdmin  = uiIsAdmin();
   const clientName = headerSubtitle();
   const clientTabs = isAdmin ? `<nav class="client-tabs" aria-label="Clients">${Object.entries(CLIENTS).map(([slug, c]) =>
     `<button type="button" onclick="setClient('${slug}')" aria-pressed="${viewSlug === slug}"
@@ -8089,6 +8123,7 @@ function explicitPlayableUrl(url) {
   return u;
 }
 function mediaLockOf(s) {
+  if (typeof clientParityOn === 'function' && clientParityOn()) return null;
   const audit = s && s.pipeline_audit;
   if (!audit || typeof audit !== 'object' || Array.isArray(audit)) return null;
   const lock = audit.media_lock || audit.mediaLock;
@@ -8152,7 +8187,7 @@ function referenceHostedFile(s, watch) {
       });
     }
   }
-  const audit = s.pipeline_audit;
+  const audit = (typeof clientParityOn === 'function' && clientParityOn()) ? null : s.pipeline_audit;
   if (audit && typeof audit === 'object' && !Array.isArray(audit)) {
     const rows = [];
     if (Array.isArray(audit.refs)) rows.push.apply(rows, audit.refs);
@@ -8687,7 +8722,7 @@ function renderShotActions(s) {
   const si = STATUS_ORDER.indexOf(s.status);
   const prev = STATUS_ORDER[si - 1];
   const next = STATUS_ORDER[si + 1];
-  const admin = typeof role !== 'undefined' && role === 'admin';
+  const admin = uiIsAdmin();
   const statusBtn = (status, label, cls) => {
     if (!status || status === 'Passed') return '<div></div>';
     const brain = admin && humanQaBlocksStatus(s, status);
@@ -8728,7 +8763,7 @@ function renderCardGroup(group) {
   const groupKey = takeGroupKey(group[0]);
   const idx = hasTakes ? (activeTake[groupKey] ?? 0) % group.length : 0;
   const s = group[idx];
-  const isAdmin = role === 'admin';
+  const isAdmin = uiIsAdmin();
   const isArchived = s.status === 'Archived';
   const groupPlannedDate = groupDate(group);
   const pastDue = isPastDue(group, localTodayStr());
@@ -8793,7 +8828,7 @@ function renderCardGroup(group) {
       </div>
     </div>
     ${canEditScripts() || viewingAsClient() ? `<button type="button" class="shot-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
-    ${typeof role !== 'undefined' && role === 'admin' ? renderHumanQaGate(s, 'card') : ''}
+    ${uiIsAdmin() ? renderHumanQaGate(s, 'card') : ''}
     ${renderShotActions(s)}
     ${renderAdvanced(s, group)}
   </article>`;
@@ -9643,7 +9678,7 @@ function renderPrompter() {
   const qaPhase = prompterShowsFilmQa() && !st.editing ? (st.qaPhase || '') : '';
   const showQa = qaPhase === 'start' || qaPhase === 'end';
   const editing = !!st.editing;
-  const session = { role: role, includeAudit: role === 'admin' };
+  const session = hubUiSession();
   const refs = reviewRefs(s, session);
   const resItems = clientResourceItems(s, session);
   const showRef = prompterCanShowReference({ editing: editing, ref: !!st.ref, refCount: refs.length });
@@ -9781,10 +9816,10 @@ window.openPrompter = (id) => {
     lastTs: 0,
     notes: false,
     player: false,
-    ref: reviewRefs(s, { role: role, includeAudit: role === 'admin' }).length
+    ref: reviewRefs(s, hubUiSession()).length
       ? (prompterIsPhone()
         ? false
-        : lsGetBool(prompterRefKey(), prompterRefPrefersOn({ role: role })))
+        : lsGetBool(prompterRefKey(), prompterRefPrefersOn(hubUiSession())))
       : false,
     resources: false,
     refIndex: 0,
@@ -9975,12 +10010,12 @@ window.prompterNotes = (force) => {
   }
 };
 function prompterRefKey() {
-  return role === 'admin' ? 'hub_pr_ref_admin' : 'hub_pr_ref_client';
+  return uiIsAdmin() ? 'hub_pr_ref_admin' : 'hub_pr_ref_client';
 }
 window.prompterRef = (force) => {
   if (!prompterState) return;
   const s = scripts.find(x => x.id === prompterState.id);
-  const session = { role: role, includeAudit: role === 'admin' };
+  const session = hubUiSession();
   const refs = s ? reviewRefs(s, session) : [];
   if (!refs.length) return;
   prompterState.ref = typeof force === 'boolean' ? force : !prompterState.ref;
@@ -10033,7 +10068,7 @@ window.prompterResources = (force) => {
 window.prompterShowRef = (index) => {
   if (!prompterState) return;
   const s = scripts.find(x => x.id === prompterState.id);
-  const session = { role: role, includeAudit: role === 'admin' };
+  const session = hubUiSession();
   const refs = s ? reviewRefs(s, session) : [];
   const info = refs[index];
   if (!info) return;
@@ -10051,7 +10086,7 @@ window.prompterShowRef = (index) => {
 window.prompterPlayRef = (index) => {
   if (!prompterState) return;
   const s = scripts.find(x => x.id === prompterState.id);
-  const session = { role: role, includeAudit: role === 'admin' };
+  const session = hubUiSession();
   const refs = s ? reviewRefs(s, session) : [];
   const info = refs[index];
   if (!info) return;
@@ -10854,7 +10889,7 @@ function humanQaFilmEndDone(s) {
   return !!(humanQaFilmStartDone(s) && qa && qa.filmEndAt);
 }
 function prompterShowsFilmQa() {
-  return typeof role !== 'undefined' && role === 'admin';
+  return uiIsAdmin();
 }
 function prompterShouldForceStart(s) {
   // The delivery stamp is the one signature. Film and Reference stay open
@@ -10935,7 +10970,7 @@ function currentAuditObject(s) {
   return (unpacked && unpacked.raw) || {};
 }
 function renderHumanQaBadge(s) {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   if (humanQaDeliveryReady(s)) {
     const qa = humanQaFrom(s) || {};
     return `<span class="qa-chip is-yes">Brain check · ${escHtml(qa.by || 'Cristian')}</span>`;
@@ -11072,7 +11107,7 @@ function deliveryActionHtml(s) {
   return lead + '<button type="button" class="qa-send" onclick="moveStatus(\'' + id + '\',\'' + action.status + '\')">' + escHtml(action.label) + '</button>';
 }
 function listClientReadyHtml(s) {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   if (!s || s.status !== 'Needs Review' || !humanQaDeliveryReady(s)) return '';
   const html = deliveryActionHtml(s);
   if (!html) return '';
@@ -11195,7 +11230,7 @@ function renderHumanQaGate(s, surface) {
 // already exist; pipeline_audit (or a legacy admin_audit object) fills the
 // checks Ops records by hand. An empty audit lists every missing check.
 function prepShowsAudit() {
-  return role === 'admin';
+  return uiIsAdmin();
 }
 function prepPlan(showAudit) {
   const labels = showAudit ? ['Read', 'Audit', 'Reference', 'Notes', 'Film'] : ['Reference', 'Notes', 'Film'];
@@ -11633,7 +11668,7 @@ function cadenceMapOf(s) {
   return { beats: beats, ref_total_sec: refTotal, script_est_sec: scriptTotal };
 }
 function cadenceMapVisible() {
-  if (typeof role === 'undefined' || role !== 'admin') return false;
+  if (!uiIsAdmin()) return false;
   if (typeof viewingAsClient === 'function' && viewingAsClient()) return false;
   if (typeof clientViewOpen !== 'undefined' && clientViewOpen) return false;
   return true;
@@ -12745,7 +12780,7 @@ function gapSummaryLine(items) {
   return list.length + ' open' + (shown.length ? ' · ' + shown.join('/') : '');
 }
 function batchGapsHtml(groups) {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   const rowsList = scriptsFromGroups(groups);
   const items = batchTopGaps(rowsList);
   const qaTitles = rowsList.filter(s => !humanQaDeliveryReady(s)).map(s => asText(s.title).trim() || 'Untitled');
@@ -12785,7 +12820,7 @@ function scriptGapHtml(audit, s) {
   return '<section class="audit-script-gaps" aria-label="Top gaps on this script"><h3>Top gaps on this script</h3><ul>' + items + '</ul>' + more + '</section>';
 }
 function auditBatchStrip() {
-  if (typeof role === 'undefined' || role !== 'admin') return '';
+  if (!uiIsAdmin()) return '';
   if (typeof segmentState !== 'function') return '';
   try {
     const state = segmentState();
@@ -13172,6 +13207,18 @@ function sessionLanding(role, clientSlug) {
     viewSlug: homeSlug(clientSlug),
     previewSlug: null,
   };
+}
+function clientParityOn() {
+  return typeof role !== 'undefined' && role === 'admin'
+    && typeof clientParity !== 'undefined' && !!clientParity
+    && typeof previewSlug !== 'undefined' && !!previewSlug;
+}
+function uiIsAdmin() {
+  return typeof role !== 'undefined' && role === 'admin' && !clientParityOn();
+}
+function hubUiSession() {
+  const admin = uiIsAdmin();
+  return { role: admin ? 'admin' : 'client', includeAudit: admin };
 }
 function viewingAsClient() {
   return role === 'admin' && !!previewSlug;
@@ -13655,7 +13702,7 @@ window.exportEdits = (kind) => {
   else downloadText('script-edits-' + slug + '.csv', 'text/csv;charset=utf-8', editsToCsv(rows));
 };
 window.openEdits = () => {
-  if (role !== 'admin') return;
+  if (!uiIsAdmin()) return;
   hubPage = 'edits';
   moreOpen = false;
   modal = null;
@@ -13695,7 +13742,7 @@ const PIPELINE_STAT_OPTIONS = [
 ];
 
 function renderPipeline() {
-  const isAdmin = role === 'admin';
+  const isAdmin = uiIsAdmin();
   const clientName = viewSlug ? (CLIENTS[viewSlug]?.name || clientLabel(viewSlug)) : 'your workspace';
   const groups = activeGroupsFor(viewSlug);
 
@@ -13905,7 +13952,7 @@ function calFormatDayLabel(dateStr) {
 // a second time within the same render.
 // ─────────────────────────────────────────────
 function renderNext7Strip(activeNonPassedGroups, todayStr, weekRange) {
-  const isAdmin = role === 'admin';
+  const isAdmin = uiIsAdmin();
   const { start, end } = weekRange;
   const inRange = groupsInRange(activeNonPassedGroups, start, end);
 
@@ -13984,7 +14031,7 @@ function renderNext7Strip(activeNonPassedGroups, todayStr, weekRange) {
 }
 
 function renderCalendar() {
-  const isAdmin = role === 'admin';
+  const isAdmin = uiIsAdmin();
 
   if (!calMonth) {
     const now = new Date();
@@ -14278,9 +14325,16 @@ window.setSegment = id => {
     });
   });
 };
+function closeFilmSurfaces() {
+  if (window.closeEdit) window.closeEdit(true);
+  if (window.closePrep) window.closePrep(true);
+  if (window.closePrompter) window.closePrompter();
+  if (window.closeClientScriptView) window.closeClientScriptView();
+}
 window.setClient   = slug => {
   if (role !== 'admin' || !CLIENTS[slug]) return;
-  if (window.closeEdit) window.closeEdit(true);
+  closeFilmSurfaces();
+  clientParity = false;
   reviewFormat = '';
   reviewArchive = false;
   const own = homeSlug(mySlug);
@@ -14312,9 +14366,68 @@ window.toggleViewAs = (force) => {
   viewAsOpen = typeof force === 'boolean' ? force : !viewAsOpen;
   renderDash();
 };
+window.previewAsClient = (slug) => {
+  if (role !== 'admin' || !CLIENTS[slug]) return;
+  clientParity = true;
+  previewSlug = slug;
+  viewSlug = slug;
+  viewAsOpen = false;
+  viewStatus = 'all';
+  viewType = 'all';
+  viewStatusExact = false;
+  viewMode = 'all';
+  calSelectedDay = null;
+  next7ResetPending = true;
+  listSearch = '';
+  previousOpen = false;
+  viewSegment = defaultSegmentForClient(slug);
+  adminLane = 'batches';
+  hubPage = 'main';
+  moreOpen = false;
+  settingsOpen = false;
+  reviewFormat = '';
+  reviewArchive = false;
+  reviewClient = '';
+  modal = null;
+  modalPinned = false;
+  viewTab = 'list';
+  resetScriptNav();
+  closeFilmSurfaces();
+  renderDash();
+  window.scrollTo(0, 0);
+};
+window.exitClientPreview = () => {
+  if (role !== 'admin' || !clientParity) return;
+  clientParity = false;
+  previewSlug = null;
+  viewAsOpen = false;
+  reviewFormat = '';
+  reviewArchive = false;
+  reviewClient = '';
+  viewSlug = homeSlug(mySlug);
+  viewStatus = 'all';
+  viewType = 'all';
+  viewStatusExact = false;
+  viewMode = 'all';
+  listSearch = '';
+  previousOpen = false;
+  viewSegment = defaultSegmentForClient(viewSlug);
+  adminLane = 'review';
+  hubPage = 'main';
+  moreOpen = false;
+  settingsOpen = false;
+  modal = null;
+  modalPinned = false;
+  viewTab = 'list';
+  resetScriptNav();
+  closeFilmSurfaces();
+  renderDash();
+  window.scrollTo(0, 0);
+};
 window.exitToClients = () => {
   if (role !== 'admin') return;
-  if (window.closeEdit) window.closeEdit(true);
+  closeFilmSurfaces();
+  clientParity = false;
   reviewFormat = '';
   reviewArchive = false;
   previewSlug = null;
@@ -14335,7 +14448,7 @@ window.exitToClients = () => {
   window.scrollTo(0, 0);
 };
 window.openClientResources = () => {
-  if (role !== 'admin') return;
+  if (!uiIsAdmin()) return;
   hubPage = 'resources';
   moreOpen = false;
   modal = null;
@@ -14344,7 +14457,8 @@ window.openClientResources = () => {
   window.scrollTo(0, 0);
 };
 window.backToWorkspace = () => {
-  if (window.closeEdit) window.closeEdit(true);
+  closeFilmSurfaces();
+  clientParity = false;
   reviewFormat = '';
   reviewArchive = false;
   previewSlug = null;
@@ -14364,6 +14478,7 @@ window.backToWorkspace = () => {
   renderDash();
 };
 window.showReviewQueue = () => {
+  if (!uiIsAdmin()) return;
   adminLane = 'review';
   viewTab = 'list';
   viewStatus = 'all';
@@ -14419,14 +14534,14 @@ window.backToBatch = () => {
 // after every single letter. Falls back to a full redraw if the region isn't on screen.
 window.setListSearch = v => {
   listSearch = v;
-  if (role === 'admin' && v && adminLane !== 'batches') adminLane = 'batches';
+  if (uiIsAdmin() && v && adminLane !== 'batches') adminLane = 'batches';
   resetScriptNav();
   if (viewTab !== 'list') { viewTab = 'list'; renderDash(); return; }
   const region = document.getElementById('list-cards');
   if (!region) { renderDash(); return; }
   try {
     const { segmentGroups, effectiveMode } = segmentState();
-    region.innerHTML = renderListCards(segmentGroups, role === 'admin', effectiveMode);
+    region.innerHTML = renderListCards(segmentGroups, uiIsAdmin(), effectiveMode);
     kickThumbResolves();
   } catch (e) { renderError(e); }
 };
@@ -14445,7 +14560,7 @@ window.togglePrevious = () => {
   requestAnimationFrame(() => window.scrollTo(0, y));
 };
 window.openFormatVault = (slug) => {
-  if (role !== 'admin') return;
+  if (!uiIsAdmin()) return;
   let pick = asText(slug).trim().toLowerCase();
   if (!pick) {
     const openId = (typeof prepState !== 'undefined' && prepState && prepState.id)
@@ -15109,7 +15224,8 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
       });
     }
     mySlug = opts.mySlug || null;
-    previewSlug = opts.previewing ? (opts.viewSlug || null) : null;
+    clientParity = !!opts.clientParity;
+    previewSlug = (opts.previewing || opts.clientParity) ? (opts.viewSlug || null) : null;
     viewAsOpen = !!opts.viewAsOpen;
     if (opts.viewSlug && !opts.previewing) viewSlug = opts.viewSlug;
     else if (previewSlug) viewSlug = previewSlug;

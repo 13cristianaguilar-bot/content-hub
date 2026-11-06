@@ -78,7 +78,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button, input, select, textarea { font-family: inherit; }
-body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
+body.prompter-open, body.prep-open, body.edit-open {
+  overflow: hidden;
+  height: 100%;
+  height: 100dvh;
+}
+/* The list stays in the document under the fixed script sheet. Hide it so its
+   Edit/Film row cannot show under the sheet footer, including while the sheet
+   scrolls and on a phone safe area. */
+body.prompter-open #app,
+body.prep-open #app,
+body.edit-open #app { display: none; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
@@ -997,6 +1007,10 @@ body.modal-open { overflow: hidden; }
 #prep {
   position: fixed; inset: 0; z-index: 75; background: var(--paper); color: var(--ink);
   display: flex; flex-direction: column; overflow: hidden;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  box-sizing: border-box;
 }
 .prep-top {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -1497,7 +1511,8 @@ body.modal-open { overflow: hidden; }
 }
 .prep-bar {
   display: flex; gap: 8px; flex-shrink: 0; background: var(--paper); border-top: 1px solid var(--line);
-  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  position: relative; z-index: 2;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
 .prep-back {
   min-width: 88px; min-height: 52px; padding: 0 14px; background: #fff; border: 1px solid var(--line); color: var(--ink);
@@ -5416,21 +5431,60 @@ function clientScriptHeld(s) {
   return true;
 }
 
-function clientFilmableStatus(status) {
-  return status === 'Needs Review' || status === 'Approved' || status === 'Filming';
+function isCurrentRepeatableBatch(batch) {
+  const raw = String(batch || '');
+  const s = raw.toLowerCase();
+  if (s.includes('archive') || s.trim().startsWith('zz')) return false;
+  if (/core/.test(s) && /10[./]28/.test(s)) return true;
+  if (/nolan/.test(s) && /10[./]30/.test(s)) return true;
+  return false;
+}
+
+// Andrew's client list. Current means the Approved CORE 10.28 and NOLAN 10.30
+// rows only. Needs Review, non-one-off drafts, and archived rows stay out.
+// One-off drafts stay behind Past one-off scripts because that is where the
+// conference and mastermind rows already were. Older Approved rows, including
+// Batch-03, stay in that past group so they do not lead the current seven.
+function andrewQueueBucket(s) {
+  if (!s) return 'hidden';
+  const status = s.status || 'Draft';
+  if (status === 'Archived') return 'hidden';
+  if (clientScriptHeld(s)) return 'hidden';
+  const oneOff = isOneOffBatch(s.batch);
+  if (status === 'Draft') return oneOff ? 'past' : 'hidden';
+  if (status === 'Needs Review') return 'hidden';
+  if (status === 'Approved' && isCurrentRepeatableBatch(s.batch)) return 'current';
+  if (status === 'Approved' || status === 'Posted' || status === 'Passed' || status === 'Filming') return 'past';
+  return 'hidden';
+}
+
+function groupQueueBucket(group) {
+  let bucket = 'hidden';
+  (group || []).forEach(s => {
+    const next = andrewQueueBucket(s);
+    if (next === 'current') bucket = 'current';
+    else if (next === 'past' && bucket !== 'current') bucket = 'past';
+  });
+  return bucket;
+}
+
+function queueAnchor(group, bucket) {
+  const rows = group || [];
+  for (let i = 0; i < rows.length; i++) {
+    if (andrewQueueBucket(rows[i]) === bucket) return rows[i];
+  }
+  return rows[0] || {};
 }
 
 function compareCurrentFilmGroups(a, b) {
   const da = groupBatchDate(a);
   const db = groupBatchDate(b);
   if (da !== db) return db.localeCompare(da);
-  const sa = (a && a[0]) || {};
-  const sb = (b && b[0]) || {};
-  const ma = reviewFormatMember(sa);
-  const mb = reviewFormatMember(sb);
-  const oa = ma ? ma.order : 1000 + (Number(sa.reel_number) || 0);
-  const ob = mb ? mb.order : 1000 + (Number(sb.reel_number) || 0);
-  if (oa !== ob) return oa - ob;
+  const sa = queueAnchor(a, 'current');
+  const sb = queueAnchor(b, 'current');
+  const ra = Number(sa.reel_number) || 0;
+  const rb = Number(sb.reel_number) || 0;
+  if (ra !== rb) return ra - rb;
   return asText(sa.id).localeCompare(asText(sb.id));
 }
 
@@ -5439,15 +5493,9 @@ function splitClientFilmQueue(groups) {
   const past = [];
   (groups || []).forEach(g => {
     if (!g || !g.length) return;
-    const name = groupBatchName(g);
-    if (isOneOffBatch(name)) {
-      past.push(g);
-      return;
-    }
-    if (g.every(clientScriptHeld)) return;
-    if (isFilmedStatus(groupStatus(g))) return;
-    if (!g.some(s => s && clientFilmableStatus(s.status) && !clientScriptHeld(s))) return;
-    current.push(g);
+    const bucket = groupQueueBucket(g);
+    if (bucket === 'current') current.push(g);
+    else if (bucket === 'past') past.push(g);
   });
   current.sort(compareCurrentFilmGroups);
   past.sort((a, b) => groupBatchDate(b).localeCompare(groupBatchDate(a)) || groupBatchName(a).localeCompare(groupBatchName(b)));
@@ -5744,6 +5792,10 @@ function renderTypeBar(counts) {
 
 function shownScript(group) {
   if (!group || !group.length) return null;
+  if (typeof clientFilmQueueOn === 'function' && clientFilmQueueOn()) {
+    const bucket = groupQueueBucket(group);
+    if (bucket === 'current' || bucket === 'past') return queueAnchor(group, bucket);
+  }
   const key = takeGroupKey(group[0]);
   const idx = group.length > 1 ? ((activeTake[key] ?? 0) % group.length) : 0;
   return group[idx];
@@ -10788,19 +10840,35 @@ function clientFilmSheetOn() {
   if (typeof mySlug !== 'undefined' && vaultSlugKey(mySlug) === 'andrew' && typeof role !== 'undefined' && role === 'client') return true;
   return false;
 }
-function scriptVisualHook(s) {
+function fdExact(s, name) {
   const fd = fdObject(s) || {};
-  return asText(fd['Visual Hook'] || fd['visual hook'] || fd.VisualHook).trim();
+  if (Object.prototype.hasOwnProperty.call(fd, name) && asText(fd[name]).trim()) return asText(fd[name]).trim();
+  const want = String(name || '').toLowerCase();
+  const keys = Object.keys(fd);
+  for (let i = 0; i < keys.length; i++) {
+    if (String(keys[i]).toLowerCase() === want && asText(fd[keys[i]]).trim()) return asText(fd[keys[i]]).trim();
+  }
+  return '';
+}
+function scriptVisualHook(s) {
+  return fdExact(s, 'Visual Hook');
 }
 function scriptTextHook(s) {
-  const fd = fdObject(s) || {};
-  const direct = asText(fd['Text Hook'] || fd['text hook'] || fd.TextHook).trim();
+  const direct = fdExact(s, 'Text Hook');
   if (direct) return direct;
   const screen = parseOnScreen(s && s.editor_notes, s && s.hook);
   if (screen.length && screen[0] && screen[0].text) return asText(screen[0].text).trim();
   return '';
 }
 function clientSpokenScript(s) {
+  const verbal = fdExact(s, 'Verbal Hook');
+  const cta = fdExact(s, 'CTA');
+  if (verbal || cta) {
+    const parts = [];
+    if (verbal) parts.push(verbal);
+    if (cta && normSpoken(cta) !== normSpoken(verbal)) parts.push(cta);
+    return parts.join('\n\n').trim();
+  }
   const parts = [];
   scriptFlow(s).forEach(sec => {
     if (!sec || sec.kind === 'clip') return;

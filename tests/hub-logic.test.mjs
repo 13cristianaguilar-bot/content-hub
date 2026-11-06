@@ -24,8 +24,9 @@ function extract(name) {
 const names = [
   'escHtml', 'ymd', 'groupStatus', 'parseBatchDate', 'groupBatchName', 'groupBatchDate',
   'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'isOneOffBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
-  'clientScriptHeld', 'clientFilmableStatus', 'compareCurrentFilmGroups', 'splitClientFilmQueue', 'clientFilmQueueOn', 'clientFilmSheetOn',
-  'scriptVisualHook', 'scriptTextHook', 'clientSpokenScript', 'clientHookBlock', 'clientReferenceHtml', 'clientScriptSheetHtml', 'clientFilmReadyHtml', 'clientFilmStepHtml',
+  'clientScriptHeld', 'isCurrentRepeatableBatch', 'andrewQueueBucket', 'groupQueueBucket', 'queueAnchor', 'compareCurrentFilmGroups', 'splitClientFilmQueue', 'clientFilmQueueOn', 'clientFilmSheetOn',
+  'takeGroupKey', 'shownScript',
+  'fdExact', 'scriptVisualHook', 'scriptTextHook', 'clientSpokenScript', 'clientHookBlock', 'clientReferenceHtml', 'clientScriptSheetHtml', 'clientFilmReadyHtml', 'clientFilmStepHtml',
   'flowTextHtml', 'prompterHtml', 'prompterNotesHtml', 'prompterChips', 'releaseVisibleTo', 'releaseAudience',
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
@@ -135,6 +136,7 @@ const src = [
   extractAssignment('CLIENT_RESOURCE_MANIFESTS'),
   extractAssignment('FORMAT_VAULT'),
   'var prepState = null;',
+  'var activeTake = {};',
   "var role = 'client';",
   "var previewSlug = null;",
   "var reviewClient = '';",
@@ -3301,56 +3303,91 @@ assert.ok(!script.includes('All current'));
 assert.ok(!script.includes('Stamp Queue Mode'));
 assert.ok(!script.includes('scripts to read and stamp'));
 
-function filmRow(id, batch, status, reel, extra) {
+function liveRow(id, batch, status, reel, extra) {
+  const current = status === 'Approved' && /10[./]28|10[./]30/.test(batch);
   return Object.assign({
     id: id,
     client_slug: 'andrew',
     batch: batch,
     status: status,
     reel_number: reel,
-    format: 'Tips · talking head',
-    title: 'Current ' + id,
-    hook: 'Say the current hook.',
-    full_script: 'Say the current hook.\n\nThen say the rest of the script without a setup note.',
-    reference_clip: 'https://www.instagram.com/reel/CCCCCCCCCCC/',
-    camera: 'Andrew on camera, handheld.',
-    filming_setup: 'FRAMING: chest-up selfie.\nPACING: fast.',
-    editor_notes: 'ON-SCREEN TEXT: STOP GUESSING\nWho films: Andrew.',
-    filming_direction: {
-      'Visual Hook': 'Laptop closes on the desk.',
-      'Text Hook': 'STOP GUESSING',
-      Pacing: 'Fast, one take.',
-      Framing: 'Handheld selfie, vertical 9:16.',
-      Format: 'Tips',
-    },
+    format: 'Tips',
+    title: 'Script ' + id,
+    hook: '',
+    full_script: '',
+    reference_clip: current ? 'https://www.instagram.com/reel/' + id + '/' : '',
+    camera: '',
+    filming_setup: '',
+    editor_notes: '',
+    clip_directions: '',
+    filming_direction: current ? {
+      'Visual Hook': 'Visual for ' + id,
+      'Text Hook': 'TEXT ' + id,
+      'Verbal Hook': 'Say the verbal hook for ' + id + '.',
+      'CTA': 'Comment the word for ' + id + '.',
+    } : {},
   }, extra || {});
 }
-const mixedAndrew = [
-  [filmRow('conf', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Needs Review', 1, { title: 'Ask them what is broken', format: 'Conference interview' })],
-  [filmRow('italy', 'Italy · booth tour · 9.4.2026', 'Approved', 2, { title: 'Italy booth tour', format: 'One-off' })],
-  [filmRow('oneoff', 'Mastermind one-off · 8.2.2026', 'Filming', 4, { title: 'Mastermind hallway' })],
-  [filmRow('r1', 'CORE · Andrew · 10.28.2026', 'Approved', 1, { title: 'Tip that is ready', format: 'Tips · list' })],
-  [filmRow('r7', 'CORE · Andrew · 10.28.2026', 'Needs Review', 7, { title: 'Visual that is ready', format: 'Visual · demo' })],
-  [filmRow('r10', 'CORE · Andrew · 10.28.2026', 'Needs Review', 10, { title: 'R10 held hook', format: 'Tips · list' })],
-  [filmRow('old', 'Andrew Batch-02 · 7.11.2026', 'Needs Review', 3, { title: 'Older weekly', format: 'Format A' })],
-  [filmRow('draft', 'CORE · Andrew · 11.02.2026', 'Draft', 2, { title: 'Draft stays back', format: 'Comparison · split' })],
-  [filmRow('posted', 'CORE · Andrew · 11.02.2026', 'Posted', 4, { title: 'Already posted', format: 'Transformations · before' })],
-  [filmRow('jan', 'Jan FINAL · 10.30.2026', 'Approved', 1, { client_slug: 'jan', title: 'Jan keeper', format: 'Story' })],
+const coreBatch = 'CORE · 10.28.2026';
+const nolanBatch = 'NOLAN · 10.30.2026';
+const coreR3 = liveRow('b09886dc', coreBatch, 'Approved', 3);
+const liveGroups = [
+  [liveRow('conf-draft', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Draft', 1, { title: 'Ask them what is broken' })],
+  [liveRow('5f04391b', 'Mastermind · AIMW · 9.12.2026', 'Draft', 2, { title: 'Italy booth line' })],
+  [liveRow('arch-same-r3', coreBatch, 'Archived', 3), coreR3],
+  [liveRow('e2673ba2', coreBatch, 'Approved', 5)],
+  [liveRow('9c57f21f', coreBatch, 'Approved', 7)],
+  [liveRow('a008f24a', coreBatch, 'Approved', 8)],
+  [liveRow('ad1f8ea3', nolanBatch, 'Approved', 1)],
+  [liveRow('e9dabd69', nolanBatch, 'Approved', 2)],
+  [liveRow('2dbb9062', nolanBatch, 'Approved', 3)],
+  [liveRow('1b80d82f', coreBatch, 'Needs Review', 10, { title: 'R10 held' })],
+  [liveRow('core-nr', coreBatch, 'Needs Review', 1, { title: 'Needs Review core reel' })],
+  [liveRow('51ec39fb', 'Andrew Batch-03 · 8.20.2026', 'Approved', 4, { title: 'Most Underutilized GHL Feature' })],
+  [liveRow('batch02-posted', 'Andrew Batch-02 · 7.11.2026', 'Posted', 2)],
+  [liveRow('core23', 'CORE · 10.23.2026', 'Archived', 1)],
+  [liveRow('core28-arch', coreBatch, 'Archived', 6)],
 ];
-assert.strictEqual(ctx.isOneOffBatch('⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026'), true);
-assert.strictEqual(ctx.isOneOffBatch('Italy · booth tour · 9.4.2026'), true);
-assert.strictEqual(ctx.isOneOffBatch('Mastermind one-off · 8.2.2026'), true);
-assert.strictEqual(ctx.isOneOffBatch('CORE · Andrew · 10.28.2026'), false);
-assert.strictEqual(ctx.clientScriptHeld(mixedAndrew[5][0]), true);
-assert.strictEqual(ctx.clientScriptHeld(mixedAndrew[3][0]), false);
-const andrewSplit = ctx.splitClientFilmQueue(mixedAndrew.filter(g => g[0].client_slug === 'andrew'));
-assert.strictEqual(andrewSplit.current.map(g => g[0].id).join(','), 'r1,r7,old');
-assert.strictEqual(andrewSplit.past.map(g => g[0].id).join(','), 'conf,italy,oneoff');
-assert.ok(!andrewSplit.current.concat(andrewSplit.past).some(g => g[0].id === 'r10'));
-assert.ok(!andrewSplit.current.some(g => g[0].id === 'draft' || g[0].id === 'posted'));
-const janSplit = ctx.splitClientFilmQueue(mixedAndrew.filter(g => g[0].client_slug === 'jan'));
-assert.strictEqual(janSplit.current.map(g => g[0].id).join(','), 'jan');
-assert.strictEqual(janSplit.past.length, 0);
+for (let i = 0; i < 10; i++) {
+  liveGroups.push([liveRow('zz-draft-' + i, 'zz · soft-ref · CORE · 10.24.2026', 'Draft', i + 1)]);
+}
+for (let reel of [1, 2, 4, 6, 9, 11]) {
+  liveGroups.push([liveRow('core28-arch-' + reel, coreBatch, 'Archived', reel)]);
+}
+assert.strictEqual(ctx.isCurrentRepeatableBatch(coreBatch), true);
+assert.strictEqual(ctx.isCurrentRepeatableBatch(nolanBatch), true);
+assert.strictEqual(ctx.isCurrentRepeatableBatch('CORE · 10.24.2026'), false);
+assert.strictEqual(ctx.isCurrentRepeatableBatch('CORE · 10.23.2026'), false);
+assert.strictEqual(ctx.isCurrentRepeatableBatch('zz · soft-ref · CORE · 10.24.2026'), false);
+assert.strictEqual(ctx.isOneOffBatch('Mastermind · AIMW · 9.12.2026'), true);
+assert.strictEqual(ctx.isOneOffBatch('zz · soft-ref · CORE · 10.24.2026'), false);
+assert.strictEqual(ctx.andrewQueueBucket(coreR3), 'current');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[9][0]), 'hidden');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[0][0]), 'past');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[11][0]), 'past');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[14][0]), 'hidden');
+liveGroups.push([liveRow('core-filming', coreBatch, 'Filming', 9)]);
+const andrewSplit = ctx.splitClientFilmQueue(liveGroups);
+const currentIds = andrewSplit.current.map(g => ctx.queueAnchor(g, 'current').id);
+assert.strictEqual(currentIds.join(','), 'ad1f8ea3,e9dabd69,2dbb9062,b09886dc,e2673ba2,9c57f21f,a008f24a');
+assert.strictEqual(currentIds.filter(id => id === 'b09886dc' || id === '2dbb9062').join(','), '2dbb9062,b09886dc');
+const pastIds = andrewSplit.past.map(g => g[0].id);
+assert.ok(pastIds.indexOf('conf-draft') >= 0);
+assert.ok(pastIds.indexOf('5f04391b') >= 0);
+assert.ok(pastIds.indexOf('51ec39fb') >= 0);
+assert.ok(pastIds.indexOf('batch02-posted') >= 0);
+assert.ok(pastIds.indexOf('core-filming') >= 0);
+assert.ok(currentIds.indexOf('core-filming') < 0);
+const visible = currentIds.concat(pastIds);
+assert.ok(visible.indexOf('1b80d82f') < 0);
+assert.ok(visible.indexOf('core-nr') < 0);
+assert.ok(visible.indexOf('51ec39fb') !== 0 || currentIds.indexOf('51ec39fb') < 0);
+assert.ok(currentIds.indexOf('51ec39fb') < 0);
+assert.ok(!visible.some(id => id.indexOf('zz-draft-') === 0));
+assert.ok(!visible.some(id => id.indexOf('core28-arch') === 0 || id === 'core23' || id === 'arch-same-r3'));
+assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Needs Review' }, 'Approved'), true);
+assert.strictEqual(ctx.isClientDeliveryStatus('Needs Review'), true);
+assert.strictEqual(ctx.isClientDeliveryStatus('Approved'), true);
 
 const savedRole = ctx.role;
 const savedView = ctx.viewSlug;
@@ -3363,14 +3400,17 @@ ctx.mySlug = 'andrew';
 ctx.clientParity = false;
 ctx.previewSlug = null;
 assert.strictEqual(ctx.clientFilmQueueOn(), true);
+const mixedR3 = liveGroups.find(g => g.some(s => s.id === 'arch-same-r3'));
+assert.strictEqual(ctx.shownScript(mixedR3).id, 'b09886dc');
 assert.strictEqual(ctx.clientFilmSheetOn(), true);
 assert.strictEqual(ctx.prepPlan(false).labels.join('|'), 'Reference|Script|Film');
 assert.strictEqual(ctx.uiIsAdmin(), false);
-const sheetScript = mixedAndrew[3][0];
+const sheetScript = coreR3;
 const sheet = ctx.prepStepHtml(ctx.prepModel(sheetScript), 1);
-assert.ok(sheet.includes('Laptop closes on the desk.'));
-assert.ok(sheet.includes('STOP GUESSING'));
-assert.ok(sheet.includes('Then say the rest of the script'));
+assert.ok(sheet.includes('Visual for b09886dc'));
+assert.ok(sheet.includes('TEXT b09886dc'));
+assert.ok(sheet.includes('Say the verbal hook for b09886dc.'));
+assert.ok(sheet.includes('Comment the word for b09886dc.'));
 assert.ok(sheet.includes('Visual hook'));
 assert.ok(sheet.includes('Text hook'));
 assert.ok(sheet.includes('Spoken script'));
@@ -3383,13 +3423,14 @@ assert.ok(!sheet.includes('Human QA'));
 assert.ok(!sheet.includes('Cristian brain check'));
 const reference = ctx.prepStepHtml(ctx.prepModel(sheetScript), 0);
 assert.ok(reference.includes('Reference video'));
-assert.ok(reference.includes('instagram.com/reel/CCCCCCCCCCC'));
+assert.ok(reference.includes('instagram.com/reel/b09886dc'));
 assert.ok(!/pacing/i.test(reference));
 assert.ok(!/framing/i.test(reference));
 assert.ok(!reference.includes('Who films'));
 const spokenOnly = ctx.prompterHtml(sheetScript);
 assert.ok(spokenOnly.includes('Spoken script'));
-assert.ok(spokenOnly.includes('Then say the rest of the script'));
+assert.ok(spokenOnly.includes('Say the verbal hook for b09886dc.'));
+assert.ok(!spokenOnly.includes('Who films'));
 assert.ok(!/Beat /.test(spokenOnly));
 assert.ok(!/framing/i.test(spokenOnly));
 assert.ok(!/pacing/i.test(spokenOnly));
@@ -3434,5 +3475,7 @@ ctx.previewSlug = savedPreview;
 assert.ok(script.includes('Past one-off scripts'));
 assert.ok(script.includes("audience: 'admin'"));
 assert.ok(script.includes('id="past-one-offs"'));
+assert.ok(html.includes('body.prep-open #app'));
+assert.ok(html.includes('body.prep-open #app,\nbody.edit-open #app { display: none; }') || html.includes('body.edit-open #app { display: none; }'));
 
 console.log('hub-logic tests passed');

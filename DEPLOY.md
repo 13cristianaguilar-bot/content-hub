@@ -220,7 +220,7 @@ Andrew’s client screen leads with the current scripts. Conference, Italy, and 
 
 This does not change Supabase auth or anyone's password. It only changes what the admin screen draws. The page version is `2026.11.06.1`, so GitHub Pages loads the new file instead of a cached copy.
 
-Live rows still decide what “current” means. A script shows in Andrew’s film list when its batch is not a conference, Italy, mastermind, or one-off batch, its status is Needs Review, Approved, or Filming, and it is not held. Andrew reel 10 stays off that list until its status is Approved, Filming, or Posted. Confirm those statuses in Supabase if a row is still in the wrong place after this ships. Do not mark a held row Approved just to make it appear.
+Andrew’s current list is the Approved CORE 10.28 and NOLAN 10.30 scripts. Needs Review, archived rows, and drafts that are not conference or mastermind one-offs stay off that list. Reel 10 stays off while it is Needs Review. Older Approved rows, including Batch-03, open from Past one-off scripts and do not lead the current list. Conference and mastermind drafts stay behind that same button. Nothing is deleted, and this does not change who can read a row in Supabase.
 
 ---
 

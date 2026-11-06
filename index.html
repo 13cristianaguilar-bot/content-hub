@@ -78,7 +78,17 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button, input, select, textarea { font-family: inherit; }
-body.prompter-open, body.prep-open, body.edit-open { overflow: hidden; }
+body.prompter-open, body.prep-open, body.edit-open {
+  overflow: hidden;
+  height: 100%;
+  height: 100dvh;
+}
+/* The list stays in the document under the fixed script sheet. Hide it so its
+   Edit/Film row cannot show under the sheet footer, including while the sheet
+   scrolls and on a phone safe area. */
+body.prompter-open #app,
+body.prep-open #app,
+body.edit-open #app { display: none; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
@@ -724,6 +734,7 @@ img, iframe, video, pre { max-width: 100%; }
   color: var(--ink); font-weight: 650; font-size: 16px; text-align: left;
   text-decoration: underline; text-underline-offset: 3px; padding: 4px 0;
 }
+.film-queue-bar { max-width: 560px; margin: 4px 0 12px; }
 .preview-banner {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   background: var(--ink); color: #fff; padding: 10px 12px; max-width: 560px;
@@ -996,6 +1007,10 @@ body.modal-open { overflow: hidden; }
 #prep {
   position: fixed; inset: 0; z-index: 75; background: var(--paper); color: var(--ink);
   display: flex; flex-direction: column; overflow: hidden;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  box-sizing: border-box;
 }
 .prep-top {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -1496,7 +1511,8 @@ body.modal-open { overflow: hidden; }
 }
 .prep-bar {
   display: flex; gap: 8px; flex-shrink: 0; background: var(--paper); border-top: 1px solid var(--line);
-  padding: 10px 16px calc(12px + env(safe-area-inset-bottom));
+  position: relative; z-index: 2;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
 }
 .prep-back {
   min-width: 88px; min-height: 52px; padding: 0 14px; background: #fff; border: 1px solid var(--line); color: var(--ink);
@@ -1925,7 +1941,7 @@ let authLinkError = authUrlParams.get('error_description');
 // Bump when What's new should show again. Must match RELEASES[0].version.
 // Defined here, not beside RELEASES, because the cache-bust below has to run
 // before the auth client exists.
-const APP_VERSION = '2026.11.05.2';
+const APP_VERSION = '2026.11.06.1';
 
 // Opening the shared Hub link (no ?cv=) used to build the auth client and then
 // location.replace() to add ?cv=. On a phone that second navigation can refresh
@@ -3305,8 +3321,24 @@ const FILMING_GUIDE = [
 
 const RELEASES = [
   {
+    version: '2026.11.06.1',
+    date: 'November 6, 2026',
+    title: 'Andrew films the current scripts first',
+    audience: 'admin',
+    items: [
+      'Andrew’s own login opens on the current scripts. Conference, Italy, and other one-off batches sit behind Past one-off scripts. Nothing is deleted.',
+      'His Film prep and teleprompter show the reference video, the visual hook, the text hook, and the spoken script.',
+      'The admin note about See what they see stays on the admin screen. A client login does not get that popup.',
+    ],
+    steps: [
+      'Open Andrew as himself, or use See what they see. The current scripts are first.',
+      'Past one-off scripts still has the conference and Italy rows.',
+    ],
+  },
+  {
     version: '2026.11.05.2',
     date: 'November 5, 2026',
+    audience: 'admin',
     title: 'See what the client sees',
     items: [
       'Admins can open See what they see. That screen matches the client film list and Film prep.',
@@ -4098,6 +4130,10 @@ let previousOpen = false;
 // Set on sign-in and on setClient via defaultSegmentForClient (conference when that client has any).
 let viewSegment = 'conference';
 const VIEW_SEGMENTS = ['conference', 'new', 'other'];
+// Andrew's client film list. Current scripts stay on screen. Conference, Italy,
+// and other one-offs stay in the database and open from Past one-off scripts.
+let showPastOneOffs = false;
+let filmQueueSplit = null;
 // Admin list lands on the brain-check queue. Batches (Conference / New / Past) stay one tap away.
 let adminLane = 'review';
 let stampQueueMode = false;
@@ -4595,6 +4631,7 @@ async function afterLogin(u) {
   if (isNewSignIn) {
     loadOpened();
     viewSegment = defaultSegmentForClient(viewSlug);
+    showPastOneOffs = false;
     if (role === 'admin') adminLane = 'review';
   }
   renderDash();
@@ -5323,6 +5360,17 @@ function isFloorFilmBatch(batch) {
   return s.includes('floor film') || s.includes('floor-film');
 }
 
+// Event batches Andrew already filmed. They stay in the database.
+function isOneOffBatch(batch) {
+  const raw = String(batch || '');
+  if (isConferenceBatch(raw)) return true;
+  const s = raw.toLowerCase();
+  if (s.includes('italy')) return true;
+  if (/one[\s-]?off/.test(s)) return true;
+  if (s.includes('mastermind')) return true;
+  return false;
+}
+
 function groupIsConference(group) {
   return isConferenceBatch(groupBatchName(group));
 }
@@ -5366,6 +5414,100 @@ function defaultSegmentForClient(slug) {
   return 'other';
 }
 
+// Andrew's client screen (and See what they see) leads with scripts he can film now.
+// Admin review of Andrew keeps Conference / New to film / Other/Past.
+function clientFilmQueueOn() {
+  if (typeof uiIsAdmin === 'function' && uiIsAdmin()) return false;
+  const slug = typeof viewSlug !== 'undefined' ? viewSlug : '';
+  return vaultSlugKey(slug) === 'andrew';
+}
+
+// R10 stays held until it is actually client-ready. Do not promote it onto the film list.
+function clientScriptHeld(s) {
+  if (!s || vaultSlugKey(s.client_slug) !== 'andrew') return false;
+  if (Number(s.reel_number) !== 10) return false;
+  const status = s.status || '';
+  if (status === 'Approved' || status === 'Filming' || status === 'Posted') return false;
+  return true;
+}
+
+function isCurrentRepeatableBatch(batch) {
+  const raw = String(batch || '');
+  const s = raw.toLowerCase();
+  if (s.includes('archive') || s.trim().startsWith('zz')) return false;
+  if (/core/.test(s) && /10[./]28/.test(s)) return true;
+  if (/nolan/.test(s) && /10[./]30/.test(s)) return true;
+  return false;
+}
+
+// Andrew's client list. Current means the Approved CORE 10.28 and NOLAN 10.30
+// rows only. The old All view already showed conference and mastermind drafts,
+// so those one-off drafts stay behind Past one-off scripts. A draft outside
+// those batches, including zz CORE 10.24, stays off. Needs Review stays off
+// this film list. Archived stays off. Older Approved, Posted, Passed, and
+// Filming rows stay in the past group so they do not lead the current seven.
+function andrewQueueBucket(s) {
+  if (!s) return 'hidden';
+  const status = s.status || 'Draft';
+  if (status === 'Archived') return 'hidden';
+  if (clientScriptHeld(s)) return 'hidden';
+  const oneOff = isOneOffBatch(s.batch);
+  if (status === 'Draft') return oneOff ? 'past' : 'hidden';
+  if (status === 'Needs Review') return 'hidden';
+  if (status === 'Approved' && isCurrentRepeatableBatch(s.batch)) return 'current';
+  if (status === 'Approved' || status === 'Posted' || status === 'Passed' || status === 'Filming') return 'past';
+  return 'hidden';
+}
+
+function groupQueueBucket(group) {
+  const rows = group || [];
+  let bucket = 'hidden';
+  rows.forEach(s => {
+    const next = andrewQueueBucket(s);
+    if (next === 'current') bucket = 'current';
+    else if (next === 'past' && bucket !== 'current') bucket = 'past';
+  });
+  // The old All view hid a group when any take was Archived. Keep that, except
+  // an Approved current row, which stays even beside an archived sibling.
+  const archived = rows.some(s => s && (s.status || '') === 'Archived');
+  if (archived && bucket !== 'current') return 'hidden';
+  return bucket;
+}
+
+function queueAnchor(group, bucket) {
+  const rows = group || [];
+  for (let i = 0; i < rows.length; i++) {
+    if (andrewQueueBucket(rows[i]) === bucket) return rows[i];
+  }
+  return rows[0] || {};
+}
+
+function compareCurrentFilmGroups(a, b) {
+  const da = groupBatchDate(a);
+  const db = groupBatchDate(b);
+  if (da !== db) return db.localeCompare(da);
+  const sa = queueAnchor(a, 'current');
+  const sb = queueAnchor(b, 'current');
+  const ra = Number(sa.reel_number) || 0;
+  const rb = Number(sb.reel_number) || 0;
+  if (ra !== rb) return ra - rb;
+  return asText(sa.id).localeCompare(asText(sb.id));
+}
+
+function splitClientFilmQueue(groups) {
+  const current = [];
+  const past = [];
+  (groups || []).forEach(g => {
+    if (!g || !g.length) return;
+    const bucket = groupQueueBucket(g);
+    if (bucket === 'current') current.push(g);
+    else if (bucket === 'past') past.push(g);
+  });
+  current.sort(compareCurrentFilmGroups);
+  past.sort((a, b) => groupBatchDate(b).localeCompare(groupBatchDate(a)) || groupBatchName(a).localeCompare(groupBatchName(b)));
+  return { current: current, past: past };
+}
+
 function segmentLabel(seg) {
   return seg === 'conference' ? 'Conference' : seg === 'new' ? 'New to film' : 'Other/Past';
 }
@@ -5381,6 +5523,24 @@ function segmentEmptyCopy(seg) {
 // (almost always Other/Past) so the three buttons are a real split.
 function segmentState() {
   const view = listGroupsForCurrentView();
+  if (clientFilmQueueOn()) {
+    const split = splitClientFilmQueue(view.modeFilteredGroups);
+    filmQueueSplit = split;
+    let groups = (showPastOneOffs ? split.past : split.current).slice();
+    if (viewStatus !== 'all') {
+      groups = groups.filter(g => viewStatusExact ? groupMatchesStatus(g, viewStatus) : g.some(s => s.status === viewStatus));
+    }
+    return {
+      allGroups: view.allGroups,
+      testingGroups: view.testingGroups,
+      effectiveMode: view.effectiveMode,
+      modeFilteredGroups: view.modeFilteredGroups,
+      parts: { conference: [], new: split.current, other: split.past },
+      seg: showPastOneOffs ? 'past' : 'current',
+      segmentGroups: groups,
+    };
+  }
+  filmQueueSplit = null;
   const parts = partitionSegments(view.modeFilteredGroups);
   const seg = normalizeSegment(viewSegment);
   let groups = parts[seg].slice();
@@ -5539,31 +5699,53 @@ function markPreviewOnboardingSeen() {
 function clearPreviewOnboardingSeen() {
   try { localStorage.removeItem(previewOnboardingKey()); } catch (e) {}
 }
-function unseenReleasesFor(seenVersion, previewing, previewSeenVersion) {
-  if (previewing && previewSeenVersion !== APP_VERSION) return RELEASES.slice(0, 1);
-  if (!seenVersion) return RELEASES.slice(0, 1);
+function releaseVisibleTo(release, audience) {
+  if (!release) return false;
+  if (release.audience === 'admin') return audience === 'admin';
+  return true;
+}
+function releaseAudience() {
+  if (typeof role !== 'undefined' && role === 'admin' && !(typeof clientParityOn === 'function' && clientParityOn()) && !(typeof viewingAsClient === 'function' && viewingAsClient())) return 'admin';
+  return 'client';
+}
+function unseenReleasesFor(seenVersion, previewing, previewSeenVersion, audience) {
+  const who = audience === 'client' || audience === 'admin'
+    ? audience
+    : (previewing ? 'client' : 'admin');
+  const list = RELEASES.filter(r => releaseVisibleTo(r, who));
+  if (previewing && who === 'client') {
+    if (previewSeenVersion === APP_VERSION) return [];
+    return list.slice(0, 1);
+  }
+  if (!seenVersion) return list.slice(0, 1);
+  if (seenVersion === APP_VERSION) return [];
   const idx = RELEASES.findIndex(r => r.version === seenVersion);
+  if (idx < 0) return list.slice(0, 1);
   if (idx === 0) return [];
-  if (idx < 0) return RELEASES.slice(0, 1);
-  return RELEASES.slice(0, idx);
+  return RELEASES.slice(0, idx).filter(r => releaseVisibleTo(r, who));
 }
 function unseenReleases() {
   if (!user) return [];
   return unseenReleasesFor(
     lsGetStr(versionStorageKey(), ''),
     viewingAsClient(),
-    lsGetStr(previewOnboardingKey(), '')
+    lsGetStr(previewOnboardingKey(), ''),
+    releaseAudience()
   );
 }
 function unseenFreshGroups() {
-  const fresh = freshPartition(clientGroups(viewSlug)).fresh;
+  const fresh = clientFilmQueueOn()
+    ? splitClientFilmQueue(clientGroups(viewSlug)).current
+    : freshPartition(clientGroups(viewSlug)).fresh;
   if (!fresh.length || !user) return [];
   const seen = lsGetStr(batchStorageKey(), '');
   return seen === freshSignature(fresh) ? [] : fresh;
 }
 function acknowledgeFreshBatch() {
   if (!user) return;
-  const fresh = freshPartition(clientGroups(viewSlug)).fresh;
+  const fresh = clientFilmQueueOn()
+    ? splitClientFilmQueue(clientGroups(viewSlug)).current
+    : freshPartition(clientGroups(viewSlug)).fresh;
   lsSetStr(batchStorageKey(), freshSignature(fresh));
 }
 function syncModal() {
@@ -5616,6 +5798,10 @@ function renderTypeBar(counts) {
 
 function shownScript(group) {
   if (!group || !group.length) return null;
+  if (typeof clientFilmQueueOn === 'function' && clientFilmQueueOn()) {
+    const bucket = groupQueueBucket(group);
+    if (bucket === 'current' || bucket === 'past') return queueAnchor(group, bucket);
+  }
   const key = takeGroupKey(group[0]);
   const idx = group.length > 1 ? ((activeTake[key] ?? 0) % group.length) : 0;
   return group[idx];
@@ -5708,6 +5894,15 @@ function renderPastBatches(groups) {
       ${renderBatchCards(b.groups)}
     </section>`).join('')}</div>`;
 }
+function renderPastOneOffButton() {
+  const split = filmQueueSplit || { past: [] };
+  const n = (split.past || []).length;
+  if (!n && !showPastOneOffs) return '';
+  const pressed = !!showPastOneOffs;
+  const note = pressed ? '<p class="fresh-batch">Showing past one-off scripts. Tap the button again for the current scripts.</p>' : '';
+  const count = pressed ? '' : ' (' + n + ')';
+  return `<div class="film-queue-bar">${note}<button type="button" class="past-link" id="past-one-offs" aria-pressed="${pressed ? 'true' : 'false'}" onclick="window.togglePastOneOffs()">Past one-off scripts${count}</button></div>`;
+}
 function renderSegmentBar(parts) {
   const seg = normalizeSegment(viewSegment);
   const items = [
@@ -5725,9 +5920,12 @@ function renderSimpleBatch(groups) {
   const seg = normalizeSegment(viewSegment);
   navSets.fresh = groups;
   navSets.previous = [];
+  const emptyCopy = clientFilmQueueOn()
+    ? (showPastOneOffs ? 'No past one-off scripts.' : 'No current scripts to film yet.')
+    : segmentEmptyCopy(seg);
   const body = groups.length
     ? renderPastBatches(groups)
-    : `<p class="fresh-empty">${escHtml(segmentEmptyCopy(seg))}</p>`;
+    : `<p class="fresh-empty">${escHtml(emptyCopy)}</p>`;
   return `<section id="fresh-section" class="fresh-block" aria-label="${escHtml(segmentLabel(seg))}">
     ${batchGapsHtml(groups)}
     ${body}
@@ -7297,7 +7495,7 @@ function renderHelpPage() {
       <button type="button" class="shot-go" style="margin-top:16px" onclick="window.openFormatVault()">Format Vault</button>
     </article>` : ''}
     <div class="eyebrow">What’s new</div>
-    ${RELEASES.map(renderReleaseArticle).join('')}
+    ${RELEASES.filter(r => releaseVisibleTo(r, releaseAudience())).map(renderReleaseArticle).join('')}
   </div>`;
 }
 function requestsMigrationHint() {
@@ -7395,8 +7593,8 @@ function renderNewScriptsModal() {
   </div>`;
 }
 function renderWhatsNewModal() {
-  const releases = unseenReleases();
-  const main = releases[0] || RELEASES[0];
+  const releases = unseenReleases().filter(r => releaseVisibleTo(r, releaseAudience()));
+  const main = releases[0];
   if (!main) return '';
   const video = main.version === APP_VERSION ? renderVideoSlot(WALKTHROUGH_VIDEO_URL) : '';
   return `<div class="modal-back" id="hub-modal" onclick="window.dismissWhatsNew()">
@@ -7542,7 +7740,9 @@ function renderDashInner() {
     : '';
   const showReview = isAdmin && adminLane !== 'batches' && hubPage === 'main' && viewTab === 'list'
     && !listSearch.trim() && viewStatus === 'all' && viewType === 'all' && effectiveMode === 'all';
-  const segmentBar = (hubPage === 'main' && viewTab === 'list' && !showReview) ? renderSegmentBar(parts) : '';
+  const segmentBar = clientFilmQueueOn()
+    ? renderPastOneOffButton()
+    : ((hubPage === 'main' && viewTab === 'list' && !showReview) ? renderSegmentBar(parts) : '');
   const queueJump = (isAdmin && !showReview && hubPage === 'main' && viewTab === 'list') ? reviewQueueJumpHtml() : '';
   const cards = (hubPage !== 'main' || viewTab !== 'list') ? ''
     : (showReview
@@ -9519,6 +9719,14 @@ function prompterEmbed(info) {
   return `<p class="pr-link-fallback">${escHtml(info.label || 'No reference reel on this script.')}</p>`;
 }
 function prompterNotesHtml(s) {
+  if (clientFilmSheetOn()) {
+    const model = prepModel(s);
+    return `
+      <section class="pr-note"><h3>Reference</h3>${model.ref && model.ref.watch ? `<p><button type="button" onclick="window.prompterPlayRef(0)">Play reference</button></p>` : '<p class="pr-note-empty">No reference video on this script.</p>'}</section>
+      <section class="pr-note"><h3>Visual hook</h3>${model.visualHook ? `<p>${escHtml(model.visualHook)}</p>` : '<p class="pr-note-empty">Not on this script.</p>'}</section>
+      <section class="pr-note"><h3>Text hook</h3>${model.textHook ? `<p>${escHtml(model.textHook)}</p>` : '<p class="pr-note-empty">Not on this script.</p>'}</section>
+      <section class="pr-note"><h3>Spoken script</h3>${model.spokenScript ? flowTextHtml(model.spokenScript) : '<p class="pr-note-empty">Not on this script.</p>'}</section>`;
+  }
   const pack = referencePack(s);
   const refs = pack.refs.length ? pack.refs.map((info, i) => {
     const playable = info.kind !== 'text' && (info.src || info.watch);
@@ -9564,6 +9772,10 @@ let prompterState = null;
 let prompterRaf = 0;
 let prompterNoticeTimer = 0;
 function prompterHtml(s) {
+  if (clientFilmSheetOn()) {
+    const spoken = clientSpokenScript(s);
+    return `<section class="pr-sec" data-flow="0"><div class="pr-label">Spoken script</div>${spoken ? flowTextHtml(spoken) : '<p class="pr-note-empty">Not on this script.</p>'}</section>`;
+  }
   const model = scriptReadModel(s.full_script);
   if (model.mode === 'questions') {
     const hook = spokenHook(s);
@@ -9580,6 +9792,7 @@ function prompterHtml(s) {
     </section>`).join('');
 }
 function prompterChips(s) {
+  if (clientFilmSheetOn()) return '<button type="button" class="pr-jump" onclick="window.prompterJump(0)">Spoken script</button>';
   const model = scriptReadModel(s.full_script);
   const labels = model.mode === 'questions'
     ? ['Hook', 'Body'].concat(spokenCta(s.cta) ? ['CTA'] : [])
@@ -10547,6 +10760,9 @@ function prepModel(s) {
     waysKind: waysKind,
     extras: extras,
     clientNotes: pullLabeled(s.editor_notes, ['client notes']).trim(),
+    visualHook: scriptVisualHook(s),
+    textHook: scriptTextHook(s),
+    spokenScript: clientSpokenScript(s),
   };
 }
 function prepText(text) {
@@ -10623,7 +10839,115 @@ function prepTightFact(label, full) {
     : '');
   return `<div class="prep-fact"><div class="eyebrow">${escHtml(label)}</div><p>${body}</p></div>`;
 }
+function clientFilmSheetOn() {
+  if (typeof uiIsAdmin === 'function' && uiIsAdmin()) return false;
+  const slug = typeof viewSlug !== 'undefined' ? viewSlug : '';
+  if (vaultSlugKey(slug) === 'andrew') return true;
+  if (typeof mySlug !== 'undefined' && vaultSlugKey(mySlug) === 'andrew' && typeof role !== 'undefined' && role === 'client') return true;
+  return false;
+}
+function fdExact(s, name) {
+  const fd = fdObject(s) || {};
+  if (Object.prototype.hasOwnProperty.call(fd, name) && asText(fd[name]).trim()) return asText(fd[name]).trim();
+  const want = String(name || '').toLowerCase();
+  const keys = Object.keys(fd);
+  for (let i = 0; i < keys.length; i++) {
+    if (String(keys[i]).toLowerCase() === want && asText(fd[keys[i]]).trim()) return asText(fd[keys[i]]).trim();
+  }
+  return '';
+}
+function scriptVisualHook(s) {
+  return fdExact(s, 'Visual Hook');
+}
+function scriptTextHook(s) {
+  const direct = fdExact(s, 'Text Hook');
+  if (direct) return direct;
+  const screen = parseOnScreen(s && s.editor_notes, s && s.hook);
+  if (screen.length && screen[0] && screen[0].text) return asText(screen[0].text).trim();
+  return '';
+}
+function clientSpokenContains(hay, piece) {
+  const needle = normSpoken(piece);
+  if (!needle) return true;
+  const stack = normSpoken(hay);
+  if (!stack) return false;
+  return stack.indexOf(needle) >= 0;
+}
+// Spoken lines the client reads aloud. Sources, in order: the hook column,
+// filming_direction "Verbal Hook" when it adds a line, every non-clip paragraph
+// of full_script, the cta column, then filming_direction "CTA" when it adds a
+// line. Cover titles, on-screen labels, clip cues, and caption notes stay out.
+// A shorter hook never replaces the body.
+function clientSpokenScript(s) {
+  const sections = [];
+  function push(text) {
+    const raw = asText(text).trim();
+    if (!raw || /^no script on this card\.?$/i.test(raw)) return;
+    const joined = sections.join('\n\n');
+    if (clientSpokenContains(joined, raw)) return;
+    if (joined && clientSpokenContains(raw, joined)) {
+      sections.length = 0;
+      sections.push(raw);
+      return;
+    }
+    sections.push(raw);
+  }
+  function pushCta(value) {
+    const raw = asText(value).trim();
+    if (!raw) return;
+    const cleaned = spokenCta(raw);
+    push(cleaned || raw);
+  }
+  push(spokenHook(s));
+  push(fdExact(s, 'Verbal Hook'));
+  scriptFlow(s).forEach(sec => {
+    if (!sec || sec.kind === 'clip' || sec.kind === 'hook' || sec.kind === 'cta') return;
+    push(sec.text);
+  });
+  pushCta(s && s.cta);
+  pushCta(fdExact(s, 'CTA'));
+  return sections.join('\n\n').trim();
+}
+function clientHookBlock(label, text) {
+  const body = asText(text).trim();
+  return `<section class="prep-block"><h3>${escHtml(label)}</h3>${body ? `<p>${prepText(body)}</p>` : '<p class="prep-empty">Not on this script.</p>'}</section>`;
+}
+function clientReferenceHtml(model) {
+  model = model || {};
+  const info = model.ref;
+  const frame = prepFrame(info, 'Reference video');
+  let open = '<p class="prep-empty">No reference video on this script.</p>';
+  if (info && (info.watch || info.label)) open = prepOpenLink(info, 'Open reference video') || open;
+  return `
+    <p class="eyebrow">Reference</p>
+    <h2 id="prep-title">Reference video</h2>
+    <div class="prep-watch">${frame}</div>
+    ${open}`;
+}
+function clientScriptSheetHtml(model) {
+  model = model || {};
+  return `
+    <p class="eyebrow">Script</p>
+    <h2 id="prep-title">${escHtml(model.title || 'Script')}</h2>
+    ${clientHookBlock('Visual hook', model.visualHook)}
+    ${clientHookBlock('Text hook', model.textHook)}
+    ${clientHookBlock('Spoken script', model.spokenScript)}`;
+}
+function clientFilmReadyHtml(model) {
+  model = model || {};
+  return `
+    <p class="eyebrow">Film</p>
+    <h2 id="prep-title">You're ready</h2>
+    <p class="prep-lead">The next screen is the spoken script.</p>
+    <p class="prep-fact"><b>${escHtml(model.title || 'Script')}</b></p>`;
+}
+function clientFilmStepHtml(model, step) {
+  if (step === 1) return clientScriptSheetHtml(model);
+  if (step >= 2) return clientFilmReadyHtml(model);
+  return clientReferenceHtml(model);
+}
 function prepReferenceHtml(model) {
+  if (clientFilmSheetOn()) return clientReferenceHtml(model);
   model = model || {};
   if (model.react) {
     const keep = model.principles
@@ -11233,7 +11557,9 @@ function prepShowsAudit() {
   return uiIsAdmin();
 }
 function prepPlan(showAudit) {
-  const labels = showAudit ? ['Read', 'Audit', 'Reference', 'Notes', 'Film'] : ['Reference', 'Notes', 'Film'];
+  const labels = showAudit
+    ? ['Read', 'Audit', 'Reference', 'Notes', 'Film']
+    : (clientFilmSheetOn() ? ['Reference', 'Script', 'Film'] : ['Reference', 'Notes', 'Film']);
   return { labels: labels, last: labels.length - 1 };
 }
 function prepContentIndex(step, showAudit) {
@@ -12862,6 +13188,7 @@ function prepAuditHtml(s) {
 }
 
 function prepStepHtml(model, step) {
+  if (clientFilmSheetOn()) return clientFilmStepHtml(model, step);
   if (step === 0) return prepReferenceHtml(model);
   if (step === 1) {
     const who = [model.person, model.camera, model.onCamera].filter(Boolean);
@@ -14354,9 +14681,17 @@ window.setClient   = slug => {
   listSearch = '';
   previousOpen = false;
   viewSegment = defaultSegmentForClient(slug);
+  showPastOneOffs = false;
   adminLane = 'review';
   hubPage = 'main';
   moreOpen = false;
+  viewTab = 'list';
+  resetScriptNav();
+  renderDash();
+};
+window.togglePastOneOffs = () => {
+  if (!clientFilmQueueOn()) return;
+  showPastOneOffs = !showPastOneOffs;
   viewTab = 'list';
   resetScriptNav();
   renderDash();
@@ -14381,6 +14716,7 @@ window.previewAsClient = (slug) => {
   listSearch = '';
   previousOpen = false;
   viewSegment = defaultSegmentForClient(slug);
+  showPastOneOffs = false;
   adminLane = 'batches';
   hubPage = 'main';
   moreOpen = false;
@@ -14412,6 +14748,7 @@ window.exitClientPreview = () => {
   listSearch = '';
   previousOpen = false;
   viewSegment = defaultSegmentForClient(viewSlug);
+  showPastOneOffs = false;
   adminLane = 'review';
   hubPage = 'main';
   moreOpen = false;
@@ -15235,6 +15572,7 @@ if (location.hostname === '127.0.0.1' || location.hostname === 'localhost') {
     viewMode = opts.viewMode || 'all';
     viewTab = opts.viewTab || 'list';
     viewSegment = opts.viewSegment || defaultSegmentForClient(viewSlug);
+    showPastOneOffs = !!opts.showPastOneOffs;
     adminLane = opts.adminLane || (role === 'admin' ? 'review' : 'batches');
     filtersOpen = opts.filtersOpen !== false && role === 'admin';
     settingsOpen = false;

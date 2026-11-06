@@ -23,7 +23,11 @@ function extract(name) {
 
 const names = [
   'escHtml', 'ymd', 'groupStatus', 'parseBatchDate', 'groupBatchName', 'groupBatchDate',
-  'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
+  'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'isOneOffBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
+  'clientScriptHeld', 'isCurrentRepeatableBatch', 'andrewQueueBucket', 'groupQueueBucket', 'queueAnchor', 'compareCurrentFilmGroups', 'splitClientFilmQueue', 'clientFilmQueueOn', 'clientFilmSheetOn',
+  'takeGroupKey', 'shownScript',
+  'fdExact', 'scriptVisualHook', 'scriptTextHook', 'clientSpokenContains', 'clientSpokenScript', 'clientHookBlock', 'clientReferenceHtml', 'clientScriptSheetHtml', 'clientFilmReadyHtml', 'clientFilmStepHtml',
+  'flowTextHtml', 'prompterHtml', 'prompterNotesHtml', 'prompterChips', 'releaseVisibleTo', 'releaseAudience',
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
   'asText', 'clipText', 'wordCount', 'readLabel', 'parseHookPair', 'normSpoken',
@@ -132,6 +136,7 @@ const src = [
   extractAssignment('CLIENT_RESOURCE_MANIFESTS'),
   extractAssignment('FORMAT_VAULT'),
   'var prepState = null;',
+  'var activeTake = {};',
   "var role = 'client';",
   "var previewSlug = null;",
   "var reviewClient = '';",
@@ -851,42 +856,55 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.11.05.2');
+assert.strictEqual(appVersion, '2026.11.06.1');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.11.05.2');
+assert.strictEqual(firstUnseen[0].version, '2026.11.06.1');
 assert.strictEqual(firstUnseen[0].version, appVersion);
+assert.strictEqual(firstUnseen[0].audience, 'admin');
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/See what they see/.test(releaseNotes));
-assert.ok(/Exit/.test(releaseNotes));
-assert.ok(/brain check/.test(releaseNotes));
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.05.2');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.05.2');
+assert.ok(/Past one-off scripts/.test(releaseNotes));
+assert.ok(/visual hook/.test(releaseNotes));
+assert.ok(/spoken script/.test(releaseNotes));
+assert.ok(!/See what the client sees/.test(firstUnseen[0].title));
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.06.1');
+const clientUnseen = ctx.unseenReleasesFor('', false, '', 'client');
+assert.strictEqual(clientUnseen.length, 1);
+assert.strictEqual(clientUnseen[0].version, '2026.11.05.1');
+assert.ok(!clientUnseen.some(r => r.audience === 'admin'));
+assert.ok(!/see what the client sees/i.test(clientUnseen[0].title + ' ' + clientUnseen[0].items.join(' ')));
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '', 'client').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', false, '', 'client').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '', 'client').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '', 'client')[0].version, '2026.11.05.1');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', true, '2026.11.05.2').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.05.2');
+assert.ok(!/see what the client sees/i.test(ctx.unseenReleasesFor('2026.10.28.4', true, '')[0].title));
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', true, appVersion).length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.05.1');
 assert.ok(script.includes('persistSession: true'));
 assert.ok(script.includes('autoRefreshToken: true'));
 assert.ok(script.includes('storageKey: HUB_AUTH_STORAGE_KEY'));
@@ -3284,5 +3302,232 @@ assert.ok(script.includes('pending research'));
 assert.ok(!script.includes('All current'));
 assert.ok(!script.includes('Stamp Queue Mode'));
 assert.ok(!script.includes('scripts to read and stamp'));
+
+function liveRow(id, batch, status, reel, extra) {
+  const current = status === 'Approved' && /10[./]28|10[./]30/.test(batch);
+  const body = current ? [
+    'MIDDLE-ONE ' + id + ' first body paragraph.',
+    id === 'b09886dc' ? 'ON-SCREEN TEXT: STOP GUESSING' : '',
+    'MIDDLE-TWO ' + id + ' second body paragraph.',
+    'MIDDLE-THREE ' + id + ' third body paragraph.',
+  ].filter(Boolean).join('\n\n') : '';
+  return Object.assign({
+    id: id,
+    client_slug: 'andrew',
+    batch: batch,
+    status: status,
+    reel_number: reel,
+    format: 'Tips',
+    title: 'Script ' + id,
+    hook: current ? ('INTRO ' + id + ' opening line.') : '',
+    full_script: body,
+    cta: current ? ('END-CTA ' + id + ' comment the word.') : '',
+    reference_clip: current ? 'https://www.instagram.com/reel/' + id + '/' : '',
+    camera: '',
+    filming_setup: current ? 'FRAMING: chest-up selfie.' : '',
+    editor_notes: current ? 'Who films: Andrew.' : '',
+    clip_directions: '',
+    filming_direction: current ? {
+      'Visual Hook': 'Visual for ' + id,
+      'Text Hook': 'TEXT ' + id,
+      'Verbal Hook': 'VERBAL ' + id + ' labeled hook.',
+      'CTA': 'FD-CTA ' + id + ' extra ask.',
+    } : {},
+  }, extra || {});
+}
+const coreBatch = 'CORE · 10.28.2026';
+const nolanBatch = 'NOLAN · 10.30.2026';
+const coreR3 = liveRow('b09886dc', coreBatch, 'Approved', 3);
+const liveGroups = [
+  [liveRow('conf-draft', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Draft', 1, { title: 'Ask them what is broken' })],
+  [liveRow('5f04391b', 'Mastermind · AIMW · 9.12.2026', 'Draft', 2, { title: 'Italy booth line' })],
+  [liveRow('arch-same-r3', coreBatch, 'Archived', 3), coreR3],
+  [liveRow('e2673ba2', coreBatch, 'Approved', 5)],
+  [liveRow('9c57f21f', coreBatch, 'Approved', 7)],
+  [liveRow('a008f24a', coreBatch, 'Approved', 8)],
+  [liveRow('ad1f8ea3', nolanBatch, 'Approved', 1)],
+  [liveRow('e9dabd69', nolanBatch, 'Approved', 2)],
+  [liveRow('2dbb9062', nolanBatch, 'Approved', 3)],
+  [liveRow('1b80d82f', coreBatch, 'Needs Review', 10, { title: 'R10 held' })],
+  [liveRow('core-nr', coreBatch, 'Needs Review', 1, { title: 'Needs Review core reel' })],
+  [liveRow('51ec39fb', 'Andrew Batch-03 · 8.20.2026', 'Approved', 4, { title: 'Most Underutilized GHL Feature' })],
+  [liveRow('batch02-posted', 'Andrew Batch-02 · 7.11.2026', 'Posted', 2)],
+  [liveRow('core23', 'CORE · 10.23.2026', 'Archived', 1)],
+  [liveRow('core28-arch', coreBatch, 'Archived', 6)],
+];
+for (let i = 0; i < 10; i++) {
+  liveGroups.push([liveRow('zz-draft-' + i, 'zz · soft-ref · CORE · 10.24.2026', 'Draft', i + 1)]);
+}
+for (let reel of [1, 2, 4, 6, 9, 11]) {
+  liveGroups.push([liveRow('core28-arch-' + reel, coreBatch, 'Archived', reel)]);
+}
+liveGroups.push([
+  liveRow('conf-arch', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Archived', 8),
+  liveRow('conf-draft-hidden', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Draft', 8, { title: 'Draft beside archive' }),
+]);
+assert.strictEqual(ctx.isCurrentRepeatableBatch(coreBatch), true);
+assert.strictEqual(ctx.isCurrentRepeatableBatch(nolanBatch), true);
+assert.strictEqual(ctx.isCurrentRepeatableBatch('CORE · 10.24.2026'), false);
+assert.strictEqual(ctx.isCurrentRepeatableBatch('CORE · 10.23.2026'), false);
+assert.strictEqual(ctx.isCurrentRepeatableBatch('zz · soft-ref · CORE · 10.24.2026'), false);
+assert.strictEqual(ctx.isOneOffBatch('Mastermind · AIMW · 9.12.2026'), true);
+assert.strictEqual(ctx.isOneOffBatch('zz · soft-ref · CORE · 10.24.2026'), false);
+assert.strictEqual(ctx.andrewQueueBucket(coreR3), 'current');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[9][0]), 'hidden');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[0][0]), 'past');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[11][0]), 'past');
+assert.strictEqual(ctx.andrewQueueBucket(liveGroups[14][0]), 'hidden');
+liveGroups.push([liveRow('core-filming', coreBatch, 'Filming', 9)]);
+const andrewSplit = ctx.splitClientFilmQueue(liveGroups);
+const currentIds = andrewSplit.current.map(g => ctx.queueAnchor(g, 'current').id);
+assert.strictEqual(currentIds.join(','), 'ad1f8ea3,e9dabd69,2dbb9062,b09886dc,e2673ba2,9c57f21f,a008f24a');
+assert.strictEqual(currentIds.filter(id => id === 'b09886dc' || id === '2dbb9062').join(','), '2dbb9062,b09886dc');
+const pastIds = andrewSplit.past.map(g => g[0].id);
+assert.ok(pastIds.indexOf('conf-draft') >= 0);
+assert.ok(pastIds.indexOf('5f04391b') >= 0);
+assert.ok(pastIds.indexOf('51ec39fb') >= 0);
+assert.ok(pastIds.indexOf('batch02-posted') >= 0);
+assert.ok(pastIds.indexOf('core-filming') >= 0);
+assert.ok(currentIds.indexOf('core-filming') < 0);
+const visible = currentIds.concat(pastIds);
+assert.ok(visible.indexOf('1b80d82f') < 0);
+assert.ok(visible.indexOf('core-nr') < 0);
+assert.ok(visible.indexOf('51ec39fb') !== 0 || currentIds.indexOf('51ec39fb') < 0);
+assert.ok(currentIds.indexOf('51ec39fb') < 0);
+assert.ok(!visible.some(id => id.indexOf('zz-draft-') === 0));
+assert.ok(!visible.some(id => id.indexOf('core28-arch') === 0 || id === 'core23' || id === 'arch-same-r3' || id === 'conf-draft-hidden' || id === 'conf-arch'));
+assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Needs Review' }, 'Approved'), true);
+assert.strictEqual(ctx.isClientDeliveryStatus('Needs Review'), true);
+assert.strictEqual(ctx.isClientDeliveryStatus('Approved'), true);
+
+const savedRole = ctx.role;
+const savedView = ctx.viewSlug;
+const savedMine = ctx.mySlug;
+const savedParity = ctx.clientParity;
+const savedPreview = ctx.previewSlug;
+ctx.role = 'client';
+ctx.viewSlug = 'andrew';
+ctx.mySlug = 'andrew';
+ctx.clientParity = false;
+ctx.previewSlug = null;
+assert.strictEqual(ctx.clientFilmQueueOn(), true);
+const mixedR3 = liveGroups.find(g => g.some(s => s.id === 'arch-same-r3'));
+assert.strictEqual(ctx.shownScript(mixedR3).id, 'b09886dc');
+assert.strictEqual(ctx.clientFilmSheetOn(), true);
+assert.strictEqual(ctx.prepPlan(false).labels.join('|'), 'Reference|Script|Film');
+assert.strictEqual(ctx.uiIsAdmin(), false);
+const sheetScript = coreR3;
+const spokenParts = [
+  'INTRO b09886dc opening line.',
+  'VERBAL b09886dc labeled hook.',
+  'MIDDLE-ONE b09886dc first body paragraph.',
+  'MIDDLE-TWO b09886dc second body paragraph.',
+  'MIDDLE-THREE b09886dc third body paragraph.',
+  'END-CTA b09886dc comment the word.',
+  'FD-CTA b09886dc extra ask.',
+];
+const spoken = ctx.clientSpokenScript(sheetScript);
+let spokenAt = -1;
+spokenParts.forEach(part => {
+  const at = spoken.indexOf(part);
+  assert.ok(at > spokenAt, part);
+  spokenAt = at;
+});
+assert.ok(!spoken.includes('STOP GUESSING'));
+assert.ok(!/who films/i.test(spoken));
+assert.ok(!/framing/i.test(spoken));
+currentIds.forEach(id => {
+  const row = liveGroups.flat().find(s => s.id === id);
+  const body = ctx.clientSpokenScript(row);
+  ['INTRO ' + id, 'MIDDLE-ONE ' + id, 'MIDDLE-TWO ' + id, 'MIDDLE-THREE ' + id, 'END-CTA ' + id].forEach(part => {
+    assert.ok(body.includes(part), id + ' missing ' + part);
+  });
+  assert.ok(body.indexOf('MIDDLE-ONE ' + id) < body.indexOf('MIDDLE-TWO ' + id));
+  assert.ok(body.indexOf('MIDDLE-TWO ' + id) < body.indexOf('MIDDLE-THREE ' + id));
+  assert.ok(body.indexOf('MIDDLE-THREE ' + id) < body.indexOf('END-CTA ' + id));
+});
+const onlyDirection = {
+  id: 'only-fd', client_slug: 'andrew', batch: coreBatch, status: 'Approved', reel_number: 12,
+  hook: '', full_script: '', cta: '',
+  filming_direction: {
+    'Verbal Hook': 'LONGVERBAL the whole talk stays here without a cut.',
+    'CTA': 'LONGCTA the ending ask stays intact.',
+  },
+};
+const onlySpoken = ctx.clientSpokenScript(onlyDirection);
+assert.ok(onlySpoken.includes('LONGVERBAL the whole talk stays here without a cut.'));
+assert.ok(onlySpoken.includes('LONGCTA the ending ask stays intact.'));
+assert.ok(onlySpoken.indexOf('LONGVERBAL') < onlySpoken.indexOf('LONGCTA'));
+const sheet = ctx.prepStepHtml(ctx.prepModel(sheetScript), 1);
+assert.ok(sheet.includes('Visual for b09886dc'));
+assert.ok(sheet.includes('TEXT b09886dc'));
+spokenParts.forEach(part => assert.ok(sheet.includes(part), part));
+assert.ok(sheet.includes('Visual hook'));
+assert.ok(sheet.includes('Text hook'));
+assert.ok(sheet.includes('Spoken script'));
+assert.ok(!/who films/i.test(sheet));
+assert.ok(!/framing/i.test(sheet));
+assert.ok(!/pacing/i.test(sheet));
+assert.ok(!/beat /i.test(sheet));
+assert.ok(!sheet.includes('filming_setup'));
+assert.ok(!sheet.includes('Human QA'));
+assert.ok(!sheet.includes('Cristian brain check'));
+const reference = ctx.prepStepHtml(ctx.prepModel(sheetScript), 0);
+assert.ok(reference.includes('Reference video'));
+assert.ok(reference.includes('instagram.com/reel/b09886dc'));
+assert.ok(!/pacing/i.test(reference));
+assert.ok(!/framing/i.test(reference));
+assert.ok(!reference.includes('Who films'));
+const spokenOnly = ctx.prompterHtml(sheetScript);
+assert.ok(spokenOnly.includes('Spoken script'));
+spokenParts.forEach(part => assert.ok(spokenOnly.includes(part), 'prompter ' + part));
+assert.ok(!spokenOnly.includes('STOP GUESSING'));
+assert.ok(!spokenOnly.includes('Who films'));
+assert.ok(!/Beat /.test(spokenOnly));
+assert.ok(!/framing/i.test(spokenOnly));
+assert.ok(!/pacing/i.test(spokenOnly));
+assert.ok(!/who films/i.test(spokenOnly));
+const filmNotes = ctx.prompterNotesHtml(sheetScript);
+assert.ok(filmNotes.includes('Visual hook'));
+assert.ok(filmNotes.includes('Text hook'));
+assert.ok(!/on camera/i.test(filmNotes));
+assert.ok(!/shot /i.test(filmNotes));
+ctx.role = 'admin';
+ctx.clientParity = true;
+ctx.previewSlug = 'andrew';
+assert.strictEqual(ctx.clientFilmQueueOn(), true);
+assert.strictEqual(ctx.clientFilmSheetOn(), true);
+assert.strictEqual(ctx.uiIsAdmin(), false);
+const paritySheet = ctx.prepStepHtml(ctx.prepModel(sheetScript), 1);
+assert.ok(paritySheet.includes('Spoken script'));
+assert.ok(!/who films/i.test(paritySheet));
+ctx.clientParity = false;
+ctx.previewSlug = null;
+assert.strictEqual(ctx.uiIsAdmin(), true);
+assert.strictEqual(ctx.clientFilmQueueOn(), false);
+assert.strictEqual(ctx.clientFilmSheetOn(), false);
+const adminNotes = ctx.prepStepHtml(ctx.prepModel(sheetScript), 1);
+assert.ok(adminNotes.includes('Who films'));
+ctx.role = 'client';
+ctx.viewSlug = 'jan';
+ctx.mySlug = 'jan';
+assert.strictEqual(ctx.clientFilmQueueOn(), false);
+assert.strictEqual(ctx.clientFilmSheetOn(), false);
+const janNotes = ctx.prepStepHtml(ctx.prepModel(Object.assign({}, sheetScript, { client_slug: 'jan' })), 1);
+assert.ok(janNotes.includes('Who films'));
+ctx.viewSlug = 'devin';
+ctx.mySlug = 'devin';
+assert.strictEqual(ctx.clientFilmQueueOn(), false);
+assert.strictEqual(ctx.clientFilmSheetOn(), false);
+ctx.role = savedRole;
+ctx.viewSlug = savedView;
+ctx.mySlug = savedMine;
+ctx.clientParity = savedParity;
+ctx.previewSlug = savedPreview;
+assert.ok(script.includes('Past one-off scripts'));
+assert.ok(script.includes("audience: 'admin'"));
+assert.ok(script.includes('id="past-one-offs"'));
+assert.ok(html.includes('body.prep-open #app'));
+assert.ok(html.includes('body.prep-open #app,\nbody.edit-open #app { display: none; }') || html.includes('body.edit-open #app { display: none; }'));
 
 console.log('hub-logic tests passed');

@@ -211,12 +211,16 @@ The admin screen stays the admin screen. Needs your brain check, Read + stamp, H
 
 1. On the admin screen, open **View a client**.
 2. Next to that client, tap **See what they see**. If you are already in their admin workspace, the same button is on the Viewing as banner.
-3. The film list and Film prep match that client's own login: Conference, New to film, and Other/Past, then Reference, Notes, and Film. Read + stamp and Human QA are not on this screen.
+3. The film list and Film prep match that client's own login. Read + stamp and Human QA are not on this screen.
 4. A banner says **Viewing as [name]** with **Exit**. Exit returns to the full admin screen.
+
+Andrew’s client screen leads with the current scripts. Conference, Italy, and other one-off batches stay behind **Past one-off scripts**. Nothing is deleted. His script screen shows the reference video, the visual hook, the text hook, and the spoken script. The teleprompter is the spoken script. Jan and Devin keep their existing lists. The admin note titled “See what the client sees” is admin-only. A real client login does not get that popup, including after a reload.
 
 **Their scripts, prep, and edits** is still the admin workspace for that client. It keeps the stamp tools.
 
-This does not change Supabase auth or anyone's password. It only changes what the admin screen draws. The page version is `2026.11.05.2`, so GitHub Pages loads the new file instead of a cached copy.
+This does not change Supabase auth or anyone's password. It only changes what the admin screen draws. The page version is `2026.11.06.1`, so GitHub Pages loads the new file instead of a cached copy.
+
+Live rows still decide what “current” means. A script shows in Andrew’s film list when its batch is not a conference, Italy, mastermind, or one-off batch, its status is Needs Review, Approved, or Filming, and it is not held. Andrew reel 10 stays off that list until its status is Approved, Filming, or Posted. Confirm those statuses in Supabase if a row is still in the wrong place after this ships. Do not mark a held row Approved just to make it appear.
 
 ---
 

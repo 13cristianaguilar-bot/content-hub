@@ -5441,10 +5441,11 @@ function isCurrentRepeatableBatch(batch) {
 }
 
 // Andrew's client list. Current means the Approved CORE 10.28 and NOLAN 10.30
-// rows only. Needs Review, non-one-off drafts, and archived rows stay out.
-// One-off drafts stay behind Past one-off scripts because that is where the
-// conference and mastermind rows already were. Older Approved rows, including
-// Batch-03, stay in that past group so they do not lead the current seven.
+// rows only. The old All view already showed conference and mastermind drafts,
+// so those one-off drafts stay behind Past one-off scripts. A draft outside
+// those batches, including zz CORE 10.24, stays off. Needs Review stays off
+// this film list. Archived stays off. Older Approved, Posted, Passed, and
+// Filming rows stay in the past group so they do not lead the current seven.
 function andrewQueueBucket(s) {
   if (!s) return 'hidden';
   const status = s.status || 'Draft';
@@ -5459,12 +5460,17 @@ function andrewQueueBucket(s) {
 }
 
 function groupQueueBucket(group) {
+  const rows = group || [];
   let bucket = 'hidden';
-  (group || []).forEach(s => {
+  rows.forEach(s => {
     const next = andrewQueueBucket(s);
     if (next === 'current') bucket = 'current';
     else if (next === 'past' && bucket !== 'current') bucket = 'past';
   });
+  // The old All view hid a group when any take was Archived. Keep that, except
+  // an Approved current row, which stays even beside an archived sibling.
+  const archived = rows.some(s => s && (s.status || '') === 'Archived');
+  if (archived && bucket !== 'current') return 'hidden';
   return bucket;
 }
 
@@ -10860,22 +10866,47 @@ function scriptTextHook(s) {
   if (screen.length && screen[0] && screen[0].text) return asText(screen[0].text).trim();
   return '';
 }
+function clientSpokenContains(hay, piece) {
+  const needle = normSpoken(piece);
+  if (!needle) return true;
+  const stack = normSpoken(hay);
+  if (!stack) return false;
+  return stack.indexOf(needle) >= 0;
+}
+// Spoken lines the client reads aloud. Sources, in order: the hook column,
+// filming_direction "Verbal Hook" when it adds a line, every non-clip paragraph
+// of full_script, the cta column, then filming_direction "CTA" when it adds a
+// line. Cover titles, on-screen labels, clip cues, and caption notes stay out.
+// A shorter hook never replaces the body.
 function clientSpokenScript(s) {
-  const verbal = fdExact(s, 'Verbal Hook');
-  const cta = fdExact(s, 'CTA');
-  if (verbal || cta) {
-    const parts = [];
-    if (verbal) parts.push(verbal);
-    if (cta && normSpoken(cta) !== normSpoken(verbal)) parts.push(cta);
-    return parts.join('\n\n').trim();
+  const sections = [];
+  function push(text) {
+    const raw = asText(text).trim();
+    if (!raw || /^no script on this card\.?$/i.test(raw)) return;
+    const joined = sections.join('\n\n');
+    if (clientSpokenContains(joined, raw)) return;
+    if (joined && clientSpokenContains(raw, joined)) {
+      sections.length = 0;
+      sections.push(raw);
+      return;
+    }
+    sections.push(raw);
   }
-  const parts = [];
+  function pushCta(value) {
+    const raw = asText(value).trim();
+    if (!raw) return;
+    const cleaned = spokenCta(raw);
+    push(cleaned || raw);
+  }
+  push(spokenHook(s));
+  push(fdExact(s, 'Verbal Hook'));
   scriptFlow(s).forEach(sec => {
-    if (!sec || sec.kind === 'clip') return;
-    const text = asText(sec.text).trim();
-    if (text) parts.push(text);
+    if (!sec || sec.kind === 'clip' || sec.kind === 'hook' || sec.kind === 'cta') return;
+    push(sec.text);
   });
-  return parts.join('\n\n').trim();
+  pushCta(s && s.cta);
+  pushCta(fdExact(s, 'CTA'));
+  return sections.join('\n\n').trim();
 }
 function clientHookBlock(label, text) {
   const body = asText(text).trim();

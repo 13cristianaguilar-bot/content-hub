@@ -220,7 +220,9 @@ Andrew’s client screen leads with the current scripts. Conference, Italy, and 
 
 This does not change Supabase auth or anyone's password. It only changes what the admin screen draws. The page version is `2026.11.06.1`, so GitHub Pages loads the new file instead of a cached copy.
 
-Andrew’s current list is the Approved CORE 10.28 and NOLAN 10.30 scripts. Needs Review, archived rows, and drafts that are not conference or mastermind one-offs stay off that list. Reel 10 stays off while it is Needs Review. Older Approved rows, including Batch-03, open from Past one-off scripts and do not lead the current list. Conference and mastermind drafts stay behind that same button. Nothing is deleted, and this does not change who can read a row in Supabase.
+Andrew’s current list is the Approved CORE 10.28 and NOLAN 10.30 scripts. His spoken script is the hook column, the full_script body, and the cta column, plus a filming_direction Verbal Hook or CTA only when that text is not already in those columns. The script screen still shows the reference, visual hook, and text hook beside that full spoken body.
+
+Conference and mastermind drafts were already on his list. They stay behind Past one-off scripts. Drafts outside those one-off batches, including the zz CORE 10.24 rows, stay off. A draft that shares a group with an archived take stays off, the same way All hid that group. Needs Review, including reel 10, stays off this film list. Archived rows stay off. Older Approved, Posted, Passed, and Filming rows, including Batch-03, open from Past one-off scripts and do not lead the current list. Nothing is deleted, and this does not change who can read a row in Supabase.
 
 ---
 

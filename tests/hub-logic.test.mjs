@@ -26,7 +26,7 @@ const names = [
   'isFilmedStatus', 'isUnfilmedGroup', 'isConferenceBatch', 'isFloorFilmBatch', 'isOneOffBatch', 'groupIsConference', 'segmentOfGroup', 'partitionSegments',
   'clientScriptHeld', 'isCurrentRepeatableBatch', 'andrewQueueBucket', 'groupQueueBucket', 'queueAnchor', 'compareCurrentFilmGroups', 'splitClientFilmQueue', 'clientFilmQueueOn', 'clientFilmSheetOn',
   'takeGroupKey', 'shownScript',
-  'fdExact', 'scriptVisualHook', 'scriptTextHook', 'clientSpokenScript', 'clientHookBlock', 'clientReferenceHtml', 'clientScriptSheetHtml', 'clientFilmReadyHtml', 'clientFilmStepHtml',
+  'fdExact', 'scriptVisualHook', 'scriptTextHook', 'clientSpokenContains', 'clientSpokenScript', 'clientHookBlock', 'clientReferenceHtml', 'clientScriptSheetHtml', 'clientFilmReadyHtml', 'clientFilmStepHtml',
   'flowTextHtml', 'prompterHtml', 'prompterNotesHtml', 'prompterChips', 'releaseVisibleTo', 'releaseAudience',
   'weekStartMonday', 'freshPartition', 'scriptType',
   'renderStatusRail', 'renderVideoSlot',
@@ -3305,6 +3305,12 @@ assert.ok(!script.includes('scripts to read and stamp'));
 
 function liveRow(id, batch, status, reel, extra) {
   const current = status === 'Approved' && /10[./]28|10[./]30/.test(batch);
+  const body = current ? [
+    'MIDDLE-ONE ' + id + ' first body paragraph.',
+    id === 'b09886dc' ? 'ON-SCREEN TEXT: STOP GUESSING' : '',
+    'MIDDLE-TWO ' + id + ' second body paragraph.',
+    'MIDDLE-THREE ' + id + ' third body paragraph.',
+  ].filter(Boolean).join('\n\n') : '';
   return Object.assign({
     id: id,
     client_slug: 'andrew',
@@ -3313,18 +3319,19 @@ function liveRow(id, batch, status, reel, extra) {
     reel_number: reel,
     format: 'Tips',
     title: 'Script ' + id,
-    hook: '',
-    full_script: '',
+    hook: current ? ('INTRO ' + id + ' opening line.') : '',
+    full_script: body,
+    cta: current ? ('END-CTA ' + id + ' comment the word.') : '',
     reference_clip: current ? 'https://www.instagram.com/reel/' + id + '/' : '',
     camera: '',
-    filming_setup: '',
-    editor_notes: '',
+    filming_setup: current ? 'FRAMING: chest-up selfie.' : '',
+    editor_notes: current ? 'Who films: Andrew.' : '',
     clip_directions: '',
     filming_direction: current ? {
       'Visual Hook': 'Visual for ' + id,
       'Text Hook': 'TEXT ' + id,
-      'Verbal Hook': 'Say the verbal hook for ' + id + '.',
-      'CTA': 'Comment the word for ' + id + '.',
+      'Verbal Hook': 'VERBAL ' + id + ' labeled hook.',
+      'CTA': 'FD-CTA ' + id + ' extra ask.',
     } : {},
   }, extra || {});
 }
@@ -3354,6 +3361,10 @@ for (let i = 0; i < 10; i++) {
 for (let reel of [1, 2, 4, 6, 9, 11]) {
   liveGroups.push([liveRow('core28-arch-' + reel, coreBatch, 'Archived', reel)]);
 }
+liveGroups.push([
+  liveRow('conf-arch', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Archived', 8),
+  liveRow('conf-draft-hidden', '⭐ CONFERENCE · Floor Film · AIMW/GHL · 10.25.2026', 'Draft', 8, { title: 'Draft beside archive' }),
+]);
 assert.strictEqual(ctx.isCurrentRepeatableBatch(coreBatch), true);
 assert.strictEqual(ctx.isCurrentRepeatableBatch(nolanBatch), true);
 assert.strictEqual(ctx.isCurrentRepeatableBatch('CORE · 10.24.2026'), false);
@@ -3384,7 +3395,7 @@ assert.ok(visible.indexOf('core-nr') < 0);
 assert.ok(visible.indexOf('51ec39fb') !== 0 || currentIds.indexOf('51ec39fb') < 0);
 assert.ok(currentIds.indexOf('51ec39fb') < 0);
 assert.ok(!visible.some(id => id.indexOf('zz-draft-') === 0));
-assert.ok(!visible.some(id => id.indexOf('core28-arch') === 0 || id === 'core23' || id === 'arch-same-r3'));
+assert.ok(!visible.some(id => id.indexOf('core28-arch') === 0 || id === 'core23' || id === 'arch-same-r3' || id === 'conf-draft-hidden' || id === 'conf-arch'));
 assert.strictEqual(ctx.humanQaBlocksStatus({ status: 'Needs Review' }, 'Approved'), true);
 assert.strictEqual(ctx.isClientDeliveryStatus('Needs Review'), true);
 assert.strictEqual(ctx.isClientDeliveryStatus('Approved'), true);
@@ -3406,11 +3417,51 @@ assert.strictEqual(ctx.clientFilmSheetOn(), true);
 assert.strictEqual(ctx.prepPlan(false).labels.join('|'), 'Reference|Script|Film');
 assert.strictEqual(ctx.uiIsAdmin(), false);
 const sheetScript = coreR3;
+const spokenParts = [
+  'INTRO b09886dc opening line.',
+  'VERBAL b09886dc labeled hook.',
+  'MIDDLE-ONE b09886dc first body paragraph.',
+  'MIDDLE-TWO b09886dc second body paragraph.',
+  'MIDDLE-THREE b09886dc third body paragraph.',
+  'END-CTA b09886dc comment the word.',
+  'FD-CTA b09886dc extra ask.',
+];
+const spoken = ctx.clientSpokenScript(sheetScript);
+let spokenAt = -1;
+spokenParts.forEach(part => {
+  const at = spoken.indexOf(part);
+  assert.ok(at > spokenAt, part);
+  spokenAt = at;
+});
+assert.ok(!spoken.includes('STOP GUESSING'));
+assert.ok(!/who films/i.test(spoken));
+assert.ok(!/framing/i.test(spoken));
+currentIds.forEach(id => {
+  const row = liveGroups.flat().find(s => s.id === id);
+  const body = ctx.clientSpokenScript(row);
+  ['INTRO ' + id, 'MIDDLE-ONE ' + id, 'MIDDLE-TWO ' + id, 'MIDDLE-THREE ' + id, 'END-CTA ' + id].forEach(part => {
+    assert.ok(body.includes(part), id + ' missing ' + part);
+  });
+  assert.ok(body.indexOf('MIDDLE-ONE ' + id) < body.indexOf('MIDDLE-TWO ' + id));
+  assert.ok(body.indexOf('MIDDLE-TWO ' + id) < body.indexOf('MIDDLE-THREE ' + id));
+  assert.ok(body.indexOf('MIDDLE-THREE ' + id) < body.indexOf('END-CTA ' + id));
+});
+const onlyDirection = {
+  id: 'only-fd', client_slug: 'andrew', batch: coreBatch, status: 'Approved', reel_number: 12,
+  hook: '', full_script: '', cta: '',
+  filming_direction: {
+    'Verbal Hook': 'LONGVERBAL the whole talk stays here without a cut.',
+    'CTA': 'LONGCTA the ending ask stays intact.',
+  },
+};
+const onlySpoken = ctx.clientSpokenScript(onlyDirection);
+assert.ok(onlySpoken.includes('LONGVERBAL the whole talk stays here without a cut.'));
+assert.ok(onlySpoken.includes('LONGCTA the ending ask stays intact.'));
+assert.ok(onlySpoken.indexOf('LONGVERBAL') < onlySpoken.indexOf('LONGCTA'));
 const sheet = ctx.prepStepHtml(ctx.prepModel(sheetScript), 1);
 assert.ok(sheet.includes('Visual for b09886dc'));
 assert.ok(sheet.includes('TEXT b09886dc'));
-assert.ok(sheet.includes('Say the verbal hook for b09886dc.'));
-assert.ok(sheet.includes('Comment the word for b09886dc.'));
+spokenParts.forEach(part => assert.ok(sheet.includes(part), part));
 assert.ok(sheet.includes('Visual hook'));
 assert.ok(sheet.includes('Text hook'));
 assert.ok(sheet.includes('Spoken script'));
@@ -3429,7 +3480,8 @@ assert.ok(!/framing/i.test(reference));
 assert.ok(!reference.includes('Who films'));
 const spokenOnly = ctx.prompterHtml(sheetScript);
 assert.ok(spokenOnly.includes('Spoken script'));
-assert.ok(spokenOnly.includes('Say the verbal hook for b09886dc.'));
+spokenParts.forEach(part => assert.ok(spokenOnly.includes(part), 'prompter ' + part));
+assert.ok(!spokenOnly.includes('STOP GUESSING'));
 assert.ok(!spokenOnly.includes('Who films'));
 assert.ok(!/Beat /.test(spokenOnly));
 assert.ok(!/framing/i.test(spokenOnly));

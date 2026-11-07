@@ -1,0 +1,3 @@
+# Private client-capture outputs. Do not commit exports or screenshots.
+/private-captures/
+tools/client-capture/out/

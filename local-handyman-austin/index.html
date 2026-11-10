@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Local Handyman Austin · Estimating Command Center (mockup)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  /* Brand colors pulled from localhandyman.com/austin (site CSS index-Dhwfpwzi.css) */
+  --brand:#F04E23; --brand-hover:#C1440E; --brand-deep:#A83A0C; --brand-soft:#FEF0EB;
+  --navy:#1C2B4A; --dark:#1D1D1B;
+  --accent:#F04E23; --accent-soft:#FEF0EB;
+  --good:#2E9E44; --watch:#D98A06; --act:#C62828;
+  --good-soft:#EAF6EC; --watch-soft:#FDF4E0; --act-soft:#FBE9E9;
+  --bg:#F8F7F5; --card:#FFFFFF; --ink:#1D1D1B; --ink2:#4A4A48; --ink3:#858481; --line:#E8E6E1; --line2:#F0EFEB;
+  --shadow:0 1px 2px rgba(29,29,27,.05),0 4px 16px rgba(29,29,27,.05);
+  --r:12px;
+  --head:Montserrat,Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#141413;--card:#1D1D1B;--ink:#F0EFEB;--ink2:#BDBBB5;--ink3:#8E8C86;--line:#34322D;--line2:#272725;
+  --accent:#FF6A3D;--accent-soft:#3A1E14;--good-soft:#14301B;--watch-soft:#3A2D10;--act-soft:#3B1A18;--shadow:none}
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.num,td.h,.tile .v{font-variant-numeric:tabular-nums}
+a{color:var(--accent)}
+.wrap{max-width:1320px;margin:0 auto;padding:0 24px}
+header.top{background:var(--card);color:var(--ink);border-bottom:1px solid var(--line);box-shadow:inset 0 -3px 0 var(--brand)}
+header.top .wrap{display:flex;align-items:center;gap:16px;min-height:68px;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+.logo{height:48px;width:auto;display:block;flex:none}
+.logo-sm{width:34px;height:34px;border-radius:8px;background:var(--brand);color:#fff;display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:12px;flex:none}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand h1{font-family:var(--head);font-size:17px;margin:0;font-weight:800;letter-spacing:-.005em}
+.brand .sep{width:1px;align-self:stretch;background:var(--line);margin:4px 2px}
+.brand .sub{font-size:12px;color:var(--ink3)}
+.tag{display:inline-block;font-family:var(--head);text-transform:uppercase;letter-spacing:.08em;font-size:10px;font-weight:700;padding:4px 9px;border-radius:4px;background:var(--brand-soft);color:var(--brand-hover);border:1px solid rgba(240,78,35,.35);margin-left:8px;vertical-align:2px;white-space:nowrap}
+.spacer{flex:1}
+.seg{display:inline-flex;background:var(--line2);border-radius:6px;padding:3px;border:1px solid var(--line)}
+.seg button{border:0;background:transparent;color:var(--ink2);font-family:var(--head);font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:7px 12px;border-radius:4px;cursor:pointer}
+.seg button.on{background:var(--brand);color:#fff}
+.updated{font-size:12px;color:var(--ink3)}
+main{padding:22px 0 10px}
+.banner{display:flex;gap:14px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--watch);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);margin-bottom:18px}
+.banner b{display:block;margin-bottom:2px}
+.banner p{margin:0;color:var(--ink2)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.chip{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--line2);color:var(--ink2);border:1px solid var(--line)}
+.chip.w{background:var(--watch-soft);color:var(--watch);border-color:transparent;font-weight:600}
+.greet{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:4px 0 14px}
+.greet h2{margin:0;font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:-.01em}
+.greet p{margin:2px 0 0;color:var(--ink2)}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px 12px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.tile:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--st,var(--line))}
+.tile.hl{background:linear-gradient(180deg,var(--accent-soft),var(--card) 70%);border-color:var(--accent)}
+.tile .l{font-family:var(--head);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:700}
+.tile .v{font-family:var(--head);font-size:30px;font-weight:800;letter-spacing:-.02em;margin:4px 0 2px;line-height:1.1}
+.tile .v small{font-size:15px;font-weight:600;color:var(--ink2);margin-left:2px}
+.tile .d{font-size:12.5px;color:var(--ink2)}
+.tile .d b{font-weight:600}
+.tile svg{position:absolute;right:12px;bottom:12px;opacity:.9}
+.g-good{--st:var(--good)}.g-watch{--st:var(--watch)}.g-act{--st:var(--act)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;margin-bottom:18px;min-width:0}
+.card h3{margin:0;font-family:var(--head);font-weight:800;font-size:16px;letter-spacing:-.005em}
+.eyebrow{font-family:var(--head);text-transform:uppercase;letter-spacing:.2em;color:var(--brand);font-size:10.5px;font-weight:700;margin-bottom:4px}
+.card .hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.card .hd p{margin:3px 0 0;color:var(--ink3);font-size:12.5px}
+.pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px;background:var(--line2);color:var(--ink2);white-space:nowrap;border:1px solid var(--line)}
+.pipe{display:grid;grid-template-columns:1.25fr auto 1fr auto 1fr auto 1fr auto 1fr;align-items:stretch;gap:8px}
+.stage{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--bg);min-width:0}
+.stage .who{font-family:var(--head);font-size:10.5px;color:var(--brand)!important;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);font-weight:600}
+.stage .nm{font-weight:650;margin:2px 0 6px}
+.stage .ct{font-family:var(--head);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.stage .ct small{font-size:12px;color:var(--ink3);font-weight:500;margin-left:4px}
+.stage .sx{font-size:12px;color:var(--ink2);margin-top:6px}
+.stage.human{background:var(--navy);border-color:var(--navy);color:#fff}
+.stage.human .who{color:#FFB59E!important}.stage.human .sx,.stage.human .ct small{color:#C5CCDA}
+.stage .sub2{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.stage .sub2 div{display:flex;justify-content:space-between;font-size:12px;color:var(--ink2);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px 8px}
+.arrow{display:grid;place-items:center;color:var(--ink3)}
+.hold{margin-top:12px;font-size:12.5px;color:var(--ink2);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(0,1fr);gap:18px}
+.grid2b{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}
+.grid2,.grid2b{margin-bottom:18px}.grid2>.card,.grid2b>.card{margin-bottom:0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:11px 10px;border-bottom:1px solid var(--line2);vertical-align:middle}
+tbody tr{cursor:pointer;transition:background .12s}
+tbody tr:hover{background:var(--line2)}
+tbody tr.sel{background:var(--accent-soft)}
+td .jt{font-weight:600}
+td .meta{font-size:12px;color:var(--ink3)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.st:before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-wait{background:var(--accent-soft);color:var(--accent)}
+.s-flag{background:var(--watch-soft);color:var(--watch)}
+.s-draft{background:var(--line2);color:var(--ink2)}
+.s-hold{background:var(--line2);color:var(--ink3)}
+.s-sent{background:var(--good-soft);color:var(--good)}
+.s-back{background:var(--act-soft);color:var(--act)}
+.type{font-size:12px;color:var(--ink2)}
+.hrs{white-space:nowrap}
+.hrs .dlt{font-size:11.5px;margin-left:4px}
+.go{font-size:12px;font-weight:600;color:var(--accent);white-space:nowrap}
+.btn{font-family:var(--head);text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:12px;border-radius:4px;padding:11px 14px;cursor:pointer;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.btn.p{background:var(--brand);border-color:var(--brand);color:#fff}.btn.p:hover{background:var(--brand-hover);border-color:var(--brand-hover)}
+.btn.x{background:transparent;color:var(--ink);border:2px solid var(--ink)}
+
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.kv div{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px}
+.kv b{display:block;font-size:18px;font-variant-numeric:tabular-nums}
+.kv span{font-size:11.5px;color:var(--ink3)}
+.team{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.member{border:1px solid var(--line);border-radius:12px;padding:14px;background:var(--bg);display:flex;flex-direction:column;gap:8px;min-width:0}
+.member .top2{display:flex;align-items:center;gap:10px}
+.av{width:36px;height:36px;border-radius:8px;display:grid;place-items:center;font-family:var(--head);font-weight:800;color:#fff;background:var(--accent);flex:none;font-size:13px}
+.av.h{background:var(--navy)}
+.member .rn{font-family:var(--head);font-weight:700;line-height:1.2}
+.member .rt{font-size:12px;color:var(--ink3)}
+.member dl{margin:0;font-size:12.5px;display:grid;gap:6px}
+.member dt{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3);font-weight:600}
+.member dd{margin:0;color:var(--ink2)}
+.sw{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink2);border-top:1px solid var(--line);padding-top:8px;margin-top:auto}
+.toggle{width:36px;height:20px;border-radius:999px;background:var(--good);position:relative;border:0;cursor:pointer;flex:none}
+.toggle:after{content:"";position:absolute;top:2px;left:18px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s}
+.toggle.off{background:var(--ink3)}
+.toggle.off:after{left:2px}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tool{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:11px;background:var(--bg);min-width:0}
+.ti{width:32px;height:32px;border-radius:8px;background:var(--brand-soft);border:1px solid rgba(240,78,35,.25);display:grid;place-items:center;font-family:var(--head);font-weight:800;font-size:11px;color:var(--brand-hover);flex:none}
+@media (prefers-color-scheme:dark){.ti{background:#3A1E14;color:#FFB59E}}
+.tool b{display:block;font-size:13px}
+.tool span{font-size:12px;color:var(--ink2)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.guard{margin-top:12px;border-radius:12px;padding:12px;background:var(--good-soft);color:var(--ink);font-size:12.5px;display:flex;gap:10px}
+.guard svg{flex:none;color:var(--good)}
+.phone{max-width:330px;margin:0 auto;border:10px solid #1B2633;border-radius:34px;background:#F2F3F7;padding:16px 12px 18px;color:#111}
+.phone .bar{text-align:center;font-size:11.5px;color:#6B7280;margin-bottom:10px}
+.phone .from{text-align:center;font-weight:650;font-size:13px;margin-bottom:12px}
+.bub{background:#E5E5EA;border-radius:18px 18px 18px 6px;padding:10px 12px;font-size:13.5px;line-height:1.4;max-width:92%;margin-bottom:8px}
+.bub.me{background:#2F7CF6;color:#fff;border-radius:18px 18px 6px 18px;margin-left:auto;max-width:60%}
+.bub a{color:#1D5FD1;word-break:break-all}
+.phone .tm{font-size:10.5px;color:#8A8F98;text-align:center;margin:6px 0}
+.next{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.nx{border:1px dashed var(--line);border-radius:12px;padding:14px;background:var(--bg)}
+.nx .ph{font-family:var(--head);font-size:10.5px;text-transform:uppercase;letter-spacing:.2em;font-weight:700;color:var(--brand)}
+.nx b{display:block;margin:4px 0 4px;font-family:var(--head)}
+.nx p{margin:0;color:var(--ink2);font-size:12.5px}
+.master{background:linear-gradient(135deg,#1C2B4A,#1D1D1B);color:#fff;border:0;border-top:4px solid var(--brand)}
+.master h3{color:#fff}
+.master .hd p{color:#B9C7D6}
+.master .pill{background:var(--brand);color:#fff;border-color:var(--brand);font-family:var(--head);text-transform:uppercase;letter-spacing:.08em}
+.mgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.mm{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:12px}
+.mm .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:#9FB3C8;font-weight:600}
+.mm b{display:block;margin:3px 0;font-family:var(--head)}
+.mm p{margin:0;font-size:12.5px;color:#C9D6E3}
+.mm.f{border-style:dashed}
+.mm .ft{display:inline-block;margin-top:8px;font-family:var(--head);letter-spacing:.12em;font-size:10px;font-weight:700;color:#FF8A66}
+.login{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;margin-bottom:14px;font-size:13px;flex-wrap:wrap}
+footer{background:#1A1A1A;color:#CCCCCC;font-size:12.5px;text-align:center;padding:26px 16px 34px;margin-top:6px;border-top:4px solid var(--brand)}
+footer b{color:#fff;font-family:var(--head);font-weight:700}
+footer .in{max-width:1320px;margin:0 auto}
+.note{font-size:12px;color:var(--ink3)}
+/* drawer */
+.scrim{position:fixed;inset:0;background:rgba(10,20,32,.45);opacity:0;pointer-events:none;transition:opacity .18s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(520px,100%);background:var(--card);z-index:50;transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column;box-shadow:-10px 0 40px rgba(0,0,0,.18)}
+.drawer.on{transform:none}
+.dh{padding:18px 20px 14px;border-bottom:1px solid var(--line)}
+.dh .x{float:right;border:0;background:var(--line2);width:32px;height:32px;border-radius:9px;cursor:pointer;color:var(--ink);font-size:18px;line-height:1}
+.dh h4{margin:6px 0 2px;font-size:18px;letter-spacing:-.01em}
+.db{padding:16px 20px;overflow:auto;flex:1}
+.db h5{margin:16px 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink3)}
+.db h5:first-child{margin-top:0}
+.li{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:9px 0;border-bottom:1px solid var(--line2);font-size:13px}
+.li .p{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.li .s{font-size:11.5px;color:var(--ink3)}
+.stock{font-size:11px;font-weight:600}
+.qc{border-radius:12px;padding:12px;font-size:13px;margin-top:4px}
+.qc.ok{background:var(--good-soft)}
+.qc.fl{background:var(--watch-soft)}
+.qc b{display:block;margin-bottom:3px}
+.cmp{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;margin-top:10px;font-size:12px}
+.barx{height:8px;border-radius:5px;background:var(--line2);position:relative;overflow:hidden}
+.barx i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+.df{padding:14px 20px;border-top:1px solid var(--line);display:flex;gap:10px}
+.df .btn{flex:1}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#16212E;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;opacity:0;transition:all .2s;z-index:60;max-width:90%;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%)}
+/* responsive */
+@media (max-width:1180px){.tiles{grid-template-columns:repeat(3,1fr)}.team,.next,.mgrid{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:980px){.grid2,.grid2b{grid-template-columns:1fr}
+  .pipe{grid-template-columns:1fr;gap:6px}.arrow{transform:rotate(90deg);height:18px}}
+@media (max-width:640px){
+  .wrap{padding:0 14px}
+  .brand h1{font-size:15px}
+  .tag{margin-left:0;margin-top:4px}
+  header.top .wrap{gap:10px}
+  .updated{width:100%}
+  .tiles{grid-template-columns:1fr 1fr;gap:10px}
+  .tiles .tile.hl{grid-column:1/-1}
+  .tile .v{font-size:26px}
+  .tile svg{display:none}
+  .team,.next,.mgrid,.tools,.kv{grid-template-columns:1fr}
+  .card{padding:14px}
+  table thead{display:none}
+  table,tbody,tr,td{display:block;width:100%}
+  tbody tr{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;padding:10px 12px;display:grid;grid-template-columns:1fr auto;gap:4px 10px}
+  td{border:0;padding:0}
+  td.c-job{grid-column:1/2}
+  td.c-st{grid-column:2/3;grid-row:1;text-align:right}
+  td.c-zip,td.c-type{display:none}
+  td.c-h{grid-column:1/-1}
+  td.c-go{display:none}
+  .greet h2{font-size:19px}
+}
+</style>
+</head>
+<body>
+<!--
+  DATA BLOCK. Everything on this page renders from the JSON below. To refresh, edit only this block.
+  updatedAt: display time of the snapshot. sample: true while all data is sample data.
+  kpis: one object per number {label, value, unit, goal, threshold, direction, note, series}.
+  stages: AI team pipeline stages {id, who, name, count, note, sub[]}.
+  jobs: approval queue rows {id, zip, area, job, type, status, inbox, botHours, firstDraftHours, pastHours, pastRef, waiting, materials[{item, store, qty, unit, price, stock}], labor[{task, hours}], qc{level, title, text}}.
+  training: [{day, rate}] match rate per training day, null for days not run yet. goLive: go-live gate in percent.
+-->
+<script id="dashboard-data" type="application/json">
+{
+  "updatedAt": "Tue Nov 10, 3:40 PM CT",
+  "sample": true,
+  "kpis": [
+    {"id":"waiting","label":"Quotes waiting for your approval","value":4,"unit":"","note":"1 waiting over 24 h","status":"watch","highlight":true,"series":[2,5,3,6,4]},
+    {"id":"leads","label":"New leads today","value":7,"unit":"","note":"2 inboxes, 6 residential","status":"good","series":[5,8,6,9,7]},
+    {"id":"ttq","label":"Average time to quote","value":3.4,"unit":"h","note":"goal under 24 h","status":"good","series":[9.5,7.2,5.8,4.1,3.4]},
+    {"id":"saved","label":"Hours saved this week","value":9.5,"unit":"h","note":"goal 12 to 15 h by Friday","status":"watch","series":[1.5,3.5,6,8,9.5]},
+    {"id":"match","label":"Bot vs Steve match rate","value":89,"unit":"%","note":"training day 7 of 10, go-live at 90%","status":"watch","series":[62,71,76,80,84,87,89]}
+  ],
+  "stages": [
+    {"id":"intake","who":"Intake Coordinators","name":"Read and sort","count":2,"note":"new requests being read","sub":[["Leads inbox (handyman.com)","5 today"],["Office inbox","2 today"]]},
+    {"id":"price","who":"Estimator","name":"Materials and labor","count":1,"note":"pricing by job zip"},
+    {"id":"qc","who":"QC Reviewer","name":"Check vs past jobs","count":1,"note":"1 flag raised today"},
+    {"id":"steve","who":"Steve or Matt","name":"Review and approve","count":4,"note":"oldest 26 h","human":true},
+    {"id":"sent","who":"Sent","name":"Back to handyman.com","count":3,"note":"today, also in HouseCall Pro"}
+  ],
+  "held": 1,
+  "jobs": [
+    {"id":"HM-1048","zip":"78745","area":"South Austin","job":"Attic stairs and attic decking","type":"Residential","status":"wait","inbox":"Leads inbox","waiting":"5 h","botHours":17,"firstDraftHours":25,"pastHours":16,"pastRef":"Job HM-0731, attic stairs and decking, 2025",
+     "materials":[{"item":"Attic ladder, 22.5 in x 54 in, aluminum","store":"Lowe's 78745","qty":1,"price":289.00,"stock":"In stock"},{"item":"3/4 in plywood, 4 ft x 8 ft","store":"Home Depot 78745","qty":12,"price":52.98,"stock":"In stock"},{"item":"2x6x8 lumber, framing for opening","store":"Home Depot 78745","qty":6,"price":7.48,"stock":"In stock"},{"item":"Construction screws, 3 in, 5 lb box","store":"Home Depot 78745","qty":1,"price":34.97,"stock":"In stock"},{"item":"Trim and casing kit","store":"Lowe's 78745","qty":1,"price":38.50,"stock":"Low stock"}],
+     "labor":[["Frame and cut attic opening",3],["Install attic ladder",3],["Lay attic decking, about 300 sq ft",9],["Trim, clean up, haul-off",2]],
+     "qc":{"level":"fl","title":"Caught and corrected before it reached you","text":"First draft came in at 25 labor hours. A similar past job (HM-0731, attic stairs and decking, ceiling height a little different) took 16 hours and finished under budget. QC Reviewer flagged the gap and the Estimator re-ran with that job as the reference. New draft: 17 hours."}},
+    {"id":"HM-1047","zip":"78704","area":"Bouldin","job":"Fence tear-out and replace, 40 ft","type":"Residential","status":"wait","inbox":"Leads inbox","waiting":"26 h","botHours":14,"firstDraftHours":12,"pastHours":13,"pastRef":"Job HM-0655, 36 ft cedar fence, 2025",
+     "materials":[{"item":"Cedar fence pickets, 6 ft","store":"Lowe's 78704","qty":80,"price":3.98,"stock":"In stock"},{"item":"Pressure-treated post, 4x4x8","store":"Lowe's 78704","qty":7,"price":12.47,"stock":"In stock"},{"item":"2x4x8 rails","store":"Lowe's 78704","qty":14,"price":5.28,"stock":"In stock"},{"item":"Fast-setting concrete, 50 lb","store":"Home Depot 78704","qty":7,"price":7.25,"stock":"In stock"},{"item":"Disposal and haul-away, old fence","store":"Dump fee estimate","qty":1,"price":85.00,"stock":"Added by QC"}],
+     "labor":[["Tear out old fence",4],["Set posts",4],["Rails and pickets",5],["Haul-off and clean up",1]],
+     "qc":{"level":"fl","title":"Disposal was missing, now added","text":"The first draft had no disposal for the old fence. QC Reviewer added haul-away and 1 hour of labor. Hours now 14 vs 13 on the closest past job, within range."}},
+    {"id":"HM-1046","zip":"78739","area":"Circle C","job":"Cedar deck replacement, 12 ft x 16 ft","type":"Residential","status":"wait","inbox":"Leads inbox","waiting":"3 h","botHours":22,"firstDraftHours":22,"pastHours":24,"pastRef":"Job HM-0702, 12 ft x 14 ft deck, 2025",
+     "materials":[{"item":"Cedar decking, 5/4 x 6 x 16","store":"Home Depot 78739","qty":34,"price":28.97,"stock":"In stock"},{"item":"Pressure-treated joist, 2x8x12","store":"Lowe's 78739","qty":14,"price":19.98,"stock":"In stock"},{"item":"Exterior deck screws, 5 lb","store":"Home Depot 78739","qty":2,"price":38.97,"stock":"In stock"},{"item":"Deck stain, 1 gal","store":"Lowe's 78739","qty":3,"price":42.98,"stock":"In stock"}],
+     "labor":[["Demo old decking and haul-off",5],["Replace damaged joists",5],["Install new decking",9],["Stain and finish",3]],
+     "qc":{"level":"ok","title":"Matches past work","text":"22 hours vs 24 on a similar 12 ft x 14 ft deck. Quantities match the dimensions in the request. Disposal included."}},
+    {"id":"HM-1042","zip":"78613","area":"Cedar Park","job":"Inspection punch list, 12 tasks","type":"Residential","status":"wait","inbox":"Office inbox","waiting":"9 h","botHours":11,"firstDraftHours":11,"pastHours":10.5,"pastRef":"Job HM-0688, 11-task punch list, 2025",
+     "materials":[{"item":"GFCI outlet, 15 amp","store":"Home Depot 78613","qty":3,"price":19.97,"stock":"In stock"},{"item":"Door stop, hinge pin","store":"Home Depot 78613","qty":4,"price":3.48,"stock":"In stock"},{"item":"HVAC filter, 20x25x1","store":"Lowe's 78613","qty":2,"price":14.98,"stock":"In stock"},{"item":"Exterior caulk, 10 oz","store":"Lowe's 78613","qty":4,"price":7.98,"stock":"In stock"}],
+     "labor":[["Electrical items (3)",2.5],["Doors and hardware (4)",2],["Exterior caulk and seal",3],["Misc items (4)",3.5]],
+     "qc":{"level":"ok","title":"Matches past work","text":"11 hours vs 10.5 on a similar 11-task inspection punch list. All 12 tasks from the report are priced."}},
+    {"id":"HM-1045","zip":"78731","area":"Northwest Hills","job":"Roof leak repair and drywall patch","type":"Residential","status":"draft","inbox":"Leads inbox","waiting":"","botHours":null,"firstDraftHours":null,"pastHours":7,"pastRef":"Job HM-0710, ceiling leak and patch, 2025",
+     "materials":[],"labor":[],
+     "qc":{"level":"ok","title":"Still drafting","text":"Estimator is pulling prices for the 78731 stores. Request came in after this week's rain. CompanyCam photos from the site visit are attached."}},
+    {"id":"HM-1044","zip":"78758","area":"North Austin","job":"Office make-ready, 6 tasks","type":"Commercial","status":"hold","inbox":"Office inbox","waiting":"","botHours":null,"firstDraftHours":null,"pastHours":null,"pastRef":"",
+     "materials":[],"labor":[],
+     "qc":{"level":"fl","title":"Held for you","text":"Commercial job. Logged and held until the commercial supplier list is added. Nothing was drafted or sent."}},
+    {"id":"HM-1043","zip":"78620","area":"Dripping Springs","job":"Fascia repair, 20 ft","type":"Residential","status":"sent","inbox":"Leads inbox","waiting":"","botHours":6,"firstDraftHours":6,"pastHours":6,"pastRef":"Job HM-0640, fascia and soffit repair, 2025",
+     "materials":[{"item":"Primed fascia board, 1x6x16","store":"Home Depot 78620","qty":2,"price":24.98,"stock":"In stock"},{"item":"Exterior paint, 1 gal","store":"Home Depot 78620","qty":1,"price":46.98,"stock":"In stock"}],
+     "labor":[["Remove and replace fascia",4],["Prime, paint, clean up",2]],
+     "qc":{"level":"ok","title":"Approved and sent","text":"Approved by Steve at 11:52 AM. Sent back to handyman.com and added to HouseCall Pro."}},
+    {"id":"HM-1041","zip":"78748","area":"Shady Hollow","job":"Interior paint, 2 bedrooms","type":"Residential","status":"sent","inbox":"Leads inbox","waiting":"","botHours":9,"firstDraftHours":9,"pastHours":9,"pastRef":"Job HM-0699, 2 room repaint, 2025",
+     "materials":[{"item":"Interior paint, eggshell, 1 gal","store":"Lowe's 78748","qty":4,"price":38.98,"stock":"In stock"},{"item":"Painter's tape and plastic kit","store":"Lowe's 78748","qty":1,"price":21.97,"stock":"In stock"}],
+     "labor":[["Prep and mask",2],["Two coats, walls",6],["Clean up",1]],
+     "qc":{"level":"ok","title":"Approved and sent","text":"Approved by Matt at 9:15 AM. Sent back to handyman.com and added to HouseCall Pro."}}
+  ],
+  "training": [{"day":1,"rate":62},{"day":2,"rate":71},{"day":3,"rate":76},{"day":4,"rate":80},{"day":5,"rate":84},{"day":6,"rate":87},{"day":7,"rate":89},{"day":8,"rate":null},{"day":9,"rate":null},{"day":10,"rate":null}],
+  "goLive": 90
+}
+</script>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <img class="logo" alt="Local Handyman" src="data:image/webp;base64,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">
+      <div class="sep"></div>
+      <div>
+        <h1>Local Handyman Austin · Estimating Command Center <span class="tag">Mockup with sample data</span></h1>
+        <div class="sub">Your AI estimating team, with you approving every quote</div>
+      </div>
+    </div>
+    <div class="spacer"></div>
+    <div class="seg" role="tablist" aria-label="View as">
+      <button class="on" data-view="steve">Steve's view</button>
+      <button data-view="matt">Matt's view</button>
+    </div>
+    <div class="updated" id="updated"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="greet">
+    <div>
+      <h2 id="greet-h">Good afternoon, Steve. 4 quotes are ready for you.</h2>
+      <p id="greet-p">About 2 minutes each from your phone. Everything else is handled.</p>
+    </div>
+    <span class="pill">All numbers on this page are sample data</span>
+  </div>
+
+  <div class="banner">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--watch);flex:none;margin-top:1px"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg>
+    <div>
+      <b>Busy stretch ahead: keep the queue short before event nights</b>
+      <p>Event-heavy weeks run through Thanksgiving and into early December. The team drafts and checks during the day so you only approve. Rain days are flagged too, since roof and exterior jobs get re-planned and leak calls pick up.</p>
+      <div class="chips"><span class="chip w">This week: event nights</span><span class="chip">Thanksgiving week: lighter</span><span class="chip w">First week of December: event nights</span><span class="chip">Rain in forecast: 2 exterior jobs to re-plan</span></div>
+    </div>
+  </div>
+
+  <section class="tiles" id="tiles"></section>
+
+  <section class="card">
+    <div class="hd">
+      <div><div class="eyebrow">Pipeline</div><h3>Live pipeline: your AI team at work</h3><p>Every lead moves through four thin bots, then you. Nothing goes to a customer until you approve.</p></div>
+      <span class="pill">Sample counts, today</span>
+    </div>
+    <div class="pipe" id="pipe"></div>
+    <div class="hold"><span class="st s-hold">1 commercial job held</span> Commercial requests are logged and held until the commercial supplier list is added. Residential is about 80 to 90% of the work and runs first.</div>
+  </section>
+
+  <div class="grid2">
+    <section class="card">
+      <div class="hd">
+        <div><div class="eyebrow">Your review</div><h3>Approval queue</h3><p>Tap a job to see materials, labor hours, and the QC check against your past jobs. Jobs are listed by ID and zip code, not customer name.</p></div>
+        <span class="pill">8 sample jobs</span>
+      </div>
+      <table>
+        <thead><tr><th>Status</th><th>Job</th><th>Zip</th><th>Type</th><th>Bot hours vs past job</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <div class="hd">
+        <div><div class="eyebrow">Notifications</div><h3>How you get notified</h3><p>You do not have to live in this dashboard. A text or email arrives when a quote is checked and ready.</p></div>
+      </div>
+      <div class="phone" aria-label="Sample text message">
+        <div class="bar">Today 3:38 PM</div>
+        <div class="from">Local Handyman AI Team</div>
+        <div class="bub">New quote ready for review. HM-1048, attic stairs and decking, 78745. 17 labor hours. Materials $1,043.11 (sample), Lowe's and Home Depot, in stock. QC check: matched to a similar past job that took 16 h. <a href="#" onclick="openJob('HM-1048');return false">Tap to review HM-1048</a></div>
+        <div class="tm">Reply APPROVE or SEND BACK with a note</div>
+        <div class="bub me">APPROVE</div>
+        <div class="bub">Approved. Quote is going back to handyman.com and into HouseCall Pro. (Mockup: nothing is actually sent.)</div>
+      </div>
+      <p class="note" style="text-align:center;margin-top:10px">Choose text, email, or both, and whether Steve, Matt, or both get it.</p>
+    </section>
+  </div>
+
+  <div class="grid2b">
+    <section class="card">
+      <div class="hd">
+        <div><div class="eyebrow">Training</div><h3>Training: side by side with Steve</h3><p>For 7 to 10 days the Estimator drafts next to your own estimates. A match means bot hours within 10% of yours.</p></div>
+        <span class="pill">Day 7 of 10, sample</span>
+      </div>
+      <div id="chart"></div>
+      <div class="legend"><span><i style="background:var(--accent)"></i>Match rate by day</span><span><i style="background:var(--good)"></i>Go-live line, 90% for 3 days in a row</span></div>
+      <div class="kv">
+        <div><b>41</b><span>leads drafted side by side</span></div>
+        <div><b>1.2 h</b><span>average gap vs your hours, down from 4.8 h on day 1</span></div>
+        <div><b>6</b><span>misses caught by QC, like disposal and stock</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="hd">
+        <div><div class="eyebrow">Your tools</div><h3>Connected tools</h3><p>Built on what you already use, with one knowledge base instead of several AI tools.</p></div>
+        <span class="pill">Sample status</span>
+      </div>
+      <div class="tools" id="tools"></div>
+      <div class="guard">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg>
+        <div><b>Privacy guard.</b> Supplier and pricing searches use the job zip code only. Customer names, phone numbers, and addresses stay inside your own accounts.</div>
+      </div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="hd">
+      <div><div class="eyebrow">The team</div><h3>Your AI team</h3><p>Each bot has one job, a clear hand-off, and things it never does. Every one has a pause switch.</p></div>
+      <span class="pill">Day-to-day lead: Matt</span>
+    </div>
+    <div class="team" id="team"></div>
+  </section>
+
+  <section class="card">
+    <div class="hd">
+      <div><div class="eyebrow">Roadmap</div><h3>Coming next</h3><p>After the estimating team is in use. Same approach: the bots prepare, a person approves.</p></div>
+      <span class="pill">Later phases</span>
+    </div>
+    <div class="next">
+      <div class="nx"><div class="ph">Phase 2</div><b>Material ordering</b><p>When a job is won, a cart is built at the right store for the job zip, checked against inventory, and held for a person to review before checkout.</p></div>
+      <div class="nx"><div class="ph">Phase 2</div><b>Technician handoff</b><p>A handoff sheet goes to the assigned tech with the scope, step-by-step instructions, photos, and a time limit per task from the approved hours.</p></div>
+      <div class="nx"><div class="ph">Phase 2</div><b>ClickUp tasks</b><p>Approved jobs create ClickUp tasks for the team automatically, so nobody re-types the scope.</p></div>
+      <div class="nx"><div class="ph">Idea</div><b>Rain-day re-planning</b><p>When rain hits, roof and exterior jobs are flagged and a new schedule is proposed for Matt to approve, so the air-traffic control is not all in your head.</p></div>
+    </div>
+  </section>
+
+  <section class="card master">
+    <div class="hd">
+      <div><div class="eyebrow" style="color:#FF8A66">Vision</div><h3>Master Dashboard (future option)</h3><p>One login for Steve that shows every bot and every connected tool. Not part of the estimating build. Shown here as a vision.</p></div>
+      <span class="pill">Future option</span>
+    </div>
+    <div class="login"><div class="logo-sm">LH</div><div><b>Signed in as Steve Lapitka</b><br><span style="color:#B9C7D6;font-size:12px">One login. Every bot, every tool, one screen.</span></div></div>
+    <div class="mgrid">
+      <div class="mm"><div class="k">This build</div><b>Estimating team</b><p>Intake, Estimator, QC Reviewer, and your approvals, as shown above.</p></div>
+      <div class="mm f"><div class="k">Future</div><b>Operations view</b><p>Jobs in HouseCall Pro, photos in CompanyCam, tasks in ClickUp, in one view.</p><span class="ft">FUTURE OPTION</span></div>
+      <div class="mm f"><div class="k">Future</div><b>Inbox summary bot</b><p>A daily digest across all inboxes with who to follow up with today.</p><span class="ft">FUTURE OPTION</span></div>
+      <div class="mm f"><div class="k">Future</div><b>Schedule and dispatch</b><p>Tech availability, rain re-planning, and multi-day jobs at a glance.</p><span class="ft">FUTURE OPTION</span></div>
+      <div class="mm f"><div class="k">Future</div><b>Lead generation bot</b><p>Finds and nurtures property managers, realtors, and partner referrals for bigger multi-day jobs.</p><span class="ft">FUTURE OPTION</span></div>
+      <div class="mm f"><div class="k">Future</div><b>Marketing bot</b><p>Follow-ups, review requests, and event recaps drafted for approval.</p><span class="ft">FUTURE OPTION</span></div>
+      <div class="mm f"><div class="k">Future</div><b>Lead screening</b><p>Flags suspicious leads for a person to check. Never auto-rejects.</p><span class="ft">FUTURE OPTION</span></div>
+      <div class="mm f"><div class="k">Future</div><b>Owner scorecard</b><p>Leads, quotes, win rate, and hours saved for the week, in one place.</p><span class="ft">FUTURE OPTION</span></div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="in">
+  <b>Prepared for Steve Lapitka by Cristian Aguilar and Daniel Bishop</b><br>
+  Mockup for discussion. All jobs, counts, hours, and material prices are sample data, not real results.</div>
+</footer>
+
+<div class="scrim" id="scrim" onclick="closeJob()"></div>
+<aside class="drawer" id="drawer" aria-hidden="true">
+  <div class="dh"><button class="x" onclick="closeJob()" aria-label="Close">&times;</button><div id="d-st"></div><h4 id="d-t"></h4><div class="note" id="d-m"></div></div>
+  <div class="db" id="d-b"></div>
+  <div class="df" id="d-f"><button class="btn x" onclick="act('back')">Send back</button><button class="btn p" onclick="act('approve')">Approve</button></div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const D = JSON.parse(document.getElementById('dashboard-data').textContent);
+const $ = s => document.querySelector(s);
+const fmt$ = n => '$' + n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+const ST = {wait:['s-wait','Waiting for you'],flag:['s-flag','QC flagged'],draft:['s-draft','Drafting'],hold:['s-hold','Held, commercial'],sent:['s-sent','Approved, sent'],back:['s-back','Sent back']};
+$('#updated').textContent = 'Updated ' + D.updatedAt + ' (sample)';
+
+function spark(arr, color){
+  const w=70,h=26,mn=Math.min(...arr),mx=Math.max(...arr),r=(mx-mn)||1;
+  const pts=arr.map((v,i)=>[(i/(arr.length-1))*w,h-3-((v-mn)/r)*(h-6)]);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${pts.map(p=>p.join(',')).join(' ')}"/></svg>`;
+}
+function renderTiles(){
+  $('#tiles').innerHTML = D.kpis.map(k=>`<div class="tile g-${k.status} ${k.highlight?'hl':''}"><div class="l">${k.label}</div><div class="v">${k.id==='waiting'?waitingCount():k.value}${k.unit?`<small>${k.unit}</small>`:''}</div><div class="d">${k.id==='waiting'?waitingNote():k.note}</div>${spark(k.series,'var(--accent)')}</div>`).join('');
+}
+function waitingCount(){return D.jobs.filter(j=>j.status==='wait').length}
+function waitingNote(){const late=D.jobs.filter(j=>j.status==='wait'&&parseFloat(j.waiting)>24).length;return late?`<b style="color:var(--watch)">${late} waiting over 24 h</b>`:'none over 24 h'}
+function renderPipe(){
+  const arrow='<div class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>';
+  $('#pipe').innerHTML = D.stages.map((s,i)=>{
+    const cnt = s.id==='steve'?waitingCount():s.id==='sent'?D.jobs.filter(j=>j.status==='sent').length+1:s.count;
+    return `<div class="stage ${s.human?'human':''}"><div class="who">${i+1}. ${s.who}</div><div class="nm">${s.name}</div><div class="ct">${cnt}<small>${s.id==='sent'?'today':'in stage'}</small></div><div class="sx">${s.note}</div>${s.sub?`<div class="sub2">${s.sub.map(x=>`<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join('')}</div>`:''}</div>`;
+  }).join(arrow);
+}
+const order={wait:0,flag:1,back:2,draft:3,hold:4,sent:5};
+function hoursCell(j){
+  if(j.botHours==null) return `<span class="meta">${j.status==='hold'?'Not drafted':'Pricing in progress'}</span>`;
+  const d=j.botHours-j.pastHours, c=Math.abs(d)/j.pastHours<=.1?'var(--good)':'var(--watch)';
+  return `<span class="hrs"><b>${j.botHours} h</b> <span class="meta">vs ${j.pastHours} h past</span><span class="dlt" style="color:${c}">${d>0?'+':''}${d===0?'match':d+' h'}</span></span>${j.firstDraftHours&&j.firstDraftHours!==j.botHours?`<div class="meta">first draft ${j.firstDraftHours} h, corrected by QC</div>`:''}`;
+}
+function renderRows(){
+  const jobs=[...D.jobs].sort((a,b)=>order[a.status]-order[b.status]);
+  $('#rows').innerHTML = jobs.map(j=>{const s=ST[j.status];return `<tr data-id="${j.id}" onclick="openJob('${j.id}')"><td class="c-st"><span class="st ${s[0]}">${s[1]}</span>${j.waiting&&j.status==='wait'?`<div class="meta" style="margin-top:3px">${j.waiting} waiting</div>`:''}</td><td class="c-job"><div class="jt">${j.job}</div><div class="meta">${j.id} · ${j.area} ${j.zip} · ${j.inbox}</div></td><td class="c-zip num">${j.zip}</td><td class="c-type"><span class="type">${j.type}</span></td><td class="c-h">${hoursCell(j)}</td><td class="c-go"><span class="go">Review &rsaquo;</span></td></tr>`}).join('');
+}
+function renderChart(){
+  const narrow=window.innerWidth<640;const W=narrow?340:560,H=narrow?230:220,L=36,R=26,T=14,B=28,pw=W-L-R,ph=H-T-B,mn=50,mx=100;
+  const x=i=>L+(i/(D.training.length-1))*pw, y=v=>T+ph-((v-mn)/(mx-mn))*ph;
+  let g='';
+  [50,60,70,80,90,100].forEach(v=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${L-8}" y="${y(v)+4}" text-anchor="end" font-size="11" fill="var(--ink3)">${v}%</text>`});
+  D.training.forEach((d,i)=>{g+=`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--ink3)">${narrow?'D':'Day '}${d.day}</text>`});
+  g+=`<line x1="${L}" x2="${W-R}" y1="${y(D.goLive)}" y2="${y(D.goLive)}" stroke="var(--good)" stroke-width="2" stroke-dasharray="6 5"/><text x="${narrow?L+6:W-R}" y="${y(D.goLive)-7}" text-anchor="${narrow?'start':'end'}" font-size="11" font-weight="600" fill="var(--good)">Go-live 90%</text>`;
+  const pts=D.training.filter(d=>d.rate!=null);
+  const area=`M${x(0)},${y(mn)} `+pts.map((d,i)=>`L${x(i)},${y(d.rate)}`).join(' ')+` L${x(pts.length-1)},${y(mn)} Z`;
+  g+=`<path d="${area}" fill="var(--accent)" opacity=".08"/>`;
+  g+=`<polyline fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${pts.map((d,i)=>x(i)+','+y(d.rate)).join(' ')}"/>`;
+  pts.forEach((d,i)=>{g+=`<circle cx="${x(i)}" cy="${y(d.rate)}" r="4" fill="var(--card)" stroke="var(--accent)" stroke-width="2"/>`});
+  const li=pts.length-1;g+=`<text x="${x(li)}" y="${y(pts[li].rate)-11}" text-anchor="middle" font-size="12" font-weight="700" fill="var(--accent)">${pts[li].rate}%</text>`;
+  for(let i=pts.length;i<D.training.length;i++) g+=`<circle cx="${x(i)}" cy="${y(D.goLive)}" r="3.5" fill="none" stroke="var(--ink3)" stroke-dasharray="2 2"/>`;
+  $('#chart').innerHTML=`<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Match rate by training day">${g}</svg>`;
+}
+const TOOLS=[
+ ['HC','HouseCall Pro','Approved quotes land here, no copy and paste','good','Connected'],
+ ['CB','ClickUp Brain','Knowledge base: 36 months of jobs and invoices','good','Connected'],
+ ['CC','CompanyCam','Site photos, video, transcripts feed the Estimator','good','Connected'],
+ ['GM','Gmail: leads inbox','handyman.com notifications, 1 Intake bot','good','Watching'],
+ ['GM','Gmail: office inbox','Second inbox, its own Intake bot','watch','Checked 3:31 PM'],
+ ['GD','Drive rate files','Your rate files and task-time PDF','good','Synced'],
+ ['HD','Home Depot and Lowe\'s','Prices and stock at stores near the job zip','good','By zip only'],
+ ['GP','Current ChatGPT estimator','Runs side by side during training, then retired','watch','Training only']
+];
+function renderTools(){
+  $('#tools').innerHTML = TOOLS.map(t=>`<div class="tool"><div class="ti">${t[0]}</div><div style="min-width:0"><b>${t[1]}</b><span>${t[2]}</span><div style="font-size:11.5px;margin-top:3px;color:var(--${t[3]})"><span class="dot" style="background:var(--${t[3]})"></span>${t[4]}</div></div></div>`).join('');
+}
+const TEAM=[
+ {av:'IN',n:'Intake Coordinator',r:'One per inbox',own:'Reads each new request, pulls zip, job type, and dimensions, sorts residential or commercial, logs the job.',hand:'Residential to the Estimator. Commercial is held for you.',never:'Never messages a customer. Never rejects a lead.'},
+ {av:'ES',n:'Estimator',r:'Materials and labor',own:'Prices materials at the Home Depot and Lowe\'s nearest the job zip, checks stock, and sets labor hours from your rate files using Steve\'s pricing method.',hand:'Draft quote to the QC Reviewer.',never:'Never guesses. Missing details become a flag.'},
+ {av:'QC',n:'QC Reviewer',r:'Checks against your history',own:'Compares every draft to similar jobs from your last 36 months: hours, disposal, quantities, stock, residential vs commercial.',hand:'Checked quote to Steve or Matt, with any flags shown.',never:'Never silently rewrites. Every change is shown.'},
+ {av:'SM',n:'Steve or Matt',r:'Approver, the human in charge',own:'Reviews the checked quote from a text or this screen and taps Approve or Send back with a note.',hand:'Approved quote back to handyman.com and into HouseCall Pro.',never:'Nothing reaches a customer without this step.',h:true}
+];
+function renderTeam(){
+  $('#team').innerHTML = TEAM.map((m,i)=>`<div class="member"><div class="top2"><div class="av ${m.h?'h':''}">${m.av}</div><div><div class="rn">${m.n}</div><div class="rt">${m.r}</div></div></div><dl><div><dt>Owns</dt><dd>${m.own}</dd></div><div><dt>Hands off</dt><dd>${m.hand}</dd></div><div><dt>Never does</dt><dd>${m.never}</dd></div></dl>${m.h?'<div class="sw"><span>Approves every quote</span></div>':`<div class="sw"><span id="sw${i}">Running</span><button class="toggle" aria-label="Pause ${m.n}" onclick="tog(this,${i})"></button></div>`}</div>`).join('');
+}
+function tog(b,i){b.classList.toggle('off');const off=b.classList.contains('off');$('#sw'+i).textContent=off?'Paused':'Running';toast(off?`${TEAM[i].n} paused (mockup).`:`${TEAM[i].n} running again (mockup).`)}
+let cur=null;
+function openJob(id){
+  const j=D.jobs.find(x=>x.id===id); if(!j) return; cur=j;
+  document.querySelectorAll('#rows tr').forEach(r=>r.classList.toggle('sel',r.dataset.id===id));
+  const s=ST[j.status];
+  $('#d-st').innerHTML=`<span class="st ${s[0]}">${s[1]}</span>`;
+  $('#d-t').textContent=j.job;
+  $('#d-m').textContent=`${j.id} · ${j.area} ${j.zip} · ${j.type} · ${j.inbox}`;
+  let q='';
+  q+=`<h5>QC check</h5><div class="qc ${j.qc.level}"><b>${j.qc.title}</b>${j.qc.text}`;
+  if(j.botHours!=null&&j.pastHours!=null){
+    const mx=Math.max(j.firstDraftHours||0,j.botHours,j.pastHours)*1.1;
+    const row=(lab,v,c)=>`<span>${lab}</span><div class="barx"><i style="width:${v/mx*100}%;background:${c}"></i></div><b>${v} h</b>`;
+    q+=`<div class="cmp">${j.firstDraftHours!==j.botHours?row('First draft',j.firstDraftHours,'var(--act)'):''}${row('This quote',j.botHours,'var(--accent)')}${row('Past job',j.pastHours,'var(--good)')}</div><div class="s note" style="margin-top:8px">Reference: ${j.pastRef}</div>`;
+  }
+  q+=`</div>`;
+  let h=q;
+  if(j.materials.length){
+    const sub=j.materials.reduce((a,m)=>a+m.qty*m.price,0);
+    h+=`<h5>Materials (sample prices)</h5>`+j.materials.map(m=>`<div class="li"><div>${m.item}<div class="s">${m.store} · qty ${m.qty} x ${fmt$(m.price)} · <span class="stock" style="color:var(--${m.stock==='In stock'?'good':'watch'})">${m.stock}</span></div></div><div class="p">${fmt$(m.qty*m.price)}</div></div>`).join('')+`<div class="li"><div><b>Materials subtotal</b><div class="s">Sample prices. Live prices are pulled for the job zip.</div></div><div class="p">${fmt$(sub)}</div></div>`;
+  }
+  if(j.labor.length){
+    const tot=j.labor.reduce((a,l)=>a+l[1],0);
+    h+=`<h5>Labor hours</h5>`+j.labor.map(l=>`<div class="li"><div>${l[0]}</div><div class="p">${l[1]} h</div></div>`).join('')+`<div class="li"><div><b>Total labor</b><div class="s">Hours from your rate files and task-time PDF</div></div><div class="p">${tot} h</div></div>`;
+    h+=`<div class="li"><div><b>Customer price</b><div class="s">Calculated with Steve's pricing method when you approve</div></div><div class="p" style="color:var(--ink3)">On approval</div></div>`;
+  }
+
+  $('#d-b').innerHTML=h;
+  $('#d-f').style.display=(j.status==='wait'||j.status==='flag')?'flex':'none';
+  $('#drawer').classList.add('on');$('#scrim').classList.add('on');$('#drawer').setAttribute('aria-hidden','false');
+}
+function closeJob(){$('#drawer').classList.remove('on');$('#scrim').classList.remove('on');$('#drawer').setAttribute('aria-hidden','true');document.querySelectorAll('#rows tr').forEach(r=>r.classList.remove('sel'))}
+function act(a){
+  if(!cur) return;
+  cur.status=a==='approve'?'sent':'back';
+  toast(a==='approve'?`${cur.id} approved. Mockup only, nothing was sent.`:`${cur.id} sent back to the Estimator with your note. Mockup only.`);
+  closeJob();renderAll();
+}
+let tt;function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2600)}
+let view='steve';
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.classList.toggle('on',x===b));view=b.dataset.view;renderGreet()});
+function renderGreet(){
+  const n=waitingCount();
+  if(view==='steve'){$('#greet-h').textContent=`Good afternoon, Steve. ${n} quote${n===1?' is':'s are'} ready for you.`;$('#greet-p').textContent='About 2 minutes each from your phone. Everything else is handled.'}
+  else{$('#greet-h').textContent=`Good afternoon, Matt. ${n} in the approval queue, 1 commercial job held.`;$('#greet-p').textContent='You run the team day to day. Steve only sees what needs his call.'}
+}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeJob()});
+function renderAll(){renderTiles();renderPipe();renderRows();renderGreet()}
+renderAll();renderChart();renderTools();renderTeam();
+</script>
+</body>
+</html>

@@ -3968,6 +3968,139 @@ footer.site{margin-top:auto}
       return { count: count, rad: Math.max(base[tier] || base[0], Math.ceil(need)) };
     });
   }
+  function tagMetrics() {
+    var font = homeNarrow() ? 20 : 10;
+    var width = font * 6.05;
+    var ascent = font * 1.02;
+    var descent = font * 0.32;
+    var el = document.querySelector('#v-home .org-svg .hubtag');
+    if (!el || !el.getBBox) return { width: width, ascent: ascent, descent: descent };
+    var sized = parseFloat(getComputedStyle(el).fontSize);
+    if (sized > 0) font = sized;
+    var len = el.getComputedTextLength ? el.getComputedTextLength() : 0;
+    if (len > 1) width = len;
+    var bb = el.getBBox();
+    var base = parseFloat(el.getAttribute('y'));
+    if (bb && bb.height > 1 && isFinite(base)) {
+      ascent = Math.max(1, base - bb.y);
+      descent = Math.max(0.5, bb.y + bb.height - base);
+    }
+    return { width: width, ascent: ascent, descent: descent };
+  }
+  function tagScale() {
+    var svg = document.querySelector('#v-home .org-svg');
+    var fallback = homeNarrow() ? 0.34 : 0.7;
+    if (!svg) return fallback;
+    var w = svg.getBoundingClientRect().width;
+    var vb = (svg.getAttribute('viewBox') || '0 0 960 540').split(/[\s,]+/).map(Number);
+    var vw = vb.length >= 3 ? vb[2] : 960;
+    return w > 40 && vw > 0 ? w / vw : fallback;
+  }
+  function tagCircles() {
+    var pos = placeLoop(S.loopRot || 0, S.orgFocus || '');
+    var out = [];
+    (S.orgNodes || []).forEach(function (node) {
+      var p = pos[node.id];
+      if (!p || p.x == null) return;
+      out.push({ x: p.x, y: p.y, r: (node.hr || 6.5) + 1.2 });
+    });
+    return out;
+  }
+  function tagLabels(anchor, ax, nameY, countY) {
+    var tag = document.querySelector('#v-home .org-svg .hubtag');
+    if (!tag || !tag.parentNode) return [];
+    var out = [];
+    function add(cls, y) {
+      var el = tag.parentNode.querySelector('.' + cls);
+      if (!el || !el.getBBox) return;
+      var w = el.getComputedTextLength ? el.getComputedTextLength() : 0;
+      var bb = el.getBBox();
+      var base = parseFloat(el.getAttribute('y'));
+      if (!(w > 1) || !bb || !(bb.height > 1) || !isFinite(base)) return;
+      var ascent = Math.max(1, base - bb.y);
+      var descent = Math.max(0.5, bb.y + bb.height - base);
+      var left = anchor === 'end' ? ax - w : (anchor === 'start' ? ax : ax - w / 2);
+      out.push({ x: left - 2, y: y - ascent - 2, w: w + 4, h: ascent + descent + 4 });
+    }
+    add('hublab', nameY);
+    add('hubcount', countY);
+    return out;
+  }
+  function tagFits(box, circles, gap, labels) {
+    if (box.x < 1 || box.y < 1 || box.x + box.w > 959 || box.y + box.h > 539) return false;
+    var i, c, nx, ny, dx, dy, need, lab;
+    for (i = 0; i < (labels || []).length; i++) {
+      lab = labels[i];
+      if (box.x < lab.x + lab.w && box.x + box.w > lab.x && box.y < lab.y + lab.h && box.y + box.h > lab.y) return false;
+    }
+    for (i = 0; i < circles.length; i++) {
+      c = circles[i];
+      nx = Math.max(box.x, Math.min(c.x, box.x + box.w));
+      ny = Math.max(box.y, Math.min(c.y, box.y + box.h));
+      dx = c.x - nx;
+      dy = c.y - ny;
+      need = c.r + gap;
+      if (dx * dx + dy * dy < need * need) return false;
+    }
+    return true;
+  }
+  function placeTag(anchor, ax, nameY, countY, hub) {
+    var m = tagMetrics();
+    var gap = 8 / tagScale();
+    var circles = tagCircles();
+    var labels = tagLabels(anchor, ax, nameY, countY);
+    function boxAt(x, y) {
+      var left = anchor === 'end' ? x - m.width : (anchor === 'start' ? x : x - m.width / 2);
+      return { x: left, y: y - m.ascent, w: m.width, h: m.ascent + m.descent };
+    }
+    function fits(x, y, avoidLabels) { return tagFits(boxAt(x, y), circles, gap, avoidLabels ? labels : []); }
+    var currentY = countY + (homeNarrow() ? 30 : 14);
+    if (fits(ax, currentY, false)) return { x: ax, y: currentY, show: true };
+    var ux = hub.ux;
+    var uy = hub.uy;
+    var sideX = -uy;
+    var sideY = ux;
+    var list = [];
+    function push(x, y) { list.push({ x: x, y: y }); }
+    var steps = [12, 24, 40, 56, 76, 100, 128, 160, 196];
+    var s, d, belowY;
+    for (s = 0; s < steps.length; s++) {
+      d = steps[s];
+      push(ax + ux * d, currentY);
+      push(ax + ux * d, currentY - d);
+      push(ax + ux * d, countY);
+      push(ax, currentY - d);
+      push(ax - ux * d, currentY);
+    }
+    belowY = Math.max(nameY + (homeNarrow() ? 36 : 20), hub.y + (hub.hr || 26) + m.ascent + 14);
+    push(ax, belowY);
+    push(hub.x, hub.y + (hub.hr || 26) + m.ascent + 18);
+    push(ax, nameY - m.ascent - 10);
+    for (s = 0; s < steps.length; s++) {
+      d = steps[s];
+      push(ax + ux * d, nameY - m.ascent - 8);
+      push(ax + ux * d, belowY);
+      push(hub.x + sideX * d, hub.y + sideY * d);
+      push(hub.x - sideX * d, hub.y + sideY * d);
+      push(hub.x + sideX * d, belowY);
+      push(hub.x - sideX * d, belowY);
+    }
+    var i, spot, box, x, y;
+    for (i = 0; i < list.length; i++) {
+      spot = list[i];
+      x = spot.x;
+      y = spot.y;
+      box = boxAt(x, y);
+      if (box.x < 2) x += 2 - box.x;
+      if (box.y < 2) y += 2 - box.y;
+      if (box.x + box.w > 958) x -= box.x + box.w - 958;
+      if (box.y + box.h > 538) y -= box.y + box.h - 538;
+      if (fits(x, y, true)) return { x: x, y: y, show: true };
+    }
+    y = nameY < 12 ? Math.min(520, hub.y + (hub.hr || 26) + m.ascent + 18) : currentY;
+    y = Math.max(m.ascent + 4, Math.min(532, y));
+    return { x: ax, y: y, show: true };
+  }
   function hubStack(n, x, y) {
     var dx = x - LOOP.cx;
     var dy = y - LOOP.cy;
@@ -3981,25 +4114,12 @@ footer.site{margin-top:auto}
     var line = homeNarrow() ? 34 : 16;
     var nameY = uy < -0.25 ? ay - line : ay;
     var countY = nameY + line;
-    var tagX = ax;
-    var tagY = countY + (homeNarrow() ? 30 : 14);
-    if (homeNarrow()) {
-      var word = 132;
-      var nudge = 84;
-      if (anchor === 'end') tagX -= nudge;
-      else if (anchor === 'start') tagX += nudge;
-      var pad = 18;
-      if (anchor === 'end') tagX = Math.max(pad + word, Math.min(942, tagX));
-      else if (anchor === 'start') tagX = Math.max(pad, Math.min(960 - pad - word, tagX));
-      else tagX = Math.max(pad + word / 2, Math.min(960 - pad - word / 2, tagX));
-      if (tagY > 508) tagY = 508;
-      if (tagY < 36) tagY = 36;
-    }
+    var placed = placeTag(anchor, ax, nameY, countY, { x: x, y: y, ux: ux, uy: uy, hr: n.hr || 26 });
     return {
       anchor: anchor,
       name: { x: ax, y: nameY },
       count: { x: ax, y: countY },
-      tag: { x: tagX, y: tagY, show: tagY >= 12 && tagY <= 528 && nameY >= 12 }
+      tag: { x: placed.x, y: placed.y, show: placed.show }
     };
   }
   function placeLoop(rot, focusKey) {

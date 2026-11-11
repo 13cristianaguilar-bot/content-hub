@@ -270,7 +270,8 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 "agents": [
   {
     "name": "Ops",
-    "role": "Ops desk",
+    "role": "Operations",
+    "bucket": "ops",
     "status": "working",
     "currentWork": "Sorting today's calls",
     "lastReportAt": "2026-11-10T06:40:00-06:00"
@@ -280,12 +281,13 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 
 | Field | Notes |
 |---|---|
-| `name` | Readable desk name. Never a raw id, uuid, or `agt_...` token. If the only identifier is an id, put the desk name here and leave the id out. |
-| `role` | Readable role or desk. `desk` is accepted as an alias when `role` is missing. |
+| `name` | Readable name. Never a raw id, uuid, or `agt_...` token. If the only identifier is an id, put the name here and leave the id out. |
+| `role` | Readable role. Do not put the word desk in the role. |
+| `bucket` | Exactly one of `attract`, `convert`, `transform`, `ops`, `growth`, `build`. This field wins over the name. Attract is his own audience and content (Posts, Trend Scout, Funnel Researcher, CommunityMiner, Sponsorships, YouTube research). Convert is sales (Client Acquisition, Prospecting, Call Breakdown, Connections). Transform is client delivery and fulfillment (Reels Editor, Editor, AI Video Director, Carousels, Content Engine, client scripts, Hub delivery). `ops` is command and operations. `growth` is personal, learning, and coaching. `build` is dev and infra. If `bucket` is omitted, the page follows `reportsTo` when that agent already has a bucket, then matches the name and role. |
 | `status` | `working`, `idle`, `blocked`, `offline`, or `not-reported`. Other short words are shown as typed. |
-| `currentWork` | What that desk is doing, in a sentence. `""` when it reported and has nothing in progress. |
+| `currentWork` | What that bot is doing, in a sentence. `""` when it reported and has nothing in progress. |
 | `lastReportAt` | ISO time of that bot's last report, or `null` if it has never reported. |
-| `reportsTo` | Optional. Name of the desk this bot reports to, or `Cristian` for a director desk. The hand-off graph uses it. Omit it and the page treats a `role` that contains "desk" as a director. |
+| `reportsTo` | Optional. Name of the agent this bot reports to. Used only when `bucket` is omitted, so the bot follows that agent's bucket. |
 
 `agents: []` means the routine ran and no bot reported. The page says **No agents in this feed.** Omitting `agents` means not connected.
 
@@ -346,6 +348,37 @@ Mark done writes `sessionStorage` key `cc-signal-done` in this browser only. It 
 | At stake | Sum of numeric `value_usd` on open rows. `null` is left out. No numbers reads **No figures**. |
 
 Boss fight, Signal stack, and the earlier focus card with a short list are not in this build. They lived on branch `cursor/signal-now-concepts-008b` (pull request 72) and the focus card on `cursor/signal-now-reminders-92d2` (pull request 69).
+
+### `stages` (plays on the flywheel)
+
+Optional object. Keys are `attract`, `convert`, and `transform`. The workforce loop reads `stages[stage].plays` for the capacity panel. Omit `stages`, or omit one stage, and that stage says **No plays logged yet**. The page does not invent plays.
+
+```json
+"stages": {
+  "attract": {
+    "plays": [
+      { "name": "Format posts", "status": "active" }
+    ]
+  },
+  "convert": { "plays": [] },
+  "transform": {
+    "plays": [
+      { "name": "Client reel delivery", "status": "active" }
+    ],
+    "multiplier": 2
+  }
+}
+```
+
+| Field | Notes |
+|---|---|
+| `plays[].name` | Readable name of a play or system for that stage. |
+| `plays[].status` | `active`, `live`, or `on` counts as an active play. Any other short word is shown as typed and is not counted as active. |
+| `plays: []` | The list was read and nothing is logged. The panel says **No plays logged yet**. |
+| `multiplier` | Optional number. Shown as a multiplier, such as `2x`. Omit it and the panel says **Needs data**. Do not send a guessed multiplier. |
+| `bottleneck` | Optional `true`. Marks that stage as the bottleneck. If no stage sets it, the page marks every stage tied for the lowest working-bot ratio, among stages that have bots. |
+
+Output next to the plays comes from sections that already exist. Attract uses `attract.social` posts and views. Convert uses `convert.funnel.booked` and `convert.pipeline`. Transform uses `transform.clients` and scripts that have `deliveredAt`. A missing section is left off the line. It is not drawn as 0.
 
 ### `activityLog`
 
@@ -518,7 +551,7 @@ Select is granted to `authenticated`, and the policy allows it only when `app_me
 
 ## Spine, tracks, and funnels
 
-`targets.json` `tracks` is the pluggable list. Each track has `id`, `label`, optional `handle`, `owner` (a desk or bot name), and `side` (`attract`, `convert`, or `transform`). Seed ids: `ig`, `youtube`, `x`, `podcast`, `events`, `speaking`, `retainers`, `magnets`.
+`targets.json` `tracks` is the pluggable list. Each track has `id`, `label`, optional `handle`, `owner` (a bot name), and `side` (`attract`, `convert`, or `transform`). Seed ids: `ig`, `youtube`, `x`, `podcast`, `events`, `speaking`, `retainers`, `magnets`.
 
 `targets.json` `goals` holds `id`, `label`, `target`, `unit` (`count` or `money`), `side`, and `track`. The current value is not in that file.
 

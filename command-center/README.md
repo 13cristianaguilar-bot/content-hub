@@ -31,7 +31,7 @@ The floor log is still `public.cc_kpi_log`. The board is the only writer, and on
 
 ## Spine
 
-Goals are rings. The target is in `targets.json`. The current value is in the feed under `spine.goals`. Projects sit under goals. Tasks sit under projects. Each one has a status, an owner (Cristian or a bot desk), a triangle side, and a track.
+Goals are rings. The target is in `targets.json`. The current value is in the feed under `spine.goals`. Projects sit under goals. Tasks sit under projects. Each one has a status, an owner (Cristian or a bot), a triangle side, and a track.
 
 Winning is the streak, XP, and wins feed. Those are computed from the floor log and from cash in the feed. The page does not invent a streak.
 

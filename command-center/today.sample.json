@@ -865,6 +865,25 @@
       "reportsTo": "Growth"
     }
   ],
+  "stages": {
+    "attract": {
+      "plays": [
+        { "name": "SAMPLE. Format posts", "status": "active" },
+        { "name": "SAMPLE. YouTube research", "status": "paused" }
+      ]
+    },
+    "convert": {
+      "plays": [
+        { "name": "SAMPLE. Booked-call follow-up", "status": "active" }
+      ]
+    },
+    "transform": {
+      "plays": [
+        { "name": "SAMPLE. Client reel delivery", "status": "active" },
+        { "name": "SAMPLE. Stamp review", "status": "active" }
+      ]
+    }
+  },
   "activityLog": [
     {
       "at": "2026-11-10T06:47:00-06:00",

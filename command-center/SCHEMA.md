@@ -349,6 +349,37 @@ Mark done writes `sessionStorage` key `cc-signal-done` in this browser only. It 
 
 Boss fight, Signal stack, and the earlier focus card with a short list are not in this build. They lived on branch `cursor/signal-now-concepts-008b` (pull request 72) and the focus card on `cursor/signal-now-reminders-92d2` (pull request 69).
 
+### `stages` (plays on the flywheel)
+
+Optional object. Keys are `attract`, `convert`, and `transform`. The workforce loop reads `stages[stage].plays` for the capacity panel. Omit `stages`, or omit one stage, and that stage says **No plays logged yet**. The page does not invent plays.
+
+```json
+"stages": {
+  "attract": {
+    "plays": [
+      { "name": "Format posts", "status": "active" }
+    ]
+  },
+  "convert": { "plays": [] },
+  "transform": {
+    "plays": [
+      { "name": "Client reel delivery", "status": "active" }
+    ],
+    "multiplier": 2
+  }
+}
+```
+
+| Field | Notes |
+|---|---|
+| `plays[].name` | Readable name of a play or system for that stage. |
+| `plays[].status` | `active`, `live`, or `on` counts as an active play. Any other short word is shown as typed and is not counted as active. |
+| `plays: []` | The list was read and nothing is logged. The panel says **No plays logged yet**. |
+| `multiplier` | Optional number. Shown as a multiplier, such as `2x`. Omit it and the panel says **Needs data**. Do not send a guessed multiplier. |
+| `bottleneck` | Optional `true`. Marks that stage as the bottleneck. If no stage sets it, the page marks every stage tied for the lowest working-bot ratio, among stages that have bots. |
+
+Output next to the plays comes from sections that already exist. Attract uses `attract.social` posts and views. Convert uses `convert.funnel.booked` and `convert.pipeline`. Transform uses `transform.clients` and scripts that have `deliveredAt`. A missing section is left off the line. It is not drawn as 0.
+
 ### `activityLog`
 
 ```json

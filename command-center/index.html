@@ -493,6 +493,32 @@ body[data-ready] .shimmer{display:none}
 .org-flow,.org-wire{fill:none;pointer-events:none}
 .org-flow{stroke:rgba(237,48,57,.32);stroke-width:1.6}
 .org-flow.live{stroke:rgba(237,48,57,.78);stroke-dasharray:5 9;animation:flowdash 3.4s linear infinite}
+.org-svg.is-focus .node:not(.in-focus){opacity:.22}
+.org-svg.is-focus .node.in-focus.idle{opacity:.4}
+.org-svg.is-focus .node.in-focus.working .core{stroke:#fff;filter:drop-shadow(0 0 5px #ed3039)}
+.org-svg.is-focus .node.focus-bot .botlab{opacity:1;pointer-events:auto}
+.org-svg.is-focus .node.focus-bot.working .botwork{opacity:1}
+.org-svg.is-focus .org-wire:not(.for-zoom){opacity:.12}
+.org-svg.is-focus .org-wire.for-zoom{opacity:1;stroke:rgba(255,255,255,.45)}
+.org-svg .hubtag{fill:#ed3039;font-size:10px;font-weight:750;letter-spacing:.04em}
+.org-svg .cap-arc{pointer-events:none}
+.node.stage.bottleneck .core{stroke:#ed3039;stroke-width:2}
+.loop-nav{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 0}
+.loop-nav button{border:1px solid rgba(255,255,255,.12);background:transparent;color:#cfcfcf;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.loop-nav button.on{border-color:rgba(237,48,57,.85);color:#fff;background:rgba(237,48,57,.14)}
+.loop-meters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:0 12px 12px}
+.loop-meter{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:inherit;border-radius:14px;text-align:left;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0;cursor:pointer;font:inherit}
+.loop-meter b{font-size:13px}
+.loop-meter span{color:#9a9a9a;font-size:11px;line-height:1.35}
+.loop-meter .tag{color:#ed3039;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
+.loop-meter.bottleneck{border-color:rgba(237,48,57,.7);box-shadow:inset 0 0 0 1px rgba(237,48,57,.28)}
+.loop-detail{padding:2px 14px 14px}
+.loop-detail h3{margin:12px 0 4px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a}
+.loop-feeds{margin:0;color:#e8e8e8}
+.loop-plays,.loop-bots{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.loop-plays li,.loop-bots li{font-size:13px}
+.loop-bots .snip,.loop-plays .st{display:block;color:#9a9a9a;font-size:12px}
+.mult{color:#9a9a9a}
 .org-wire{stroke:rgba(255,255,255,.2);stroke-width:1}
 .org-wire.sat{stroke:rgba(255,255,255,.28);stroke-width:1.05}
 .node.stage .core{stroke:#fff;stroke-width:1.6}
@@ -505,7 +531,7 @@ body[data-ready] .shimmer{display:none}
 .node.idle{opacity:.55}
 .node.blocked .core,.node.offline .core{stroke:#ed3039}
 .node.working .core{stroke:#3DDC97}
-.org-stage{position:relative;height:380px;border-radius:14px;overflow:hidden;background-color:#090909;background-image:none}
+.org-stage{position:relative;height:auto;aspect-ratio:960/540;border-radius:14px;overflow:hidden;background-color:#090909;background-image:none}
 .org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent;opacity:0}
 .org-fx.sized{opacity:1}
 .org-links{opacity:0}
@@ -539,7 +565,8 @@ body[data-ready] .shimmer{display:none}
 .stepper button.nodebtn{border:0;background:transparent;color:inherit;text-align:left;padding:0;width:100%}
 .stepper b{display:block}
 .stepper .work{color:var(--muted);font-size:12px}
-.stepper ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.stepper ul.bots{list-style:none;margin:8px 0 0;padding:0;display:none;gap:6px}
+.stepper>li.on ul.bots{display:grid}
 .stepper li li{font-size:13px}
 .stepper .bots .snip{display:block;color:var(--muted);font-size:11px;line-height:1.3;padding:2px 2px 0}
 .term{background:#070707;border:1px solid rgba(255,255,255,.08);border-radius:18px;min-height:420px;display:flex;flex-direction:column;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
@@ -590,7 +617,8 @@ body[data-ready] .shimmer{display:none}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
   .hero-grid,.gaugerow,.splitview,.two{grid-template-columns:1fr}
   .org-svg,.org-map,.org-links{display:none}
-  .org-stage{height:88px}
+  .loop-meters{grid-template-columns:1fr}
+  .org-stage{display:none}
   .stepper{display:block}
   .org{min-height:0}
   .ph{flex-direction:column;align-items:flex-start}
@@ -941,6 +969,8 @@ footer.site{margin-top:auto}
     pick: '',
     orgNodes: [],
     orgZoom: '',
+    orgFocus: '',
+    loopRot: 0,
     authReady: false,
     user: null,
     admin: false,
@@ -3676,6 +3706,11 @@ footer.site{margin-top:auto}
       if (a.name) byName[a.name] = a.bucket;
     });
   }
+  var LOOP = { cx: 480, cy: 236, r: 122 };
+  var STAGE_ORDER = ['attract', 'convert', 'transform'];
+  var LOOP_FROM = { attract: 'Transform', convert: 'Attract', transform: 'Convert' };
+  var LOOP_TO = { attract: 'Convert', convert: 'Transform', transform: 'Attract' };
+  var LOOP_NAME = { attract: 'Attract', convert: 'Convert', transform: 'Transform' };
   function workSnippet(text) {
     var s = clean(text || '');
     if (s.length <= 46) return s;
@@ -3684,11 +3719,219 @@ footer.site{margin-top:auto}
     if (sp > 24) cut = cut.slice(0, sp);
     return cut + '...';
   }
+  function lastSeries(arr) {
+    if (!Array.isArray(arr)) return null;
+    var i;
+    for (i = arr.length - 1; i >= 0; i--) {
+      var n = num(arr[i]);
+      if (n != null) return n;
+    }
+    return null;
+  }
+  function stageCapacity(feed, groups) {
+    feed = feed || {};
+    var stages = (feed.stages && typeof feed.stages === 'object' && !Array.isArray(feed.stages)) ? feed.stages : {};
+    function playsOf(key) {
+      var block = stages[key];
+      if (!block || !Array.isArray(block.plays)) return { missing: true, items: [], active: 0 };
+      var items = [];
+      block.plays.forEach(function (p) {
+        if (!p || typeof p !== 'object') return;
+        var name = clean(p.name || '');
+        if (!name) return;
+        items.push({ name: name, status: clean(p.status || '') });
+      });
+      var active = items.filter(function (p) { return /^(active|live|on)$/i.test(p.status); }).length;
+      return { missing: false, items: items, active: active };
+    }
+    function multOf(key) {
+      var block = stages[key];
+      if (!block || block.multiplier == null || block.multiplier === '') return null;
+      return num(block.multiplier);
+    }
+    var posts = null, views = null;
+    var plats = feed.attract && feed.attract.social && Array.isArray(feed.attract.social.platforms) ? feed.attract.social.platforms : null;
+    if (plats) plats.forEach(function (p) {
+      if (!p) return;
+      var c = num(p.postsThisWeek);
+      if (c != null) posts = (posts || 0) + c;
+      var v = lastSeries(p.viewsByWeek);
+      if (v != null) views = (views || 0) + v;
+    });
+    var booked = feed.convert && feed.convert.funnel ? num(feed.convert.funnel.booked) : null;
+    var pipeline = feed.convert && Array.isArray(feed.convert.pipeline) ? feed.convert.pipeline.length : null;
+    var clients = feed.transform && Array.isArray(feed.transform.clients) ? feed.transform.clients : null;
+    var clientN = clients ? clients.length : null;
+    var delivered = null;
+    if (clients) {
+      var sawScripts = false;
+      clients.forEach(function (c) {
+        if (!c || !Array.isArray(c.scripts)) return;
+        sawScripts = true;
+        c.scripts.forEach(function (s) {
+          if (s && clean(s.deliveredAt || '')) delivered = (delivered || 0) + 1;
+        });
+      });
+      if (sawScripts && delivered == null) delivered = 0;
+    }
+    function outAttract() {
+      var bits = [];
+      if (posts != null) bits.push(compact(posts) + (posts === 1 ? ' post' : ' posts'));
+      if (views != null) bits.push(compact(views) + ' views');
+      return bits.join(', ');
+    }
+    function outConvert() {
+      var bits = [];
+      if (booked != null) bits.push(compact(booked) + ' booked');
+      if (pipeline != null) bits.push(compact(pipeline) + ' in pipeline');
+      return bits.join(', ');
+    }
+    function outTransform() {
+      var bits = [];
+      if (clientN != null) bits.push(compact(clientN) + (clientN === 1 ? ' active client' : ' active clients'));
+      if (delivered != null) bits.push(compact(delivered) + (delivered === 1 ? ' deliverable' : ' deliverables'));
+      return bits.join(', ');
+    }
+    var cap = {
+      attract: { plays: playsOf('attract'), mult: multOf('attract'), out: outAttract() },
+      convert: { plays: playsOf('convert'), mult: multOf('convert'), out: outConvert() },
+      transform: { plays: playsOf('transform'), mult: multOf('transform'), out: outTransform() }
+    };
+    var explicit = [];
+    STAGE_ORDER.forEach(function (key) {
+      if (stages[key] && stages[key].bottleneck === true) explicit.push(key);
+    });
+    var marks = explicit;
+    if (!marks.length) {
+      var best = null;
+      var keys = [];
+      STAGE_ORDER.forEach(function (key) {
+        var list = groups[key] || [];
+        if (!list.length) return;
+        var live = list.filter(function (a) { return a.status === 'working'; }).length;
+        var ratio = live / list.length;
+        if (best == null || ratio < best - 1e-9) { best = ratio; keys = [key]; }
+        else if (Math.abs(ratio - best) < 1e-9) keys.push(key);
+      });
+      marks = keys;
+    }
+    STAGE_ORDER.forEach(function (key) { cap[key].bottleneck = marks.indexOf(key) >= 0; });
+    return cap;
+  }
+  function playLine(plays) {
+    if (!plays || plays.missing || !plays.items.length) return 'No plays logged yet';
+    if (plays.active === 1) return '1 active play';
+    if (plays.active > 1) return plays.active + ' active plays';
+    if (plays.items.length === 1) return '1 play logged';
+    return plays.items.length + ' plays logged';
+  }
+  function multLine(mult) {
+    if (mult == null) return 'Multiplier: Needs data';
+    return 'Multiplier: ' + compact(mult) + 'x';
+  }
+  function stageAngle(key, rot) {
+    return -Math.PI / 2 + (rot || 0) + STAGE_ORDER.indexOf(key) * (2 * Math.PI / 3);
+  }
+  function hubPoint(key, rot) {
+    var a = stageAngle(key, rot);
+    return { x: LOOP.cx + Math.cos(a) * LOOP.r, y: LOOP.cy + Math.sin(a) * LOOP.r, ang: a };
+  }
+  function ringGap(satellite) { return satellite ? 0.62 : 0.82; }
+  function orbitPlan(total, focus, satellite) {
+    if (!total) return [];
+    var counts;
+    if (total <= 8) counts = [total];
+    else {
+      var outer = Math.ceil(total * 0.55);
+      var inner = total - outer;
+      counts = inner < 3 ? [total] : [inner, outer];
+    }
+    var gap = ringGap(satellite);
+    return counts.map(function (count, tier) {
+      var span = Math.PI * 2 - gap;
+      var step = span / Math.max(1, count);
+      var need = count <= 1 ? 26 : (20 / (2 * Math.sin(step / 2)));
+      var base = satellite ? [32, 46] : (focus ? [48, 68] : [42, 64]);
+      return { count: count, rad: Math.max(base[tier] || base[0], Math.ceil(need)) };
+    });
+  }
+  function hubStack(n, x, y) {
+    var dx = x - LOOP.cx;
+    var dy = y - LOOP.cy;
+    var len = Math.hypot(dx, dy) || 1;
+    var ux = dx / len;
+    var uy = dy / len;
+    var reach = (!n.satellite && S.orgFocus === n.stageId ? (n.focusOuter || n.outerRad) : n.outerRad) || 40;
+    var anchor = ux > 0.45 ? 'start' : (ux < -0.45 ? 'end' : 'middle');
+    var ax = x + ux * (reach + 20) + (anchor === 'start' ? 6 : (anchor === 'end' ? -6 : 0));
+    var ay = y + uy * (reach + 10);
+    var nameY = uy < -0.25 ? ay - 16 : ay;
+    var countY = nameY + 16;
+    var tagY = countY + 14;
+    return {
+      anchor: anchor,
+      name: { x: ax, y: nameY },
+      count: { x: ax, y: countY },
+      tag: { x: ax, y: tagY, show: tagY >= 12 && tagY <= 528 && nameY >= 12 }
+    };
+  }
+  function placeLoop(rot, focusKey) {
+    var pos = {};
+    STAGE_ORDER.forEach(function (key) {
+      var p = hubPoint(key, rot);
+      pos['stage-' + key] = { x: p.x, y: p.y };
+    });
+    (S.orgNodes || []).forEach(function (n) {
+      if (n.stageHub && !n.satellite) return;
+      if (n.stageHub && n.satellite) {
+        pos[n.id] = { x: n.hx, y: n.hy };
+        return;
+      }
+      var hub = pos[n.parent];
+      if (!hub) return;
+      var spin = n.satellite ? 0 : rot;
+      var rad = (!n.satellite && focusKey && n.stageId === focusKey) ? n.focusR : n.orbitR;
+      var ang = n.zang + spin;
+      pos[n.id] = { x: hub.x + Math.cos(ang) * rad, y: hub.y + Math.sin(ang) * rad };
+    });
+    return pos;
+  }
+  function loopBoardHtml(focus) {
+    var cap = S.stageCap || {};
+    function meter(key) {
+      var c = cap[key];
+      if (!c) return '';
+      var live = c.live || 0;
+      var total = c.total || 0;
+      var tag = c.bottleneck ? '<span class="tag">Bottleneck</span>' : '';
+      var out = c.out ? '<span>' + esc(c.out) + '</span>' : '';
+      return '<button type="button" class="loop-meter' + (c.bottleneck ? ' bottleneck' : '') + '" data-focus="' + key + '"><b>' + esc(LOOP_NAME[key] || key) + '</b>' + tag + '<span>' + live + ' working / ' + total + '</span><span>' + esc(playLine(c.plays)) + '</span>' + out + '<span class="mult">' + esc(multLine(c.mult)) + '</span></button>';
+    }
+    if (!focus || !cap[focus]) {
+      return '<div class="loop-meters">' + STAGE_ORDER.map(meter).join('') + '</div>';
+    }
+    var c = cap[focus];
+    var idle = (c.total || 0) - (c.live || 0);
+    var plays = c.plays && c.plays.items.length
+      ? '<ul class="loop-plays">' + c.plays.items.map(function (p) {
+          return '<li><b>' + esc(p.name) + '</b>' + (p.status ? '<span class="st">' + esc(p.status) + '</span>' : '') + '</li>';
+        }).join('') + '</ul>'
+      : '<p class="quiet">No plays logged yet</p>';
+    var bots = (S.orgNodes || []).filter(function (n) { return n.stageId === focus && !n.stageHub; });
+    var botHtml = bots.map(function (b) {
+      var snip = (b.status === 'working' && b.work) ? '<span class="snip">' + esc(workSnippet(b.work)) + '</span>' : '';
+      return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><b>' + esc(b.name) + '</b>' + snip + '</li>';
+    }).join('');
+    var out = c.out ? '<p>' + esc(c.out) + '</p>' : '';
+    return '<div class="loop-detail"><p class="loop-feeds">Fed by ' + esc(LOOP_FROM[focus]) + '. Feeds ' + esc(LOOP_TO[focus]) + '.</p><p>' + (c.live || 0) + ' working, ' + idle + ' idle</p><p class="mult">' + esc(multLine(c.mult)) + '</p>' + out + '<h3>Plays</h3>' + plays + '<h3>Bots</h3><ul class="loop-bots">' + botHtml + '</ul></div>';
+  }
   function orgHtml(m) {
     if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
     var cards = m.agentCards || [];
     if (!cards.length) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">No agents in this feed.</p></section>';
     S.orgZoom = '';
+    S.orgFocus = '';
+    S.loopRot = 0;
     var reduce = motionReduce();
     var groups = { attract: [], convert: [], transform: [], ops: [], growth: [], build: [] };
     cards.forEach(function (a) {
@@ -3702,197 +3945,176 @@ footer.site{margin-top:auto}
       return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
     }
     Object.keys(groups).forEach(function (key) { groups[key].sort(byLive); });
-    var spec = {
-      attract: { id: 'stage-attract', name: 'Attract', x: 188, y: 150, r: 26, satellite: false },
-      convert: { id: 'stage-convert', name: 'Convert', x: 480, y: 138, r: 26, satellite: false },
-      transform: { id: 'stage-transform', name: 'Transform', x: 772, y: 150, r: 26, satellite: false }
-    };
-    var satKeys = ['ops', 'growth', 'build'].filter(function (key) { return groups[key].length; });
-    var satNames = { ops: 'Ops', growth: 'Personal', build: 'Build' };
-    var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [334, 640] : [188, 480, 772]);
-    satKeys.forEach(function (key, i) {
-      spec[key] = {
-        id: 'stage-' + key,
-        name: satNames[key],
-        x: satXs[i],
-        y: 326,
-        r: 16,
-        satellite: true
-      };
+    S.stageCap = stageCapacity(S.feed, groups);
+    STAGE_ORDER.forEach(function (key) {
+      var list = groups[key];
+      var live = list.filter(function (a) { return a.status === 'working'; }).length;
+      S.stageCap[key].live = live;
+      S.stageCap[key].total = list.length;
     });
-    var order = ['attract', 'convert', 'transform'].concat(satKeys);
-    S.orgLinkSpace = 'view';
     var nodes = [];
-    var pos = {};
-    order.forEach(function (key) {
-      var hub = spec[key];
+    var spec = {
+      attract: { id: 'stage-attract', name: 'Attract' },
+      convert: { id: 'stage-convert', name: 'Convert' },
+      transform: { id: 'stage-transform', name: 'Transform' }
+    };
+    STAGE_ORDER.forEach(function (key) {
       var list = groups[key];
       var live = list.some(function (a) { return a.status === 'working'; });
-      var node = {
-        id: hub.id, name: hub.name, role: 'Stage', status: live ? 'working' : 'idle',
+      var plan = orbitPlan(list.length, false, false);
+      var focusPlan = orbitPlan(list.length, true, false);
+      var outer = 28;
+      var focusOuter = 28;
+      plan.forEach(function (ring) { if (ring.rad > outer) outer = ring.rad; });
+      focusPlan.forEach(function (ring) { if (ring.rad > focusOuter) focusOuter = ring.rad; });
+      nodes.push({
+        id: spec[key].id, name: spec[key].name, role: 'Stage', status: live ? 'working' : 'idle',
         work: '', report: '', reportText: '', activeAt: '', parent: '', desk: true, feed: false,
-        stageHub: true, stageId: key, liveStage: live, satellite: !!hub.satellite, count: list.length
-      };
-      nodes.push(node);
-      pos[hub.id] = { x: hub.x, y: hub.y, r: hub.r };
+        stageHub: true, stageId: key, liveStage: live, satellite: false, count: list.length,
+        bottleneck: !!S.stageCap[key].bottleneck, outerRad: outer, focusOuter: focusOuter, hr: 26
+      });
     });
-    function orbitCounts(total) {
-      if (total <= 9) return [total];
-      var outer = Math.ceil(total * 0.56);
-      var inner = total - outer;
-      if (inner < 4) return [total];
-      return [inner, outer];
-    }
-    function orbitRadius(count, tier, satellite) {
-      var chord = 20;
-      var need = count <= 1 ? 40 : (chord / (2 * Math.sin(Math.PI / count)));
-      var base = satellite ? [44, 66] : [58, 86];
-      return Math.max(base[tier] || base[base.length - 1], Math.ceil(need + 2));
-    }
-    order.forEach(function (key) {
-      var hub = spec[key];
-      var parent = pos[hub.id];
+    function addBots(key, satellite) {
+      var hubId = 'stage-' + key;
       var list = groups[key];
-      var counts = orbitCounts(list.length);
+      var overview = orbitPlan(list.length, false, satellite);
+      var focused = orbitPlan(list.length, true, satellite);
       var cursor = 0;
-      var outerRad = 0;
-      counts.forEach(function (count, ri) {
-        var rad = orbitRadius(count, ri, !!hub.satellite);
-        if (rad > outerRad) outerRad = rad;
-        var chunk = list.slice(cursor, cursor + count);
-        cursor += count;
-        var spin = ri % 2 ? (Math.PI / Math.max(1, count)) : 0;
-        var gap = 1.05;
-        var span = Math.PI * 2 - gap;
-        var start = (hub.satellite ? Math.PI / 2 : -Math.PI / 2) + gap / 2;
+      var outward = satellite ? Math.PI / 2 : stageAngle(key, 0);
+      var gap = ringGap(satellite);
+      var span = Math.PI * 2 - gap;
+      overview.forEach(function (ring, ri) {
+        var chunk = list.slice(cursor, cursor + ring.count);
+        var focusRing = focused[ri] || ring;
+        cursor += ring.count;
+        var spin = ri % 2 ? (span / Math.max(1, chunk.length)) * 0.5 : 0;
+        var start = outward + gap / 2;
         chunk.forEach(function (b, i) {
-          var ang = start + spin + (count <= 1 ? span / 2 : (i / count) * span);
+          var ang = start + spin + ((i + 0.5) / chunk.length) * span;
           var id = 'n' + nodes.length;
-          var bot = agentNode(b, { id: id, parent: hub.id, desk: isDeskCard(b), fallbackRole: 'Bot' });
+          var bot = agentNode(b, { id: id, parent: hubId, desk: false, fallbackRole: 'Bot' });
           bot.stageId = key;
-          bot.lead = !!bot.desk;
+          bot.satellite = !!satellite;
           bot.zang = ang;
-          bot.zring = ri;
+          bot.orbitR = ring.rad;
+          bot.focusR = focusRing.rad;
+          bot.hr = 6.5;
           nodes.push(bot);
-          var rr = bot.lead ? 8 : 6.5;
-          pos[id] = {
-            x: parent.x + Math.cos(ang) * rad,
-            y: parent.y + Math.sin(ang) * rad,
-            r: rr,
-            ang: ang
-          };
         });
       });
-      var hubNode = nodes.filter(function (n) { return n.id === hub.id; })[0];
-      if (hubNode) {
-        hubNode.outerRad = outerRad;
-        if (hub.satellite) {
-          hubNode.nameDy = outerRad + 16;
-          hubNode.countDy = outerRad + 28;
-        } else {
-          hubNode.nameDy = -(outerRad + 16);
-          hubNode.countDy = hubNode.nameDy + 13;
-        }
-      }
+    }
+    STAGE_ORDER.forEach(function (key) { addBots(key, false); });
+    var satKeys = ['ops', 'growth', 'build'].filter(function (key) { return groups[key].length; });
+    var satNames = { ops: 'Ops', growth: 'Personal', build: 'Build' };
+    var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [300, 660] : [156, 480, 804]);
+    satKeys.forEach(function (key, i) {
+      var list = groups[key];
+      var live = list.some(function (a) { return a.status === 'working'; });
+      var plan = orbitPlan(list.length, false, true);
+      var outer = 24;
+      plan.forEach(function (ring) { if (ring.rad > outer) outer = ring.rad; });
+      nodes.push({
+        id: 'stage-' + key, name: satNames[key], role: 'Stage', status: live ? 'working' : 'idle',
+        work: '', report: '', reportText: '', activeAt: '', parent: '', desk: true, feed: false,
+        stageHub: true, stageId: key, liveStage: live, satellite: true, count: list.length,
+        bottleneck: false, outerRad: outer, hr: 14, hx: satXs[i], hy: 430
+      });
+      addBots(key, true);
     });
+    S.orgNodes = nodes;
+    var placed = placeLoop(0, '');
     nodes.forEach(function (n) {
-      var p = pos[n.id];
-      if (!p) return;
-      p.x = finite(p.x, 480);
-      p.y = finite(p.y, 180);
-      p.r = finite(p.r, 6);
-      p.x = Math.max(p.r + 8, Math.min(952 - p.r, p.x));
-      p.y = Math.max(p.r + 8, Math.min(412 - p.r, p.y));
+      var p = placed[n.id] || { x: n.hx || LOOP.cx, y: n.hy || LOOP.cy };
+      p.x = finite(p.x, LOOP.cx);
+      p.y = finite(p.y, LOOP.cy);
       n.vx = p.x;
       n.vy = p.y;
       n.hx = p.x;
       n.hy = p.y;
-      n.hr = p.r;
-      n.hitR = p.r + 2;
+      n.hr = n.hr || (n.stageHub ? 22 : 6.5);
+      n.hitR = n.hr + 3;
     });
-    S.orgNodes = nodes;
+    S.orgLinkSpace = 'view';
     function fill(status) {
       if (status === 'working') return '#ed3039';
       if (status === 'blocked') return '#C4A35A';
       if (status === 'not-reported') return '#242424';
       return '#3a3a3a';
     }
-    function qpath(a, b, lift) {
-      if (!a || !b) return null;
-      var mx = (a.x + b.x) / 2;
-      var my = (a.y + b.y) / 2 - lift;
-      if (!isFinite(mx) || !isFinite(my)) return null;
-      return {
-        d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + mx.toFixed(1) + ',' + my.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1),
-        x0: a.x, y0: a.y, cx: mx, cy: my, x1: b.x, y1: b.y
-      };
-    }
-    var paths = '';
-    var pulses = [];
-    function pushPath(L, cls, pulse, extra) {
-      if (!L) return;
-      paths += '<path class="' + cls + '"' + (extra || '') + ' d="' + L.d + '"/>';
-      if (pulse && pulses.length < 4) pulses.push(L);
-    }
-    var attractLive = groups.attract.some(function (a) { return a.status === 'working'; });
-    var convertLive = groups.convert.some(function (a) { return a.status === 'working'; });
-    var flowA = qpath(pos['stage-attract'], pos['stage-convert'], 36);
-    var flowB = qpath(pos['stage-convert'], pos['stage-transform'], 36);
-    pushPath(flowA, attractLive ? 'org-flow live' : 'org-flow', attractLive);
-    pushPath(flowB, convertLive ? 'org-flow live' : 'org-flow', convertLive);
+    var paths = '<circle class="org-loop org-flow live" cx="' + LOOP.cx + '" cy="' + LOOP.cy + '" r="' + LOOP.r + '"/>';
     satKeys.forEach(function (key) {
-      pushPath(qpath(pos['stage-' + key], pos['stage-convert'], 4), 'org-wire sat', false);
+      var h = placed['stage-' + key];
+      if (!h) return;
+      paths += '<path class="org-wire sat" d="M' + h.x.toFixed(1) + ',' + h.y.toFixed(1) + ' L' + LOOP.cx + ',' + LOOP.cy + '"/>';
     });
     nodes.forEach(function (n) {
-      if (!n.parent || !pos[n.parent] || !pos[n.id]) return;
-      var a = pos[n.parent];
-      var b = pos[n.id];
-      var line = {
-        d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' L' + b.x.toFixed(1) + ',' + b.y.toFixed(1),
-        x0: a.x, y0: a.y, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, x1: b.x, y1: b.y
-      };
-      pushPath(line, 'org-wire', false, ' data-bot="' + esc(n.stageId) + '" data-from="' + esc(n.parent) + '" data-to="' + esc(n.id) + '"');
+      if (!n.parent || !placed[n.parent] || !placed[n.id]) return;
+      var a = placed[n.parent];
+      var b = placed[n.id];
+      paths += '<path class="org-wire" data-bot="' + esc(n.stageId) + '" data-from="' + esc(n.parent) + '" data-to="' + esc(n.id) + '" d="M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' L' + b.x.toFixed(1) + ',' + b.y.toFixed(1) + '"/>';
     });
-    S.orgLinks = pulses;
-    var pingLeft = reduce ? 0 : 12;
+    S.orgLinks = [0, 0.33, 0.66].map(function (phase) {
+      return { kind: 'arc', cx: LOOP.cx, cy: LOOP.cy, r: LOOP.r, a0: -Math.PI / 2, a1: Math.PI * 1.5, phase: phase };
+    });
+    var pingLeft = reduce ? 0 : 10;
     nodes.forEach(function (n) {
       var hot = n.stageHub ? n.liveStage : n.status === 'working';
       n.ping = !!(hot && pingLeft > 0);
       if (n.ping) pingLeft -= 1;
     });
     var shapes = nodes.map(function (n) {
-      var p = pos[n.id];
-      if (!p || !isFinite(p.x) || !isFinite(p.y) || !isFinite(p.r)) return '';
-      var cls = n.stageHub ? ('stage' + (n.liveStage ? ' working' : '')) : (n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : (n.status === 'offline' ? 'offline' : 'idle')));
-      var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8).toFixed(1) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
-      var halo = n.stageHub ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 7).toFixed(1) + '" fill="none" stroke="rgba(237,48,57,.5)" stroke-width="1.3"/>' : '';
-      var labCls = n.stageHub ? 'hublab' : 'botlab';
-      var nameY = p.y + (n.stageHub ? (n.nameDy || (n.satellite ? -22 : 14)) : (p.r + 14));
-      var label = '<text class="' + labCls + '" x="' + p.x.toFixed(1) + '" y="' + nameY.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
-      if (n.stageHub) {
-        var countY = p.y + (n.countDy || (nameY - p.y + 13));
-        label += '<text class="hubcount" x="' + p.x.toFixed(1) + '" y="' + countY.toFixed(1) + '" text-anchor="middle">' + n.count + '</text>';
-      } else if (n.work) {
-        label += '<text class="botwork" x="' + p.x.toFixed(1) + '" y="' + (nameY + 12).toFixed(1) + '" text-anchor="middle">' + esc(workSnippet(n.work)) + '</text>';
+      var x = n.hx, y = n.hy, r = n.hr;
+      var cls = n.stageHub ? ('stage' + (n.liveStage ? ' working' : '') + (n.bottleneck ? ' bottleneck' : '')) : (n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : (n.status === 'offline' ? 'offline' : 'idle')));
+      var ping = n.ping ? '<circle class="ringping" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (r + 8).toFixed(1) + '" fill="none" stroke="#ed3039" stroke-width="1.2"/>' : '';
+      var gauge = '';
+      if (n.stageHub && !n.satellite) {
+        var gr = r + 9;
+        var circ = 2 * Math.PI * gr;
+        var ratio = n.count ? ((groups[n.stageId] || []).filter(function (a) { return a.status === 'working'; }).length / n.count) : 0;
+        var dash = Math.max(0, Math.min(circ, ratio * circ));
+        var stroke = n.bottleneck ? '#ed3039' : 'rgba(255,255,255,.55)';
+        gauge = '<circle class="cap-arc" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + gr.toFixed(1) + '" fill="none" stroke="' + stroke + '" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + circ.toFixed(2) + '" transform="rotate(-90 ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>';
       }
-      var hit = '<circle class="hit" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + finite(n.hitR, p.r + 2).toFixed(1) + '"/>';
+      var label;
+      if (n.stageHub && !n.satellite) {
+        var stack = hubStack(n, x, y);
+        var liveN = (groups[n.stageId] || []).filter(function (a) { return a.status === 'working'; }).length;
+        function lab(cls, pt, word) {
+          return '<text class="' + cls + '" x="' + pt.x.toFixed(1) + '" y="' + pt.y.toFixed(1) + '" text-anchor="' + stack.anchor + '">' + word + '</text>';
+        }
+        label = lab('hublab', stack.name, esc(n.name)) + lab('hubcount', stack.count, liveN + '/' + n.count);
+        if (n.bottleneck && stack.tag.show) label += lab('hubtag', stack.tag, 'Bottleneck');
+      } else if (n.stageHub) {
+        var countY = y + n.outerRad + 28;
+        var liveSat = (groups[n.stageId] || []).filter(function (a) { return a.status === 'working'; }).length;
+        label = '<text class="hublab" x="' + x.toFixed(1) + '" y="' + (y + n.outerRad + 16).toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+        label += '<text class="hubcount" x="' + x.toFixed(1) + '" y="' + countY.toFixed(1) + '" text-anchor="middle">' + liveSat + '/' + n.count + '</text>';
+      } else {
+        label = '<text class="botlab" x="' + x.toFixed(1) + '" y="' + (y + 14).toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+        if (n.work) label += '<text class="botwork" x="' + x.toFixed(1) + '" y="' + (y + 26).toFixed(1) + '" text-anchor="middle">' + esc(workSnippet(n.work)) + '</text>';
+      }
+      var hit = '<circle class="hit" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (n.hitR).toFixed(1) + '"/>';
       var fillColor = n.stageHub ? (n.liveStage ? '#ed3039' : '#2a2a2a') : fill(n.status);
-      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" data-stage="' + esc(n.stageId) + '" aria-label="' + esc(n.name) + '">' + ping + halo + hit + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r.toFixed(1) + '" fill="' + fillColor + '"/>' + label + '</g>';
+      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" data-stage="' + esc(n.stageId) + '" aria-label="' + esc(n.name) + '">' + ping + gauge + hit + '<circle class="core" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fillColor + '"/>' + label + '</g>';
     }).join('');
-    var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="AI workforce. Attract, Convert, and Transform, with each bot on its stage.">' + paths + shapes + '</svg>';
-    var steps = order.map(function (key) {
-      var hub = nodes.filter(function (n) { return n.id === spec[key].id; })[0];
+    var nav = STAGE_ORDER.map(function (key, i) {
+      return '<button type="button" data-focus="' + key + '">' + (i + 1) + ' ' + esc(spec[key].name) + '</button>';
+    }).join('');
+    var steps = STAGE_ORDER.concat(satKeys).map(function (key) {
+      var hub = nodes.filter(function (n) { return n.stageHub && n.stageId === key; })[0];
       var kids = nodes.filter(function (n) { return n.parent === hub.id; });
       var liveN = kids.filter(function (k) { return k.status === 'working'; }).length;
       var botsHtml = kids.map(function (b) {
         var snip = (b.status === 'working' && b.work) ? '<span class="snip">' + esc(workSnippet(b.work)) + '</span>' : '';
         return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button>' + snip + '</li>';
       }).join('');
-      var cls = hub.liveStage ? 'working' : 'idle';
-      var idleN = kids.length - liveN;
-      return '<li class="' + cls + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(liveN + ' working, ' + idleN + ' idle') + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
+      var cap = S.stageCap[key];
+      var meta = liveN + ' working, ' + (kids.length - liveN) + ' idle';
+      if (cap) meta += '. ' + playLine(cap.plays);
+      return '<li class="' + (hub.liveStage ? 'working' : 'idle') + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(meta) + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
     }).join('');
-    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. Click a bucket to go deeper.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
+    var svg = '<svg class="org-svg" viewBox="0 0 960 540" role="img" aria-label="AI workforce loop. Attract feeds Convert, Convert feeds Transform, and Transform feeds Attract.">' + paths + shapes + '</svg>';
+    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. A closed loop.</p></div><div class="loop-nav" id="loop-nav">' + nav + '</div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><div id="loop-board">' + loopBoardHtml('') + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   var zoomGen = 0;
   function refreshOrgWires() {
@@ -3913,163 +4135,115 @@ footer.site{margin-top:auto}
     Array.prototype.forEach.call(g.querySelectorAll('circle'), function (c) {
       c.setAttribute('cx', x.toFixed(1));
       c.setAttribute('cy', y.toFixed(1));
+      if (c.classList.contains('cap-arc')) c.setAttribute('transform', 'rotate(-90 ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')');
     });
-    var overview = !!home;
     var texts = g.querySelectorAll('text');
-    function placeText(el, tx, ty, anchor) {
-      if (!el) return;
-      el.setAttribute('x', tx.toFixed(1));
-      el.setAttribute('y', ty.toFixed(1));
-      if (anchor) el.setAttribute('text-anchor', anchor);
-    }
-    if (n.stageHub) {
-      var nameDy = overview ? (n.nameDy || -(n.hr + 18)) : -(n.hr + 22);
-      var countDy = overview ? (n.countDy || (nameDy + 13)) : (nameDy + 14);
-      placeText(texts[0], x, y + nameDy, 'middle');
-      placeText(texts[1], x, y + countDy, 'middle');
+    if (n.stageHub && !n.satellite) {
+      var stack = hubStack(n, x, y);
+      function put(el, pt) {
+        if (!el || !pt) return;
+        el.setAttribute('x', pt.x.toFixed(1));
+        el.setAttribute('y', pt.y.toFixed(1));
+        el.setAttribute('text-anchor', stack.anchor);
+      }
+      put(texts[0], stack.name);
+      put(texts[1], stack.count);
+      if (texts[2]) {
+        put(texts[2], stack.tag);
+        texts[2].setAttribute('opacity', stack.tag.show ? '1' : '0');
+      }
       return;
     }
-    if (overview) {
-      placeText(texts[0], x, y + n.hr + 14, 'middle');
-      placeText(texts[1], x, y + n.hr + 26, 'middle');
+    if (n.stageHub && n.satellite) {
+      if (texts[0]) { texts[0].setAttribute('x', x.toFixed(1)); texts[0].setAttribute('y', (y + n.outerRad + 16).toFixed(1)); }
+      if (texts[1]) { texts[1].setAttribute('x', x.toFixed(1)); texts[1].setAttribute('y', (y + n.outerRad + 28).toFixed(1)); }
       return;
     }
-    var ang = typeof n.zang === 'number' ? n.zang : 0;
-    var cos = Math.cos(ang);
-    var dist = n.hr + 18;
-    var anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
-    var lx = x + cos * dist;
-    var ly = y + Math.sin(ang) * dist + 4;
-    placeText(texts[0], lx, ly, anchor);
-    placeText(texts[1], lx, ly + 12, anchor);
-  }
-  function zoomTargets(stageId) {
-    var bots = (S.orgNodes || []).filter(function (n) { return n.stageId === stageId && !n.stageHub; });
-    var hub = (S.orgNodes || []).filter(function (n) { return n.stageHub && n.stageId === stageId; })[0];
-    var targets = {};
-    if (!hub) return targets;
-    var ox = 2400;
-    var oy = 360;
-    targets[hub.id] = { x: ox, y: oy };
-    var rings = [];
-    bots.forEach(function (b) {
-      var ri = b.zring || 0;
-      if (!rings[ri]) rings[ri] = [];
-      rings[ri].push(b);
-    });
-    rings.forEach(function (list, ri) {
-      if (!list || !list.length) return;
-      var rad = list.length > 9 ? (210 + ri * 170) : (list.length > 6 ? 250 : 210);
-      if (rings.length > 1) rad = 200 + ri * 168;
-      var gap = 1.05;
-      var span = Math.PI * 2 - gap;
-      var satellite = !!hub.satellite;
-      var start = (satellite ? Math.PI / 2 : -Math.PI / 2) + gap / 2;
-      var spin = ri % 2 ? (span / list.length) * 0.5 : 0;
-      list.forEach(function (b, i) {
-        var ang = start + spin + (list.length <= 1 ? span / 2 : (i / list.length) * span);
-        b.zang = ang;
-        targets[b.id] = { x: ox + Math.cos(ang) * rad, y: oy + Math.sin(ang) * rad };
-      });
-    });
-    return targets;
-  }
-  function viewFor(points) {
-    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-    points.forEach(function (p) {
-      minX = Math.min(minX, p.x - 210);
-      maxX = Math.max(maxX, p.x + 210);
-      minY = Math.min(minY, p.y - 70);
-      maxY = Math.max(maxY, p.y + 56);
-    });
-    var w = Math.max(280, maxX - minX);
-    var h = Math.max(160, maxY - minY);
-    var aspect = 960 / 420;
-    if (w / h < aspect) {
-      var nw = h * aspect;
-      minX -= (nw - w) / 2;
-      w = nw;
-    } else {
-      var nh = w / aspect;
-      minY -= (nh - h) / 2;
-      h = nh;
+    var ang = (n.zang || 0) + (n.satellite ? 0 : (S.loopRot || 0));
+    var dist = n.hr + 12;
+    var lx = x + Math.cos(ang) * dist;
+    var ly = y + Math.sin(ang) * dist;
+    var anchor = Math.cos(ang) > 0.35 ? 'start' : (Math.cos(ang) < -0.35 ? 'end' : 'middle');
+    if (texts[0]) {
+      texts[0].setAttribute('x', lx.toFixed(1));
+      texts[0].setAttribute('y', ly.toFixed(1));
+      texts[0].setAttribute('text-anchor', anchor);
     }
-    return [minX, minY, w, h];
+    if (texts[1]) {
+      texts[1].setAttribute('x', lx.toFixed(1));
+      texts[1].setAttribute('y', (ly + 11).toFixed(1));
+      texts[1].setAttribute('text-anchor', anchor);
+    }
   }
-  function animateOrg(svg, moves, box, home) {
+  function animateOrg(svg, moves) {
     var gen = ++zoomGen;
-    var raw = (svg.getAttribute('viewBox') || '0 0 960 420').split(/[\s,]+/).map(Number);
-    var fromBox = raw.length === 4 && raw.every(function (n) { return isFinite(n); }) ? raw : [0, 0, 960, 420];
     var start = moves.map(function (m) { return { n: m.n, x: m.n.vx, y: m.n.vy, tx: m.x, ty: m.y }; });
     if (motionReduce()) {
-      start.forEach(function (m) { paintNodeAt(m.n, m.tx, m.ty, home); });
-      svg.setAttribute('viewBox', box.map(function (n) { return n.toFixed(1); }).join(' '));
+      start.forEach(function (m) { paintNodeAt(m.n, m.tx, m.ty, !S.orgFocus); });
       refreshOrgWires();
       return;
     }
     var t0 = performance.now();
     function frame(now) {
       if (gen !== zoomGen) return;
-      var u = Math.min(1, (now - t0) / 320);
+      var u = Math.min(1, (now - t0) / 360);
       var e = 1 - Math.pow(1 - u, 3);
-      start.forEach(function (m) {
-        paintNodeAt(m.n, m.x + (m.tx - m.x) * e, m.y + (m.ty - m.y) * e, home);
-      });
-      var vb = fromBox.map(function (v, i) { return v + (box[i] - v) * e; });
-      svg.setAttribute('viewBox', vb.map(function (n) { return n.toFixed(1); }).join(' '));
+      start.forEach(function (m) { paintNodeAt(m.n, m.x + (m.tx - m.x) * e, m.y + (m.ty - m.y) * e, !S.orgFocus); });
       refreshOrgWires();
       if (u < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
-  function zoomOrg(stage) {
-    S.orgZoom = stage || '';
+  function focusOrg(stage, toggle) {
+    if (STAGE_ORDER.indexOf(stage) < 0) stage = '';
+    if (toggle && stage && stage === S.orgFocus) stage = '';
+    S.orgFocus = stage || '';
+    S.loopRot = stage ? -STAGE_ORDER.indexOf(stage) * (2 * Math.PI / 3) : 0;
     hideHover();
-    var svg = document.querySelector('#v-home .org-svg');
     var crumb = $('org-crumb');
-    var hub = null;
-    (S.orgNodes || []).forEach(function (n) { if (n.stageHub && n.stageId === S.orgZoom) hub = n; });
+    var cap = (S.stageCap && S.stageCap[stage]) || null;
     if (crumb) {
-      var kids = hub ? (S.orgNodes || []).filter(function (n) { return n.parent === hub.id; }) : [];
-      var liveN = kids.filter(function (n) { return n.status === 'working'; }).length;
-      crumb.innerHTML = hub
-        ? '<button type="button" class="org-crumb" data-org-zoom="">Workforce</button> / <b>' + esc(hub.name) + '</b><span class="org-counts">' + liveN + ' working, ' + (kids.length - liveN) + ' idle</span>'
-        : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
+      crumb.innerHTML = cap
+        ? '<button type="button" class="org-crumb" data-focus="">Workforce</button> / <b>' + esc(LOOP_NAME[stage]) + '</b> <span class="org-counts">' + cap.live + ' working, ' + (cap.total - cap.live) + ' idle</span>'
+        : 'Attract, Convert, and Transform. A closed loop.';
     }
-    Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) {
-      li.classList.toggle('on', !!S.orgZoom && li.getAttribute('data-stage') === S.orgZoom);
+    var board = $('loop-board');
+    if (board) board.innerHTML = loopBoardHtml(S.orgFocus);
+    Array.prototype.forEach.call(document.querySelectorAll('#loop-nav button'), function (btn) {
+      btn.classList.toggle('on', btn.getAttribute('data-focus') === S.orgFocus);
     });
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) {
+      var key = li.getAttribute('data-stage');
+      li.classList.toggle('on', !!S.orgFocus && key === S.orgFocus);
+    });
+    var svg = document.querySelector('#v-home .org-svg');
     if (!svg) return;
-    svg.classList.toggle('is-zoom', !!S.orgZoom);
+    svg.classList.toggle('is-focus', !!S.orgFocus);
     Array.prototype.forEach.call(svg.querySelectorAll('.node'), function (g) {
-      g.classList.toggle('in-zoom', !S.orgZoom || g.getAttribute('data-stage') === S.orgZoom);
+      var on = !S.orgFocus || g.getAttribute('data-stage') === S.orgFocus;
+      g.classList.toggle('in-focus', on);
+      g.classList.toggle('focus-bot', false);
     });
     Array.prototype.forEach.call(svg.querySelectorAll('.org-wire[data-bot]'), function (p) {
-      p.classList.toggle('for-zoom', !!S.orgZoom && p.getAttribute('data-bot') === S.orgZoom);
+      p.classList.toggle('for-zoom', !!S.orgFocus && p.getAttribute('data-bot') === S.orgFocus);
     });
+    var targets = placeLoop(S.loopRot, S.orgFocus);
     var moves = [];
-    if (!S.orgZoom) {
-      (S.orgNodes || []).forEach(function (n) {
-        if (n.hx == null) return;
-        moves.push({ n: n, x: n.hx, y: n.hy });
-      });
-      animateOrg(svg, moves, [0, 0, 960, 420], true);
-      return;
-    }
-    var targets = zoomTargets(S.orgZoom);
-    var pts = [];
     (S.orgNodes || []).forEach(function (n) {
       if (!targets[n.id]) return;
       moves.push({ n: n, x: targets[n.id].x, y: targets[n.id].y });
-      pts.push(targets[n.id]);
     });
-    if (!pts.length) return;
-    animateOrg(svg, moves, viewFor(pts), false);
+    animateOrg(svg, moves);
   }
   function orgActivate(id) {
     var n = nodeById(id);
-    if (n && n.stageHub) {
-      zoomOrg(S.orgZoom === n.stageId ? '' : n.stageId);
+    if (n && n.stageHub && !n.satellite) {
+      focusOrg(n.stageId, true);
+      return;
+    }
+    if (n && n.stageHub && n.satellite) {
+      var li = document.querySelector('#v-home .stepper li[data-stage="' + n.stageId + '"]');
+      if (li) li.classList.toggle('on');
       return;
     }
     openNode(id);
@@ -4309,15 +4483,22 @@ footer.site{margin-top:auto}
     if (n && !S.orgZoom) {
       var cssSpace = S.orgLinkSpace === 'css';
       var sx = cssSpace ? 1 : FX.w / 960;
-      var sy = cssSpace ? 1 : FX.h / 420;
-      ctx.globalAlpha = 0.9;
+      var sy = cssSpace ? 1 : FX.h / 540;
+      ctx.globalAlpha = 0.85;
       for (i = 0; i < n; i++) {
         var L = links[i];
-        if (!L || !isFinite(L.x0) || !isFinite(L.y0) || !isFinite(L.x1) || !isFinite(L.y1) || !isFinite(L.cx) || !isFinite(L.cy)) continue;
-        var u = ((t * 0.00022) + i / n) % 1;
-        var k = 1 - u;
-        var x = k * k * L.x0 + 2 * k * u * L.cx + u * u * L.x1;
-        var y = k * k * L.y0 + 2 * k * u * L.cy + u * u * L.y1;
+        if (!L) continue;
+        var u = ((t * 0.00028) + (L.phase || i / n)) % 1;
+        var x, y;
+        if (L.kind === 'arc' && isFinite(L.cx) && isFinite(L.cy) && isFinite(L.r)) {
+          var ang = L.a0 + (L.a1 - L.a0) * u;
+          x = L.cx + Math.cos(ang) * L.r;
+          y = L.cy + Math.sin(ang) * L.r;
+        } else if (isFinite(L.x0) && isFinite(L.y0) && isFinite(L.x1) && isFinite(L.y1) && isFinite(L.cx) && isFinite(L.cy)) {
+          var k = 1 - u;
+          x = k * k * L.x0 + 2 * k * u * L.cx + u * u * L.x1;
+          y = k * k * L.y0 + 2 * k * u * L.cy + u * u * L.y1;
+        } else continue;
         if (!isFinite(x) || !isFinite(y)) continue;
         ctx.fillRect(x * sx, y * sy, 2.2, 2.2);
       }
@@ -4580,11 +4761,18 @@ footer.site{margin-top:auto}
         { k: 'Live', v: String(stageLive.length) }
       ];
       if (stageTop.length) stageRows.push({ k: 'Active', v: stageTop.map(function (k) { return k.name; }).join(', ') });
+      var cap = S.stageCap && S.stageCap[n.stageId];
+      if (cap && !n.satellite) {
+        stageRows.push({ k: 'Plays', v: playLine(cap.plays) });
+        if (cap.out) stageRows.push({ k: 'Output', v: cap.out });
+        stageRows.push({ k: 'Multiplier', v: cap.mult == null ? 'Needs data' : (compact(cap.mult) + 'x') });
+        if (cap.bottleneck) stageRows.push({ k: 'Signal', v: 'Bottleneck' });
+      }
       return {
         title: n.name,
         pill: null,
         rows: stageRows,
-        hint: S.orgZoom === n.stageId ? 'Esc returns to the workforce' : 'Click to open this bucket'
+        hint: S.orgFocus === n.stageId ? 'Esc returns to the loop' : (n.satellite ? 'Support for the loop' : 'Click to focus this stage')
       };
     }
     var kids = nodes.filter(function (k) { return k.parent === n.id && k.feed; });
@@ -5550,11 +5738,12 @@ footer.site{margin-top:auto}
         return;
       }
       if (e.target.closest('a[href]')) return;
-      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-pick],[data-more]');
+      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-focus],[data-pick],[data-more]');
       if (!t) {
         if (Hover.pointer === 'touch') hideHover();
         return;
       }
+      if (t.hasAttribute('data-focus')) { focusOrg(t.getAttribute('data-focus')); return; }
       if (t.hasAttribute('data-node')) {
         var nodeId = t.getAttribute('data-node');
         var svgClick = e.target.closest && e.target.closest('.org-svg');
@@ -5619,8 +5808,24 @@ footer.site{margin-top:auto}
           return $(id) && $(id).classList.contains('on');
         });
         if (sheetOn) { closeSheets(); return; }
-        if (S.orgZoom) { zoomOrg(''); return; }
+        if (S.orgFocus) { focusOrg(''); return; }
         closeSheets();
+      }
+      var typing = e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable);
+      if (typing) return;
+      var sheetOpen = ['drawer', 'kpisheet', 'login', 'chat'].some(function (id) {
+        return $(id) && $(id).classList.contains('on');
+      });
+      if (sheetOpen) return;
+      var loopKeys = { '1': 'attract', '2': 'convert', '3': 'transform' };
+      if (loopKeys[e.key]) { e.preventDefault(); focusOrg(loopKeys[e.key]); return; }
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        var order = ['attract', 'convert', 'transform'];
+        var at = order.indexOf(S.orgFocus);
+        if (at < 0) at = e.key === 'ArrowLeft' ? 0 : -1;
+        var next = order[(at + (e.key === 'ArrowRight' ? 1 : order.length - 1)) % order.length];
+        e.preventDefault();
+        focusOrg(next);
       }
     });
     if ($('lock-in')) $('lock-in').addEventListener('click', function () { show('login'); });

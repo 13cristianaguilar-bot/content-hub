@@ -479,6 +479,18 @@ body[data-ready] .shimmer{display:none}
 .org .ph .sub{min-width:0;text-align:right}
 .org-svg{width:100%;height:380px;display:block}
 .org-svg text{font-family:var(--sans);font-size:11px;fill:#d4d4d4}
+.org-svg .hublab{fill:#fff;font-size:13px;font-weight:700}
+.org-svg .botlab{opacity:0;pointer-events:none}
+.org-svg.is-zoom .node.in-zoom .botlab{opacity:1;pointer-events:auto}
+.org-svg.is-zoom .node:not(.in-zoom){opacity:.12;pointer-events:none}
+.org-svg.is-zoom .org-flow,.org-svg.is-zoom .org-wire{opacity:0}
+.org-flow,.org-wire{fill:none;pointer-events:none}
+.org-flow{stroke:rgba(237,48,57,.78);stroke-width:2;stroke-dasharray:8 11;animation:flowdash 2.6s linear infinite}
+.org-wire{stroke:rgba(255,255,255,.16);stroke-width:1.1}
+.org-wire.live{stroke:rgba(237,48,57,.72);stroke-dasharray:4 8;animation:flowdash 1.8s linear infinite}
+.node.stage .core{stroke:#fff;stroke-width:1.6}
+@keyframes flowdash{to{stroke-dashoffset:-76}}
+.org-crumb{background:none;border:0;padding:0;color:#fff;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .node{cursor:pointer}
 .node .hit{fill:transparent;pointer-events:all}
 .node .ringping{animation:pingfade 2.2s ease-out infinite;pointer-events:none}
@@ -625,6 +637,8 @@ body[data-ready] .shimmer{display:none}
 .stepper .bots{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;padding:0;list-style:none}
 .stepper .bots li{padding:0}
 .stepper .bots button{border:1px solid var(--line);background:rgba(255,255,255,.03);color:inherit;border-radius:999px;padding:4px 8px;font-size:12px}
+.stepper li:not(.on) > .bots{display:none}
+.stepper li.on > .bots{display:flex}
 .speedo .lbl{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
 footer.site{margin-top:auto}
 @media(max-width:1180px){
@@ -917,6 +931,7 @@ footer.site{margin-top:auto}
     more: {},
     pick: '',
     orgNodes: [],
+    orgZoom: '',
     authReady: false,
     user: null,
     admin: false,
@@ -3599,65 +3614,136 @@ footer.site{margin-top:auto}
       feed: true
     };
   }
+  function stageOfBlob(blob) {
+    var transform = /\b(transform|fulfil\w*|deliveries|delivery|retainers?|stamps?)\b/.test(blob);
+    var convert = /\b(convert|funnels?|prospects?|prospecting|acquisition|booked|sales|close|growth|outreach|campaigns?|traffic|seo|ads?)\b/.test(blob);
+    var attract = /\b(attract|content|posts?|instagram|youtube|reels?|hooks?|captions?|thumbnails?|copy|editors?|films?|scripts?|magnets?|carousels?)\b/.test(blob);
+    if (convert && transform) {
+      if (/\b(acquisition|growth|outreach|funnels?|prospects?|prospecting)\b/.test(blob)) return 'convert';
+      return 'transform';
+    }
+    if (convert) return 'convert';
+    if (transform) return 'transform';
+    if (attract) return 'attract';
+    return 'ops';
+  }
+  function stageForCard(card, deskStage) {
+    var boss = card && card.reportsTo;
+    if (boss && deskStage[boss]) return deskStage[boss];
+    return stageOfBlob(agentBlob(card));
+  }
   function orgHtml(m) {
     if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
     var cards = m.agentCards || [];
     if (!cards.length) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">No agents in this feed.</p></section>';
-    if (!structuredAgents(cards)) return clusterOrg(m, cards);
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var desks = [];
-    var bots = [];
-    cards.forEach(function (a) { (isDeskCard(a) ? desks : bots).push(a); });
-    var cx = 480, cy = 200;
+    S.orgZoom = '';
+    var reduce = motionReduce();
+    var deskStage = {};
+    cards.forEach(function (a) {
+      if (isDeskCard(a) && a.name) deskStage[a.name] = stageOfBlob(agentBlob(a));
+    });
+    var groups = { attract: [], convert: [], transform: [], ops: [] };
+    cards.forEach(function (a) {
+      var key = stageForCard(a, deskStage);
+      if (!groups[key]) key = 'ops';
+      groups[key].push(a);
+    });
+    function byLive(a, b) {
+      var aw = a.status === 'working' ? 0 : 1;
+      var bw = b.status === 'working' ? 0 : 1;
+      if (aw !== bw) return aw - bw;
+      return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+    }
+    Object.keys(groups).forEach(function (key) { groups[key].sort(byLive); });
+    var spec = {
+      attract: { id: 'stage-attract', name: 'Attract', x: 168, y: 150, r: 26, arcs: [{ a0: Math.PI, a1: Math.PI * 1.5 }] },
+      convert: { id: 'stage-convert', name: 'Convert', x: 480, y: 128, r: 26, arcs: [{ a0: -Math.PI * 0.98, a1: -Math.PI * 0.58 }, { a0: -Math.PI * 0.42, a1: -Math.PI * 0.02 }] },
+      transform: { id: 'stage-transform', name: 'Transform', x: 792, y: 150, r: 26, arcs: [{ a0: -Math.PI * 0.5, a1: 0 }] },
+      ops: { id: 'stage-ops', name: 'Ops', x: 480, y: 312, r: 18, arcs: [{ a0: Math.PI * 0.04, a1: Math.PI * 0.96 }] }
+    };
+    var order = ['attract', 'convert', 'transform'];
+    if (groups.ops.length) order.push('ops');
     S.orgLinkSpace = 'view';
-    var nodes = [{ id: 'n0', name: 'Cristian', role: 'Owner', status: 'working', work: 'The desks report here.', report: 'This node is the hub, not a metric.', parent: '' }];
-    var pos = { n0: { x: cx, y: cy, r: 28, ang: 0 } };
-    var deskNode = {};
-    desks.forEach(function (d, i) {
-      var ang = -Math.PI / 2 + (i * 2 * Math.PI / Math.max(desks.length, 1));
-      var id = 'n' + nodes.length;
-      nodes.push(agentNode(d, { id: id, parent: 'n0', desk: true, fallbackRole: 'Desk' }));
-      pos[id] = { x: cx + Math.cos(ang) * 155, y: cy + Math.sin(ang) * 96, r: 16, ang: ang };
-      deskNode[d.name] = id;
+    var nodes = [];
+    var pos = {};
+    order.forEach(function (key) {
+      var hub = spec[key];
+      var list = groups[key];
+      var live = list.some(function (a) { return a.status === 'working'; });
+      var node = {
+        id: hub.id, name: hub.name, role: 'Stage', status: live ? 'working' : 'idle',
+        work: '', report: '', reportText: '', activeAt: '', parent: '', desk: true, feed: false,
+        stageHub: true, stageId: key, liveStage: live
+      };
+      nodes.push(node);
+      pos[hub.id] = { x: hub.x, y: hub.y, r: hub.r };
     });
-    var buckets = {};
-    var bucketTooBig = false;
-    bots.forEach(function (b) {
-      var key = b.reportsTo && deskNode[b.reportsTo] ? b.reportsTo : '';
-      if (!buckets[key]) buckets[key] = [];
-      buckets[key].push(b);
-      if (buckets[key].length > 10) bucketTooBig = true;
-    });
-    if (bucketTooBig) return clusterOrg(m, cards);
-    Object.keys(buckets).forEach(function (key) {
-      var parentId = key ? deskNode[key] : 'n0';
-      var parent = pos[parentId];
-      if (!parent || !isFinite(parent.x) || !isFinite(parent.y)) return;
-      var base = parent.ang != null && parentId !== 'n0' ? parent.ang : -Math.PI / 2;
-      var list = buckets[key];
-      var mid = Math.ceil(list.length / 2);
-      list.forEach(function (b, i) {
-        var ring = i < mid ? 0 : 1;
-        var count = ring === 0 ? mid : list.length - mid;
-        var idx = ring === 0 ? i : i - mid;
-        var spread = Math.min(1.05, 0.22 * Math.max(count, 1));
-        var ang = base + (count <= 1 ? 0 : (-spread / 2 + spread * idx / (count - 1)));
-        var rad = parentId === 'n0' ? 120 : (ring === 0 ? 46 : 78);
-        var id = 'n' + nodes.length;
-        nodes.push(agentNode(b, { id: id, parent: parentId, fallbackRole: 'Bot' }));
-        pos[id] = { x: parent.x + Math.cos(ang) * rad, y: parent.y + Math.sin(ang) * rad, r: 6.5, ang: ang };
+    function ringCounts(total, key) {
+      if (key === 'ops' && total > 12) {
+        var outer = Math.ceil(total * 0.42);
+        var mid = Math.ceil((total - outer) * 0.62);
+        var inner = total - outer - mid;
+        if (inner < 1) inner = 1;
+        return [inner, mid, outer];
+      }
+      var rings = total > 16 ? 3 : (total > 7 ? 2 : 1);
+      var counts = [];
+      var left = total;
+      var r;
+      for (r = 0; r < rings; r++) {
+        var take = Math.ceil(left / (rings - r));
+        counts.push(take);
+        left -= take;
+      }
+      return counts;
+    }
+    order.forEach(function (key) {
+      var hub = spec[key];
+      var parent = pos[hub.id];
+      var list = groups[key];
+      var arcs = hub.arcs;
+      var per = Math.ceil(list.length / arcs.length) || 0;
+      arcs.forEach(function (arc, ai) {
+        var slice = list.slice(ai * per, ai === arcs.length - 1 ? list.length : (ai + 1) * per);
+        if (!slice.length) return;
+        var counts = ringCounts(slice.length, key);
+        var cursor = 0;
+        counts.forEach(function (count, ri) {
+          var rad = (key === 'ops' ? 40 : 50) + ri * 22;
+          var chunk = slice.slice(cursor, cursor + count);
+          cursor += count;
+          chunk.forEach(function (b, i) {
+            var t = chunk.length <= 1 ? 0.5 : i / (chunk.length - 1);
+            var ang = arc.a0 + (arc.a1 - arc.a0) * t;
+            var id = 'n' + nodes.length;
+            var bot = agentNode(b, { id: id, parent: hub.id, desk: isDeskCard(b), fallbackRole: 'Bot' });
+            bot.stageId = key;
+            bot.lead = !!bot.desk;
+            nodes.push(bot);
+            var rr = bot.lead ? 9 : 6.5;
+            pos[id] = {
+              x: parent.x + Math.cos(ang) * rad,
+              y: parent.y + Math.sin(ang) * rad,
+              r: rr,
+              ang: ang
+            };
+          });
+        });
       });
     });
     nodes.forEach(function (n) {
       var p = pos[n.id];
       if (!p) return;
-      p.x = finite(p.x, cx);
-      p.y = finite(p.y, cy);
+      p.x = finite(p.x, 480);
+      p.y = finite(p.y, 180);
       p.r = finite(p.r, 6);
-      p.x = Math.max(p.r + 8, Math.min(960 - p.r - 8, p.x));
-      p.y = Math.max(p.r + 8, Math.min(420 - p.r - 8, p.y));
+      p.x = Math.max(p.r + 10, Math.min(960 - p.r - 10, p.x));
+      p.y = Math.max(p.r + 10, Math.min(408 - p.r, p.y));
       n.vx = p.x;
       n.vy = p.y;
+      n.hx = p.x;
+      n.hy = p.y;
+      n.hr = p.r;
       n.hitR = p.r + 2;
     });
     S.orgNodes = nodes;
@@ -3667,127 +3753,200 @@ footer.site{margin-top:auto}
       if (status === 'not-reported') return '#242424';
       return '#3a3a3a';
     }
-    function link(a, b) {
-      if (!a || !b || !isFinite(a.x) || !isFinite(a.y) || !isFinite(b.x) || !isFinite(b.y)) return null;
-      var dx = b.x - a.x, dy = b.y - a.y;
-      if (dx * dx + dy * dy < 16) return null;
-      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      var cpx = mx * 0.62 + cx * 0.38, cpy = my * 0.62 + cy * 0.38;
-      if (!isFinite(cpx) || !isFinite(cpy)) return null;
-      return { d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1), x0: a.x, y0: a.y, cx: cpx, cy: cpy, x1: b.x, y1: b.y };
+    function qpath(a, b, lift) {
+      if (!a || !b) return null;
+      var mx = (a.x + b.x) / 2;
+      var my = (a.y + b.y) / 2 - lift;
+      if (!isFinite(mx) || !isFinite(my)) return null;
+      return {
+        d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + mx.toFixed(1) + ',' + my.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1),
+        x0: a.x, y0: a.y, cx: mx, cy: my, x1: b.x, y1: b.y
+      };
     }
     var paths = '';
-    S.orgLinks = [];
-    var labelDesk = desks.length > 0 && desks.length <= 8;
+    var pulses = [];
+    function pushPath(L, cls, pulse) {
+      if (!L) return;
+      paths += '<path class="' + cls + '" d="' + L.d + '"/>';
+      if (pulse && pulses.length < 8) pulses.push(L);
+    }
+    var flowA = qpath(pos['stage-attract'], pos['stage-convert'], 78);
+    var flowB = qpath(pos['stage-convert'], pos['stage-transform'], 78);
+    pushPath(flowA, 'org-flow', true);
+    pushPath(flowB, 'org-flow', true);
+    if (pos['stage-ops']) {
+      pushPath(qpath(pos['stage-ops'], pos['stage-attract'], 10), 'org-wire', false);
+      pushPath(qpath(pos['stage-ops'], pos['stage-convert'], 8), 'org-wire', false);
+      pushPath(qpath(pos['stage-ops'], pos['stage-transform'], 10), 'org-wire', false);
+    }
     nodes.forEach(function (n) {
       if (!n.parent) return;
-      var L = link(pos[n.parent], pos[n.id]);
-      if (!L) return;
-      paths += '<path d="' + L.d + '" fill="none" stroke="rgba(237,48,57,.35)" stroke-width="1.2"/>';
-      if (S.orgLinks.length < 8) S.orgLinks.push(L);
+      var L = qpath(pos[n.parent], pos[n.id], 0);
+      var live = n.status === 'working';
+      pushPath(L, live ? 'org-wire live' : 'org-wire', live);
     });
+    S.orgLinks = pulses;
     var pingLeft = reduce ? 0 : 12;
     nodes.forEach(function (n) {
-      n.ping = n.status === 'working' && pingLeft > 0;
+      var hot = n.stageHub ? n.liveStage : n.status === 'working';
+      n.ping = !!(hot && pingLeft > 0);
       if (n.ping) pingLeft -= 1;
     });
     var shapes = nodes.map(function (n) {
       var p = pos[n.id];
       if (!p || !isFinite(p.x) || !isFinite(p.y) || !isFinite(p.r)) return '';
-      var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
-      var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
-      var label = '';
-      if (n.id === 'n0' || (labelDesk && n.desk)) {
-        var ang = n.id === 'n0' ? Math.PI / 2 : finite(p.ang, 0);
-        var lx = n.id === 'n0' ? p.x : p.x - Math.cos(ang) * (p.r + 18);
-        var ly = n.id === 'n0' ? p.y + p.r + 16 : p.y - Math.sin(ang) * (p.r + 16);
-        if (isFinite(lx) && isFinite(ly)) label = '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
-      }
-      var hit = '<circle class="hit" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + finite(n.hitR, 14).toFixed(1) + '" fill="transparent"/>';
-      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" aria-label="' + esc(n.name) + '">' + ping + hit + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r.toFixed(1) + '" fill="' + fill(n.status) + '"/>' + label + '</g>';
+      var cls = n.stageHub ? ('stage' + (n.liveStage ? ' working' : '')) : (n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : (n.status === 'offline' ? 'offline' : 'idle')));
+      var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8).toFixed(1) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
+      var halo = n.stageHub ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 7).toFixed(1) + '" fill="none" stroke="rgba(237,48,57,.5)" stroke-width="1.3"/>' : '';
+      var ly = n.stageHub && n.stageId === 'ops' ? p.y - p.r - 12 : p.y + p.r + 16;
+      var labCls = n.stageHub ? 'hublab' : 'botlab';
+      var label = '<text class="' + labCls + '" x="' + p.x.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+      var hit = '<circle class="hit" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + finite(n.hitR, p.r + 2).toFixed(1) + '"/>';
+      var fillColor = n.stageHub ? (n.liveStage ? '#ed3039' : '#2a2a2a') : fill(n.status);
+      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" data-stage="' + esc(n.stageId) + '" aria-label="' + esc(n.name) + '">' + ping + halo + hit + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r.toFixed(1) + '" fill="' + fillColor + '"/>' + label + '</g>';
     }).join('');
-    var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="Agent hand-off. Cristian in the center, desks around him, bots on the desks.">' + paths + shapes + '</svg>';
-    function stepItem(n) {
-      var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
-      if (n.ping) cls += ' ping';
-      return '<li class="' + cls + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(n.id) + '"><b>' + esc(n.name) + '</b><span class="work">' + esc(n.role || '') + (n.work ? ' · ' + esc(n.work) : '') + '</span></button>';
-    }
-    var steps = stepItem(nodes[0]);
-    var deskNodes = nodes.filter(function (n) { return n.parent === 'n0'; });
-    steps += '<ul>' + deskNodes.map(function (d) {
-      var kids = nodes.filter(function (n) { return n.parent === d.id; });
-      return stepItem(d) + (kids.length ? '<ul class="bots">' + kids.map(function (b) {
+    var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="AI workforce. Attract, Convert, and Transform, with each bot on its stage.">' + paths + shapes + '</svg>';
+    var steps = order.map(function (key) {
+      var hub = nodes.filter(function (n) { return n.id === spec[key].id; })[0];
+      var kids = nodes.filter(function (n) { return n.parent === hub.id; });
+      var liveN = kids.filter(function (k) { return k.status === 'working'; }).length;
+      var botsHtml = kids.map(function (b) {
         return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button></li>';
-      }).join('') + '</ul>' : '') + '</li>';
-    }).join('') + '</ul></li>';
-    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(String(nodes.length)) + ' nodes. Click one for current work and the last report.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
-  }
-  function clusterOrg(m, cards) {
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var order = ['Ops', 'Content', 'Growth', 'Research', 'Personal', 'Other'];
-    var groups = {};
-    order.forEach(function (name) { groups[name] = []; });
-    cards.forEach(function (a) {
-      var key = deskNameFor(a);
-      if (!groups[key]) key = 'Other';
-      groups[key].push(a);
-    });
-    var nodes = [{ id: 'n0', name: 'Cristian', role: 'Owner', status: 'working', work: 'The desks report here.', report: 'This node is the hub, not a metric.', parent: '' }];
-    var desks = [];
-    order.forEach(function (name) {
-      var list = groups[name];
-      if (!list || !list.length) return;
-      list.sort(function (a, b) {
-        var aw = a.status === 'working' ? 0 : 1;
-        var bw = b.status === 'working' ? 0 : 1;
-        if (aw !== bw) return aw - bw;
-        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
-      });
-      var id = 'n' + nodes.length;
-      var live = 0;
-      list.forEach(function (a) { if (a.status === 'working') live += 1; });
-      var deskNode = { id: id, name: name, role: 'Desk', status: live ? 'working' : 'idle', work: deskMeta(list.length, live) + '. Grouped from role and name.', report: 'No separate desk record in the feed.', parent: 'n0', count: list.length, live: live, desk: true, cluster: true, feed: false };
-      nodes.push(deskNode);
-      desks.push(deskNode);
-      list.forEach(function (b) {
-        nodes.push(agentNode(b, { id: 'n' + nodes.length, parent: id, fallbackRole: 'Bot' }));
-      });
-    });
-    var pingLeft = reduce ? 0 : 6;
-    nodes.forEach(function (n) {
-      n.ping = !!(n.parent && n.parent !== 'n0' && n.status === 'working' && pingLeft > 0);
-      if (n.ping) pingLeft -= 1;
-    });
-    S.orgNodes = nodes;
-    S.orgLinks = [];
-    S.orgLinkSpace = 'css';
-    function stepItem(n) {
-      var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
-      if (n.ping) cls += ' ping';
-      return '<li class="' + cls + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(n.id) + '"><b>' + esc(n.name) + '</b><span class="work">' + esc(n.role || '') + (n.work ? ' · ' + esc(n.work) : '') + '</span></button>';
-    }
-    var steps = stepItem(nodes[0]);
-    steps += '<ul>' + desks.map(function (d) {
-      var kids = nodes.filter(function (n) { return n.parent === d.id; });
-      return stepItem(d) + (kids.length ? '<ul class="bots">' + kids.map(function (b) {
-        return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button></li>';
-      }).join('') + '</ul>' : '') + '</li>';
-    }).join('') + '</ul></li>';
-    var deskWord = desks.length === 1 ? '1 desk' : (desks.length + ' desks');
-    var sub = cards.length + (cards.length === 1 ? ' agent' : ' agents') + ' across ' + deskWord + '. Click one for current work and the last report.';
-    var deskHtml = desks.map(function (d) {
-      var kids = nodes.filter(function (n) { return n.parent === d.id; });
-      var meta = deskMeta(d.count, d.live);
-      var buttons = kids.map(function (b) {
-        var cls = b.status === 'working' ? 'working' : 'idle';
-        if (b.ping) cls += ' ping';
-        return '<button type="button" class="org-dot ' + cls + '" data-node="' + esc(b.id) + '" aria-label="' + esc(b.name) + '"></button>';
       }).join('');
-      return '<div class="cluster" data-desk="' + esc(d.id) + '"><div class="cluster-h" data-node="' + esc(d.id) + '"><b>' + esc(d.name) + '</b><span>' + esc(meta) + '</span></div><div class="org-dots">' + buttons + '</div></div>';
+      var cls = hub.liveStage ? 'working' : 'idle';
+      return '<li class="' + cls + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(deskMeta(kids.length, liveN)) + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
     }).join('');
-    var hubPing = !reduce && desks.some(function (d) { return d.live; }) ? ' ping' : '';
-    var map = '<div class="org-map"><div class="org-desks" style="grid-template-columns:repeat(' + desks.length + ',minmax(0,1fr))">' + deskHtml + '</div><div class="org-hubrow"><button type="button" class="org-hub' + hubPing + '" data-node="n0" data-hub="1" aria-label="Cristian"></button><em>Cristian</em></div></div>';
-    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(sub) + '</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas><svg class="org-links" viewBox="0 0 2 2" preserveAspectRatio="none" aria-hidden="true"></svg>' + map + '</div><ol class="stepper">' + steps + '</ol></section>';
+    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. Click a stage to go deeper.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
+  }
+  var zoomGen = 0;
+  function paintNodeAt(n, x, y, home) {
+    n.vx = x;
+    n.vy = y;
+    var g = document.querySelector('#v-home .node[data-node="' + n.id + '"]');
+    if (!g) return;
+    Array.prototype.forEach.call(g.querySelectorAll('circle'), function (c) {
+      c.setAttribute('cx', x.toFixed(1));
+      c.setAttribute('cy', y.toFixed(1));
+    });
+    var text = g.querySelector('text');
+    if (!text) return;
+    var overview = !!home;
+    var dy = (n.stageHub && n.stageId === 'ops' && overview) ? -(n.hr + 12) : (n.hr + 16);
+    text.setAttribute('x', x.toFixed(1));
+    text.setAttribute('y', (y + dy).toFixed(1));
+  }
+  function zoomTargets(stageId) {
+    var bots = (S.orgNodes || []).filter(function (n) { return n.stageId === stageId && !n.stageHub; });
+    var hub = (S.orgNodes || []).filter(function (n) { return n.stageHub && n.stageId === stageId; })[0];
+    var targets = {};
+    if (!hub) return targets;
+    var cols = bots.length ? Math.max(3, Math.min(5, Math.ceil(Math.sqrt(bots.length * 1.15)))) : 1;
+    var gapX = 168;
+    var gapY = 88;
+    var ox = 2400;
+    var oy = 70;
+    targets[hub.id] = { x: ox, y: oy };
+    bots.forEach(function (b, i) {
+      var row = Math.floor(i / cols);
+      var col = i % cols;
+      var rowCount = Math.min(cols, bots.length - row * cols);
+      var rowW = (rowCount - 1) * gapX;
+      targets[b.id] = { x: ox - rowW / 2 + col * gapX, y: oy + 108 + row * gapY };
+    });
+    return targets;
+  }
+  function viewFor(points) {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    points.forEach(function (p) {
+      minX = Math.min(minX, p.x - 100);
+      maxX = Math.max(maxX, p.x + 100);
+      minY = Math.min(minY, p.y - 52);
+      maxY = Math.max(maxY, p.y + 40);
+    });
+    var w = Math.max(280, maxX - minX);
+    var h = Math.max(160, maxY - minY);
+    var aspect = 960 / 420;
+    if (w / h < aspect) {
+      var nw = h * aspect;
+      minX -= (nw - w) / 2;
+      w = nw;
+    } else {
+      var nh = w / aspect;
+      minY -= (nh - h) / 2;
+      h = nh;
+    }
+    return [minX, minY, w, h];
+  }
+  function animateOrg(svg, moves, box, home) {
+    var gen = ++zoomGen;
+    var raw = (svg.getAttribute('viewBox') || '0 0 960 420').split(/[\s,]+/).map(Number);
+    var fromBox = raw.length === 4 && raw.every(function (n) { return isFinite(n); }) ? raw : [0, 0, 960, 420];
+    var start = moves.map(function (m) { return { n: m.n, x: m.n.vx, y: m.n.vy, tx: m.x, ty: m.y }; });
+    if (motionReduce()) {
+      start.forEach(function (m) { paintNodeAt(m.n, m.tx, m.ty, home); });
+      svg.setAttribute('viewBox', box.map(function (n) { return n.toFixed(1); }).join(' '));
+      return;
+    }
+    var t0 = performance.now();
+    function frame(now) {
+      if (gen !== zoomGen) return;
+      var u = Math.min(1, (now - t0) / 320);
+      var e = 1 - Math.pow(1 - u, 3);
+      start.forEach(function (m) {
+        paintNodeAt(m.n, m.x + (m.tx - m.x) * e, m.y + (m.ty - m.y) * e, home);
+      });
+      var vb = fromBox.map(function (v, i) { return v + (box[i] - v) * e; });
+      svg.setAttribute('viewBox', vb.map(function (n) { return n.toFixed(1); }).join(' '));
+      if (u < 1) requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+  function zoomOrg(stage) {
+    S.orgZoom = stage || '';
+    hideHover();
+    var svg = document.querySelector('#v-home .org-svg');
+    var crumb = $('org-crumb');
+    var hub = null;
+    (S.orgNodes || []).forEach(function (n) { if (n.stageHub && n.stageId === S.orgZoom) hub = n; });
+    if (crumb) {
+      crumb.innerHTML = hub
+        ? '<button type="button" class="org-crumb" data-org-zoom="">Workforce</button> / <b>' + esc(hub.name) + '</b>'
+        : 'Attract, Convert, and Transform. Click a stage to go deeper.';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) {
+      li.classList.toggle('on', !!S.orgZoom && li.getAttribute('data-stage') === S.orgZoom);
+    });
+    if (!svg) return;
+    svg.classList.toggle('is-zoom', !!S.orgZoom);
+    Array.prototype.forEach.call(svg.querySelectorAll('.node'), function (g) {
+      g.classList.toggle('in-zoom', !S.orgZoom || g.getAttribute('data-stage') === S.orgZoom);
+    });
+    var moves = [];
+    if (!S.orgZoom) {
+      (S.orgNodes || []).forEach(function (n) {
+        if (n.hx == null) return;
+        moves.push({ n: n, x: n.hx, y: n.hy });
+      });
+      animateOrg(svg, moves, [0, 0, 960, 420], true);
+      return;
+    }
+    var targets = zoomTargets(S.orgZoom);
+    var pts = [];
+    (S.orgNodes || []).forEach(function (n) {
+      if (!targets[n.id]) return;
+      moves.push({ n: n, x: targets[n.id].x, y: targets[n.id].y });
+      pts.push(targets[n.id]);
+    });
+    if (!pts.length) return;
+    animateOrg(svg, moves, viewFor(pts), false);
+  }
+  function orgActivate(id) {
+    var n = nodeById(id);
+    if (n && n.stageHub) {
+      zoomOrg(S.orgZoom === n.stageId ? '' : n.stageId);
+      return;
+    }
+    openNode(id);
   }
   function levelWord(level) {
     var l = String(level || 'info').toLowerCase();
@@ -4021,7 +4180,7 @@ footer.site{margin-top:auto}
     }
     var links = S.orgLinks || [];
     var n = links.length < 8 ? links.length : 8;
-    if (n) {
+    if (n && !S.orgZoom) {
       var cssSpace = S.orgLinkSpace === 'css';
       var sx = cssSpace ? 1 : FX.w / 960;
       var sy = cssSpace ? 1 : FX.h / 420;
@@ -4284,8 +4443,26 @@ footer.site{margin-top:auto}
     var n = nodeById(id);
     if (!n) return null;
     if (n.id === 'n0') return { title: n.name, rows: [{ k: 'Role', v: 'Owner' }], hint: 'Click for details' };
+    if (n.stageHub) {
+      var stageKids = nodes.filter(function (k) { return k.parent === n.id && k.feed; });
+      var stageLive = stageKids.filter(function (k) { return k.status === 'working'; });
+      var stageTop = stageLive.slice().sort(function (a, b) {
+        return (Date.parse(b.activeAt || '') || 0) - (Date.parse(a.activeAt || '') || 0);
+      }).slice(0, 3);
+      var stageRows = [
+        { k: 'Bots', v: String(stageKids.length) },
+        { k: 'Live', v: String(stageLive.length) }
+      ];
+      if (stageTop.length) stageRows.push({ k: 'Active', v: stageTop.map(function (k) { return k.name; }).join(', ') });
+      return {
+        title: n.name,
+        pill: null,
+        rows: stageRows,
+        hint: S.orgZoom === n.stageId ? 'Esc returns to the workforce' : 'Click to open this stage'
+      };
+    }
     var kids = nodes.filter(function (k) { return k.parent === n.id && k.feed; });
-    var isDesk = !!(n.desk || n.cluster || kids.length);
+    var isDesk = !n.feed && !!(n.desk || n.cluster || kids.length);
     function activeRows() {
       var rows = [];
       if (n.feed && n.work) rows.push({ k: 'Current work', v: n.work });
@@ -4311,7 +4488,8 @@ footer.site{margin-top:auto}
     }
     var agentRows = [];
     var parent = n.parent ? nodeById(n.parent) : null;
-    if (parent && parent.id !== 'n0') agentRows.push({ k: 'Desk', v: parent.name });
+    if (parent && parent.stageHub) agentRows.push({ k: 'Stage', v: parent.name });
+    else if (parent && parent.id !== 'n0') agentRows.push({ k: 'Desk', v: parent.name });
     agentRows = agentRows.concat(activeRows());
     return { title: n.name, pill: pillOf(n.status), rows: agentRows, hint: 'Click for details' };
   }
@@ -4450,6 +4628,7 @@ footer.site{margin-top:auto}
     var bestD = Infinity;
     (S.orgNodes || []).forEach(function (n) {
       if (n.vx == null || n.vy == null) return;
+      if (S.orgZoom && n.stageId !== S.orgZoom) return;
       var dx = p.x - n.vx;
       var dy = p.y - n.vy;
       var d = Math.sqrt(dx * dx + dy * dy);
@@ -5245,7 +5424,7 @@ footer.site{margin-top:auto}
         return;
       }
       if (e.target.closest('a[href]')) return;
-      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-pick],[data-more]');
+      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-pick],[data-more]');
       if (!t) {
         if (Hover.pointer === 'touch') hideHover();
         return;
@@ -5262,9 +5441,10 @@ footer.site{margin-top:auto}
           armHover(t.closest('.node') || t, 'node:' + nodeId, nodeSpec(nodeId), true);
           return;
         }
-        openNode(nodeId);
+        orgActivate(nodeId);
         return;
       }
+      if (t.hasAttribute('data-org-zoom')) { zoomOrg(t.getAttribute('data-org-zoom')); return; }
       if (t.hasAttribute('data-pick')) { S.pick = t.getAttribute('data-pick'); updateReview(); return; }
       if (t.hasAttribute('data-more')) { var key = t.getAttribute('data-more'); S.more[key] = !S.more[key]; updateToday(); return; }
       if (t.hasAttribute('data-view')) { closeSheets(); go(t.getAttribute('data-view')); return; }
@@ -5308,7 +5488,14 @@ footer.site{margin-top:auto}
         return;
       }
       if (signalKey(e)) return;
-      if (e.key === 'Escape') closeSheets();
+      if (e.key === 'Escape') {
+        var sheetOn = ['drawer', 'kpisheet', 'login', 'chat'].some(function (id) {
+          return $(id) && $(id).classList.contains('on');
+        });
+        if (sheetOn) { closeSheets(); return; }
+        if (S.orgZoom) { zoomOrg(''); return; }
+        closeSheets();
+      }
     });
     if ($('lock-in')) $('lock-in').addEventListener('click', function () { show('login'); });
     $('log-form').addEventListener('submit', function (e) {

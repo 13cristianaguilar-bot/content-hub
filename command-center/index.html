@@ -480,6 +480,7 @@ body[data-ready] .shimmer{display:none}
 .org-svg{width:100%;height:380px;display:block}
 .org-svg text{font-family:var(--sans);font-size:11px;fill:#d4d4d4}
 .org-svg .hublab{fill:#fff;font-size:13px;font-weight:700}
+.org-svg .hubcount{fill:#9a9a9a;font-size:11px;font-weight:650}
 .org-svg .botlab{opacity:0;pointer-events:none}
 .org-svg.is-zoom .node.in-zoom .botlab{opacity:1;pointer-events:auto}
 .org-svg.is-zoom .node:not(.in-zoom){opacity:.12;pointer-events:none}
@@ -487,6 +488,7 @@ body[data-ready] .shimmer{display:none}
 .org-flow,.org-wire{fill:none;pointer-events:none}
 .org-flow{stroke:rgba(237,48,57,.78);stroke-width:2;stroke-dasharray:8 11;animation:flowdash 2.6s linear infinite}
 .org-wire{stroke:rgba(255,255,255,.16);stroke-width:1.1}
+.org-wire.sat{stroke:rgba(255,255,255,.32);stroke-width:1.15}
 .org-wire.live{stroke:rgba(237,48,57,.72);stroke-dasharray:4 8;animation:flowdash 1.8s linear infinite}
 .node.stage .core{stroke:#fff;stroke-width:1.6}
 @keyframes flowdash{to{stroke-dashoffset:-76}}
@@ -2346,7 +2348,7 @@ footer.site{margin-top:auto}
       if (!a || typeof a !== 'object') return;
       var role = clean(a.role || a.desk || '');
       var name = clean(a.name || '');
-      if (!name || looksLikeId(name)) name = role && !looksLikeId(role) ? role : 'Unnamed desk';
+      if (!name || looksLikeId(name)) name = role && !looksLikeId(role) ? role : 'Unnamed agent';
       if (looksLikeId(role)) role = '';
       var st = clean(a.status || 'not-reported').toLowerCase();
       agentCards.push({
@@ -2357,9 +2359,11 @@ footer.site{margin-top:auto}
         report: a.lastReportAt ? formatWhen(a.lastReportAt) : '',
         reportText: textField(a, ['lastReport', 'lastReportText', 'lastReportMessage', 'reportText']),
         activeAt: timeField(a, ['lastActiveAt', 'lastSeenAt', 'lastReportAt']),
-        reportsTo: clean(a.reportsTo || '')
+        reportsTo: clean(a.reportsTo || ''),
+        bucket: clean(a.bucket || '')
       });
     });
+    assignBuckets(agentCards);
     var activity = feed && Array.isArray(feed.activityLog) ? feed.activityLog : null;
 
     var winCopy = 'No wins logged this week.';
@@ -3205,7 +3209,7 @@ footer.site{margin-top:auto}
       line('Stripe', m.stripeWaiting ? 'Waiting for first Stripe sync' : 'In today.json cash.stripe') +
       line('Attract', m.metrics['post-ig'] && m.metrics['post-ig'].words === 'Not connected' ? 'Not connected' : 'today.json attract.social') +
       line('Pipeline', m.pipeItems ? (m.pipeItems.length + ' deals') : 'Not connected') +
-      line('Agents', m.agentsKnown ? (m.agentCards.length + ' desks') : 'Not connected') +
+      line('Agents', m.agentsKnown ? (m.agentCards.length + ' agents') : 'Not connected') +
       '</ul>';
     return '<details class="behind"><summary>Behind the scenes</summary><div class="inn"><h3 class="qhead">Agent hand-off</h3>' + agents + '<h3 class="qhead">Log</h3>' + log + '<h3 class="qhead">Sources on this page</h3>' + sources + '</div></details>';
   }
@@ -3614,23 +3618,51 @@ footer.site{margin-top:auto}
       feed: true
     };
   }
-  function stageOfBlob(blob) {
-    var transform = /\b(transform|fulfil\w*|deliveries|delivery|retainers?|stamps?)\b/.test(blob);
+  var BUCKET_OK = { attract: 1, convert: 1, transform: 1, ops: 1, growth: 1, build: 1 };
+  function bucketFromBlob(blob) {
+    if (/\b(builds?|infra|infrastructure|systems?|deploys?|deployments?|backups?|monitors?|monitoring|utility|helpers?)\b/.test(blob)) return 'build';
+    if (/\b(ops|operations|command|inbox|calendar|gmail|emails?|stripe|briefs?|reminders?|handoffs?|files|digests?|follow ?ups?|invoices?|billing|schedules?|crm|deep work)\b/.test(blob)) return 'ops';
+    if (/\b(learning|coaches?|dream|personal|family|private|life admin|studies|study)\b/.test(blob)) return 'growth';
     var convert = /\b(convert|funnels?|prospects?|prospecting|acquisition|booked|sales|close|growth|outreach|campaigns?|traffic|seo|ads?)\b/.test(blob);
-    var attract = /\b(attract|content|posts?|instagram|youtube|reels?|hooks?|captions?|thumbnails?|copy|editors?|films?|scripts?|magnets?|carousels?)\b/.test(blob);
+    var transform = /\b(transform|fulfil\w*|deliveries|delivery|retainers?|stamps?)\b/.test(blob);
     if (convert && transform) {
       if (/\b(acquisition|growth|outreach|funnels?|prospects?|prospecting)\b/.test(blob)) return 'convert';
       return 'transform';
     }
     if (convert) return 'convert';
     if (transform) return 'transform';
-    if (attract) return 'attract';
+    if (/\b(attract|content|posts?|instagram|youtube|reels?|hooks?|captions?|thumbnails?|copy|editors?|films?|scripts?|magnets?|carousels?|ideas?|brainstorms?|research|scouts?|trends?|analysts?|intel|searches|search)\b/.test(blob)) return 'attract';
     return 'ops';
   }
-  function stageForCard(card, deskStage) {
-    var boss = card && card.reportsTo;
-    if (boss && deskStage[boss]) return deskStage[boss];
-    return stageOfBlob(agentBlob(card));
+  function assignBuckets(cards) {
+    var byName = {};
+    cards.forEach(function (a) {
+      var raw = String(a.bucket || '').toLowerCase();
+      if (BUCKET_OK[raw]) {
+        a.bucket = raw;
+        if (a.name) byName[a.name] = raw;
+      } else a.bucket = '';
+    });
+    var open = cards.filter(function (a) { return !a.bucket; });
+    var guard = 0;
+    while (open.length && guard < 8) {
+      var still = [];
+      var moved = false;
+      open.forEach(function (a) {
+        if (a.reportsTo && byName[a.reportsTo]) {
+          a.bucket = byName[a.reportsTo];
+          if (a.name) byName[a.name] = a.bucket;
+          moved = true;
+        } else still.push(a);
+      });
+      if (!moved) break;
+      open = still;
+      guard += 1;
+    }
+    open.forEach(function (a) {
+      a.bucket = bucketFromBlob(agentBlob(a));
+      if (a.name) byName[a.name] = a.bucket;
+    });
   }
   function orgHtml(m) {
     if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
@@ -3638,14 +3670,9 @@ footer.site{margin-top:auto}
     if (!cards.length) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">No agents in this feed.</p></section>';
     S.orgZoom = '';
     var reduce = motionReduce();
-    var deskStage = {};
+    var groups = { attract: [], convert: [], transform: [], ops: [], growth: [], build: [] };
     cards.forEach(function (a) {
-      if (isDeskCard(a) && a.name) deskStage[a.name] = stageOfBlob(agentBlob(a));
-    });
-    var groups = { attract: [], convert: [], transform: [], ops: [] };
-    cards.forEach(function (a) {
-      var key = stageForCard(a, deskStage);
-      if (!groups[key]) key = 'ops';
+      var key = BUCKET_OK[a.bucket] ? a.bucket : 'ops';
       groups[key].push(a);
     });
     function byLive(a, b) {
@@ -3656,13 +3683,25 @@ footer.site{margin-top:auto}
     }
     Object.keys(groups).forEach(function (key) { groups[key].sort(byLive); });
     var spec = {
-      attract: { id: 'stage-attract', name: 'Attract', x: 168, y: 150, r: 26, arcs: [{ a0: Math.PI, a1: Math.PI * 1.5 }] },
-      convert: { id: 'stage-convert', name: 'Convert', x: 480, y: 128, r: 26, arcs: [{ a0: -Math.PI * 0.98, a1: -Math.PI * 0.58 }, { a0: -Math.PI * 0.42, a1: -Math.PI * 0.02 }] },
-      transform: { id: 'stage-transform', name: 'Transform', x: 792, y: 150, r: 26, arcs: [{ a0: -Math.PI * 0.5, a1: 0 }] },
-      ops: { id: 'stage-ops', name: 'Ops', x: 480, y: 312, r: 18, arcs: [{ a0: Math.PI * 0.04, a1: Math.PI * 0.96 }] }
+      attract: { id: 'stage-attract', name: 'Attract', x: 168, y: 138, r: 26, satellite: false, arcs: [{ a0: Math.PI, a1: Math.PI * 1.5 }] },
+      convert: { id: 'stage-convert', name: 'Convert', x: 480, y: 112, r: 26, satellite: false, arcs: [{ a0: -Math.PI * 0.98, a1: -Math.PI * 0.58 }, { a0: -Math.PI * 0.42, a1: -Math.PI * 0.02 }] },
+      transform: { id: 'stage-transform', name: 'Transform', x: 792, y: 138, r: 26, satellite: false, arcs: [{ a0: -Math.PI * 0.5, a1: 0 }] }
     };
-    var order = ['attract', 'convert', 'transform'];
-    if (groups.ops.length) order.push('ops');
+    var satKeys = ['ops', 'growth', 'build'].filter(function (key) { return groups[key].length; });
+    var satNames = { ops: 'Ops', growth: 'Personal', build: 'Build' };
+    var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [300, 660] : [176, 480, 784]);
+    satKeys.forEach(function (key, i) {
+      spec[key] = {
+        id: 'stage-' + key,
+        name: satNames[key],
+        x: satXs[i],
+        y: 318,
+        r: 16,
+        satellite: true,
+        arcs: [{ a0: Math.PI * 0.18, a1: Math.PI * 0.82 }]
+      };
+    });
+    var order = ['attract', 'convert', 'transform'].concat(satKeys);
     S.orgLinkSpace = 'view';
     var nodes = [];
     var pos = {};
@@ -3673,13 +3712,14 @@ footer.site{margin-top:auto}
       var node = {
         id: hub.id, name: hub.name, role: 'Stage', status: live ? 'working' : 'idle',
         work: '', report: '', reportText: '', activeAt: '', parent: '', desk: true, feed: false,
-        stageHub: true, stageId: key, liveStage: live
+        stageHub: true, stageId: key, liveStage: live, satellite: !!hub.satellite, count: list.length
       };
       nodes.push(node);
       pos[hub.id] = { x: hub.x, y: hub.y, r: hub.r };
     });
     function ringCounts(total, key) {
-      if (key === 'ops' && total > 12) {
+      var satellite = key === 'ops' || key === 'growth' || key === 'build';
+      if (satellite && total > 12) {
         var outer = Math.ceil(total * 0.42);
         var mid = Math.ceil((total - outer) * 0.62);
         var inner = total - outer - mid;
@@ -3709,7 +3749,7 @@ footer.site{margin-top:auto}
         var counts = ringCounts(slice.length, key);
         var cursor = 0;
         counts.forEach(function (count, ri) {
-          var rad = (key === 'ops' ? 40 : 50) + ri * 22;
+          var rad = ((key === 'ops' || key === 'growth' || key === 'build') ? 34 : 50) + ri * 20;
           var chunk = slice.slice(cursor, cursor + count);
           cursor += count;
           chunk.forEach(function (b, i) {
@@ -3774,11 +3814,9 @@ footer.site{margin-top:auto}
     var flowB = qpath(pos['stage-convert'], pos['stage-transform'], 78);
     pushPath(flowA, 'org-flow', true);
     pushPath(flowB, 'org-flow', true);
-    if (pos['stage-ops']) {
-      pushPath(qpath(pos['stage-ops'], pos['stage-attract'], 10), 'org-wire', false);
-      pushPath(qpath(pos['stage-ops'], pos['stage-convert'], 8), 'org-wire', false);
-      pushPath(qpath(pos['stage-ops'], pos['stage-transform'], 10), 'org-wire', false);
-    }
+    satKeys.forEach(function (key) {
+      pushPath(qpath(pos['stage-' + key], pos['stage-convert'], 6), 'org-wire sat', false);
+    });
     nodes.forEach(function (n) {
       if (!n.parent) return;
       var L = qpath(pos[n.parent], pos[n.id], 0);
@@ -3798,9 +3836,13 @@ footer.site{margin-top:auto}
       var cls = n.stageHub ? ('stage' + (n.liveStage ? ' working' : '')) : (n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : (n.status === 'offline' ? 'offline' : 'idle')));
       var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8).toFixed(1) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
       var halo = n.stageHub ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 7).toFixed(1) + '" fill="none" stroke="rgba(237,48,57,.5)" stroke-width="1.3"/>' : '';
-      var ly = n.stageHub && n.stageId === 'ops' ? p.y - p.r - 12 : p.y + p.r + 16;
       var labCls = n.stageHub ? 'hublab' : 'botlab';
-      var label = '<text class="' + labCls + '" x="' + p.x.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+      var nameY = n.satellite ? p.y - p.r - 22 : p.y + p.r + 14;
+      var label = '<text class="' + labCls + '" x="' + p.x.toFixed(1) + '" y="' + nameY.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+      if (n.stageHub) {
+        var countY = n.satellite ? p.y - p.r - 10 : p.y + p.r + 28;
+        label += '<text class="hubcount" x="' + p.x.toFixed(1) + '" y="' + countY.toFixed(1) + '" text-anchor="middle">' + n.count + '</text>';
+      }
       var hit = '<circle class="hit" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + finite(n.hitR, p.r + 2).toFixed(1) + '"/>';
       var fillColor = n.stageHub ? (n.liveStage ? '#ed3039' : '#2a2a2a') : fill(n.status);
       return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" data-stage="' + esc(n.stageId) + '" aria-label="' + esc(n.name) + '">' + ping + halo + hit + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r.toFixed(1) + '" fill="' + fillColor + '"/>' + label + '</g>';
@@ -3816,7 +3858,7 @@ footer.site{margin-top:auto}
       var cls = hub.liveStage ? 'working' : 'idle';
       return '<li class="' + cls + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(deskMeta(kids.length, liveN)) + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
     }).join('');
-    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. Click a stage to go deeper.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
+    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. Click a bucket to go deeper.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   var zoomGen = 0;
   function paintNodeAt(n, x, y, home) {
@@ -3828,12 +3870,19 @@ footer.site{margin-top:auto}
       c.setAttribute('cx', x.toFixed(1));
       c.setAttribute('cy', y.toFixed(1));
     });
-    var text = g.querySelector('text');
-    if (!text) return;
     var overview = !!home;
-    var dy = (n.stageHub && n.stageId === 'ops' && overview) ? -(n.hr + 12) : (n.hr + 16);
-    text.setAttribute('x', x.toFixed(1));
-    text.setAttribute('y', (y + dy).toFixed(1));
+    var above = !!(n.satellite && overview);
+    var texts = g.querySelectorAll('text');
+    if (texts[0]) {
+      var dy = above ? -(n.hr + 22) : (n.stageHub ? n.hr + 14 : n.hr + 16);
+      texts[0].setAttribute('x', x.toFixed(1));
+      texts[0].setAttribute('y', (y + dy).toFixed(1));
+    }
+    if (texts[1] && n.stageHub) {
+      var dy2 = above ? -(n.hr + 10) : (n.hr + 28);
+      texts[1].setAttribute('x', x.toFixed(1));
+      texts[1].setAttribute('y', (y + dy2).toFixed(1));
+    }
   }
   function zoomTargets(stageId) {
     var bots = (S.orgNodes || []).filter(function (n) { return n.stageId === stageId && !n.stageHub; });
@@ -3911,7 +3960,7 @@ footer.site{margin-top:auto}
     if (crumb) {
       crumb.innerHTML = hub
         ? '<button type="button" class="org-crumb" data-org-zoom="">Workforce</button> / <b>' + esc(hub.name) + '</b>'
-        : 'Attract, Convert, and Transform. Click a stage to go deeper.';
+        : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
     }
     Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) {
       li.classList.toggle('on', !!S.orgZoom && li.getAttribute('data-stage') === S.orgZoom);
@@ -4458,7 +4507,7 @@ footer.site{margin-top:auto}
         title: n.name,
         pill: null,
         rows: stageRows,
-        hint: S.orgZoom === n.stageId ? 'Esc returns to the workforce' : 'Click to open this stage'
+        hint: S.orgZoom === n.stageId ? 'Esc returns to the workforce' : 'Click to open this bucket'
       };
     }
     var kids = nodes.filter(function (k) { return k.parent === n.id && k.feed; });
@@ -4488,7 +4537,7 @@ footer.site{margin-top:auto}
     }
     var agentRows = [];
     var parent = n.parent ? nodeById(n.parent) : null;
-    if (parent && parent.stageHub) agentRows.push({ k: 'Stage', v: parent.name });
+    if (parent && parent.stageHub) agentRows.push({ k: 'Bucket', v: parent.name });
     else if (parent && parent.id !== 'n0') agentRows.push({ k: 'Desk', v: parent.name });
     agentRows = agentRows.concat(activeRows());
     return { title: n.name, pill: pillOf(n.status), rows: agentRows, hint: 'Click for details' };
@@ -4725,7 +4774,7 @@ footer.site{margin-top:auto}
         '<div style="margin-top:12px">' + otherRetainers(m) + '</div>';
     }
     if (id === 'goals') return '<section class="guide"><div><p class="gk">Goals</p><h2>The rings</h2><p>Big targets. The dashed ring is the target. The number is the current value, only when the feed has one.</p></div></section>' + goalsHtml(data);
-    if (id === 'projects') return '<section class="guide"><div><p class="gk">Projects</p><h2>Under each goal</h2><p>Status and an owner. The owner is Cristian or a bot desk.</p></div></section>' + projectsHtml(data);
+    if (id === 'projects') return '<section class="guide"><div><p class="gk">Projects</p><h2>Under each goal</h2><p>Status and an owner. The owner is Cristian or a bot.</p></div></section>' + projectsHtml(data);
     if (id === 'tasks') return '<section class="guide"><div><p class="gk">Tasks</p><h2>Under each project</h2><p>Each task has a status, an owner, a triangle side, and a track.</p></div></section>' + tasksHtml(data);
     if (id === 'winning') return '<section class="guide"><div><p class="gk">Winning</p><h2>Streaks and XP</h2><p>Flames are real wins this week. Points come from the floor log and cash in the feed.</p></div></section>' + winningHtml(m, data);
     if (id === 'tracks') return '<section class="guide"><div><p class="gk">Tracks</p><h2>One card per track</h2><p>The list is targets.json. The number and the sparkline come from the feed. A track with no reading says Not connected.</p></div></section>' + tracksHtml(data);
@@ -5116,7 +5165,7 @@ footer.site{margin-top:auto}
       if (!m.agentCards.length) return m.agentsKnown ? 'No agents in this feed.' : 'Agents are not connected yet.';
       return m.agentCards.map(function (a) { return a.name + (a.work ? ': ' + a.work : ''); }).join(' ');
     }
-    return 'I can read this page only. Ask about the score, Stripe, calls, drafts, or the desks. Nothing is sent.';
+    return 'I can read this page only. Ask about the score, Stripe, calls, drafts, or the bots. Nothing is sent.';
   }
   function addMsg(text, who) {
     var div = document.createElement('div');
@@ -5290,8 +5339,8 @@ footer.site{margin-top:auto}
   }
   function fixtureDeskAgents(strip) {
     var spec = [
-      ['Operations Manager', 'Ops desk'],
-      ['Command Center', 'Command Center desk'],
+      ['Operations Manager', 'Operations'],
+      ['Command Center', 'Command center'],
       ['PersonalAssistant', 'Personal assistant'],
       ['Brainstorm', 'Idea bot'],
       ['Trend Scout', 'Research scout'],
@@ -5619,7 +5668,7 @@ footer.site{margin-top:auto}
     if (namesHas(hash)) S.view = hash;
     markNav();
     if (S.fixture === '1' && $('banner')) $('banner').textContent = 'SAMPLE. Fake 47-bot fixture for layout checks. These figures are not the live feed and they are not saved.';
-    if (S.fixture === '2' && $('banner')) $('banner').textContent = 'SAMPLE. Fake desk-role fixture for layout checks. These figures are not the live feed and they are not saved.';
+    if (S.fixture === '2' && $('banner')) $('banner').textContent = 'SAMPLE. Fake role fixture for layout checks. These figures are not the live feed and they are not saved.';
     if (S.fixture === '3' && $('banner')) $('banner').textContent = 'SAMPLE. Fake plain-role fixture for layout checks. These figures are not the live feed and they are not saved.';
     function paintSampleLinks() {
       if ($('sample-link')) {

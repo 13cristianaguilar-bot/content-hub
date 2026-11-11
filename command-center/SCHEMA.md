@@ -270,7 +270,8 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 "agents": [
   {
     "name": "Ops",
-    "role": "Ops desk",
+    "role": "Operations",
+    "bucket": "ops",
     "status": "working",
     "currentWork": "Sorting today's calls",
     "lastReportAt": "2026-11-10T06:40:00-06:00"
@@ -280,12 +281,13 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 
 | Field | Notes |
 |---|---|
-| `name` | Readable desk name. Never a raw id, uuid, or `agt_...` token. If the only identifier is an id, put the desk name here and leave the id out. |
-| `role` | Readable role or desk. `desk` is accepted as an alias when `role` is missing. |
+| `name` | Readable name. Never a raw id, uuid, or `agt_...` token. If the only identifier is an id, put the name here and leave the id out. |
+| `role` | Readable role. Do not put the word desk in the role. |
+| `bucket` | Exactly one of `attract`, `convert`, `transform`, `ops`, `growth`, `build`. Attract, Convert, and Transform are the connected flow. `ops` is command and operations, `growth` is personal (learning, coaching), and `build` is infra. Edit this field to move a bot. If it is omitted, the page guesses once from `reportsTo`, then from the role and name, and still puts the bot in one bucket. |
 | `status` | `working`, `idle`, `blocked`, `offline`, or `not-reported`. Other short words are shown as typed. |
-| `currentWork` | What that desk is doing, in a sentence. `""` when it reported and has nothing in progress. |
+| `currentWork` | What that bot is doing, in a sentence. `""` when it reported and has nothing in progress. |
 | `lastReportAt` | ISO time of that bot's last report, or `null` if it has never reported. |
-| `reportsTo` | Optional. Name of the desk this bot reports to, or `Cristian` for a director desk. The hand-off graph uses it. Omit it and the page treats a `role` that contains "desk" as a director. |
+| `reportsTo` | Optional. Name of the agent this bot reports to. Used only when `bucket` is omitted, so the bot follows that agent's bucket. |
 
 `agents: []` means the routine ran and no bot reported. The page says **No agents in this feed.** Omitting `agents` means not connected.
 
@@ -518,7 +520,7 @@ Select is granted to `authenticated`, and the policy allows it only when `app_me
 
 ## Spine, tracks, and funnels
 
-`targets.json` `tracks` is the pluggable list. Each track has `id`, `label`, optional `handle`, `owner` (a desk or bot name), and `side` (`attract`, `convert`, or `transform`). Seed ids: `ig`, `youtube`, `x`, `podcast`, `events`, `speaking`, `retainers`, `magnets`.
+`targets.json` `tracks` is the pluggable list. Each track has `id`, `label`, optional `handle`, `owner` (a bot name), and `side` (`attract`, `convert`, or `transform`). Seed ids: `ig`, `youtube`, `x`, `podcast`, `events`, `speaking`, `retainers`, `magnets`.
 
 `targets.json` `goals` holds `id`, `label`, `target`, `unit` (`count` or `money`), `side`, and `track`. The current value is not in that file.
 

@@ -481,18 +481,24 @@ body[data-ready] .shimmer{display:none}
 .org-svg text{font-family:var(--sans);font-size:11px;fill:#d4d4d4}
 .org-svg .hublab{fill:#fff;font-size:13px;font-weight:700}
 .org-svg .hubcount{fill:#9a9a9a;font-size:11px;font-weight:650}
-.org-svg .botlab{opacity:0;pointer-events:none}
+.org-svg .botlab,.org-svg .botwork{opacity:0;pointer-events:none}
+.org-svg .botwork{font-size:9px;fill:#a3a3a3}
 .org-svg.is-zoom .node.in-zoom .botlab{opacity:1;pointer-events:auto}
+.org-svg.is-zoom .node.in-zoom.working .botwork{opacity:1}
+.org-svg.is-zoom .node.in-zoom.working .core{stroke:#fff;stroke-width:1.4;filter:drop-shadow(0 0 5px #ed3039)}
+.org-svg.is-zoom .node.in-zoom.idle{opacity:.38}
 .org-svg.is-zoom .node:not(.in-zoom){opacity:.12;pointer-events:none}
 .org-svg.is-zoom .org-flow,.org-svg.is-zoom .org-wire{opacity:0}
+.org-svg.is-zoom .org-wire.for-zoom{opacity:1;stroke:rgba(255,255,255,.42)}
 .org-flow,.org-wire{fill:none;pointer-events:none}
-.org-flow{stroke:rgba(237,48,57,.78);stroke-width:2;stroke-dasharray:8 11;animation:flowdash 2.6s linear infinite}
-.org-wire{stroke:rgba(255,255,255,.16);stroke-width:1.1}
-.org-wire.sat{stroke:rgba(255,255,255,.32);stroke-width:1.15}
-.org-wire.live{stroke:rgba(237,48,57,.72);stroke-dasharray:4 8;animation:flowdash 1.8s linear infinite}
+.org-flow{stroke:rgba(237,48,57,.32);stroke-width:1.6}
+.org-flow.live{stroke:rgba(237,48,57,.78);stroke-dasharray:5 9;animation:flowdash 3.4s linear infinite}
+.org-wire{stroke:rgba(255,255,255,.2);stroke-width:1}
+.org-wire.sat{stroke:rgba(255,255,255,.28);stroke-width:1.05}
 .node.stage .core{stroke:#fff;stroke-width:1.6}
 @keyframes flowdash{to{stroke-dashoffset:-76}}
 .org-crumb{background:none;border:0;padding:0;color:#fff;font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.org-counts{color:#9a9a9a;font-weight:650;margin-left:8px}
 .node{cursor:pointer}
 .node .hit{fill:transparent;pointer-events:all}
 .node .ringping{animation:pingfade 2.2s ease-out infinite;pointer-events:none}
@@ -535,6 +541,7 @@ body[data-ready] .shimmer{display:none}
 .stepper .work{color:var(--muted);font-size:12px}
 .stepper ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
 .stepper li li{font-size:13px}
+.stepper .bots .snip{display:block;color:var(--muted);font-size:11px;line-height:1.3;padding:2px 2px 0}
 .term{background:#070707;border:1px solid rgba(255,255,255,.08);border-radius:18px;min-height:420px;display:flex;flex-direction:column;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .dots{display:flex;gap:6px;padding:12px 14px 0}
 .dots i{width:9px;height:9px;border-radius:50%;display:block}
@@ -3620,18 +3627,23 @@ footer.site{margin-top:auto}
   }
   var BUCKET_OK = { attract: 1, convert: 1, transform: 1, ops: 1, growth: 1, build: 1 };
   function bucketFromBlob(blob) {
-    if (/\b(builds?|infra|infrastructure|systems?|deploys?|deployments?|backups?|monitors?|monitoring|utility|helpers?)\b/.test(blob)) return 'build';
-    if (/\b(ops|operations|command|inbox|calendar|gmail|emails?|stripe|briefs?|reminders?|handoffs?|files|digests?|follow ?ups?|invoices?|billing|schedules?|crm|deep work)\b/.test(blob)) return 'ops';
-    if (/\b(learning|coaches?|dream|personal|family|private|life admin|studies|study)\b/.test(blob)) return 'growth';
-    var convert = /\b(convert|funnels?|prospects?|prospecting|acquisition|booked|sales|close|growth|outreach|campaigns?|traffic|seo|ads?)\b/.test(blob);
-    var transform = /\b(transform|fulfil\w*|deliveries|delivery|retainers?|stamps?)\b/.test(blob);
-    if (convert && transform) {
-      if (/\b(acquisition|growth|outreach|funnels?|prospects?|prospecting)\b/.test(blob)) return 'convert';
-      return 'transform';
-    }
-    if (convert) return 'convert';
-    if (transform) return 'transform';
-    if (/\b(attract|content|posts?|instagram|youtube|reels?|hooks?|captions?|thumbnails?|copy|editors?|films?|scripts?|magnets?|carousels?|ideas?|brainstorms?|research|scouts?|trends?|analysts?|intel|searches|search)\b/.test(blob)) return 'attract';
+    var rules = [
+      ['growth', /\b(learning coach|deep work|dream\s*bots?|dreambots?|signal coach|brainstorms?|speaking coach|personal assistant)\b/],
+      ['attract', /\b(funnel researcher|community\s*miner|trend scout|you\s*tube research|sponsorships?|outlier pipeline)\b/],
+      ['convert', /\b(client acquisition|prospecting|call breakdown|connections|make\s*money|sales coach)\b/],
+      ['ops', /\b(operations manager|command cent(?:er|re)|computer\s*handoff|reminders?)\b/],
+      ['transform', /\b(reels?\s*editors?|ai video|video directors?|video edit\w*|video gen|content engine|carousels?|b\s*roll|podcast editors?|audio engineers?|cross\s*posters?|format vault|script auditors?|client scripts?|hub delivery|client fulfill\w*|customer\s*service|edit researchers?|edit reviewers?)\b/],
+      ['build', /\b(chat\s*gpt bridge)\b/],
+      ['transform', /\b(editors?|editing|reels?|captions?|carousels?|fulfil\w*|deliveries|delivery|transform|retainers?|stamps?|shoots?)\b/],
+      ['attract', /\b(posts?|scouts?|sponsorships?|audiences?|you\s*tube|instagram|trends?|research|hooks?|thumbnails?|copy|magnets?)\b/],
+      ['convert', /\b(prospect\w*|acquisition|sales|outreach|pipelines?|offers?|booked|campaigns?|traffic|seo|ads?)\b/],
+      ['build', /\b(builds?|infrastructures?|infra|deploys?|deployments?|backups?|monitors?|monitoring|utility|helpers?|developers?|devops)\b/],
+      ['ops', /\b(ops|operations|command|inbox|calendar|gmail|emails?|handoffs?|files|digests?|follow ?ups?|invoices?|billing|schedules?|crm|stripe)\b/],
+      ['growth', /\b(learning|coaches?|coach|dream|personal|family|private|life admin)\b/],
+      ['ops', /\bbots\b/]
+    ];
+    var i;
+    for (i = 0; i < rules.length; i++) if (rules[i][1].test(blob)) return rules[i][0];
     return 'ops';
   }
   function assignBuckets(cards) {
@@ -3664,6 +3676,14 @@ footer.site{margin-top:auto}
       if (a.name) byName[a.name] = a.bucket;
     });
   }
+  function workSnippet(text) {
+    var s = clean(text || '');
+    if (s.length <= 46) return s;
+    var cut = s.slice(0, 44);
+    var sp = cut.lastIndexOf(' ');
+    if (sp > 24) cut = cut.slice(0, sp);
+    return cut + '...';
+  }
   function orgHtml(m) {
     if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
     var cards = m.agentCards || [];
@@ -3683,22 +3703,21 @@ footer.site{margin-top:auto}
     }
     Object.keys(groups).forEach(function (key) { groups[key].sort(byLive); });
     var spec = {
-      attract: { id: 'stage-attract', name: 'Attract', x: 168, y: 138, r: 26, satellite: false, arcs: [{ a0: Math.PI, a1: Math.PI * 1.5 }] },
-      convert: { id: 'stage-convert', name: 'Convert', x: 480, y: 112, r: 26, satellite: false, arcs: [{ a0: -Math.PI * 0.98, a1: -Math.PI * 0.58 }, { a0: -Math.PI * 0.42, a1: -Math.PI * 0.02 }] },
-      transform: { id: 'stage-transform', name: 'Transform', x: 792, y: 138, r: 26, satellite: false, arcs: [{ a0: -Math.PI * 0.5, a1: 0 }] }
+      attract: { id: 'stage-attract', name: 'Attract', x: 188, y: 150, r: 26, satellite: false },
+      convert: { id: 'stage-convert', name: 'Convert', x: 480, y: 138, r: 26, satellite: false },
+      transform: { id: 'stage-transform', name: 'Transform', x: 772, y: 150, r: 26, satellite: false }
     };
     var satKeys = ['ops', 'growth', 'build'].filter(function (key) { return groups[key].length; });
     var satNames = { ops: 'Ops', growth: 'Personal', build: 'Build' };
-    var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [300, 660] : [176, 480, 784]);
+    var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [334, 640] : [188, 480, 772]);
     satKeys.forEach(function (key, i) {
       spec[key] = {
         id: 'stage-' + key,
         name: satNames[key],
         x: satXs[i],
-        y: 318,
+        y: 326,
         r: 16,
-        satellite: true,
-        arcs: [{ a0: Math.PI * 0.18, a1: Math.PI * 0.82 }]
+        satellite: true
       };
     });
     var order = ['attract', 'convert', 'transform'].concat(satKeys);
@@ -3717,59 +3736,64 @@ footer.site{margin-top:auto}
       nodes.push(node);
       pos[hub.id] = { x: hub.x, y: hub.y, r: hub.r };
     });
-    function ringCounts(total, key) {
-      var satellite = key === 'ops' || key === 'growth' || key === 'build';
-      if (satellite && total > 12) {
-        var outer = Math.ceil(total * 0.42);
-        var mid = Math.ceil((total - outer) * 0.62);
-        var inner = total - outer - mid;
-        if (inner < 1) inner = 1;
-        return [inner, mid, outer];
-      }
-      var rings = total > 16 ? 3 : (total > 7 ? 2 : 1);
-      var counts = [];
-      var left = total;
-      var r;
-      for (r = 0; r < rings; r++) {
-        var take = Math.ceil(left / (rings - r));
-        counts.push(take);
-        left -= take;
-      }
-      return counts;
+    function orbitCounts(total) {
+      if (total <= 9) return [total];
+      var outer = Math.ceil(total * 0.56);
+      var inner = total - outer;
+      if (inner < 4) return [total];
+      return [inner, outer];
+    }
+    function orbitRadius(count, tier, satellite) {
+      var chord = 20;
+      var need = count <= 1 ? 40 : (chord / (2 * Math.sin(Math.PI / count)));
+      var base = satellite ? [44, 66] : [58, 86];
+      return Math.max(base[tier] || base[base.length - 1], Math.ceil(need + 2));
     }
     order.forEach(function (key) {
       var hub = spec[key];
       var parent = pos[hub.id];
       var list = groups[key];
-      var arcs = hub.arcs;
-      var per = Math.ceil(list.length / arcs.length) || 0;
-      arcs.forEach(function (arc, ai) {
-        var slice = list.slice(ai * per, ai === arcs.length - 1 ? list.length : (ai + 1) * per);
-        if (!slice.length) return;
-        var counts = ringCounts(slice.length, key);
-        var cursor = 0;
-        counts.forEach(function (count, ri) {
-          var rad = ((key === 'ops' || key === 'growth' || key === 'build') ? 34 : 50) + ri * 20;
-          var chunk = slice.slice(cursor, cursor + count);
-          cursor += count;
-          chunk.forEach(function (b, i) {
-            var t = chunk.length <= 1 ? 0.5 : i / (chunk.length - 1);
-            var ang = arc.a0 + (arc.a1 - arc.a0) * t;
-            var id = 'n' + nodes.length;
-            var bot = agentNode(b, { id: id, parent: hub.id, desk: isDeskCard(b), fallbackRole: 'Bot' });
-            bot.stageId = key;
-            bot.lead = !!bot.desk;
-            nodes.push(bot);
-            var rr = bot.lead ? 9 : 6.5;
-            pos[id] = {
-              x: parent.x + Math.cos(ang) * rad,
-              y: parent.y + Math.sin(ang) * rad,
-              r: rr,
-              ang: ang
-            };
-          });
+      var counts = orbitCounts(list.length);
+      var cursor = 0;
+      var outerRad = 0;
+      counts.forEach(function (count, ri) {
+        var rad = orbitRadius(count, ri, !!hub.satellite);
+        if (rad > outerRad) outerRad = rad;
+        var chunk = list.slice(cursor, cursor + count);
+        cursor += count;
+        var spin = ri % 2 ? (Math.PI / Math.max(1, count)) : 0;
+        var gap = 1.05;
+        var span = Math.PI * 2 - gap;
+        var start = (hub.satellite ? Math.PI / 2 : -Math.PI / 2) + gap / 2;
+        chunk.forEach(function (b, i) {
+          var ang = start + spin + (count <= 1 ? span / 2 : (i / count) * span);
+          var id = 'n' + nodes.length;
+          var bot = agentNode(b, { id: id, parent: hub.id, desk: isDeskCard(b), fallbackRole: 'Bot' });
+          bot.stageId = key;
+          bot.lead = !!bot.desk;
+          bot.zang = ang;
+          bot.zring = ri;
+          nodes.push(bot);
+          var rr = bot.lead ? 8 : 6.5;
+          pos[id] = {
+            x: parent.x + Math.cos(ang) * rad,
+            y: parent.y + Math.sin(ang) * rad,
+            r: rr,
+            ang: ang
+          };
         });
       });
+      var hubNode = nodes.filter(function (n) { return n.id === hub.id; })[0];
+      if (hubNode) {
+        hubNode.outerRad = outerRad;
+        if (hub.satellite) {
+          hubNode.nameDy = outerRad + 16;
+          hubNode.countDy = outerRad + 28;
+        } else {
+          hubNode.nameDy = -(outerRad + 16);
+          hubNode.countDy = hubNode.nameDy + 13;
+        }
+      }
     });
     nodes.forEach(function (n) {
       var p = pos[n.id];
@@ -3777,8 +3801,8 @@ footer.site{margin-top:auto}
       p.x = finite(p.x, 480);
       p.y = finite(p.y, 180);
       p.r = finite(p.r, 6);
-      p.x = Math.max(p.r + 10, Math.min(960 - p.r - 10, p.x));
-      p.y = Math.max(p.r + 10, Math.min(408 - p.r, p.y));
+      p.x = Math.max(p.r + 8, Math.min(952 - p.r, p.x));
+      p.y = Math.max(p.r + 8, Math.min(412 - p.r, p.y));
       n.vx = p.x;
       n.vy = p.y;
       n.hx = p.x;
@@ -3805,23 +3829,29 @@ footer.site{margin-top:auto}
     }
     var paths = '';
     var pulses = [];
-    function pushPath(L, cls, pulse) {
+    function pushPath(L, cls, pulse, extra) {
       if (!L) return;
-      paths += '<path class="' + cls + '" d="' + L.d + '"/>';
-      if (pulse && pulses.length < 8) pulses.push(L);
+      paths += '<path class="' + cls + '"' + (extra || '') + ' d="' + L.d + '"/>';
+      if (pulse && pulses.length < 4) pulses.push(L);
     }
-    var flowA = qpath(pos['stage-attract'], pos['stage-convert'], 78);
-    var flowB = qpath(pos['stage-convert'], pos['stage-transform'], 78);
-    pushPath(flowA, 'org-flow', true);
-    pushPath(flowB, 'org-flow', true);
+    var attractLive = groups.attract.some(function (a) { return a.status === 'working'; });
+    var convertLive = groups.convert.some(function (a) { return a.status === 'working'; });
+    var flowA = qpath(pos['stage-attract'], pos['stage-convert'], 36);
+    var flowB = qpath(pos['stage-convert'], pos['stage-transform'], 36);
+    pushPath(flowA, attractLive ? 'org-flow live' : 'org-flow', attractLive);
+    pushPath(flowB, convertLive ? 'org-flow live' : 'org-flow', convertLive);
     satKeys.forEach(function (key) {
-      pushPath(qpath(pos['stage-' + key], pos['stage-convert'], 6), 'org-wire sat', false);
+      pushPath(qpath(pos['stage-' + key], pos['stage-convert'], 4), 'org-wire sat', false);
     });
     nodes.forEach(function (n) {
-      if (!n.parent) return;
-      var L = qpath(pos[n.parent], pos[n.id], 0);
-      var live = n.status === 'working';
-      pushPath(L, live ? 'org-wire live' : 'org-wire', live);
+      if (!n.parent || !pos[n.parent] || !pos[n.id]) return;
+      var a = pos[n.parent];
+      var b = pos[n.id];
+      var line = {
+        d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' L' + b.x.toFixed(1) + ',' + b.y.toFixed(1),
+        x0: a.x, y0: a.y, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2, x1: b.x, y1: b.y
+      };
+      pushPath(line, 'org-wire', false, ' data-bot="' + esc(n.stageId) + '" data-from="' + esc(n.parent) + '" data-to="' + esc(n.id) + '"');
     });
     S.orgLinks = pulses;
     var pingLeft = reduce ? 0 : 12;
@@ -3837,11 +3867,13 @@ footer.site{margin-top:auto}
       var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8).toFixed(1) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
       var halo = n.stageHub ? '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 7).toFixed(1) + '" fill="none" stroke="rgba(237,48,57,.5)" stroke-width="1.3"/>' : '';
       var labCls = n.stageHub ? 'hublab' : 'botlab';
-      var nameY = n.satellite ? p.y - p.r - 22 : p.y + p.r + 14;
+      var nameY = p.y + (n.stageHub ? (n.nameDy || (n.satellite ? -22 : 14)) : (p.r + 14));
       var label = '<text class="' + labCls + '" x="' + p.x.toFixed(1) + '" y="' + nameY.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
       if (n.stageHub) {
-        var countY = n.satellite ? p.y - p.r - 10 : p.y + p.r + 28;
+        var countY = p.y + (n.countDy || (nameY - p.y + 13));
         label += '<text class="hubcount" x="' + p.x.toFixed(1) + '" y="' + countY.toFixed(1) + '" text-anchor="middle">' + n.count + '</text>';
+      } else if (n.work) {
+        label += '<text class="botwork" x="' + p.x.toFixed(1) + '" y="' + (nameY + 12).toFixed(1) + '" text-anchor="middle">' + esc(workSnippet(n.work)) + '</text>';
       }
       var hit = '<circle class="hit" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + finite(n.hitR, p.r + 2).toFixed(1) + '"/>';
       var fillColor = n.stageHub ? (n.liveStage ? '#ed3039' : '#2a2a2a') : fill(n.status);
@@ -3853,14 +3885,26 @@ footer.site{margin-top:auto}
       var kids = nodes.filter(function (n) { return n.parent === hub.id; });
       var liveN = kids.filter(function (k) { return k.status === 'working'; }).length;
       var botsHtml = kids.map(function (b) {
-        return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button></li>';
+        var snip = (b.status === 'working' && b.work) ? '<span class="snip">' + esc(workSnippet(b.work)) + '</span>' : '';
+        return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button>' + snip + '</li>';
       }).join('');
       var cls = hub.liveStage ? 'working' : 'idle';
-      return '<li class="' + cls + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(deskMeta(kids.length, liveN)) + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
+      var idleN = kids.length - liveN;
+      return '<li class="' + cls + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(liveN + ' working, ' + idleN + ' idle') + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
     }).join('');
     return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. Click a bucket to go deeper.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   var zoomGen = 0;
+  function refreshOrgWires() {
+    var byId = {};
+    (S.orgNodes || []).forEach(function (n) { byId[n.id] = n; });
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .org-wire[data-from]'), function (p) {
+      var a = byId[p.getAttribute('data-from')];
+      var b = byId[p.getAttribute('data-to')];
+      if (!a || !b || a.vx == null || b.vx == null) return;
+      p.setAttribute('d', 'M' + a.vx.toFixed(1) + ',' + a.vy.toFixed(1) + ' L' + b.vx.toFixed(1) + ',' + b.vy.toFixed(1));
+    });
+  }
   function paintNodeAt(n, x, y, home) {
     n.vx = x;
     n.vy = y;
@@ -3871,46 +3915,72 @@ footer.site{margin-top:auto}
       c.setAttribute('cy', y.toFixed(1));
     });
     var overview = !!home;
-    var above = !!(n.satellite && overview);
     var texts = g.querySelectorAll('text');
-    if (texts[0]) {
-      var dy = above ? -(n.hr + 22) : (n.stageHub ? n.hr + 14 : n.hr + 16);
-      texts[0].setAttribute('x', x.toFixed(1));
-      texts[0].setAttribute('y', (y + dy).toFixed(1));
+    function placeText(el, tx, ty, anchor) {
+      if (!el) return;
+      el.setAttribute('x', tx.toFixed(1));
+      el.setAttribute('y', ty.toFixed(1));
+      if (anchor) el.setAttribute('text-anchor', anchor);
     }
-    if (texts[1] && n.stageHub) {
-      var dy2 = above ? -(n.hr + 10) : (n.hr + 28);
-      texts[1].setAttribute('x', x.toFixed(1));
-      texts[1].setAttribute('y', (y + dy2).toFixed(1));
+    if (n.stageHub) {
+      var nameDy = overview ? (n.nameDy || -(n.hr + 18)) : -(n.hr + 22);
+      var countDy = overview ? (n.countDy || (nameDy + 13)) : (nameDy + 14);
+      placeText(texts[0], x, y + nameDy, 'middle');
+      placeText(texts[1], x, y + countDy, 'middle');
+      return;
     }
+    if (overview) {
+      placeText(texts[0], x, y + n.hr + 14, 'middle');
+      placeText(texts[1], x, y + n.hr + 26, 'middle');
+      return;
+    }
+    var ang = typeof n.zang === 'number' ? n.zang : 0;
+    var cos = Math.cos(ang);
+    var dist = n.hr + 18;
+    var anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
+    var lx = x + cos * dist;
+    var ly = y + Math.sin(ang) * dist + 4;
+    placeText(texts[0], lx, ly, anchor);
+    placeText(texts[1], lx, ly + 12, anchor);
   }
   function zoomTargets(stageId) {
     var bots = (S.orgNodes || []).filter(function (n) { return n.stageId === stageId && !n.stageHub; });
     var hub = (S.orgNodes || []).filter(function (n) { return n.stageHub && n.stageId === stageId; })[0];
     var targets = {};
     if (!hub) return targets;
-    var cols = bots.length ? Math.max(3, Math.min(5, Math.ceil(Math.sqrt(bots.length * 1.15)))) : 1;
-    var gapX = 168;
-    var gapY = 88;
     var ox = 2400;
-    var oy = 70;
+    var oy = 360;
     targets[hub.id] = { x: ox, y: oy };
-    bots.forEach(function (b, i) {
-      var row = Math.floor(i / cols);
-      var col = i % cols;
-      var rowCount = Math.min(cols, bots.length - row * cols);
-      var rowW = (rowCount - 1) * gapX;
-      targets[b.id] = { x: ox - rowW / 2 + col * gapX, y: oy + 108 + row * gapY };
+    var rings = [];
+    bots.forEach(function (b) {
+      var ri = b.zring || 0;
+      if (!rings[ri]) rings[ri] = [];
+      rings[ri].push(b);
+    });
+    rings.forEach(function (list, ri) {
+      if (!list || !list.length) return;
+      var rad = list.length > 9 ? (210 + ri * 170) : (list.length > 6 ? 250 : 210);
+      if (rings.length > 1) rad = 200 + ri * 168;
+      var gap = 1.05;
+      var span = Math.PI * 2 - gap;
+      var satellite = !!hub.satellite;
+      var start = (satellite ? Math.PI / 2 : -Math.PI / 2) + gap / 2;
+      var spin = ri % 2 ? (span / list.length) * 0.5 : 0;
+      list.forEach(function (b, i) {
+        var ang = start + spin + (list.length <= 1 ? span / 2 : (i / list.length) * span);
+        b.zang = ang;
+        targets[b.id] = { x: ox + Math.cos(ang) * rad, y: oy + Math.sin(ang) * rad };
+      });
     });
     return targets;
   }
   function viewFor(points) {
     var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     points.forEach(function (p) {
-      minX = Math.min(minX, p.x - 100);
-      maxX = Math.max(maxX, p.x + 100);
-      minY = Math.min(minY, p.y - 52);
-      maxY = Math.max(maxY, p.y + 40);
+      minX = Math.min(minX, p.x - 210);
+      maxX = Math.max(maxX, p.x + 210);
+      minY = Math.min(minY, p.y - 70);
+      maxY = Math.max(maxY, p.y + 56);
     });
     var w = Math.max(280, maxX - minX);
     var h = Math.max(160, maxY - minY);
@@ -3934,6 +4004,7 @@ footer.site{margin-top:auto}
     if (motionReduce()) {
       start.forEach(function (m) { paintNodeAt(m.n, m.tx, m.ty, home); });
       svg.setAttribute('viewBox', box.map(function (n) { return n.toFixed(1); }).join(' '));
+      refreshOrgWires();
       return;
     }
     var t0 = performance.now();
@@ -3946,6 +4017,7 @@ footer.site{margin-top:auto}
       });
       var vb = fromBox.map(function (v, i) { return v + (box[i] - v) * e; });
       svg.setAttribute('viewBox', vb.map(function (n) { return n.toFixed(1); }).join(' '));
+      refreshOrgWires();
       if (u < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
@@ -3958,8 +4030,10 @@ footer.site{margin-top:auto}
     var hub = null;
     (S.orgNodes || []).forEach(function (n) { if (n.stageHub && n.stageId === S.orgZoom) hub = n; });
     if (crumb) {
+      var kids = hub ? (S.orgNodes || []).filter(function (n) { return n.parent === hub.id; }) : [];
+      var liveN = kids.filter(function (n) { return n.status === 'working'; }).length;
       crumb.innerHTML = hub
-        ? '<button type="button" class="org-crumb" data-org-zoom="">Workforce</button> / <b>' + esc(hub.name) + '</b>'
+        ? '<button type="button" class="org-crumb" data-org-zoom="">Workforce</button> / <b>' + esc(hub.name) + '</b><span class="org-counts">' + liveN + ' working, ' + (kids.length - liveN) + ' idle</span>'
         : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
     }
     Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) {
@@ -3969,6 +4043,9 @@ footer.site{margin-top:auto}
     svg.classList.toggle('is-zoom', !!S.orgZoom);
     Array.prototype.forEach.call(svg.querySelectorAll('.node'), function (g) {
       g.classList.toggle('in-zoom', !S.orgZoom || g.getAttribute('data-stage') === S.orgZoom);
+    });
+    Array.prototype.forEach.call(svg.querySelectorAll('.org-wire[data-bot]'), function (p) {
+      p.classList.toggle('for-zoom', !!S.orgZoom && p.getAttribute('data-bot') === S.orgZoom);
     });
     var moves = [];
     if (!S.orgZoom) {
@@ -5339,61 +5416,61 @@ footer.site{margin-top:auto}
   }
   function fixtureDeskAgents(strip) {
     var spec = [
-      ['Operations Manager', 'Operations'],
-      ['Command Center', 'Command center'],
-      ['PersonalAssistant', 'Personal assistant'],
-      ['Brainstorm', 'Idea bot'],
-      ['Trend Scout', 'Research scout'],
-      ['Editor', 'Content editor'],
-      ['Posts', 'Content posts'],
-      ['Content Engine', 'Content engine'],
-      ['Client Acquisition', 'Growth outreach'],
-      ['Prospecting', 'Growth prospecting'],
-      ['Funnel Researcher', 'Funnel research'],
-      ['Carousels', 'Content carousels'],
-      ['Captions', 'Content captions'],
-      ['Inbox Fixture', 'Ops inbox'],
-      ['Calendar Fixture', 'Ops calendar'],
-      ['Brief Fixture', 'Ops brief'],
-      ['Reminder Fixture', 'Ops reminders'],
-      ['Handoff Fixture', 'Ops handoff'],
-      ['Files Fixture', 'Ops files'],
-      ['Digest Fixture', 'Ops digest'],
-      ['Followup Fixture', 'Ops follow up'],
-      ['Billing Fixture', 'Ops billing'],
-      ['Schedule Fixture', 'Ops schedule'],
-      ['Script Fixture', 'Content scripts'],
-      ['Hook Fixture', 'Content hooks'],
-      ['Thumbnail Fixture', 'Content thumbnails'],
-      ['Reel Fixture', 'Content reels'],
-      ['Copy Fixture', 'Content copy'],
-      ['YouTube Fixture', 'Content youtube'],
-      ['Instagram Fixture', 'Content instagram'],
-      ['Ad Fixture', 'Growth ads'],
-      ['Magnet Fixture', 'Growth magnet'],
-      ['Outreach Fixture', 'Growth outreach'],
-      ['Campaign Fixture', 'Growth campaign'],
-      ['Traffic Fixture', 'Growth traffic'],
-      ['Seo Fixture', 'Growth seo'],
-      ['Scout Fixture', 'Research scout'],
-      ['Analyst Fixture', 'Research analyst'],
-      ['Search Fixture', 'Research search'],
-      ['Study Fixture', 'Research study'],
-      ['Intel Fixture', 'Research intel'],
-      ['Life Fixture', 'Personal life admin'],
-      ['Family Fixture', 'Personal family'],
-      ['Private Fixture', 'Personal private'],
-      ['Utility Fixture A', 'Utility helper'],
-      ['Utility Fixture B', 'Utility helper'],
-      ['Utility Fixture C', 'Utility helper']
+      ['Reels Editor', 'Client delivery', 'SAMPLE. Cutting a client reel.'],
+      ['Editor (YouTube & Podcast)', 'Client delivery', ''],
+      ['AI Video Director', 'Client delivery', 'SAMPLE. Lining up the next cut.'],
+      ['Carousels', 'Client delivery', ''],
+      ['Content Engine', 'Client delivery', 'SAMPLE. Packaging client edits.'],
+      ['Ai Video Editing Test', 'Client delivery', ''],
+      ['Client Fulfillment', 'Client delivery', ''],
+      ['Delivery QA', 'Client delivery', 'SAMPLE. Checking a delivery.'],
+      ['Script Auditor', 'Client scripts', ''],
+      ['Format Vault', 'Client delivery', ''],
+      ['CustomerService', 'Client delivery', ''],
+      ['Edit Researcher', 'Client delivery', ''],
+      ['Edit Reviewer', 'Client delivery', ''],
+      ['B-roll Editor', 'Client delivery', ''],
+      ['Captions', 'Client delivery', ''],
+      ['Cross-Poster', 'Client delivery', ''],
+      ['Podcast Editor', 'Client delivery', ''],
+      ['Audio Engineer', 'Client delivery', ''],
+      ['AI Video Gen', 'Client delivery', ''],
+      ['Posts', 'Audience content', 'SAMPLE. Drafting an audience post.'],
+      ['Trend Scout', 'Audience research', 'SAMPLE. Scanning this week\'s hooks.'],
+      ['Funnel Researcher', 'Audience research', ''],
+      ['CommunityMiner', 'Audience research', ''],
+      ['Sponsorships', 'Audience content', ''],
+      ['YouTube Research', 'Audience research', ''],
+      ['Outlier Pipeline', 'Audience research', ''],
+      ['Muse', 'Audience content', ''],
+      ['Client Acquisition', 'Sales', 'SAMPLE. Following up a booked call.'],
+      ['Prospecting', 'Sales', 'SAMPLE. Building a prospect list.'],
+      ['Call Breakdown', 'Sales', ''],
+      ['Connections', 'Sales', ''],
+      ['Strategist', 'Sales', ''],
+      ['MakeMoney', 'Sales', ''],
+      ['Operations Manager', 'Operations', 'SAMPLE. Sorting the morning handoff.'],
+      ['Command Center', 'Command center', ''],
+      ['Reminders', 'Operations', ''],
+      ['ComputerHandoff', 'Operations', ''],
+      ['Bots', 'Operations', ''],
+      ['Learning Coach', 'Learning', 'SAMPLE. Reviewing a study block.'],
+      ['Deep Work', 'Personal', ''],
+      ['Dreambot', 'Personal', ''],
+      ['Signal Coach', 'Coaching', ''],
+      ['Brainstorm', 'Personal', ''],
+      ['Speaking Coach', 'Coaching', ''],
+      ['PersonalAssistant', 'Personal', ''],
+      ['Foundation', 'Infrastructure', 'SAMPLE. Checking the deploy.'],
+      ['ChatGPT Bridge', 'Infrastructure', '']
     ];
-    return spec.map(function (row, i) {
-      var working = i < 10;
+    return spec.map(function (row) {
+      var working = !!row[2];
       return {
         name: row[0],
         role: strip ? String(row[1]).replace(/desk/ig, 'unit') : row[1],
         status: working ? 'working' : 'idle',
-        currentWork: working ? ('Fixture task ' + (i + 1) + ' is in progress.') : '',
+        currentWork: working ? row[2] : '',
         lastReportAt: '2026-11-11T08:00:00-06:00'
       };
     });

@@ -283,7 +283,7 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 |---|---|
 | `name` | Readable name. Never a raw id, uuid, or `agt_...` token. If the only identifier is an id, put the name here and leave the id out. |
 | `role` | Readable role. Do not put the word desk in the role. |
-| `bucket` | Exactly one of `attract`, `convert`, `transform`, `ops`, `growth`, `build`. Attract, Convert, and Transform are the connected flow. `ops` is command and operations, `growth` is personal (learning, coaching), and `build` is infra. Edit this field to move a bot. If it is omitted, the page guesses once from `reportsTo`, then from the role and name, and still puts the bot in one bucket. |
+| `bucket` | Exactly one of `attract`, `convert`, `transform`, `ops`, `growth`, `build`. This field wins over the name. Attract is his own audience and content (Posts, Trend Scout, Funnel Researcher, CommunityMiner, Sponsorships, YouTube research). Convert is sales (Client Acquisition, Prospecting, Call Breakdown, Connections). Transform is client delivery and fulfillment (Reels Editor, Editor, AI Video Director, Carousels, Content Engine, client scripts, Hub delivery). `ops` is command and operations. `growth` is personal, learning, and coaching. `build` is dev and infra. If `bucket` is omitted, the page follows `reportsTo` when that agent already has a bucket, then matches the name and role. |
 | `status` | `working`, `idle`, `blocked`, `offline`, or `not-reported`. Other short words are shown as typed. |
 | `currentWork` | What that bot is doing, in a sentence. `""` when it reported and has nothing in progress. |
 | `lastReportAt` | ISO time of that bot's last report, or `null` if it has never reported. |

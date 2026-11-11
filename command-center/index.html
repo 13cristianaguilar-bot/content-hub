@@ -429,6 +429,7 @@ body[data-ready] .shimmer{display:none}
   .top{flex-wrap:wrap;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px}
   .crumb{flex:1 1 auto}
   .ask{min-height:44px;order:2}
+  .snd{order:2;width:44px;height:44px}
   .who,.ghost{order:3}
   .clock{order:4;margin-left:0;width:100%}
   .search{order:5;max-width:none;flex:1 1 100%;min-height:44px}
@@ -522,7 +523,7 @@ body[data-ready] .shimmer{display:none}
 .org-svg .hubtag{fill:#ed3039;font-size:10px;font-weight:750;letter-spacing:.04em}
 .org-svg .cap-arc,.org-svg .bloom{pointer-events:none}
 .org-svg .bloom{fill:none;stroke:#ed3039;stroke-width:1.6;opacity:0;transform-box:fill-box;transform-origin:center}
-.org-svg .node.is-hot .core{filter:drop-shadow(0 0 6px #ed3039);transform-box:fill-box;transform-origin:center;animation:dot-bloom 220ms cubic-bezier(.2,1.4,.3,1)}
+.org-svg .node.is-hot .core{filter:drop-shadow(0 0 6px #ed3039);transform-box:fill-box;transform-origin:center;animation:dot-bloom 220ms cubic-bezier(.2,1.4,.3,1) forwards}
 .org-svg .node.is-hot .bloom{animation:dot-ripple 520ms ease-out}
 @keyframes dot-bloom{0%{transform:scale(1)}55%{transform:scale(1.22)}100%{transform:scale(1.08)}}
 @keyframes dot-ripple{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.15)}}
@@ -4851,7 +4852,7 @@ footer.site{margin-top:auto}
     var agentRows = [];
     var parent = n.parent ? nodeById(n.parent) : null;
     if (parent && parent.stageHub) agentRows.push({ k: 'Bucket', v: parent.name });
-    else if (parent && parent.id !== 'n0') agentRows.push({ k: 'Desk', v: parent.name });
+    else if (parent && parent.id !== 'n0') agentRows.push({ k: 'Reports to', v: parent.name });
     agentRows = agentRows.concat(activeRows());
     return { title: n.name, pill: pillOf(n.status), rows: agentRows, hint: 'Click for details' };
   }
@@ -4869,7 +4870,7 @@ footer.site{margin-top:auto}
     if (!title && !rows.length) return null;
     return { title: title || 'Post', rows: rows };
   }
-  var Bubble = { ctx: null, on: true, armed: false, last: 0 };
+  var Bubble = { ctx: null, on: true, armed: false, last: 0, queued: '' };
   var TouchScroll = { x: 0, y: 0, moved: false };
   function bubbleOn() {
     try { if (localStorage.getItem('cc-sound') === '0') return false; } catch (e) {}
@@ -4893,8 +4894,8 @@ footer.site{margin-top:auto}
     }
     if (Bubble.ctx.state === 'suspended') {
       var pending = Bubble.ctx.resume();
-      if (pending && pending.catch) pending.catch(function () {});
-    }
+      if (pending && pending.then) pending.then(flushBubble).catch(function () {});
+    } else flushBubble();
   }
   function toneAt(ctx, t, type, f0, f1, dur, peak) {
     var osc = ctx.createOscillator();
@@ -4907,12 +4908,25 @@ footer.site{margin-top:auto}
     gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     osc.connect(gain);
     gain.connect(ctx.destination);
+    osc.onended = function () {
+      try { osc.disconnect(); gain.disconnect(); } catch (e) {}
+    };
     osc.start(t);
     osc.stop(t + dur + 0.03);
   }
+  function flushBubble() {
+    var kind = Bubble.queued;
+    Bubble.queued = '';
+    if (kind) bubble(kind);
+  }
   function bubble(kind) {
-    if (!Bubble.armed || !Bubble.on || !Bubble.ctx || Bubble.ctx.state !== 'running') return;
+    if (!Bubble.armed || !Bubble.on) return;
     if (Hover.pointer === 'touch' && TouchScroll.moved) return;
+    if (!Bubble.ctx || Bubble.ctx.state !== 'running') {
+      Bubble.queued = kind || 'bloop';
+      return;
+    }
+    Bubble.queued = '';
     var nowMs = performance.now();
     if (kind === 'bloop' && nowMs - Bubble.last < 120) return;
     if (kind !== 'chime') Bubble.last = nowMs;
@@ -4924,7 +4938,10 @@ footer.site{margin-top:auto}
       else if (kind === 'chime') {
         toneAt(ctx, t, 'sine', 523 * wobble, 660 * wobble, 0.09, 0.11);
         toneAt(ctx, t + 0.09, 'triangle', 784 * wobble, 990 * wobble, 0.12, 0.1);
-      } else toneAt(ctx, t, 'sine', 300 * wobble, 900 * wobble, 0.09, 0.126);
+      } else {
+        toneAt(ctx, t, 'sine', 300 * wobble, 900 * wobble, 0.09, 0.09);
+        toneAt(ctx, t + 0.004, 'triangle', 450 * wobble, 1200 * wobble, 0.06, 0.036);
+      }
     } catch (e) {}
   }
   var Hover = { el: null, timer: 0, hideT: 0, key: '', pending: '', anchor: null, touchId: '', pointer: 'mouse', hot: null };
@@ -5874,11 +5891,8 @@ footer.site{margin-top:auto}
       try { localStorage.setItem('cc-sound', Bubble.on ? '1' : '0'); } catch (e) {}
       paintSound();
       if (!Bubble.on) return;
+      bubble('pop');
       armAudio();
-      var ctx = Bubble.ctx;
-      if (ctx && ctx.state !== 'running' && ctx.resume) {
-        ctx.resume().then(function () { bubble('pop'); }).catch(function () {});
-      } else bubble('pop');
     });
     document.addEventListener('pointerdown', function (e) {
       Hover.pointer = e.pointerType || 'mouse';

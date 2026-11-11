@@ -32,6 +32,9 @@ html,body{margin:0;background:#080808;color:var(--ink)}
 body{
   font-family:var(--sans);font-size:15px;line-height:1.45;min-height:100dvh;
   -webkit-font-smoothing:antialiased;
+  background:#080808;
+}
+body[data-ready]{
   background:
     radial-gradient(880px 480px at 82% -12%,rgba(237,48,57,.24),transparent 56%),
     radial-gradient(640px 380px at 0% 0%,rgba(237,48,57,.08),transparent 52%),
@@ -361,7 +364,7 @@ body[data-ready] .shimmer{display:none}
   .view.enter.on .krow .kpi:nth-child(4),.view.enter.on .desks .desk:nth-child(4){animation-delay:.18s}
   .view.enter.on .desks .desk:nth-child(5),.view.enter.on .krow .kpi:nth-child(5){animation-delay:.24s}
 }
-@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes rise{from{transform:translateY(8px)}to{transform:none}}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .mrow .quiet{grid-column:1;font-size:12px}
 .sheet-value{font-family:var(--mono);font-size:40px;letter-spacing:-.04em;margin:8px 0}
@@ -447,12 +450,15 @@ body[data-ready] .shimmer{display:none}
 .org-svg{width:100%;height:380px;display:block}
 .org-svg text{font-family:var(--sans);font-size:11px;fill:#d4d4d4}
 .node{cursor:pointer}
-.node .ringping{transform-origin:center;transform-box:fill-box;animation:sonar 2.2s ease-out infinite}
+.node .ringping{animation:pingfade 2.2s ease-out infinite}
 .node.idle{opacity:.55}
 .node.blocked .core,.node.offline .core{stroke:#ed3039}
 .node.working .core{stroke:#3DDC97}
-.org-stage{position:relative;height:380px;border-radius:14px;overflow:hidden;background-color:#090909;background-image:radial-gradient(420px 150px at 50% 92%,rgba(237,48,57,.16),transparent 68%)}
-.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent}
+.org-stage{position:relative;height:380px;border-radius:14px;overflow:hidden;background-color:#090909;background-image:none}
+.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent;opacity:0}
+.org-fx.sized{opacity:1}
+.org-links{opacity:0}
+.org-links.sized{opacity:1}
 .org-links{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 .org-svg{position:relative;z-index:1;height:100%}
 .org-map{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:10px 8px 8px;min-height:0}
@@ -524,6 +530,7 @@ body[data-ready] .shimmer{display:none}
 .chat{top:0;bottom:0;right:0;height:100dvh;width:min(420px,100%);border-radius:0;border-left:1px solid var(--line);transform:translateX(104%);opacity:1}
 .chat.on{transform:none}
 @keyframes sonar{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.7);opacity:0}}
+@keyframes pingfade{0%{opacity:.7}100%{opacity:0}}
 @keyframes slidein{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
@@ -755,8 +762,8 @@ footer.site{margin-top:auto}
   };
   var params = new URLSearchParams(location.search);
   var S = {
-    sample: params.get('sample') === '1' || params.get('fixture') === '1',
-    fixture: params.get('fixture') === '1',
+    sample: params.get('sample') === '1' || params.get('fixture') === '1' || params.get('fixture') === '2' || params.get('fixture') === '3',
+    fixture: params.get('fixture') === '1' ? '1' : (params.get('fixture') === '2' ? '2' : (params.get('fixture') === '3' ? '3' : '')),
     feed: null,
     targets: null,
     feedState: 'checking',
@@ -2558,10 +2565,29 @@ footer.site{margin-top:auto}
     if (live === 1) return bots + ', 1 live';
     return bots + ', ' + live + ' live';
   }
+  function isDeskCard(a) {
+    return !!(a && (a.reportsTo === 'Cristian' || (!a.reportsTo && /desk/i.test(a.role || ''))));
+  }
   function structuredAgents(cards) {
-    return cards.some(function (a) {
-      return a.reportsTo === 'Cristian' || /desk/i.test(a.role || '') || /desk/i.test(a.name || '');
+    var desks = [];
+    var bots = [];
+    cards.forEach(function (a) { (isDeskCard(a) ? desks : bots).push(a); });
+    if (desks.length < 2) return false;
+    var names = {};
+    desks.forEach(function (d) { if (d.name) names[d.name] = 1; });
+    if (!bots.length) return true;
+    var linked = 0;
+    var buckets = {};
+    bots.forEach(function (b) {
+      var key = b.reportsTo && names[b.reportsTo] ? b.reportsTo : '';
+      if (key) linked += 1;
+      buckets[key] = (buckets[key] || 0) + 1;
     });
+    if (linked / bots.length < 0.6) return false;
+    var keys = Object.keys(buckets);
+    var i;
+    for (i = 0; i < keys.length; i++) if (buckets[keys[i]] > 10) return false;
+    return true;
   }
   function orgHtml(m) {
     if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
@@ -2571,10 +2597,7 @@ footer.site{margin-top:auto}
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var desks = [];
     var bots = [];
-    cards.forEach(function (a) {
-      var desk = a.reportsTo === 'Cristian' || (!a.reportsTo && /desk/i.test(a.role || ''));
-      (desk ? desks : bots).push(a);
-    });
+    cards.forEach(function (a) { (isDeskCard(a) ? desks : bots).push(a); });
     var cx = 480, cy = 200;
     S.orgLinkSpace = 'view';
     var nodes = [{ id: 'n0', name: 'Cristian', role: 'Owner', status: 'working', work: 'The desks report here.', report: 'This node is the hub, not a metric.', parent: '' }];
@@ -2583,16 +2606,19 @@ footer.site{margin-top:auto}
     desks.forEach(function (d, i) {
       var ang = -Math.PI / 2 + (i * 2 * Math.PI / Math.max(desks.length, 1));
       var id = 'n' + nodes.length;
-      nodes.push({ id: id, name: d.name, role: d.role || 'Desk', status: d.status || 'idle', work: d.work || 'No current work in the feed.', report: d.report || 'No report time', parent: 'n0' });
+      nodes.push({ id: id, name: d.name, role: d.role || 'Desk', status: d.status || 'idle', work: d.work || 'No current work in the feed.', report: d.report || 'No report time', parent: 'n0', desk: true });
       pos[id] = { x: cx + Math.cos(ang) * 155, y: cy + Math.sin(ang) * 96, r: 16, ang: ang };
       deskNode[d.name] = id;
     });
     var buckets = {};
+    var bucketTooBig = false;
     bots.forEach(function (b) {
       var key = b.reportsTo && deskNode[b.reportsTo] ? b.reportsTo : '';
       if (!buckets[key]) buckets[key] = [];
       buckets[key].push(b);
+      if (buckets[key].length > 10) bucketTooBig = true;
     });
+    if (bucketTooBig) return clusterOrg(m, cards);
     Object.keys(buckets).forEach(function (key) {
       var parentId = key ? deskNode[key] : 'n0';
       var parent = pos[parentId];
@@ -2658,7 +2684,7 @@ footer.site{margin-top:auto}
       var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
       var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
       var label = '';
-      if (n.id === 'n0' || (labelDesk && n.parent === 'n0')) {
+      if (n.id === 'n0' || (labelDesk && n.desk)) {
         var ang = n.id === 'n0' ? Math.PI / 2 : finite(p.ang, 0);
         var lx = n.id === 'n0' ? p.x : p.x - Math.cos(ang) * (p.r + 18);
         var ly = n.id === 'n0' ? p.y + p.r + 16 : p.y - Math.sin(ang) * (p.r + 16);
@@ -2910,29 +2936,50 @@ footer.site{margin-top:auto}
     svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
     svg.textContent = '';
     if (paths) svg.insertAdjacentHTML('afterbegin', paths);
+    svg.classList.add('sized');
     S.orgLinks = links;
     S.orgLinkSpace = 'css';
   }
   function sizeFx() {
-    syncFlatLinks();
     var c = FX.canvas;
     if (!c) return;
     var rect = c.getBoundingClientRect();
+    var w = Math.round(rect.width);
+    var h = Math.round(rect.height);
+    if (w < 8 || h < 8) {
+      c.classList.remove('sized');
+      var linksHidden = document.querySelector('#v-home .org-links');
+      if (linksHidden) linksHidden.classList.remove('sized');
+      if (!FX.sizeWait) {
+        FX.sizeWait = true;
+        requestAnimationFrame(function () {
+          FX.sizeWait = false;
+          var box = FX.canvas && FX.canvas.getBoundingClientRect();
+          if (box && box.width >= 8 && box.height >= 8) sizeFx();
+        });
+      }
+      return;
+    }
+    syncFlatLinks();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var w = Math.max(1, Math.round(rect.width));
-    var h = Math.max(1, Math.round(rect.height));
-    if (!w || !h) return;
-    if (FX.w === w && FX.h === h && FX.dpr === dpr && c.width === Math.round(w * dpr)) return;
+    var bw = Math.round(w * dpr);
+    var bh = Math.round(h * dpr);
+    if (FX.w === w && FX.h === h && FX.dpr === dpr && c.width === bw && c.height === bh) {
+      c.classList.add('sized');
+      return;
+    }
     FX.w = w;
     FX.h = h;
     FX.dpr = dpr;
-    c.width = Math.round(w * dpr);
-    c.height = Math.round(h * dpr);
+    c.width = bw;
+    c.height = bh;
+    c.classList.add('sized');
     seedParts();
   }
   function drawFx(t) {
     var c = FX.canvas;
-    if (!c || !FX.w || !FX.h) return;
+    if (!c || !(FX.w >= 8) || !(FX.h >= 8)) return;
+    if (c.width < Math.round(FX.w * (FX.dpr || 1)) - 2 || c.height < Math.round(FX.h * (FX.dpr || 1)) - 2) return;
     var ctx = c.getContext('2d');
     if (!ctx) return;
     var dpr = FX.dpr;
@@ -3320,9 +3367,9 @@ footer.site{margin-top:auto}
     }
     S.model = buildBoard(S.feed, S.targets, new Date());
     S.spine = spineData();
+    markNav();
     ensureView(S.view);
     paintSys();
-    markNav();
     applyFilter();
     if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
   }
@@ -3352,7 +3399,11 @@ footer.site{margin-top:auto}
       if (b.classList.contains('navbtn') || b.parentElement === $('bnav')) b.setAttribute('aria-current', on ? 'page' : 'false');
     });
     var locked = !S.sample && !S.admin;
-    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', !locked && v.id === 'v-' + S.view); });
+    var checking = !S.authReady && !S.sample && S.feedState === 'checking';
+    document.querySelectorAll('.view').forEach(function (v) {
+      var show = checking ? v.id === 'v-' + S.view : (!locked && v.id === 'v-' + S.view);
+      v.classList.toggle('on', show);
+    });
     var label = 'Workforce';
     VIEWS.forEach(function (v) { if (v[0] === S.view) label = v[1]; });
     if ($('crumb')) $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + label;
@@ -3362,8 +3413,8 @@ footer.site{margin-top:auto}
     S.view = view;
     var next = location.pathname + location.search + '#' + view;
     if ((location.pathname + location.search + location.hash) !== next) history.replaceState(null, '', next);
-    ensureView(view);
     markNav();
+    ensureView(view);
     applyFilter();
     window.scrollTo(0, 0);
     if (view === 'home' && FX.org && !FX.reduce && !document.hidden) {
@@ -3760,6 +3811,67 @@ footer.site{margin-top:auto}
     }
     return list;
   }
+  function fixtureDeskAgents(strip) {
+    var spec = [
+      ['Operations Manager', 'Ops desk'],
+      ['Command Center', 'Command Center desk'],
+      ['PersonalAssistant', 'Personal assistant'],
+      ['Brainstorm', 'Idea bot'],
+      ['Trend Scout', 'Research scout'],
+      ['Editor', 'Content editor'],
+      ['Posts', 'Content posts'],
+      ['Content Engine', 'Content engine'],
+      ['Client Acquisition', 'Growth outreach'],
+      ['Prospecting', 'Growth prospecting'],
+      ['Funnel Researcher', 'Funnel research'],
+      ['Carousels', 'Content carousels'],
+      ['Captions', 'Content captions'],
+      ['Inbox Fixture', 'Ops inbox'],
+      ['Calendar Fixture', 'Ops calendar'],
+      ['Brief Fixture', 'Ops brief'],
+      ['Reminder Fixture', 'Ops reminders'],
+      ['Handoff Fixture', 'Ops handoff'],
+      ['Files Fixture', 'Ops files'],
+      ['Digest Fixture', 'Ops digest'],
+      ['Followup Fixture', 'Ops follow up'],
+      ['Billing Fixture', 'Ops billing'],
+      ['Schedule Fixture', 'Ops schedule'],
+      ['Script Fixture', 'Content scripts'],
+      ['Hook Fixture', 'Content hooks'],
+      ['Thumbnail Fixture', 'Content thumbnails'],
+      ['Reel Fixture', 'Content reels'],
+      ['Copy Fixture', 'Content copy'],
+      ['YouTube Fixture', 'Content youtube'],
+      ['Instagram Fixture', 'Content instagram'],
+      ['Ad Fixture', 'Growth ads'],
+      ['Magnet Fixture', 'Growth magnet'],
+      ['Outreach Fixture', 'Growth outreach'],
+      ['Campaign Fixture', 'Growth campaign'],
+      ['Traffic Fixture', 'Growth traffic'],
+      ['Seo Fixture', 'Growth seo'],
+      ['Scout Fixture', 'Research scout'],
+      ['Analyst Fixture', 'Research analyst'],
+      ['Search Fixture', 'Research search'],
+      ['Study Fixture', 'Research study'],
+      ['Intel Fixture', 'Research intel'],
+      ['Life Fixture', 'Personal life admin'],
+      ['Family Fixture', 'Personal family'],
+      ['Private Fixture', 'Personal private'],
+      ['Utility Fixture A', 'Utility helper'],
+      ['Utility Fixture B', 'Utility helper'],
+      ['Utility Fixture C', 'Utility helper']
+    ];
+    return spec.map(function (row, i) {
+      var working = i < 10;
+      return {
+        name: row[0],
+        role: strip ? String(row[1]).replace(/desk/ig, 'unit') : row[1],
+        status: working ? 'working' : 'idle',
+        currentWork: working ? ('Fixture task ' + (i + 1) + ' is in progress.') : '',
+        lastReportAt: '2026-11-11T08:00:00-06:00'
+      };
+    });
+  }
   async function loadFeed() {
     var ticket = ++feedTicket;
     await loadTargets();
@@ -3770,7 +3882,9 @@ footer.site{margin-top:auto}
         if (ticket !== feedTicket) return;
         if (!res.ok) throw new Error('status');
         S.feed = await res.json();
-        if (S.fixture) S.feed.agents = fixtureAgents();
+        if (S.fixture === '1') S.feed.agents = fixtureAgents();
+        if (S.fixture === '2') S.feed.agents = fixtureDeskAgents(false);
+        if (S.fixture === '3') S.feed.agents = fixtureDeskAgents(true);
         S.feedState = 'ready';
         S.feedNote = '';
       } catch (e) {
@@ -3940,7 +4054,9 @@ footer.site{margin-top:auto}
     if (hash === 'team' || hash === 'floor') hash = 'home';
     if (namesHas(hash)) S.view = hash;
     markNav();
-    if (S.fixture && $('banner')) $('banner').textContent = 'SAMPLE. Fake 47-bot fixture for layout checks. These figures are not the live feed and they are not saved.';
+    if (S.fixture === '1' && $('banner')) $('banner').textContent = 'SAMPLE. Fake 47-bot fixture for layout checks. These figures are not the live feed and they are not saved.';
+    if (S.fixture === '2' && $('banner')) $('banner').textContent = 'SAMPLE. Fake desk-role fixture for layout checks. These figures are not the live feed and they are not saved.';
+    if (S.fixture === '3' && $('banner')) $('banner').textContent = 'SAMPLE. Fake plain-role fixture for layout checks. These figures are not the live feed and they are not saved.';
     $('sample-link').textContent = S.sample ? 'Owner feed' : 'Sample layout';
     $('sample-link').setAttribute('href', sampleHref());
     await bootAuth();

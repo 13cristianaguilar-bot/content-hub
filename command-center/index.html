@@ -81,12 +81,12 @@ a{color:var(--red-soft);text-decoration:none}
 .gdot.dim{background:#555;box-shadow:none}
 .maincol{min-width:0;display:flex;flex-direction:column;min-height:100dvh}
 .top{
-  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;min-width:0;
   background:#0c0c0c;border-bottom:1px solid var(--line);
 }
-.crumb{font-size:13px;color:var(--muted);white-space:nowrap}
+.crumb{font-size:13px;color:var(--muted);white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .crumb b{color:var(--ink);font-weight:650}
-.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:0 10px;min-height:40px}
+.search{flex:1;max-width:420px;min-width:0;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:0 10px;min-height:40px}
 .search input{flex:1;border:0;background:transparent;outline:none;font-size:14px;min-width:0}
 .clock{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
 .ask{
@@ -439,11 +439,11 @@ body[data-ready] .shimmer{display:none}
 .sysline{font-size:12px;color:var(--muted);white-space:nowrap}
 .kbd{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
 .hero-grid{display:grid;grid-template-columns:1.45fr .85fr;gap:12px;margin-bottom:12px}
-.org{position:relative;min-height:420px;overflow:hidden;background:
-  radial-gradient(420px 220px at 50% 45%,rgba(237,48,57,.18),transparent 70%),
-  rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 48px rgba(237,48,57,.12)}
-.org .ph{padding:14px 14px 0}
+.org{position:relative;min-height:420px;overflow:hidden;background-color:#0c0c0c;background-image:radial-gradient(360px 120px at 50% 100%,rgba(237,48,57,.14),transparent 70%);
+  border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
+.org .ph{padding:14px 14px 0;align-items:flex-start}
+.org .ph h2{flex:none;overflow-wrap:normal;white-space:nowrap}
+.org .ph .sub{min-width:0;text-align:right}
 .org-svg{width:100%;height:380px;display:block}
 .org-svg text{font-family:var(--sans);font-size:11px;fill:#d4d4d4}
 .node{cursor:pointer}
@@ -451,11 +451,25 @@ body[data-ready] .shimmer{display:none}
 .node.idle{opacity:.55}
 .node.blocked .core,.node.offline .core{stroke:#ed3039}
 .node.working .core{stroke:#3DDC97}
-.org-stage{position:relative;height:380px}
-.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-.org-fx.live{will-change:transform}
+.org-stage{position:relative;height:380px;border-radius:14px;overflow:hidden;background-color:#090909;background-image:radial-gradient(420px 150px at 50% 92%,rgba(237,48,57,.16),transparent 68%)}
+.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent}
+.org-links{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 .org-svg{position:relative;z-index:1;height:100%}
-.org.is-off .ringping,.org.is-off .stepper .ping .dot,html.anim-off .ringping,html.anim-off .gdot,html.anim-off .ticker-track,html.anim-off .stepper .ping .dot{animation-play-state:paused}
+.org-map{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:10px 8px 8px;min-height:0}
+.org-desks{display:grid;gap:8px 6px;align-items:start}
+.cluster{min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px}
+.cluster-h{width:100%;min-width:0;text-align:center}
+.cluster-h b{display:block;font-size:12px;font-weight:750;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cluster-h span{display:block;color:var(--muted);font-size:10px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.org-dots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;max-width:100%}
+.org-dot{width:11px;height:11px;border-radius:50%;border:0;padding:0;background:#3a3a3a;opacity:.48;flex:none}
+.org-dot.working{width:14px;height:14px;background:#ed3039;opacity:1;border:2px solid #3DDC97}
+.org-dot.ping{position:relative}
+.org-dot.ping:after,.org-hub.ping:after{content:"";position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(237,48,57,.85);animation:sonar 2.2s ease-out infinite;pointer-events:none}
+.org-hubrow{display:flex;flex-direction:column;align-items:center;gap:4px}
+.org-hub{position:relative;width:46px;height:46px;border-radius:50%;border:2px solid #3DDC97;background:#ed3039;padding:0}
+.org-hubrow em{font-style:normal;font-size:12px;font-weight:750}
+.org.is-off .ringping,.org.is-off .org-dot.ping:after,.org.is-off .org-hub.ping:after,.org.is-off .stepper .ping .dot,html.anim-off .ringping,html.anim-off .org-dot.ping:after,html.anim-off .org-hub.ping:after,html.anim-off .gdot,html.anim-off .ticker-track,html.anim-off .stepper .ping .dot{animation-play-state:paused}
 .stepper{display:none;list-style:none;margin:0;padding:8px 12px 14px}
 .stepper>li{position:relative;padding:0 0 16px 28px}
 .stepper .dot{position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid #555;background:#111}
@@ -477,12 +491,16 @@ body[data-ready] .shimmer{display:none}
 .term .log{max-height:340px;padding:4px 14px 14px}
 .term .row.in{animation:slidein .45s ease both}
 .lv.alert{color:#2a0a0c;background:#ed3039}
-.gaugerow{display:grid;grid-template-columns:1.15fr repeat(3,.7fr);gap:12px;margin-bottom:12px}
-.speedo,.gcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
-.speedo{background:radial-gradient(280px 140px at 50% 80%,rgba(237,48,57,.2),transparent 70%),rgba(255,255,255,.03)}
-.speedo .num,.gcard .num{font-size:54px;line-height:.9}
+.gaugerow{display:grid;grid-template-columns:minmax(0,1.15fr) repeat(3,minmax(0,.7fr));gap:12px;margin-bottom:12px}
+.speedo,.gcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);min-width:0}
+.speedo{display:flex;flex-direction:column;justify-content:center;background-color:#0e0e0e;background-image:radial-gradient(160px 80px at 50% 70%,rgba(237,48,57,.2),transparent 72%)}
+.speedo-face{position:relative;width:min(100%,200px);margin:0 auto}
+.speedo svg{width:100%;height:auto;display:block}
+.speedo-read{position:absolute;left:0;right:0;top:44%;text-align:center;pointer-events:none}
+.speedo .num{font-size:34px;line-height:.85;display:block}
+.gcard .num{font-size:32px;line-height:.9}
 .gcard{text-align:center}
-.gcard svg,.speedo svg{width:100%;height:auto;display:block}
+.gcard svg{width:100%;height:100%;display:block}
 .tile{position:relative;text-align:left;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px 12px 10px;color:inherit;min-width:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
 .tile .num{font-size:40px;line-height:1;display:block;margin:6px 0 2px}
 .tile .l{font-size:12px;color:var(--muted);font-weight:650}
@@ -510,7 +528,7 @@ body[data-ready] .shimmer{display:none}
 @keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
   .hero-grid,.gaugerow,.splitview,.two{grid-template-columns:1fr}
-  .org-svg{display:none}
+  .org-svg,.org-map,.org-links{display:none}
   .org-stage{height:88px}
   .stepper{display:block}
   .org{min-height:0}
@@ -536,7 +554,7 @@ body[data-ready] .shimmer{display:none}
 .goal h2{font-family:var(--serif);font-weight:400;font-size:28px;margin:8px 0 4px}
 .ringbox.lg{width:150px;height:150px;margin:0 auto}
 .ringbox.lg .ctr b{font-family:var(--serif);font-size:34px;font-weight:400}
-.gcard .ringbox{width:112px;height:112px;margin:0 auto}
+.gcard .ringbox{width:min(112px,100%);height:auto;aspect-ratio:1;margin:0 auto}
 .gcard .words,.goal .words{font-size:16px;font-weight:750}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .tag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:3px 8px;color:var(--muted)}
@@ -567,8 +585,12 @@ body[data-ready] .shimmer{display:none}
 .stepper .bots{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;padding:0;list-style:none}
 .stepper .bots li{padding:0}
 .stepper .bots button{border:1px solid var(--line);background:rgba(255,255,255,.03);color:inherit;border-radius:999px;padding:4px 8px;font-size:12px}
-.speedo .lbl{display:block;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.speedo .lbl{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
 footer.site{margin-top:auto}
+@media(max-width:1180px){
+  .sysline,.kbd{display:none}
+  .search{max-width:260px}
+}
 @media(max-width:1100px){
   .trackgrid{grid-template-columns:1fr 1fr}
   .goalgrid{grid-template-columns:1fr 1fr}
@@ -733,7 +755,8 @@ footer.site{margin-top:auto}
   };
   var params = new URLSearchParams(location.search);
   var S = {
-    sample: params.get('sample') === '1',
+    sample: params.get('sample') === '1' || params.get('fixture') === '1',
+    fixture: params.get('fixture') === '1',
     feed: null,
     targets: null,
     feedState: 'checking',
@@ -2508,10 +2531,43 @@ footer.site{margin-top:auto}
     }).join('') + '</ul>' : '<p class="quiet">' + esc(m.winCopy) + '</p>';
     return gameHtml(m) + '<section class="panel" style="margin-top:12px"><div class="ph"><h2>Wins</h2><p class="sub">This Monday-start week. Flames mark a real win. XP is on the level card.</p></div>' + list + '</section>';
   }
+  function finite(n, fallback) {
+    return typeof n === 'number' && isFinite(n) ? n : fallback;
+  }
+  function agentBlob(a) {
+    var raw = ((a && a.name) || '') + ' ' + ((a && a.role) || '');
+    raw = raw.replace(/[_./-]+/g, ' ').replace(/([a-z\d])([A-Z])/g, '$1 $2');
+    return ' ' + raw.toLowerCase() + ' ';
+  }
+  function deskNameFor(a) {
+    var blob = agentBlob(a);
+    var rules = [
+      ['Personal', /\b(personal|family|private)\b/],
+      ['Ops', /\b(ops|operations|inbox|calendar|gmail|emails?|stripe|briefs?|reminders?|handoffs?|files|digests?|follow ?ups?|invoices?|billing|schedules?|crm)\b/],
+      ['Content', /\b(content|scripts?|hooks?|films?|youtube|instagram|reels?|copy|editors?|posts?|captions?|thumbnails?)\b/],
+      ['Growth', /\b(growth|ads?|funnels?|attract|convert|magnets?|seo|outreach|campaigns?|traffic)\b/],
+      ['Research', /\b(research|scouts?|searches|search|analysts?|intel|studies|study)\b/]
+    ];
+    var i;
+    for (i = 0; i < rules.length; i++) if (rules[i][1].test(blob)) return rules[i][0];
+    return 'Other';
+  }
+  function deskMeta(total, live) {
+    var bots = total === 1 ? '1 bot' : (total + ' bots');
+    if (!live) return bots + ', idle';
+    if (live === 1) return bots + ', 1 live';
+    return bots + ', ' + live + ' live';
+  }
+  function structuredAgents(cards) {
+    return cards.some(function (a) {
+      return a.reportsTo === 'Cristian' || /desk/i.test(a.role || '') || /desk/i.test(a.name || '');
+    });
+  }
   function orgHtml(m) {
     if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
     var cards = m.agentCards || [];
     if (!cards.length) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">No agents in this feed.</p></section>';
+    if (!structuredAgents(cards)) return clusterOrg(m, cards);
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var desks = [];
     var bots = [];
@@ -2520,6 +2576,7 @@ footer.site{margin-top:auto}
       (desk ? desks : bots).push(a);
     });
     var cx = 480, cy = 200;
+    S.orgLinkSpace = 'view';
     var nodes = [{ id: 'n0', name: 'Cristian', role: 'Owner', status: 'working', work: 'The desks report here.', report: 'This node is the hub, not a metric.', parent: '' }];
     var pos = { n0: { x: cx, y: cy, r: 28, ang: 0 } };
     var deskNode = {};
@@ -2539,6 +2596,7 @@ footer.site{margin-top:auto}
     Object.keys(buckets).forEach(function (key) {
       var parentId = key ? deskNode[key] : 'n0';
       var parent = pos[parentId];
+      if (!parent || !isFinite(parent.x) || !isFinite(parent.y)) return;
       var base = parent.ang != null && parentId !== 'n0' ? parent.ang : -Math.PI / 2;
       var list = buckets[key];
       var mid = Math.ceil(list.length / 2);
@@ -2556,8 +2614,12 @@ footer.site{margin-top:auto}
     });
     nodes.forEach(function (n) {
       var p = pos[n.id];
-      p.x = Math.max(28, Math.min(932, p.x));
-      p.y = Math.max(24, Math.min(396, p.y));
+      if (!p) return;
+      p.x = finite(p.x, cx);
+      p.y = finite(p.y, cy);
+      p.r = finite(p.r, 6);
+      p.x = Math.max(p.r + 8, Math.min(960 - p.r - 8, p.x));
+      p.y = Math.max(p.r + 8, Math.min(420 - p.r - 8, p.y));
     });
     S.orgNodes = nodes;
     function fill(status) {
@@ -2567,15 +2629,21 @@ footer.site{margin-top:auto}
       return '#3a3a3a';
     }
     function link(a, b) {
+      if (!a || !b || !isFinite(a.x) || !isFinite(a.y) || !isFinite(b.x) || !isFinite(b.y)) return null;
+      var dx = b.x - a.x, dy = b.y - a.y;
+      if (dx * dx + dy * dy < 16) return null;
       var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       var cpx = mx * 0.62 + cx * 0.38, cpy = my * 0.62 + cy * 0.38;
+      if (!isFinite(cpx) || !isFinite(cpy)) return null;
       return { d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1), x0: a.x, y0: a.y, cx: cpx, cy: cpy, x1: b.x, y1: b.y };
     }
     var paths = '';
     S.orgLinks = [];
+    var labelDesk = desks.length > 0 && desks.length <= 8;
     nodes.forEach(function (n) {
       if (!n.parent) return;
       var L = link(pos[n.parent], pos[n.id]);
+      if (!L) return;
       paths += '<path d="' + L.d + '" fill="none" stroke="rgba(237,48,57,.35)" stroke-width="1.2"/>';
       if (S.orgLinks.length < 8) S.orgLinks.push(L);
     });
@@ -2586,16 +2654,17 @@ footer.site{margin-top:auto}
     });
     var shapes = nodes.map(function (n) {
       var p = pos[n.id];
+      if (!p || !isFinite(p.x) || !isFinite(p.y) || !isFinite(p.r)) return '';
       var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
       var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
       var label = '';
-      if (n.id === 'n0' || n.parent === 'n0') {
-        var ang = n.id === 'n0' ? Math.PI / 2 : (p.ang || 0);
+      if (n.id === 'n0' || (labelDesk && n.parent === 'n0')) {
+        var ang = n.id === 'n0' ? Math.PI / 2 : finite(p.ang, 0);
         var lx = n.id === 'n0' ? p.x : p.x - Math.cos(ang) * (p.r + 18);
         var ly = n.id === 'n0' ? p.y + p.r + 16 : p.y - Math.sin(ang) * (p.r + 16);
-        label = '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+        if (isFinite(lx) && isFinite(ly)) label = '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
       }
-      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '">' + ping + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r + '" fill="' + fill(n.status) + '"/><title>' + esc(n.name + '. ' + (n.role || '') + '. ' + n.work) + '</title>' + label + '</g>';
+      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '">' + ping + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r.toFixed(1) + '" fill="' + fill(n.status) + '"/><title>' + esc(n.name + '. ' + (n.role || '') + '. ' + n.work) + '</title>' + label + '</g>';
     }).join('');
     var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="Agent hand-off. Cristian in the center, desks around him, bots on the desks.">' + paths + shapes + '</svg>';
     function stepItem(n) {
@@ -2612,6 +2681,74 @@ footer.site{margin-top:auto}
       }).join('') + '</ul>' : '') + '</li>';
     }).join('') + '</ul></li>';
     return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(String(nodes.length)) + ' nodes. Click one for current work and the last report.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
+  }
+  function clusterOrg(m, cards) {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var order = ['Ops', 'Content', 'Growth', 'Research', 'Personal', 'Other'];
+    var groups = {};
+    order.forEach(function (name) { groups[name] = []; });
+    cards.forEach(function (a) {
+      var key = deskNameFor(a);
+      if (!groups[key]) key = 'Other';
+      groups[key].push(a);
+    });
+    var nodes = [{ id: 'n0', name: 'Cristian', role: 'Owner', status: 'working', work: 'The desks report here.', report: 'This node is the hub, not a metric.', parent: '' }];
+    var desks = [];
+    order.forEach(function (name) {
+      var list = groups[name];
+      if (!list || !list.length) return;
+      list.sort(function (a, b) {
+        var aw = a.status === 'working' ? 0 : 1;
+        var bw = b.status === 'working' ? 0 : 1;
+        if (aw !== bw) return aw - bw;
+        return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+      });
+      var id = 'n' + nodes.length;
+      var live = 0;
+      list.forEach(function (a) { if (a.status === 'working') live += 1; });
+      var deskNode = { id: id, name: name, role: 'Desk', status: live ? 'working' : 'idle', work: deskMeta(list.length, live) + '. Grouped from role and name.', report: 'No separate desk record in the feed.', parent: 'n0', count: list.length, live: live };
+      nodes.push(deskNode);
+      desks.push(deskNode);
+      list.forEach(function (b) {
+        nodes.push({ id: 'n' + nodes.length, name: b.name, role: b.role || 'Bot', status: b.status || 'idle', work: b.work || 'No current work in the feed.', report: b.report || 'No report time', parent: id });
+      });
+    });
+    var pingLeft = reduce ? 0 : 6;
+    nodes.forEach(function (n) {
+      n.ping = !!(n.parent && n.parent !== 'n0' && n.status === 'working' && pingLeft > 0);
+      if (n.ping) pingLeft -= 1;
+    });
+    S.orgNodes = nodes;
+    S.orgLinks = [];
+    S.orgLinkSpace = 'css';
+    function stepItem(n) {
+      var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
+      if (n.ping) cls += ' ping';
+      return '<li class="' + cls + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(n.id) + '"><b>' + esc(n.name) + '</b><span class="work">' + esc(n.role || '') + (n.work ? ' · ' + esc(n.work) : '') + '</span></button>';
+    }
+    var steps = stepItem(nodes[0]);
+    steps += '<ul>' + desks.map(function (d) {
+      var kids = nodes.filter(function (n) { return n.parent === d.id; });
+      return stepItem(d) + (kids.length ? '<ul class="bots">' + kids.map(function (b) {
+        return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button></li>';
+      }).join('') + '</ul>' : '') + '</li>';
+    }).join('') + '</ul></li>';
+    var deskWord = desks.length === 1 ? '1 desk' : (desks.length + ' desks');
+    var sub = cards.length + (cards.length === 1 ? ' agent' : ' agents') + ' across ' + deskWord + '. Click one for current work and the last report.';
+    var deskHtml = desks.map(function (d) {
+      var kids = nodes.filter(function (n) { return n.parent === d.id; });
+      var meta = deskMeta(d.count, d.live);
+      var buttons = kids.map(function (b) {
+        var cls = b.status === 'working' ? 'working' : 'idle';
+        if (b.ping) cls += ' ping';
+        var label = b.name + (b.role ? ', ' + b.role : '');
+        return '<button type="button" class="org-dot ' + cls + '" data-node="' + esc(b.id) + '" title="' + esc(label) + '" aria-label="' + esc(b.name) + '"></button>';
+      }).join('');
+      return '<div class="cluster" data-desk="' + esc(d.id) + '"><div class="cluster-h" title="' + esc(d.name + '. ' + meta) + '"><b>' + esc(d.name) + '</b><span>' + esc(meta) + '</span></div><div class="org-dots">' + buttons + '</div></div>';
+    }).join('');
+    var hubPing = !reduce && desks.some(function (d) { return d.live; }) ? ' ping' : '';
+    var map = '<div class="org-map"><div class="org-desks" style="grid-template-columns:repeat(' + desks.length + ',minmax(0,1fr))">' + deskHtml + '</div><div class="org-hubrow"><button type="button" class="org-hub' + hubPing + '" data-node="n0" data-hub="1" aria-label="Cristian"></button><em>Cristian</em></div></div>';
+    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(sub) + '</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas><svg class="org-links" viewBox="0 0 2 2" preserveAspectRatio="none" aria-hidden="true"></svg>' + map + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   function levelWord(level) {
     var l = String(level || 'info').toLowerCase();
@@ -2740,7 +2877,44 @@ footer.site{margin-top:auto}
       });
     }
   }
+  function syncFlatLinks() {
+    var svg = document.querySelector('#v-home .org-links');
+    if (!svg) {
+      if (S.orgLinkSpace !== 'view') S.orgLinkSpace = 'view';
+      return;
+    }
+    var stage = svg.parentElement;
+    if (!stage) return;
+    var rect = stage.getBoundingClientRect();
+    var w = Math.round(rect.width);
+    var h = Math.round(rect.height);
+    if (!(w >= 8) || !(h >= 8)) return;
+    var hub = stage.querySelector('[data-hub]');
+    if (!hub) return;
+    var hb = hub.getBoundingClientRect();
+    var x0 = hb.left + hb.width / 2 - rect.left;
+    var y0 = hb.top + hb.height / 2 - rect.top;
+    var paths = '';
+    var links = [];
+    Array.prototype.forEach.call(stage.querySelectorAll('[data-desk]'), function (el) {
+      var dots = el.querySelector('.org-dots') || el;
+      var b = dots.getBoundingClientRect();
+      var x1 = b.left + b.width / 2 - rect.left;
+      var y1 = b.top + b.height / 2 - rect.top;
+      if (!isFinite(x0) || !isFinite(y0) || !isFinite(x1) || !isFinite(y1)) return;
+      var cpx = (x0 + x1) / 2;
+      var cpy = (y0 + y1) / 2;
+      paths += '<path d="M' + x0.toFixed(1) + ',' + y0.toFixed(1) + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1) + ' ' + x1.toFixed(1) + ',' + y1.toFixed(1) + '" fill="none" stroke="rgba(237,48,57,.4)" stroke-width="1.15"/>';
+      if (links.length < 8) links.push({ x0: x0, y0: y0, cx: cpx, cy: cpy, x1: x1, y1: y1 });
+    });
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+    svg.textContent = '';
+    if (paths) svg.insertAdjacentHTML('afterbegin', paths);
+    S.orgLinks = links;
+    S.orgLinkSpace = 'css';
+  }
   function sizeFx() {
+    syncFlatLinks();
     var c = FX.canvas;
     if (!c) return;
     var rect = c.getBoundingClientRect();
@@ -2762,35 +2936,42 @@ footer.site{margin-top:auto}
     var ctx = c.getContext('2d');
     if (!ctx) return;
     var dpr = FX.dpr;
+    if (!isFinite(dpr) || dpr <= 0) dpr = 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, FX.w, FX.h);
     ctx.fillStyle = '#ed3039';
     var parts = FX.parts;
     var i = 0;
     for (i = 0; i < parts.length; i++) {
       var p = parts[i];
+      if (!isFinite(p.x) || !isFinite(p.y) || !isFinite(p.vx) || !isFinite(p.vy)) continue;
       p.x += p.vx;
       p.y += p.vy;
       if (p.x < 0) p.x += FX.w;
       else if (p.x > FX.w) p.x -= FX.w;
       if (p.y < 0) p.y += FX.h;
       else if (p.y > FX.h) p.y -= FX.h;
-      ctx.globalAlpha = p.a;
+      if (!isFinite(p.s) || p.s <= 0 || p.s > 3) continue;
+      ctx.globalAlpha = isFinite(p.a) ? p.a : 0.15;
       ctx.fillRect(p.x, p.y, p.s, p.s);
     }
     var links = S.orgLinks || [];
     var n = links.length < 8 ? links.length : 8;
     if (n) {
-      var sx = FX.w / 960;
-      var sy = FX.h / 420;
+      var cssSpace = S.orgLinkSpace === 'css';
+      var sx = cssSpace ? 1 : FX.w / 960;
+      var sy = cssSpace ? 1 : FX.h / 420;
       ctx.globalAlpha = 0.9;
       for (i = 0; i < n; i++) {
         var L = links[i];
+        if (!L || !isFinite(L.x0) || !isFinite(L.y0) || !isFinite(L.x1) || !isFinite(L.y1) || !isFinite(L.cx) || !isFinite(L.cy)) continue;
         var u = ((t * 0.00022) + i / n) % 1;
         var k = 1 - u;
         var x = k * k * L.x0 + 2 * k * u * L.cx + u * u * L.x1;
         var y = k * k * L.y0 + 2 * k * u * L.cy + u * u * L.y1;
-        ctx.fillRect(x * sx, y * sy, 2.4, 2.4);
+        if (!isFinite(x) || !isFinite(y)) continue;
+        ctx.fillRect(x * sx, y * sy, 2.2, 2.2);
       }
     }
     ctx.globalAlpha = 1;
@@ -2913,14 +3094,17 @@ footer.site{margin-top:auto}
     armClock();
   }
   function speedoHtml(score) {
-    var R = 78;
+    var R = 68;
     var C = Math.PI * R;
-    var p = score == null ? 0 : Math.max(0, Math.min(100, score)) / 100;
-    var off = (C * (1 - p)).toFixed(2);
-    var arc = score == null ? '' : '<path class="arc" d="M22 108 A78 78 0 0 1 178 108" fill="none" stroke="#ed3039" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + C.toFixed(2) + '" data-off="' + off + '"/>';
-    var num = score == null ? '<span class="num" style="font-size:28px">No score</span>' : '<span class="num"><span class="cu" data-to="' + esc(String(score)) + '">' + esc(String(score)) + '</span></span>';
-    var note = score == null ? 'No side has a score yet.' : 'Average of the sides that have data.';
-    return '<div class="speedo"><svg viewBox="0 0 200 128" role="img" aria-label="' + esc(note) + '"><path d="M22 108 A78 78 0 0 1 178 108" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="14" stroke-linecap="round"/>' + arc + '</svg>' + num + '<span class="lbl">Weekly score</span><p class="src">' + esc(note) + '</p></div>';
+    var p = score == null ? 0 : Math.max(0, Math.min(100, Number(score)));
+    if (!isFinite(p)) p = 0;
+    var off = C * (1 - p / 100);
+    if (!isFinite(off)) off = C;
+    var shown = score == null || !isFinite(Number(score)) ? null : Math.round(Number(score));
+    var arc = shown == null ? '' : '<path class="arc" d="M22 92 A68 68 0 0 1 158 92" fill="none" stroke="#ed3039" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + C.toFixed(2) + '" data-off="' + off.toFixed(2) + '"/>';
+    var num = shown == null ? '<span class="num" style="font-size:22px">No score</span>' : '<span class="num"><span class="cu" data-to="' + esc(String(shown)) + '">' + esc(String(shown)) + '</span></span>';
+    var note = shown == null ? 'No side has a score yet.' : 'Average of the sides that have data.';
+    return '<div class="speedo"><div class="speedo-face"><svg viewBox="0 0 180 108" preserveAspectRatio="xMidYMid meet" role="img" aria-label="' + esc(note) + '"><path d="M22 92 A68 68 0 0 1 158 92" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="12" stroke-linecap="round"/>' + arc + '</svg><div class="speedo-read">' + num + '<span class="lbl">Weekly score</span></div></div><p class="src">' + esc(note) + '</p></div>';
   }
   function gaugeCard(side, label) {
     var s = S.model.sides[side];
@@ -3546,6 +3730,36 @@ footer.site{margin-top:auto}
     S.feedState = 'ready';
     S.feedNote = '';
   }
+  function fixtureAgents() {
+    var desks = [
+      ['Ops', 'Operations runner'],
+      ['Content', 'Content script writer'],
+      ['Growth', 'Growth campaign bot'],
+      ['Research', 'Research scout'],
+      ['Personal', 'Personal assistant'],
+      ['Other', 'Utility helper']
+    ];
+    var longNames = [
+      'Operations Morning Digest Coordinator',
+      'Content Hook And Script Drafting Bot',
+      'Growth Funnel Experiment Runner'
+    ];
+    var list = [];
+    var i;
+    for (i = 0; i < 47; i++) {
+      var desk = desks[i % desks.length];
+      var working = i < 10;
+      var name = i < longNames.length ? longNames[i] : (desk[0] + ' Fixture ' + (i < 9 ? '0' : '') + (i + 1));
+      list.push({
+        name: name,
+        role: desk[1],
+        status: working ? 'working' : 'idle',
+        currentWork: working ? ('Fixture task ' + (i + 1) + ' is in progress.') : '',
+        lastReportAt: '2026-11-11T08:00:00-06:00'
+      });
+    }
+    return list;
+  }
   async function loadFeed() {
     var ticket = ++feedTicket;
     await loadTargets();
@@ -3556,6 +3770,7 @@ footer.site{margin-top:auto}
         if (ticket !== feedTicket) return;
         if (!res.ok) throw new Error('status');
         S.feed = await res.json();
+        if (S.fixture) S.feed.agents = fixtureAgents();
         S.feedState = 'ready';
         S.feedNote = '';
       } catch (e) {
@@ -3725,6 +3940,7 @@ footer.site{margin-top:auto}
     if (hash === 'team' || hash === 'floor') hash = 'home';
     if (namesHas(hash)) S.view = hash;
     markNav();
+    if (S.fixture && $('banner')) $('banner').textContent = 'SAMPLE. Fake 47-bot fixture for layout checks. These figures are not the live feed and they are not saved.';
     $('sample-link').textContent = S.sample ? 'Owner feed' : 'Sample layout';
     $('sample-link').setAttribute('href', sampleHref());
     await bootAuth();
@@ -3736,6 +3952,7 @@ footer.site{margin-top:auto}
     document.body.setAttribute('data-ready', '1');
     window.__cc = {
       sample: S.sample,
+      fixture: S.fixture,
       model: function () { return S.model; },
       metrics: function () { return S.model && S.model.metrics; }
     };

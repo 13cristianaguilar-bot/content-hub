@@ -27,18 +27,18 @@
   --side:240px;
 }
 *{box-sizing:border-box}
-html{color-scheme:dark;-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
-html,body{margin:0;background:#080808;color:var(--ink)}
+html{color-scheme:dark;-webkit-text-size-adjust:100%;scrollbar-gutter:stable;background:#0c0c0c}
+html,body{margin:0;background:#0c0c0c;color:var(--ink)}
 body{
   font-family:var(--sans);font-size:15px;line-height:1.45;min-height:100dvh;
   -webkit-font-smoothing:antialiased;
-  background:#080808;
+  background:#0c0c0c;
 }
 body[data-ready]{
   background:
     radial-gradient(880px 480px at 82% -12%,rgba(237,48,57,.24),transparent 56%),
     radial-gradient(640px 380px at 0% 0%,rgba(237,48,57,.08),transparent 52%),
-    #080808;
+    #0c0c0c;
 }
 body:before{
   content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -473,8 +473,9 @@ body[data-ready] .shimmer{display:none}
     display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:35;
     background:#0c0c0c;
     border-top:1px solid var(--line);padding:4px 2px calc(6px + env(safe-area-inset-bottom));
+    transform:translateY(var(--bnav-shift, 0px));
   }
-  html.lock .bnav{display:none}
+  html.lock .bnav,html.kb .bnav{display:none}
   .bnav button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;min-height:48px}
   .bnav button.on{color:var(--red-soft)}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom));max-width:calc(100% - 24px)}
@@ -651,12 +652,14 @@ body[data-ready] .shimmer{display:none}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
   .chat{transform:translateY(105%)}
   .hero-grid,.gaugerow,.splitview,.two{grid-template-columns:1fr}
-  .org-svg,.org-map,.org-links{display:none}
-  .viewseg button{min-height:44px;padding:0 14px}
+  .viewseg button,.loop-nav button{min-height:44px;padding:0 14px}
   .loop-meters{grid-template-columns:1fr}
-  .org-stage{display:none}
-  .stepper{display:block}
-  .org{min-height:0}
+  .org-svg text{font-size:24px}
+  .org-svg .hublab{font-size:32px}
+  .org-svg .hubcount,.org-svg .botlab{font-size:24px}
+  .org-svg .botwork,.org-svg .hubtag{font-size:20px}
+  #v-home>.snx-list{margin:0 0 12px;padding:12px 12px 14px;border-radius:22px;background:#070707;border:1px solid rgba(255,255,255,.1)}
+  .snx-more{margin-top:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--ink);border-radius:999px;min-height:44px;padding:0 16px;font-weight:750}
   .ph{flex-direction:column;align-items:flex-start}
   .shimmer{inset:12px 12px auto}
   .term{min-height:0}
@@ -1020,6 +1023,7 @@ footer.site{margin-top:auto}
     orgZoom: '',
     orgFocus: '',
     orgView: 'map',
+    signalAll: false,
     loopRot: 0,
     authReady: false,
     user: null,
@@ -2728,12 +2732,17 @@ footer.site{margin-top:auto}
     return signalShell('snx-clear', signalHead(stats) + '<div class="snx-clear"><p class="snx-kicker">Clear</p><h3>Board clear this session</h3><p class="snx-notes">' + stats.clears + ' clears, ' + stats.xp + ' session XP, level ' + stats.level + '. The reminders payload still has these rows.</p><button type="button" class="snx-go" data-snx="restore" title="This browser only. Does not write the feed.">Show the feed again</button></div>' + signalFoot(source, block, ranked));
   }
   function signalPlainHtml(open) {
-    var rows = open.map(function (row) {
+    var narrow = window.matchMedia && window.matchMedia('(max-width:760px)').matches;
+    var cap = 5;
+    var cut = !!(narrow && !S.signalAll && open.length > cap);
+    var shown = cut ? open.slice(0, cap) : open;
+    var rows = shown.map(function (row) {
       var on = row.id === S.signalId;
       var amt = row.amount == null ? '' : '<b>' + esc(money(row.amount)) + '</b>';
       return '<li><button type="button" class="snx-row' + (on ? ' is-on' : '') + '" data-snx="lock" data-id="' + esc(row.id) + '" aria-pressed="' + (on ? 'true' : 'false') + '"><span class="snx-row-title">' + esc(row.title) + '</span><span class="snx-row-meta">' + dueChip(row.due, false) + amt + '</span></button></li>';
     }).join('');
-    return '<div class="snx-list"><h3>On this board</h3><ol class="snx-plain">' + rows + '</ol></div>';
+    var more = (narrow && open.length > cap) ? '<button type="button" class="snx-more" data-snx="all">' + (S.signalAll ? 'Show less' : 'Show all') + '</button>' : '';
+    return '<div class="snx-list"><h3>On this board</h3><ol class="snx-plain">' + rows + '</ol>' + more + '</div>';
   }
   function signalRadarHtml(block, ranked, split, source) {
     var open = split.open;
@@ -3000,24 +3009,62 @@ footer.site{margin-top:auto}
       signalNudge();
     }
   }
+  function homeNarrow() {
+    return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
+  }
+  function placeWorkforce() {
+    var home = $('v-home');
+    if (!home) return;
+    var snx = home.querySelector('#signal-now');
+    var grid = home.querySelector('.hero-grid');
+    if (!snx || !grid) return;
+    var narrow = homeNarrow();
+    if (placeWorkforce.narrow != null && placeWorkforce.narrow !== narrow && S.model && !placeWorkforce.busy) {
+      placeWorkforce.narrow = narrow;
+      S.signalAll = false;
+      placeWorkforce.busy = true;
+      signalRepaint();
+      placeWorkforce.busy = false;
+      return;
+    }
+    placeWorkforce.narrow = narrow;
+    var list = snx.querySelector('.snx-list') || home.querySelector(':scope > .snx-list');
+    var foot = snx.querySelector('.snx-foot');
+    Array.prototype.forEach.call(home.querySelectorAll(':scope > .snx-list'), function (el) {
+      if (el !== list) el.remove();
+    });
+    if (narrow && list) {
+      if (grid.previousElementSibling !== snx) snx.after(grid);
+      if (list.previousElementSibling !== grid) grid.after(list);
+      return;
+    }
+    if (list && list.parentElement !== snx) {
+      if (foot) snx.insertBefore(list, foot);
+      else snx.appendChild(list);
+    }
+    if (grid.previousElementSibling !== snx) snx.after(grid);
+  }
   function signalRepaint() {
     if (!S.model) return;
-    var old = document.querySelector('#v-home #signal-now');
+    var home = $('v-home');
+    var old = home && home.querySelector('#signal-now');
     if (!old) return;
     signalHide();
     SFX.canvas = null;
+    Array.prototype.forEach.call(home.querySelectorAll(':scope > .snx-list'), function (el) { el.remove(); });
     var holder = document.createElement('div');
     holder.innerHTML = remindersHtml(S.model);
     var next = holder.firstElementChild;
     if (!next) return;
     old.replaceWith(next);
+    placeWorkforce();
     signalMount();
   }
   function signalSelect(id) {
     S.signalId = id || '';
     var root = document.querySelector('#v-home .snx');
     if (!root) return;
-    Array.prototype.forEach.call(root.querySelectorAll('[data-snx="lock"]'), function (el) {
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home [data-snx="lock"]'), function (el) {
       var on = !!S.signalId && el.getAttribute('data-id') === S.signalId;
       el.classList.toggle('is-on', on);
       if (el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -3105,6 +3152,11 @@ footer.site{margin-top:auto}
     signalRepaint();
   }
   function signalAct(action, id, el) {
+    if (action === 'all') {
+      S.signalAll = !S.signalAll;
+      signalRepaint();
+      return;
+    }
     if (action === 'restore') { signalRestore(); return; }
     if (action === 'done') { signalDone(id, el); return; }
     if (action === 'lock') { signalSelect(id || ''); }
@@ -3926,9 +3978,10 @@ footer.site{margin-top:auto}
     var anchor = ux > 0.45 ? 'start' : (ux < -0.45 ? 'end' : 'middle');
     var ax = x + ux * (reach + 20) + (anchor === 'start' ? 6 : (anchor === 'end' ? -6 : 0));
     var ay = y + uy * (reach + 10);
-    var nameY = uy < -0.25 ? ay - 16 : ay;
-    var countY = nameY + 16;
-    var tagY = countY + 14;
+    var line = homeNarrow() ? 34 : 16;
+    var nameY = uy < -0.25 ? ay - line : ay;
+    var countY = nameY + line;
+    var tagY = countY + (homeNarrow() ? 30 : 14);
     return {
       anchor: anchor,
       name: { x: ax, y: nameY },
@@ -3990,16 +4043,25 @@ footer.site{margin-top:auto}
       }
       var nameDy = S.orgZoom ? -(n.hr + 22) : (n.nameDy || -(n.hr + 18));
       var countDy = S.orgZoom ? (nameDy + 14) : (n.countDy != null ? n.countDy : nameDy + 13);
+      if (homeNarrow()) {
+        nameDy -= 16;
+        countDy = nameDy + 34;
+      }
       return {
         anchor: 'middle',
         name: { x: x, y: y + nameDy },
         count: { x: x, y: y + countDy },
-        tag: { x: x, y: y + countDy + 14, show: false }
+        tag: { x: x, y: y + countDy + (homeNarrow() ? 30 : 14), show: false }
       };
     }
     if (n.stageHub) {
+      if (homeNarrow() && S.orgView !== 'loop') {
+        var above = -(n.hr + 48);
+        return { anchor: 'middle', name: { x: x, y: y + above }, count: { x: x, y: y + above + 34 } };
+      }
       var nameOff = S.orgZoom ? (n.hr + 20) : (S.orgView === 'loop' ? (n.outerRad + 16) : (n.nameDy || (n.hr + 18)));
       var countOff = S.orgZoom ? (n.hr + 34) : (S.orgView === 'loop' ? (n.outerRad + 28) : (n.countDy != null ? n.countDy : nameOff + 12));
+      if (homeNarrow()) countOff = nameOff + 34;
       return { anchor: 'middle', name: { x: x, y: y + nameOff }, count: { x: x, y: y + countOff } };
     }
     if (S.orgView !== 'loop' && !S.orgZoom) {
@@ -4011,7 +4073,7 @@ footer.site{margin-top:auto}
     var anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
     var lx = x + Math.cos(ang) * dist;
     var ly = y + Math.sin(ang) * dist;
-    return { anchor: anchor, name: { x: lx, y: ly }, count: { x: lx, y: ly + 11 } };
+    return { anchor: anchor, name: { x: lx, y: ly }, count: { x: lx, y: ly + (homeNarrow() ? 24 : 11) } };
   }
   function loopBoardHtml(focus) {
     var cap = S.stageCap || {};
@@ -4927,7 +4989,7 @@ footer.site{margin-top:auto}
     });
     window.addEventListener('resize', function () {
       clearTimeout(FX.resizeT);
-      FX.resizeT = setTimeout(function () { sizeFx(); signalSize(); signalNudge(); }, 150);
+      FX.resizeT = setTimeout(function () { sizeFx(); signalSize(); signalNudge(); placeWorkforce(); }, 150);
     });
     var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mq && mq.addEventListener) {
@@ -5367,7 +5429,7 @@ footer.site{margin-top:auto}
       }
     }, immediate ? 0 : 80);
   }
-  function hitNode(clientX, clientY) {
+  function hitNode(clientX, clientY, loose) {
     var svg = document.querySelector('#v-home .org-svg');
     if (!svg || !svg.createSVGPoint || !svg.getScreenCTM) return null;
     var pt = svg.createSVGPoint();
@@ -5376,6 +5438,8 @@ footer.site{margin-top:auto}
     var ctm = svg.getScreenCTM();
     if (!ctm) return null;
     var p = pt.matrixTransform(ctm.inverse());
+    var scale = (svg.getBoundingClientRect().width / 960) || 1;
+    var floor = loose ? (24 / scale) : 0;
     var best = null;
     var bestD = Infinity;
     (S.orgNodes || []).forEach(function (n) {
@@ -5384,7 +5448,7 @@ footer.site{margin-top:auto}
       var dx = p.x - n.vx;
       var dy = p.y - n.vy;
       var d = Math.sqrt(dx * dx + dy * dy);
-      var hit = n.hitR || 14;
+      var hit = Math.max(n.hitR || 14, floor);
       if (d <= hit && d < bestD) { best = n; bestD = d; }
     });
     return best;
@@ -5511,6 +5575,7 @@ footer.site{margin-top:auto}
     if (id === 'home') {
       syncTerm(S.model.activity, false);
       attachOrg();
+      placeWorkforce();
       signalMount();
     }
     kickVisuals(el);
@@ -6205,6 +6270,26 @@ footer.site{margin-top:auto}
         return;
       }
       if (e.target.closest('a[href]')) return;
+      if (Hover.pointer === 'touch' && !TouchScroll.moved && e.target.closest && e.target.closest('#v-home .org-svg')) {
+        var nodeEl = e.target.closest('.node');
+        var tapped = nodeEl ? nodeById(nodeEl.getAttribute('data-node')) : null;
+        if (!tapped) tapped = hitNode(e.clientX, e.clientY, true);
+        if (!tapped) { hideHover(); return; }
+        var tapG = nodeEl || e.target.closest('#v-home .org-svg').querySelector('.node[data-node="' + tapped.id + '"]');
+        if (tapped.stageHub) {
+          bubble('pop');
+          orgActivate(tapped.id);
+          return;
+        }
+        if (Hover.touchId !== tapped.id) {
+          Hover.touchId = tapped.id;
+          armHover(tapG || e.target, 'node:' + tapped.id, nodeSpec(tapped.id), true);
+          return;
+        }
+        bubble('pop');
+        orgActivate(tapped.id);
+        return;
+      }
       var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-org-view],[data-focus],[data-pick],[data-more]');
       if (!t) {
         if (Hover.pointer === 'touch') hideHover();
@@ -6493,6 +6578,7 @@ footer.site{margin-top:auto}
     renderBoard();
     deepLink();
     document.body.setAttribute('data-ready', '1');
+    scheduleBnav();
     window.__cc = {
       sample: S.sample,
       fixture: S.fixture,
@@ -6508,6 +6594,39 @@ footer.site{margin-top:auto}
       }
     };
   }
+  var bnavQueued = false;
+  function bnavTyping() {
+    var el = document.activeElement;
+    if (!el || el === document.body || el === document.documentElement) return false;
+    var tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || !!el.isContentEditable;
+  }
+  function placeBnav() {
+    var vv = window.visualViewport;
+    var gap = vv ? (window.innerHeight - (vv.height + vv.offsetTop)) : 0;
+    var typing = bnavTyping();
+    document.documentElement.classList.toggle('kb', typing);
+    var shift = (!typing && gap < 0) ? -gap : 0;
+    if (!isFinite(shift) || shift < 0 || shift > window.innerHeight) shift = 0;
+    document.documentElement.style.setProperty('--bnav-shift', (Math.round(shift * 100) / 100) + 'px');
+  }
+  function scheduleBnav() {
+    if (bnavQueued) return;
+    bnavQueued = true;
+    requestAnimationFrame(function () {
+      bnavQueued = false;
+      placeBnav();
+    });
+  }
+  scheduleBnav();
+  window.addEventListener('resize', scheduleBnav);
+  window.addEventListener('orientationchange', scheduleBnav);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', scheduleBnav);
+    window.visualViewport.addEventListener('scroll', scheduleBnav);
+  }
+  document.addEventListener('focusin', scheduleBnav);
+  document.addEventListener('focusout', scheduleBnav);
   start();
 })();
 </script>

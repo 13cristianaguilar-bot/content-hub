@@ -53,8 +53,7 @@ a{color:var(--red-soft);text-decoration:none}
 .app{position:relative;z-index:1;display:grid;grid-template-columns:var(--side) 1fr;min-height:100dvh}
 .sidenav{
   position:sticky;top:0;height:100dvh;overflow:auto;padding:18px 14px 16px;display:flex;flex-direction:column;gap:2px;
-  border-right:1px solid var(--line);background:rgba(8,8,8,.78);
-  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+  border-right:1px solid var(--line);background:#0c0c0c;
 }
 .brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px}
 .mark{width:28px;height:28px;border-radius:8px;background:#080808;border:1px solid #333;display:grid;grid-template-columns:repeat(5,1fr);gap:1.5px;padding:5px 4px;align-items:end;flex:none}
@@ -83,7 +82,7 @@ a{color:var(--red-soft);text-decoration:none}
 .maincol{min-width:0;display:flex;flex-direction:column;min-height:100dvh}
 .top{
   position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;
-  background:rgba(8,8,8,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+  background:#0c0c0c;border-bottom:1px solid var(--line);
 }
 .crumb{font-size:13px;color:var(--muted);white-space:nowrap}
 .crumb b{color:var(--ink);font-weight:650}
@@ -96,7 +95,7 @@ a{color:var(--red-soft);text-decoration:none}
 }
 .who{font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ghost{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:650;min-height:36px;padding:0 8px}
-main.stage{padding:16px 22px 40px}
+main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .view{display:none}
 .view.on{display:block}
 .banner{margin-bottom:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(237,48,57,.5);background:rgba(237,48,57,.14);font-weight:700}
@@ -218,9 +217,8 @@ html.lock body{position:fixed;left:0;right:0;width:100%}
 .scrim.on{opacity:1;pointer-events:auto}
 .drawer{
   position:fixed;top:0;right:0;height:100%;width:min(880px,calc(100% - 48px));z-index:65;
-  background:rgba(12,12,12,.96);border-left:1px solid var(--line);box-shadow:-20px 0 60px rgba(0,0,0,.45);
+  background:#0c0c0c;border-left:1px solid var(--line);box-shadow:-20px 0 60px rgba(0,0,0,.45);
   transform:translateX(104%);transition:transform .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;
-  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
 }
 .drawer.on{transform:none}
 .grab{display:none}
@@ -297,8 +295,8 @@ footer.site a{color:var(--muted)}
 .gdot{animation:pulse 1.8s ease-in-out infinite}
 .gdot.dim{animation:none}
 .live-age{max-width:280px;overflow:hidden;text-overflow:ellipsis}
-.shimmer{display:grid;gap:12px}
-.shimmer i{display:block;height:92px;border-radius:16px;background:linear-gradient(100deg,rgba(255,255,255,.04) 20%,rgba(255,255,255,.12) 40%,rgba(255,255,255,.04) 60%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.shimmer{position:absolute;inset:16px 22px auto;z-index:2;display:grid;gap:12px;pointer-events:none}
+.shimmer i{display:block;height:92px;border-radius:16px;background:rgba(255,255,255,.06);animation:pulse 1.3s ease-in-out infinite}
 .shimmer i:nth-child(2){height:150px;animation-delay:.1s}
 .shimmer i:nth-child(3){height:72px;animation-delay:.2s}
 body[data-ready] .shimmer{display:none}
@@ -348,23 +346,22 @@ body[data-ready] .shimmer{display:none}
 .heat i.wait{background:var(--watch)}
 .flame{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
 .xpbar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden}
-.xpbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#b71a23,#ed3039);box-shadow:0 0 16px rgba(237,48,57,.55);transition:width .9s cubic-bezier(.22,.8,.3,1)}
+.xpbar i{display:block;height:100%;width:100%;border-radius:99px;background:linear-gradient(90deg,#b71a23,#ed3039);transform:scaleX(0);transform-origin:left center;transition:transform .9s cubic-bezier(.22,.8,.3,1)}
 .arc{transition:stroke-dashoffset .9s cubic-bezier(.22,.8,.3,1)}
 .legend i.dash{display:inline-block;width:16px;height:0;border-top:1.5px dashed rgba(255,255,255,.55);margin:0 4px 0 0;vertical-align:middle}
 @media (hover:hover) and (pointer:fine){
-  .kpi:hover,.score:hover,.panel:hover,.desk:hover{border-color:rgba(237,48,57,.45)}
-  .desk:hover,.panel:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 28px rgba(237,48,57,.18)}
+  .kpi:hover,.score:hover,.panel:hover,.desk:hover,.tile:hover,.pick:hover{border-color:rgba(237,48,57,.45)}
+  .navbtn:hover{color:var(--ink)}
+  .navbtn.on:hover{color:#fff}
 }
 @media (prefers-reduced-motion:no-preference){
-  .view.on .score,.view.on .kpi,.view.on .panel,.view.on .desk{animation:rise .48s ease both}
-  .view.on .scores .score:nth-child(2),.view.on .krow .kpi:nth-child(2),.view.on .desks .desk:nth-child(2){animation-delay:.06s}
-  .view.on .scores .score:nth-child(3),.view.on .krow .kpi:nth-child(3),.view.on .desks .desk:nth-child(3){animation-delay:.12s}
-  .view.on .krow .kpi:nth-child(4),.view.on .desks .desk:nth-child(4){animation-delay:.18s}
-  .view.on .desks .desk:nth-child(5),.view.on .krow .kpi:nth-child(5){animation-delay:.24s}
+  .view.enter.on .score,.view.enter.on .kpi,.view.enter.on .panel,.view.enter.on .desk{animation:rise .48s ease}
+  .view.enter.on .scores .score:nth-child(2),.view.enter.on .krow .kpi:nth-child(2),.view.enter.on .desks .desk:nth-child(2){animation-delay:.06s}
+  .view.enter.on .scores .score:nth-child(3),.view.enter.on .krow .kpi:nth-child(3),.view.enter.on .desks .desk:nth-child(3){animation-delay:.12s}
+  .view.enter.on .krow .kpi:nth-child(4),.view.enter.on .desks .desk:nth-child(4){animation-delay:.18s}
+  .view.enter.on .desks .desk:nth-child(5),.view.enter.on .krow .kpi:nth-child(5){animation-delay:.24s}
 }
 @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.45}}
-@keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .mrow .quiet{grid-column:1;font-size:12px}
 .sheet-value{font-family:var(--mono);font-size:40px;letter-spacing:-.04em;margin:8px 0}
@@ -421,7 +418,7 @@ body[data-ready] .shimmer{display:none}
   .cmpx{grid-template-columns:1fr}
   .bnav{
     display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:35;
-    background:rgba(8,8,8,.96);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    background:#0c0c0c;
     border-top:1px solid var(--line);padding:4px 2px calc(6px + env(safe-area-inset-bottom));
   }
   html.lock .bnav{display:none}
@@ -434,7 +431,7 @@ body[data-ready] .shimmer{display:none}
 }
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation:none!important;transition:none!important}
-  .mover{display:none}
+  .org-fx{display:none}
 }
 .guide h2,.tile .num,.speedo .num,.sidehead h2{font-family:var(--serif);font-weight:400;letter-spacing:-.02em}
 .livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;background:rgba(61,220,151,.12);color:var(--good);border:1px solid rgba(61,220,151,.35);font-size:11px;font-weight:800;letter-spacing:.12em}
@@ -454,11 +451,16 @@ body[data-ready] .shimmer{display:none}
 .node.idle{opacity:.55}
 .node.blocked .core,.node.offline .core{stroke:#ed3039}
 .node.working .core{stroke:#3DDC97}
-.mover{fill:#ed3039;filter:drop-shadow(0 0 4px #ed3039)}
+.org-stage{position:relative;height:380px}
+.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.org-fx.live{will-change:transform}
+.org-svg{position:relative;z-index:1;height:100%}
+.org.is-off .ringping,.org.is-off .stepper .ping .dot,html.anim-off .ringping,html.anim-off .gdot,html.anim-off .ticker-track,html.anim-off .stepper .ping .dot{animation-play-state:paused}
 .stepper{display:none;list-style:none;margin:0;padding:8px 12px 14px}
 .stepper>li{position:relative;padding:0 0 16px 28px}
 .stepper .dot{position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid #555;background:#111}
-.stepper .working .dot{border-color:#3DDC97;box-shadow:0 0 0 6px rgba(61,220,151,.15);animation:sonar 2.2s ease-out infinite}
+.stepper .working .dot{border-color:#3DDC97;box-shadow:0 0 0 6px rgba(61,220,151,.15)}
+.stepper .ping .dot{animation:sonar 2.2s ease-out infinite}
 .stepper .idle .dot{border-color:#C4A35A}
 .stepper .blocked .dot{border-color:#ed3039}
 .stepper button.nodebtn{border:0;background:transparent;color:inherit;text-align:left;padding:0;width:100%}
@@ -473,7 +475,7 @@ body[data-ready] .shimmer{display:none}
 .dots i:nth-child(2){background:#FEBC2E}
 .dots i:nth-child(3){background:#28C840}
 .term .log{max-height:340px;padding:4px 14px 14px}
-.term .row{animation:slidein .45s ease both}
+.term .row.in{animation:slidein .45s ease both}
 .lv.alert{color:#2a0a0c;background:#ed3039}
 .gaugerow{display:grid;grid-template-columns:1.15fr repeat(3,.7fr);gap:12px;margin-bottom:12px}
 .speedo,.gcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
@@ -488,7 +490,6 @@ body[data-ready] .shimmer{display:none}
 .delta.up{color:#d7f0e0;border-color:rgba(61,220,151,.35);background:rgba(61,220,151,.1)}
 .delta.down{color:#ffd0d0;border-color:rgba(237,48,57,.4);background:rgba(237,48,57,.12)}
 .tile .tip{position:absolute;left:8px;right:8px;top:calc(100% - 8px);z-index:5;opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .2s ease,transform .2s ease;background:#121212;border:1px solid rgba(237,48,57,.35);border-radius:12px;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
-.tile:hover{border-color:rgba(237,48,57,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 28px rgba(237,48,57,.28)}
 .tile:hover .tip{opacity:1;transform:none}
 .spark.draw polyline{transition:stroke-dashoffset .9s ease}
 .splitview{display:grid;grid-template-columns:.9fr 1.1fr;gap:12px}
@@ -510,8 +511,11 @@ body[data-ready] .shimmer{display:none}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
   .hero-grid,.gaugerow,.splitview,.two{grid-template-columns:1fr}
   .org-svg{display:none}
+  .org-stage{height:88px}
   .stepper{display:block}
   .org{min-height:0}
+  .ph{flex-direction:column;align-items:flex-start}
+  .shimmer{inset:12px 12px auto}
   .term{min-height:0}
   .term .log{max-height:220px}
   .kbd{display:none}
@@ -558,7 +562,7 @@ body[data-ready] .shimmer{display:none}
 .livepill .gdot{animation:pulse 1.6s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .term .log .row{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px;align-items:start;padding:7px 0;border:0}
-.view.on .tile,.view.on .gcard,.view.on .speedo,.view.on .org,.view.on .term{animation:rise .48s ease both}
+.view.enter.on .tile,.view.enter.on .gcard,.view.enter.on .speedo,.view.enter.on .org,.view.enter.on .term{animation:rise .48s ease}
 .stepper ul{display:block}
 .stepper .bots{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;padding:0;list-style:none}
 .stepper .bots li{padding:0}
@@ -752,9 +756,12 @@ footer.site{margin-top:auto}
     chatOn: false,
     chatStarted: false,
     lockY: 0,
-    lastFocus: null
+    lastFocus: null,
+    painted: {}
   };
   var sb = null;
+  var feedTicket = 0;
+  var vizSeq = 0;
 
   function $(id) { return document.getElementById(id); }
   function esc(s) {
@@ -959,7 +966,9 @@ footer.site{margin-top:auto}
     var labs = pts.map(function (p) {
       return '<text x="' + p.x.toFixed(1) + '" y="' + (h - 8) + '" text-anchor="middle" fill="#737373" font-size="11">' + esc(shortLab(p.b.label)) + '</text>';
     }).join('');
-    return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Collected by week"><defs><linearGradient id="cashfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ed3039" stop-opacity=".42"/><stop offset="1" stop-color="#ed3039" stop-opacity="0"/></linearGradient></defs><polygon points="' + area + '" fill="url(#cashfill)"/><polyline fill="none" stroke="#ed3039" stroke-width="2.4" points="' + line + '"/>' + dots + labs + '</svg>';
+    vizSeq += 1;
+    var gid = 'cashfill' + vizSeq;
+    return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Collected by week"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ed3039" stop-opacity=".42"/><stop offset="1" stop-color="#ed3039" stop-opacity="0"/></linearGradient></defs><polygon points="' + area + '" fill="url(#' + gid + ')"/><polyline fill="none" stroke="#ed3039" stroke-width="2.4" points="' + line + '"/>' + dots + labs + '</svg>';
   }
   function funnelChart(steps) {
     if (!steps || !steps.length) return '';
@@ -2560,20 +2569,25 @@ footer.site{margin-top:auto}
     function link(a, b) {
       var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
       var cpx = mx * 0.62 + cx * 0.38, cpy = my * 0.62 + cy * 0.38;
-      return 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1);
+      return { d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1), x0: a.x, y0: a.y, cx: cpx, cy: cpy, x1: b.x, y1: b.y };
     }
     var paths = '';
-    var movers = '';
+    S.orgLinks = [];
     nodes.forEach(function (n) {
       if (!n.parent) return;
-      var d = link(pos[n.parent], pos[n.id]);
-      paths += '<path d="' + d + '" fill="none" stroke="rgba(237,48,57,.35)" stroke-width="1.2"/>';
-      if (!reduce) movers += '<circle r="2.3" class="mover"><animateMotion dur="' + (3.2 + (n.id.length % 5) * 0.45).toFixed(2) + 's" repeatCount="indefinite" path="' + d + '"/></circle>';
+      var L = link(pos[n.parent], pos[n.id]);
+      paths += '<path d="' + L.d + '" fill="none" stroke="rgba(237,48,57,.35)" stroke-width="1.2"/>';
+      if (S.orgLinks.length < 8) S.orgLinks.push(L);
+    });
+    var pingLeft = reduce ? 0 : 12;
+    nodes.forEach(function (n) {
+      n.ping = n.status === 'working' && pingLeft > 0;
+      if (n.ping) pingLeft -= 1;
     });
     var shapes = nodes.map(function (n) {
       var p = pos[n.id];
       var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
-      var ping = n.status === 'working' && !reduce ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
+      var ping = n.ping ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
       var label = '';
       if (n.id === 'n0' || n.parent === 'n0') {
         var ang = n.id === 'n0' ? Math.PI / 2 : (p.ang || 0);
@@ -2581,12 +2595,12 @@ footer.site{margin-top:auto}
         var ly = n.id === 'n0' ? p.y + p.r + 16 : p.y - Math.sin(ang) * (p.r + 16);
         label = '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
       }
-      var glow = n.status === 'working' ? ' filter="url(#nglow)"' : '';
-      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '">' + ping + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r + '" fill="' + fill(n.status) + '"' + glow + '/><title>' + esc(n.name + '. ' + (n.role || '') + '. ' + n.work) + '</title>' + label + '</g>';
+      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '">' + ping + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r + '" fill="' + fill(n.status) + '"/><title>' + esc(n.name + '. ' + (n.role || '') + '. ' + n.work) + '</title>' + label + '</g>';
     }).join('');
-    var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="Agent hand-off. Cristian in the center, desks around him, bots on the desks."><defs><filter id="nglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' + paths + movers + shapes + '</svg>';
+    var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="Agent hand-off. Cristian in the center, desks around him, bots on the desks.">' + paths + shapes + '</svg>';
     function stepItem(n) {
       var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
+      if (n.ping) cls += ' ping';
       return '<li class="' + cls + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(n.id) + '"><b>' + esc(n.name) + '</b><span class="work">' + esc(n.role || '') + (n.work ? ' · ' + esc(n.work) : '') + '</span></button>';
     }
     var steps = stepItem(nodes[0]);
@@ -2597,7 +2611,7 @@ footer.site{margin-top:auto}
         return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button></li>';
       }).join('') + '</ul>' : '') + '</li>';
     }).join('') + '</ul></li>';
-    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(String(nodes.length)) + ' nodes. Click one for current work and the last report.</p></div>' + svg + '<ol class="stepper">' + steps + '</ol></section>';
+    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(String(nodes.length)) + ' nodes. Click one for current work and the last report.</p></div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   function levelWord(level) {
     var l = String(level || 'info').toLowerCase();
@@ -2606,16 +2620,297 @@ footer.site{margin-top:auto}
     if (l === 'alert' || l === 'error') return ['alert', 'ALERT'];
     return ['info', 'INFO'];
   }
+  var TERM_CAP = 40;
   function termHtml(m) {
     if (!m.activity) return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><p class="quiet" style="padding:12px 14px">Not connected. The feed has no activity log.</p></section>';
     if (!m.activity.length) return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><p class="quiet" style="padding:12px 14px">The log was checked and it is empty.</p></section>';
-    var rows = m.activity.slice().reverse().slice(0, 14);
-    var body = rows.map(function (e, i) {
-      var lv = levelWord(e.level);
-      var msg = clean((e.actor ? e.actor + ': ' : '') + (e.message || ''));
-      return '<div class="row filterable" style="animation-delay:' + (i * 45) + 'ms"><span class="lv ' + lv[0] + '">' + lv[1] + '</span><span>' + esc(msg) + '</span></div>';
-    }).join('');
-    return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="ph" style="padding:8px 14px 0"><h2>Live log</h2><p class="sub">Newest first</p></div><div class="log">' + body + '</div></section>';
+    return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="ph" style="padding:8px 14px 0"><h2>Live log</h2><p class="sub">Newest first</p></div><div class="log" id="term-log"></div></section>';
+  }
+  function termKey(e) {
+    var msg = clean((e.actor ? e.actor + ': ' : '') + (e.message || ''));
+    return clean(e.at || '') + '|' + msg;
+  }
+  function termRow(e, fresh) {
+    var lv = levelWord(e.level);
+    var msg = clean((e.actor ? e.actor + ': ' : '') + (e.message || ''));
+    var row = document.createElement('div');
+    row.className = 'row filterable' + (fresh ? ' in' : '');
+    row.dataset.key = termKey(e);
+    var tag = document.createElement('span');
+    tag.className = 'lv ' + lv[0];
+    tag.textContent = lv[1];
+    var body = document.createElement('span');
+    body.textContent = msg;
+    row.appendChild(tag);
+    row.appendChild(body);
+    return row;
+  }
+  function syncTerm(activity, fresh) {
+    var log = $('term-log');
+    if (!log || !activity) return;
+    var seen = {};
+    Array.prototype.forEach.call(log.children, function (row) { if (row.dataset.key) seen[row.dataset.key] = 1; });
+    var incoming = [];
+    activity.slice().reverse().forEach(function (e) {
+      var key = termKey(e);
+      if (seen[key]) return;
+      seen[key] = 1;
+      incoming.push(e);
+    });
+    var anchor = log.firstChild;
+    incoming.forEach(function (e, i) {
+      log.insertBefore(termRow(e, !!fresh && i === 0), anchor);
+    });
+    while (log.children.length > TERM_CAP) log.removeChild(log.lastChild);
+  }
+  var FX = {
+    reduce: false,
+    visible: false,
+    running: false,
+    raf: 0,
+    genLive: 0,
+    clockT: 0,
+    clockAt: 0,
+    resizeT: 0,
+    jobs: [],
+    parts: [],
+    canvas: null,
+    org: null,
+    io: null,
+    dpr: 1,
+    w: 0,
+    h: 0
+  };
+  function motionReduce() {
+    return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
+  function armClock() {
+    clearTimeout(FX.clockT);
+    if (FX.running || document.hidden) return;
+    FX.clockT = setTimeout(function () {
+      tick();
+      armClock();
+    }, 1000);
+  }
+  function fxFrame(t, gen) {
+    if (!FX.running || FX.genLive !== gen) return;
+    FX.raf = requestAnimationFrame(function (now) { fxFrame(now, gen); });
+    if (document.hidden) return;
+    if (t - FX.clockAt >= 1000) {
+      FX.clockAt = t;
+      tick();
+    }
+    var i = 0;
+    while (i < FX.jobs.length) {
+      if (FX.jobs[i](t) === false) FX.jobs.splice(i, 1);
+      else i += 1;
+    }
+    if (!FX.reduce && FX.visible && FX.canvas) drawFx(t);
+    else if (!FX.jobs.length && !FX.visible) FX.stop();
+  }
+  FX.start = function () {
+    clearTimeout(FX.clockT);
+    if (FX.running || document.hidden) return;
+    FX.running = true;
+    var gen = ++FX.genLive;
+    FX.raf = requestAnimationFrame(function (now) { fxFrame(now, gen); });
+  };
+  FX.stop = function () {
+    FX.running = false;
+    FX.genLive += 1;
+    cancelAnimationFrame(FX.raf);
+    armClock();
+  };
+  function particleCap() {
+    if (FX.reduce) return 0;
+    return FX.w < 520 ? 18 : 36;
+  }
+  function seedParts() {
+    var n = particleCap();
+    FX.parts = [];
+    var i = 0;
+    for (i = 0; i < n; i++) {
+      FX.parts.push({
+        x: Math.random() * FX.w,
+        y: Math.random() * FX.h,
+        s: Math.random() * 1.6 + 0.6,
+        vx: (Math.random() - 0.5) * 0.28,
+        vy: (Math.random() - 0.5) * 0.28,
+        a: Math.random() * 0.28 + 0.08
+      });
+    }
+  }
+  function sizeFx() {
+    var c = FX.canvas;
+    if (!c) return;
+    var rect = c.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var w = Math.max(1, Math.round(rect.width));
+    var h = Math.max(1, Math.round(rect.height));
+    if (!w || !h) return;
+    if (FX.w === w && FX.h === h && FX.dpr === dpr && c.width === Math.round(w * dpr)) return;
+    FX.w = w;
+    FX.h = h;
+    FX.dpr = dpr;
+    c.width = Math.round(w * dpr);
+    c.height = Math.round(h * dpr);
+    seedParts();
+  }
+  function drawFx(t) {
+    var c = FX.canvas;
+    if (!c || !FX.w || !FX.h) return;
+    var ctx = c.getContext('2d');
+    if (!ctx) return;
+    var dpr = FX.dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, FX.w, FX.h);
+    ctx.fillStyle = '#ed3039';
+    var parts = FX.parts;
+    var i = 0;
+    for (i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.x < 0) p.x += FX.w;
+      else if (p.x > FX.w) p.x -= FX.w;
+      if (p.y < 0) p.y += FX.h;
+      else if (p.y > FX.h) p.y -= FX.h;
+      ctx.globalAlpha = p.a;
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+    var links = S.orgLinks || [];
+    var n = links.length < 8 ? links.length : 8;
+    if (n) {
+      var sx = FX.w / 960;
+      var sy = FX.h / 420;
+      ctx.globalAlpha = 0.9;
+      for (i = 0; i < n; i++) {
+        var L = links[i];
+        var u = ((t * 0.00022) + i / n) % 1;
+        var k = 1 - u;
+        var x = k * k * L.x0 + 2 * k * u * L.cx + u * u * L.x1;
+        var y = k * k * L.y0 + 2 * k * u * L.cy + u * u * L.y1;
+        ctx.fillRect(x * sx, y * sy, 2.4, 2.4);
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+  function paintCount(node, n) {
+    if (node.money) node.el.textContent = money(n);
+    else if (node.suffix === '%') node.el.textContent = Math.round(n) + '%';
+    else node.el.textContent = compact(n) + node.suffix;
+  }
+  function kickVisuals(root) {
+    if (!root) return;
+    var nodes = root.querySelectorAll('.cu');
+    var arcs = root.querySelectorAll('.arc');
+    var bars = root.querySelectorAll('.xpbar i');
+    var targets = [];
+    Array.prototype.forEach.call(nodes, function (el) {
+      var to = parseFloat(el.dataset.to);
+      if (!isFinite(to)) return;
+      targets.push({ el: el, to: to, money: el.dataset.money === '1', suffix: el.dataset.suffix || '' });
+    });
+    function finishBars() {
+      Array.prototype.forEach.call(arcs, function (arc) {
+        arc.style.strokeDashoffset = arc.getAttribute('data-off') || '0';
+      });
+      Array.prototype.forEach.call(bars, function (bar) {
+        var fill = parseFloat(bar.getAttribute('data-fill') || '0');
+        if (!isFinite(fill)) fill = 0;
+        fill = Math.max(0, Math.min(100, fill));
+        bar.style.transform = 'scaleX(' + (fill / 100) + ')';
+      });
+    }
+    if (FX.reduce) {
+      targets.forEach(function (node) { paintCount(node, node.to); });
+      finishBars();
+      return;
+    }
+    var t0 = performance.now();
+    if (targets.length) {
+      FX.jobs.push(function (t) {
+        var p = Math.min(1, (t - t0) / 800);
+        var e = 1 - Math.pow(1 - p, 3);
+        targets.forEach(function (node) { paintCount(node, node.to * e); });
+        if (p < 1) return;
+        targets.forEach(function (node) { paintCount(node, node.to); });
+        return false;
+      });
+    }
+    var armed = false;
+    FX.jobs.push(function () {
+      if (!armed) { armed = true; return; }
+      finishBars();
+      return false;
+    });
+    FX.start();
+  }
+  function attachOrg() {
+    var org = document.querySelector('#v-home .org');
+    var canvas = document.querySelector('#v-home .org-fx');
+    FX.org = org;
+    FX.canvas = canvas;
+    if (FX.io) { FX.io.disconnect(); FX.io = null; }
+    if (!org || !canvas) { FX.visible = false; return; }
+    sizeFx();
+    FX.visible = !FX.reduce && !document.hidden;
+    org.classList.toggle('is-off', !FX.visible);
+    canvas.classList.toggle('live', FX.visible);
+    if (window.IntersectionObserver) {
+      FX.io = new IntersectionObserver(function (entries) {
+        var hit = false;
+        entries.forEach(function (en) { if (en.isIntersecting) hit = true; });
+        var homeOn = $('v-home') && $('v-home').classList.contains('on');
+        FX.visible = !!(hit && homeOn && !FX.reduce && !document.hidden);
+        org.classList.toggle('is-off', !FX.visible);
+        canvas.classList.toggle('live', FX.visible);
+        if (FX.visible) FX.start();
+      }, { threshold: [0, 0.08] });
+      FX.io.observe(org);
+    }
+    if (FX.visible || FX.jobs.length) FX.start();
+  }
+  function bootMotion() {
+    FX.reduce = motionReduce();
+    document.addEventListener('visibilitychange', function () {
+      document.documentElement.classList.toggle('anim-off', document.hidden);
+      if (document.hidden) {
+        FX.visible = false;
+        if (FX.org) FX.org.classList.add('is-off');
+        if (FX.canvas) FX.canvas.classList.remove('live');
+        FX.running = false;
+        FX.genLive += 1;
+        cancelAnimationFrame(FX.raf);
+        clearTimeout(FX.clockT);
+        return;
+      }
+      tick();
+      if (FX.org && $('v-home') && $('v-home').classList.contains('on') && !FX.reduce) {
+        FX.visible = true;
+        FX.org.classList.remove('is-off');
+        if (FX.canvas) FX.canvas.classList.add('live');
+      }
+      if (FX.visible || FX.jobs.length) FX.start();
+      else armClock();
+    });
+    window.addEventListener('resize', function () {
+      clearTimeout(FX.resizeT);
+      FX.resizeT = setTimeout(sizeFx, 150);
+    });
+    var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq && mq.addEventListener) {
+      mq.addEventListener('change', function () {
+        FX.reduce = mq.matches;
+        if (FX.reduce) {
+          FX.visible = false;
+          FX.parts = [];
+          if (FX.canvas) FX.canvas.classList.remove('live');
+          if (FX.org) FX.org.classList.add('is-off');
+        }
+      });
+    }
+    armClock();
   }
   function speedoHtml(score) {
     var R = 78;
@@ -2677,6 +2972,14 @@ footer.site{margin-top:auto}
     if (fail && fail.countTo) items.push({ id: 'kpi:failed-charges', title: (fail.valueText || compact(fail.countTo)) + ' failed charges', meta: 'Failed charges', href: '', hrefLabel: '', note: 'Open the card. This board does not retry a charge.', kind: 'kpi' });
     return items;
   }
+  function reviewDetail(cur) {
+    var action = '';
+    if (!cur) return '<p class="quiet">Nothing else is waiting in this list.</p>';
+    if (cur.kind === 'kpi') action = '<button type="button" class="btn p" data-open-kpi="failed-charges">Open the card</button>';
+    else if (cur.href) action = '<a class="btn p" href="' + esc(cur.href) + '" target="_blank" rel="noopener noreferrer">' + esc(cur.hrefLabel || 'Open to approve') + '</a>';
+    else action = '<p class="quiet">No link on this item.</p>';
+    return '<p class="badge">' + esc(cur.meta || 'Review') + '</p><h2>' + esc(cur.title) + '</h2><p>' + esc(cur.note || '') + '</p>' + action + '<p class="src">This opens the source. The board does not send, stamp, or charge.</p>';
+  }
   function approvalHtml(m) {
     var known = m.callsKnown || m.emailsKnown || !!m.stripe || (m.metrics['failed-charges'] && m.metrics['failed-charges'].words !== 'Not connected');
     var items = approvalItems(m);
@@ -2686,11 +2989,7 @@ footer.site{margin-top:auto}
       return '<button type="button" class="pick' + (it.id === S.pick ? ' on' : '') + '" data-pick="' + esc(it.id) + '"><b>' + esc(it.title) + '</b><span>' + esc(it.meta || '') + '</span></button>';
     }).join('');
     var cur = items.filter(function (it) { return it.id === S.pick; })[0];
-    var action = '';
-    if (cur.kind === 'kpi') action = '<button type="button" class="btn p" data-open-kpi="failed-charges">Open the card</button>';
-    else if (cur.href) action = '<a class="btn p" href="' + esc(cur.href) + '" target="_blank" rel="noopener noreferrer">' + esc(cur.hrefLabel || 'Open to approve') + '</a>';
-    else action = '<p class="quiet">No link on this item.</p>';
-    var detail = '<div class="detailpane swap" id="detailpane"><p class="badge">' + esc(cur.meta || 'Review') + '</p><h2>' + esc(cur.title) + '</h2><p>' + esc(cur.note || '') + '</p>' + action + '<p class="src">This opens the source. The board does not send, stamp, or charge.</p></div>';
+    var detail = '<div class="detailpane" id="detailpane">' + reviewDetail(cur) + '</div>';
     return '<section class="splitview" id="approvals"><article class="panel"><div class="ph"><h2>Review</h2><p class="sub">Money moves, drafts, failed charges</p></div>' + picks + '</article><article class="panel">' + detail + '</article></section>';
   }
   function compactWins(m) {
@@ -2703,12 +3002,12 @@ footer.site{margin-top:auto}
   }
   function compactToday(m) {
     var rows = m.rows.filter(function (r) { return r.group === 'today' || r.group === 'upcoming' || r.group === 'drafts' || r.group === 'look'; });
-    if (!m.callsKnown && !m.emailsKnown && !rows.length) return '<article class="panel"><h2>Today</h2><p class="quiet">Not connected.</p></article>';
+    if (!m.callsKnown && !m.emailsKnown && !rows.length) return '<article class="panel" id="today-panel"><h2>Today</h2><p class="quiet">Not connected.</p></article>';
     var open = !!(S.more && S.more.today);
     var shown = open ? rows : rows.slice(0, 4);
     var body = shown.length ? shown.map(rowHtml).join('') : '<p class="quiet">Nothing on the list.</p>';
     var btn = rows.length > 4 ? '<button type="button" class="ghost" data-more="today">' + (open ? 'Show less' : 'View all') + '</button>' : '';
-    return '<article class="panel"><div class="ph"><h2>Today</h2>' + btn + '</div>' + body + '</article>';
+    return '<article class="panel" id="today-panel"><div class="ph"><h2>Today</h2>' + btn + '</div>' + body + '</article>';
   }
   function homeHtml(m) {
     var tiles = '<div class="krow">' + tileHtml(m.metrics.collected) + tileHtml(m.metrics.videos) + tileHtml(m.metrics.booked) + tileHtml(m.metrics.unsent) + '</div>';
@@ -2729,6 +3028,79 @@ footer.site{margin-top:auto}
     $('d-f').innerHTML = '<p class="src">From the feed agents list. This board does not message the bot.</p>';
     show('drawer');
   }
+  function viewHtml(id) {
+    var m = S.model;
+    var data = S.spine;
+    if (id === 'home') return homeHtml(m);
+    if (id === 'attract') return sideHead('attract', 'Attract', 'Posts, reach, outliers, and the work you log.') +
+      '<div class="krow">' + tileHtml(m.metrics['post-ig']) + tileHtml(m.metrics['post-x']) + tileHtml(m.metrics['post-youtube']) + tileHtml(m.metrics.videos) + '</div>' +
+      '<div class="plats" style="margin-top:12px">' + platHtml('ig') + platHtml('x') + platHtml('youtube') + '</div>' +
+      attractChartsHtml(m) +
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics.outliers) + card(m.metrics.magnets) + card(m.metrics.contacts) + card(m.metrics.community) + '</div>';
+    if (id === 'convert') return sideHead('convert', 'Convert', 'Calls, pipeline, and cash against the MRR target.') +
+      '<div class="funnel">' + card(m.metrics.contacts) + card(m.metrics.booked) + card(m.metrics.showed) + card(m.metrics.closed) + '</div>' +
+      convertChartsHtml(m) +
+      '<div class="two">' + donutHtml(m) + cashChartHtml(m) + '</div>' +
+      '<div class="stack" style="margin-top:12px">' + pipelineHtml(m) + stripeHtml(m) + '</div>' +
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics['show-rate']) + card(m.metrics['close-rate']) + card(m.metrics.collected) + card(m.metrics['cash-due']) + card(m.metrics.unsent) + card(m.metrics['failed-charges']) + '</div>';
+    if (id === 'transform') {
+      var clients = m.official.length ? '<div class="clients">' + m.official.map(clientHtml).join('') + '</div>' : '<article class="panel"><h2>Clients</h2><p class="quiet">Targets file did not load, so the client list is not guessed.</p></article>';
+      return sideHead('transform', 'Transform', 'One card per client. Quotes appear only when they were logged.') +
+        '<div class="krow">' + card(m.metrics['delivery-oldest']) + '</div>' +
+        '<div style="margin-top:12px">' + clients + '</div>' +
+        '<div style="margin-top:12px">' + otherRetainers(m) + '</div>';
+    }
+    if (id === 'goals') return '<section class="guide"><div><p class="gk">Goals</p><h2>The rings</h2><p>Big targets. The dashed ring is the target. The number is the current value, only when the feed has one.</p></div></section>' + goalsHtml(data);
+    if (id === 'projects') return '<section class="guide"><div><p class="gk">Projects</p><h2>Under each goal</h2><p>Status and an owner. The owner is Cristian or a bot desk.</p></div></section>' + projectsHtml(data);
+    if (id === 'tasks') return '<section class="guide"><div><p class="gk">Tasks</p><h2>Under each project</h2><p>Each task has a status, an owner, a triangle side, and a track.</p></div></section>' + tasksHtml(data);
+    if (id === 'winning') return '<section class="guide"><div><p class="gk">Winning</p><h2>Streaks and XP</h2><p>Flames are real wins this week. Points come from the floor log and cash in the feed.</p></div></section>' + winningHtml(m, data);
+    if (id === 'tracks') return '<section class="guide"><div><p class="gk">Tracks</p><h2>One card per track</h2><p>The list is targets.json. The number and the sparkline come from the feed. A track with no reading says Not connected.</p></div></section>' + tracksHtml(data);
+    if (id === 'funnels') return '<section class="guide"><div><p class="gk">Funnels</p><h2>The table</h2><p>Name, type, status, link, and conversions. A missing count stays Not connected.</p></div></section>' + funnelsHtml(data);
+    return '';
+  }
+  function releaseMotion() {
+    FX.jobs = [];
+    FX.visible = false;
+    FX.parts = [];
+    FX.canvas = null;
+    FX.org = null;
+    if (FX.io) { FX.io.disconnect(); FX.io = null; }
+  }
+  function ensureView(id) {
+    if (!S.model || lockedNow()) return;
+    var el = $('v-' + id);
+    if (!el || S.painted[id]) return;
+    if (!S.spine) S.spine = spineData();
+    el.innerHTML = viewHtml(id);
+    S.painted[id] = 1;
+    if (!FX.reduce) el.classList.add('enter');
+    if (id === 'home') {
+      syncTerm(S.model.activity, false);
+      attachOrg();
+    }
+    kickVisuals(el);
+  }
+  function updateReview() {
+    var root = $('approvals');
+    if (!root || !S.model) return;
+    var items = approvalItems(S.model);
+    if (!items.length) return;
+    if (!S.pick || !items.some(function (it) { return it.id === S.pick; })) S.pick = items[0].id;
+    var cur = null;
+    items.forEach(function (it) { if (it.id === S.pick) cur = it; });
+    root.querySelectorAll('.pick').forEach(function (btn) {
+      btn.classList.toggle('on', btn.getAttribute('data-pick') === S.pick);
+    });
+    var pane = $('detailpane');
+    if (pane) pane.innerHTML = reviewDetail(cur);
+  }
+  function updateToday() {
+    var panel = $('today-panel');
+    if (!panel || !S.model) return;
+    var holder = document.createElement('div');
+    holder.innerHTML = compactToday(S.model);
+    if (holder.firstElementChild) panel.replaceWith(holder.firstElementChild);
+  }
   function renderBoard() {
     var locked = lockedNow();
     var label = 'Workforce';
@@ -2747,86 +3119,28 @@ footer.site{margin-top:auto}
       var lp = $('lock-copy');
       if (lp) lp.textContent = S.kpiState === 'forbidden' ? 'That login is not the owner.' : 'Sign in as the owner to load the private feed. The sample layout stays on this page without a login.';
     }
+    releaseMotion();
+    S.painted = {};
+    S.spine = null;
+    VIEWS.forEach(function (v) {
+      var el = $('v-' + v[0]);
+      if (!el) return;
+      el.innerHTML = '';
+      el.classList.remove('enter');
+    });
     if (locked) {
-      VIEWS.forEach(function (v) { var el = $('v-' + v[0]); if (el) el.innerHTML = ''; });
       S.model = null;
       paintSys();
       markNav();
       return;
     }
-    var now = new Date();
-    S.model = buildBoard(S.feed, S.targets, now);
-    var m = S.model;
-    var data = spineData();
-    $('v-home').innerHTML = homeHtml(m);
-    $('v-attract').innerHTML = sideHead('attract', 'Attract', 'Posts, reach, outliers, and the work you log.') +
-      '<div class="krow">' + tileHtml(m.metrics['post-ig']) + tileHtml(m.metrics['post-x']) + tileHtml(m.metrics['post-youtube']) + tileHtml(m.metrics.videos) + '</div>' +
-      '<div class="plats" style="margin-top:12px">' + platHtml('ig') + platHtml('x') + platHtml('youtube') + '</div>' +
-      attractChartsHtml(m) +
-      '<div class="krow" style="margin-top:12px">' + card(m.metrics.outliers) + card(m.metrics.magnets) + card(m.metrics.contacts) + card(m.metrics.community) + '</div>';
-    $('v-convert').innerHTML = sideHead('convert', 'Convert', 'Calls, pipeline, and cash against the MRR target.') +
-      '<div class="funnel">' + card(m.metrics.contacts) + card(m.metrics.booked) + card(m.metrics.showed) + card(m.metrics.closed) + '</div>' +
-      convertChartsHtml(m) +
-      '<div class="two">' + donutHtml(m) + cashChartHtml(m) + '</div>' +
-      '<div class="stack" style="margin-top:12px">' + pipelineHtml(m) + stripeHtml(m) + '</div>' +
-      '<div class="krow" style="margin-top:12px">' + card(m.metrics['show-rate']) + card(m.metrics['close-rate']) + card(m.metrics.collected) + card(m.metrics['cash-due']) + card(m.metrics.unsent) + card(m.metrics['failed-charges']) + '</div>';
-    var clients = m.official.length ? '<div class="clients">' + m.official.map(clientHtml).join('') + '</div>' : '<article class="panel"><h2>Clients</h2><p class="quiet">Targets file did not load, so the client list is not guessed.</p></article>';
-    $('v-transform').innerHTML = sideHead('transform', 'Transform', 'One card per client. Quotes appear only when they were logged.') +
-      '<div class="krow">' + card(m.metrics['delivery-oldest']) + '</div>' +
-      '<div style="margin-top:12px">' + clients + '</div>' +
-      '<div style="margin-top:12px">' + otherRetainers(m) + '</div>';
-    $('v-goals').innerHTML = '<section class="guide"><div><p class="gk">Goals</p><h2>The rings</h2><p>Big targets. The dashed ring is the target. The number is the current value, only when the feed has one.</p></div></section>' + goalsHtml(data);
-    $('v-projects').innerHTML = '<section class="guide"><div><p class="gk">Projects</p><h2>Under each goal</h2><p>Status and an owner. The owner is Cristian or a bot desk.</p></div></section>' + projectsHtml(data);
-    $('v-tasks').innerHTML = '<section class="guide"><div><p class="gk">Tasks</p><h2>Under each project</h2><p>Each task has a status, an owner, a triangle side, and a track.</p></div></section>' + tasksHtml(data);
-    $('v-winning').innerHTML = '<section class="guide"><div><p class="gk">Winning</p><h2>Streaks and XP</h2><p>Flames are real wins this week. Points come from the floor log and cash in the feed.</p></div></section>' + winningHtml(m, data);
-    $('v-tracks').innerHTML = '<section class="guide"><div><p class="gk">Tracks</p><h2>One card per track</h2><p>The list is targets.json. The number and the sparkline come from the feed. A track with no reading says Not connected.</p></div></section>' + tracksHtml(data);
-    $('v-funnels').innerHTML = '<section class="guide"><div><p class="gk">Funnels</p><h2>The table</h2><p>Name, type, status, link, and conversions. A missing count stays Not connected.</p></div></section>' + funnelsHtml(data);
+    S.model = buildBoard(S.feed, S.targets, new Date());
+    S.spine = spineData();
+    ensureView(S.view);
     paintSys();
     markNav();
     applyFilter();
-    animateVisuals();
     if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
-  }
-  function animateVisuals() {
-    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    document.querySelectorAll('.cu').forEach(function (el) {
-      var to = parseFloat(el.dataset.to);
-      if (!isFinite(to)) return;
-      var isMoney = el.dataset.money === '1';
-      var suffix = el.dataset.suffix || '';
-      function paint(n) {
-        if (isMoney) el.textContent = money(n);
-        else if (suffix === '%') el.textContent = Math.round(n) + '%';
-        else el.textContent = compact(n) + suffix;
-      }
-      if (reduce) { paint(to); return; }
-      var t0 = performance.now();
-      function frame(t) {
-        var p = Math.min(1, (t - t0) / 800);
-        var e = 1 - Math.pow(1 - p, 3);
-        paint(to * e);
-        if (p < 1) requestAnimationFrame(frame);
-        else paint(to);
-      }
-      requestAnimationFrame(frame);
-    });
-    var arcs = document.querySelectorAll('.arc');
-    var bars = document.querySelectorAll('.xpbar i');
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        arcs.forEach(function (arc) { arc.style.strokeDashoffset = arc.getAttribute('data-off') || '0'; });
-        bars.forEach(function (bar) { bar.style.width = (bar.getAttribute('data-fill') || '0') + '%'; });
-      });
-    });
-    document.querySelectorAll('.spark.draw polyline').forEach(function (pl) {
-      if (!pl.getTotalLength) return;
-      var len = 0;
-      try { len = pl.getTotalLength(); } catch (err) { len = 0; }
-      if (!len) return;
-      pl.style.strokeDasharray = String(len);
-      pl.style.strokeDashoffset = reduce ? '0' : String(len);
-      if (!reduce) requestAnimationFrame(function () { pl.style.strokeDashoffset = '0'; });
-    });
   }
   function paintSys() {
     var ready = S.feedState === 'ready';
@@ -2864,9 +3178,21 @@ footer.site{margin-top:auto}
     S.view = view;
     var next = location.pathname + location.search + '#' + view;
     if ((location.pathname + location.search + location.hash) !== next) history.replaceState(null, '', next);
+    ensureView(view);
     markNav();
     applyFilter();
     window.scrollTo(0, 0);
+    if (view === 'home' && FX.org && !FX.reduce && !document.hidden) {
+      FX.visible = true;
+      FX.org.classList.remove('is-off');
+      if (FX.canvas) FX.canvas.classList.add('live');
+      sizeFx();
+      FX.start();
+    } else if (view !== 'home') {
+      FX.visible = false;
+      if (FX.org) FX.org.classList.add('is-off');
+      if (FX.canvas) FX.canvas.classList.remove('live');
+    }
   }
   function namesHas(v) { return VIEWS.some(function (t) { return t[0] === v; }); }
   function applyFilter() {
@@ -3149,31 +3475,9 @@ footer.site{margin-top:auto}
       S.admin = isAdmin(user);
       if (S.admin) await refreshKpis();
       else S.kpiState = user ? 'forbidden' : 'signedout';
-      sb.auth.onAuthStateChange(function (ev, session) {
-        if (!S.authReady) return;
-        if (ev === 'INITIAL_SESSION' || ev === 'TOKEN_REFRESHED') return;
-        var next = session && session.user;
-        S.user = next || null;
-        S.admin = isAdmin(next);
-        if (!S.admin) {
-          S.kpiState = next ? 'forbidden' : 'signedout';
-          S.kpiRows = [];
-          if (!S.sample) {
-            S.feed = null;
-            S.feedState = 'locked';
-            S.feedNote = S.kpiState === 'forbidden' ? 'That login is not the owner.' : 'Sign in to open the private feed.';
-          }
-          paintWho();
-          renderBoard();
-          return;
-        }
-        Promise.all([refreshKpis(), loadPrivate()]).then(async function () {
-          paintWho();
-          var p = S.pending;
-          S.pending = null;
-          if (p) await saveLog(p.metric, p.count, p.loggedOn, p.note, p.clientName);
-          else renderBoard();
-        });
+      sb.auth.onAuthStateChange(function (ev) {
+        if (ev === 'INITIAL_SESSION' || ev === 'TOKEN_REFRESHED' || ev === 'SIGNED_IN') return;
+        if (ev === 'SIGNED_OUT') applySignedOut();
       });
     } catch (e) {
       S.kpiState = 'signedout';
@@ -3188,14 +3492,36 @@ footer.site{margin-top:auto}
       S.targets = null;
     }
   }
+  function applySignedOut() {
+    if (!S.user && !S.admin && (S.sample || S.feedState === 'locked' || S.feedState === 'checking')) {
+      S.user = null;
+      S.admin = false;
+      paintWho();
+      return;
+    }
+    S.user = null;
+    S.admin = false;
+    S.kpiState = 'signedout';
+    S.kpiRows = [];
+    if (!S.sample) {
+      S.feed = null;
+      S.feedState = 'locked';
+      S.feedNote = 'Sign in to open the private feed.';
+    }
+    paintWho();
+    renderBoard();
+  }
   async function loadPrivate() {
+    var ticket = feedTicket;
     if (!sb) {
+      if (ticket !== feedTicket) return;
       S.feed = null;
       S.feedState = 'error';
       S.feedNote = 'Sign-in library did not load.';
       return;
     }
     var res = await sb.from('cc_feed').select('payload, updated_at').eq('id', 'today').maybeSingle();
+    if (ticket !== feedTicket) return;
     if (res.error) {
       S.feed = null;
       if (isMissingTable(res.error)) {
@@ -3221,15 +3547,19 @@ footer.site{margin-top:auto}
     S.feedNote = '';
   }
   async function loadFeed() {
+    var ticket = ++feedTicket;
     await loadTargets();
+    if (ticket !== feedTicket) return;
     if (S.sample) {
       try {
         var res = await fetch('today.sample.json', { cache: 'no-store' });
+        if (ticket !== feedTicket) return;
         if (!res.ok) throw new Error('status');
         S.feed = await res.json();
         S.feedState = 'ready';
         S.feedNote = '';
       } catch (e) {
+        if (ticket !== feedTicket) return;
         S.feed = null;
         S.feedState = 'error';
         S.feedNote = 'The sample file did not load.';
@@ -3244,7 +3574,12 @@ footer.site{margin-top:auto}
     }
     await loadPrivate();
   }
-  function tick() { $('clock').textContent = chicagoTime(new Date()) + ' CT'; }
+  function tick() {
+    var el = $('clock');
+    if (!el) return;
+    var text = chicagoTime(new Date()) + ' CT';
+    if (el.textContent !== text) el.textContent = text;
+  }
   function deepLink() {
     var open = params.get('open');
     if (!open || !S.model) return;
@@ -3271,8 +3606,8 @@ footer.site{margin-top:auto}
       var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-pick],[data-more]');
       if (!t) return;
       if (t.hasAttribute('data-node')) { openNode(t.getAttribute('data-node')); return; }
-      if (t.hasAttribute('data-pick')) { S.pick = t.getAttribute('data-pick'); renderBoard(); return; }
-      if (t.hasAttribute('data-more')) { var key = t.getAttribute('data-more'); S.more[key] = !S.more[key]; renderBoard(); return; }
+      if (t.hasAttribute('data-pick')) { S.pick = t.getAttribute('data-pick'); updateReview(); return; }
+      if (t.hasAttribute('data-more')) { var key = t.getAttribute('data-more'); S.more[key] = !S.more[key]; updateToday(); return; }
       if (t.hasAttribute('data-view')) { closeSheets(); go(t.getAttribute('data-view')); return; }
       if (t.hasAttribute('data-close')) { closeSheets(); return; }
       if (t.hasAttribute('data-open-row')) { openRow(t.getAttribute('data-open-row')); return; }
@@ -3293,7 +3628,11 @@ footer.site{margin-top:auto}
       if (t.hasAttribute('data-undo')) { undoLog(t.getAttribute('data-undo')); return; }
     });
     $('scrim').addEventListener('click', closeSheets);
-    $('qsearch').addEventListener('input', applyFilter);
+    var filterT = 0;
+    $('qsearch').addEventListener('input', function () {
+      clearTimeout(filterT);
+      filterT = setTimeout(applyFilter, 120);
+    });
     document.addEventListener('keydown', function (e) {
       if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
@@ -3316,10 +3655,9 @@ footer.site{margin-top:auto}
     });
     $('ask').addEventListener('click', openChat);
     $('signout').addEventListener('click', async function () {
-      if (sb) await sb.auth.signOut();
-      S.user = null; S.admin = false; S.kpiState = 'signedout'; S.kpiRows = [];
-      if (!S.sample) { S.feed = null; S.feedState = 'locked'; S.feedNote = 'Sign in to open the private feed.'; }
-      paintWho(); renderBoard();
+      if (!sb) { applySignedOut(); return; }
+      try { await sb.auth.signOut(); }
+      catch (e) { applySignedOut(); }
     });
     $('login-form').addEventListener('submit', async function (e) {
       e.preventDefault();
@@ -3336,6 +3674,15 @@ footer.site{margin-top:auto}
       }
       $('login-pw').value = '';
       closeSheets();
+      S.user = res.data.user;
+      S.admin = true;
+      S.kpiState = 'ready';
+      paintWho();
+      await Promise.all([refreshKpis(), loadFeed()]);
+      var pending = S.pending;
+      S.pending = null;
+      if (pending) await saveLog(pending.metric, pending.count, pending.loggedOn, pending.note, pending.clientName);
+      else renderBoard();
     });
     $('login-forgot').addEventListener('click', async function () {
       var email = $('login-email').value.trim();
@@ -3369,8 +3716,8 @@ footer.site{margin-top:auto}
   }
   async function start() {
     bind();
+    bootMotion();
     tick();
-    setInterval(tick, 30000);
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'today') hash = 'home';
     if (hash === 'money') hash = 'convert';

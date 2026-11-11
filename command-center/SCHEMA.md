@@ -291,6 +291,44 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 
 The page never prints an `id` field from this array.
 
+### `reminders` (SIGNAL NOW)
+
+Top-level object from the reminders bot. The Workforce view shows it under "What to do now". Omit the key when the bot has not synced. The page then says **Not connected. Reminders bot has not synced yet.** Do not invent rows.
+
+```json
+"reminders": {
+  "asOf": "2026-11-11T08:15:00-06:00",
+  "source": "reminders bot",
+  "counts": { "signalNow": 1, "futureSignal": 2, "noise": 6 },
+  "signalNow": [
+    {
+      "id": "rem-1",
+      "title": "Failed charge on Northwind",
+      "tied_to": "Northwind Studio",
+      "due": "2026-11-13",
+      "value_usd": 3000,
+      "notes": "Failed charge can take delivery offline.",
+      "href": "https://signals.marketing"
+    }
+  ]
+}
+```
+
+| Field | Notes |
+|---|---|
+| `asOf` | ISO time the bot wrote this block. The panel says `Reminders bot, updated <time CT>`. |
+| `source` | Who wrote it. The panel source line stays "Reminders bot". |
+| `counts.signalNow` | Count chip. Not computed from the array. |
+| `counts.futureSignal` | Count chip. Those rows are not listed on this panel. |
+| `counts.noise` | Count chip. Those rows are not listed on this panel. |
+| `signalNow` | Only the rows to show. `[]` means the bot synced and nothing is signal-now. |
+| `due` | ISO date (`2026-11-13`, shown as `Nov 13` with an overdue, today, or soon tint) or free text (`Now; failed charge can take delivery offline`), shown as typed in a pill. |
+| `value_usd` | Number, or `null`. `$3,000` is shown only when a number is present. |
+| `href` | `https` link, or `null`. A link opens in a new tab. |
+| `title`, `tied_to`, `notes` | Readable text. A row with no title is skipped. |
+
+`today.sample.json` carries fake SAMPLE rows for this block. `?fixture=2` loads that file and keeps `reminders` while it swaps the agent list.
+
 ### `activityLog`
 
 ```json

@@ -291,6 +291,62 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 
 The page never prints an `id` field from this array.
 
+### `reminders` (SIGNAL NOW)
+
+Workforce opens on Mission radar. The radar is the SIGNAL NOW view. There is no `concept` query. Omit `reminders` when the bot has not synced. The panel then says **Not connected. Reminders bot has not synced yet.** `signalNow: []` means the bot synced and nothing is signal-now. The panel then says **Nothing to do now.**
+
+```json
+"reminders": {
+  "asOf": "2026-11-11T08:15:00-06:00",
+  "source": "Reminders bot",
+  "counts": { "signalNow": 8, "futureSignal": 2, "noise": 6 },
+  "signalNow": [
+    {
+      "id": "rem-1",
+      "title": "Send the retainer ask",
+      "tied_to": "Northwind Studio",
+      "due": "2026-11-09",
+      "value_usd": 4500,
+      "notes": "Short briefing line.",
+      "href": "https://signals.marketing"
+    }
+  ]
+}
+```
+
+| Field | Notes |
+|---|---|
+| `asOf` | When the bot wrote this block. The footer shows it in America/Chicago. |
+| `source` | Short name of the writer. The page still labels the footer Reminders bot. |
+| `counts.signalNow` | Bot's own count. The page ranks the rows it can render. If that number differs, the footer says so. |
+| `counts.futureSignal`, `counts.noise` | Kept off this board. The footer names the counts. |
+| `signalNow[]` | Rows on the radar and in the list under it. |
+| `id` | Stable id. The browser uses it for the session done list. |
+| `title` | Required. A row with no title is skipped. |
+| `tied_to` | Who or what the row is about. Printed in the briefing. |
+| `due` | ISO date (`2026-11-13`) or a short phrase. The first word `overdue`, `today`, or `now` becomes that chip. |
+| `value_usd` | Number, or `null` when there is no dollar figure. `0` is a real number. |
+| `notes` | Printed in the radar briefing. |
+| `href` | `https` only, or `null`. The page opens it as Open source. |
+
+Rank, used for both the radar and the list: overdue first, then today or now, then soon (a date inside 7 days, or other free text), then later, then no due. Inside one band, an earlier calendar day comes first. A due phrase with no calendar day sorts after dated rows in that band. When the due day ties, rows with `value_usd` come first, highest first. `null` comes after every number, including 0. The original feed order breaks any tie that is still left.
+
+The inner ring is overdue. Then now, soon, and later. A larger blip is a higher `value_usd`. A row with no dollar figure stays small. If open rows would sit on top of each other, the page nudges angle and ring until the dots have a gap. Hover text is the dollar figure, or the due chip when there is no figure. Titles in the list wrap. They are not clipped.
+
+The list under the radar is the same rows in that rank. It stays on screen for a screen reader, for `prefers-reduced-motion`, and as the plain fallback. The disc is decorative for assistive tech. The list buttons are the keyboard path. Arrows or J and K move the lock. Enter locks the first row when none is locked. D marks the locked row done. Esc clears the lock.
+
+Mark done writes `sessionStorage` key `cc-signal-done` in this browser only. It does not write `cc_feed`. The button says so. A new tab shows the feed rows again. Show the feed again clears that key.
+
+| Figure | How it is computed |
+|---|---|
+| Session XP | 100 for each current `signalNow` id in `cc-signal-done`. Ids that are no longer in the feed are ignored. |
+| Level | 1 plus that count. |
+| Clears | That same count. |
+| Heat | Open rows whose chip is overdue, today, or now. |
+| At stake | Sum of numeric `value_usd` on open rows. `null` is left out. No numbers reads **No figures**. |
+
+Boss fight, Signal stack, and the earlier focus card with a short list are not in this build. They lived on branch `cursor/signal-now-concepts-008b` (pull request 72) and the focus card on `cursor/signal-now-reminders-92d2` (pull request 69).
+
 ### `activityLog`
 
 ```json

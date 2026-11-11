@@ -616,6 +616,105 @@ footer.site{margin-top:auto}
   .funtable td{border:0;padding:3px 0}
   .funtable td:before{content:attr(data-k);display:block;color:var(--dim);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 }
+/* Mission radar. The sweep canvas stays opacity 0 until .sized, and .sized is added only after the bitmap matches a box that is on screen. */
+.sn-chip{display:inline-flex;align-items:center;max-width:100%;min-height:28px;padding:0 10px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.06em;line-height:1;color:var(--ink);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);white-space:nowrap}
+.sn-chip.hot{color:#fff;background:var(--red);border-color:transparent;letter-spacing:.12em}
+.sn-chip.lg{min-height:34px;padding:0 14px;font-size:13px}
+.signal-now-off p{color:var(--muted);font-size:15px;line-height:1.45}
+.snx{position:relative;margin:0 0 16px;padding:16px 16px 12px;border-radius:22px;background:#070707;border:1px solid rgba(255,255,255,.1);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 24px 50px -36px rgba(0,0,0,.85);color:var(--ink);overflow:visible}
+.snx:before{content:"";position:absolute;left:18px;right:18px;top:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);pointer-events:none}
+.snx-head{position:relative;z-index:1;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 20px;margin-bottom:12px}
+.snx-kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red-soft);font-weight:800}
+.snx-head h2,.snx-hud h3,.snx-clear h3{font-family:var(--serif);font-weight:400;letter-spacing:-.03em}
+.snx-head h2{font-size:32px;line-height:1}
+.snx-readout{display:flex;flex-wrap:wrap;gap:10px 16px}
+.snx-readout span{display:flex;flex-direction:column;min-width:64px}
+.snx-readout b{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.04em;line-height:1.1}
+.snx-readout i{font-style:normal;color:var(--dim);font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.snx-readout .flame{width:14px;height:14px;margin-right:4px;vertical-align:-2px}
+.snx-foot{position:relative;z-index:1;margin-top:12px;display:grid;gap:3px}
+.snx-foot p{color:var(--dim);font-size:12px;line-height:1.4}
+.snx-keys kbd{font-family:var(--mono);font-size:10px;border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:1px 5px;color:var(--muted)}
+.snx-legend{position:relative;z-index:1;color:var(--muted);font-size:12px;line-height:1.4;margin:8px 0 0}
+.snx-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(240px,.85fr);gap:14px;align-items:start}
+.snx-hud{min-height:168px;padding:14px 14px 12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
+.snx-hud h3{font-size:clamp(26px,3vw,40px);line-height:1.08;margin-top:8px;overflow-wrap:anywhere}
+.brief-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:32px}
+.snx-val{font-family:var(--mono);font-weight:600;letter-spacing:-.04em;font-size:28px;line-height:1}
+.snx-val.lg{font-size:34px}
+.snx-noval{color:var(--muted);font-size:13px;font-weight:750}
+.snx-tied{margin-top:6px;font-weight:650}
+.snx-notes{margin-top:8px;color:var(--muted);font-size:14px;line-height:1.4}
+.snx-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.snx-go{border:0;border-radius:999px;min-height:44px;padding:0 16px;background:var(--red);color:#fff;font-weight:800}
+.snx-go:hover{background:var(--red-deep)}
+.snx-go:active{transform:scale(.96)}
+.snx-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);color:var(--ink);font-weight:750}
+.snx button:focus-visible,.snx a:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.snx-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;background:transparent;opacity:0}
+.snx-fx.sized{opacity:1}
+.disc-wrap{width:min(100%,520px);margin:0 auto;padding:36px 18px 8px;overflow:visible}
+.disc{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:visible;background:radial-gradient(circle at 50% 50%,rgba(237,48,57,.16),rgba(0,0,0,.2) 46%,#050505 72%);box-shadow:inset 0 0 0 1px rgba(237,48,57,.35),0 0 40px rgba(237,48,57,.08)}
+.disc:before,.disc:after{content:"";position:absolute;background:rgba(237,48,57,.28);pointer-events:none;z-index:1}
+.disc:before{left:9%;right:9%;top:50%;height:1px}
+.disc:after{top:9%;bottom:9%;left:50%;width:1px}
+.rings{position:absolute;inset:0;pointer-events:none;z-index:0}
+.rings i{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.14)}
+.rings .r0{border-color:rgba(237,48,57,.7);box-shadow:0 0 16px rgba(237,48,57,.18)}
+.ring-label{position:absolute;right:8%;transform:translateY(-50%);z-index:2;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:800;pointer-events:none;white-space:nowrap}
+.core{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;display:grid;place-items:center;z-index:2;pointer-events:none;background:radial-gradient(circle at 38% 32%,#ff8a8e,#ed3039 46%,#6a1016 80%);box-shadow:0 0 22px rgba(237,48,57,.55)}
+.core b{font-size:11px;letter-spacing:.16em;color:#fff}
+.orbit{position:absolute;inset:0;z-index:3;animation:snx-orbit 48s linear infinite;transform-origin:50% 50%}
+.arm{position:absolute;inset:0;pointer-events:none;transform:rotate(var(--ang))}
+.arm:hover,.arm:focus-within{z-index:6}
+.blip{position:absolute;left:50%;top:var(--top);width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:inherit;transform:translate(-50%,-50%);pointer-events:auto}
+.face{position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1));animation:snx-face 48s linear infinite}
+.disc:has(.arm:hover) .orbit,.disc:has(.arm:hover) .face,.disc:has(.arm:hover) .ping-t,.disc:has(.arm:focus-within) .orbit,.disc:has(.arm:focus-within) .face,.disc:has(.arm:focus-within) .ping-t{animation-play-state:paused}
+.dot{display:block;width:calc(12px + var(--scale) * 16px);height:calc(12px + var(--scale) * 16px);border-radius:50%;background:radial-gradient(circle at 35% 32%,#fff,#ed3039 46%,#7a1218);box-shadow:0 0 12px rgba(237,48,57,.85);transition:transform .35s cubic-bezier(.2,1.45,.3,1)}
+.blip.hot .dot{animation:pulse 1.25s ease-in-out infinite}
+.blip:hover .dot,.blip.is-on .dot{transform:scale(1.28)}
+.blip:active .dot{transform:scale(.86)}
+.blip.is-on .dot{box-shadow:0 0 0 2px #fff,0 0 16px rgba(237,48,57,.95)}
+.ping{position:absolute;left:50%;top:calc(var(--top) - 2px);z-index:4;transform:translate(-50%,-130%);opacity:0;pointer-events:none}
+.arm:hover .ping,.arm:focus-within .ping{opacity:1}
+.ping-t{display:inline-block;transform:rotate(calc(var(--ang) * -1));animation:snx-ping 48s linear infinite;white-space:nowrap;padding:3px 7px;border-radius:999px;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:750;letter-spacing:.02em;color:#fff}
+.snx-list{position:relative;z-index:1;margin-top:14px}
+.snx-list h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red-soft);font-weight:800;margin:0 0 6px}
+.snx-plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.snx-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:100%;min-height:44px;text-align:left;color:inherit;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:12px;padding:8px 10px}
+.snx-row.is-on{border-color:rgba(237,48,57,.8);background:rgba(237,48,57,.12)}
+.snx-row-title{display:block;font-weight:750;line-height:1.35;overflow:visible;white-space:normal;overflow-wrap:anywhere}
+.snx-row-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end;flex:none;max-width:46%}
+.snx-row-meta b{font-family:var(--mono);font-size:13px;font-weight:600}
+.snx-clear{position:relative;z-index:1;padding:8px 4px 12px}
+.snx-clear h3{font-size:clamp(32px,5vw,56px);line-height:1.05;margin:6px 0 8px}
+.snx-sparks{position:absolute;width:0;height:0;z-index:6;pointer-events:none}
+.snx-sparks i{position:absolute;left:0;top:0;width:3px;height:3px;border-radius:1px;background:#ed3039;transform:rotate(var(--a)) translateY(0);animation:snx-spark .55s ease-out forwards}
+.snx-sparks i:nth-child(odd){background:#fff}
+.xp-num.pop{animation:snx-pop .45s cubic-bezier(.2,1.4,.3,1)}
+.blip.is-boom .dot{animation:snx-boom .5s ease forwards}
+@keyframes snx-orbit{to{transform:rotate(360deg)}}
+@keyframes snx-face{from{transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1))}to{transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1 - 360deg))}}
+@keyframes snx-ping{from{transform:rotate(calc(var(--ang) * -1))}to{transform:rotate(calc(var(--ang) * -1 - 360deg))}}
+@keyframes snx-spark{to{transform:rotate(var(--a)) translateY(-48px);opacity:0}}
+@keyframes snx-pop{40%{transform:scale(1.18)}}
+@keyframes snx-boom{0%{transform:scale(1);opacity:1}40%{transform:scale(1.7);opacity:1}100%{transform:scale(.2);opacity:0}}
+@media (max-width:1200px){
+  .snx-grid{grid-template-columns:1fr}
+}
+@media (max-width:760px){
+  .snx{padding:14px 12px 10px}
+  .snx-head h2{font-size:28px}
+  .snx-hud h3{font-size:28px}
+  .snx-val.lg{font-size:28px}
+  .snx-row{flex-direction:column;align-items:stretch}
+  .snx-row-meta{max-width:none;justify-content:flex-start}
+  .disc-wrap{padding:28px 4px 4px}
+}
+@media (prefers-reduced-motion:reduce){
+  .snx-fx{display:none}
+  .blip:hover .dot,.blip.is-on .dot,.snx-go:active{transform:none}
+}
 </style>
 </head>
 <body>
@@ -801,7 +900,11 @@ footer.site{margin-top:auto}
     chatStarted: false,
     lockY: 0,
     lastFocus: null,
-    painted: {}
+    painted: {},
+    signalId: null,
+    signalRows: null,
+    signalBusy: false,
+    signalMax: 0
   };
   var sb = null;
   var feedTicket = 0;
@@ -2135,12 +2238,694 @@ footer.site{margin-top:auto}
       rows: rows, byId: byId, pipeItems: pipeItems, stripe: stripe, stripeWaiting: !stripe,
       agentsKnown: !!agents, agentCards: agentCards, activity: activity,
       callsKnown: !!calls, emailsKnown: !!emails,
+      reminders: reminderBundle(feed),
       wins: wins, winCopy: winCopy, xp: xp, film: streakFilm(), bookedStreak: streakBooked(), charts: charts,
       clientCount: official.length, retainersKnown: !!(feed && feed.retainers),
       official: official.map(function (spec, i) { return { index: i, name: clean(spec.name || ''), handle: clean(spec.handle || '') }; })
     };
   }
 
+  function reminderBundle(feed) {
+    var block = feed && feed.reminders;
+    if (!block || typeof block !== 'object' || Array.isArray(block)) return { known: false };
+    var counts = block.counts && typeof block.counts === 'object' ? block.counts : {};
+    return {
+      known: true,
+      asOf: clean(block.asOf || ''),
+      counts: {
+        signalNow: num(counts.signalNow),
+        futureSignal: num(counts.futureSignal),
+        noise: num(counts.noise)
+      },
+      items: Array.isArray(block.signalNow) ? block.signalNow : []
+    };
+  }
+  function reminderShort(raw) {
+    var head = String(raw || '').split(';')[0].trim();
+    var words = head.split(/\s+/).filter(Boolean).slice(0, 2);
+    if (!words.length) words = String(raw || '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
+    return words.map(function (w) { return w.replace(/^[^A-Za-z0-9$]+|[^A-Za-z0-9$]+$/g, ''); }).filter(Boolean).join(' ');
+  }
+  function reminderMonth(day) {
+    var bits = day.split('-');
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
+  }
+  function reminderDue(due, today) {
+    var raw = clean(due);
+    if (!raw) return null;
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+      var day = dayOf(raw);
+      if (!day) return { text: reminderShort(raw) || raw, tip: raw, hot: false, urgency: 2, sortDay: '', kind: 'text' };
+      var label = reminderMonth(day);
+      var diff = daysBetween(today, day);
+      if (diff < 0) return { text: 'OVERDUE', tip: label, hot: true, urgency: 0, sortDay: day, kind: 'date' };
+      if (diff === 0) return { text: 'TODAY', tip: label, hot: true, urgency: 1, sortDay: day, kind: 'date' };
+      if (diff > 7) return { text: label, tip: label, hot: false, urgency: 3, sortDay: day, kind: 'date' };
+      return { text: label, tip: label, hot: false, urgency: 2, sortDay: day, kind: 'date' };
+    }
+    var short = reminderShort(raw);
+    var first = short.toLowerCase();
+    if (first === 'overdue') return { text: 'OVERDUE', tip: raw, hot: true, urgency: 0, sortDay: '9999-99-99', kind: 'text' };
+    if (first === 'today') return { text: 'TODAY', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99', kind: 'text' };
+    if (first === 'now') return { text: 'NOW', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99', kind: 'text' };
+    return { text: short || raw, tip: raw, hot: false, urgency: 2, sortDay: '', kind: 'text' };
+  }
+  function reminderRank(items, today) {
+    var rows = [];
+    items.forEach(function (item, index) {
+      if (!item || typeof item !== 'object') return;
+      var title = clean(item.title || '');
+      if (!title) return;
+      rows.push({
+        index: index,
+        id: clean(item.id || '') || ('row-' + index),
+        title: title,
+        tied: clean(item.tied_to || ''),
+        notes: clean(item.notes || ''),
+        amount: num(item.value_usd),
+        href: safeHref(item.href),
+        due: reminderDue(item.due, today)
+      });
+    });
+    rows.sort(function (a, b) {
+      var ad = a.due || { urgency: 4, sortDay: '' };
+      var bd = b.due || { urgency: 4, sortDay: '' };
+      if (ad.urgency !== bd.urgency) return ad.urgency - bd.urgency;
+      var as = ad.sortDay || '9999-99-98';
+      var bs = bd.sortDay || '9999-99-98';
+      if (as !== bs) return as < bs ? -1 : 1;
+      var aNull = a.amount == null;
+      var bNull = b.amount == null;
+      if (aNull !== bNull) return aNull ? 1 : -1;
+      if (!aNull && a.amount !== b.amount) return b.amount - a.amount;
+      return a.index - b.index;
+    });
+    return rows;
+  }
+  function reminderWhen(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return reminderMonth(iso);
+    return chicagoTime(d) + ' CT';
+  }
+  function dueChip(due, large) {
+    if (!due) return '';
+    return '<span class="sn-chip' + (due.hot ? ' hot' : '') + (large ? ' lg' : '') + '" title="' + esc(due.tip) + '">' + esc(due.text) + '</span>';
+  }
+  var SIGNAL_DONE_KEY = 'cc-signal-done';
+  var SIGNAL_XP_EACH = 100;
+  var SFX = { reduce: false, canvas: null, raf: 0, gen: 0, running: false, w: 0, h: 0, dpr: 1, parts: [], onScreen: true, io: null, sizeWait: false, lateSize: 0 };
+  function signalDoneIds() {
+    try {
+      var raw = sessionStorage.getItem(SIGNAL_DONE_KEY);
+      var arr = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(arr)) return [];
+      var out = [];
+      arr.forEach(function (id) {
+        id = clean(String(id || ''));
+        if (id && out.indexOf(id) < 0) out.push(id);
+      });
+      return out;
+    } catch (err) { return []; }
+  }
+  function signalRememberDone(id) {
+    var ids = signalDoneIds();
+    if (ids.indexOf(id) < 0) ids.push(id);
+    try { sessionStorage.setItem(SIGNAL_DONE_KEY, JSON.stringify(ids)); } catch (err) {}
+  }
+  function signalForgetDone() {
+    try { sessionStorage.removeItem(SIGNAL_DONE_KEY); } catch (err) {}
+  }
+  function signalSplit(ranked) {
+    var done = signalDoneIds();
+    var open = [];
+    var cleared = 0;
+    ranked.forEach(function (row) {
+      if (done.indexOf(row.id) >= 0) cleared += 1;
+      else open.push(row);
+    });
+    var stake = 0, stakeN = 0, noDollar = 0, heat = 0;
+    open.forEach(function (row) {
+      if (row.amount == null) noDollar += 1;
+      else { stake += row.amount; stakeN += 1; }
+      if (row.due && row.due.hot) heat += 1;
+    });
+    return {
+      open: open,
+      cleared: cleared,
+      stats: { xp: cleared * SIGNAL_XP_EACH, level: 1 + cleared, clears: cleared, stake: stakeN ? stake : null, stakeN: stakeN, noDollar: noDollar, heat: heat }
+    };
+  }
+  function signalRing(row) {
+    var u = row.due ? row.due.urgency : 2;
+    if (u <= 0) return 0;
+    if (u === 1) return 1;
+    if (u === 2) return 2;
+    return 3;
+  }
+  function signalMaxOf(open) {
+    var maxAmt = 0;
+    open.forEach(function (row) { if (row.amount != null && row.amount > maxAmt) maxAmt = row.amount; });
+    return maxAmt;
+  }
+  function signalRowById(id) {
+    var rows = S.signalRows || [];
+    var i;
+    for (i = 0; i < rows.length; i++) if (rows[i].id === id) return rows[i];
+    return null;
+  }
+  function signalLayout(open) {
+    var groups = [[], [], [], []];
+    open.forEach(function (row) { groups[signalRing(row)].push(row); });
+    var out = {};
+    var bases = [34, 26, 16, 7];
+    groups.forEach(function (list, ring) {
+      var n = list.length;
+      if (!n) return;
+      var lanes = n > 16 ? 3 : (n > 8 ? 2 : 1);
+      var shift = lanes === 1 ? [0] : (lanes === 2 ? [-3.2, 3.2] : [-4.2, 0, 4.2]);
+      var counts = [];
+      var seen = [];
+      var lane;
+      for (lane = 0; lane < lanes; lane++) { counts.push(0); seen.push(0); }
+      list.forEach(function (row, i) { counts[i % lanes] += 1; });
+      list.forEach(function (row, i) {
+        lane = i % lanes;
+        var slot = seen[lane];
+        seen[lane] += 1;
+        var slots = counts[lane] || 1;
+        var ang = (360 / slots) * slot + ring * 19 + (lane * 180 / slots);
+        var top = bases[ring] + shift[lane];
+        if (top < 6) top = 6;
+        if (top > 42) top = 42;
+        out[row.id] = { ang: ang, top: top };
+      });
+    });
+    return out;
+  }
+  function signalCountBits(block, ranked) {
+    var c = (block && block.counts) || {};
+    var bits = [ranked.length + ' on this board'];
+    if (c.signalNow != null && c.signalNow !== ranked.length) bits.push('bot signal now count ' + c.signalNow);
+    if (c.futureSignal != null) bits.push(c.futureSignal + ' future signal kept off this board');
+    if (c.noise != null) bits.push(c.noise + ' noise kept off this board');
+    return bits.join('. ');
+  }
+  function signalHead(stats) {
+    var stake = stats.stakeN ? money(stats.stake) : 'No figures';
+    var stakeTitle = stats.stakeN
+      ? ('Sum of dollar figures on ' + stats.stakeN + (stats.stakeN === 1 ? ' open item' : ' open items') + (stats.noDollar ? '. ' + stats.noDollar + (stats.noDollar === 1 ? ' open item has' : ' open items have') + ' no dollar figure.' : '.'))
+      : 'No open item has a dollar figure.';
+    var flame = stats.clears > 0 ? FLAME : '';
+    return '<header class="snx-head"><div><p class="snx-kicker">Signal now</p><h2>Mission radar</h2></div><div class="snx-readout">' +
+      '<span title="1 plus items marked done this session"><b>' + stats.level + '</b><i>Level</i></span>' +
+      '<span title="100 for each item marked done this session"><b class="xp-num" data-xp="' + stats.xp + '">' + stats.xp + '</b><i>Session XP</i></span>' +
+      '<span title="Open items that are overdue, today, or now"><b>' + stats.heat + '</b><i>Heat</i></span>' +
+      '<span title="' + esc(stakeTitle) + '"><b>' + esc(stake) + '</b><i>At stake</i></span>' +
+      '<span title="Items marked done this session"><b>' + flame + stats.clears + '</b><i>Clears</i></span>' +
+      '</div></header>';
+  }
+  function signalFoot(source, block, ranked) {
+    return '<footer class="snx-foot"><p>' + esc(source) + '</p><p>' + esc(signalCountBits(block, ranked)) + '</p><p>Session XP is 100 for each item you mark done here. Level is 1 plus that count. Clears use the same count. The feed stays as the bot wrote it.</p><p class="snx-keys"><kbd>Arrows</kbd> move <kbd>Enter</kbd> lock <kbd>D</kbd> done <kbd>Esc</kbd> release</p></footer>';
+  }
+  function signalShell(extra, inner) {
+    return '<section class="signal-now snx' + (extra ? ' ' + extra : '') + '" id="signal-now" aria-label="Signal now">' + inner + '</section>';
+  }
+  function signalValueHtml(amount) {
+    if (amount == null) return '<span class="snx-noval">No dollar figure</span>';
+    return '<span class="snx-val lg">' + esc(money(amount)) + '</span>';
+  }
+  function signalActions(row) {
+    var link = row.href ? '<a class="snx-link" href="' + esc(row.href) + '" target="_blank" rel="noopener noreferrer">Open source</a>' : '';
+    return '<div class="snx-actions"><button type="button" class="snx-go" data-snx="done" data-id="' + esc(row.id) + '" title="This browser only. Does not write the feed.">Mark done</button>' + link + '</div>';
+  }
+  function signalBriefHtml(row) {
+    if (!row) return '<p class="snx-kicker">Scan</p><h3>Choose a target</h3><p class="snx-notes">Arrows move the lock. D marks it done in this browser.</p>';
+    return '<p class="snx-kicker">Locked</p><div class="brief-top">' + dueChip(row.due, false) + signalValueHtml(row.amount) + '</div><h3>' + esc(row.title) + '</h3>' +
+      (row.tied ? '<p class="snx-tied">' + esc(row.tied) + '</p>' : '') +
+      (row.notes ? '<p class="snx-notes">' + esc(row.notes) + '</p>' : '') +
+      signalActions(row);
+  }
+  function signalPrepare(ranked) {
+    var split = signalSplit(ranked);
+    S.signalRows = split.open;
+    S.signalMax = signalMaxOf(split.open);
+    if (S.signalId == null) S.signalId = split.open.length ? split.open[0].id : '';
+    else if (S.signalId && !split.open.some(function (row) { return row.id === S.signalId; })) S.signalId = split.open.length ? split.open[0].id : '';
+    return split;
+  }
+  function signalOffline(message, source) {
+    var foot = source ? '<footer class="snx-foot"><p>' + esc(source) + '</p></footer>' : '';
+    return signalShell('snx-off', '<p class="snx-kicker">Mission radar</p><div class="signal-now-off"><p>' + esc(message) + '</p></div>' + foot);
+  }
+  function signalClearHtml(block, ranked, split, source) {
+    var stats = split.stats;
+    return signalShell('snx-clear', signalHead(stats) + '<div class="snx-clear"><p class="snx-kicker">Clear</p><h3>Board clear this session</h3><p class="snx-notes">' + stats.clears + ' clears, ' + stats.xp + ' session XP, level ' + stats.level + '. The reminders payload still has these rows.</p><button type="button" class="snx-go" data-snx="restore" title="This browser only. Does not write the feed.">Show the feed again</button></div>' + signalFoot(source, block, ranked));
+  }
+  function signalPlainHtml(open) {
+    var rows = open.map(function (row) {
+      var on = row.id === S.signalId;
+      var amt = row.amount == null ? '' : '<b>' + esc(money(row.amount)) + '</b>';
+      return '<li><button type="button" class="snx-row' + (on ? ' is-on' : '') + '" data-snx="lock" data-id="' + esc(row.id) + '" aria-pressed="' + (on ? 'true' : 'false') + '"><span class="snx-row-title">' + esc(row.title) + '</span><span class="snx-row-meta">' + dueChip(row.due, false) + amt + '</span></button></li>';
+    }).join('');
+    return '<div class="snx-list"><h3>On this board</h3><ol class="snx-plain">' + rows + '</ol></div>';
+  }
+  function signalRadarHtml(block, ranked, split, source) {
+    var open = split.open;
+    var place = signalLayout(open);
+    var names = ['Overdue', 'Now', 'Soon', 'Later'];
+    var tops = ['34%', '26%', '16%', '7%'];
+    var arms = open.map(function (row) {
+      var spot = place[row.id];
+      var ring = signalRing(row);
+      var scale = (row.amount == null || !S.signalMax) ? 0 : (row.amount / S.signalMax);
+      var on = row.id === S.signalId;
+      var ping = row.amount != null ? money(row.amount) : (row.due ? row.due.text : '');
+      var ang = spot.ang.toFixed(2);
+      var top = spot.top.toFixed(2);
+      return '<div class="arm' + (on ? ' is-on' : '') + '" style="--ang:' + ang + 'deg" aria-hidden="true"><button type="button" class="blip' + (row.due && row.due.hot ? ' hot' : '') + (on ? ' is-on' : '') + '" tabindex="-1" data-snx="lock" data-id="' + esc(row.id) + '" style="--top:' + top + '%;--scale:' + scale.toFixed(3) + '" aria-label="' + esc(row.title) + '"><span class="face" style="--ang:' + ang + 'deg"><span class="dot"></span></span></button>' + (ping ? '<span class="ping" style="--top:' + top + '%"><span class="ping-t" style="--ang:' + ang + 'deg">' + esc(ping) + '</span></span>' : '') + '</div>';
+    }).join('');
+    var rings = tops.map(function (top, i) {
+      return '<i class="r' + i + '" style="inset:' + top + '"></i><span class="ring-label" style="top:' + top + '">' + names[i] + '</span>';
+    }).join('');
+    var disc = '<div class="disc-wrap"><div class="disc"><canvas class="snx-fx" width="2" height="2" aria-hidden="true"></canvas><div class="rings" aria-hidden="true">' + rings + '</div><div class="core" aria-hidden="true"><b>SIG</b></div><div class="orbit">' + arms + '</div></div><p class="snx-legend">The inner ring is overdue. A larger blip is a higher dollar figure. A row with no dollar figure stays small. The list under the radar is the same rows, in this order.</p></div>';
+    var hud = '<div class="snx-hud" data-hud="radar">' + signalBriefHtml(signalRowById(S.signalId)) + '</div>';
+    return signalShell('', signalHead(split.stats) + '<div class="snx-grid">' + disc + hud + '</div>' + signalPlainHtml(open) + signalFoot(source, block, ranked));
+  }
+  function signalBoard(block, ranked, source) {
+    var split = signalPrepare(ranked);
+    if (!split.open.length) return signalClearHtml(block, ranked, split, source);
+    return signalRadarHtml(block, ranked, split, source);
+  }
+  function signalLoopStop() {
+    SFX.running = false;
+    SFX.gen += 1;
+    if (SFX.raf) cancelAnimationFrame(SFX.raf);
+    SFX.raf = 0;
+  }
+  function signalHide() {
+    signalLoopStop();
+    clearTimeout(SFX.lateSize);
+    if (SFX.io) { SFX.io.disconnect(); SFX.io = null; }
+    if (SFX.canvas) SFX.canvas.classList.remove('sized');
+    SFX.parts = [];
+  }
+  function signalDrawParts(ctx) {
+    var i;
+    for (i = SFX.parts.length - 1; i >= 0; i--) {
+      var p = SFX.parts[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.018;
+      if (p.life <= 0) { SFX.parts.splice(i, 1); continue; }
+      if (!isFinite(p.x) || !isFinite(p.y) || p.s <= 0 || p.s > 4) continue;
+      ctx.globalAlpha = Math.max(0, p.life);
+      ctx.fillStyle = p.white ? '#ffffff' : '#ed3039';
+      ctx.fillRect(p.x, p.y, p.s, p.s);
+    }
+    ctx.globalAlpha = 1;
+  }
+  function signalDrawRadar(ctx, t) {
+    if (SFX.reduce) return;
+    var w = SFX.w, h = SFX.h;
+    var cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.46;
+    if (!(R > 8)) return;
+    var ang = (t * 0.00105) % (Math.PI * 2);
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(ang);
+    var grd = ctx.createLinearGradient(0, 0, R, 0);
+    grd.addColorStop(0, 'rgba(237,48,57,0)');
+    grd.addColorStop(1, 'rgba(237,48,57,.38)');
+    ctx.fillStyle = grd;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, R, -0.38, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+  function signalDraw(t) {
+    var c = SFX.canvas;
+    if (!c || !c.isConnected || c.width < 8 || c.height < 8 || !(SFX.w >= 8) || !(SFX.h >= 8)) return;
+    var ctx = c.getContext('2d', { alpha: true });
+    if (!ctx) return;
+    var dpr = SFX.dpr || 1;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    signalDrawRadar(ctx, t);
+    signalDrawParts(ctx);
+    ctx.globalAlpha = 1;
+  }
+  function signalFrame(t, gen) {
+    if (!SFX.running || SFX.gen !== gen) return;
+    SFX.raf = requestAnimationFrame(function (now) { signalFrame(now, gen); });
+    if (document.hidden || !SFX.onScreen || SFX.reduce) return;
+    var c = SFX.canvas;
+    if (!c || !c.classList.contains('sized')) return;
+    signalDraw(t);
+  }
+  function signalLoopStart() {
+    if (SFX.running || SFX.reduce || document.hidden || SFX.onScreen === false) return;
+    if (!SFX.canvas || !SFX.canvas.classList.contains('sized')) return;
+    SFX.running = true;
+    var gen = ++SFX.gen;
+    SFX.raf = requestAnimationFrame(function (now) { signalFrame(now, gen); });
+  }
+  function signalSize() {
+    var c = SFX.canvas;
+    if (!c || !c.isConnected) return;
+    var home = $('v-home');
+    var shown = !!(home && home.classList.contains('on') && !document.hidden);
+    if (!shown) { c.classList.remove('sized'); return; }
+    var style = window.getComputedStyle(c);
+    if (style.display === 'none' || style.visibility === 'hidden') {
+      c.classList.remove('sized');
+      signalLoopStop();
+      return;
+    }
+    var rect = c.getBoundingClientRect();
+    var w = Math.round(rect.width);
+    var h = Math.round(rect.height);
+    if (w < 8 || h < 8) {
+      c.classList.remove('sized');
+      signalLoopStop();
+      SFX.sizeTries = (SFX.sizeTries || 0) + 1;
+      if (SFX.sizeTries > 8 || SFX.sizeWait) return;
+      SFX.sizeWait = true;
+      requestAnimationFrame(function () {
+        SFX.sizeWait = false;
+        if (SFX.canvas === c && c.isConnected) signalSize();
+      });
+      return;
+    }
+    SFX.sizeTries = 0;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var bw = Math.max(1, Math.round(w * dpr));
+    var bh = Math.max(1, Math.round(h * dpr));
+    var same = c.width === bw && c.height === bh && SFX.w === w && SFX.h === h && SFX.dpr === dpr;
+    SFX.w = w; SFX.h = h; SFX.dpr = dpr;
+    if (!same) {
+      c.classList.remove('sized');
+      c.width = bw;
+      c.height = bh;
+    }
+    if (!same) signalDraw(performance.now());
+    c.classList.add('sized');
+    if (!SFX.reduce && SFX.onScreen !== false) signalLoopStart();
+  }
+  function signalReadAng(arm) {
+    var raw = arm.style.getPropertyValue('--ang') || '0';
+    var n = parseFloat(raw);
+    return isFinite(n) ? n : 0;
+  }
+  function signalSetAng(arm, ang) {
+    var text = ang.toFixed(2) + 'deg';
+    arm.style.setProperty('--ang', text);
+    var face = arm.querySelector('.face');
+    var ping = arm.querySelector('.ping-t');
+    if (face) face.style.setProperty('--ang', text);
+    if (ping) ping.style.setProperty('--ang', text);
+  }
+  function signalPlace(arm, ang, top) {
+    signalSetAng(arm, ang);
+    var text = top.toFixed(2) + '%';
+    var blip = arm.querySelector('.blip');
+    var ping = arm.querySelector('.ping');
+    if (blip) blip.style.setProperty('--top', text);
+    if (ping) ping.style.setProperty('--top', text);
+  }
+  function signalShift(pt, mx, my, minR, maxR) {
+    var x = pt.x + mx;
+    var y = pt.y + my;
+    var radius = Math.sqrt(x * x + y * y) || 0.1;
+    if (radius < minR) radius = minR;
+    if (radius > maxR) radius = maxR;
+    var ang = Math.atan2(x, -y) * 180 / Math.PI;
+    var rad = ang * Math.PI / 180;
+    pt.ang = ang;
+    pt.radius = radius;
+    pt.x = Math.sin(rad) * radius;
+    pt.y = -Math.cos(rad) * radius;
+  }
+  function signalNudge() {
+    var disc = document.querySelector('#v-home .snx .disc');
+    if (!disc) return;
+    var box = disc.getBoundingClientRect();
+    if (box.width < 8 || box.height < 8) return;
+    var arms = [].slice.call(disc.querySelectorAll('.arm'));
+    if (arms.length < 2) return;
+    var width = box.width;
+    var need = Math.max(36, Math.min(48, width * 0.12));
+    var minR = width * 0.12;
+    var maxR = width * 0.40;
+    var pts = arms.map(function (arm) {
+      var blip = arm.querySelector('.blip');
+      var ang = signalReadAng(arm);
+      var top = parseFloat((blip && blip.style.getPropertyValue('--top')) || '20');
+      if (!isFinite(top)) top = 20;
+      var radius = width * (0.5 - top / 100);
+      var rad = ang * Math.PI / 180;
+      return { arm: arm, ang: ang, radius: radius, x: Math.sin(rad) * radius, y: -Math.cos(rad) * radius };
+    });
+    var pass, i, j;
+    for (pass = 0; pass < 40; pass++) {
+      var moved = false;
+      for (i = 0; i < pts.length; i++) {
+        for (j = i + 1; j < pts.length; j++) {
+          var dx = pts[j].x - pts[i].x;
+          var dy = pts[j].y - pts[i].y;
+          var dist = Math.sqrt(dx * dx + dy * dy) || 0.1;
+          if (dist >= need) continue;
+          var push = (need - dist) * 0.55;
+          var nx = dx / dist;
+          var ny = dy / dist;
+          signalShift(pts[i], -nx * push, -ny * push, minR, maxR);
+          signalShift(pts[j], nx * push, ny * push, minR, maxR);
+          moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+    pts.forEach(function (pt) {
+      signalPlace(pt.arm, pt.ang, (0.5 - pt.radius / width) * 100);
+    });
+  }
+  function signalMount() {
+    signalLoopStop();
+    clearTimeout(SFX.lateSize);
+    if (SFX.io) { SFX.io.disconnect(); SFX.io = null; }
+    SFX.canvas = null;
+    SFX.parts = [];
+    SFX.reduce = motionReduce();
+    var root = document.querySelector('#v-home .snx');
+    if (!root || root.classList.contains('snx-off') || root.classList.contains('snx-clear')) return;
+    var canvas = root.querySelector('.snx-fx');
+    SFX.canvas = canvas || null;
+    SFX.onScreen = true;
+    if (window.IntersectionObserver) {
+      SFX.io = new IntersectionObserver(function (entries) {
+        var hit = false;
+        entries.forEach(function (en) { if (en.isIntersecting) hit = true; });
+        SFX.onScreen = hit;
+        if (hit && !SFX.reduce && !document.hidden) signalLoopStart();
+        else signalLoopStop();
+      }, { threshold: [0, 0.04] });
+      SFX.io.observe(root);
+    }
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        signalSize();
+        signalNudge();
+      });
+    });
+    SFX.lateSize = setTimeout(function () {
+      if (SFX.canvas && SFX.canvas.isConnected) signalSize();
+      signalNudge();
+    }, 260);
+  }
+  function signalWake() {
+    var home = $('v-home');
+    if (!home || !home.classList.contains('on')) return;
+    if (!SFX.canvas || !SFX.canvas.isConnected) signalMount();
+    else {
+      SFX.reduce = motionReduce();
+      signalSize();
+      signalNudge();
+    }
+  }
+  function signalRepaint() {
+    if (!S.model) return;
+    var old = document.querySelector('#v-home #signal-now');
+    if (!old) return;
+    signalHide();
+    SFX.canvas = null;
+    var holder = document.createElement('div');
+    holder.innerHTML = remindersHtml(S.model);
+    var next = holder.firstElementChild;
+    if (!next) return;
+    old.replaceWith(next);
+    signalMount();
+  }
+  function signalSelect(id) {
+    S.signalId = id || '';
+    var root = document.querySelector('#v-home .snx');
+    if (!root) return;
+    Array.prototype.forEach.call(root.querySelectorAll('[data-snx="lock"]'), function (el) {
+      var on = !!S.signalId && el.getAttribute('data-id') === S.signalId;
+      el.classList.toggle('is-on', on);
+      if (el.hasAttribute('aria-pressed')) el.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var arm = el.closest('.arm');
+      if (arm) arm.classList.toggle('is-on', on);
+    });
+    var hud = root.querySelector('[data-hud]');
+    if (hud) hud.innerHTML = signalBriefHtml(signalRowById(S.signalId));
+  }
+  function signalLockEl(id) {
+    var found = null;
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .snx [data-snx="lock"]'), function (el) {
+      if (!found && el.getAttribute('data-id') === id) found = el;
+    });
+    return found;
+  }
+  function signalDomBurst(el) {
+    if (!el || SFX.reduce) return;
+    var host = document.querySelector('#v-home #signal-now');
+    if (!host) return;
+    var r = el.getBoundingClientRect();
+    var hr = host.getBoundingClientRect();
+    if (r.width < 1 && r.height < 1) return;
+    var burst = document.createElement('span');
+    burst.className = 'snx-sparks';
+    burst.style.left = (r.left + r.width / 2 - hr.left) + 'px';
+    burst.style.top = (r.top + r.height / 2 - hr.top) + 'px';
+    var i;
+    for (i = 0; i < 14; i++) {
+      var bit = document.createElement('i');
+      bit.style.setProperty('--a', (i * (360 / 14)) + 'deg');
+      burst.appendChild(bit);
+    }
+    host.appendChild(burst);
+  }
+  function signalBurstAt(el) {
+    signalDomBurst(el);
+    var c = SFX.canvas;
+    if (!c || !c.classList.contains('sized') || !el || SFX.reduce) return;
+    var cr = c.getBoundingClientRect();
+    var er = el.getBoundingClientRect();
+    if (cr.width < 8 || cr.height < 8) return;
+    var x = er.left + er.width / 2 - cr.left;
+    var y = er.top + er.height / 2 - cr.top;
+    if (x < -20 || y < -20 || x > cr.width + 20 || y > cr.height + 20) return;
+    var i;
+    for (i = 0; i < 18; i++) {
+      var a = (Math.PI * 2 * i) / 18;
+      var sp = 0.8 + (i % 5) * 0.35;
+      SFX.parts.push({ x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, s: 1.5 + (i % 3) * 0.4, white: i % 3 === 0 });
+    }
+    if (SFX.parts.length > 60) SFX.parts.splice(0, SFX.parts.length - 60);
+  }
+  function signalBump(root) {
+    if (!root) return;
+    var el = root.querySelector('.xp-num');
+    if (!el) return;
+    var n = parseInt(el.getAttribute('data-xp') || '0', 10);
+    if (!isFinite(n)) n = 0;
+    el.textContent = String(n + SIGNAL_XP_EACH);
+    el.classList.add('pop');
+  }
+  function signalDone(id, el) {
+    if (S.signalBusy || !id) return;
+    S.signalBusy = true;
+    signalRememberDone(id);
+    if (S.signalId === id) S.signalId = null;
+    var root = document.querySelector('#v-home .snx');
+    var lockEl = signalLockEl(id) || el;
+    if (lockEl) lockEl.classList.add('is-boom');
+    if (root) root.classList.add('is-hit');
+    signalBurstAt(lockEl || el);
+    signalBump(root);
+    var wait = motionReduce() ? 0 : 540;
+    setTimeout(function () {
+      S.signalBusy = false;
+      signalRepaint();
+    }, wait);
+  }
+  function signalRestore() {
+    signalForgetDone();
+    S.signalId = null;
+    S.signalBusy = false;
+    signalRepaint();
+  }
+  function signalAct(action, id, el) {
+    if (action === 'restore') { signalRestore(); return; }
+    if (action === 'done') { signalDone(id, el); return; }
+    if (action === 'lock') { signalSelect(id || ''); }
+  }
+  function signalTyping(e) {
+    var tag = (e.target && e.target.tagName) || '';
+    return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || !!(e.target && e.target.isContentEditable);
+  }
+  function signalIds() {
+    var ids = [];
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home.view.on .snx [data-snx="lock"]'), function (el) {
+      var id = el.getAttribute('data-id');
+      if (id && ids.indexOf(id) < 0) ids.push(id);
+    });
+    return ids;
+  }
+  function signalKey(e) {
+    if (signalTyping(e) || anyOpen() || e.metaKey || e.ctrlKey || e.altKey) return false;
+    if (!$('v-home') || !$('v-home').classList.contains('on')) return false;
+    var root = document.querySelector('#v-home .snx');
+    if (!root || root.classList.contains('snx-off')) return false;
+    if (root.classList.contains('snx-clear')) {
+      if (e.key === 'Enter' || e.key === 'r' || e.key === 'R') { e.preventDefault(); signalRestore(); return true; }
+      return false;
+    }
+    var ids = signalIds();
+    if (!ids.length) return false;
+    var idx = ids.indexOf(S.signalId);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'j' || e.key === 'J') {
+      e.preventDefault();
+      signalSelect(ids[(idx + 1 + ids.length) % ids.length]);
+      return true;
+    }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'k' || e.key === 'K') {
+      e.preventDefault();
+      signalSelect(ids[(idx - 1 + ids.length) % ids.length]);
+      return true;
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (idx < 0) signalSelect(ids[0]);
+      return true;
+    }
+    if (e.key === 'd' || e.key === 'D') {
+      e.preventDefault();
+      var id = idx >= 0 ? ids[idx] : ids[0];
+      signalDone(id, signalLockEl(id));
+      return true;
+    }
+    if (e.key === 'Escape') {
+      if (!S.signalId) return false;
+      e.preventDefault();
+      signalSelect('');
+      return true;
+    }
+    return false;
+  }
+  function remindersHtml(m) {
+    var block = m.reminders;
+    if (!block || !block.known) return signalOffline('Not connected. Reminders bot has not synced yet.', '');
+    var ranked = reminderRank(block.items, m.today);
+    var when = reminderWhen(block.asOf);
+    var source = when ? ('Reminders bot, updated ' + when) : 'Reminders bot. No update time in the feed.';
+    if (!ranked.length) return signalOffline('Nothing to do now.', source);
+    return signalBoard(block, ranked, source);
+  }
   function card(m) {
     if (!m) return '';
     var plus = (m.log && m.log.quick) ? '<button type="button" class="plus" data-plus="' + esc(m.log.metric) + '" aria-label="Log 1 for ' + esc(m.label) + '">+1</button>' : '';
@@ -3152,6 +3937,7 @@ footer.site{margin-top:auto}
     document.addEventListener('visibilitychange', function () {
       document.documentElement.classList.toggle('anim-off', document.hidden);
       if (document.hidden) {
+        signalHide();
         FX.visible = false;
         if (FX.org) FX.org.classList.add('is-off');
         if (FX.canvas) FX.canvas.classList.remove('live');
@@ -3167,23 +3953,26 @@ footer.site{margin-top:auto}
         FX.org.classList.remove('is-off');
         if (FX.canvas) FX.canvas.classList.add('live');
       }
+      if ($('v-home') && $('v-home').classList.contains('on')) signalWake();
       if (FX.visible || FX.jobs.length) FX.start();
       else armClock();
     });
     window.addEventListener('resize', function () {
       clearTimeout(FX.resizeT);
-      FX.resizeT = setTimeout(sizeFx, 150);
+      FX.resizeT = setTimeout(function () { sizeFx(); signalSize(); signalNudge(); }, 150);
     });
     var mq = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)');
     if (mq && mq.addEventListener) {
       mq.addEventListener('change', function () {
         FX.reduce = mq.matches;
+        SFX.reduce = mq.matches;
         if (FX.reduce) {
           FX.visible = false;
           FX.parts = [];
           if (FX.canvas) FX.canvas.classList.remove('live');
           if (FX.org) FX.org.classList.add('is-off');
-        }
+          signalLoopStop();
+        } else if ($('v-home') && $('v-home').classList.contains('on')) signalWake();
       });
     }
     armClock();
@@ -3290,7 +4079,7 @@ footer.site{margin-top:auto}
   }
   function homeHtml(m) {
     var tiles = '<div class="krow">' + tileHtml(m.metrics.collected) + tileHtml(m.metrics.videos) + tileHtml(m.metrics.booked) + tileHtml(m.metrics.unsent) + '</div>';
-    return guideHtml(m) + '<div class="hero-grid">' + orgHtml(m) + termHtml(m) + '</div>' + gaugeRow(m) + tiles +
+    return guideHtml(m) + remindersHtml(m) + '<div class="hero-grid">' + orgHtml(m) + termHtml(m) + '</div>' + gaugeRow(m) + tiles +
       '<div class="two">' + cashChartHtml(m) + donutHtml(m) + '</div>' +
       '<div style="margin-top:12px">' + approvalHtml(m) + '</div>' +
       '<div class="two">' + compactWins(m) + compactToday(m) + '</div>';
@@ -3344,6 +4133,8 @@ footer.site{margin-top:auto}
     FX.canvas = null;
     FX.org = null;
     if (FX.io) { FX.io.disconnect(); FX.io = null; }
+    signalHide();
+    SFX.canvas = null;
   }
   function ensureView(id) {
     if (!S.model || lockedNow()) return;
@@ -3356,6 +4147,7 @@ footer.site{margin-top:auto}
     if (id === 'home') {
       syncTerm(S.model.activity, false);
       attachOrg();
+      signalMount();
     }
     kickVisuals(el);
   }
@@ -3465,6 +4257,7 @@ footer.site{margin-top:auto}
     ensureView(view);
     applyFilter();
     window.scrollTo(0, 0);
+    if (view !== 'home') signalHide();
     if (view === 'home' && FX.org && !FX.reduce && !document.hidden) {
       FX.visible = true;
       FX.org.classList.remove('is-off');
@@ -3476,6 +4269,7 @@ footer.site{margin-top:auto}
       if (FX.org) FX.org.classList.add('is-off');
       if (FX.canvas) FX.canvas.classList.remove('live');
     }
+    if (view === 'home') signalWake();
   }
   function namesHas(v) { return VIEWS.some(function (t) { return t[0] === v; }); }
   function applyFilter() {
@@ -4006,6 +4800,11 @@ footer.site{margin-top:auto}
     $('bnav').innerHTML = ['home', 'goals', 'tasks', 'winning'].map(function (id) { return navButton(byId[id], ''); }).join('');
     if ($('chips')) $('chips').innerHTML = VIEWS.map(function (v) { return '<button type="button" data-view="' + v[0] + '">' + esc(v[1]) + '</button>'; }).join('');
     document.body.addEventListener('click', function (e) {
+      var snx = e.target.closest('[data-snx]');
+      if (snx && !e.target.closest('a[href]')) {
+        signalAct(snx.getAttribute('data-snx'), snx.getAttribute('data-id') || '', snx);
+        return;
+      }
       if (e.target.closest('a[href]')) return;
       var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-pick],[data-more]');
       if (!t) return;
@@ -4052,6 +4851,7 @@ footer.site{margin-top:auto}
         if ($('qsearch')) $('qsearch').focus();
         return;
       }
+      if (signalKey(e)) return;
       if (e.key === 'Escape') closeSheets();
     });
     if ($('lock-in')) $('lock-in').addEventListener('click', function () { show('login'); });
@@ -4225,7 +5025,15 @@ footer.site{margin-top:auto}
       sample: S.sample,
       fixture: S.fixture,
       model: function () { return S.model; },
-      metrics: function () { return S.model && S.model.metrics; }
+      metrics: function () { return S.model && S.model.metrics; },
+      feed: function () { return S.feed; },
+      rerender: function () { renderBoard(); },
+      asOwner: function () {
+        S.sample = false;
+        S.admin = true;
+        S.feedState = 'ready';
+        renderBoard();
+      }
     };
   }
   start();

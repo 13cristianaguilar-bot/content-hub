@@ -4,22 +4,57 @@
   "weekStarts": "monday",
   "attract": {
     "postsPerWeek": {
-      "ig": { "label": "Instagram", "handle": "@cristianaguilar.ai", "target": 5 },
-      "x": { "label": "X", "handle": "", "target": 7 },
-      "youtube": { "label": "YouTube", "handle": "@SignalRatio", "target": 1 }
+      "ig": {
+        "label": "Instagram",
+        "handle": "@cristianaguilar.ai",
+        "target": 5
+      },
+      "x": {
+        "label": "X",
+        "handle": "",
+        "target": 7
+      },
+      "youtube": {
+        "label": "YouTube",
+        "handle": "@SignalRatio",
+        "target": 1
+      }
     },
-    "viewsPerWeek": { "direction": "up", "baselineWeeks": 4 },
-    "followerGrowthPerWeek": { "direction": "up", "baselineWeeks": 4 },
-    "outliersPerMonth": { "target": 2, "multiple": 3 },
-    "videosPerWeek": { "target": 5 },
-    "leadMagnetsPerMonth": { "target": 2 },
-    "contactsPerWeek": { "target": 20 },
-    "communityPerWeek": { "target": 5 }
+    "viewsPerWeek": {
+      "direction": "up",
+      "baselineWeeks": 4
+    },
+    "followerGrowthPerWeek": {
+      "direction": "up",
+      "baselineWeeks": 4
+    },
+    "outliersPerMonth": {
+      "target": 2,
+      "multiple": 3
+    },
+    "videosPerWeek": {
+      "target": 5
+    },
+    "leadMagnetsPerMonth": {
+      "target": 2
+    },
+    "contactsPerWeek": {
+      "target": 20
+    },
+    "communityPerWeek": {
+      "target": 5
+    }
   },
   "convert": {
-    "bookedCallsPerWeek": { "target": 15 },
-    "showRate": { "target": 0.7 },
-    "closeRate": { "target": 0.25 },
+    "bookedCallsPerWeek": {
+      "target": 15
+    },
+    "showRate": {
+      "target": 0.7
+    },
+    "closeRate": {
+      "target": 0.25
+    },
     "mrr": {
       "target": 20000,
       "retainers": 10,
@@ -32,12 +67,30 @@
     "filmedRate": 1,
     "overdueActAfterDays": 7,
     "clients": [
-      { "name": "Andrew George", "handle": "@andrewpreneurship" },
-      { "name": "Devin Shea", "handle": "@teamr3set" },
-      { "name": "Jan Zands", "handle": "" },
-      { "name": "Rich Life Academy", "handle": "@therichlifeacademy" },
-      { "name": "Sagun Sedai", "handle": "" },
-      { "name": "The Austin Report", "handle": "@austinreport" }
+      {
+        "name": "Andrew George",
+        "handle": "@andrewpreneurship"
+      },
+      {
+        "name": "Devin Shea",
+        "handle": "@teamr3set"
+      },
+      {
+        "name": "Jan Zands",
+        "handle": ""
+      },
+      {
+        "name": "Rich Life Academy",
+        "handle": "@therichlifeacademy"
+      },
+      {
+        "name": "Sagun Sedai",
+        "handle": ""
+      },
+      {
+        "name": "The Austin Report",
+        "handle": "@austinreport"
+      }
     ]
   },
   "xp": {
@@ -51,10 +104,106 @@
     "cashInPer": 100,
     "cashInPoints": 1,
     "levels": [
-      { "name": "Signal 1", "xp": 50 },
-      { "name": "Signal 2", "xp": 150 },
-      { "name": "Signal 3", "xp": 400 },
-      { "name": "Signal 4", "xp": 800 }
+      {
+        "name": "Signal 1",
+        "xp": 50
+      },
+      {
+        "name": "Signal 2",
+        "xp": 150
+      },
+      {
+        "name": "Signal 3",
+        "xp": 400
+      },
+      {
+        "name": "Signal 4",
+        "xp": 800
+      }
     ]
-  }
+  },
+  "tracks": [
+    {
+      "id": "ig",
+      "label": "Instagram",
+      "handle": "@cristianaguilar.ai",
+      "owner": "Content",
+      "side": "attract"
+    },
+    {
+      "id": "youtube",
+      "label": "YouTube",
+      "handle": "@SignalRatio",
+      "owner": "Content",
+      "side": "attract"
+    },
+    {
+      "id": "x",
+      "label": "X",
+      "handle": "",
+      "owner": "Content",
+      "side": "attract"
+    },
+    {
+      "id": "podcast",
+      "label": "Podcast",
+      "handle": "STNR",
+      "owner": "Content",
+      "side": "attract"
+    },
+    {
+      "id": "events",
+      "label": "Events & Travel",
+      "handle": "",
+      "owner": "Events",
+      "side": "attract"
+    },
+    {
+      "id": "speaking",
+      "label": "Speaking on stages",
+      "handle": "",
+      "owner": "Growth",
+      "side": "convert"
+    },
+    {
+      "id": "retainers",
+      "label": "Retainer clients",
+      "handle": "",
+      "owner": "Fulfilment",
+      "side": "transform"
+    },
+    {
+      "id": "magnets",
+      "label": "Lead magnets & funnels",
+      "handle": "",
+      "owner": "Growth",
+      "side": "convert"
+    }
+  ],
+  "goals": [
+    {
+      "id": "retainers",
+      "label": "10 retainer clients",
+      "target": 10,
+      "unit": "count",
+      "side": "convert",
+      "track": "retainers"
+    },
+    {
+      "id": "cash",
+      "label": "Cash collected",
+      "target": 20000,
+      "unit": "money",
+      "side": "convert",
+      "track": "retainers"
+    },
+    {
+      "id": "followers",
+      "label": "Followers",
+      "target": 5000,
+      "unit": "count",
+      "side": "attract",
+      "track": "ig"
+    }
+  ]
 }

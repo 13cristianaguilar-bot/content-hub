@@ -13,7 +13,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23080808' width='32' height='32' rx='7'/%3E%3Cpath fill='%23ed3039' d='M6 22h3V14H6zm5 0h3V9h-3zm5 0h3V6h-3zm5 0h3V11h-3z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Geist:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
@@ -21,6 +21,7 @@
   --line:rgba(255,255,255,.08);--glass:rgba(255,255,255,.04);
   --red:#ed3039;--red-deep:#b71a23;--red-soft:#ff8a8e;
   --good:#3DDC97;--good-ink:#d7f0e0;--watch:#C4A35A;--act:#ed3039;
+  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
   --sans:Geist,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
   --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --side:240px;
@@ -51,7 +52,7 @@ a{color:var(--red-soft);text-decoration:none}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .app{position:relative;z-index:1;display:grid;grid-template-columns:var(--side) 1fr;min-height:100dvh}
 .sidenav{
-  position:sticky;top:0;height:100dvh;padding:18px 14px 16px;display:flex;flex-direction:column;gap:2px;
+  position:sticky;top:0;height:100dvh;overflow:auto;padding:18px 14px 16px;display:flex;flex-direction:column;gap:2px;
   border-right:1px solid var(--line);background:rgba(8,8,8,.78);
   -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
 }
@@ -79,7 +80,7 @@ a{color:var(--red-soft);text-decoration:none}
 .sys span{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.4}
 .gdot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);flex:none}
 .gdot.dim{background:#555;box-shadow:none}
-.maincol{min-width:0;display:flex;flex-direction:column}
+.maincol{min-width:0;display:flex;flex-direction:column;min-height:100dvh}
 .top{
   position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;
   background:rgba(8,8,8,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
@@ -382,7 +383,7 @@ body[data-ready] .shimmer{display:none}
   .who,.ghost{order:3}
   .clock{order:4;margin-left:0;width:100%}
   .search{order:5;max-width:none;flex:1 1 100%;min-height:44px}
-  main.stage{padding:12px 12px calc(112px + env(safe-area-inset-bottom))}
+  main.stage{padding:12px 12px 16px}
   .guide{flex-direction:column;align-items:stretch}
   .guide h2{font-size:22px}
   .guide .btn,.btn,.open,.plus,.chip{min-height:44px}
@@ -427,10 +428,158 @@ body[data-ready] .shimmer{display:none}
   .bnav button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;min-height:48px}
   .bnav button.on{color:var(--red-soft)}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom));max-width:calc(100% - 24px)}
-  footer.site{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+  .maincol{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  footer.site{padding-bottom:12px}
+  .lock{margin:12px 16px 8px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{animation:none!important;transition:none!important}
+  .mover{display:none}
+}
+.guide h2,.tile .num,.speedo .num,.sidehead h2{font-family:var(--serif);font-weight:400;letter-spacing:-.02em}
+.livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;background:rgba(61,220,151,.12);color:var(--good);border:1px solid rgba(61,220,151,.35);font-size:11px;font-weight:800;letter-spacing:.12em}
+.livepill .gdot{background:var(--good);box-shadow:0 0 8px var(--good)}
+.sysline{font-size:12px;color:var(--muted);white-space:nowrap}
+.kbd{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
+.hero-grid{display:grid;grid-template-columns:1.45fr .85fr;gap:12px;margin-bottom:12px}
+.org{position:relative;min-height:420px;overflow:hidden;background:
+  radial-gradient(420px 220px at 50% 45%,rgba(237,48,57,.18),transparent 70%),
+  rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 48px rgba(237,48,57,.12)}
+.org .ph{padding:14px 14px 0}
+.org-svg{width:100%;height:380px;display:block}
+.org-svg text{font-family:var(--sans);font-size:11px;fill:#d4d4d4}
+.node{cursor:pointer}
+.node .ringping{transform-origin:center;transform-box:fill-box;animation:sonar 2.2s ease-out infinite}
+.node.idle{opacity:.55}
+.node.blocked .core,.node.offline .core{stroke:#ed3039}
+.node.working .core{stroke:#3DDC97}
+.mover{fill:#ed3039;filter:drop-shadow(0 0 4px #ed3039)}
+.stepper{display:none;list-style:none;margin:0;padding:8px 12px 14px}
+.stepper>li{position:relative;padding:0 0 16px 28px}
+.stepper .dot{position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;border:2px solid #555;background:#111}
+.stepper .working .dot{border-color:#3DDC97;box-shadow:0 0 0 6px rgba(61,220,151,.15);animation:sonar 2.2s ease-out infinite}
+.stepper .idle .dot{border-color:#C4A35A}
+.stepper .blocked .dot{border-color:#ed3039}
+.stepper button.nodebtn{border:0;background:transparent;color:inherit;text-align:left;padding:0;width:100%}
+.stepper b{display:block}
+.stepper .work{color:var(--muted);font-size:12px}
+.stepper ul{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.stepper li li{font-size:13px}
+.term{background:#070707;border:1px solid rgba(255,255,255,.08);border-radius:18px;min-height:420px;display:flex;flex-direction:column;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.dots{display:flex;gap:6px;padding:12px 14px 0}
+.dots i{width:9px;height:9px;border-radius:50%;display:block}
+.dots i:nth-child(1){background:#FF5F57}
+.dots i:nth-child(2){background:#FEBC2E}
+.dots i:nth-child(3){background:#28C840}
+.term .log{max-height:340px;padding:4px 14px 14px}
+.term .row{animation:slidein .45s ease both}
+.lv.alert{color:#2a0a0c;background:#ed3039}
+.gaugerow{display:grid;grid-template-columns:1.15fr repeat(3,.7fr);gap:12px;margin-bottom:12px}
+.speedo,.gcard{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.speedo{background:radial-gradient(280px 140px at 50% 80%,rgba(237,48,57,.2),transparent 70%),rgba(255,255,255,.03)}
+.speedo .num,.gcard .num{font-size:54px;line-height:.9}
+.gcard{text-align:center}
+.gcard svg,.speedo svg{width:100%;height:auto;display:block}
+.tile{position:relative;text-align:left;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:12px 12px 10px;color:inherit;min-width:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.tile .num{font-size:40px;line-height:1;display:block;margin:6px 0 2px}
+.tile .l{font-size:12px;color:var(--muted);font-weight:650}
+.delta{display:inline-flex;margin-top:6px;font-family:var(--mono);font-size:11px;border-radius:999px;padding:2px 7px;border:1px solid rgba(255,255,255,.12);color:var(--muted)}
+.delta.up{color:#d7f0e0;border-color:rgba(61,220,151,.35);background:rgba(61,220,151,.1)}
+.delta.down{color:#ffd0d0;border-color:rgba(237,48,57,.4);background:rgba(237,48,57,.12)}
+.tile .tip{position:absolute;left:8px;right:8px;top:calc(100% - 8px);z-index:5;opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .2s ease,transform .2s ease;background:#121212;border:1px solid rgba(237,48,57,.35);border-radius:12px;padding:8px;box-shadow:0 16px 40px rgba(0,0,0,.45)}
+.tile:hover{border-color:rgba(237,48,57,.55);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 28px rgba(237,48,57,.28)}
+.tile:hover .tip{opacity:1;transform:none}
+.spark.draw polyline{transition:stroke-dashoffset .9s ease}
+.splitview{display:grid;grid-template-columns:.9fr 1.1fr;gap:12px}
+.pick{display:block;width:100%;text-align:left;border:0;border-top:1px solid rgba(255,255,255,.08);background:transparent;color:inherit;padding:10px 4px;border-radius:10px}
+.pick.on{background:rgba(237,48,57,.1)}
+.pick b{display:block}
+.pick span{color:var(--muted);font-size:12px}
+.detailpane{min-height:180px}
+.detailpane.swap{animation:fadein .35s ease}
+.compact-list{display:grid;gap:0}
+.minirow{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13px}
+.minirow span{color:var(--muted);text-align:right}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.chat{top:0;bottom:0;right:0;height:100dvh;width:min(420px,100%);border-radius:0;border-left:1px solid var(--line);transform:translateX(104%);opacity:1}
+.chat.on{transform:none}
+@keyframes sonar{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.7);opacity:0}}
+@keyframes slidein{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media(max-width:760px),(max-height:520px) and (max-width:980px){
+  .hero-grid,.gaugerow,.splitview,.two{grid-template-columns:1fr}
+  .org-svg{display:none}
+  .stepper{display:block}
+  .org{min-height:0}
+  .term{min-height:0}
+  .term .log{max-height:220px}
+  .kbd{display:none}
+  .sysline{display:none}
+  .tile .num{font-size:34px}
+  .speedo .num{font-size:42px}
+}
+
+.lock{max-width:440px;margin:8vh auto;text-align:center;padding:36px 28px;border:1px solid var(--line);border-radius:24px;background:rgba(14,14,14,.86);box-shadow:0 0 80px rgba(237,48,57,.16)}
+.lock h2{font-family:var(--serif);font-weight:400;font-size:42px;margin:0 0 8px;letter-spacing:-.03em}
+.lock p{color:var(--muted)}
+.chips{display:none;gap:6px;overflow:auto;padding:10px 16px 0;-webkit-overflow-scrolling:touch}
+.chips button{flex:none;border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:6px 10px;font:700 12px/1 var(--sans);min-height:32px}
+.chips button.on{color:var(--ink);border-color:rgba(237,48,57,.55);background:rgba(237,48,57,.14)}
+.goalgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.trackgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.goal{text-align:center}
+.goal h2{font-family:var(--serif);font-weight:400;font-size:28px;margin:8px 0 4px}
+.ringbox.lg{width:150px;height:150px;margin:0 auto}
+.ringbox.lg .ctr b{font-family:var(--serif);font-size:34px;font-weight:400}
+.gcard .ringbox{width:112px;height:112px;margin:0 auto}
+.gcard .words,.goal .words{font-size:16px;font-weight:750}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.tag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);border-radius:999px;padding:3px 8px;color:var(--muted)}
+.st{display:inline-flex;align-items:center;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:750;border:1px solid var(--line);color:var(--muted)}
+.st.active,.st.live{color:#d7f0e0;border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.12)}
+.st.waiting,.st.draft{color:#f3e2bc;border-color:rgba(196,163,90,.45);background:rgba(196,163,90,.12)}
+.st.blocked,.st.paused{color:#ffd0d0;border-color:rgba(237,48,57,.45);background:rgba(237,48,57,.12)}
+.taskrow{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid rgba(255,255,255,.06)}
+.taskmeta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;color:var(--muted);font-size:12px;white-space:nowrap}
+.funwrap{max-width:100%;overflow-x:auto}
+.funtable{width:100%;border-collapse:collapse;font-size:13px}
+.funtable th{text-align:left;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:8px}
+.funtable td{padding:10px 8px;border-top:1px solid rgba(255,255,255,.06);vertical-align:middle}
+.funtable a{color:var(--red-soft)}
+.pill{display:inline-flex;border-radius:999px;padding:3px 8px;background:rgba(237,48,57,.14);color:#ffd0d0;font-size:11px;font-weight:750}
+.donut{display:grid;grid-template-columns:140px minmax(0,1fr);gap:12px;align-items:center}
+.donut svg{width:140px;height:140px}
+.tile .words{font-size:18px;font-weight:750;line-height:1.2;display:block;margin:8px 0}
+.trackcard .num{font-family:var(--serif);font-size:32px;line-height:1;display:block;margin:8px 0}
+.trackcard .words{font-size:18px;font-weight:750;display:block;margin:8px 0}
+.livepill.off{background:rgba(255,255,255,.04);color:var(--muted);border-color:var(--line)}
+.livepill.off .gdot{background:#555;box-shadow:none;animation:none}
+.livepill .gdot{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.term .log .row{display:grid;grid-template-columns:84px minmax(0,1fr);gap:8px;align-items:start;padding:7px 0;border:0}
+.view.on .tile,.view.on .gcard,.view.on .speedo,.view.on .org,.view.on .term{animation:rise .48s ease both}
+.stepper ul{display:block}
+.stepper .bots{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0;padding:0;list-style:none}
+.stepper .bots li{padding:0}
+.stepper .bots button{border:1px solid var(--line);background:rgba(255,255,255,.03);color:inherit;border-radius:999px;padding:4px 8px;font-size:12px}
+.speedo .lbl{display:block;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+footer.site{margin-top:auto}
+@media(max-width:1100px){
+  .trackgrid{grid-template-columns:1fr 1fr}
+  .goalgrid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px),(max-height:520px) and (max-width:980px){
+  .chips{display:flex}
+  .goalgrid,.trackgrid{grid-template-columns:1fr}
+  .donut{grid-template-columns:1fr}
+  .taskrow{flex-direction:column}
+  .taskmeta{align-items:flex-start;white-space:normal}
+  .funtable,.funtable tbody,.funtable tr,.funtable td{display:block;width:100%}
+  .funtable thead{display:none}
+  .funtable tr{padding:10px 0;border-top:1px solid rgba(255,255,255,.08)}
+  .funtable td{border:0;padding:3px 0}
+  .funtable td:before{content:attr(data-k);display:block;color:var(--dim);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
 }
 </style>
 </head>
@@ -442,29 +591,44 @@ body[data-ready] .shimmer{display:none}
       <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
       <div><strong>Signal</strong><em>Command Center</em></div>
     </div>
-    <div class="side-k">Triangle</div>
     <nav id="tabs" aria-label="Sections"></nav>
     <div class="side-k">Open</div>
     <a class="side-link" href="../">Hub</a>
     <a class="side-link" href="../signal/">Magnet</a>
     <a class="side-link" href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Surge Today</a>
     <a class="side-link" href="https://signals.marketing" target="_blank" rel="noopener noreferrer">signals.marketing</a>
-    <div class="sys" id="sys"><b><i class="gdot dim"></i> Feed</b><span>Checking today.json.</span></div>
+    <div class="sys" id="sys"><b><i class="gdot dim"></i> Feed</b><span>Checking the feed.</span></div>
   </aside>
   <div class="maincol">
     <header class="top">
-      <div class="crumb">Command Center / <b id="crumb">Home</b></div>
-      <label class="search"><input id="qsearch" type="search" placeholder="Search the board" aria-label="Search the board" autocomplete="off"></label>
+      <span class="livepill off" id="livepill"><i class="gdot"></i> WAIT</span>
+      <span class="sysline" id="sysline">Checking the feed</span>
+      <div class="crumb">Command Center / <b id="crumb">Workforce</b></div>
+      <label class="search"><input id="qsearch" type="search" placeholder="Search the board" aria-label="Search the board" autocomplete="off"><kbd class="kbd">Cmd K</kbd></label>
       <span class="who" id="who"></span>
       <button type="button" class="ghost" id="signout" hidden>Sign out</button>
       <button type="button" class="ask" id="ask">Ask your AI team</button>
-      <div class="clock"><i class="gdot dim" id="livedot" aria-hidden="true"></i><span class="live-age" id="live-age">Checking the feed</span><span id="clock">CT</span></div>
+      <div class="clock"><span id="clock">CT</span></div>
     </header>
+    <div class="chips" id="chips" aria-label="More sections"></div>
     <main class="stage">
       <div class="shimmer" id="shimmer" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="banner" id="banner" hidden>SAMPLE. These figures are layout data. They are not the live feed and they are not saved.</div>
       <div class="banner" id="target-banner" hidden>Targets file did not load. This board is not guessing targets.</div>
-      <section class="view on" id="v-home" aria-label="Home"></section>
+      <div class="banner" id="feed-banner" hidden></div>
+      <section class="lock" id="lock" hidden>
+        <h2>Private feed</h2>
+        <p id="lock-copy">Sign in as the owner to load the private feed. The sample layout stays on this page without a login.</p>
+        <button type="button" class="btn p" id="lock-in">Sign in</button>
+        <p style="margin-top:14px"><a id="lock-sample" href="?sample=1">Open the sample layout</a></p>
+      </section>
+      <section class="view on" id="v-home" aria-label="Workforce"></section>
+      <section class="view" id="v-goals" aria-label="Goals"></section>
+      <section class="view" id="v-projects" aria-label="Projects"></section>
+      <section class="view" id="v-tasks" aria-label="Tasks"></section>
+      <section class="view" id="v-winning" aria-label="Winning"></section>
+      <section class="view" id="v-tracks" aria-label="Tracks"></section>
+      <section class="view" id="v-funnels" aria-label="Funnels"></section>
       <section class="view" id="v-attract" aria-label="Attract"></section>
       <section class="view" id="v-convert" aria-label="Convert"></section>
       <section class="view" id="v-transform" aria-label="Transform"></section>
@@ -473,6 +637,7 @@ body[data-ready] .shimmer{display:none}
       Signal Marketing · Command Center · Read only, except the owner log. Nothing here sends, stamps, or charges.<br>
       <a id="sample-link" href="?sample=1">Sample layout</a>
       · <a href="./SCHEMA.md">Feed schema</a>
+      · <a href="./README.md">Read me</a>
       · <a href="./targets.json">Targets</a>
     </footer>
   </div>
@@ -541,7 +706,13 @@ body[data-ready] .shimmer{display:none}
   var SB_KEY = 'sb_publishable_lwmiHRxf1Hdf2Z4b_aJkjg_ck7u1ms4';
   var AUTH_KEY = 'sb-udkbnlpnfyjuwlstfxhr-auth-token';
   var VIEWS = [
-    ['home', 'Home', '<path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'],
+    ['home', 'Workforce', '<circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>'],
+    ['goals', 'Goals', '<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>'],
+    ['projects', 'Projects', '<path d="M4 7h6l2 2h8v10H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'],
+    ['tasks', 'Tasks', '<path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'],
+    ['winning', 'Winning', '<path d="M12 3c1 3 3.2 4.2 3.2 7.2a3.2 3.2 0 1 1-6.4 0c0-1 .5-2 1.2-2.6-.2 1 .6 1.8 1.4 1.8C11 7.2 11.4 5 12 3z" fill="currentColor"/>'],
+    ['tracks', 'Tracks', '<path d="M4 16l4-4 3 3 8-8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+    ['funnels', 'Funnels', '<path d="M4 5h16l-5 7v6l-6 2v-8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'],
     ['attract', 'Attract', '<path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
     ['convert', 'Convert', '<path d="M4 16l5-5 3 3 8-8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
     ['transform', 'Transform', '<path d="M4 12h16M14 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>']
@@ -562,8 +733,12 @@ body[data-ready] .shimmer{display:none}
     feed: null,
     targets: null,
     feedState: 'checking',
-    feedNote: 'Checking today.json.',
+    feedNote: 'Checking the feed.',
     view: 'home',
+    more: {},
+    pick: '',
+    orgNodes: [],
+    authReady: false,
     user: null,
     admin: false,
     kpiState: 'signedout',
@@ -696,7 +871,7 @@ body[data-ready] .shimmer{display:none}
       var y = (h - 4) - ((v - mn) / (mx - mn)) * (h - 8);
       return x.toFixed(1) + ',' + y.toFixed(1);
     }).join(' ');
-    return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"><polyline fill="none" stroke="#ed3039" stroke-opacity=".35" stroke-width="4" points="' + pts + '"/><polyline fill="none" stroke="#ed3039" stroke-width="1.8" points="' + pts + '"/></svg>';
+    return '<svg class="spark draw" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"><polyline fill="none" stroke="#ed3039" stroke-opacity=".35" stroke-width="4" points="' + pts + '"/><polyline fill="none" stroke="#ed3039" stroke-width="1.8" points="' + pts + '"/></svg>';
   }
   function chartSvg(vals, labels) {
     if (!vals || vals.length < 2) return '';
@@ -1643,6 +1818,16 @@ body[data-ready] .shimmer{display:none}
       });
     })();
 
+    function winSide(metric) {
+      if (metric === 'client_wins') return 'transform';
+      if (metric === 'booked_calls' || metric === 'showed_calls' || metric === 'closed_deals') return 'convert';
+      return 'attract';
+    }
+    function winTrack(metric) {
+      if (metric === 'videos') return 'youtube';
+      if (metric === 'lead_magnets' || metric === 'contacts') return 'magnets';
+      return 'retainers';
+    }
     var wins = [];
     if (log.state === 'ready') {
       log.rows.forEach(function (r) {
@@ -1651,12 +1836,12 @@ body[data-ready] .shimmer{display:none}
         var text = compact(r.count) + ' ' + (r.count === 1 ? pair[0] : pair[1]);
         if (r.client_name) text += ' for ' + r.client_name;
         if (r.note) text += '. ' + r.note;
-        wins.push({ when: r.logged_on, text: text, source: 'floor log' });
+        wins.push({ when: r.logged_on, text: text, source: 'floor log', side: winSide(r.metric), track: winTrack(r.metric) });
       });
     }
     official.forEach(function (spec, index) {
       (MET['c' + index + '-win'].lines || []).forEach(function (line) {
-        if (line.when && line.when >= ws && line.when <= we) wins.push(line);
+        if (line.when && line.when >= ws && line.when <= we) wins.push({ when: line.when, text: line.text, source: line.source || 'client card', side: line.side || 'transform', track: line.track || 'retainers' });
       });
     });
     function cashEvents(list, kind) {
@@ -1668,7 +1853,7 @@ body[data-ready] .shimmer{display:none}
         if (kind === 'gmail' && item.direction !== 'in') return;
         var who = clean(item.customer || item.who || 'a payment');
         var amt = num(item.amount);
-        wins.push({ when: day, text: (amt == null ? 'Payment' : money(amt)) + ' in from ' + who, source: kind === 'stripe' ? 'Stripe, today.json cash.stripe' : 'Gmail, today.json cash.payments' });
+        wins.push({ when: day, text: (amt == null ? 'Payment' : money(amt)) + ' in from ' + who, source: kind === 'stripe' ? 'Stripe, today.json cash.stripe' : 'Gmail, today.json cash.payments', side: 'convert', track: 'retainers' });
       });
     }
     if (stripe && Array.isArray(stripe.recentCharges)) cashEvents(stripe.recentCharges, 'stripe');
@@ -1830,7 +2015,7 @@ body[data-ready] .shimmer{display:none}
     if (!(alerts.state === 'ready' && alerts.failed)) gaps.push('failed charges');
     var guide;
     if (!feed) {
-      guide = { kicker: 'What to do now', title: 'The feed did not load.', sub: S.feedNote || 'today.json did not load.', button: '', rowId: '' };
+      guide = { kicker: 'What to do now', title: 'The feed did not load.', sub: S.feedNote || 'The feed did not load.', button: '', rowId: '' };
     } else if (moveRows.length) {
       guide = { kicker: S.sample ? 'Sample. What to do now' : 'What to do now', title: moveRows[0].title, sub: moveRows[1] ? ('Then: ' + moveRows[1].title) : (moveRows[0].meta || ''), button: 'Open this move', rowId: moveRows[0].id };
     } else if (decisions.state === 'ready' && !gaps.length && !rows.some(function (r) { return r.group === 'look'; })) {
@@ -1860,7 +2045,7 @@ body[data-ready] .shimmer{display:none}
       if (!name || looksLikeId(name)) name = role && !looksLikeId(role) ? role : 'Unnamed desk';
       if (looksLikeId(role)) role = '';
       var st = clean(a.status || 'not-reported').toLowerCase();
-      agentCards.push({ name: name, role: role && role !== name ? role : '', status: st || 'not-reported', work: clean(a.currentWork || ''), report: a.lastReportAt ? formatWhen(a.lastReportAt) : '' });
+      agentCards.push({ name: name, role: role && role !== name ? role : '', status: st || 'not-reported', work: clean(a.currentWork || ''), report: a.lastReportAt ? formatWhen(a.lastReportAt) : '', reportsTo: clean(a.reportsTo || '') });
     });
     var activity = feed && Array.isArray(feed.activityLog) ? feed.activityLog : null;
 
@@ -2136,37 +2321,466 @@ body[data-ready] .shimmer{display:none}
     var strip = cells ? '<div class="heat" role="img" aria-label="Scripts delivered against filmed">' + cells + '</div>' : '';
     return strip + (h.message && !cells ? '<p class="quiet">' + esc(h.message) + '</p>' : '') + late + (cells ? '<p class="quiet">Green filmed on time. Gold still inside the window. Red is late.</p>' : '');
   }
+  function lockedNow() { return !S.sample && !S.admin; }
+  function sideWord(side) {
+    if (side === 'attract') return 'Attract';
+    if (side === 'convert') return 'Convert';
+    if (side === 'transform') return 'Transform';
+    return '';
+  }
+  function trackById(tracks, id) {
+    var key = String(id || '');
+    for (var i = 0; i < tracks.length; i++) if (tracks[i] && tracks[i].id === key) return tracks[i];
+    return null;
+  }
+  function tagsHtml(side, trackId, tracks) {
+    var bits = [];
+    var word = sideWord(side);
+    var track = trackById(tracks || [], trackId);
+    if (word) bits.push('<span class="tag">' + esc(word) + '</span>');
+    if (track) bits.push('<span class="tag">' + esc(track.label || track.id) + '</span>');
+    return bits.length ? '<span class="tags">' + bits.join('') + '</span>' : '';
+  }
+  function statusPill(status) {
+    var k = clean(status || '').toLowerCase();
+    var word = k === 'active' ? 'Active' : k === 'waiting' ? 'Waiting' : k === 'blocked' ? 'Blocked' : k === 'done' ? 'Done' : k === 'live' ? 'Live' : k === 'draft' ? 'Draft' : k === 'paused' ? 'Paused' : (clean(status) || 'No status');
+    return '<span class="st ' + esc(k || 'none') + '">' + esc(word) + '</span>';
+  }
+  function missPanel(title, note) {
+    return '<article class="panel"><h2>' + esc(title) + '</h2><p class="quiet">' + esc(note) + '</p></article>';
+  }
+  function deltaPill(vals) {
+    if (!vals || vals.length < 2) return '';
+    var a = num(vals[vals.length - 2]);
+    var b = num(vals[vals.length - 1]);
+    if (a == null || b == null || a === b) return '';
+    var d = b - a;
+    var cls = d > 0 ? 'up' : 'down';
+    var sign = d > 0 ? '+' : '';
+    return '<span class="delta ' + cls + '">' + sign + esc(compact(d)) + ' vs prior</span>';
+  }
+  function spineData() {
+    var feed = S.feed || {};
+    var targets = S.targets || {};
+    var spine = feed.spine && typeof feed.spine === 'object' && !Array.isArray(feed.spine) ? feed.spine : null;
+    var tracks = Array.isArray(targets.tracks) ? targets.tracks : [];
+    var defs = Array.isArray(targets.goals) ? targets.goals : [];
+    var live = spine && Array.isArray(spine.goals) ? spine.goals : [];
+    var byId = {};
+    live.forEach(function (g) { if (g && g.id) byId[g.id] = g; });
+    var ids = defs.map(function (g) { return g && g.id; }).filter(Boolean);
+    live.forEach(function (g) { if (g && g.id && ids.indexOf(g.id) === -1) ids.push(g.id); });
+    var goals = ids.length ? ids.map(function (id) {
+      var def = null;
+      defs.forEach(function (g) { if (g && g.id === id) def = g; });
+      var row = byId[id] || {};
+      def = def || {};
+      return {
+        id: id,
+        label: clean(row.label || def.label || id),
+        current: row.current == null ? null : num(row.current),
+        target: num(row.target != null ? row.target : def.target),
+        unit: clean(row.unit || def.unit || 'count'),
+        side: clean(row.side || def.side || ''),
+        track: clean(row.track || def.track || ''),
+        owner: clean(row.owner || def.owner || ''),
+        status: clean(row.status || '')
+      };
+    }) : null;
+    var pulse = {};
+    if (spine && Array.isArray(spine.trackPulse)) {
+      spine.trackPulse.forEach(function (p) { if (p && p.id) pulse[p.id] = p; });
+    }
+    return {
+      known: !!spine,
+      tracks: tracks,
+      goals: goals,
+      projects: spine && Array.isArray(spine.projects) ? spine.projects : null,
+      tasks: spine && Array.isArray(spine.tasks) ? spine.tasks : null,
+      funnels: spine && Array.isArray(spine.funnels) ? spine.funnels : null,
+      pulse: pulse
+    };
+  }
+  function goalCard(g, tracks) {
+    var cur = g.current;
+    var tgt = g.target;
+    var pct = (cur != null && tgt) ? Math.max(0, Math.min(100, (cur / tgt) * 100)) : null;
+    var shown = cur == null ? '' : (g.unit === 'money' ? money(cur) : compact(cur));
+    var targetText = tgt == null ? 'No target in targets.json' : (g.unit === 'money' ? money(tgt) : compact(tgt));
+    var center = cur == null ? '' : '<b><span class="cu" data-to="' + esc(String(cur)) + '"' + (g.unit === 'money' ? ' data-money="1"' : '') + '>' + esc(shown) + '</span></b>';
+    return '<article class="panel goal filterable"><div class="ringbox lg">' + ringSvg(pct, 150) + '<div class="ctr">' + center + '</div></div>' +
+      (cur == null ? '<p class="v words">Not connected</p>' : '') +
+      '<h2>' + esc(g.label) + '</h2><p class="src">Target ' + esc(targetText) + '</p>' +
+      '<p class="quiet">Owner ' + esc(g.owner || 'Unassigned') + '</p>' +
+      (g.status ? statusPill(g.status) : '') + tagsHtml(g.side, g.track, tracks) + '</article>';
+  }
+  function goalsHtml(data) {
+    if (!data.goals) return missPanel('Goals', 'Not connected. Goal targets live in targets.json and the current value lives in the feed.');
+    return '<div class="goalgrid">' + data.goals.map(function (g) { return goalCard(g, data.tracks); }).join('') + '</div>';
+  }
+  function projectsHtml(data) {
+    if (data.projects == null) return missPanel('Projects', 'Not connected. Projects sit under a goal in the feed.');
+    if (!data.projects.length) return missPanel('Projects', 'No projects in this feed.');
+    var goals = data.goals || [];
+    var groups = {};
+    data.projects.forEach(function (p) {
+      var k = clean((p && p.goalId) || '');
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(p);
+    });
+    var keys = goals.map(function (g) { return g.id; });
+    Object.keys(groups).forEach(function (k) { if (keys.indexOf(k) === -1) keys.push(k); });
+    return keys.map(function (k) {
+      var list = groups[k];
+      if (!list) return '';
+      var goal = null;
+      goals.forEach(function (g) { if (g.id === k) goal = g; });
+      var title = goal ? goal.label : (k || 'No goal');
+      var cards = list.map(function (p) {
+        return '<article class="panel filterable"><div class="ph"><h2>' + esc(clean((p && p.name) || 'Project')) + '</h2>' + statusPill(p && p.status) + '</div><p class="quiet">Owner ' + esc(clean((p && p.owner) || 'Unassigned')) + '</p>' + tagsHtml(p && p.side, p && p.track, data.tracks) + '</article>';
+      }).join('');
+      return '<h3 class="qhead">' + esc(title) + '</h3><div class="goalgrid">' + cards + '</div>';
+    }).join('');
+  }
+  function tasksHtml(data) {
+    if (data.tasks == null) return missPanel('Tasks', 'Not connected. Tasks sit under a project in the feed.');
+    if (!data.tasks.length) return missPanel('Tasks', 'No tasks in this feed.');
+    var projects = data.projects || [];
+    var groups = {};
+    data.tasks.forEach(function (t) {
+      var k = clean((t && t.projectId) || '');
+      if (!groups[k]) groups[k] = [];
+      groups[k].push(t);
+    });
+    var keys = projects.map(function (p) { return clean(p && p.id); }).filter(Boolean);
+    Object.keys(groups).forEach(function (k) { if (keys.indexOf(k) === -1) keys.push(k); });
+    return keys.map(function (k) {
+      var list = groups[k];
+      if (!list) return '';
+      var project = null;
+      projects.forEach(function (p) { if (p && p.id === k) project = p; });
+      var title = project ? clean(project.name || 'Project') : (k || 'No project');
+      var rows = list.map(function (t) {
+        return '<div class="taskrow filterable"><div><b>' + esc(clean((t && t.name) || 'Task')) + '</b>' + tagsHtml(t && t.side, t && t.track, data.tracks) + '</div><div class="taskmeta">' + statusPill(t && t.status) + '<span>Owner ' + esc(clean((t && t.owner) || 'Unassigned')) + '</span></div></div>';
+      }).join('');
+      return '<section class="panel"><h2>' + esc(title) + '</h2>' + rows + '</section>';
+    }).join('');
+  }
+  function tracksHtml(data) {
+    if (!S.targets) return missPanel('Tracks', 'Targets file did not load, so the track list is not guessed.');
+    if (!data.tracks.length) return missPanel('Tracks', 'No tracks in targets.json.');
+    var cards = data.tracks.map(function (t) {
+      var pulse = data.pulse[t.id];
+      var hist = pulse && Array.isArray(pulse.history) ? pulse.history.map(num).filter(function (n) { return n != null; }) : [];
+      var value = '';
+      if (pulse && pulse.value != null && String(pulse.value).trim()) value = '<span class="num">' + esc(clean(pulse.value)) + '</span>';
+      else if (pulse && num(pulse.current) != null) value = '<span class="num"><span class="cu" data-to="' + esc(String(pulse.current)) + '">' + esc(compact(pulse.current)) + '</span></span>';
+      else value = '<span class="words">Not connected</span>';
+      var note = pulse && pulse.note ? '<p class="quiet">' + esc(clean(pulse.note)) + '</p>' : '';
+      var src = pulse ? 'Source: feed spine.trackPulse' : 'Source: targets.json tracks. No reading in the feed.';
+      return '<article class="panel trackcard filterable"><span class="l">' + esc(clean(t.label || t.id)) + (t.handle ? ' ' + esc(clean(t.handle)) : '') + '</span>' + value + deltaPill(hist) + (spark(hist) || '') + note + '<p class="quiet">Owner ' + esc(clean(t.owner || 'Unassigned')) + '</p>' + tagsHtml(t.side, t.id, data.tracks) + '<p class="src">' + esc(src) + '</p></article>';
+    }).join('');
+    return '<div class="trackgrid">' + cards + '</div>';
+  }
+  function funnelsHtml(data) {
+    if (data.funnels == null) return missPanel('Funnels', 'Not connected. Funnels sit in the feed.');
+    if (!data.funnels.length) return missPanel('Funnels', 'No funnels in this feed.');
+    var rows = data.funnels.map(function (f) {
+      var href = safeHref((f && (f.href || f.url)) || '');
+      var conv = num(f && f.conversions);
+      var link = href ? '<a href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">Open</a>' : 'No link';
+      return '<tr class="filterable"><td data-k="Name">' + esc(clean((f && f.name) || 'Untitled')) + tagsHtml(f && f.side, f && f.track, data.tracks) + '</td><td data-k="Type"><span class="pill">' + esc(clean((f && f.type) || 'Funnel')) + '</span></td><td data-k="Status">' + statusPill(f && f.status) + '</td><td data-k="Link">' + link + '</td><td data-k="Conversions">' + esc(conv == null ? 'Not connected' : compact(conv)) + '</td></tr>';
+    }).join('');
+    return '<article class="panel"><div class="ph"><h2>Funnels</h2><p class="sub">Name, type, status, link, conversions.</p></div><div class="funwrap"><table class="funtable"><thead><tr><th>Name</th><th>Type</th><th>Status</th><th>Link</th><th>Conversions</th></tr></thead><tbody>' + rows + '</tbody></table></div><p class="src">Source: feed spine.funnels. Links open out. This board does not submit a form.</p></article>';
+  }
+  function winningHtml(m, data) {
+    var list = m.wins.length ? '<ul class="wins">' + m.wins.map(function (w) {
+      return '<li class="filterable"><span>' + FLAME + ' ' + esc(w.text) + tagsHtml(w.side, w.track, data.tracks) + '</span><span>' + esc([w.when, w.source].filter(Boolean).join(' · ')) + '</span></li>';
+    }).join('') + '</ul>' : '<p class="quiet">' + esc(m.winCopy) + '</p>';
+    return gameHtml(m) + '<section class="panel" style="margin-top:12px"><div class="ph"><h2>Wins</h2><p class="sub">This Monday-start week. Flames mark a real win. XP is on the level card.</p></div>' + list + '</section>';
+  }
+  function orgHtml(m) {
+    if (!m.agentsKnown) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">Not connected. The feed has no agents list.</p></section>';
+    var cards = m.agentCards || [];
+    if (!cards.length) return '<section class="org panel"><div class="ph"><h2>AI workforce</h2></div><p class="quiet" style="padding:8px 14px 16px">No agents in this feed.</p></section>';
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var desks = [];
+    var bots = [];
+    cards.forEach(function (a) {
+      var desk = a.reportsTo === 'Cristian' || (!a.reportsTo && /desk/i.test(a.role || ''));
+      (desk ? desks : bots).push(a);
+    });
+    var cx = 480, cy = 200;
+    var nodes = [{ id: 'n0', name: 'Cristian', role: 'Owner', status: 'working', work: 'The desks report here.', report: 'This node is the hub, not a metric.', parent: '' }];
+    var pos = { n0: { x: cx, y: cy, r: 28, ang: 0 } };
+    var deskNode = {};
+    desks.forEach(function (d, i) {
+      var ang = -Math.PI / 2 + (i * 2 * Math.PI / Math.max(desks.length, 1));
+      var id = 'n' + nodes.length;
+      nodes.push({ id: id, name: d.name, role: d.role || 'Desk', status: d.status || 'idle', work: d.work || 'No current work in the feed.', report: d.report || 'No report time', parent: 'n0' });
+      pos[id] = { x: cx + Math.cos(ang) * 155, y: cy + Math.sin(ang) * 96, r: 16, ang: ang };
+      deskNode[d.name] = id;
+    });
+    var buckets = {};
+    bots.forEach(function (b) {
+      var key = b.reportsTo && deskNode[b.reportsTo] ? b.reportsTo : '';
+      if (!buckets[key]) buckets[key] = [];
+      buckets[key].push(b);
+    });
+    Object.keys(buckets).forEach(function (key) {
+      var parentId = key ? deskNode[key] : 'n0';
+      var parent = pos[parentId];
+      var base = parent.ang != null && parentId !== 'n0' ? parent.ang : -Math.PI / 2;
+      var list = buckets[key];
+      var mid = Math.ceil(list.length / 2);
+      list.forEach(function (b, i) {
+        var ring = i < mid ? 0 : 1;
+        var count = ring === 0 ? mid : list.length - mid;
+        var idx = ring === 0 ? i : i - mid;
+        var spread = Math.min(1.05, 0.22 * Math.max(count, 1));
+        var ang = base + (count <= 1 ? 0 : (-spread / 2 + spread * idx / (count - 1)));
+        var rad = parentId === 'n0' ? 120 : (ring === 0 ? 46 : 78);
+        var id = 'n' + nodes.length;
+        nodes.push({ id: id, name: b.name, role: b.role || 'Bot', status: b.status || 'idle', work: b.work || 'No current work in the feed.', report: b.report || 'No report time', parent: parentId });
+        pos[id] = { x: parent.x + Math.cos(ang) * rad, y: parent.y + Math.sin(ang) * rad, r: 6.5, ang: ang };
+      });
+    });
+    nodes.forEach(function (n) {
+      var p = pos[n.id];
+      p.x = Math.max(28, Math.min(932, p.x));
+      p.y = Math.max(24, Math.min(396, p.y));
+    });
+    S.orgNodes = nodes;
+    function fill(status) {
+      if (status === 'working') return '#ed3039';
+      if (status === 'blocked') return '#C4A35A';
+      if (status === 'not-reported') return '#242424';
+      return '#3a3a3a';
+    }
+    function link(a, b) {
+      var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      var cpx = mx * 0.62 + cx * 0.38, cpy = my * 0.62 + cy * 0.38;
+      return 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + cpx.toFixed(1) + ',' + cpy.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1);
+    }
+    var paths = '';
+    var movers = '';
+    nodes.forEach(function (n) {
+      if (!n.parent) return;
+      var d = link(pos[n.parent], pos[n.id]);
+      paths += '<path d="' + d + '" fill="none" stroke="rgba(237,48,57,.35)" stroke-width="1.2"/>';
+      if (!reduce) movers += '<circle r="2.3" class="mover"><animateMotion dur="' + (3.2 + (n.id.length % 5) * 0.45).toFixed(2) + 's" repeatCount="indefinite" path="' + d + '"/></circle>';
+    });
+    var shapes = nodes.map(function (n) {
+      var p = pos[n.id];
+      var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
+      var ping = n.status === 'working' && !reduce ? '<circle class="ringping" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + (p.r + 8) + '" fill="none" stroke="#ed3039" stroke-width="1.4"/>' : '';
+      var label = '';
+      if (n.id === 'n0' || n.parent === 'n0') {
+        var ang = n.id === 'n0' ? Math.PI / 2 : (p.ang || 0);
+        var lx = n.id === 'n0' ? p.x : p.x - Math.cos(ang) * (p.r + 18);
+        var ly = n.id === 'n0' ? p.y + p.r + 16 : p.y - Math.sin(ang) * (p.r + 16);
+        label = '<text x="' + lx.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
+      }
+      var glow = n.status === 'working' ? ' filter="url(#nglow)"' : '';
+      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '">' + ping + '<circle class="core" cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="' + p.r + '" fill="' + fill(n.status) + '"' + glow + '/><title>' + esc(n.name + '. ' + (n.role || '') + '. ' + n.work) + '</title>' + label + '</g>';
+    }).join('');
+    var svg = '<svg class="org-svg" viewBox="0 0 960 420" role="img" aria-label="Agent hand-off. Cristian in the center, desks around him, bots on the desks."><defs><filter id="nglow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' + paths + movers + shapes + '</svg>';
+    function stepItem(n) {
+      var cls = n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : 'idle');
+      return '<li class="' + cls + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(n.id) + '"><b>' + esc(n.name) + '</b><span class="work">' + esc(n.role || '') + (n.work ? ' · ' + esc(n.work) : '') + '</span></button>';
+    }
+    var steps = stepItem(nodes[0]);
+    var deskNodes = nodes.filter(function (n) { return n.parent === 'n0'; });
+    steps += '<ul>' + deskNodes.map(function (d) {
+      var kids = nodes.filter(function (n) { return n.parent === d.id; });
+      return stepItem(d) + (kids.length ? '<ul class="bots">' + kids.map(function (b) {
+        return '<li class="' + (b.status === 'working' ? 'working' : 'idle') + '"><button type="button" data-node="' + esc(b.id) + '">' + esc(b.name) + '</button></li>';
+      }).join('') + '</ul>' : '') + '</li>';
+    }).join('') + '</ul></li>';
+    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub">' + esc(String(nodes.length)) + ' nodes. Click one for current work and the last report.</p></div>' + svg + '<ol class="stepper">' + steps + '</ol></section>';
+  }
+  function levelWord(level) {
+    var l = String(level || 'info').toLowerCase();
+    if (l === 'success' || l === 'ok') return ['ok', 'SUCCESS'];
+    if (l === 'warn' || l === 'warning') return ['warn', 'WARN'];
+    if (l === 'alert' || l === 'error') return ['alert', 'ALERT'];
+    return ['info', 'INFO'];
+  }
+  function termHtml(m) {
+    if (!m.activity) return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><p class="quiet" style="padding:12px 14px">Not connected. The feed has no activity log.</p></section>';
+    if (!m.activity.length) return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><p class="quiet" style="padding:12px 14px">The log was checked and it is empty.</p></section>';
+    var rows = m.activity.slice().reverse().slice(0, 14);
+    var body = rows.map(function (e, i) {
+      var lv = levelWord(e.level);
+      var msg = clean((e.actor ? e.actor + ': ' : '') + (e.message || ''));
+      return '<div class="row filterable" style="animation-delay:' + (i * 45) + 'ms"><span class="lv ' + lv[0] + '">' + lv[1] + '</span><span>' + esc(msg) + '</span></div>';
+    }).join('');
+    return '<section class="term"><div class="dots" aria-hidden="true"><i></i><i></i><i></i></div><div class="ph" style="padding:8px 14px 0"><h2>Live log</h2><p class="sub">Newest first</p></div><div class="log">' + body + '</div></section>';
+  }
+  function speedoHtml(score) {
+    var R = 78;
+    var C = Math.PI * R;
+    var p = score == null ? 0 : Math.max(0, Math.min(100, score)) / 100;
+    var off = (C * (1 - p)).toFixed(2);
+    var arc = score == null ? '' : '<path class="arc" d="M22 108 A78 78 0 0 1 178 108" fill="none" stroke="#ed3039" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + C.toFixed(2) + '" stroke-dashoffset="' + C.toFixed(2) + '" data-off="' + off + '"/>';
+    var num = score == null ? '<span class="num" style="font-size:28px">No score</span>' : '<span class="num"><span class="cu" data-to="' + esc(String(score)) + '">' + esc(String(score)) + '</span></span>';
+    var note = score == null ? 'No side has a score yet.' : 'Average of the sides that have data.';
+    return '<div class="speedo"><svg viewBox="0 0 200 128" role="img" aria-label="' + esc(note) + '"><path d="M22 108 A78 78 0 0 1 178 108" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="14" stroke-linecap="round"/>' + arc + '</svg>' + num + '<span class="lbl">Weekly score</span><p class="src">' + esc(note) + '</p></div>';
+  }
+  function gaugeCard(side, label) {
+    var s = S.model.sides[side];
+    var num = s.score == null ? '<span class="words">No score</span>' : '<b><span class="cu" data-to="' + esc(String(s.score)) + '">' + esc(String(s.score)) + '</span></b>';
+    var note = s.score == null ? 'No metrics with data yet.' : (s.behind ? (s.behind + ' behind') : 'On pace');
+    return '<button type="button" class="gcard" data-view="' + side + '"><div class="ringbox">' + ringSvg(s.score, 112) + '<div class="ctr">' + num + '</div></div><span class="l">' + esc(label) + '</span><span class="src">' + esc(note) + '. The dashed ring is the target.</span></button>';
+  }
+  function gaugeRow(m) {
+    var parts = ['attract', 'convert', 'transform'].map(function (s) { return m.sides[s].score; }).filter(function (s) { return s != null; });
+    var overall = parts.length ? Math.round(parts.reduce(function (a, b) { return a + b; }, 0) / parts.length) : null;
+    return '<div class="gaugerow">' + speedoHtml(overall) + gaugeCard('attract', 'Attract') + gaugeCard('convert', 'Convert') + gaugeCard('transform', 'Transform') + '</div>';
+  }
+  function tileHtml(m) {
+    if (!m) return '';
+    var vals = (m.history && m.history.vals) || [];
+    var tip = '';
+    if (vals.length >= 2) {
+      var chart = chartSvg(vals, (m.history && m.history.labels) || []);
+      if (chart) tip = '<span class="tip">' + chart + '<span class="src">Source: ' + esc(m.source) + '</span></span>';
+    }
+    return '<button type="button" class="tile sig-' + esc(m.signal) + '" data-open-kpi="' + esc(m.id) + '"><span class="l">' + esc(m.label) + '</span>' + valueHtml(m, true) + deltaPill(vals) + '<span class="src">Target ' + esc(m.targetText) + '</span>' + (spark(vals) || '') + tip + '</button>';
+  }
+  function donutHtml(m) {
+    var slices = [];
+    var collected = m.metrics.collected;
+    if (collected && collected.countTo != null && collected.countTo > 0) slices.push({ label: 'Collected', value: collected.countTo, color: '#ed3039' });
+    var cash = m.charts && m.charts.cash;
+    if (cash && cash.outstanding) slices.push({ label: cash.outLabel || 'Outstanding', value: cash.outstanding, color: '#C4A35A' });
+    if (!slices.length) return chartPanel('Where the cash sits', 'Collected against outstanding.', emptyViz('Not connected'), 'the feed cash block');
+    var total = slices.reduce(function (s, x) { return s + x.value; }, 0);
+    var C = 2 * Math.PI * 42;
+    var off = 0;
+    var arcs = slices.map(function (sl) {
+      var len = C * (sl.value / total);
+      var el = '<circle cx="60" cy="60" r="42" fill="none" stroke="' + sl.color + '" stroke-width="16" stroke-linecap="butt" stroke-dasharray="' + len.toFixed(2) + ' ' + (C - len).toFixed(2) + '" stroke-dashoffset="' + (-off).toFixed(2) + '" transform="rotate(-90 60 60)"/>';
+      off += len;
+      return el;
+    }).join('');
+    var legend = '<ul class="src-list">' + slices.map(function (sl) {
+      return '<li><b>' + esc(sl.label) + '</b><span>' + esc(money(sl.value)) + '</span></li>';
+    }).join('') + '</ul>';
+    return chartPanel('Where the cash sits', 'Only amounts the feed actually has.', '<div class="donut"><svg viewBox="0 0 120 120" role="img" aria-label="Cash split">' + arcs + '</svg>' + legend + '</div>', 'the feed cash block');
+  }
+  function approvalItems(m) {
+    var items = m.rows.filter(function (r) { return r.group === 'look' || r.kind === 'email'; }).map(function (r) {
+      return { id: r.id, title: r.title, meta: r.meta || r.badge || '', href: r.href || '', hrefLabel: r.hrefLabel || 'Open to approve', note: r.leftNote || r.meta || '', kind: r.kind || 'row' };
+    });
+    var fail = m.metrics['failed-charges'];
+    if (fail && fail.countTo) items.push({ id: 'kpi:failed-charges', title: (fail.valueText || compact(fail.countTo)) + ' failed charges', meta: 'Failed charges', href: '', hrefLabel: '', note: 'Open the card. This board does not retry a charge.', kind: 'kpi' });
+    return items;
+  }
+  function approvalHtml(m) {
+    var known = m.callsKnown || m.emailsKnown || !!m.stripe || (m.metrics['failed-charges'] && m.metrics['failed-charges'].words !== 'Not connected');
+    var items = approvalItems(m);
+    if (!items.length) return '<section class="panel" id="approvals"><h2>Review</h2><p class="quiet">' + (known ? 'Nothing is waiting for review.' : 'Not connected.') + '</p><p class="src">The board does not send, stamp, or charge.</p></section>';
+    if (!S.pick || !items.some(function (it) { return it.id === S.pick; })) S.pick = items[0].id;
+    var picks = items.map(function (it) {
+      return '<button type="button" class="pick' + (it.id === S.pick ? ' on' : '') + '" data-pick="' + esc(it.id) + '"><b>' + esc(it.title) + '</b><span>' + esc(it.meta || '') + '</span></button>';
+    }).join('');
+    var cur = items.filter(function (it) { return it.id === S.pick; })[0];
+    var action = '';
+    if (cur.kind === 'kpi') action = '<button type="button" class="btn p" data-open-kpi="failed-charges">Open the card</button>';
+    else if (cur.href) action = '<a class="btn p" href="' + esc(cur.href) + '" target="_blank" rel="noopener noreferrer">' + esc(cur.hrefLabel || 'Open to approve') + '</a>';
+    else action = '<p class="quiet">No link on this item.</p>';
+    var detail = '<div class="detailpane swap" id="detailpane"><p class="badge">' + esc(cur.meta || 'Review') + '</p><h2>' + esc(cur.title) + '</h2><p>' + esc(cur.note || '') + '</p>' + action + '<p class="src">This opens the source. The board does not send, stamp, or charge.</p></div>';
+    return '<section class="splitview" id="approvals"><article class="panel"><div class="ph"><h2>Review</h2><p class="sub">Money moves, drafts, failed charges</p></div>' + picks + '</article><article class="panel">' + detail + '</article></section>';
+  }
+  function compactWins(m) {
+    if (!m.wins.length) return '<article class="panel"><div class="ph"><h2>Weekly wins</h2></div><p class="quiet">' + esc(m.winCopy) + '</p></article>';
+    var rows = m.wins.slice(0, 3).map(function (w) {
+      return '<div class="minirow"><span>' + FLAME + ' ' + esc(w.text) + '</span></div>';
+    }).join('');
+    var more = m.wins.length > 3 ? '<button type="button" class="ghost" data-view="winning">View all</button>' : '';
+    return '<article class="panel"><div class="ph"><h2>Weekly wins</h2>' + more + '</div>' + rows + '</article>';
+  }
+  function compactToday(m) {
+    var rows = m.rows.filter(function (r) { return r.group === 'today' || r.group === 'upcoming' || r.group === 'drafts' || r.group === 'look'; });
+    if (!m.callsKnown && !m.emailsKnown && !rows.length) return '<article class="panel"><h2>Today</h2><p class="quiet">Not connected.</p></article>';
+    var open = !!(S.more && S.more.today);
+    var shown = open ? rows : rows.slice(0, 4);
+    var body = shown.length ? shown.map(rowHtml).join('') : '<p class="quiet">Nothing on the list.</p>';
+    var btn = rows.length > 4 ? '<button type="button" class="ghost" data-more="today">' + (open ? 'Show less' : 'View all') + '</button>' : '';
+    return '<article class="panel"><div class="ph"><h2>Today</h2>' + btn + '</div>' + body + '</article>';
+  }
+  function homeHtml(m) {
+    var tiles = '<div class="krow">' + tileHtml(m.metrics.collected) + tileHtml(m.metrics.videos) + tileHtml(m.metrics.booked) + tileHtml(m.metrics.unsent) + '</div>';
+    return guideHtml(m) + '<div class="hero-grid">' + orgHtml(m) + termHtml(m) + '</div>' + gaugeRow(m) + tiles +
+      '<div class="two">' + cashChartHtml(m) + donutHtml(m) + '</div>' +
+      '<div style="margin-top:12px">' + approvalHtml(m) + '</div>' +
+      '<div class="two">' + compactWins(m) + compactToday(m) + '</div>';
+  }
+  function openNode(id) {
+    var n = (S.orgNodes || []).filter(function (x) { return x.id === id; })[0];
+    if (!n) return;
+    var word = n.status === 'working' ? 'Working' : n.status === 'blocked' ? 'Blocked' : n.status === 'idle' ? 'Idle' : 'Not reported';
+    $('d-st').textContent = word;
+    $('d-st').className = 'badge';
+    $('d-t').textContent = n.name;
+    $('d-m').textContent = n.role || '';
+    $('d-b').innerHTML = '<p class="gk">Current work</p><p>' + esc(n.work || 'No current work in the feed.') + '</p><p class="gk">Last report</p><p>' + esc(n.report || 'No report time') + '</p>';
+    $('d-f').innerHTML = '<p class="src">From the feed agents list. This board does not message the bot.</p>';
+    show('drawer');
+  }
   function renderBoard() {
+    var locked = lockedNow();
+    var label = 'Workforce';
+    VIEWS.forEach(function (v) { if (v[0] === S.view) label = v[1]; });
+    if ($('crumb')) $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + label;
+    if ($('banner')) $('banner').hidden = !S.sample;
+    if ($('target-banner')) $('target-banner').hidden = !!S.targets;
+    var fb = $('feed-banner');
+    if (fb) {
+      var showB = !locked && !S.sample && S.feedState !== 'ready';
+      fb.hidden = !showB;
+      if (showB) fb.textContent = S.feedNote || 'The private feed did not load.';
+    }
+    if ($('lock')) {
+      $('lock').hidden = !locked;
+      var lp = $('lock-copy');
+      if (lp) lp.textContent = S.kpiState === 'forbidden' ? 'That login is not the owner.' : 'Sign in as the owner to load the private feed. The sample layout stays on this page without a login.';
+    }
+    if (locked) {
+      VIEWS.forEach(function (v) { var el = $('v-' + v[0]); if (el) el.innerHTML = ''; });
+      S.model = null;
+      paintSys();
+      markNav();
+      return;
+    }
     var now = new Date();
     S.model = buildBoard(S.feed, S.targets, now);
     var m = S.model;
-    $('banner').hidden = !S.sample;
-    $('target-banner').hidden = !!S.targets;
-    var names = { home: 'Home', attract: 'Attract', convert: 'Convert', transform: 'Transform' };
-    $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + (names[S.view] || 'Home');
-    $('v-home').innerHTML = guideHtml(m) +
-      '<p class="legend"><i class="dash"></i>Dashed ring or line is the target. The red arc or bar is the result. Green is on pace. Red is behind. Grey means there is no data yet.</p>' +
-      tickerHtml(m) +
-      '<div class="scores">' + scoreCard('attract', 'Attract') + scoreCard('convert', 'Convert') + scoreCard('transform', 'Transform') + '</div>' +
-      desksHtml(m) +
-      gameHtml(m) + winsHtml(m) +
-      '<h2 class="qhead">Morning check</h2><div class="krow">' + card(m.metrics['cash-due']) + card(m.metrics.unsent) + card(m.metrics['delivery-oldest']) + card(m.metrics['failed-charges']) + '</div>' +
-      queueHtml(m) + behindHtml(m);
-    $('v-attract').innerHTML = guideHtml(m) + sideHead('attract', 'Attract', 'Posts, reach, outliers, and the work you log.') +
-      '<div class="plats">' + platHtml('ig') + platHtml('x') + platHtml('youtube') + '</div>' +
+    var data = spineData();
+    $('v-home').innerHTML = homeHtml(m);
+    $('v-attract').innerHTML = sideHead('attract', 'Attract', 'Posts, reach, outliers, and the work you log.') +
+      '<div class="krow">' + tileHtml(m.metrics['post-ig']) + tileHtml(m.metrics['post-x']) + tileHtml(m.metrics['post-youtube']) + tileHtml(m.metrics.videos) + '</div>' +
+      '<div class="plats" style="margin-top:12px">' + platHtml('ig') + platHtml('x') + platHtml('youtube') + '</div>' +
       attractChartsHtml(m) +
-      '<div class="krow" style="margin-top:12px">' + card(m.metrics.outliers) + card(m.metrics.videos) + card(m.metrics.magnets) + card(m.metrics.contacts) + card(m.metrics.community) + '</div>';
-    $('v-convert').innerHTML = guideHtml(m) + sideHead('convert', 'Convert', 'Calls, pipeline, and cash against the MRR target.') +
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics.outliers) + card(m.metrics.magnets) + card(m.metrics.contacts) + card(m.metrics.community) + '</div>';
+    $('v-convert').innerHTML = sideHead('convert', 'Convert', 'Calls, pipeline, and cash against the MRR target.') +
       '<div class="funnel">' + card(m.metrics.contacts) + card(m.metrics.booked) + card(m.metrics.showed) + card(m.metrics.closed) + '</div>' +
       convertChartsHtml(m) +
-      '<div class="krow" style="margin-top:12px">' + card(m.metrics['show-rate']) + card(m.metrics['close-rate']) + card(m.metrics.collected) + card(m.metrics['cash-due']) + '</div>' +
+      '<div class="two">' + donutHtml(m) + cashChartHtml(m) + '</div>' +
       '<div class="stack" style="margin-top:12px">' + pipelineHtml(m) + stripeHtml(m) + '</div>' +
-      '<div class="krow" style="margin-top:12px">' + card(m.metrics['cash-out']) + card(m.metrics.unsent) + card(m.metrics['failed-charges']) + '</div>';
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics['show-rate']) + card(m.metrics['close-rate']) + card(m.metrics.collected) + card(m.metrics['cash-due']) + card(m.metrics.unsent) + card(m.metrics['failed-charges']) + '</div>';
     var clients = m.official.length ? '<div class="clients">' + m.official.map(clientHtml).join('') + '</div>' : '<article class="panel"><h2>Clients</h2><p class="quiet">Targets file did not load, so the client list is not guessed.</p></article>';
-    $('v-transform').innerHTML = guideHtml(m) + sideHead('transform', 'Transform', 'One card per client. Quotes appear only when they were logged.') +
+    $('v-transform').innerHTML = sideHead('transform', 'Transform', 'One card per client. Quotes appear only when they were logged.') +
       '<div class="krow">' + card(m.metrics['delivery-oldest']) + '</div>' +
       '<div style="margin-top:12px">' + clients + '</div>' +
       '<div style="margin-top:12px">' + otherRetainers(m) + '</div>';
+    $('v-goals').innerHTML = '<section class="guide"><div><p class="gk">Goals</p><h2>The rings</h2><p>Big targets. The dashed ring is the target. The number is the current value, only when the feed has one.</p></div></section>' + goalsHtml(data);
+    $('v-projects').innerHTML = '<section class="guide"><div><p class="gk">Projects</p><h2>Under each goal</h2><p>Status and an owner. The owner is Cristian or a bot desk.</p></div></section>' + projectsHtml(data);
+    $('v-tasks').innerHTML = '<section class="guide"><div><p class="gk">Tasks</p><h2>Under each project</h2><p>Each task has a status, an owner, a triangle side, and a track.</p></div></section>' + tasksHtml(data);
+    $('v-winning').innerHTML = '<section class="guide"><div><p class="gk">Winning</p><h2>Streaks and XP</h2><p>Flames are real wins this week. Points come from the floor log and cash in the feed.</p></div></section>' + winningHtml(m, data);
+    $('v-tracks').innerHTML = '<section class="guide"><div><p class="gk">Tracks</p><h2>One card per track</h2><p>The list is targets.json. The number and the sparkline come from the feed. A track with no reading says Not connected.</p></div></section>' + tracksHtml(data);
+    $('v-funnels').innerHTML = '<section class="guide"><div><p class="gk">Funnels</p><h2>The table</h2><p>Name, type, status, link, and conversions. A missing count stays Not connected.</p></div></section>' + funnelsHtml(data);
     paintSys();
     markNav();
     applyFilter();
@@ -2204,14 +2818,34 @@ body[data-ready] .shimmer{display:none}
         bars.forEach(function (bar) { bar.style.width = (bar.getAttribute('data-fill') || '0') + '%'; });
       });
     });
+    document.querySelectorAll('.spark.draw polyline').forEach(function (pl) {
+      if (!pl.getTotalLength) return;
+      var len = 0;
+      try { len = pl.getTotalLength(); } catch (err) { len = 0; }
+      if (!len) return;
+      pl.style.strokeDasharray = String(len);
+      pl.style.strokeDashoffset = reduce ? '0' : String(len);
+      if (!reduce) requestAnimationFrame(function () { pl.style.strokeDashoffset = '0'; });
+    });
   }
   function paintSys() {
     var ready = S.feedState === 'ready';
+    var locked = !S.sample && !S.admin;
     var age = ready && S.model ? S.model.fileAge : (S.feedNote || 'Checking the feed');
-    $('sys').innerHTML = '<b><i class="gdot' + (ready ? '' : ' dim') + '"></i> ' + (S.sample ? 'Sample feed' : 'Live') + '</b><span>' + esc(age) + '</span>';
-    var dot = $('livedot');
-    if (dot) dot.className = 'gdot' + (ready ? '' : ' dim');
-    if ($('live-age')) $('live-age').textContent = age;
+    var agents = S.model && S.model.agentsKnown ? S.model.agentCards.length : null;
+    var working = 0;
+    if (agents != null) S.model.agentCards.forEach(function (a) { if (a.status === 'working') working++; });
+    var hub = agents ? 1 : 0;
+    var agentLine = agents == null ? 'Agents not connected' : ('Agents ' + (working + hub) + '/' + (agents + hub));
+    var title = locked ? 'Private' : (S.sample ? 'Sample' : (ready ? 'System online' : 'Feed'));
+    $('sys').innerHTML = '<b><i class="gdot' + (ready && !locked ? '' : ' dim') + '"></i> ' + esc(title) + '</b><span>' + esc(locked ? 'Sign in to load the feed.' : (agentLine + '. ' + age)) + '</span>';
+    var pill = $('livepill');
+    if (pill) {
+      pill.classList.toggle('off', !ready || locked);
+      pill.innerHTML = '<i class="gdot"></i> ' + (locked ? 'LOCKED' : (ready ? 'LIVE' : 'WAIT'));
+    }
+    var line = $('sysline');
+    if (line) line.textContent = locked ? 'Private feed locked' : (S.sample ? 'Sample layout' : (ready ? 'All systems operational' : (S.feedNote || 'Feed offline')));
   }
   function markNav() {
     document.querySelectorAll('[data-view]').forEach(function (b) {
@@ -2219,9 +2853,11 @@ body[data-ready] .shimmer{display:none}
       b.classList.toggle('on', on);
       if (b.classList.contains('navbtn') || b.parentElement === $('bnav')) b.setAttribute('aria-current', on ? 'page' : 'false');
     });
-    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'v-' + S.view); });
-    var names = { home: 'Home', attract: 'Attract', convert: 'Convert', transform: 'Transform' };
-    if ($('crumb')) $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + (names[S.view] || 'Home');
+    var locked = !S.sample && !S.admin;
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', !locked && v.id === 'v-' + S.view); });
+    var label = 'Workforce';
+    VIEWS.forEach(function (v) { if (v[0] === S.view) label = v[1]; });
+    if ($('crumb')) $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + label;
   }
   function go(view) {
     if (!namesHas(view)) view = 'home';
@@ -2381,7 +3017,7 @@ body[data-ready] .shimmer{display:none}
   function isMissingTable(error) {
     var code = error && error.code || '';
     var msg = ((error && error.message) || '').toLowerCase();
-    return code === 'PGRST205' || code === '42P01' || (msg.indexOf('cc_kpi_log') !== -1 && (msg.indexOf('schema') !== -1 || msg.indexOf('does not exist') !== -1 || msg.indexOf('could not find') !== -1));
+    return code === 'PGRST205' || code === '42P01' || ((msg.indexOf('cc_kpi_log') !== -1 || msg.indexOf('cc_feed') !== -1) && (msg.indexOf('schema') !== -1 || msg.indexOf('does not exist') !== -1 || msg.indexOf('could not find') !== -1));
   }
   async function refreshKpis() {
     if (S.sample || !sb || !S.admin) return;
@@ -2513,12 +3149,25 @@ body[data-ready] .shimmer{display:none}
       S.admin = isAdmin(user);
       if (S.admin) await refreshKpis();
       else S.kpiState = user ? 'forbidden' : 'signedout';
-      sb.auth.onAuthStateChange(function (_e, session) {
+      sb.auth.onAuthStateChange(function (ev, session) {
+        if (!S.authReady) return;
+        if (ev === 'INITIAL_SESSION' || ev === 'TOKEN_REFRESHED') return;
         var next = session && session.user;
         S.user = next || null;
         S.admin = isAdmin(next);
-        if (!S.admin) { S.kpiState = next ? 'forbidden' : 'signedout'; S.kpiRows = []; paintWho(); renderBoard(); return; }
-        refreshKpis().then(async function () {
+        if (!S.admin) {
+          S.kpiState = next ? 'forbidden' : 'signedout';
+          S.kpiRows = [];
+          if (!S.sample) {
+            S.feed = null;
+            S.feedState = 'locked';
+            S.feedNote = S.kpiState === 'forbidden' ? 'That login is not the owner.' : 'Sign in to open the private feed.';
+          }
+          paintWho();
+          renderBoard();
+          return;
+        }
+        Promise.all([refreshKpis(), loadPrivate()]).then(async function () {
           paintWho();
           var p = S.pending;
           S.pending = null;
@@ -2530,18 +3179,7 @@ body[data-ready] .shimmer{display:none}
       S.kpiState = 'signedout';
     }
   }
-  async function loadFeed() {
-    var url = S.sample ? 'today.sample.json' : 'today.json';
-    try {
-      var res = await fetch(url, { cache: 'no-store' });
-      if (!res.ok) throw new Error('status');
-      S.feed = await res.json();
-      S.feedState = 'ready';
-    } catch (e) {
-      S.feed = null;
-      S.feedState = 'error';
-      S.feedNote = S.sample ? 'The sample file did not load.' : 'today.json did not load.';
-    }
+  async function loadTargets() {
     try {
       var tr = await fetch('targets.json', { cache: 'no-store' });
       if (!tr.ok) throw new Error('targets');
@@ -2549,6 +3187,62 @@ body[data-ready] .shimmer{display:none}
     } catch (e2) {
       S.targets = null;
     }
+  }
+  async function loadPrivate() {
+    if (!sb) {
+      S.feed = null;
+      S.feedState = 'error';
+      S.feedNote = 'Sign-in library did not load.';
+      return;
+    }
+    var res = await sb.from('cc_feed').select('payload, updated_at').eq('id', 'today').maybeSingle();
+    if (res.error) {
+      S.feed = null;
+      if (isMissingTable(res.error)) {
+        S.feedState = 'missing';
+        S.feedNote = 'Not set up yet.';
+      } else {
+        S.feedState = 'error';
+        S.feedNote = 'The private feed did not load.';
+      }
+      return;
+    }
+    var row = res.data;
+    var payload = row && row.payload;
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      S.feed = null;
+      S.feedState = 'empty';
+      S.feedNote = 'No private feed yet.';
+      return;
+    }
+    if (!payload.asOf && row.updated_at) payload.asOf = row.updated_at;
+    S.feed = payload;
+    S.feedState = 'ready';
+    S.feedNote = '';
+  }
+  async function loadFeed() {
+    await loadTargets();
+    if (S.sample) {
+      try {
+        var res = await fetch('today.sample.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('status');
+        S.feed = await res.json();
+        S.feedState = 'ready';
+        S.feedNote = '';
+      } catch (e) {
+        S.feed = null;
+        S.feedState = 'error';
+        S.feedNote = 'The sample file did not load.';
+      }
+      return;
+    }
+    if (!S.admin) {
+      S.feed = null;
+      S.feedState = 'locked';
+      S.feedNote = 'Sign in to open the private feed.';
+      return;
+    }
+    await loadPrivate();
   }
   function tick() { $('clock').textContent = chicagoTime(new Date()) + ' CT'; }
   function deepLink() {
@@ -2562,16 +3256,23 @@ body[data-ready] .shimmer{display:none}
     }
   }
   function bind() {
-    var nav = VIEWS.map(function (v) {
-      return '<button type="button" class="navbtn" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + '</button>';
+    function navButton(v, cls) {
+      return '<button type="button" class="' + cls + '" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + '</button>';
+    }
+    var byId = {};
+    VIEWS.forEach(function (v) { byId[v[0]] = v; });
+    var groups = [['Workforce', ['home']], ['Spine', ['goals', 'projects', 'tasks', 'winning']], ['Triangle', ['attract', 'convert', 'transform']], ['Lists', ['tracks', 'funnels']]];
+    $('tabs').innerHTML = groups.map(function (g) {
+      return '<div class="side-k">' + esc(g[0]) + '</div>' + g[1].map(function (id) { return navButton(byId[id], 'navbtn'); }).join('');
     }).join('');
-    $('tabs').innerHTML = nav;
-    $('bnav').innerHTML = VIEWS.map(function (v) {
-      return '<button type="button" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + '</button>';
-    }).join('');
+    $('bnav').innerHTML = ['home', 'goals', 'tasks', 'winning'].map(function (id) { return navButton(byId[id], ''); }).join('');
+    if ($('chips')) $('chips').innerHTML = VIEWS.map(function (v) { return '<button type="button" data-view="' + v[0] + '">' + esc(v[1]) + '</button>'; }).join('');
     document.body.addEventListener('click', function (e) {
-      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo]');
+      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-pick],[data-more]');
       if (!t) return;
+      if (t.hasAttribute('data-node')) { openNode(t.getAttribute('data-node')); return; }
+      if (t.hasAttribute('data-pick')) { S.pick = t.getAttribute('data-pick'); renderBoard(); return; }
+      if (t.hasAttribute('data-more')) { var key = t.getAttribute('data-more'); S.more[key] = !S.more[key]; renderBoard(); return; }
       if (t.hasAttribute('data-view')) { closeSheets(); go(t.getAttribute('data-view')); return; }
       if (t.hasAttribute('data-close')) { closeSheets(); return; }
       if (t.hasAttribute('data-open-row')) { openRow(t.getAttribute('data-open-row')); return; }
@@ -2594,8 +3295,14 @@ body[data-ready] .shimmer{display:none}
     $('scrim').addEventListener('click', closeSheets);
     $('qsearch').addEventListener('input', applyFilter);
     document.addEventListener('keydown', function (e) {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        if ($('qsearch')) $('qsearch').focus();
+        return;
+      }
       if (e.key === 'Escape') closeSheets();
     });
+    if ($('lock-in')) $('lock-in').addEventListener('click', function () { show('login'); });
     $('log-form').addEventListener('submit', function (e) {
       e.preventDefault();
       var metric = $('log-form').dataset.metric;
@@ -2611,6 +3318,7 @@ body[data-ready] .shimmer{display:none}
     $('signout').addEventListener('click', async function () {
       if (sb) await sb.auth.signOut();
       S.user = null; S.admin = false; S.kpiState = 'signedout'; S.kpiRows = [];
+      if (!S.sample) { S.feed = null; S.feedState = 'locked'; S.feedNote = 'Sign in to open the private feed.'; }
       paintWho(); renderBoard();
     });
     $('login-form').addEventListener('submit', async function (e) {
@@ -2670,9 +3378,11 @@ body[data-ready] .shimmer{display:none}
     if (hash === 'team' || hash === 'floor') hash = 'home';
     if (namesHas(hash)) S.view = hash;
     markNav();
-    $('sample-link').textContent = S.sample ? 'Live feed' : 'Sample layout';
+    $('sample-link').textContent = S.sample ? 'Owner feed' : 'Sample layout';
     $('sample-link').setAttribute('href', sampleHref());
-    await Promise.all([loadFeed(), bootAuth()]);
+    await bootAuth();
+    await loadFeed();
+    S.authReady = true;
     paintWho();
     renderBoard();
     deepLink();

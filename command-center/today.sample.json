@@ -189,13 +189,48 @@
       "refunds": 500,
       "failedCharges": 1,
       "charges": [
-        { "date": "2026-10-06", "customer": "SAMPLE Northwind Studio", "amount": 1800, "status": "succeeded" },
-        { "date": "2026-10-13", "customer": "SAMPLE Harbor Co", "amount": 2200, "status": "succeeded" },
-        { "date": "2026-10-20", "customer": "SAMPLE Lumen Lab", "amount": 1600, "status": "succeeded" },
-        { "date": "2026-10-27", "customer": "SAMPLE Northwind Studio", "amount": 2400, "status": "succeeded" },
-        { "date": "2026-11-10", "customer": "SAMPLE Northwind Studio", "amount": 2000, "status": "succeeded" },
-        { "date": "2026-11-04", "customer": "SAMPLE Harbor Co", "amount": 2000, "status": "failed" },
-        { "date": "2026-11-02", "customer": "SAMPLE Lumen Lab", "amount": 500, "status": "refunded" }
+        {
+          "date": "2026-10-06",
+          "customer": "SAMPLE Northwind Studio",
+          "amount": 1800,
+          "status": "succeeded"
+        },
+        {
+          "date": "2026-10-13",
+          "customer": "SAMPLE Harbor Co",
+          "amount": 2200,
+          "status": "succeeded"
+        },
+        {
+          "date": "2026-10-20",
+          "customer": "SAMPLE Lumen Lab",
+          "amount": 1600,
+          "status": "succeeded"
+        },
+        {
+          "date": "2026-10-27",
+          "customer": "SAMPLE Northwind Studio",
+          "amount": 2400,
+          "status": "succeeded"
+        },
+        {
+          "date": "2026-11-10",
+          "customer": "SAMPLE Northwind Studio",
+          "amount": 2000,
+          "status": "succeeded"
+        },
+        {
+          "date": "2026-11-04",
+          "customer": "SAMPLE Harbor Co",
+          "amount": 2000,
+          "status": "failed"
+        },
+        {
+          "date": "2026-11-02",
+          "customer": "SAMPLE Lumen Lab",
+          "amount": 500,
+          "status": "refunded"
+        }
       ],
       "balance": {
         "available": 1500,
@@ -346,35 +381,360 @@
       "role": "Ops desk",
       "status": "working",
       "currentWork": "SAMPLE. Sorting the morning feed.",
-      "lastReportAt": "2026-11-10T06:40:00-06:00"
+      "lastReportAt": "2026-11-10T06:40:00-06:00",
+      "reportsTo": "Cristian"
     },
     {
       "name": "Content",
       "role": "Content desk",
       "status": "working",
       "currentWork": "SAMPLE. Drafting a lead magnet outline.",
-      "lastReportAt": "2026-11-10T06:35:00-06:00"
+      "lastReportAt": "2026-11-10T06:40:00-06:00",
+      "reportsTo": "Cristian"
     },
     {
-      "name": "Fulfillment",
-      "role": "Fulfillment desk",
+      "name": "Fulfilment",
+      "role": "Fulfilment desk",
       "status": "blocked",
       "currentWork": "SAMPLE. Waiting on a stamp.",
-      "lastReportAt": "2026-11-10T06:22:00-06:00"
+      "lastReportAt": "2026-11-10T06:40:00-06:00",
+      "reportsTo": "Cristian"
     },
     {
       "name": "Growth",
       "role": "Growth desk",
       "status": "idle",
       "currentWork": "SAMPLE. No send queued.",
-      "lastReportAt": "2026-11-10T06:10:00-06:00"
+      "lastReportAt": "2026-11-10T06:40:00-06:00",
+      "reportsTo": "Cristian"
     },
     {
       "name": "Systems",
       "role": "Systems desk",
       "status": "working",
       "currentWork": "SAMPLE. Watching the delivery tools.",
-      "lastReportAt": "2026-11-10T06:44:00-06:00"
+      "lastReportAt": "2026-11-10T06:40:00-06:00",
+      "reportsTo": "Cristian"
+    },
+    {
+      "name": "Calendar",
+      "role": "Ops bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Calendar is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:10:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Inbox",
+      "role": "Ops bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Inbox is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:11:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Brief",
+      "role": "Ops bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Brief is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:12:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Follow-up",
+      "role": "Ops bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Follow-up is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:13:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Files",
+      "role": "Ops bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Files is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:14:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Digest",
+      "role": "Ops bot",
+      "status": "blocked",
+      "currentWork": "SAMPLE. Digest is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:15:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Handoff",
+      "role": "Ops bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Handoff is on the Ops desk.",
+      "lastReportAt": "2026-11-10T06:16:00-06:00",
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Reminders",
+      "role": "Ops bot",
+      "status": "not-reported",
+      "currentWork": "SAMPLE. Reminders is on the Ops desk.",
+      "lastReportAt": null,
+      "reportsTo": "Ops"
+    },
+    {
+      "name": "Hooks",
+      "role": "Content bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Hooks is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:10:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Scripts",
+      "role": "Content bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Scripts is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:11:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Edit",
+      "role": "Content bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Edit is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:12:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Thumbnails",
+      "role": "Content bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Thumbnails is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:13:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Captions",
+      "role": "Content bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Captions is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:14:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Publish",
+      "role": "Content bot",
+      "status": "blocked",
+      "currentWork": "SAMPLE. Publish is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:15:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Research",
+      "role": "Content bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Research is on the Content desk.",
+      "lastReportAt": "2026-11-10T06:16:00-06:00",
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Repurpose",
+      "role": "Content bot",
+      "status": "not-reported",
+      "currentWork": "SAMPLE. Repurpose is on the Content desk.",
+      "lastReportAt": null,
+      "reportsTo": "Content"
+    },
+    {
+      "name": "Delivery",
+      "role": "Fulfilment bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Delivery is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:10:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Stamps",
+      "role": "Fulfilment bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Stamps is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:11:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Shoots",
+      "role": "Fulfilment bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Shoots is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:12:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Reviews",
+      "role": "Fulfilment bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Reviews is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:13:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Assets",
+      "role": "Fulfilment bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Assets is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:14:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Queue",
+      "role": "Fulfilment bot",
+      "status": "blocked",
+      "currentWork": "SAMPLE. Queue is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:15:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Notes",
+      "role": "Fulfilment bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Notes is on the Fulfilment desk.",
+      "lastReportAt": "2026-11-10T06:16:00-06:00",
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Clients",
+      "role": "Fulfilment bot",
+      "status": "not-reported",
+      "currentWork": "SAMPLE. Clients is on the Fulfilment desk.",
+      "lastReportAt": null,
+      "reportsTo": "Fulfilment"
+    },
+    {
+      "name": "Outreach",
+      "role": "Growth bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Outreach is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:10:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Magnets",
+      "role": "Growth bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Magnets is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:11:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Community",
+      "role": "Growth bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Community is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:12:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Offers",
+      "role": "Growth bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Offers is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:13:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Pipeline",
+      "role": "Growth bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Pipeline is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:14:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Followups",
+      "role": "Growth bot",
+      "status": "blocked",
+      "currentWork": "SAMPLE. Followups is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:15:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Ads",
+      "role": "Growth bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Ads is on the Growth desk.",
+      "lastReportAt": "2026-11-10T06:16:00-06:00",
+      "reportsTo": "Growth"
+    },
+    {
+      "name": "Stripe watch",
+      "role": "Systems bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Stripe watch is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:10:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Gmail",
+      "role": "Systems bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Gmail is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:11:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Drive",
+      "role": "Systems bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Drive is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:12:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Health",
+      "role": "Systems bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Health is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:13:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Alerts",
+      "role": "Systems bot",
+      "status": "idle",
+      "currentWork": "SAMPLE. Alerts is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:14:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Backups",
+      "role": "Systems bot",
+      "status": "blocked",
+      "currentWork": "SAMPLE. Backups is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:15:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Monitor",
+      "role": "Systems bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Monitor is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:16:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Watch",
+      "role": "Systems bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Watch is on the Systems desk.",
+      "lastReportAt": "2026-11-10T06:16:00-06:00",
+      "reportsTo": "Systems"
+    },
+    {
+      "name": "Events",
+      "role": "Growth bot",
+      "status": "working",
+      "currentWork": "SAMPLE. Asking venues, flights, and hotels to sponsor the next trip so Cristian can network and film.",
+      "lastReportAt": "2026-11-10T06:40:00-06:00",
+      "reportsTo": "Growth"
     }
   ],
   "activityLog": [
@@ -401,6 +761,66 @@
       "level": "warn",
       "actor": "Fulfillment",
       "message": "SAMPLE. Lumen Lab has waited 13 days."
+    },
+    {
+      "at": "2026-11-10T06:50:00-06:00",
+      "level": "ok",
+      "actor": "Content",
+      "message": "SAMPLE. Hook draft is ready for a look."
+    },
+    {
+      "at": "2026-11-10T06:48:00-06:00",
+      "level": "info",
+      "actor": "Growth",
+      "message": "SAMPLE. Counted community replies for the layout."
+    },
+    {
+      "at": "2026-11-10T06:46:00-06:00",
+      "level": "warn",
+      "actor": "Fulfilment",
+      "message": "SAMPLE. A script is still inside the film window."
+    },
+    {
+      "at": "2026-11-10T06:42:00-06:00",
+      "level": "info",
+      "actor": "Ops",
+      "message": "SAMPLE. Calendar read finished."
+    },
+    {
+      "at": "2026-11-10T06:38:00-06:00",
+      "level": "ok",
+      "actor": "Systems",
+      "message": "SAMPLE. Stripe snapshot is in the layout file."
+    },
+    {
+      "at": "2026-11-10T06:33:00-06:00",
+      "level": "info",
+      "actor": "Hooks",
+      "message": "SAMPLE. Pulled view counts for the sample posts."
+    },
+    {
+      "at": "2026-11-10T06:28:00-06:00",
+      "level": "warn",
+      "actor": "Stripe watch",
+      "message": "SAMPLE. One sample charge is marked failed."
+    },
+    {
+      "at": "2026-11-10T06:18:00-06:00",
+      "level": "info",
+      "actor": "Inbox",
+      "message": "SAMPLE. Drafts were listed. Nothing was sent."
+    },
+    {
+      "at": "2026-11-10T06:12:00-06:00",
+      "level": "ok",
+      "actor": "Publish",
+      "message": "SAMPLE. Sample post dates are in the feed."
+    },
+    {
+      "at": "2026-11-10T06:05:00-06:00",
+      "level": "info",
+      "actor": "Digest",
+      "message": "SAMPLE. Morning brief assembled for the layout."
     }
   ],
   "sampleKpis": [
@@ -535,7 +955,12 @@
           "id": "ig",
           "handle": "@cristianaguilar.ai",
           "postsThisWeek": 6,
-          "postsByWeek": [3, 4, 5, 6],
+          "postsByWeek": [
+            3,
+            4,
+            5,
+            6
+          ],
           "viewsByWeek": [
             800,
             900,
@@ -597,7 +1022,10 @@
           "id": "x",
           "handle": "",
           "postsThisWeek": 3,
-          "postsByWeek": [4, 3],
+          "postsByWeek": [
+            4,
+            3
+          ],
           "viewsByWeek": [
             400,
             350
@@ -616,7 +1044,10 @@
           "id": "youtube",
           "handle": "@SignalRatio",
           "postsThisWeek": 1,
-          "postsByWeek": [1, 1],
+          "postsByWeek": [
+            1,
+            1
+          ],
           "viewsByWeek": [
             null,
             2000
@@ -654,8 +1085,18 @@
       "booked": 4,
       "showed": 3,
       "closed": 1,
-      "bookedByWeek": [15, 15, 15, 2],
-      "weekLabels": ["Oct 19", "Oct 26", "Nov 2", "Nov 9"]
+      "bookedByWeek": [
+        15,
+        15,
+        15,
+        2
+      ],
+      "weekLabels": [
+        "Oct 19",
+        "Oct 26",
+        "Nov 2",
+        "Nov 9"
+      ]
     },
     "pipeline": [
       {
@@ -821,9 +1262,24 @@
       {
         "name": "Sagun Sedai",
         "handle": "",
-        "viewsByWeek": [100, 140, 180, 260],
-        "weekLabels": ["Oct 19", "Oct 26", "Nov 2", "Nov 9"],
-        "followersByWeek": [2, 3, 4, 6],
+        "viewsByWeek": [
+          100,
+          140,
+          180,
+          260
+        ],
+        "weekLabels": [
+          "Oct 19",
+          "Oct 26",
+          "Nov 2",
+          "Nov 9"
+        ],
+        "followersByWeek": [
+          2,
+          3,
+          4,
+          6
+        ],
         "scripts": [
           {
             "title": "SAMPLE. Sagun opener",
@@ -832,7 +1288,10 @@
           }
         ],
         "overdue": [
-          { "title": "SAMPLE. Thumbnail", "days": 9 }
+          {
+            "title": "SAMPLE. Thumbnail",
+            "days": 9
+          }
         ],
         "payment": "on-time",
         "health": 55,
@@ -875,6 +1334,291 @@
             "text": "SAMPLE. Austin Report kept the Thursday slot."
           }
         ]
+      }
+    ]
+  },
+  "spine": {
+    "goals": [
+      {
+        "id": "retainers",
+        "current": 6,
+        "owner": "Fulfilment",
+        "status": "active"
+      },
+      {
+        "id": "cash",
+        "current": 2000,
+        "owner": "Systems",
+        "status": "active"
+      },
+      {
+        "id": "followers",
+        "current": 1240,
+        "owner": "Content",
+        "status": "active"
+      }
+    ],
+    "projects": [
+      {
+        "id": "p-close",
+        "goalId": "retainers",
+        "name": "SAMPLE. Close the next retainer",
+        "status": "active",
+        "owner": "Growth",
+        "side": "convert",
+        "track": "retainers"
+      },
+      {
+        "id": "p-cash",
+        "goalId": "cash",
+        "name": "SAMPLE. Collect the open balance",
+        "status": "waiting",
+        "owner": "Cristian",
+        "side": "convert",
+        "track": "retainers"
+      },
+      {
+        "id": "p-film",
+        "goalId": "followers",
+        "name": "SAMPLE. Film the week",
+        "status": "active",
+        "owner": "Content",
+        "side": "attract",
+        "track": "ig"
+      },
+      {
+        "id": "p-events",
+        "goalId": "followers",
+        "name": "SAMPLE. Book a sponsored trip",
+        "status": "active",
+        "owner": "Events",
+        "side": "attract",
+        "track": "events"
+      },
+      {
+        "id": "p-stage",
+        "goalId": "retainers",
+        "name": "SAMPLE. Book a stage",
+        "status": "waiting",
+        "owner": "Growth",
+        "side": "convert",
+        "track": "speaking"
+      },
+      {
+        "id": "p-magnet",
+        "goalId": "cash",
+        "name": "SAMPLE. Ship the audit funnel",
+        "status": "active",
+        "owner": "Growth",
+        "side": "convert",
+        "track": "magnets"
+      }
+    ],
+    "tasks": [
+      {
+        "id": "t1",
+        "projectId": "p-close",
+        "name": "SAMPLE. Send the scope",
+        "status": "waiting",
+        "owner": "Cristian",
+        "side": "convert",
+        "track": "retainers"
+      },
+      {
+        "id": "t2",
+        "projectId": "p-close",
+        "name": "SAMPLE. Draft the offer",
+        "status": "active",
+        "owner": "Growth",
+        "side": "convert",
+        "track": "retainers"
+      },
+      {
+        "id": "t3",
+        "projectId": "p-cash",
+        "name": "SAMPLE. Open the Stripe invoice",
+        "status": "waiting",
+        "owner": "Systems",
+        "side": "convert",
+        "track": "retainers"
+      },
+      {
+        "id": "t4",
+        "projectId": "p-film",
+        "name": "SAMPLE. Cut three clips",
+        "status": "active",
+        "owner": "Content",
+        "side": "attract",
+        "track": "ig"
+      },
+      {
+        "id": "t5",
+        "projectId": "p-events",
+        "name": "SAMPLE. Ask the venue to cover the room",
+        "status": "active",
+        "owner": "Events",
+        "side": "attract",
+        "track": "events"
+      },
+      {
+        "id": "t6",
+        "projectId": "p-events",
+        "name": "SAMPLE. Hold the flight",
+        "status": "blocked",
+        "owner": "Events",
+        "side": "attract",
+        "track": "events"
+      },
+      {
+        "id": "t7",
+        "projectId": "p-stage",
+        "name": "SAMPLE. Reply to the host",
+        "status": "waiting",
+        "owner": "Cristian",
+        "side": "convert",
+        "track": "speaking"
+      },
+      {
+        "id": "t8",
+        "projectId": "p-magnet",
+        "name": "SAMPLE. Publish the opt-in page",
+        "status": "active",
+        "owner": "Growth",
+        "side": "convert",
+        "track": "magnets"
+      }
+    ],
+    "funnels": [
+      {
+        "name": "SAMPLE. Signal audit",
+        "type": "Lead magnet",
+        "status": "live",
+        "href": "https://signals.marketing",
+        "conversions": 18,
+        "side": "convert",
+        "track": "magnets"
+      },
+      {
+        "name": "SAMPLE. Book a call",
+        "type": "Booking",
+        "status": "live",
+        "href": "https://signals.marketing",
+        "conversions": 6,
+        "side": "convert",
+        "track": "retainers"
+      },
+      {
+        "name": "SAMPLE. YouTube subscribe",
+        "type": "Content",
+        "status": "draft",
+        "href": "https://www.youtube.com/@SignalRatio",
+        "conversions": 4,
+        "side": "attract",
+        "track": "youtube"
+      },
+      {
+        "name": "SAMPLE. Podcast guest",
+        "type": "Content",
+        "status": "live",
+        "href": "https://signals.marketing",
+        "conversions": 2,
+        "side": "attract",
+        "track": "podcast"
+      },
+      {
+        "name": "SAMPLE. Event sponsor",
+        "type": "Application",
+        "status": "draft",
+        "href": "https://signals.marketing",
+        "conversions": 1,
+        "side": "attract",
+        "track": "events"
+      },
+      {
+        "name": "SAMPLE. Retainer intake",
+        "type": "Application",
+        "status": "paused",
+        "href": "https://signals.marketing",
+        "conversions": 3,
+        "side": "convert",
+        "track": "retainers"
+      }
+    ],
+    "trackPulse": [
+      {
+        "id": "ig",
+        "value": "6 posts",
+        "history": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "note": "SAMPLE. Posts this week."
+      },
+      {
+        "id": "youtube",
+        "value": "1 video",
+        "history": [
+          1,
+          1
+        ],
+        "note": "SAMPLE. @SignalRatio."
+      },
+      {
+        "id": "x",
+        "value": "3 posts",
+        "history": [
+          4,
+          3
+        ],
+        "note": "SAMPLE. Posts this week."
+      },
+      {
+        "id": "podcast",
+        "value": "1 hold",
+        "history": [
+          1,
+          1
+        ],
+        "note": "SAMPLE. STNR date is held. The invite is not sent."
+      },
+      {
+        "id": "events",
+        "value": "2 asks",
+        "history": [
+          1,
+          2
+        ],
+        "note": "SAMPLE. Asks out for a sponsored flight, hotel, and event. Nothing is booked."
+      },
+      {
+        "id": "speaking",
+        "value": "1 stage",
+        "history": [
+          1,
+          1
+        ],
+        "note": "SAMPLE. One host is waiting on a reply."
+      },
+      {
+        "id": "retainers",
+        "value": "6 clients",
+        "history": [
+          4,
+          5,
+          6
+        ],
+        "note": "SAMPLE. Toward 10 retainers."
+      },
+      {
+        "id": "magnets",
+        "value": "2 live",
+        "history": [
+          1,
+          2
+        ],
+        "note": "SAMPLE. Live funnels in the table."
       }
     ]
   }

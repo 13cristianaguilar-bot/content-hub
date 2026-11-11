@@ -1,12 +1,16 @@
-# Command Center `today.json`
+# Command Center feed
 
-The board at `command-center/index.html` reads `command-center/today.json` on open. A daily routine regenerates that file from Calendar, Fathom, Gmail, Drive, and Content Hub. The page does not invent numbers. If a key is missing, the panel says **Not connected yet** and shows the age of the feed. An empty list is different: it means the source was read and there was nothing, and the panel says so in words (for example **No failed charges**). It never shows a fake zero.
+The live board does not read `command-center/today.json`. That file is a stub with no client or payment data. The live payload sits in Supabase table `public.cc_feed`, row `id = today`, column `payload`. The shape of `payload` is the shape this document describes. Source lines on the board still say `today.json` because that is the name of the shape, not a file the page fetches.
 
-Do not write floor counts into this file. Videos filmed, lead magnets, contacts, booked calls, showed calls, closed deals, and client wins are logged on the board and stored in `public.cc_kpi_log`. See the migration `migrations/2026-11-11_cc_kpi_log.sql`. Until that migration is applied, those cards say **Not set up yet** after the owner signs in. Before that they say **Log in to track**. A week with no log row is **Log to start**, never 0.
+The page loads the row only after an owner signs in. Owner means `app_metadata.role = admin` on project `udkbnlpnfyjuwlstfxhr`, the same check as `cc_kpi_log`. anon cannot read the table. The browser cannot write it. The ingest routine writes with the service role. Migration: `migrations/2026-11-11_cc_feed.sql`. It is not applied until Cristian runs it. Until then a signed-in owner sees **Not set up yet**. No row yet says **No private feed yet**. Signed out, the board is locked. `?sample=1` still loads `today.sample.json` and never reads the table.
 
-Targets live in `command-center/targets.json`. The page loads that file. Do not hardcode targets into `today.json`. Weeks start Monday, America/Chicago. A count is on pace when it has reached `target * (days elapsed / days in the period)`. The side score is the average of progress-to-target, capped at 100, using only metrics that have a real value. Missing metrics are left out of the score. The page does not show a score of 0 when nothing has data.
+A daily routine should write that payload from Calendar, Fathom, Gmail, Drive, and Content Hub. The page does not invent numbers. If a key is missing, the panel says **Not connected** and shows the age of the feed. An empty list is different: it means the source was read and there was nothing, and the panel says so in words (for example **No failed charges**). It never shows a fake zero.
 
-`today.sample.json` is layout-only. It loads behind `?sample=1` and is badged SAMPLE. Never copy it over `today.json`.
+Do not write floor counts into the payload. Videos filmed, lead magnets, contacts, booked calls, showed calls, closed deals, and client wins are logged on the board and stored in `public.cc_kpi_log`. See `migrations/2026-11-11_cc_kpi_log.sql`. Until that migration is applied, those cards say **Not set up yet** after the owner signs in. Before that they say **Log in to track**. A week with no log row is **Log to start**, never 0.
+
+Targets, the track list, and goal targets live in `command-center/targets.json`. The page loads that file. Do not hardcode targets into the feed. Weeks start Monday, America/Chicago. A count is on pace when it has reached `target * (days elapsed / days in the period)`. The side score is the average of progress-to-target, capped at 100, using only metrics that have a real value. Missing metrics are left out of the score. The page does not show a score of 0 when nothing has data.
+
+`today.sample.json` is layout-only. It loads behind `?sample=1` and is badged SAMPLE. It is the only local feed file the page fetches.
 
 Times are America/Chicago. Prefer ISO-8601 with a numeric offset (`2026-11-10T06:47:00-06:00`). A date-only string (`2026-11-04`) is allowed on `calls[].when` when there is no clock time.
 
@@ -38,7 +42,7 @@ The board is read-only except the floor log. Do not add fields that tell the pag
     }
   ],
   "podcast": {
-    "guest": "Molly Mahoney",
+    "guest": "Guest name",
     "status": "Jan 22, 12-1pm PT (draft reply unsent)",
     "nextAction": "Send the draft, then the calendar invite"
   },
@@ -281,6 +285,7 @@ Top-level array. The Team view and the hand-off pipeline render every object, in
 | `status` | `working`, `idle`, `blocked`, `offline`, or `not-reported`. Other short words are shown as typed. |
 | `currentWork` | What that desk is doing, in a sentence. `""` when it reported and has nothing in progress. |
 | `lastReportAt` | ISO time of that bot's last report, or `null` if it has never reported. |
+| `reportsTo` | Optional. Name of the desk this bot reports to, or `Cristian` for a director desk. The hand-off graph uses it. Omit it and the page treats a `role` that contains "desk" as a director. |
 
 `agents: []` means the routine ran and no bot reported. The page says **No agents in this feed.** Omitting `agents` means not connected.
 
@@ -443,4 +448,40 @@ The sparkline groups `count` by `logged_on` for that metric. Days with no row ar
 
 ## Sample mode
 
-`?sample=1` fetches `today.sample.json` instead. That file sets `"sample": true`. Every figure on that view is layout sample data and must stay out of `today.json`.
+`?sample=1` fetches `today.sample.json` instead. That file sets `"sample": true`. Every figure on that view is layout sample data. The page does not fetch `today.json` in sample mode or in the live mode. Live mode reads `cc_feed` after the owner signs in.
+
+## Private table `cc_feed`
+
+| Column | Meaning |
+|---|---|
+| `id` | Text primary key. The board reads `today`. |
+| `payload` | jsonb. The object this document describes, including `spine` when the routine has it. |
+| `updated_at` | Set on write. The board uses it as `asOf` when the payload omits `asOf`. |
+
+Select is granted to `authenticated`, and the policy allows it only when `app_metadata.role` is `admin`. There is no policy for insert, update, or delete. anon is revoked. The ingest routine uses the service role.
+
+## Spine, tracks, and funnels
+
+`targets.json` `tracks` is the pluggable list. Each track has `id`, `label`, optional `handle`, `owner` (a desk or bot name), and `side` (`attract`, `convert`, or `transform`). Seed ids: `ig`, `youtube`, `x`, `podcast`, `events`, `speaking`, `retainers`, `magnets`.
+
+`targets.json` `goals` holds `id`, `label`, `target`, `unit` (`count` or `money`), `side`, and `track`. The current value is not in that file.
+
+The feed may include `spine`:
+
+```json
+{
+  "spine": {
+    "goals": [{ "id": "retainers", "current": 6, "owner": "Fulfilment", "status": "active" }],
+    "projects": [{ "id": "p1", "goalId": "retainers", "name": "Close the next retainer", "status": "active", "owner": "Growth", "side": "convert", "track": "retainers" }],
+    "tasks": [{ "id": "t1", "projectId": "p1", "name": "Send the scope", "status": "waiting", "owner": "Cristian", "side": "convert", "track": "retainers" }],
+    "funnels": [{ "name": "Signal audit", "type": "Lead magnet", "status": "live", "href": "https://signals.marketing", "conversions": 18, "side": "convert", "track": "magnets" }],
+    "trackPulse": [{ "id": "ig", "value": "6 posts", "history": [4, 5, 6], "note": "" }]
+  }
+}
+```
+
+Omit `spine` when it was not built. Goals, Projects, Tasks, and Funnels then say **Not connected**. A track with no `trackPulse` row still shows its name from `targets.json` and says **Not connected** for the number. Do not pad `history` with zeros. `href` must be `https`. `conversions` omitted means **Not connected**, not zero.
+
+Status words the board knows: `active`, `waiting`, `blocked`, `done`, `live`, `draft`, `paused`.
+
+Events and Travel (`events`) is the bot that asks venues, flights, and hotels to sponsor a trip so Cristian can network and film. The board does not book the trip. Winning is computed from the floor log and from cash in the feed. Do not write a fake streak into `spine`.

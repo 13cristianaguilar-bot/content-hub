@@ -43,7 +43,7 @@ The board is read-only except the floor log. Do not add fields that tell the pag
   ],
   "podcast": {
     "guest": "Guest name",
-    "status": "Jan 22, 12-1pm PT (draft reply unsent)",
+    "status": "2026-01-22, 12-1pm PT (draft reply unsent)",
     "nextAction": "Send the draft, then the calendar invite"
   },
   "dmBridge": null
@@ -435,8 +435,8 @@ Booked-call target, show rate, close rate, and the MRR target are in `targets.js
   "asOf": "2026-11-10T06:47:00-06:00",
   "clients": [
     {
-      "name": "Andrew George",
-      "handle": "@andrewpreneurship",
+      "name": "Lumen Lab",
+      "handle": "@lumenlab",
       "viewsByWeek": [1200, 1400, 1600, 2100],
       "weekLabels": ["Oct 19", "Oct 26", "Nov 2", "Nov 9"],
       "followersByWeek": [20, 18, 30, 40],

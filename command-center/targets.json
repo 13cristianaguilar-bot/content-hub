@@ -68,28 +68,28 @@
     "overdueActAfterDays": 7,
     "clients": [
       {
-        "name": "Andrew George",
-        "handle": "@andrewpreneurship"
+        "name": "Lumen Lab",
+        "handle": "@lumenlab"
       },
       {
-        "name": "Devin Shea",
-        "handle": "@teamr3set"
+        "name": "Northwind Studio",
+        "handle": "@northwind"
       },
       {
-        "name": "Jan Zands",
-        "handle": ""
+        "name": "Harbor Co",
+        "handle": "@harborco"
       },
       {
-        "name": "Rich Life Academy",
-        "handle": "@therichlifeacademy"
+        "name": "Brightline Studio",
+        "handle": "@brightline"
       },
       {
-        "name": "Sagun Sedai",
-        "handle": ""
+        "name": "Plover Pine",
+        "handle": "@ploverpine"
       },
       {
-        "name": "The Austin Report",
-        "handle": "@austinreport"
+        "name": "Copper Finch",
+        "handle": "@copperfinch"
       }
     ]
   },

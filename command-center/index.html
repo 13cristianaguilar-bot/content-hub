@@ -32,6 +32,9 @@ html,body{margin:0;background:#080808;color:var(--ink)}
 body{
   font-family:var(--sans);font-size:15px;line-height:1.45;min-height:100dvh;
   -webkit-font-smoothing:antialiased;
+  background:#080808;
+}
+body[data-ready]{
   background:
     radial-gradient(880px 480px at 82% -12%,rgba(237,48,57,.24),transparent 56%),
     radial-gradient(640px 380px at 0% 0%,rgba(237,48,57,.08),transparent 52%),
@@ -361,7 +364,7 @@ body[data-ready] .shimmer{display:none}
   .view.enter.on .krow .kpi:nth-child(4),.view.enter.on .desks .desk:nth-child(4){animation-delay:.18s}
   .view.enter.on .desks .desk:nth-child(5),.view.enter.on .krow .kpi:nth-child(5){animation-delay:.24s}
 }
-@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes rise{from{transform:translateY(8px)}to{transform:none}}
 @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .mrow .quiet{grid-column:1;font-size:12px}
 .sheet-value{font-family:var(--mono);font-size:40px;letter-spacing:-.04em;margin:8px 0}
@@ -452,7 +455,10 @@ body[data-ready] .shimmer{display:none}
 .node.blocked .core,.node.offline .core{stroke:#ed3039}
 .node.working .core{stroke:#3DDC97}
 .org-stage{position:relative;height:380px;border-radius:14px;overflow:hidden;background-color:#090909;background-image:none}
-.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent}
+.org-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;background:transparent;opacity:0}
+.org-fx.sized{opacity:1}
+.org-links{opacity:0}
+.org-links.sized{opacity:1}
 .org-links{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
 .org-svg{position:relative;z-index:1;height:100%}
 .org-map{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:10px 8px 8px;min-height:0}
@@ -756,8 +762,8 @@ footer.site{margin-top:auto}
   };
   var params = new URLSearchParams(location.search);
   var S = {
-    sample: params.get('sample') === '1' || params.get('fixture') === '1' || params.get('fixture') === '2',
-    fixture: params.get('fixture') === '1' ? '1' : (params.get('fixture') === '2' ? '2' : ''),
+    sample: params.get('sample') === '1' || params.get('fixture') === '1' || params.get('fixture') === '2' || params.get('fixture') === '3',
+    fixture: params.get('fixture') === '1' ? '1' : (params.get('fixture') === '2' ? '2' : (params.get('fixture') === '3' ? '3' : '')),
     feed: null,
     targets: null,
     feedState: 'checking',
@@ -2930,29 +2936,50 @@ footer.site{margin-top:auto}
     svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
     svg.textContent = '';
     if (paths) svg.insertAdjacentHTML('afterbegin', paths);
+    svg.classList.add('sized');
     S.orgLinks = links;
     S.orgLinkSpace = 'css';
   }
   function sizeFx() {
-    syncFlatLinks();
     var c = FX.canvas;
     if (!c) return;
     var rect = c.getBoundingClientRect();
+    var w = Math.round(rect.width);
+    var h = Math.round(rect.height);
+    if (w < 8 || h < 8) {
+      c.classList.remove('sized');
+      var linksHidden = document.querySelector('#v-home .org-links');
+      if (linksHidden) linksHidden.classList.remove('sized');
+      if (!FX.sizeWait) {
+        FX.sizeWait = true;
+        requestAnimationFrame(function () {
+          FX.sizeWait = false;
+          var box = FX.canvas && FX.canvas.getBoundingClientRect();
+          if (box && box.width >= 8 && box.height >= 8) sizeFx();
+        });
+      }
+      return;
+    }
+    syncFlatLinks();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var w = Math.max(1, Math.round(rect.width));
-    var h = Math.max(1, Math.round(rect.height));
-    if (!w || !h) return;
-    if (FX.w === w && FX.h === h && FX.dpr === dpr && c.width === Math.round(w * dpr)) return;
+    var bw = Math.round(w * dpr);
+    var bh = Math.round(h * dpr);
+    if (FX.w === w && FX.h === h && FX.dpr === dpr && c.width === bw && c.height === bh) {
+      c.classList.add('sized');
+      return;
+    }
     FX.w = w;
     FX.h = h;
     FX.dpr = dpr;
-    c.width = Math.round(w * dpr);
-    c.height = Math.round(h * dpr);
+    c.width = bw;
+    c.height = bh;
+    c.classList.add('sized');
     seedParts();
   }
   function drawFx(t) {
     var c = FX.canvas;
-    if (!c || !FX.w || !FX.h) return;
+    if (!c || !(FX.w >= 8) || !(FX.h >= 8)) return;
+    if (c.width < Math.round(FX.w * (FX.dpr || 1)) - 2 || c.height < Math.round(FX.h * (FX.dpr || 1)) - 2) return;
     var ctx = c.getContext('2d');
     if (!ctx) return;
     var dpr = FX.dpr;
@@ -3340,9 +3367,9 @@ footer.site{margin-top:auto}
     }
     S.model = buildBoard(S.feed, S.targets, new Date());
     S.spine = spineData();
+    markNav();
     ensureView(S.view);
     paintSys();
-    markNav();
     applyFilter();
     if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
   }
@@ -3372,7 +3399,11 @@ footer.site{margin-top:auto}
       if (b.classList.contains('navbtn') || b.parentElement === $('bnav')) b.setAttribute('aria-current', on ? 'page' : 'false');
     });
     var locked = !S.sample && !S.admin;
-    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', !locked && v.id === 'v-' + S.view); });
+    var checking = !S.authReady && !S.sample && S.feedState === 'checking';
+    document.querySelectorAll('.view').forEach(function (v) {
+      var show = checking ? v.id === 'v-' + S.view : (!locked && v.id === 'v-' + S.view);
+      v.classList.toggle('on', show);
+    });
     var label = 'Workforce';
     VIEWS.forEach(function (v) { if (v[0] === S.view) label = v[1]; });
     if ($('crumb')) $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + label;
@@ -3382,8 +3413,8 @@ footer.site{margin-top:auto}
     S.view = view;
     var next = location.pathname + location.search + '#' + view;
     if ((location.pathname + location.search + location.hash) !== next) history.replaceState(null, '', next);
-    ensureView(view);
     markNav();
+    ensureView(view);
     applyFilter();
     window.scrollTo(0, 0);
     if (view === 'home' && FX.org && !FX.reduce && !document.hidden) {
@@ -3780,7 +3811,7 @@ footer.site{margin-top:auto}
     }
     return list;
   }
-  function fixtureDeskAgents() {
+  function fixtureDeskAgents(strip) {
     var spec = [
       ['Operations Manager', 'Ops desk'],
       ['Command Center', 'Command Center desk'],
@@ -3834,7 +3865,7 @@ footer.site{margin-top:auto}
       var working = i < 10;
       return {
         name: row[0],
-        role: row[1],
+        role: strip ? String(row[1]).replace(/desk/ig, 'unit') : row[1],
         status: working ? 'working' : 'idle',
         currentWork: working ? ('Fixture task ' + (i + 1) + ' is in progress.') : '',
         lastReportAt: '2026-11-11T08:00:00-06:00'
@@ -3852,7 +3883,8 @@ footer.site{margin-top:auto}
         if (!res.ok) throw new Error('status');
         S.feed = await res.json();
         if (S.fixture === '1') S.feed.agents = fixtureAgents();
-        if (S.fixture === '2') S.feed.agents = fixtureDeskAgents();
+        if (S.fixture === '2') S.feed.agents = fixtureDeskAgents(false);
+        if (S.fixture === '3') S.feed.agents = fixtureDeskAgents(true);
         S.feedState = 'ready';
         S.feedNote = '';
       } catch (e) {
@@ -4024,6 +4056,7 @@ footer.site{margin-top:auto}
     markNav();
     if (S.fixture === '1' && $('banner')) $('banner').textContent = 'SAMPLE. Fake 47-bot fixture for layout checks. These figures are not the live feed and they are not saved.';
     if (S.fixture === '2' && $('banner')) $('banner').textContent = 'SAMPLE. Fake desk-role fixture for layout checks. These figures are not the live feed and they are not saved.';
+    if (S.fixture === '3' && $('banner')) $('banner').textContent = 'SAMPLE. Fake plain-role fixture for layout checks. These figures are not the live feed and they are not saved.';
     $('sample-link').textContent = S.sample ? 'Owner feed' : 'Sample layout';
     $('sample-link').setAttribute('href', sampleHref());
     await bootAuth();

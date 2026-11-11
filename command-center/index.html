@@ -1,1448 +1,2261 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080808">
 <meta name="color-scheme" content="dark">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Signal CC">
 <title>Signal Marketing · Command Center</title>
-<meta name="description" content="Signal Marketing Command Center — daily ops for Today, Money, Clients, Team, and Projects. America/Chicago. signals.marketing">
+<meta name="description" content="Signal Marketing Command Center. Attract, Convert, and Transform. signals.marketing">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23080808' width='32' height='32' rx='7'/%3E%3Cpath fill='%23ed3039' d='M6 22h3V14H6zm5 0h3V9h-3zm5 0h3V6h-3zm5 0h3V11h-3z'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root {
-    --bg: #080808; --fg: #f6f5f3; --muted: #a8a8a8; --dim: #6a6a6a;
-    --red: #ed3039; --red-soft: #ff6a70; --red-glow: rgba(237, 48, 57, 0.35);
-    --surface: #101010; --surface-2: #161212; --surface-3: #1c1616;
-    --line: #242424; --line-hot: rgba(237, 48, 57, 0.45);
-    --ok: #3dd68c; --warn: #f0b429; --danger: #ff8a8a;
-    --tap: 48px; --radius: 14px;
-    --safe-b: env(safe-area-inset-bottom, 0px);
-    --safe-t: env(safe-area-inset-top, 0px);
+:root{
+  --bg:#080808;--ink:#f6f5f3;--muted:#a3a3a3;--dim:#737373;
+  --line:rgba(255,255,255,.08);--glass:rgba(255,255,255,.04);
+  --red:#ed3039;--red-deep:#b71a23;--red-soft:#ff8a8e;
+  --good:#3DDC97;--good-ink:#d7f0e0;--watch:#C4A35A;--act:#ed3039;
+  --sans:Geist,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --side:240px;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark;-webkit-text-size-adjust:100%}
+html,body{margin:0;background:#080808;color:var(--ink)}
+body{
+  font-family:var(--sans);font-size:15px;line-height:1.45;min-height:100dvh;
+  -webkit-font-smoothing:antialiased;
+  background:
+    radial-gradient(880px 480px at 82% -12%,rgba(237,48,57,.24),transparent 56%),
+    radial-gradient(640px 380px at 0% 0%,rgba(237,48,57,.08),transparent 52%),
+    #080808;
+}
+body:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:56px 56px;
+  -webkit-mask-image:radial-gradient(circle at 50% 0%,#000 8%,transparent 72%);
+  mask-image:radial-gradient(circle at 50% 0%,#000 8%,transparent 72%);
+}
+button,input,textarea,select{font-family:inherit;color:inherit}
+button,a,input,textarea,select,summary,label{-webkit-tap-highlight-color:transparent}
+button{cursor:pointer}
+h1,h2,h3,h4,p{margin:0}
+a{color:var(--red-soft);text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.app{position:relative;z-index:1;display:grid;grid-template-columns:var(--side) 1fr;min-height:100dvh}
+.sidenav{
+  position:sticky;top:0;height:100dvh;padding:18px 14px 16px;display:flex;flex-direction:column;gap:2px;
+  border-right:1px solid var(--line);background:rgba(8,8,8,.78);
+  -webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 14px}
+.mark{width:28px;height:28px;border-radius:8px;background:#080808;border:1px solid #333;display:grid;grid-template-columns:repeat(5,1fr);gap:1.5px;padding:5px 4px;align-items:end;flex:none}
+.mark span{display:block;background:var(--red);border-radius:1px}
+.mark span:nth-child(1){height:35%}
+.mark span:nth-child(2){height:60%}
+.mark span:nth-child(3){height:100%}
+.mark span:nth-child(4){height:55%}
+.mark span:nth-child(5){height:40%}
+.brand strong{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase}
+.brand em{display:block;font-style:normal;color:var(--muted);font-size:12px}
+.side-k{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:12px 10px 6px}
+.navbtn,.side-link{
+  border:0;background:transparent;color:var(--muted);display:flex;align-items:center;gap:10px;
+  width:100%;text-align:left;border-radius:999px;padding:9px 12px;font-size:14px;font-weight:600;text-decoration:none;
+}
+.navbtn svg,.bnav svg{width:18px;height:18px;flex:none}
+.navbtn.on{color:#fff;background:var(--red-deep);box-shadow:0 0 22px rgba(237,48,57,.35)}
+.side-link{font-weight:550;color:var(--muted)}
+.side-link:hover{color:var(--ink)}
+.sys{margin-top:auto;padding:12px;border-radius:14px;background:var(--glass);border:1px solid var(--line)}
+.sys b{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:650}
+.sys span{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.4}
+.gdot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);flex:none}
+.gdot.dim{background:#555;box-shadow:none}
+.maincol{min-width:0;display:flex;flex-direction:column}
+.top{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;
+  background:rgba(8,8,8,.82);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);border-bottom:1px solid var(--line);
+}
+.crumb{font-size:13px;color:var(--muted);white-space:nowrap}
+.crumb b{color:var(--ink);font-weight:650}
+.search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:0 10px;min-height:40px}
+.search input{flex:1;border:0;background:transparent;outline:none;font-size:14px;min-width:0}
+.clock{margin-left:auto;display:flex;align-items:center;gap:8px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
+.ask{
+  border:1px solid rgba(237,48,57,.4);background:rgba(237,48,57,.12);color:var(--ink);
+  border-radius:999px;min-height:36px;padding:0 12px;font-weight:700;font-size:13px;
+}
+.who{font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ghost{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:650;min-height:36px;padding:0 8px}
+main.stage{padding:16px 22px 40px}
+.view{display:none}
+.view.on{display:block}
+.banner{margin-bottom:12px;padding:10px 12px;border-radius:14px;border:1px solid rgba(237,48,57,.5);background:rgba(237,48,57,.14);font-weight:700}
+.guide{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 18px;margin-bottom:12px;
+  border-radius:16px;background:linear-gradient(180deg,rgba(237,48,57,.16),rgba(255,255,255,.03));
+  border:1px solid rgba(237,48,57,.4);box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 32px rgba(237,48,57,.12);
+}
+.guide .gk{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--red-soft);font-weight:700;margin-bottom:4px}
+.guide h2{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.15}
+.guide p{color:var(--muted);font-size:14px;margin-top:4px}
+.guide .btn{flex:none}
+.legend{color:var(--dim);font-size:12px;margin:0 0 12px}
+.scores{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.score{
+  position:relative;text-align:left;border:1px solid var(--line);background:var(--glass);border-radius:16px;
+  padding:14px;color:inherit;box-shadow:inset 3px 0 0 #555,inset 0 1px 0 rgba(255,255,255,.05);min-width:0;
+}
+.score.sig-good{box-shadow:inset 3px 0 0 var(--good),inset 0 1px 0 rgba(255,255,255,.05)}
+.score.sig-bad{box-shadow:inset 3px 0 0 var(--red),inset 0 1px 0 rgba(255,255,255,.05)}
+.score .l{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.score .v{display:block;margin:8px 0 6px;line-height:1}
+.score .v.num{font-family:var(--mono);font-size:40px;font-weight:600;letter-spacing:-.04em}
+.score .v.words{font-size:22px;font-weight:750;letter-spacing:-.03em}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.plats,.clients{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.game{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:12px;margin-top:12px}
+.kpi{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:16px;box-shadow:inset 3px 0 0 #555,inset 0 1px 0 rgba(255,255,255,.05);min-width:0}
+.kpi.sig-good{box-shadow:inset 3px 0 0 var(--good),inset 0 1px 0 rgba(255,255,255,.05)}
+.kpi.sig-bad{box-shadow:inset 3px 0 0 var(--red),inset 0 1px 0 rgba(255,255,255,.05)}
+.kpi.sig-good .sig,.score.sig-good .sig{background:var(--good);box-shadow:0 0 8px var(--good)}
+.kpi.sig-bad .sig,.score.sig-bad .sig{background:var(--red);box-shadow:0 0 8px var(--red)}
+.kpi-hit{display:block;width:100%;text-align:left;border:0;background:transparent;color:inherit;padding:14px 14px 12px;border-radius:16px;cursor:pointer;position:relative}
+.kpi.has-plus .kpi-hit{padding-bottom:46px}
+.kpi .l,.mrow .l{font-size:12px;color:var(--muted);font-weight:650}
+.kpi .v{display:block;margin:8px 0 4px;font-variant-numeric:tabular-nums;line-height:1.05}
+.kpi .v.num,.side .big{font-family:var(--mono);font-weight:600;letter-spacing:-.04em}
+.kpi .v.num{font-size:32px}
+.kpi .v.words{font-size:22px;font-weight:750;letter-spacing:-.03em;line-height:1.15}
+.sig{width:8px;height:8px;border-radius:50%;background:#6b6b6b;display:inline-block}
+.kpi-hit>.sig,.score>.sig{position:absolute;top:14px;right:14px}
+.sig-good>.sig,.mrow.sig-good .sig{background:var(--good);box-shadow:0 0 8px var(--good)}
+.sig-bad>.sig,.mrow.sig-bad .sig{background:var(--red);box-shadow:0 0 8px var(--red)}
+.target{display:block;margin-top:4px;font-size:12px;font-weight:500;color:var(--dim)}
+.target b{font-weight:650;color:var(--muted);font-variant-numeric:tabular-nums}
+.src{display:block;margin-top:3px;font-size:11px;color:var(--dim)}
+.foot{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;min-height:28px;margin-top:8px}
+.dchip{font-size:11px;font-weight:650;border-radius:999px;padding:3px 7px;background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--line);line-height:1.35}
+.dchip.act{color:#ffd0d0;border-color:rgba(237,48,57,.45);background:rgba(237,48,57,.12)}
+.dchip.good{color:var(--good-ink);border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.12)}
+.spark{width:84px;height:28px;flex:none}
+.plus{
+  position:absolute;right:10px;bottom:10px;border:0;background:var(--red);color:#fff;border-radius:999px;
+  min-height:32px;padding:0 12px;font-weight:800;font-size:14px;box-shadow:0 8px 18px -12px rgba(237,48,57,.9);z-index:1;
+}
+.panel{background:var(--glass);border:1px solid var(--line);border-radius:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);padding:14px;min-width:0}
+.ph{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;margin-bottom:4px}
+.ph h2,.client h2{font-size:16px;font-weight:750;letter-spacing:-.02em;overflow-wrap:anywhere}
+.ph .sub,.client .sub{color:var(--muted);font-size:12px;margin-top:2px}
+.mrow{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;width:100%;text-align:left;
+  border:0;border-top:1px solid var(--line);background:transparent;color:inherit;padding:10px 2px;position:relative;
+}
+.mrow .l{grid-column:1}
+.mrow .num,.mrow .words{grid-column:2;grid-row:1 / span 3;align-self:center;font-variant-numeric:tabular-nums}
+.mrow .num{font-family:var(--mono);font-size:22px;font-weight:600}
+.mrow .words{font-size:14px;font-weight:750;max-width:120px;text-align:right;line-height:1.2}
+.mrow .target,.mrow .src,.mrow .dchip{grid-column:1;justify-self:start}
+.mrow .spark{grid-column:2;grid-row:4;justify-self:end}
+.stack{display:grid;gap:12px}
+.qcols{display:grid;grid-template-columns:92px minmax(0,1.5fr) minmax(0,.9fr) 108px;gap:10px;padding:0 4px 6px;color:var(--dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
+.qhead{margin:14px 0 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red-soft);font-weight:700}
+.qhead:first-child{margin-top:0}
+.qrow{display:grid;grid-template-columns:92px minmax(0,1.5fr) minmax(0,.9fr) 108px;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid rgba(255,255,255,.08);cursor:pointer;border-radius:10px}
+.qrow:hover{background:rgba(255,255,255,.03)}
+.qrow .qw b{display:block;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
+.qrow .qw span,.when{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.badge{justify-self:start;font-size:11px;font-weight:750;border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.05);color:var(--muted)}
+.badge.act{background:rgba(237,48,57,.16);color:#ffc9c9}
+.badge.good{background:rgba(61,220,151,.14);color:var(--good-ink)}
+.open{border:0;background:var(--red-deep);color:#fff;border-radius:999px;min-height:34px;padding:0 12px;font-weight:750;font-size:13px}
+.quiet{color:var(--muted);font-size:13px;line-height:1.45}
+.pipe{display:flex;gap:0;overflow-x:auto;list-style:none;margin:8px 0 0;padding:6px 0 2px}
+.pipe li{position:relative;flex:1 0 112px;text-align:center;padding:0 8px 4px}
+.pipe .dot{width:16px;height:16px;border-radius:50%;display:inline-block;background:#141416;border:2px solid var(--red);box-shadow:0 0 0 5px rgba(237,48,57,.16)}
+.pipe li.working .dot{border-color:var(--good);box-shadow:0 0 0 5px rgba(61,220,151,.18)}
+.pipe li.idle .dot{border-color:var(--watch);box-shadow:0 0 0 5px rgba(196,163,90,.18)}
+.pipe li.blocked .dot,.pipe li.offline .dot{border-color:var(--act);box-shadow:0 0 0 5px rgba(237,48,57,.18)}
+.pipe li.missing .dot{border-color:#555;box-shadow:none}
+.pipe li:not(:last-child) .dot:after{content:"";position:absolute;top:7px;left:calc(50% + 16px);width:calc(100% - 32px);height:2px;background:rgba(237,48,57,.4)}
+.pipe b{display:block;margin-top:10px;font-size:13px}
+.pipe .role,.pipe .work,.pipe .ago{display:block;color:var(--muted);font-size:12px;line-height:1.35}
+.behind{margin-top:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.02)}
+.behind summary{cursor:pointer;padding:14px 16px;font-weight:700;list-style:none;min-height:44px;display:flex;align-items:center}
+.behind summary::-webkit-details-marker{display:none}
+.behind .inn{padding:0 12px 12px}
+.log{font-family:var(--mono);font-size:12px;line-height:1.55;max-height:280px;overflow:auto}
+.log .row{display:grid;grid-template-columns:92px 72px minmax(0,1fr);gap:8px;padding:4px 0}
+.lv{font-family:var(--sans);font-size:10px;font-weight:800;letter-spacing:.06em;border-radius:4px;padding:2px 5px;height:fit-content}
+.lv.info{color:#f6f5f3;background:rgba(255,255,255,.08)}
+.lv.ok{color:#e9fff2;background:rgba(61,220,151,.28)}
+.lv.warn{color:#2a1c05;background:var(--watch)}
+.src-list,.wins{list-style:none;margin:8px 0 0;padding:0}
+.src-list li,.wins li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13px}
+.src-list span,.wins span{color:var(--muted);text-align:right}
+.bar{height:8px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red);width:0}
+.btn{border:0;border-radius:999px;min-height:40px;padding:0 14px;font-weight:700}
+.btn.p{background:var(--red);color:#fff}
+.btn.p:hover{background:var(--red-deep)}
+.btn.s{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line)}
+.stripe{border-color:rgba(237,48,57,.35)}
+html.lock,html.lock body{overflow:hidden}
+html.lock body{position:fixed;left:0;right:0;width:100%}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{
+  position:fixed;top:0;right:0;height:100%;width:min(880px,calc(100% - 48px));z-index:65;
+  background:rgba(12,12,12,.96);border-left:1px solid var(--line);box-shadow:-20px 0 60px rgba(0,0,0,.45);
+  transform:translateX(104%);transition:transform .35s cubic-bezier(.32,.72,0,1);display:flex;flex-direction:column;
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+}
+.drawer.on{transform:none}
+.grab{display:none}
+.dh{padding:18px 22px 6px;position:relative}
+.dh h3{font-size:28px;letter-spacing:-.03em;line-height:1.1;padding-right:48px;overflow-wrap:anywhere}
+.x{position:absolute;right:14px;top:14px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:20px}
+.db{padding:8px 22px 20px;overflow:auto;flex:1}
+.df{display:flex;gap:8px;padding:12px 22px 18px;border-top:1px solid var(--line);flex-wrap:wrap}
+.df .btn,.df a.btn{flex:1;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+.cmpx{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.side{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:14px}
+.side.now{box-shadow:inset 0 0 0 1px rgba(237,48,57,.35)}
+.side .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.side.now .k{color:var(--red-soft)}
+.side .big{font-size:28px;letter-spacing:-.04em;margin:6px 0}
+.side p{color:var(--muted);font-size:14px;margin-top:6px}
+.kpisheet,.login,.chat{
+  position:fixed;z-index:70;background:rgba(12,12,12,.97);border:1px solid rgba(237,48,57,.28);border-radius:18px;
+  box-shadow:0 24px 70px rgba(0,0,0,.5);
+}
+.kpisheet,.login{left:50%;top:50%;width:min(560px,calc(100% - 28px));transform:translate(-50%,-46%);opacity:0;pointer-events:none;padding:18px;max-height:min(86dvh,760px);overflow:auto}
+.kpisheet.on,.login.on{opacity:1;transform:translate(-50%,-50%);pointer-events:auto}
+.kpisheet{z-index:72}
+.login{z-index:80;width:min(420px,calc(100% - 28px))}
+.kpisheet h3,.login h3{font-size:26px;letter-spacing:-.03em;padding-right:36px}
+.kchart{width:100%;height:auto;margin-top:8px}
+.log-grid{display:grid;grid-template-columns:110px 160px 1fr;gap:8px;margin-top:14px}
+.log-grid label,.login label{display:grid;gap:4px;font-size:12px;color:var(--muted);font-weight:650}
+.log-grid input,.log-grid select,.login input,textarea,.chat input{
+  width:100%;border:1px solid var(--line);background:#0c0c0c;border-radius:12px;min-height:40px;padding:8px 10px;font-size:16px;
+}
+#log-client-wrap{grid-column:1 / -1}
+.log-actions{display:flex;gap:8px;margin-top:10px}
+.entries{margin-top:12px;display:grid;gap:8px}
+.entry{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.08);font-size:13px}
+.entry button{border:0;background:transparent;color:var(--muted);font-weight:700;min-height:36px}
+.chat{
+  right:20px;bottom:20px;width:min(400px,calc(100% - 24px));height:min(560px,calc(100% - 40px));z-index:66;
+  display:flex;flex-direction:column;transform:translateY(12px);opacity:0;pointer-events:none;
+}
+.chat.on{opacity:1;transform:none;pointer-events:auto}
+.ch{padding:14px 44px 4px 14px}
+.ch span{display:block;color:var(--muted);font-size:12px}
+.cb{flex:1;overflow:auto;padding:8px 12px}
+.m{border-radius:14px;padding:8px 10px;margin:6px 0;max-width:92%;font-size:14px}
+.m.me{background:var(--red-deep);color:#fff;margin-left:auto}
+.m.bot{background:rgba(255,255,255,.05)}
+.sugg{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--ink);border-radius:999px;padding:6px 10px;font-size:13px}
+.cf{display:flex;gap:8px;padding:10px}
+.cf input{flex:1;border-radius:999px;padding:0 12px}
+.cf button{border:0;background:#fff;color:#111;border-radius:999px;padding:0 14px;font-weight:800}
+.demo{padding:0 12px 10px;color:var(--dim);font-size:11px}
+.err{color:#ffb4b4;font-size:13px;margin:6px 0}
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#161616;border:1px solid var(--line);
+  color:#fff;border-radius:999px;padding:10px 14px;opacity:0;pointer-events:none;z-index:90;display:flex;gap:8px;align-items:center;
+}
+.toast.on{opacity:1;pointer-events:auto}
+.toast button{border:0;background:transparent;color:var(--red-soft);font-weight:800}
+.bnav{display:none}
+.roster{display:grid;gap:8px}
+.agent{display:grid;grid-template-columns:16px 1fr;gap:10px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.03)}
+.agent i{width:12px;height:12px;border-radius:50%;margin-top:4px;background:var(--dim)}
+.agent.working i{background:var(--good)}
+.agent.idle i{background:var(--watch)}
+.agent.blocked i,.agent.offline i{background:var(--act)}
+.agent b{font-size:15px}
+.agent p{color:var(--muted);font-size:13px;margin-top:2px}
+footer.site{padding:8px 22px 28px;color:var(--dim);font-size:12px;line-height:1.5}
+footer.site a{color:var(--muted)}
+.hidden,[hidden]{display:none !important}
+.kpi.has-plus .foot{padding-right:54px}
+.mrow .quiet{grid-column:1;font-size:12px}
+.sheet-value{font-family:var(--mono);font-size:40px;letter-spacing:-.04em;margin:8px 0}
+.sheet-value.words{font-family:var(--sans);font-size:28px;font-weight:750}
+@media(max-width:1100px){
+  .krow,.scores,.plats,.clients,.funnel,.game{grid-template-columns:1fr 1fr}
+  .funnel{grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px),(max-height:520px) and (max-width:980px){
+  .app{display:block}
+  .sidenav{display:none}
+  .top{flex-wrap:wrap;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px}
+  .crumb{flex:1 1 auto}
+  .ask{min-height:44px;order:2}
+  .who,.ghost{order:3}
+  .clock{order:4;margin-left:0;width:100%}
+  .search{order:5;max-width:none;flex:1 1 100%;min-height:44px}
+  main.stage{padding:12px 12px calc(112px + env(safe-area-inset-bottom))}
+  .guide{flex-direction:column;align-items:stretch}
+  .guide h2{font-size:22px}
+  .guide .btn,.btn,.open,.plus,.chip{min-height:44px}
+  .guide .btn{width:100%;text-align:center}
+  .krow,.scores,.plats,.clients,.funnel,.game{grid-template-columns:1fr}
+  .kpi .v.num{font-size:28px}
+  .score .v.num{font-size:34px}
+  .qcols{display:none}
+  .qrow{grid-template-columns:1fr;border:1px solid var(--line);border-radius:14px;padding:12px;margin:10px 0;border-top:1px solid var(--line)}
+  .qrow .open{width:100%}
+  .pipe{flex-direction:column;overflow:visible}
+  .pipe li{flex:none;display:grid;grid-template-columns:28px minmax(0,1fr);text-align:left;column-gap:8px;padding:0 0 16px}
+  .pipe .dot{grid-row:1 / span 4;margin-top:2px}
+  .pipe b,.pipe .role,.pipe .work,.pipe .ago{grid-column:2}
+  .pipe b{margin-top:0}
+  .pipe li:not(:last-child) .dot:after{top:20px;left:7px;width:2px;height:calc(100% + 8px)}
+  .log .row{grid-template-columns:72px 64px minmax(0,1fr)}
+  .log-grid{grid-template-columns:1fr 1fr}
+  .log-grid label:last-child,#log-client-wrap{grid-column:1 / -1}
+  .drawer,.kpisheet,.login,.chat{
+    left:0;top:0;right:0;bottom:0;width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0;
+    transform:translateY(105%);padding-top:env(safe-area-inset-top);background:#0c0c0c;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    background: var(--bg); color: var(--fg);
-    font-family: Geist, ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
-    min-height: 100%; min-height: 100dvh;
-    -webkit-font-smoothing: antialiased;
-    -webkit-tap-highlight-color: transparent;
-    touch-action: manipulation;
-    background-image:
-      radial-gradient(120% 70% at 50% -15%, rgba(237,48,57,0.28), transparent 55%),
-      radial-gradient(80% 40% at 100% 20%, rgba(237,48,57,0.08), transparent 50%);
-    background-attachment: fixed;
+  .drawer.on,.kpisheet.on,.login.on,.chat.on{transform:none;opacity:1}
+  .kpisheet,.login{padding:calc(12px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom))}
+  .grab{display:block;width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.2);margin:8px auto 0}
+  .x{width:44px;height:44px;top:8px;right:8px}
+  .dh h3{font-size:24px}
+  .db{padding:8px 16px 16px}
+  .df{position:sticky;bottom:0;flex-direction:column;background:#0c0c0c;padding:10px 14px calc(12px + env(safe-area-inset-bottom))}
+  .cmpx{grid-template-columns:1fr}
+  .bnav{
+    display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:35;
+    background:rgba(8,8,8,.96);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+    border-top:1px solid var(--line);padding:4px 2px calc(6px + env(safe-area-inset-bottom));
   }
-  body { padding: calc(12px + var(--safe-t)) 14px calc(96px + var(--safe-b)); max-width: 520px; margin: 0 auto; }
-  a { color: var(--red-soft); text-decoration: none; }
-  button, input, select, textarea { font: inherit; color: inherit; }
-  button:focus, a:focus, input:focus, select:focus, textarea:focus { outline: none; }
-  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
-    outline: 2px solid var(--red-soft); outline-offset: 2px;
-  }
-  time { display: block; }
-
-  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-  .brand { display: flex; align-items: center; gap: 10px; font-size: 11px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-  .mark {
-    width: 26px; height: 26px; border-radius: 7px; background: #080808; border: 1px solid #333;
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1.5px; padding: 5px 4px; align-items: end;
-  }
-  .mark span { display: block; background: var(--red); border-radius: 1px; width: 100%; }
-  .mark span:nth-child(1) { height: 35%; }
-  .mark span:nth-child(2) { height: 60%; }
-  .mark span:nth-child(3) { height: 100%; }
-  .mark span:nth-child(4) { height: 55%; }
-  .mark span:nth-child(5) { height: 40%; }
-  .brand-text { display: flex; flex-direction: column; gap: 1px; line-height: 1.15; }
-  .brand-text strong { color: var(--fg); font-size: 12px; letter-spacing: 0.08em; }
-  .brand-text em { font-style: normal; color: var(--red-soft); font-size: 10px; letter-spacing: 0.04em; text-transform: lowercase; }
-  .pill-live {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--red-soft); background: rgba(237,48,57,0.12); border: 1px solid var(--line-hot);
-    padding: 6px 10px; border-radius: 999px; white-space: nowrap;
-  }
-  .pill-live .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-right: 6px; vertical-align: middle; box-shadow: 0 0 8px var(--red); animation: pulse 1.6s ease infinite; }
-  @keyframes pulse { 50% { opacity: .45; } }
-
-  .kicker { font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: var(--red-soft); margin-bottom: 2px; }
-  h1 { font-size: 42px; font-weight: 900; letter-spacing: -0.045em; margin: 0 0 4px; line-height: 0.95; white-space: nowrap; }
-  h1 em { font-style: normal; color: var(--red); }
-  .sub { font-size: 13px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
-
-  .product-nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; margin-bottom: 12px; -webkit-overflow-scrolling: touch; }
-  .product-nav a, .product-nav button {
-    flex: 0 0 auto; font-size: 12px; font-weight: 650; padding: 8px 12px; border-radius: 999px;
-    border: 1px solid var(--line); background: var(--surface); color: var(--muted); white-space: nowrap; cursor: pointer;
-  }
-  .product-nav a.on, .product-nav button.on {
-    color: var(--fg); border-color: var(--line-hot); background: rgba(237,48,57,0.14);
-    box-shadow: 0 0 0 1px rgba(237,48,57,0.15) inset;
-  }
-
-  .tabs { display: flex; gap: 6px; margin: 0 0 12px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .tab {
-    flex: 1 0 auto; min-width: 64px; text-align: center; padding: 11px 8px; border-radius: 12px;
-    border: 1px solid var(--line); background: var(--surface); color: var(--muted);
-    font-size: 12px; font-weight: 700; cursor: pointer;
-  }
-  .tab.on { background: rgba(237,48,57,0.16); border-color: var(--line-hot); color: var(--fg); }
-  .panel { display: none; }
-  .panel.on { display: block; }
-  .panel-purpose {
-    font-size: 12px; color: var(--dim); margin: -2px 0 12px; line-height: 1.4;
-    padding: 8px 12px; border-radius: 10px; background: rgba(255,255,255,0.03); border: 1px solid var(--line);
-  }
-  .panel-purpose strong { color: var(--muted); font-weight: 700; }
-
-  .callout {
-    background: linear-gradient(160deg, var(--surface-2) 0%, var(--surface) 100%);
-    border: 1px solid var(--line-hot); border-radius: var(--radius); padding: 14px;
-    margin-bottom: 12px; box-shadow: 0 0 40px -18px var(--red-glow);
-  }
-  .callout h2 { font-size: 14px; color: var(--red-soft); margin-bottom: 6px; font-weight: 750; }
-  .callout p, .card p { font-size: 14px; color: var(--fg); line-height: 1.45; }
-
-  .card {
-    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-    padding: 12px 14px; margin-bottom: 10px;
-  }
-  .card h3 {
-    font-size: 12px; color: var(--muted); text-transform: uppercase;
-    letter-spacing: .08em; margin-bottom: 8px; font-weight: 700;
-  }
-  .card-h { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
-  .card-h h3, .card-h .who { margin: 0; }
-  .who { font-size: 16px; font-weight: 750; letter-spacing: -0.02em; color: var(--fg); text-transform: none; }
-
-  .badge { display: inline-block; font-size: 11px; font-weight: 750; padding: 3px 8px; border-radius: 999px; }
-  .badge.danger { background: #3a1717; color: var(--danger); }
-  .badge.warn { background: #3a2e12; color: var(--warn); }
-  .badge.ok { background: #123a28; color: var(--ok); }
-  .badge.muted { background: #1a1a1a; color: var(--dim); }
-  .onphone {
-    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--dim); border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; white-space: nowrap;
-  }
-
-  .empty {
-    border: 1px dashed var(--line); border-radius: 12px; padding: 14px;
-    color: var(--muted); font-size: 13px; line-height: 1.45; margin-bottom: 8px;
-  }
-  .empty strong { display: block; color: var(--fg); font-size: 14px; margin-bottom: 4px; font-weight: 700; }
-  .fine { font-size: 12px; color: var(--dim); line-height: 1.4; }
-  label.fine { display: block; margin: 8px 0 4px; }
-  .feed-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
-  .feed-title { font-size: 15px; font-weight: 750; line-height: 1.35; overflow-wrap: anywhere; }
-  .feed-meta, .feed-link { font-size: 13px; color: var(--muted); margin-top: 4px; line-height: 1.4; overflow-wrap: anywhere; }
-  .feed-link { display: inline-block; }
-  .feed-row { padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .feed-row:last-child { border-bottom: 0; }
-  .badge-row { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-  .src {
-    font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--red-soft); border: 1px solid var(--line-hot); border-radius: 999px; padding: 3px 7px; white-space: nowrap;
-  }
-  .overlay {
-    margin-top: 14px; border: 1px solid var(--line); border-radius: var(--radius);
-    background: rgba(255,255,255,0.02); padding: 4px 12px 12px;
-  }
-  .overlay summary {
-    cursor: pointer; font-size: 13px; font-weight: 750; min-height: 48px;
-    display: flex; align-items: center; color: var(--fg);
-  }
-  .overlay[open] summary { color: var(--red-soft); }
-
-  .field, select.field, textarea.field {
-    width: 100%; background: #0c0c0c; border: 1px solid var(--line); border-radius: 12px;
-    padding: 12px; font-size: 16px; color: var(--fg);
-  }
-  textarea.field { min-height: 84px; resize: vertical; line-height: 1.4; }
-  select.field { min-height: var(--tap); font-weight: 700; }
-  select.st[data-tone="unset"] { color: var(--dim); }
-  select.st[data-tone="progress"], select.st[data-tone="waiting"] { color: var(--warn); }
-  select.st[data-tone="delivered"] { color: var(--ok); }
-  select.st[data-tone="blocked"] { color: var(--danger); }
-
-  .money-big { font-size: 34px; font-weight: 850; letter-spacing: -0.03em; line-height: 1.05; margin: 2px 0 4px; overflow-wrap: anywhere; }
-  .money-big.blank { color: var(--dim); font-weight: 700; }
-  .money-sub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
-
-  .add-row { display: flex; gap: 8px; margin-top: 8px; align-items: stretch; }
-  .add-row .field { flex: 1; min-width: 0; width: auto; }
-  .add-row button, .texty, .btn-wide {
-    border-radius: 12px; border: 1px solid var(--line); background: var(--surface-3);
-    color: var(--fg); font-size: 13px; font-weight: 700; cursor: pointer;
-  }
-  .add-row button {
-    flex: 0 0 auto; min-width: 72px; min-height: var(--tap); padding: 0 14px;
-    border-color: var(--line-hot); background: rgba(237,48,57,0.18); color: var(--red-soft);
-  }
-  .add-row button:active, .btn-wide:active, .tab:active, .texty:active { transform: scale(0.98); }
-  .texty {
-    background: transparent; color: var(--dim); border-color: transparent;
-    min-height: 36px; padding: 6px 0; font-size: 12px;
-  }
-  .btn-wide {
-    display: flex; align-items: center; justify-content: center; min-height: 48px;
-    text-decoration: none; width: 100%; margin-top: 8px;
-  }
-  .btn-wide.primary {
-    background: var(--red); color: #fff; border-color: var(--red);
-    box-shadow: 0 8px 24px -12px var(--red-glow);
-  }
-
-  .check { display: flex; gap: 4px; align-items: flex-start; padding: 4px 0; border-bottom: 1px solid var(--line); }
-  .check:last-child { border-bottom: 0; }
-  .check label { display: flex; gap: 10px; align-items: flex-start; flex: 1; padding: 8px 0; cursor: pointer; }
-  .check input { width: 22px; height: 22px; margin-top: 1px; accent-color: var(--red); flex-shrink: 0; }
-  .check .txt, .win .txt { font-size: 15px; line-height: 1.35; overflow-wrap: anywhere; }
-  .check.done .txt { color: var(--dim); text-decoration: line-through; }
-  .x {
-    border: 0; background: transparent; color: var(--dim); width: 44px; height: 44px;
-    font-size: 20px; cursor: pointer; flex-shrink: 0;
-  }
-
-  .track { height: 8px; border-radius: 99px; background: #141414; border: 1px solid var(--line); overflow: hidden; margin-top: 10px; }
-  .track > span { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #9a1c24, var(--red)); border-radius: 99px; }
-  .goal .track { margin-top: 8px; }
-  .win { padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; display: flex; gap: 8px; align-items: flex-start; }
-  .win:last-child { border-bottom: 0; }
-  .win .txt { flex: 1; line-height: 1.35; padding-top: 10px; }
-  .lane { font-size: 10px; font-weight: 800; letter-spacing: 0.14em; color: var(--red); text-transform: uppercase; margin-bottom: 6px; }
-
-  .go {
-    flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--red-soft);
-    border: 1px solid var(--line-hot); background: rgba(237,48,57,0.12);
-    padding: 6px 10px; border-radius: 999px; text-decoration: none;
-  }
-
-  .toast {
-    position: fixed; left: 50%; bottom: calc(78px + var(--safe-b)); transform: translateX(-50%);
-    background: #1a1a1a; color: #fff; padding: 10px 14px; border-radius: 999px; font-size: 13px;
-    opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 30; border: 1px solid var(--line);
-    max-width: calc(100% - 32px); text-align: center;
-  }
-  .toast.on { opacity: 1; }
-
-  .dock {
-    position: fixed; left: 0; right: 0; bottom: 0;
-    padding: 8px 12px calc(10px + var(--safe-b));
-    background: linear-gradient(180deg, transparent, rgba(8,8,8,0.92) 28%, #080808);
-    display: flex; justify-content: center; z-index: 25;
-  }
-  .dock-inner {
-    width: 100%; max-width: 520px; display: grid; grid-template-columns: repeat(4, 1fr);
-    gap: 6px; background: var(--surface); border: 1px solid var(--line);
-    border-radius: 18px; padding: 6px;
-  }
-  .dock a, .dock button {
-    text-align: center; padding: 8px 4px; border-radius: 12px; border: 0; background: transparent;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-    color: var(--muted); line-height: 1.25; cursor: pointer; width: 100%; text-decoration: none;
-  }
-  .dock a.on, .dock button.on { background: rgba(237,48,57,0.16); color: var(--fg); }
-  .dock a span, .dock button span { display: block; font-size: 16px; margin-bottom: 2px; }
-
-  footer { margin-top: 16px; font-size: 11px; color: var(--dim); line-height: 1.45; text-align: center; }
-  [hidden] { display: none !important; }
-  @media (prefers-reduced-motion: reduce) {
-    * { animation: none !important; transition: none !important; }
-  }
+  html.lock .bnav{display:none}
+  .bnav button{border:0;background:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10px;font-weight:700;min-height:48px}
+  .bnav button.on{color:var(--red-soft)}
+  .toast{bottom:calc(84px + env(safe-area-inset-bottom));max-width:calc(100% - 24px)}
+  footer.site{padding-bottom:calc(28px + env(safe-area-inset-bottom))}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*:before,*:after{animation:none!important;transition:none!important}
+}
 </style>
 </head>
 <body>
-  <div class="topbar">
+<h1 class="sr">Signal Marketing Command Center</h1>
+<div class="app">
+  <aside class="sidenav">
     <div class="brand">
       <div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
-      <div class="brand-text">
-        <strong>Signal Marketing</strong>
-        <em><a href="https://signals.marketing" style="color:inherit">signals.marketing</a></em>
-      </div>
+      <div><strong>Signal</strong><em>Command Center</em></div>
     </div>
-    <div class="pill-live" id="livePill"><span class="dot" aria-hidden="true"></span><span id="liveClock">CT</span></div>
+    <div class="side-k">Triangle</div>
+    <nav id="tabs" aria-label="Sections"></nav>
+    <div class="side-k">Open</div>
+    <a class="side-link" href="../">Hub</a>
+    <a class="side-link" href="../signal/">Magnet</a>
+    <a class="side-link" href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Surge Today</a>
+    <a class="side-link" href="https://signals.marketing" target="_blank" rel="noopener noreferrer">signals.marketing</a>
+    <div class="sys" id="sys"><b><i class="gdot dim"></i> Feed</b><span>Checking today.json.</span></div>
+  </aside>
+  <div class="maincol">
+    <header class="top">
+      <div class="crumb">Command Center / <b id="crumb">Home</b></div>
+      <label class="search"><input id="qsearch" type="search" placeholder="Search the board" aria-label="Search the board" autocomplete="off"></label>
+      <span class="who" id="who"></span>
+      <button type="button" class="ghost" id="signout" hidden>Sign out</button>
+      <button type="button" class="ask" id="ask">Ask your AI team</button>
+      <div class="clock"><i class="gdot" aria-hidden="true"></i><span id="clock">CT</span></div>
+    </header>
+    <main class="stage">
+      <div class="banner" id="banner" hidden>SAMPLE. These figures are layout data. They are not the live feed and they are not saved.</div>
+      <div class="banner" id="target-banner" hidden>Targets file did not load. This board is not guessing targets.</div>
+      <section class="view on" id="v-home" aria-label="Home"></section>
+      <section class="view" id="v-attract" aria-label="Attract"></section>
+      <section class="view" id="v-convert" aria-label="Convert"></section>
+      <section class="view" id="v-transform" aria-label="Transform"></section>
+    </main>
+    <footer class="site">
+      Signal Marketing · Command Center · Read only, except the owner log. Nothing here sends, stamps, or charges.<br>
+      <a id="sample-link" href="?sample=1">Sample layout</a>
+      · <a href="./SCHEMA.md">Feed schema</a>
+      · <a href="./targets.json">Targets</a>
+    </footer>
   </div>
-
-  <time id="opsDay" datetime="">
-    <div class="kicker" id="heroDow">America/Chicago</div>
-    <h1><span id="heroMon">—</span> <em id="heroDom">—</em></h1>
-  </time>
-  <p class="sub" id="heroSub">Loading Chicago time.</p>
-
-  <nav class="product-nav" aria-label="Signal product">
-    <button type="button" data-dock="floor">Floor</button>
-    <button type="button" data-dock="today">Today</button>
-    <a href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Surge Today</a>
-    <a href="../signal/">Magnet</a>
-    <a href="../">Hub</a>
-  </nav>
-
-  <div class="tabs" role="tablist" aria-label="Ops panels">
-    <button class="tab on" data-tab="today" type="button" role="tab" aria-selected="true">Today</button>
-    <button class="tab" data-tab="money" type="button" role="tab" aria-selected="false">Money</button>
-    <button class="tab" data-tab="clients" type="button" role="tab" aria-selected="false">Clients</button>
-    <button class="tab" data-tab="team" type="button" role="tab" aria-selected="false">Team</button>
-    <button class="tab" data-tab="projects" type="button" role="tab" aria-selected="false">Projects</button>
-  </div>
-
-  <section id="panel-today" class="panel on" role="tabpanel" data-feed-state="checking">
-    <p class="lane">Lane 01 · Today</p>
-    <p class="panel-purpose"><strong>Today</strong> — calls from Calendar and Fathom, drafts from Gmail. Personal DMs are not connected.</p>
-    <div class="callout">
-      <h2>Today's run</h2>
-      <p id="todayRunLabel">Checking the live feed.</p>
+</div>
+<nav class="bnav" id="bnav" aria-label="Sections"></nav>
+<div class="scrim" id="scrim" hidden></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="d-t">
+  <div class="grab" aria-hidden="true"></div>
+  <header class="dh">
+    <button type="button" class="x" data-close aria-label="Close">×</button>
+    <p class="badge" id="d-st"></p>
+    <h3 id="d-t"></h3>
+    <p class="quiet" id="d-m"></p>
+  </header>
+  <div class="db" id="d-b"></div>
+  <footer class="df" id="d-f"></footer>
+</aside>
+<div class="kpisheet" id="kpisheet" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="kpi-t">
+  <button type="button" class="x" data-close aria-label="Close">×</button>
+  <p class="guide gk" id="kpi-k" style="margin:0"></p>
+  <h3 id="kpi-t"></h3>
+  <div id="kpi-body"></div>
+  <form id="log-form" hidden>
+    <div class="log-grid">
+      <label>Count<input id="log-count" type="number" min="1" max="500" step="1" value="1" inputmode="numeric"></label>
+      <label>Date<input id="log-date" type="date" required></label>
+      <label>Note<input id="log-note" type="text" maxlength="240" placeholder="Optional note" autocomplete="off"></label>
+      <label id="log-client-wrap" hidden>Client<select id="log-client"></select></label>
     </div>
-    <p class="fine" id="feedNote">Waiting on live feed.</p>
-
-    <article class="card">
-      <div class="card-h">
-        <h3>Calls</h3>
-        <span class="src">Calendar · Fathom</span>
-      </div>
-      <div class="empty" id="empty-feed-calls"><strong>No booked calls in the feed</strong>Names show up only when today.json has them.</div>
-      <div class="list" id="feed-calls"></div>
-    </article>
-
-    <article class="card">
-      <div class="card-h">
-        <h3>Emails to send</h3>
-        <span class="src">Gmail</span>
-      </div>
-      <p class="fine" style="margin-bottom:8px">Stale drafts stay labeled Draft. A draft is not a send-tonight task.</p>
-      <div class="empty" id="empty-feed-emails"><strong>No emails in the feed</strong>Nothing is queued from Gmail until the file lists it.</div>
-      <div class="list" id="feed-emails"></div>
-    </article>
-
-    <article class="card">
-      <div class="card-h">
-        <h3>Podcast</h3>
-      </div>
-      <div class="empty" id="empty-feed-podcast"><strong>No podcast booking in the feed</strong>Nothing is filled in until the file has a booking.</div>
-      <div class="list" id="feed-podcast"></div>
-    </article>
-
-    <article class="card" id="dm-bridge">
-      <div class="card-h">
-        <h3>DMs</h3>
-        <span class="badge muted">Bridge TBD</span>
-      </div>
-      <div class="empty"><strong>Bridge TBD</strong>iMessage, Instagram DMs, Messenger, and WhatsApp personal have no connector. Nothing from those inboxes is listed.</div>
-    </article>
-
-    <details class="overlay">
-      <summary>Phone checklist · optional</summary>
-      <p class="fine">Saved in this browser only. The feed above is the list. Add a row only for a check that is not in the feed.</p>
-      <article class="card">
-        <div class="card-h">
-          <h3>Calls</h3>
-          <span class="badge muted" id="count-calls" hidden></span>
-        </div>
-        <div class="empty" id="empty-calls"><strong>No phone-only rows</strong>On this phone. Not the Calendar feed.</div>
-        <div class="list" id="list-calls"></div>
-        <form class="add-row" data-add="calls">
-          <input class="field" type="text" maxlength="140" placeholder="Add a phone-only check" aria-label="Add a phone-only call check" autocomplete="off">
-          <button type="submit">Add</button>
-        </form>
-        <button type="button" class="texty" data-clear="calls" hidden>Clear phone checks</button>
-      </article>
-      <article class="card">
-        <div class="card-h">
-          <h3>Emails</h3>
-          <span class="badge muted" id="count-emails" hidden></span>
-        </div>
-        <div class="empty" id="empty-emails"><strong>No phone-only rows</strong>On this phone. Not the Gmail feed.</div>
-        <div class="list" id="list-emails"></div>
-        <form class="add-row" data-add="emails">
-          <input class="field" type="text" maxlength="140" placeholder="Add a phone-only check" aria-label="Add a phone-only email check" autocomplete="off">
-          <button type="submit">Add</button>
-        </form>
-        <button type="button" class="texty" data-clear="emails" hidden>Clear phone checks</button>
-      </article>
-      <article class="card">
-        <div class="card-h">
-          <h3>Podcast</h3>
-          <span class="badge muted" id="count-podcast" hidden></span>
-        </div>
-        <div class="empty" id="empty-podcast"><strong>No phone-only rows</strong>On this phone. Not the feed.</div>
-        <div class="list" id="list-podcast"></div>
-        <form class="add-row" data-add="podcast">
-          <input class="field" type="text" maxlength="140" placeholder="Add a phone-only check" aria-label="Add a phone-only podcast check" autocomplete="off">
-          <button type="submit">Add</button>
-        </form>
-        <button type="button" class="texty" data-clear="podcast" hidden>Clear phone checks</button>
-      </article>
-    </details>
-    <p class="fine" style="margin-top:12px">Live agent board stays on <a href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Surge Today</a>. This page does not read it.</p>
-  </section>
-
-  <section id="panel-money" class="panel" role="tabpanel">
-    <p class="lane">Lane 02 · Money</p>
-    <p class="panel-purpose"><strong>Money</strong> — cash in, cash out, tools spend. Blank. No Drive Sheet is pointed here, and Stripe is not authorized.</p>
-    <div class="callout">
-      <h2>Books not connected</h2>
-      <p>No balance is loaded. Figures stay blank until a Sheet you point at and Stripe are connected. Neither is in this build.</p>
+    <div class="log-actions">
+      <button type="button" class="btn p" id="log-plus">+1 today</button>
+      <button type="submit" class="btn s" id="log-save">Save entry</button>
     </div>
-
-    <article class="card">
-      <div class="card-h"><h3>Cash in</h3><span class="onphone">On this phone</span></div>
-      <div class="money-big blank" id="fig-cashIn">—</div>
-      <div class="money-sub" id="sub-cashIn">Not logged</div>
-      <label class="fine" for="in-cashIn">Phone-local scratch only. Not Stripe. Not a Sheet.</label>
-      <input class="field" id="in-cashIn" data-bind="money.cashIn" inputmode="decimal" maxlength="40" placeholder="Not logged" autocomplete="off" spellcheck="false">
-    </article>
-    <article class="card">
-      <div class="card-h"><h3>Cash out</h3><span class="onphone">On this phone</span></div>
-      <div class="money-big blank" id="fig-cashOut">—</div>
-      <div class="money-sub" id="sub-cashOut">Not logged</div>
-      <label class="fine" for="in-cashOut">Phone-local scratch only. Not Stripe. Not a Sheet.</label>
-      <input class="field" id="in-cashOut" data-bind="money.cashOut" inputmode="decimal" maxlength="40" placeholder="Not logged" autocomplete="off" spellcheck="false">
-    </article>
-    <article class="card">
-      <div class="card-h"><h3>Tools spend</h3><span class="onphone">On this phone</span></div>
-      <div class="money-big blank" id="fig-tools">—</div>
-      <div class="money-sub" id="sub-tools">Not logged</div>
-      <label class="fine" for="in-tools">Phone-local scratch only. Not Stripe. Not a Sheet.</label>
-      <input class="field" id="in-tools" data-bind="money.tools" inputmode="decimal" maxlength="40" placeholder="Not logged" autocomplete="off" spellcheck="false">
-    </article>
-    <article class="card">
-      <div class="card-h"><h3>Note</h3><span class="onphone">On this phone</span></div>
-      <label class="fine" for="in-money-note">Phone-local only. Not synced.</label>
-      <textarea class="field" id="in-money-note" data-bind="money.note" maxlength="500" placeholder="Optional note. Stays in this browser."></textarea>
-    </article>
-  </section>
-
-  <section id="panel-clients" class="panel" role="tabpanel">
-    <p class="lane">Lane 03 · Clients</p>
-    <p class="panel-purpose"><strong>Clients</strong> — delivery tracking. Status stays Not set until you change it. Open Hub for the queue.</p>
-
-    <article class="card">
-      <div class="card-h"><div class="who">Jan · Rich Life</div><a class="go" href="../">Check Hub</a></div>
-      <label class="fine" for="st-jan">Status · you set this</label>
-      <select class="field st" id="st-jan" data-bind="client.jan.status" data-tone="unset">
-        <option value="unset">Not set</option>
-        <option value="progress">In progress</option>
-        <option value="waiting">Waiting</option>
-        <option value="delivered">Delivered</option>
-        <option value="blocked">Blocked</option>
-      </select>
-      <label class="fine" for="note-jan">Note · on this phone</label>
-      <input class="field" id="note-jan" data-bind="client.jan.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Andrew George</div><a class="go" href="../">Check Hub</a></div>
-      <label class="fine" for="st-andrew">Status · you set this</label>
-      <select class="field st" id="st-andrew" data-bind="client.andrew.status" data-tone="unset">
-        <option value="unset">Not set</option>
-        <option value="progress">In progress</option>
-        <option value="waiting">Waiting</option>
-        <option value="delivered">Delivered</option>
-        <option value="blocked">Blocked</option>
-      </select>
-      <label class="fine" for="note-andrew">Note · on this phone</label>
-      <input class="field" id="note-andrew" data-bind="client.andrew.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Devin · R3SET</div><a class="go" href="../">Check Hub</a></div>
-      <label class="fine" for="st-devin">Status · you set this</label>
-      <select class="field st" id="st-devin" data-bind="client.devin.status" data-tone="unset">
-        <option value="unset">Not set</option>
-        <option value="progress">In progress</option>
-        <option value="waiting">Waiting</option>
-        <option value="delivered">Delivered</option>
-        <option value="blocked">Blocked</option>
-      </select>
-      <label class="fine" for="note-devin">Note · on this phone</label>
-      <input class="field" id="note-devin" data-bind="client.devin.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Sagun · Austin Report</div><a class="go" href="../">Check Hub</a></div>
-      <label class="fine" for="st-sagun">Status · you set this</label>
-      <select class="field st" id="st-sagun" data-bind="client.sagun.status" data-tone="unset">
-        <option value="unset">Not set</option>
-        <option value="progress">In progress</option>
-        <option value="waiting">Waiting</option>
-        <option value="delivered">Delivered</option>
-        <option value="blocked">Blocked</option>
-      </select>
-      <label class="fine" for="note-sagun">Note · on this phone</label>
-      <input class="field" id="note-sagun" data-bind="client.sagun.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Personal brand</div><a class="go" href="../">Check Hub</a></div>
-      <label class="fine" for="st-brand">Status · you set this</label>
-      <select class="field st" id="st-brand" data-bind="client.brand.status" data-tone="unset">
-        <option value="unset">Not set</option>
-        <option value="progress">In progress</option>
-        <option value="waiting">Waiting</option>
-        <option value="delivered">Delivered</option>
-        <option value="blocked">Blocked</option>
-      </select>
-      <label class="fine" for="note-brand">Note · on this phone</label>
-      <input class="field" id="note-brand" data-bind="client.brand.note" maxlength="240" placeholder="Optional phone-local note" autocomplete="off">
-    </article>
-  </section>
-
-  <section id="panel-team" class="panel" role="tabpanel">
-    <p class="lane">Lane 04 · Team</p>
-    <p class="panel-purpose"><strong>Team</strong> — desks, not agent IDs. Notes here are phone-local. The live board is on Surge.</p>
-    <div class="callout">
-      <h2>Live agent board</h2>
-      <p>Ops, Content, Fulfillment, Growth, and Systems work in the open is on Surge Today. This page does not invent what an agent is doing.</p>
-      <a class="btn-wide primary" href="https://cristian-command-center.surge.sh/" target="_blank" rel="noopener noreferrer">Open Surge Today</a>
+    <p class="quiet" id="log-hint"></p>
+  </form>
+  <div id="kpi-entries"></div>
+</div>
+<div class="login" id="login" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="login-t">
+  <button type="button" class="x" data-close aria-label="Close">×</button>
+  <h3 id="login-t">Owner login</h3>
+  <p class="quiet">Same sign-in as the Hub. Only an owner can write the log. Clients cannot read it.</p>
+  <form id="login-form" method="post" action="" autocomplete="on">
+    <p class="err" id="login-err" hidden></p>
+    <label>Email<input id="login-email" name="username" type="email" autocomplete="username" inputmode="email" autocapitalize="none" required></label>
+    <label style="margin-top:8px">Password<input id="login-pw" name="password" type="password" autocomplete="current-password" required></label>
+    <div class="log-actions">
+      <button type="submit" class="btn p" id="login-go">Sign in</button>
+      <button type="button" class="btn s" id="login-forgot">Forgot password?</button>
     </div>
-    <article class="card">
-      <div class="card-h"><div class="who">Ops</div><span class="onphone">On this phone</span></div>
-      <textarea class="field" data-bind="desk.ops" maxlength="500" placeholder="Nothing logged for Ops." aria-label="Ops desk note, phone-local"></textarea>
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Content</div><span class="onphone">On this phone</span></div>
-      <textarea class="field" data-bind="desk.content" maxlength="500" placeholder="Nothing logged for Content." aria-label="Content desk note, phone-local"></textarea>
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Fulfillment</div><span class="onphone">On this phone</span></div>
-      <textarea class="field" data-bind="desk.fulfillment" maxlength="500" placeholder="Nothing logged for Fulfillment." aria-label="Fulfillment desk note, phone-local"></textarea>
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Growth</div><span class="onphone">On this phone</span></div>
-      <textarea class="field" data-bind="desk.growth" maxlength="500" placeholder="Nothing logged for Growth." aria-label="Growth desk note, phone-local"></textarea>
-    </article>
-    <article class="card">
-      <div class="card-h"><div class="who">Systems</div><span class="onphone">On this phone</span></div>
-      <textarea class="field" data-bind="desk.systems" maxlength="500" placeholder="Nothing logged for Systems." aria-label="Systems desk note, phone-local"></textarea>
-    </article>
-  </section>
-
-  <section id="panel-projects" class="panel" role="tabpanel">
-    <p class="lane">Lane 05 · Projects</p>
-    <p class="panel-purpose"><strong>Projects</strong> — goals, then tasks, then wins you write. The bar moves only when you add tasks. No score is invented.</p>
-    <p class="fine" id="projectSummary" hidden></p>
-    <div class="empty" id="goalEmpty"><strong>No goals on this phone</strong>Add one when you want a run. Progress shows up only from tasks you add.</div>
-    <div id="goalList"></div>
-    <form class="add-row" data-add="goal">
-      <input class="field" type="text" maxlength="80" placeholder="Name a goal" aria-label="Goal name" autocomplete="off">
-      <button type="submit">Add</button>
-    </form>
-    <p class="fine" style="margin-top:8px">Checking a task does not add points. Log a win in your own words.</p>
-  </section>
-
-  <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <footer>
-    Signal Marketing · Command Center<br>
-    Add to Home Screen from the browser share sheet.<br>
-    Checks, money, desks, and goals save in this browser only.
-  </footer>
-
-  <nav class="dock" aria-label="Quick nav">
-    <div class="dock-inner">
-      <button type="button" data-dock="floor"><span>■</span>Floor</button>
-      <button type="button" data-dock="today"><span>◎</span>Today</button>
-      <a href="../signal/"><span>◆</span>Magnet</a>
-      <a href="../"><span>▦</span>Hub</a>
-    </div>
-  </nav>
-
+  </form>
+</div>
+<section class="chat" id="chat" role="dialog" aria-label="Ask your AI team" aria-hidden="true">
+  <button type="button" class="x" data-close aria-label="Close">×</button>
+  <header class="ch"><b>Ask your AI team</b><span id="chat-note">Not connected. This chat stays on this page.</span></header>
+  <div class="cb" id="cb"></div>
+  <form class="cf" id="chat-form">
+    <input id="ci" type="text" maxlength="400" placeholder="Ask about this page" aria-label="Ask about this page" autocomplete="off">
+    <button type="submit">Ask</button>
+  </form>
+  <p class="demo">Answers are read from this page only. Nothing is sent.</p>
+</section>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 (function () {
-  var KEY = 'cc_ops_v1';
-  var MAX_ROWS = 80;
-  var MAX_GOALS = 30;
-  var PANELS = { today: 1, money: 1, clients: 1, team: 1, projects: 1 };
-  var FLOOR = { money: 1, clients: 1, team: 1, projects: 1 };
-  var LISTS = { calls: 1, emails: 1, podcast: 1 };
-  var STATUSES = { unset: 1, progress: 1, waiting: 1, delivered: 1, blocked: 1 };
-  var CLIENTS = ['jan', 'andrew', 'devin', 'sagun', 'brand'];
-  var DESKS = ['ops', 'content', 'fulfillment', 'growth', 'systems'];
-  var MONEY_KEYS = ['cashIn', 'cashOut', 'tools'];
-  var lastFloor = 'money';
-  var active = 'today';
+  var SB_URL = 'https://udkbnlpnfyjuwlstfxhr.supabase.co';
+  var SB_KEY = 'sb_publishable_lwmiHRxf1Hdf2Z4b_aJkjg_ck7u1ms4';
+  var AUTH_KEY = 'sb-udkbnlpnfyjuwlstfxhr-auth-token';
+  var VIEWS = [
+    ['home', 'Home', '<path d="M4 11.5 12 4l8 7.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'],
+    ['attract', 'Attract', '<path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+    ['convert', 'Convert', '<path d="M4 16l5-5 3 3 8-8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>'],
+    ['transform', 'Transform', '<path d="M4 12h16M14 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>']
+  ];
+  var LOG_SET = { videos: 1, lead_magnets: 1, contacts: 1, booked_calls: 1, showed_calls: 1, closed_deals: 1, client_wins: 1 };
+  var PHRASE = {
+    videos: ['video filmed', 'videos filmed'],
+    lead_magnets: ['lead magnet shipped', 'lead magnets shipped'],
+    contacts: ['new contact', 'new contacts'],
+    booked_calls: ['booked call', 'booked calls'],
+    showed_calls: ['showed call', 'showed calls'],
+    closed_deals: ['deal closed', 'deals closed'],
+    client_wins: ['client win', 'client wins']
+  };
+  var params = new URLSearchParams(location.search);
+  var S = {
+    sample: params.get('sample') === '1',
+    feed: null,
+    targets: null,
+    feedState: 'checking',
+    feedNote: 'Checking today.json.',
+    view: 'home',
+    user: null,
+    admin: false,
+    kpiState: 'signedout',
+    kpiRows: [],
+    kpiNote: '',
+    model: null,
+    pending: null,
+    saving: false,
+    undoId: null,
+    sheet: null,
+    chatOn: false,
+    chatStarted: false,
+    lockY: 0,
+    lastFocus: null
+  };
+  var sb = null;
 
-  function blankState() {
-    return {
-      v: 1,
-      calls: [],
-      emails: [],
-      podcast: [],
-      money: { cashIn: '', cashOut: '', tools: '', note: '' },
-      clients: {
-        jan: { status: 'unset', note: '' },
-        andrew: { status: 'unset', note: '' },
-        devin: { status: 'unset', note: '' },
-        sagun: { status: 'unset', note: '' },
-        brand: { status: 'unset', note: '' }
-      },
-      desks: { ops: '', content: '', fulfillment: '', growth: '', systems: '' },
-      projects: []
-    };
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
-
-  function uid() {
-    return Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+  function clean(s) {
+    return String(s == null ? '' : s).replace(/\u2014/g, ', ').replace(/\u2013/g, '-').replace(/\u2212/g, '-').replace(/[ \t]{2,}/g, ' ').replace(/\s+,/g, ',').trim();
   }
-
-  function byId(list, id) {
-    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
-    return null;
+  function num(v) { return (typeof v === 'number' && isFinite(v)) ? v : null; }
+  function money(n) {
+    var digits = Math.round(Math.abs(n) * 100) % 100 === 0 ? 0 : 2;
+    try { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits }); }
+    catch (e) { return '$' + n; }
   }
-
-  function allowedStatus(v) { return STATUSES[v] ? v : 'unset'; }
-
-  function asText(v, max) {
-    var s = (v == null ? '' : String(v)).slice(0, max);
-    return s;
+  function compact(n) {
+    var r = Math.round(n * 10) / 10;
+    if (Math.abs(r - Math.round(r)) < 0.001) r = Math.round(r);
+    return r.toLocaleString('en-US');
   }
-
-  function normalize(raw) {
-    var base = blankState();
-    if (!raw || typeof raw !== 'object') return base;
-    ['calls', 'emails', 'podcast'].forEach(function (key) {
-      if (!Array.isArray(raw[key])) return;
-      base[key] = raw[key].filter(function (row) {
-        return row && typeof row.text === 'string' && row.text.trim();
-      }).slice(0, MAX_ROWS).map(function (row) {
-        return { id: asText(row.id, 24) || uid(), text: asText(row.text, 140).trim(), done: !!row.done };
-      });
-    });
-    if (raw.money && typeof raw.money === 'object') {
-      MONEY_KEYS.forEach(function (k) { base.money[k] = asText(raw.money[k], 40); });
-      base.money.note = asText(raw.money.note, 500);
+  function chicagoDate(d) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+  }
+  function chicagoTime(d) {
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' }).format(d);
+  }
+  function chicagoStamp(d) {
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(d);
+  }
+  function addDays(ymd, n) {
+    var d = new Date(ymd + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+  function weekStart(ymd) {
+    var day = new Date(ymd + 'T12:00:00Z').getUTCDay();
+    return addDays(ymd, -((day + 6) % 7));
+  }
+  function weekIndex(ymd) {
+    return ((new Date(ymd + 'T12:00:00Z').getUTCDay() + 6) % 7) + 1;
+  }
+  function daysInMonth(ymd) {
+    return new Date(Date.UTC(+ymd.slice(0, 4), +ymd.slice(5, 7), 0)).getUTCDate();
+  }
+  function dayOf(v) {
+    if (!v) return '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(v) && v.length === 10) return v;
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return '';
+    return chicagoDate(d);
+  }
+  function daysBetween(a, b) {
+    return Math.round((Date.parse(b + 'T12:00:00Z') - Date.parse(a + 'T12:00:00Z')) / 86400000);
+  }
+  function parseWhen(v) {
+    if (!v) return null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return { date: v, raw: v };
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return { date: '', raw: clean(v) };
+    return { date: chicagoDate(d), at: d, raw: v };
+  }
+  function formatWhen(v) {
+    var p = parseWhen(v);
+    if (!p) return '';
+    if (p.at) return chicagoStamp(p.at) + ' CT';
+    if (p.date) {
+      var bits = p.date.split('-');
+      return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
     }
-    CLIENTS.forEach(function (id) {
-      var src = raw.clients && raw.clients[id];
-      if (!src || typeof src !== 'object') return;
-      base.clients[id].status = allowedStatus(src.status);
-      base.clients[id].note = asText(src.note, 240);
-    });
-    DESKS.forEach(function (id) {
-      if (raw.desks && typeof raw.desks[id] === 'string') base.desks[id] = asText(raw.desks[id], 500);
-    });
-    if (Array.isArray(raw.projects)) {
-      base.projects = raw.projects.filter(function (g) { return g && typeof g.title === 'string'; }).slice(0, MAX_GOALS).map(function (g) {
-        var tasks = Array.isArray(g.tasks) ? g.tasks : [];
-        var wins = Array.isArray(g.wins) ? g.wins : [];
-        return {
-          id: asText(g.id, 24) || uid(),
-          title: asText(g.title, 80),
-          tasks: tasks.filter(function (t) { return t && typeof t.text === 'string' && t.text.trim(); }).slice(0, MAX_ROWS).map(function (t) {
-            return { id: asText(t.id, 24) || uid(), text: asText(t.text, 140).trim(), done: !!t.done };
-          }),
-          wins: wins.filter(function (w) { return w && typeof w.text === 'string' && w.text.trim(); }).slice(0, MAX_ROWS).map(function (w) {
-            return { id: asText(w.id, 24) || uid(), text: asText(w.text, 140).trim() };
-          })
-        };
-      });
+    return clean(p.raw || '');
+  }
+  function ageInfo(iso, now) {
+    if (!iso) return '';
+    var day = '', time = '';
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) day = iso;
+    else {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return '';
+      day = chicagoDate(d);
+      time = chicagoTime(d);
     }
-    return base;
+    var diff = Math.round((Date.parse(chicagoDate(now) + 'T00:00:00Z') - Date.parse(day + 'T00:00:00Z')) / 86400000);
+    if (!isFinite(diff)) return '';
+    if (diff <= 0) return time ? ('Updated today at ' + time + ' CT') : 'Updated today';
+    if (diff === 1) return 'Last updated 1 day ago';
+    return 'Last updated ' + diff + ' days ago';
   }
-
-  function load() {
-    try { return normalize(JSON.parse(localStorage.getItem(KEY) || 'null')); }
-    catch (e) { return blankState(); }
-  }
-
-  var state = load();
-
-  function save() {
-    try { localStorage.setItem(KEY, JSON.stringify(state)); }
-    catch (e) { toast('Could not save on this phone'); }
-  }
-
-  function toast(msg) {
-    var el = document.getElementById('toast');
-    el.textContent = msg;
-    el.classList.add('on');
-    clearTimeout(toast._t);
-    toast._t = setTimeout(function () { el.classList.remove('on'); }, 1600);
-  }
-
-  function chicagoParts(d) {
-    var dateFmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Chicago',
-      weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'
-    });
-    var timeFmt = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Chicago',
-      hour: 'numeric', minute: '2-digit', hour12: true
-    });
-    var map = {};
-    dateFmt.formatToParts(d).forEach(function (p) { map[p.type] = p.value; });
-    var iso = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit'
-    }).format(d);
-    return {
-      dow: map.weekday || '',
-      year: map.year || '',
-      mon: map.month || '',
-      dom: map.day || '',
-      time: timeFmt.format(d),
-      iso: iso
-    };
-  }
-
-  function tick() {
-    var dow = document.getElementById('heroDow');
-    var mon = document.getElementById('heroMon');
-    var dom = document.getElementById('heroDom');
-    var sub = document.getElementById('heroSub');
-    var clock = document.getElementById('liveClock');
-    var stamp = document.getElementById('opsDay');
-    try {
-      var p = chicagoParts(new Date());
-      dow.textContent = p.dow.toUpperCase() + ' · ' + p.year;
-      mon.textContent = p.mon;
-      dom.textContent = p.dom;
-      sub.textContent = p.time + ' · Chicago';
-      clock.textContent = p.time;
-      stamp.setAttribute('datetime', p.iso);
-      document.title = p.dow.slice(0, 3) + ', ' + p.mon + ' ' + p.dom + ' · Signal Command';
-    } catch (e) {
-      dow.textContent = 'America/Chicago';
-      mon.textContent = '';
-      dom.textContent = '—';
-      sub.textContent = 'Chicago time unavailable on this browser.';
-      clock.textContent = 'CT';
-    }
-  }
-
-  function stats(items) {
-    var done = 0;
-    items.forEach(function (it) { if (it.done) done++; });
-    return { total: items.length, done: done, open: items.length - done };
-  }
-
-  var feed = blankFeed();
-  var feedState = 'checking';
-
-  function blankFeed() {
-    return { asOf: '', calls: [], emails: [], podcast: null, dmBridge: null };
-  }
-
-  function safeUrl(v) {
-    var s = asText(v, 300).trim();
+  function safeHref(v) {
+    var s = String(v || '').trim();
     if (/^https:\/\/\S+$/i.test(s)) return s;
+    if (/^(\.\.\/|\/)[^\s]*$/.test(s) && s.indexOf('//') === -1) return s;
     return '';
   }
-
-  function normalizeFeed(raw) {
-    var out = blankFeed();
-    if (!raw || typeof raw !== 'object') return out;
-    out.asOf = asText(raw.asOf, 80).trim();
-    if (Array.isArray(raw.calls)) {
-      raw.calls.forEach(function (row) {
-        if (!row || typeof row !== 'object' || out.calls.length >= 40) return;
-        var item = {
-          title: asText(row.title, 180).trim(),
-          when: asText(row.when, 80).trim(),
-          who: asText(row.who, 160).trim(),
-          nextStep: asText(row.nextStep, 240).trim(),
-          source: row.source === 'calendar' || row.source === 'fathom' ? row.source : '',
-          url: safeUrl(row.url)
-        };
-        if (item.title || item.when || item.who || item.nextStep || item.url) out.calls.push(item);
-      });
-    }
-    if (Array.isArray(raw.emails)) {
-      raw.emails.forEach(function (row) {
-        if (!row || typeof row !== 'object' || out.emails.length >= 40) return;
-        var item = {
-          to: asText(row.to, 160).trim(),
-          subject: asText(row.subject, 180).trim(),
-          intent: asText(row.intent, 240).trim(),
-          status: row.status === 'draft' || row.status === 'needs-send' ? row.status : '',
-          source: row.source === 'gmail' ? 'gmail' : ''
-        };
-        if (item.to || item.subject || item.intent) out.emails.push(item);
-      });
-    }
-    if (raw.podcast && typeof raw.podcast === 'object') {
-      var pod = {
-        guest: asText(raw.podcast.guest, 140).trim(),
-        status: asText(raw.podcast.status, 80).trim(),
-        nextAction: asText(raw.podcast.nextAction, 240).trim()
-      };
-      if (pod.guest || pod.status || pod.nextAction) out.podcast = pod;
-    }
-    out.dmBridge = null;
-    return out;
-  }
-
-  function formatZoneTime(value) {
-    if (!value) return '';
-    var d = new Date(value);
-    if (isNaN(d.getTime())) return value;
-    try {
-      return new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Chicago',
-        weekday: 'short', month: 'short', day: 'numeric',
-        hour: 'numeric', minute: '2-digit', hour12: true
-      }).format(d) + ' Chicago';
-    } catch (e) {
-      return value;
-    }
-  }
-
-  function sourceLabel(src) {
-    if (src === 'calendar') return 'Calendar';
-    if (src === 'fathom') return 'Fathom';
-    if (src === 'gmail') return 'Gmail';
-    return '';
-  }
-
-  function statusLabel(st) {
-    if (st === 'draft') return 'Draft';
-    if (st === 'needs-send') return 'Needs send';
-    return '';
-  }
-
-  function addMeta(parent, text) {
-    if (!text) return;
-    var line = document.createElement('div');
-    line.className = 'feed-meta';
-    line.textContent = text;
-    parent.appendChild(line);
-  }
-
-  function clearNode(node) {
-    while (node.firstChild) node.removeChild(node.firstChild);
-  }
-
-  function renderCall(item) {
-    var row = document.createElement('div');
-    row.className = 'feed-row';
-    var top = document.createElement('div');
-    top.className = 'feed-top';
-    var title = document.createElement('div');
-    title.className = 'feed-title';
-    title.textContent = item.title || item.who || formatZoneTime(item.when) || item.url;
-    top.appendChild(title);
-    var src = sourceLabel(item.source);
-    if (src) {
-      var chip = document.createElement('span');
-      chip.className = 'src';
-      chip.textContent = src;
-      top.appendChild(chip);
-    }
-    row.appendChild(top);
-    var when = formatZoneTime(item.when);
-    if (when && when !== title.textContent) addMeta(row, when);
-    if (item.who && item.who !== title.textContent) addMeta(row, item.who);
-    if (item.nextStep) addMeta(row, 'Next: ' + item.nextStep);
-    if (item.url) {
-      var link = document.createElement('a');
-      link.className = 'feed-link';
-      link.href = item.url;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      link.textContent = item.url;
-      row.appendChild(link);
-    }
-    return row;
-  }
-
-  function renderEmail(item) {
-    var row = document.createElement('div');
-    row.className = 'feed-row';
-    row.setAttribute('data-status', item.status || '');
-    var top = document.createElement('div');
-    top.className = 'feed-top';
-    var title = document.createElement('div');
-    title.className = 'feed-title';
-    title.textContent = item.subject || item.to || item.intent;
-    top.appendChild(title);
-    var badges = document.createElement('div');
-    badges.className = 'badge-row';
-    var st = statusLabel(item.status);
-    if (st) {
-      var badge = document.createElement('span');
-      badge.className = 'badge ' + (item.status === 'draft' ? 'muted' : 'warn');
-      badge.textContent = st;
-      badges.appendChild(badge);
-    }
-    var src = sourceLabel(item.source);
-    if (src) {
-      var chip = document.createElement('span');
-      chip.className = 'src';
-      chip.textContent = src;
-      badges.appendChild(chip);
-    }
-    if (badges.childNodes.length) top.appendChild(badges);
-    row.appendChild(top);
-    if (item.to && item.to !== title.textContent) addMeta(row, item.to);
-    if (item.intent) addMeta(row, item.intent);
-    if (item.status === 'draft') addMeta(row, 'Stale draft. Not a send-tonight item.');
-    return row;
-  }
-
-  function paintFeed() {
-    var calls = document.getElementById('feed-calls');
-    var emails = document.getElementById('feed-emails');
-    var podcast = document.getElementById('feed-podcast');
-    clearNode(calls);
-    clearNode(emails);
-    clearNode(podcast);
-    feed.calls.forEach(function (item) { calls.appendChild(renderCall(item)); });
-    feed.emails.forEach(function (item) { emails.appendChild(renderEmail(item)); });
-    document.getElementById('empty-feed-calls').hidden = feed.calls.length > 0;
-    document.getElementById('empty-feed-emails').hidden = feed.emails.length > 0;
-    if (feed.podcast) {
-      var row = document.createElement('div');
-      row.className = 'feed-row';
-      var title = document.createElement('div');
-      title.className = 'feed-title';
-      title.textContent = feed.podcast.guest || feed.podcast.status || feed.podcast.nextAction;
-      row.appendChild(title);
-      if (feed.podcast.guest && feed.podcast.status) addMeta(row, feed.podcast.status);
-      if (feed.podcast.nextAction) addMeta(row, 'Next: ' + feed.podcast.nextAction);
-      podcast.appendChild(row);
-      document.getElementById('empty-feed-podcast').hidden = true;
-    } else {
-      document.getElementById('empty-feed-podcast').hidden = false;
-    }
-    document.getElementById('panel-today').setAttribute('data-feed-state', feedState);
-    paintTodayHud();
-  }
-
-  /*
-   * today.json — same folder. The Command Center bot overwrites this file from
-   * Calendar, Fathom, and Gmail. Fetch on load. Do not invent rows.
-   * {
-   *   "asOf": "ISO Chicago",
-   *   "calls": [{ "title": "", "when": "", "who": "", "nextStep": "", "source": "calendar|fathom", "url": "https:// optional, fathom only" }],
-   *   "emails": [{ "to": "", "subject": "", "intent": "", "status": "draft|needs-send", "source": "gmail" }],
-   *   "podcast": { "guest": "", "status": "", "nextAction": "" } | null,
-   *   "dmBridge": null
-   * }
-   * 200: render those fields. Missing or failed fetch: empty shells + "Waiting on live feed."
-   * dmBridge is never rendered. Personal inboxes stay Bridge TBD.
-   */
-  function loadTodayFeed() {
-    fetch('./today.json?v=' + Date.now(), { cache: 'no-store' }).then(function (res) {
-      if (!res.ok) throw new Error(String(res.status));
-      return res.json();
-    }).then(function (data) {
-      feed = normalizeFeed(data);
-      feedState = 'live';
-      paintFeed();
-    }).catch(function () {
-      feed = blankFeed();
-      feedState = 'waiting';
-      paintFeed();
-    });
-  }
-
-  function paintTodayHud() {
-    var label = document.getElementById('todayRunLabel');
-    var note = document.getElementById('feedNote');
-    var callsN = feed.calls.length;
-    var emailsN = feed.emails.length;
-    var drafts = 0;
-    var needs = 0;
-    feed.emails.forEach(function (item) {
-      if (item.status === 'draft') drafts++;
-      else if (item.status === 'needs-send') needs++;
-    });
-    if (feedState === 'checking') {
-      label.textContent = 'Checking the live feed.';
-      note.textContent = 'Checking today.json.';
-    } else if (feedState === 'waiting') {
-      label.textContent = 'Nothing loaded from the feed.';
-      note.textContent = 'Waiting on live feed.';
-    } else if (!callsN && !emailsN && !feed.podcast) {
-      label.textContent = 'Nothing in Calls, Emails, or Podcast.';
-      note.textContent = feed.asOf ? ('Feed loaded · ' + formatZoneTime(feed.asOf) + '.') : 'Feed loaded. No rows.';
-    } else {
-      var parts = [];
-      if (callsN) parts.push(callsN + (callsN === 1 ? ' call' : ' calls'));
-      if (drafts) parts.push(drafts + (drafts === 1 ? ' stale draft' : ' stale drafts'));
-      if (needs) parts.push(needs + (needs === 1 ? ' email to send' : ' emails to send'));
-      var other = emailsN - drafts - needs;
-      if (other > 0) parts.push(other + (other === 1 ? ' email' : ' emails'));
-      if (feed.podcast) parts.push('podcast booking set');
-      label.textContent = parts.join(' · ') + '.';
-      note.textContent = feed.asOf ? ('Feed loaded · ' + formatZoneTime(feed.asOf) + '.') : 'Feed loaded.';
-    }
-    ['calls', 'emails', 'podcast'].forEach(function (name) {
-      var n = state[name].length;
-      var badge = document.getElementById('count-' + name);
-      if (badge) {
-        badge.hidden = n === 0;
-        badge.textContent = n ? String(n) : '';
-      }
-      var empty = document.getElementById('empty-' + name);
-      if (empty) empty.hidden = n > 0;
-      var clearer = document.querySelector('[data-clear="' + name + '"]');
-      if (clearer) clearer.hidden = n === 0;
-    });
-  }
-
-  function paintList(name) {
-    var host = document.getElementById('list-' + name);
-    while (host.firstChild) host.removeChild(host.firstChild);
-    state[name].forEach(function (item) {
-      var row = document.createElement('div');
-      row.className = 'check' + (item.done ? ' done' : '');
-      var lab = document.createElement('label');
-      var cb = document.createElement('input');
-      cb.type = 'checkbox';
-      cb.checked = !!item.done;
-      cb.setAttribute('data-toggle', name);
-      cb.setAttribute('data-id', item.id);
-      var txt = document.createElement('span');
-      txt.className = 'txt';
-      txt.textContent = item.text;
-      lab.appendChild(cb);
-      lab.appendChild(txt);
-      var del = document.createElement('button');
-      del.type = 'button';
-      del.className = 'x';
-      del.setAttribute('aria-label', 'Remove');
-      del.textContent = '\u00d7';
-      del.setAttribute('data-del', name);
-      del.setAttribute('data-id', item.id);
-      row.appendChild(lab);
-      row.appendChild(del);
-      host.appendChild(row);
-    });
-    paintTodayHud();
-  }
-
-  function figureFor(raw) {
-    var s = String(raw || '').trim();
-    if (!s) return { big: '\u2014', sub: 'Not logged', blank: true };
-    var cleaned = s.replace(/[$,]/g, '');
-    if (/^\d+(\.\d{1,2})?$/.test(cleaned)) {
-      var n = Number(cleaned);
-      return {
-        big: n.toLocaleString('en-US', { style: 'currency', currency: 'USD' }),
-        sub: 'Logged on this phone',
-        blank: false
-      };
-    }
-    return { big: s, sub: 'Logged on this phone', blank: false };
-  }
-
-  function paintMoney(key) {
-    var fig = figureFor(state.money[key]);
-    var big = document.getElementById('fig-' + key);
-    var sub = document.getElementById('sub-' + key);
-    big.textContent = fig.big;
-    big.classList.toggle('blank', fig.blank);
-    sub.textContent = fig.sub;
-  }
-
-  function paintStatus(sel) {
-    var v = allowedStatus(sel.value);
-    sel.value = v;
-    sel.setAttribute('data-tone', v);
-  }
-
-  function mountValues() {
-    MONEY_KEYS.forEach(function (k) {
-      document.getElementById('in-' + k).value = state.money[k];
-      paintMoney(k);
-    });
-    document.getElementById('in-money-note').value = state.money.note;
-    CLIENTS.forEach(function (id) {
-      var sel = document.querySelector('[data-bind="client.' + id + '.status"]');
-      var note = document.querySelector('[data-bind="client.' + id + '.note"]');
-      sel.value = state.clients[id].status;
-      paintStatus(sel);
-      note.value = state.clients[id].note;
-    });
-    DESKS.forEach(function (id) {
-      document.querySelector('[data-bind="desk.' + id + '"]').value = state.desks[id];
-    });
-  }
-
-  function taskStats(tasks) {
-    return stats(tasks);
-  }
-
-  function paintGoals() {
-    var host = document.getElementById('goalList');
-    var empty = document.getElementById('goalEmpty');
-    var summary = document.getElementById('projectSummary');
-    while (host.firstChild) host.removeChild(host.firstChild);
-    empty.hidden = state.projects.length > 0;
-    if (!state.projects.length) {
-      summary.hidden = true;
-      summary.textContent = '';
-    } else {
-      var open = 0;
-      var done = 0;
-      state.projects.forEach(function (g) {
-        var s = taskStats(g.tasks);
-        open += s.open;
-        done += s.done;
-      });
-      summary.hidden = false;
-      summary.textContent = state.projects.length + (state.projects.length === 1 ? ' goal' : ' goals') + ' · ' + open + ' open tasks · ' + done + ' done';
-    }
-    state.projects.forEach(function (g) {
-      var card = document.createElement('article');
-      card.className = 'card goal';
-      var head = document.createElement('div');
-      head.className = 'card-h';
-      var who = document.createElement('div');
-      who.className = 'who';
-      who.textContent = 'Goal';
-      var phone = document.createElement('span');
-      phone.className = 'onphone';
-      phone.textContent = 'On this phone';
-      head.appendChild(who);
-      head.appendChild(phone);
-
-      var title = document.createElement('input');
-      title.className = 'field';
-      title.type = 'text';
-      title.maxLength = 80;
-      title.value = g.title;
-      title.setAttribute('aria-label', 'Goal name');
-      title.setAttribute('data-bind', 'goal.' + g.id + '.title');
-      title.autocomplete = 'off';
-
-      var s = taskStats(g.tasks);
-      var meta = document.createElement('p');
-      meta.className = 'fine';
-      meta.textContent = s.total ? (s.done + ' of ' + s.total + ' tasks') : 'No tasks yet';
-      var track = document.createElement('div');
-      track.className = 'track';
-      var fill = document.createElement('span');
-      fill.style.width = s.total ? Math.round((s.done / s.total) * 100) + '%' : '0%';
-      track.appendChild(fill);
-
-      var list = document.createElement('div');
-      list.className = 'list';
-      g.tasks.forEach(function (task) {
-        var row = document.createElement('div');
-        row.className = 'check' + (task.done ? ' done' : '');
-        var lab = document.createElement('label');
-        var cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = !!task.done;
-        cb.setAttribute('data-toggle-task', g.id);
-        cb.setAttribute('data-id', task.id);
-        var txt = document.createElement('span');
-        txt.className = 'txt';
-        txt.textContent = task.text;
-        lab.appendChild(cb);
-        lab.appendChild(txt);
-        var del = document.createElement('button');
-        del.type = 'button';
-        del.className = 'x';
-        del.setAttribute('aria-label', 'Remove task');
-        del.textContent = '\u00d7';
-        del.setAttribute('data-del-task', g.id);
-        del.setAttribute('data-id', task.id);
-        row.appendChild(lab);
-        row.appendChild(del);
-        list.appendChild(row);
-      });
-
-      var taskForm = document.createElement('form');
-      taskForm.className = 'add-row';
-      taskForm.setAttribute('data-add-task', g.id);
-      var taskInput = document.createElement('input');
-      taskInput.className = 'field';
-      taskInput.type = 'text';
-      taskInput.maxLength = 140;
-      taskInput.placeholder = 'Add a task';
-      taskInput.setAttribute('aria-label', 'Add a task');
-      taskInput.autocomplete = 'off';
-      var taskBtn = document.createElement('button');
-      taskBtn.type = 'submit';
-      taskBtn.textContent = 'Add';
-      taskForm.appendChild(taskInput);
-      taskForm.appendChild(taskBtn);
-
-      var winLabel = document.createElement('p');
-      winLabel.className = 'fine';
-      winLabel.style.marginTop = '12px';
-      winLabel.textContent = 'Wins';
-      var wins = document.createElement('div');
-      if (!g.wins.length) {
-        var none = document.createElement('p');
-        none.className = 'empty';
-        var strong = document.createElement('strong');
-        strong.textContent = 'No wins logged';
-        none.appendChild(strong);
-        none.appendChild(document.createTextNode('Log one when you want it on the board.'));
-        wins.appendChild(none);
-      } else {
-        g.wins.forEach(function (w) {
-          var row = document.createElement('div');
-          row.className = 'win';
-          var txt = document.createElement('div');
-          txt.className = 'txt';
-          txt.textContent = w.text;
-          var del = document.createElement('button');
-          del.type = 'button';
-          del.className = 'x';
-          del.setAttribute('aria-label', 'Remove win');
-          del.textContent = '\u00d7';
-          del.setAttribute('data-del-win', g.id);
-          del.setAttribute('data-id', w.id);
-          row.appendChild(txt);
-          row.appendChild(del);
-          wins.appendChild(row);
-        });
-      }
-      var winForm = document.createElement('form');
-      winForm.className = 'add-row';
-      winForm.setAttribute('data-add-win', g.id);
-      var winInput = document.createElement('input');
-      winInput.className = 'field';
-      winInput.type = 'text';
-      winInput.maxLength = 140;
-      winInput.placeholder = 'Log a win';
-      winInput.setAttribute('aria-label', 'Log a win');
-      winInput.autocomplete = 'off';
-      var winBtn = document.createElement('button');
-      winBtn.type = 'submit';
-      winBtn.textContent = 'Log';
-      winForm.appendChild(winInput);
-      winForm.appendChild(winBtn);
-
-      var remove = document.createElement('button');
-      remove.type = 'button';
-      remove.className = 'texty';
-      remove.textContent = 'Remove goal';
-      remove.setAttribute('data-del-goal', g.id);
-
-      card.appendChild(head);
-      card.appendChild(title);
-      card.appendChild(meta);
-      card.appendChild(track);
-      card.appendChild(list);
-      card.appendChild(taskForm);
-      card.appendChild(winLabel);
-      card.appendChild(wins);
-      card.appendChild(winForm);
-      card.appendChild(remove);
-      host.appendChild(card);
-    });
-  }
-
-  function applyBind(bind, value) {
-    var parts = bind.split('.');
-    if (parts[0] === 'money' && Object.prototype.hasOwnProperty.call(state.money, parts[1])) {
-      state.money[parts[1]] = asText(value, parts[1] === 'note' ? 500 : 40);
-      if (parts[1] !== 'note') paintMoney(parts[1]);
-      return true;
-    }
-    if (parts[0] === 'client' && state.clients[parts[1]]) {
-      if (parts[2] === 'note') state.clients[parts[1]].note = asText(value, 240);
-      if (parts[2] === 'status') state.clients[parts[1]].status = allowedStatus(value);
-      return true;
-    }
-    if (parts[0] === 'desk' && Object.prototype.hasOwnProperty.call(state.desks, parts[1])) {
-      state.desks[parts[1]] = asText(value, 500);
-      return true;
-    }
-    if (parts[0] === 'goal') {
-      var g = byId(state.projects, parts[1]);
-      if (!g) return false;
-      if (parts[2] === 'title') g.title = asText(value, 80);
-      return true;
-    }
+  function looksLikeId(s) {
+    if (!s) return true;
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-/i.test(s)) return true;
+    if (/^(agt|agent|bot|desk)[_-][a-z0-9-]+$/i.test(s)) return true;
+    if (/^[A-Za-z0-9_-]{20,}$/.test(s) && s.indexOf(' ') === -1) return true;
     return false;
   }
-
-  function showTab(name) {
-    if (!PANELS[name]) name = 'today';
-    if (FLOOR[name]) lastFloor = name;
-    active = name;
-    document.querySelectorAll('.tab').forEach(function (tab) {
-      var on = tab.getAttribute('data-tab') === name;
-      tab.classList.toggle('on', on);
-      tab.setAttribute('aria-selected', on ? 'true' : 'false');
+  function norm(s) { return clean(s).toLowerCase().replace(/[^a-z0-9@]+/g, ''); }
+  function platId(id) {
+    var k = String(id || '').toLowerCase();
+    if (k === 'ig' || k === 'instagram') return 'ig';
+    if (k === 'x' || k === 'twitter') return 'x';
+    if (k === 'yt' || k === 'youtube') return 'youtube';
+    return k;
+  }
+  function spark(vals) {
+    if (!vals || vals.length < 2) return '';
+    var w = 84, h = 28, mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    if (mx === mn) mx = mn + 1;
+    var pts = vals.map(function (v, i) {
+      var x = (i / (vals.length - 1)) * (w - 4) + 2;
+      var y = (h - 4) - ((v - mn) / (mx - mn)) * (h - 8);
+      return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"><polyline fill="none" stroke="#ed3039" stroke-width="1.7" points="' + pts + '"/></svg>';
+  }
+  function chartSvg(vals, labels) {
+    if (!vals || vals.length < 2) return '';
+    var w = 480, h = 140, pad = 16;
+    var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals);
+    if (mx === mn) mx = mn + 1;
+    var pts = vals.map(function (v, i) {
+      return [(i / (vals.length - 1)) * (w - pad * 2) + pad, (h - 28) - ((v - mn) / (mx - mn)) * (h - 44)];
     });
-    document.querySelectorAll('.panel').forEach(function (panel) {
-      panel.classList.toggle('on', panel.id === 'panel-' + name);
-    });
-    document.querySelectorAll('[data-dock="floor"]').forEach(function (el) {
-      el.classList.toggle('on', name !== 'today');
-    });
-    document.querySelectorAll('[data-dock="today"]').forEach(function (el) {
-      el.classList.toggle('on', name === 'today');
-    });
-    try { history.replaceState(null, '', '#' + name); } catch (e) {}
+    var poly = pts.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' ');
+    var dots = pts.map(function (p) { return '<circle cx="' + p[0].toFixed(1) + '" cy="' + p[1].toFixed(1) + '" r="3.2" fill="#ed3039"/>'; }).join('');
+    var labs = pts.map(function (p, i) {
+      return '<text x="' + p[0].toFixed(1) + '" y="' + (h - 6) + '" text-anchor="middle" fill="#737373" font-size="11">' + esc(labels[i] || '') + '</text>';
+    }).join('');
+    return '<svg class="kchart" viewBox="0 0 ' + w + ' ' + h + '" role="img"><polyline fill="none" stroke="#ed3039" stroke-width="2" points="' + poly + '"/>' + dots + labs + '</svg>';
+  }
+  function chip(signal, word) {
+    var cls = signal === 'good' ? 'good' : signal === 'bad' ? 'act' : '';
+    return '<span class="dchip ' + cls + '">' + esc(word) + '</span>';
+  }
+  function valueHtml(m, big) {
+    if (m.words) return '<span class="' + (big ? 'v words' : 'words') + '">' + esc(m.words) + '</span>';
+    return '<span class="' + (big ? 'v num' : 'num') + '">' + esc(m.valueText || '') + '</span>';
   }
 
-  function addRow(name, text) {
-    var value = String(text || '').trim();
-    if (!LISTS[name] || !value) return;
-    if (state[name].length >= MAX_ROWS) { toast('This list is full'); return; }
-    state[name].push({ id: uid(), text: value.slice(0, 140), done: false });
-    save();
-    paintList(name);
-    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (err) {} }
+  function sampleRows(feed) {
+    if (!feed || !Array.isArray(feed.sampleKpis)) return [];
+    return feed.sampleKpis.map(function (r, i) {
+      var c = num(r.count);
+      if (!LOG_SET[r.metric] || c == null || c < 1) return null;
+      return { id: 'sample-' + i, metric: r.metric, count: c, logged_on: r.loggedOn, note: clean(r.note || ''), client_name: clean(r.clientName || ''), created_at: r.loggedOn };
+    }).filter(Boolean);
+  }
+  function logBundle(feed) {
+    if (S.sample) return { state: 'ready', rows: sampleRows(feed) };
+    if (S.kpiState === 'ready') return { state: 'ready', rows: S.kpiRows || [] };
+    return { state: S.kpiState || 'signedout', rows: [] };
+  }
+  function logWords(state) {
+    if (state === 'signedout') return 'Log in to track';
+    if (state === 'forbidden') return 'Owner login required';
+    if (state === 'missing') return 'Not set up yet';
+    if (state === 'checking') return 'Checking the log';
+    if (state === 'error') return 'Could not read the log';
+    return 'Log to start';
+  }
+  function sumRows(rows, metric, from, to, client) {
+    var n = 0, any = false, mine = [];
+    rows.forEach(function (r) {
+      if (r.metric !== metric) return;
+      if (from && String(r.logged_on) < from) return;
+      if (to && String(r.logged_on) > to) return;
+      if (client && norm(r.client_name) !== norm(client)) return;
+      any = true;
+      n += r.count;
+      mine.push(r);
+    });
+    return { any: any, value: any ? n : null, rows: mine };
+  }
+  function weekSeries(rows, metric, today) {
+    var vals = [], labels = [];
+    var start = weekStart(today);
+    for (var i = 7; i >= 0; i--) {
+      var ws = addDays(start, -7 * i);
+      var got = sumRows(rows, metric, ws, addDays(ws, 6));
+      if (!got.any) continue;
+      vals.push(got.value);
+      labels.push(ws.slice(5));
+    }
+    return { vals: vals, labels: labels };
+  }
+  function knownSeries(arr) {
+    if (!Array.isArray(arr)) return null;
+    var nums = arr.map(function (v) { return (typeof v === 'number' && isFinite(v)) ? v : null; });
+    return nums.some(function (v) { return v != null; }) ? nums : null;
+  }
+  function trendState(arr, need) {
+    var nums = knownSeries(arr);
+    if (!nums) return { state: 'missing' };
+    var last = null;
+    for (var i = nums.length - 1; i >= 0; i--) if (nums[i] != null) { last = nums[i]; break; }
+    var labels = [];
+    var vals = [];
+    nums.forEach(function (v, i) { if (v != null) { vals.push(v); labels.push(String(i + 1)); } });
+    if (nums.length < need || nums.slice(-need).some(function (v) { return v == null; })) {
+      return { state: 'baseline', last: last, history: { vals: vals, labels: labels }, need: need };
+    }
+    var prev = nums[nums.length - 2];
+    var up = last >= prev;
+    return {
+      state: 'ready', last: last, up: up,
+      progress: up ? 100 : (prev > 0 ? Math.min(100, (last / prev) * 100) : 0),
+      history: { vals: vals, labels: labels }, need: need
+    };
+  }
+  function median(nums) {
+    var a = nums.slice().sort(function (x, y) { return x - y; });
+    var i = Math.floor(a.length / 2);
+    if (!a.length) return null;
+    return a.length % 2 ? a[i] : (a[i - 1] + a[i]) / 2;
+  }
+  function pace(value, target, elapsed, total) {
+    if (value >= target) return 'good';
+    if (!(total > 0)) return 'bad';
+    return value + 1e-9 >= target * (elapsed / total) ? 'good' : 'bad';
+  }
+  function progressTo(value, target) {
+    if (!(target > 0)) return value <= 0 ? 100 : 0;
+    return Math.max(0, Math.min(100, (value / target) * 100));
   }
 
-  document.body.addEventListener('submit', function (e) {
-    var form = e.target;
-    if (!form || !form.getAttribute) return;
-    var add = form.getAttribute('data-add');
-    var addTask = form.getAttribute('data-add-task');
-    var addWin = form.getAttribute('data-add-win');
-    if (!add && !addTask && !addWin) return;
-    e.preventDefault();
-    var input = form.querySelector('input');
-    var value = input ? input.value : '';
-    if (add === 'goal') {
-      var title = String(value || '').trim();
-      if (!title) return;
-      if (state.projects.length >= MAX_GOALS) { toast('Goal list is full'); return; }
-      state.projects.unshift({ id: uid(), title: title.slice(0, 80), tasks: [], wins: [] });
-      save();
-      input.value = '';
-      paintGoals();
-      toast('Goal added');
-      return;
+  function buildBoard(feed, targets, now) {
+    var MET = {};
+    var rows = [];
+    var byId = {};
+    var n = 0;
+    var missingTargets = !targets;
+    function put(o) {
+      var signal = o.signal || 'none';
+      var m = {
+        id: o.id,
+        scoreSide: o.scoreSide || '',
+        label: o.label,
+        words: o.words || '',
+        valueText: o.valueText || '',
+        targetText: missingTargets ? 'Targets file did not load' : (o.targetText || 'No target in targets.json'),
+        signal: missingTargets ? 'none' : signal,
+        signalWord: missingTargets ? 'No data' : (o.signalWord || (signal === 'good' ? 'On pace' : signal === 'bad' ? 'Behind' : 'No data')),
+        source: o.source || '',
+        note: o.note || '',
+        history: o.history || { vals: [], labels: [] },
+        progress: (missingTargets || o.progress == null) ? null : Math.max(0, Math.min(100, o.progress)),
+        log: o.log || null,
+        lines: o.lines || [],
+        posts: o.posts || []
+      };
+      MET[m.id] = m;
+      return m;
     }
-    if (add && LISTS[add]) {
-      addRow(add, value);
-      input.value = '';
-      return;
+    function add(row) {
+      row.id = row.id || ('r' + (++n));
+      row.sample = !!(feed && feed.sample) || S.sample;
+      rows.push(row);
+      byId[row.id] = row;
+      return row;
     }
-    if (addTask) {
-      var g = byId(state.projects, addTask);
-      var taskText = String(value || '').trim();
-      if (!g || !taskText) return;
-      if (g.tasks.length >= MAX_ROWS) { toast('Task list is full'); return; }
-      g.tasks.push({ id: uid(), text: taskText.slice(0, 140), done: false });
-      save();
-      paintGoals();
-      return;
+    var today = chicagoDate(now);
+    var ws = weekStart(today);
+    var we = addDays(ws, 6);
+    var dim = daysInMonth(today);
+    var wIndex = weekIndex(today);
+    var dIndex = +today.slice(8, 10);
+    var fileAge = feed && feed.asOf ? ageInfo(feed.asOf, now) : (S.feedNote || 'Updated time is missing.');
+    var log = logBundle(feed);
+    function logged(metric, from, to, client) {
+      if (log.state !== 'ready') return { state: log.state, value: null, rows: [] };
+      var got = sumRows(log.rows, metric, from, to, client);
+      return { state: 'ready', value: got.value, rows: got.rows };
     }
-    if (addWin) {
-      var goal = byId(state.projects, addWin);
-      var winText = String(value || '').trim();
-      if (!goal || !winText) return;
-      if (goal.wins.length >= MAX_ROWS) { toast('Win list is full'); return; }
-      goal.wins.unshift({ id: uid(), text: winText.slice(0, 140) });
-      save();
-      paintGoals();
-      toast('Win logged');
+    function countMetric(o) {
+      if (o.value == null || o.target == null) {
+        return put({
+          id: o.id, scoreSide: o.scoreSide, label: o.label,
+          words: o.value == null ? (o.emptyWords || 'Not connected') : '',
+          valueText: o.value == null ? '' : (o.money ? money(o.value) : compact(o.value)),
+          targetText: o.target == null ? 'No target in targets.json' : o.targetText,
+          signal: 'none', source: o.source, note: o.note, history: o.history, log: o.log, progress: null,
+          lines: o.lines, posts: o.posts
+        });
+      }
+      var signal = pace(o.value, o.target, o.elapsed, o.total);
+      return put({
+        id: o.id, scoreSide: o.scoreSide, label: o.label,
+        words: (o.value === 0 && o.zeroWord) ? o.zeroWord : '',
+        valueText: o.money ? money(o.value) : compact(o.value),
+        targetText: o.targetText, signal: signal, source: o.source, note: o.note,
+        history: o.history, log: o.log, progress: progressTo(o.value, o.target),
+        lines: o.lines, posts: o.posts
+      });
     }
-  });
+    function lowerMetric(o) {
+      if (o.value == null) {
+        return put({
+          id: o.id, scoreSide: o.scoreSide, label: o.label, words: o.emptyWords || 'Not connected',
+          targetText: o.targetText, signal: 'none', source: o.source, note: o.note, log: o.log, progress: null, lines: o.lines
+        });
+      }
+      var actAt = o.actAt == null ? 0 : o.actAt;
+      var bad = o.value > actAt;
+      return put({
+        id: o.id, scoreSide: o.scoreSide, label: o.label,
+        words: o.value === 0 ? (o.zeroWord || 'None') : '',
+        valueText: o.valueText || compact(o.value),
+        targetText: o.targetText, signal: bad ? 'bad' : 'good',
+        source: o.source, note: o.note, history: o.history, log: o.log,
+        progress: bad ? 0 : 100, lines: o.lines
+      });
+    }
+    function trendMetric(o) {
+      var tr = o.trend;
+      if (!tr || tr.state === 'missing') {
+        return put({
+          id: o.id, scoreSide: o.scoreSide, label: o.label, words: 'Not connected',
+          targetText: o.targetText, signal: 'none', source: o.source, note: o.note, progress: null
+        });
+      }
+      if (tr.state === 'baseline') {
+        return put({
+          id: o.id, scoreSide: o.scoreSide, label: o.label,
+          words: tr.last == null ? 'Baseline building' : '',
+          valueText: tr.last == null ? '' : compact(tr.last),
+          targetText: o.targetText, signal: 'none', signalWord: 'Baseline building',
+          source: o.source,
+          note: [tr.last == null ? '' : ('Baseline building until ' + tr.need + ' weeks are in.'), o.note || ''].filter(Boolean).join(' '),
+          history: tr.history, progress: null
+        });
+      }
+      return put({
+        id: o.id, scoreSide: o.scoreSide, label: o.label, valueText: compact(tr.last),
+        targetText: o.targetText, signal: tr.up ? 'good' : 'bad', source: o.source, note: o.note,
+        history: tr.history, progress: tr.progress
+      });
+    }
 
-  document.body.addEventListener('input', function (e) {
-    var el = e.target;
-    if (!el || !el.getAttribute) return;
-    var bind = el.getAttribute('data-bind');
-    if (!bind) return;
-    if (applyBind(bind, el.value)) save();
-  });
+    var A = targets && targets.attract || {};
+    var C = targets && targets.convert || {};
+    var X = targets && targets.transform || {};
+    var postSpec = A.postsPerWeek || {};
+    var viewNeed = num(A.viewsPerWeek && A.viewsPerWeek.baselineWeeks) || null;
+    var followNeed = num(A.followerGrowthPerWeek && A.followerGrowthPerWeek.baselineWeeks) || viewNeed;
+    var social = feed && feed.attract && feed.attract.social;
+    var platforms = social && Array.isArray(social.platforms) ? social.platforms : null;
+    function findPlat(key) {
+      if (!platforms) return null;
+      for (var i = 0; i < platforms.length; i++) if (platId(platforms[i] && platforms[i].id) === key) return platforms[i];
+      return null;
+    }
+    var allPosts = [];
+    ['ig', 'x', 'youtube'].forEach(function (key) {
+      var spec = postSpec[key] || {};
+      var plat = findPlat(key);
+      var label = clean(spec.label || key);
+      var handle = clean(spec.handle || (plat && plat.handle) || '');
+      var age = ageInfo((plat && plat.asOf) || (social && social.asOf) || (feed && feed.attract && feed.attract.asOf), now);
+      var src = 'today.json attract.social';
+      var postTarget = num(spec.target);
+      var postsValue = plat ? num(plat.postsThisWeek) : null;
+      if (social && social.error && postsValue == null) {
+        put({ id: 'post-' + key, scoreSide: 'attract', label: label + ' posts', words: clean(social.error), targetText: postTarget == null ? 'No target in targets.json' : (compact(postTarget) + ' this week'), signal: 'bad', source: src, note: age, progress: null });
+      } else {
+        countMetric({
+          id: 'post-' + key, scoreSide: 'attract', label: label + ' posts',
+          value: postsValue, emptyWords: 'Not connected', target: postTarget,
+          targetText: postTarget == null ? 'No target in targets.json' : (compact(postTarget) + ' this week'),
+          elapsed: wIndex, total: 7, source: src, note: [handle, age].filter(Boolean).join(' · '),
+          zeroWord: 'None', history: { vals: [], labels: [] }
+        });
+      }
+      MET['post-' + key].handle = handle;
+      MET['post-' + key].platLabel = label;
+      var vTrend = trendState(plat && plat.viewsByWeek, viewNeed || 4);
+      if (plat && Array.isArray(plat.weekLabels) && vTrend.history) {
+        var vi = 0;
+        vTrend.history.labels = (plat.viewsByWeek || []).map(function (v, idx) {
+          return (typeof v === 'number') ? clean(plat.weekLabels[idx] || vTrend.history.labels[vi++] || '') : null;
+        }).filter(function (v) { return v != null; });
+      }
+      trendMetric({ id: 'views-' + key, scoreSide: 'attract', label: label + ' views', trend: plat ? vTrend : { state: 'missing' }, targetText: 'Up week over week', source: src, note: age });
+      var fTrend = trendState(plat && plat.followersByWeek, followNeed || 4);
+      if (plat && Array.isArray(plat.weekLabels) && fTrend.history) {
+        fTrend.history.labels = (plat.followersByWeek || []).map(function (v, idx) {
+          return (typeof v === 'number') ? clean(plat.weekLabels[idx] || '') : null;
+        }).filter(function (v) { return v != null; });
+      }
+      trendMetric({ id: 'follows-' + key, scoreSide: 'attract', label: label + ' follower growth', trend: plat ? fTrend : { state: 'missing' }, targetText: 'Up week over week', source: src, note: age });
+      if (plat && Array.isArray(plat.posts)) plat.posts.forEach(function (post) { if (post) allPosts.push(post); });
+    });
 
-  document.body.addEventListener('change', function (e) {
-    var el = e.target;
-    if (!el || !el.getAttribute) return;
-    var bind = el.getAttribute('data-bind');
-    if (bind && bind.indexOf('.status') !== -1) {
-      applyBind(bind, el.value);
-      paintStatus(el);
-      save();
-      return;
+    var outTarget = num(A.outliersPerMonth && A.outliersPerMonth.target);
+    var multiple = num(A.outliersPerMonth && A.outliersPerMonth.multiple);
+    var withViews = allPosts.filter(function (p) { return num(p.views) != null; });
+    if (!platforms) {
+      put({ id: 'outliers', scoreSide: 'attract', label: 'Outliers this month', words: 'Not connected', targetText: outTarget == null ? 'No target in targets.json' : (compact(outTarget) + ' this month'), signal: 'none', source: 'today.json attract.social', progress: null });
+    } else if (withViews.length < 4 || multiple == null) {
+      put({ id: 'outliers', scoreSide: 'attract', label: 'Outliers this month', words: 'Baseline building', targetText: outTarget == null ? 'No target in targets.json' : (compact(outTarget) + ' this month'), signal: 'none', signalWord: 'Baseline building', source: 'today.json attract.social', note: 'Needs 4 posts with views before a median is fair.', progress: null });
+    } else {
+      var med = median(withViews.map(function (p) { return p.views; }));
+      var hits = allPosts.filter(function (p) {
+        var views = num(p.views);
+        var day = dayOf(p.publishedAt);
+        return views != null && day && day.slice(0, 7) === today.slice(0, 7) && views + 1e-9 >= med * multiple;
+      });
+      countMetric({
+        id: 'outliers', scoreSide: 'attract', label: 'Outliers this month',
+        value: hits.length, target: outTarget, emptyWords: 'Not connected',
+        targetText: outTarget == null ? 'No target in targets.json' : (compact(outTarget) + ' this month'),
+        elapsed: dIndex, total: dim, source: 'today.json attract.social',
+        note: 'Median views ' + compact(med) + '. An outlier is ' + compact(multiple) + 'x or more.',
+        zeroWord: 'None this month',
+        posts: hits.map(function (p) { return { title: clean(p.title || 'Untitled post'), views: p.views, url: safeHref(p.url), when: dayOf(p.publishedAt) }; })
+      });
     }
-    var listName = el.getAttribute('data-toggle');
-    if (listName && state[listName]) {
-      var row = byId(state[listName], el.getAttribute('data-id'));
-      if (!row) return;
-      row.done = !!el.checked;
-      save();
-      paintList(listName);
-      return;
-    }
-    var goalId = el.getAttribute('data-toggle-task');
-    if (goalId) {
-      var g = byId(state.projects, goalId);
-      var task = g && byId(g.tasks, el.getAttribute('data-id'));
-      if (!task) return;
-      task.done = !!el.checked;
-      save();
-      paintGoals();
-    }
-  });
 
-  document.body.addEventListener('click', function (e) {
-    var el = e.target.closest('[data-dock], [data-tab], [data-del], [data-clear], [data-del-task], [data-del-win], [data-del-goal]');
-    if (!el) return;
-    if (el.getAttribute('data-tab')) {
-      showTab(el.getAttribute('data-tab'));
-      return;
+    function manualCount(id, side, label, metric, target, targetText, elapsed, total, from, to) {
+      var got = logged(metric, from, to);
+      var hist = got.state === 'ready' ? weekSeries(log.rows, metric, today) : { vals: [], labels: [] };
+      countMetric({
+        id: id, scoreSide: side, label: label, value: got.state === 'ready' ? got.value : null,
+        emptyWords: got.state === 'ready' ? 'Log to start' : logWords(got.state),
+        target: target, targetText: targetText, elapsed: elapsed, total: total,
+        source: 'floor log', note: got.state === 'error' ? (S.kpiNote || '') : '',
+        history: hist, log: { metric: metric, quick: true }, zeroWord: 'None'
+      });
     }
-    if (el.getAttribute('data-dock') === 'today') {
-      showTab('today');
-      return;
-    }
-    if (el.getAttribute('data-dock') === 'floor') {
-      showTab(active === 'today' ? lastFloor : active);
-      return;
-    }
-    var del = el.getAttribute('data-del');
-    if (del && state[del]) {
-      state[del] = state[del].filter(function (row) { return row.id !== el.getAttribute('data-id'); });
-      save();
-      paintList(del);
-      return;
-    }
-    var clear = el.getAttribute('data-clear');
-    if (clear && state[clear]) {
-      if (!state[clear].length) return;
-      if (!confirm('Clear these rows on this phone?')) return;
-      state[clear] = [];
-      save();
-      paintList(clear);
-      toast('Cleared');
-      return;
-    }
-    var delTask = el.getAttribute('data-del-task');
-    if (delTask) {
-      var g = byId(state.projects, delTask);
-      if (!g) return;
-      g.tasks = g.tasks.filter(function (t) { return t.id !== el.getAttribute('data-id'); });
-      save();
-      paintGoals();
-      return;
-    }
-    var delWin = el.getAttribute('data-del-win');
-    if (delWin) {
-      var gw = byId(state.projects, delWin);
-      if (!gw) return;
-      gw.wins = gw.wins.filter(function (w) { return w.id !== el.getAttribute('data-id'); });
-      save();
-      paintGoals();
-      return;
-    }
-    var delGoal = el.getAttribute('data-del-goal');
-    if (delGoal) {
-      if (!confirm('Remove this goal from this phone?')) return;
-      state.projects = state.projects.filter(function (g) { return g.id !== delGoal; });
-      save();
-      paintGoals();
-      toast('Goal removed');
-    }
-  });
+    manualCount('videos', 'attract', 'Videos filmed', 'videos', num(A.videosPerWeek && A.videosPerWeek.target), (num(A.videosPerWeek && A.videosPerWeek.target) == null ? 'No target in targets.json' : compact(A.videosPerWeek.target) + ' this week'), wIndex, 7, ws, we);
+    manualCount('magnets', 'attract', 'Lead magnets shipped', 'lead_magnets', num(A.leadMagnetsPerMonth && A.leadMagnetsPerMonth.target), (num(A.leadMagnetsPerMonth && A.leadMagnetsPerMonth.target) == null ? 'No target in targets.json' : compact(A.leadMagnetsPerMonth.target) + ' this month'), dIndex, dim, today.slice(0, 8) + '01', today.slice(0, 8) + String(dim).padStart(2, '0'));
+    manualCount('contacts', 'attract', 'New contacts', 'contacts', num(A.contactsPerWeek && A.contactsPerWeek.target), (num(A.contactsPerWeek && A.contactsPerWeek.target) == null ? 'No target in targets.json' : compact(A.contactsPerWeek.target) + ' this week'), wIndex, 7, ws, we);
 
-  window.addEventListener('hashchange', function () {
-    var h = (location.hash || '').replace(/^#/, '');
-    if (PANELS[h] && h !== active) showTab(h);
-  });
+    var community = feed && feed.attract && feed.attract.community;
+    var cTarget = num(A.communityPerWeek && A.communityPerWeek.target);
+    if (!community || community.error) {
+      put({ id: 'community', scoreSide: 'attract', label: 'Community activity', words: community && community.error ? clean(community.error) : 'Not connected', targetText: cTarget == null ? 'No target in targets.json' : (compact(cTarget) + ' this week'), signal: community && community.error ? 'bad' : 'none', source: 'today.json attract.community', note: community && community.error ? ageInfo(community.lastGoodAt, now) : '', progress: null });
+    } else {
+      var postsN = num(community.postsThisWeek), repliesN = num(community.repliesThisWeek);
+      var cVal = (postsN == null && repliesN == null) ? null : (postsN == null ? repliesN : repliesN == null ? postsN : postsN + repliesN);
+      var cNote = [clean(community.note || ''), ageInfo(community.asOf, now)];
+      if (postsN == null || repliesN == null) cNote.unshift('One of posts or replies is missing, so only the number that arrived is shown.');
+      countMetric({
+        id: 'community', scoreSide: 'attract', label: 'Community activity', value: cVal,
+        emptyWords: 'Not connected', target: cTarget,
+        targetText: cTarget == null ? 'No target in targets.json' : (compact(cTarget) + ' this week'),
+        elapsed: wIndex, total: 7, source: 'today.json attract.community', note: cNote.filter(Boolean).join(' '), zeroWord: 'None'
+      });
+    }
 
-  ['calls', 'emails', 'podcast'].forEach(paintList);
-  mountValues();
-  paintGoals();
-  var start = (location.hash || '').replace(/^#/, '');
-  showTab(PANELS[start] ? start : 'today');
-  loadTodayFeed();
-  tick();
-  setInterval(tick, 15000);
+    var funnel = feed && feed.convert && feed.convert.funnel && typeof feed.convert.funnel === 'object' ? feed.convert.funnel : null;
+    function pickStep(metric, key) {
+      var got = logged(metric, ws, we);
+      if (got.state === 'ready' && got.value != null) return { value: got.value, source: 'floor log', fromLog: true, state: 'ready' };
+      if (funnel && num(funnel[key]) != null) return { value: funnel[key], source: 'Calendar and Fathom, today.json convert.funnel', fromLog: false, state: 'ready' };
+      if (got.state !== 'ready') return { value: null, source: 'floor log', fromLog: false, state: got.state, blocked: true };
+      return { value: null, source: 'floor log, or today.json convert.funnel', fromLog: false, state: 'ready' };
+    }
+    var booked = pickStep('booked_calls', 'booked');
+    var showed = pickStep('showed_calls', 'showed');
+    var closed = pickStep('closed_deals', 'closed');
+    var contactStep = pickStep('contacts', 'contacts');
+    if (contactStep.value != null && !contactStep.fromLog) {
+      countMetric({
+        id: 'contacts', scoreSide: 'attract', label: 'New contacts', value: contactStep.value,
+        target: num(A.contactsPerWeek && A.contactsPerWeek.target),
+        targetText: num(A.contactsPerWeek && A.contactsPerWeek.target) == null ? 'No target in targets.json' : (compact(A.contactsPerWeek.target) + ' this week'),
+        elapsed: wIndex, total: 7, source: contactStep.source, zeroWord: 'None',
+        log: { metric: 'contacts', quick: true }
+      });
+    }
+    var bookedTarget = num(C.bookedCallsPerWeek && C.bookedCallsPerWeek.target);
+    countMetric({
+      id: 'booked', scoreSide: 'convert', label: 'Booked calls',
+      value: booked.blocked ? null : booked.value,
+      emptyWords: booked.blocked ? logWords(booked.state) : 'Log to start',
+      target: bookedTarget,
+      targetText: bookedTarget == null ? 'No target in targets.json' : (compact(bookedTarget) + ' this week'),
+      elapsed: wIndex, total: 7, source: booked.source, zeroWord: 'None',
+      history: log.state === 'ready' ? weekSeries(log.rows, 'booked_calls', today) : { vals: [], labels: [] },
+      log: { metric: 'booked_calls', quick: true },
+      note: (funnel && booked.fromLog && num(funnel.booked) != null) ? ('Calendar and Fathom also reported ' + compact(funnel.booked) + '. That figure is not added to the log.') : ''
+    });
+    put({
+      id: 'showed', scoreSide: '', label: 'Showed calls',
+      words: showed.value == null ? (showed.blocked ? logWords(showed.state) : 'Log to start') : (showed.value === 0 ? 'None' : ''),
+      valueText: showed.value == null || showed.value === 0 ? '' : compact(showed.value),
+      targetText: 'Used for the show rate', signal: 'none', signalWord: 'No separate target',
+      source: showed.source, progress: null, log: { metric: 'showed_calls', quick: true },
+      history: log.state === 'ready' ? weekSeries(log.rows, 'showed_calls', today) : { vals: [], labels: [] }
+    });
+    put({
+      id: 'closed', scoreSide: '', label: 'Closed deals',
+      words: closed.value == null ? (closed.blocked ? logWords(closed.state) : 'Log to start') : (closed.value === 0 ? 'None' : ''),
+      valueText: closed.value == null || closed.value === 0 ? '' : compact(closed.value),
+      targetText: 'Used for the close rate', signal: 'none', signalWord: 'No separate target',
+      source: closed.source, progress: null, log: { metric: 'closed_deals', quick: true },
+      history: log.state === 'ready' ? weekSeries(log.rows, 'closed_deals', today) : { vals: [], labels: [] }
+    });
+    function rateMetric(id, label, top, bottom, target, targetText) {
+      var same = top && bottom && top.fromLog === bottom.fromLog && !top.blocked && !bottom.blocked;
+      if (!same || top.value == null || bottom.value == null || !(bottom.value > 0) || target == null) {
+        var why = 'Log to start';
+        if (top && top.blocked) why = logWords(top.state);
+        else if (same && bottom && bottom.value === 0) why = 'No ' + label.replace(' rate', '') + ' base yet';
+        else if (same && (top.value == null || bottom.value == null)) why = 'Log to start';
+        else if (top && bottom && top.fromLog !== bottom.fromLog) why = 'Log to start';
+        return put({ id: id, scoreSide: 'convert', label: label, words: why, targetText: targetText, signal: 'none', source: (top && top.source) || 'floor log', note: 'The rate uses one source for both numbers. It does not mix the log with the feed.', progress: null });
+      }
+      var rate = top.value / bottom.value;
+      put({
+        id: id, scoreSide: 'convert', label: label, valueText: Math.round(rate * 100) + '%',
+        targetText: targetText, signal: rate + 1e-9 >= target ? 'good' : 'bad',
+        source: top.source, progress: progressTo(rate, target),
+        note: compact(top.value) + ' of ' + compact(bottom.value) + '.'
+      });
+    }
+    var showTarget = num(C.showRate && C.showRate.target);
+    var closeTarget = num(C.closeRate && C.closeRate.target);
+    rateMetric('show-rate', 'Show rate', showed, booked, showTarget, showTarget == null ? 'No target in targets.json' : (Math.round(showTarget * 100) + '%'));
+    rateMetric('close-rate', 'Close rate', closed, showed, closeTarget, closeTarget == null ? 'No target in targets.json' : (Math.round(closeTarget * 100) + '%'));
+
+    var pipeItems = null;
+    if (feed && feed.convert && Array.isArray(feed.convert.pipeline)) pipeItems = feed.convert.pipeline;
+    var pipeRows = [];
+    (pipeItems || []).forEach(function (deal) {
+      if (!deal) return;
+      var name = clean(deal.name || '');
+      if (!name) return;
+      pipeRows.push(add({
+        group: 'pipeline', kind: 'deal', title: name, meta: clean(deal.nextStep || ''),
+        whenText: clean(deal.stage || 'Stage'), status: '', badge: num(deal.amount) != null ? money(deal.amount) : '',
+        href: safeHref(deal.href), hrefLabel: 'Open link',
+        copyText: clean([name, deal.stage, deal.nextStep].filter(Boolean).join('. ')),
+        leftK: 'Stage', leftBig: clean(deal.stage || 'Not set'), leftNote: num(deal.amount) != null ? money(deal.amount) : 'No amount in the feed',
+        rightK: 'Next step', rightBig: clean(deal.nextStep || 'No next step in the feed'), rightNote: 'Read only.'
+      }));
+    });
+
+    var stripe = feed && feed.cash && feed.cash.stripe && typeof feed.cash.stripe === 'object' ? feed.cash.stripe : null;
+    var gmailIn = feed && feed.cash && feed.cash.in ? num(feed.cash.in.amount) : null;
+    var collected = null, collectedSource = 'Stripe, today.json cash.stripe';
+    if (stripe && stripe.monthToDate && num(stripe.monthToDate.collected) != null) collected = stripe.monthToDate.collected;
+    else if (gmailIn != null) { collected = gmailIn; collectedSource = 'Gmail, today.json cash.in'; }
+    else if (feed && feed.cash && Array.isArray(feed.cash.payments)) {
+      var sumIn = 0, anyIn = false, okIn = true;
+      feed.cash.payments.forEach(function (p) {
+        if (p && p.direction === 'in') { anyIn = true; if (num(p.amount) == null) okIn = false; else sumIn += p.amount; }
+      });
+      if (anyIn && okIn) { collected = sumIn; collectedSource = 'Gmail payments, today.json cash.payments'; }
+    }
+    var mrr = num(C.mrr && C.mrr.target);
+    var mrrText = mrr == null ? 'No target in targets.json' : (money(mrr) + ' MRR');
+    countMetric({
+      id: 'collected', scoreSide: 'convert', label: 'Collected this month', value: collected,
+      emptyWords: stripe ? 'Not connected' : 'Not connected', money: true, target: mrr, targetText: mrrText,
+      elapsed: dIndex, total: dim, source: collected == null && !stripe ? 'Stripe and Gmail, today.json cash' : collectedSource,
+      note: [clean(C.mrr && C.mrr.label || ''), stripe && stripe.asOf ? ageInfo(stripe.asOf, now) : ''].filter(Boolean).join(' · '),
+      zeroWord: ''
+    });
+    if (collected === 0) MET.collected.words = '';
+
+    function sectionState(block, key) {
+      if (!feed || !Object.prototype.hasOwnProperty.call(feed, key)) return { state: 'missing' };
+      var raw = feed[key];
+      if (!raw || typeof raw !== 'object') return { state: 'missing' };
+      if (raw.error) return { state: 'error', error: clean(raw.error), lastGoodAt: raw.lastGoodAt };
+      return { state: 'ready', raw: raw };
+    }
+    var cash = sectionState(feed && feed.cash, 'cash');
+    var dueAmount = null, dueNote = '', dueHist = { vals: [], labels: [] };
+    if (cash.state === 'ready') {
+      var due = cash.raw.stillDue;
+      dueAmount = due ? num(due.amount) : null;
+      dueNote = due ? clean(due.note || '') : '';
+      if (due && Array.isArray(due.history)) {
+        due.history.forEach(function (v, i) { if (typeof v === 'number' && isFinite(v)) { dueHist.vals.push(v); dueHist.labels.push(clean((due.historyLabels || [])[i] || '')); } });
+      }
+      if (dueAmount == null && Array.isArray(cash.raw.payments)) {
+        var ds = 0, dAny = false, dOk = true;
+        cash.raw.payments.forEach(function (p) { if (p && p.direction === 'due') { dAny = true; if (num(p.amount) == null) dOk = false; else ds += p.amount; } });
+        if (dAny && dOk) dueAmount = ds;
+      }
+    }
+    lowerMetric({
+      id: 'cash-due', scoreSide: 'convert', label: 'Cash still due',
+      value: cash.state === 'ready' ? dueAmount : null,
+      emptyWords: cash.state === 'error' ? cash.error : 'Not connected',
+      valueText: dueAmount > 0 ? money(dueAmount) : '',
+      targetText: 'Nothing past due', actAt: 0, source: 'Gmail, today.json cash',
+      note: [dueNote, cash.state === 'ready' ? ageInfo(cash.raw.asOf || (feed && feed.asOf), now) : ''].filter(Boolean).join(' · '),
+      history: dueHist, zeroWord: 'Nothing due'
+    });
+    var outAmount = null;
+    if (cash.state === 'ready' && cash.raw.out) outAmount = num(cash.raw.out.amount);
+    put({
+      id: 'cash-out', scoreSide: '', label: 'Cash out, Gmail',
+      words: outAmount == null ? (cash.state === 'error' ? cash.error : 'Not connected') : (outAmount === 0 ? 'None in Gmail' : ''),
+      valueText: outAmount > 0 ? money(outAmount) : '',
+      targetText: 'No target set', signal: 'none', signalWord: 'No target',
+      source: 'Gmail, today.json cash', progress: null,
+      note: cash.state === 'ready' && cash.raw.out ? clean(cash.raw.out.note || '') : ''
+    });
+
+    var moves = sectionState(feed && feed.moneyMoves, 'moneyMoves');
+    var unsent = [];
+    if (moves.state === 'ready' && Array.isArray(moves.raw.items)) {
+      unsent = moves.raw.items.filter(function (it) { return it && (!it.status || it.status === 'unsent'); });
+      unsent.forEach(function (it) {
+        add({
+          group: 'look', kind: 'money', title: clean(it.title || it.who || 'Unsent money-move'),
+          meta: clean(it.note || it.who || ''), whenText: 'Unsent', status: 'act', badge: 'Unsent',
+          href: safeHref(it.href), hrefLabel: 'Open link',
+          copyText: clean([it.title, it.who, it.note].filter(Boolean).join('. ')),
+          leftK: 'Ready', leftBig: clean(it.title || 'Money-move'), leftNote: clean(it.note || ''),
+          rightK: 'Status', rightBig: 'Not sent', rightNote: 'This board does not send it.'
+        });
+      });
+    }
+    lowerMetric({
+      id: 'unsent', scoreSide: 'convert', label: 'Unsent money-moves',
+      value: moves.state === 'ready' ? unsent.length : null,
+      emptyWords: moves.state === 'error' ? moves.error : 'Not connected',
+      targetText: 'None waiting', actAt: 0, source: 'today.json moneyMoves',
+      note: moves.state === 'ready' ? ageInfo(moves.raw.asOf, now) : '', zeroWord: 'None'
+    });
+
+    var alerts = { state: 'missing', failed: null };
+    if (feed && Object.prototype.hasOwnProperty.call(feed, 'alerts') && feed.alerts && typeof feed.alerts === 'object') {
+      if (feed.alerts.error) alerts = { state: 'error', error: clean(feed.alerts.error) };
+      else alerts = { state: 'ready', failed: Array.isArray(feed.alerts.failedCharges) ? feed.alerts.failedCharges : null, asOf: feed.alerts.asOf, loops: Array.isArray(feed.alerts.loops) ? feed.alerts.loops : [] };
+    }
+    (alerts.loops || []).forEach(function (loop) {
+      add({
+        group: 'look', kind: 'loop', title: clean(loop.title || 'Open loop'), meta: clean(loop.who || ''),
+        whenText: clean(loop.action || ''), status: 'act', badge: 'Open',
+        href: safeHref(loop.href), hrefLabel: 'Open link',
+        copyText: clean(loop.copyText || loop.action || loop.title || ''),
+        leftK: 'Open loop', leftBig: clean(loop.title || ''), leftNote: clean(loop.action || ''),
+        rightK: 'Who', rightBig: clean(loop.who || 'Not named'), rightNote: 'Read only.'
+      });
+    });
+    if (alerts.failed) alerts.failed.forEach(function (c) {
+      var tool = clean(c.tool || c.name || 'Unnamed tool');
+      add({
+        group: 'look', kind: 'charge', title: tool + ' charge failed', meta: clean(c.note || ''),
+        whenText: formatWhen(c.when), status: 'act', badge: 'Act', href: safeHref(c.href), hrefLabel: 'Open the notice',
+        copyText: clean(tool + '. ' + (c.note || '')),
+        leftK: 'Tool', leftBig: tool, leftNote: num(c.amount) == null ? 'Amount not in the feed' : money(c.amount),
+        rightK: 'Why it matters', rightBig: 'Client work', rightNote: clean(c.note || 'A failed delivery-stack charge can take client work offline.')
+      });
+    });
+    lowerMetric({
+      id: 'failed-charges', scoreSide: 'convert', label: 'Failed delivery-stack charges',
+      value: alerts.failed ? alerts.failed.length : null,
+      emptyWords: alerts.state === 'error' ? alerts.error : 'Not connected',
+      targetText: 'None', actAt: 0, source: 'today.json alerts.failedCharges',
+      note: alerts.failed && alerts.failed.length ? alerts.failed.map(function (c) { return clean(c.tool || c.name || 'Unnamed tool'); }).join(', ') : ageInfo(alerts.asOf, now),
+      zeroWord: 'None'
+    });
+
+    var delivery = sectionState(feed && feed.delivery, 'delivery');
+    var oldest = delivery.state === 'ready' ? num(delivery.raw.oldestDays) : null;
+    lowerMetric({
+      id: 'delivery-oldest', scoreSide: 'transform', label: 'Oldest overdue delivery',
+      value: oldest, emptyWords: delivery.state === 'error' ? delivery.error : 'Not connected',
+      valueText: oldest > 0 ? (compact(oldest) + ' days') : '',
+      targetText: 'None past 7 days', actAt: num(X.overdueActAfterDays) == null ? 7 : X.overdueActAfterDays,
+      source: 'today.json delivery',
+      note: delivery.state === 'ready' ? clean(delivery.raw.note || delivery.raw.client || '') : '',
+      zeroWord: 'None'
+    });
+
+    var retainerItems = [];
+    if (feed && Array.isArray(feed.retainers)) retainerItems = feed.retainers;
+    else if (feed && feed.retainers && Array.isArray(feed.retainers.items)) retainerItems = feed.retainers.items;
+    retainerItems.forEach(function (r) {
+      if (!r) return;
+      var name = clean(r.name || r.who || 'Unnamed retainer');
+      add({
+        group: 'retainers', kind: 'retainer', title: name, meta: clean(r.why || ''),
+        whenText: r.risk === 'late-payment' ? 'Late payment' : r.risk === 'overdue-delivery' ? 'Overdue delivery' : 'Retainer',
+        status: (r.risk && r.risk !== 'none') ? 'act' : '',
+        badge: r.risk === 'late-payment' ? 'Late payment' : r.risk === 'overdue-delivery' ? 'Overdue' : 'Retainer',
+        href: safeHref(r.href) || '../', hrefLabel: 'Open in Hub',
+        copyText: clean(name + '. ' + (r.why || '')),
+        leftK: 'Retainer', leftBig: name, leftNote: clean(r.why || ''),
+        rightK: 'Wait', rightBig: num(r.daysWaiting) > 0 ? (r.daysWaiting + ' days') : 'No wait listed',
+        rightNote: 'Read only.'
+      });
+    });
+
+    var official = (X.clients && Array.isArray(X.clients)) ? X.clients : [];
+    var feedClients = feed && feed.transform && Array.isArray(feed.transform.clients) ? feed.transform.clients : null;
+    function matchClient(spec) {
+      if (!feedClients) return null;
+      var n = norm(spec.name), h = norm(spec.handle || '');
+      for (var i = 0; i < feedClients.length; i++) {
+        var c = feedClients[i];
+        if (!c) continue;
+        var cn = norm(c.name || ''), ch = norm(c.handle || '');
+        if (h && ch && h === ch) return c;
+        if (n && cn && (n === cn || cn.indexOf(n) !== -1 || n.indexOf(cn) !== -1)) return c;
+      }
+      return null;
+    }
+    var filmDays = num(X.filmedWithinDays);
+    var actDays = num(X.overdueActAfterDays);
+    official.forEach(function (spec, index) {
+      var name = clean(spec.name || ('Client ' + (index + 1)));
+      var handle = clean(spec.handle || '');
+      var c = matchClient(spec);
+      var prefix = 'c' + index;
+      var src = 'today.json transform.clients';
+      var vTrend = trendState(c && c.viewsByWeek, viewNeed || 4);
+      var fTrend = trendState(c && c.followersByWeek, followNeed || 4);
+      trendMetric({ id: prefix + '-views', scoreSide: 'transform', label: name + ' views', trend: c ? vTrend : { state: 'missing' }, targetText: 'Up week over week', source: src });
+      trendMetric({ id: prefix + '-follows', scoreSide: 'transform', label: name + ' followers', trend: c ? fTrend : { state: 'missing' }, targetText: 'Up week over week', source: src });
+
+      var scriptNote = '';
+      var scriptValue = null, scriptText = '', scriptSignal = 'none', scriptProgress = null, scriptWords = 'Not connected';
+      if (c && Array.isArray(c.scripts)) {
+        if (!c.scripts.length) { scriptWords = 'None delivered'; scriptSignal = 'none'; scriptProgress = null; }
+        else if (filmDays == null) { scriptWords = 'No target in targets.json'; }
+        else {
+          var delivered = 0, onTime = 0, pending = 0, late = 0;
+          c.scripts.forEach(function (s) {
+            var deliveredAt = dayOf(s && s.deliveredAt);
+            if (!deliveredAt) return;
+            delivered++;
+            var filmedAt = dayOf(s && s.filmedAt);
+            if (filmedAt) {
+              var lag = daysBetween(deliveredAt, filmedAt);
+              if (lag >= 0 && lag <= filmDays) onTime++; else late++;
+            } else if (daysBetween(deliveredAt, today) > filmDays) late++;
+            else pending++;
+          });
+          if (!delivered) { scriptWords = 'None delivered'; }
+          else {
+            scriptWords = '';
+            scriptText = onTime + ' of ' + delivered;
+            scriptSignal = late ? 'bad' : 'good';
+            scriptProgress = (onTime / delivered) * 100;
+            scriptValue = onTime;
+            var bits = [];
+            if (pending) bits.push(pending + ' still inside ' + filmDays + ' days');
+            if (late) bits.push(late + ' past ' + filmDays + ' days');
+            scriptNote = bits.join('. ');
+          }
+        }
+      } else if (c && num(c.scriptsDelivered) != null && num(c.scriptsFilmed) != null) {
+        if (c.scriptsDelivered <= 0) scriptWords = 'None delivered';
+        else {
+          scriptWords = '';
+          scriptText = compact(c.scriptsFilmed) + ' of ' + compact(c.scriptsDelivered);
+          scriptSignal = c.scriptsFilmed + 1e-9 >= c.scriptsDelivered ? 'good' : 'bad';
+          scriptProgress = (c.scriptsFilmed / c.scriptsDelivered) * 100;
+          scriptNote = 'Dates are not in the feed, so the 7-day check is not connected.';
+        }
+      }
+      put({
+        id: prefix + '-scripts', scoreSide: 'transform', label: name + ' scripts filmed',
+        words: scriptWords, valueText: scriptText, targetText: filmDays == null ? 'No target in targets.json' : ('100% within ' + filmDays + ' days'),
+        signal: scriptSignal, source: src, note: scriptNote, progress: scriptProgress
+      });
+
+      var overdueWords = 'Not connected', overdueText = '', overdueSignal = 'none', overdueProgress = null, overdueNote = '';
+      if (c && Array.isArray(c.overdue)) {
+        var past = c.overdue.filter(function (item) { return num(item && item.days) != null && item.days > (actDays == null ? 7 : actDays); });
+        var oldestItem = 0;
+        c.overdue.forEach(function (item) { if (num(item && item.days) != null && item.days > oldestItem) oldestItem = item.days; });
+        if (!c.overdue.length) { overdueWords = 'None'; overdueSignal = 'good'; overdueProgress = 100; }
+        else {
+          overdueWords = '';
+          overdueText = oldestItem + ' days';
+          overdueSignal = past.length ? 'bad' : 'good';
+          overdueProgress = past.length ? 0 : 100;
+          overdueNote = past.length ? (past.length + ' past ' + (actDays == null ? 7 : actDays) + ' days') : ('None past ' + (actDays == null ? 7 : actDays) + ' days');
+        }
+      }
+      put({
+        id: prefix + '-overdue', scoreSide: 'transform', label: name + ' overdue',
+        words: overdueWords, valueText: overdueText,
+        targetText: 'None past ' + (actDays == null ? 7 : actDays) + ' days',
+        signal: overdueSignal, source: src, note: overdueNote, progress: overdueProgress
+      });
+
+      var pay = c && c.payment ? String(c.payment).toLowerCase() : '';
+      var payWord = '', paySignal = 'none', payProgress = null;
+      if (!c || !c.payment) payWord = 'Not connected';
+      else if (pay === 'on-time' || pay === 'ontime' || pay === 'current' || pay === 'paid') { payWord = 'On time'; paySignal = 'good'; payProgress = 100; }
+      else if (pay === 'late' || pay === 'past-due') { payWord = 'Late'; paySignal = 'bad'; payProgress = 0; }
+      else if (pay === 'partial') { payWord = 'Partial'; paySignal = 'bad'; payProgress = 0; }
+      else payWord = clean(c.payment);
+      put({
+        id: prefix + '-pay', scoreSide: 'transform', label: name + ' payment',
+        words: payWord, targetText: 'On time', signal: paySignal, source: src, progress: payProgress
+      });
+
+      var health = c ? num(c.health) : null;
+      put({
+        id: prefix + '-health', scoreSide: '', label: name + ' health',
+        words: health == null ? 'Not connected' : '', valueText: health == null ? '' : compact(health),
+        targetText: 'No numeric target', signal: 'none', signalWord: 'No target', source: src, progress: null
+      });
+
+      var winLines = [];
+      if (c && Array.isArray(c.wins)) c.wins.forEach(function (w) {
+        if (w && clean(w.text || '')) winLines.push({ when: dayOf(w.at), text: clean(w.text), source: 'today.json transform.clients' });
+      });
+      if (log.state === 'ready') {
+        log.rows.forEach(function (r) {
+          if (r.metric === 'client_wins' && norm(r.client_name) === norm(name) && clean(r.note || '')) {
+            winLines.push({ when: r.logged_on, text: clean(r.note), source: 'floor log' });
+          }
+        });
+      }
+      put({
+        id: prefix + '-win', scoreSide: '', label: 'Win for ' + name,
+        words: winLines.length ? (winLines.length === 1 ? '1 logged' : (winLines.length + ' logged')) : 'No wins logged',
+        targetText: 'Real quotes only', signal: 'none', signalWord: winLines.length ? 'Logged' : 'No data',
+        source: 'floor log and today.json transform.clients', progress: null,
+        log: { metric: 'client_wins', client: name, quick: false },
+        lines: winLines
+      });
+      MET[prefix + '-win'].clientName = name;
+      MET[prefix + '-win'].handle = handle;
+    });
+
+    var anyClientOverdue = Object.keys(MET).some(function (id) { return /-overdue$/.test(id) && MET[id].progress != null; });
+    if (anyClientOverdue && MET['delivery-oldest']) MET['delivery-oldest'].scoreSide = '';
+
+    function scoreOf(side) {
+      var list = Object.keys(MET).map(function (k) { return MET[k]; }).filter(function (m) { return m.scoreSide === side && m.progress != null; });
+      if (!list.length) return { score: null, behind: 0, names: [] };
+      var sum = 0, behind = 0;
+      list.forEach(function (m) { sum += m.progress; if (m.signal === 'bad') behind++; });
+      return { score: Math.round(sum / list.length), behind: behind, names: list.map(function (m) { return m.label; }) };
+    }
+
+    var wins = [];
+    if (log.state === 'ready') {
+      log.rows.forEach(function (r) {
+        if (String(r.logged_on) < ws || String(r.logged_on) > we) return;
+        var pair = PHRASE[r.metric] || [r.metric, r.metric];
+        var text = compact(r.count) + ' ' + (r.count === 1 ? pair[0] : pair[1]);
+        if (r.client_name) text += ' for ' + r.client_name;
+        if (r.note) text += '. ' + r.note;
+        wins.push({ when: r.logged_on, text: text, source: 'floor log' });
+      });
+    }
+    official.forEach(function (spec, index) {
+      (MET['c' + index + '-win'].lines || []).forEach(function (line) {
+        if (line.when && line.when >= ws && line.when <= we) wins.push(line);
+      });
+    });
+    function cashEvents(list, kind) {
+      (list || []).forEach(function (item) {
+        if (!item) return;
+        var day = dayOf(item.date || item.when);
+        if (!day || day < ws || day > we) return;
+        if (kind === 'stripe' && item.status !== 'succeeded') return;
+        if (kind === 'gmail' && item.direction !== 'in') return;
+        var who = clean(item.customer || item.who || 'a payment');
+        var amt = num(item.amount);
+        wins.push({ when: day, text: (amt == null ? 'Payment' : money(amt)) + ' in from ' + who, source: kind === 'stripe' ? 'Stripe, today.json cash.stripe' : 'Gmail, today.json cash.payments' });
+      });
+    }
+    if (stripe && Array.isArray(stripe.recentCharges)) cashEvents(stripe.recentCharges, 'stripe');
+    else if (feed && feed.cash && Array.isArray(feed.cash.payments)) cashEvents(feed.cash.payments, 'gmail');
+
+    var xp = { state: 'empty', total: 0, lines: [], level: '', next: '', fill: 0 };
+    if (missingTargets) xp = { state: 'missing', total: 0, lines: [], level: '', next: '', fill: 0 };
+    else if (log.state !== 'ready' && collected == null) xp.state = log.state === 'ready' ? 'empty' : log.state;
+    else {
+      var points = (targets.xp && targets.xp.points) || {};
+      var total = 0;
+      var lines = [];
+      if (log.state === 'ready') {
+        Object.keys(points).forEach(function (metric) {
+          var p = num(points[metric]);
+          if (p == null) return;
+          var got = sumRows(log.rows, metric);
+          if (!got.any) return;
+          var addXp = p * got.value;
+          total += addXp;
+          lines.push(compact(got.value) + ' ' + (PHRASE[metric] ? PHRASE[metric][1] : metric) + ' · ' + compact(addXp) + ' XP');
+        });
+      }
+      var cashXp = 0, cashNote = '';
+      var per = num(targets.xp && targets.xp.cashInPer) || 0;
+      var cpp = num(targets.xp && targets.xp.cashInPoints) || 0;
+      if (per > 0 && cpp > 0) {
+        var dollars = null;
+        if (stripe && Array.isArray(stripe.recentCharges)) {
+          dollars = 0;
+          stripe.recentCharges.forEach(function (ch) { if (ch && ch.status === 'succeeded' && num(ch.amount) != null) dollars += ch.amount; });
+          cashNote = 'Succeeded Stripe charges in this feed';
+        } else if (stripe && stripe.monthToDate && num(stripe.monthToDate.collected) != null) {
+          dollars = stripe.monthToDate.collected;
+          cashNote = 'Stripe collected this month';
+        } else if (feed && feed.cash && Array.isArray(feed.cash.payments)) {
+          dollars = 0;
+          var anyPay = false;
+          feed.cash.payments.forEach(function (p) { if (p && p.direction === 'in' && num(p.amount) != null) { dollars += p.amount; anyPay = true; } });
+          if (!anyPay) dollars = null;
+          cashNote = 'Gmail payments in this feed';
+        }
+        if (dollars != null) {
+          cashXp = Math.floor(dollars / per) * cpp;
+          total += cashXp;
+          if (cashXp > 0) lines.push(money(dollars) + ' cash in · ' + compact(cashXp) + ' XP');
+        }
+      }
+      var levels = ((targets.xp && targets.xp.levels) || []).filter(function (l) { return l && l.name && num(l.xp) != null; }).sort(function (a, b) { return a.xp - b.xp; });
+      var current = null, next = null;
+      levels.forEach(function (l) { if (total >= l.xp) current = l; else if (!next) next = l; });
+      var fill = 0;
+      if (total > 0) {
+        if (!current && next) fill = Math.min(100, (total / next.xp) * 100);
+        else if (current && next && next.xp > current.xp) fill = Math.min(100, ((total - current.xp) / (next.xp - current.xp)) * 100);
+        else if (current) fill = 100;
+      }
+      xp = {
+        state: total > 0 ? 'ready' : (log.state === 'ready' ? 'empty' : log.state),
+        total: total, lines: lines, fill: fill,
+        level: current ? current.name : '',
+        next: next ? (next.name + ' at ' + compact(next.xp) + ' XP') : (current ? 'Top level in targets.json' : (levels[0] ? (levels[0].name + ' at ' + compact(levels[0].xp) + ' XP') : ''))
+      };
+    }
+
+    function streakFilm() {
+      if (log.state !== 'ready') return { words: logWords(log.state) };
+      var days = {};
+      log.rows.forEach(function (r) { if (r.metric === 'videos') days[r.logged_on] = 1; });
+      if (!Object.keys(days).length) return { words: 'Log to start' };
+      var cursor = days[today] ? today : addDays(today, -1);
+      if (!days[cursor]) return { words: 'No filming streak yet' };
+      var count = 0;
+      while (days[cursor]) { count++; cursor = addDays(cursor, -1); }
+      return { text: count + (count === 1 ? ' day' : ' days') };
+    }
+    function streakBooked() {
+      if (log.state !== 'ready') return { words: logWords(log.state) };
+      if (bookedTarget == null) return { words: 'No target in targets.json' };
+      if (!sumRows(log.rows, 'booked_calls').any) return { words: 'Log to start' };
+      var week = addDays(ws, -7);
+      var count = 0;
+      for (var guard = 0; guard < 104; guard++) {
+        var got = sumRows(log.rows, 'booked_calls', week, addDays(week, 6));
+        if (!got.any || got.value < bookedTarget) break;
+        count++;
+        week = addDays(week, -7);
+      }
+      if (!count) return { words: 'No full week at the booked-call target yet' };
+      return { text: count + (count === 1 ? ' week' : ' weeks') };
+    }
+
+    var decisions = { state: 'missing', items: [] };
+    if (feed && feed.decisions && typeof feed.decisions === 'object') {
+      if (feed.decisions.error) decisions = { state: 'error', error: clean(feed.decisions.error) };
+      else if (Array.isArray(feed.decisions.topMoves)) decisions = { state: 'ready', items: feed.decisions.topMoves };
+    }
+    var moveRows = [];
+    if (decisions.state === 'ready') {
+      decisions.items.slice().sort(function (a, b) { return (num(a.rank) || 99) - (num(b.rank) || 99); }).forEach(function (m) {
+        var title = clean(m.title || m.name || '');
+        if (!title) return;
+        moveRows.push(add({
+          group: 'look', kind: 'move', title: title, meta: clean(m.why || ''), whenText: m.kind ? clean(m.kind).replace('-', ' ') : 'Move',
+          status: 'act', badge: 'Move', href: safeHref(m.href), hrefLabel: 'Open link',
+          copyText: clean(m.copyText || m.why || title),
+          leftK: 'This move', leftBig: title, leftNote: clean(m.why || ''),
+          rightK: 'Kind', rightBig: clean(m.kind || 'Move'), rightNote: 'Read only. This board does not send it.'
+        }));
+      });
+    }
+    var calls = feed && Array.isArray(feed.calls) ? feed.calls : null;
+    var emails = feed && Array.isArray(feed.emails) ? feed.emails : null;
+    var nextCall = null;
+    (calls || []).forEach(function (c) {
+      var when = parseWhen(c.when);
+      var group = 'recent';
+      if (c.source === 'calendar' && when && when.date) {
+        if (when.date > today) group = 'upcoming';
+        else if (when.date === today) group = 'today';
+      }
+      var row = add({
+        group: group, kind: 'call', title: clean(c.title || c.who || 'Call'), meta: clean(c.who || ''),
+        whenText: formatWhen(c.when), status: '', badge: c.source === 'fathom' ? 'Fathom' : 'Calendar',
+        href: safeHref(c.url), hrefLabel: c.source === 'fathom' ? 'Open recording' : 'Open link',
+        copyText: clean([c.title, formatWhen(c.when), c.who, c.nextStep].filter(Boolean).join('. ')),
+        leftK: 'When', leftBig: formatWhen(c.when) || 'Time not in the feed', leftNote: clean(c.who || ''),
+        rightK: 'Next step', rightBig: clean(c.nextStep || 'No next step in the feed'), rightNote: c.source === 'fathom' ? 'From Fathom.' : 'From Calendar.'
+      });
+      if ((group === 'today' || group === 'upcoming')) {
+        var stamp = when && when.at ? when.at.getTime() : Date.parse((when && when.date ? when.date : '2999-01-01') + 'T23:59:00Z');
+        if (!nextCall || stamp < nextCall.stamp) nextCall = { row: row, stamp: stamp };
+      }
+    });
+    (emails || []).forEach(function (m) {
+      add({
+        group: 'drafts', kind: 'email', title: clean(m.subject || m.to || 'Draft'), meta: clean(m.to || ''),
+        whenText: m.status === 'needs-send' ? 'Needs send' : 'Draft', status: '', badge: 'Draft',
+        href: safeHref(m.url), hrefLabel: 'Open draft',
+        copyText: clean([m.to, m.subject, m.intent].filter(Boolean).join('. ')),
+        leftK: 'Draft', leftBig: clean(m.subject || 'No subject'), leftNote: clean(m.to || ''),
+        rightK: 'Intent', rightBig: clean(m.intent || 'No intent in the feed'), rightNote: 'This board does not send mail. A draft is not a send.'
+      });
+    });
+    var podcast = feed && Object.prototype.hasOwnProperty.call(feed, 'podcast') ? feed.podcast : undefined;
+    if (podcast && typeof podcast === 'object') {
+      add({
+        group: 'podcast', kind: 'podcast', title: clean(podcast.guest || 'Podcast'), meta: clean(podcast.status || ''),
+        whenText: 'Podcast', status: '', badge: 'Podcast', href: '', hrefLabel: '',
+        copyText: clean([podcast.guest, podcast.status, podcast.nextAction].filter(Boolean).join('. ')),
+        leftK: 'Guest', leftBig: clean(podcast.guest || 'Guest'), leftNote: clean(podcast.status || ''),
+        rightK: 'Next', rightBig: clean(podcast.nextAction || 'No next step in the feed'), rightNote: 'This board does not send the invite.'
+      });
+    }
+
+    var gaps = [];
+    if (cash.state !== 'ready') gaps.push('cash');
+    if (delivery.state !== 'ready') gaps.push('overdue delivery');
+    if (!(alerts.state === 'ready' && alerts.failed)) gaps.push('failed charges');
+    var guide;
+    if (!feed) {
+      guide = { kicker: 'What to do now', title: 'The feed did not load.', sub: S.feedNote || 'today.json did not load.', button: '', rowId: '' };
+    } else if (moveRows.length) {
+      guide = { kicker: S.sample ? 'Sample. What to do now' : 'What to do now', title: moveRows[0].title, sub: moveRows[1] ? ('Then: ' + moveRows[1].title) : (moveRows[0].meta || ''), button: 'Open this move', rowId: moveRows[0].id };
+    } else if (decisions.state === 'ready' && !gaps.length && !rows.some(function (r) { return r.group === 'look'; })) {
+      guide = { kicker: 'You are clear', title: 'All caught up', sub: 'Nothing is waiting on a decision.', button: '', rowId: '' };
+    } else {
+      var bits = [fileAge];
+      if (decisions.state === 'error') bits.unshift(decisions.error);
+      if (nextCall) bits.push('Next call: ' + nextCall.row.title + (nextCall.row.whenText ? ', ' + nextCall.row.whenText : '') + '.');
+      var draftN = rows.filter(function (r) { return r.group === 'drafts'; }).length;
+      if (draftN) bits.push(draftN + (draftN === 1 ? ' draft is in Gmail.' : ' drafts are in Gmail.') + ' A draft is not a send.');
+      guide = {
+        kicker: 'What to do now',
+        title: decisions.state === 'error' ? 'Top two moves did not load.' : 'Top two moves are not in the feed yet.',
+        sub: bits.join(' '),
+        button: nextCall ? 'Open next call' : (draftN ? 'Review drafts' : ''),
+        rowId: nextCall ? nextCall.row.id : ((rows.filter(function (r) { return r.group === 'drafts'; })[0] || {}).id || '')
+      };
+    }
+
+    var agents = null;
+    if (feed && Array.isArray(feed.agents)) agents = feed.agents;
+    var agentCards = [];
+    if (agents) agents.forEach(function (a) {
+      if (!a || typeof a !== 'object') return;
+      var role = clean(a.role || a.desk || '');
+      var name = clean(a.name || '');
+      if (!name || looksLikeId(name)) name = role && !looksLikeId(role) ? role : 'Unnamed desk';
+      if (looksLikeId(role)) role = '';
+      var st = clean(a.status || 'not-reported').toLowerCase();
+      agentCards.push({ name: name, role: role && role !== name ? role : '', status: st || 'not-reported', work: clean(a.currentWork || ''), report: a.lastReportAt ? formatWhen(a.lastReportAt) : '' });
+    });
+    var activity = feed && Array.isArray(feed.activityLog) ? feed.activityLog : null;
+
+    var winCopy = 'No wins logged this week.';
+    if (log.state !== 'ready' && !wins.length) winCopy = logWords(log.state);
+    else if (!wins.length) winCopy = 'No wins logged this week.';
+
+    return {
+      sample: S.sample, fileAge: fileAge, today: today, guide: guide, metrics: MET,
+      sides: { attract: scoreOf('attract'), convert: scoreOf('convert'), transform: scoreOf('transform') },
+      rows: rows, byId: byId, pipeItems: pipeItems, stripe: stripe, stripeWaiting: !stripe,
+      agentsKnown: !!agents, agentCards: agentCards, activity: activity,
+      callsKnown: !!calls, emailsKnown: !!emails,
+      wins: wins, winCopy: winCopy, xp: xp, film: streakFilm(), bookedStreak: streakBooked(),
+      clientCount: official.length, retainersKnown: !!(feed && feed.retainers),
+      official: official.map(function (spec, i) { return { index: i, name: clean(spec.name || ''), handle: clean(spec.handle || '') }; })
+    };
+  }
+
+  function card(m) {
+    if (!m) return '';
+    var plus = (m.log && m.log.quick) ? '<button type="button" class="plus" data-plus="' + esc(m.log.metric) + '" aria-label="Log 1 for ' + esc(m.label) + '">+1</button>' : '';
+    return '<article class="kpi sig-' + m.signal + (plus ? ' has-plus' : '') + ' filterable" data-kpi="' + esc(m.id) + '">' +
+      '<button type="button" class="kpi-hit" data-open-kpi="' + esc(m.id) + '">' +
+      '<i class="sig" aria-hidden="true"></i><span class="l">' + esc(m.label) + '</span>' +
+      valueHtml(m, true) +
+      '<span class="target">Target <b>' + esc(m.targetText) + '</b></span>' +
+      '<span class="src">Source: ' + esc(m.source) + '</span>' +
+      (m.note ? '<span class="quiet">' + esc(m.note) + '</span>' : '') +
+      '<span class="foot">' + chip(m.signal, m.signalWord) + (spark(m.history.vals) || '') + '</span>' +
+      '</button>' + plus + '</article>';
+  }
+  function rowMetric(m, shortLabel) {
+    if (!m) return '';
+    return '<button type="button" class="mrow sig-' + m.signal + '" data-open-kpi="' + esc(m.id) + '">' +
+      '<span class="l">' + esc(shortLabel || m.label) + ' <i class="sig" aria-hidden="true"></i></span>' +
+      valueHtml(m, false) +
+      '<span class="target">Target <b>' + esc(m.targetText) + '</b></span>' +
+      '<span class="src">Source: ' + esc(m.source) + '</span>' +
+      chip(m.signal, m.signalWord) +
+      (m.note ? '<span class="quiet">' + esc(m.note) + '</span>' : '') +
+      (spark(m.history.vals) || '') +
+      '</button>';
+  }
+  function scoreCard(side, label) {
+    var s = S.model.sides[side];
+    var signal = s.score == null ? 'none' : (s.behind ? 'bad' : 'good');
+    var word = s.score == null ? 'No data' : (s.behind ? (s.behind + ' behind') : 'On pace');
+    var names = s.names.slice(0, 6).join(', ');
+    if (s.names.length > 6) names += ', and ' + (s.names.length - 6) + ' more';
+    return '<button type="button" class="score sig-' + signal + '" data-view="' + side + '">' +
+      '<i class="sig" aria-hidden="true"></i><span class="l">' + esc(label) + '</span>' +
+      (s.score == null ? '<span class="v words">No score yet</span>' : '<span class="v num">' + esc(String(s.score)) + '</span>') +
+      '<span class="src">' + (s.score == null ? 'No metrics with data yet.' : ('Counts ' + esc(names) + '.')) + '</span>' +
+      '<span class="foot">' + chip(signal, word) + '</span></button>';
+  }
+  function guideHtml(m) {
+    var btn = m.guide.button ? '<button type="button" class="btn p" data-open-row="' + esc(m.guide.rowId) + '">' + esc(m.guide.button) + '</button>' : '';
+    return '<section class="guide"><div><p class="gk">' + esc(m.guide.kicker) + '</p><h2>' + esc(m.guide.title) + '</h2><p>' + esc(m.guide.sub) + '</p></div>' + btn + '</section>';
+  }
+  function gameHtml(m) {
+    var xp = m.xp;
+    var xpBody;
+    if (xp.state === 'ready') {
+      xpBody = '<span class="v num">' + esc(compact(xp.total)) + '</span><p class="quiet">' + esc(xp.level || 'No level yet') + (xp.next ? (' · Next ' + xp.next) : '') + '</p>' +
+        '<div class="bar" aria-hidden="true"><i style="width:' + Math.max(0, Math.min(100, xp.fill)).toFixed(1) + '%"></i></div>' +
+        (xp.lines.length ? '<p class="src">' + esc(xp.lines.join(' · ')) + '</p>' : '');
+    } else if (xp.state === 'missing') xpBody = '<span class="v words">Targets file did not load</span>';
+    else if (xp.state === 'empty') xpBody = '<span class="v words">No XP yet</span><p class="quiet">XP starts when a film, a lead magnet, a booked call, a closed deal, or cash in is on the board.</p>';
+    else xpBody = '<span class="v words">' + esc(logWords(xp.state)) + '</span>';
+    function streak(title, obj) {
+      return '<article class="panel"><h2>' + esc(title) + '</h2>' +
+        (obj.text ? '<p class="sheet-value" style="font-size:28px">' + esc(obj.text) + '</p>' : '<p class="v words" style="margin-top:8px">' + esc(obj.words || '') + '</p>') +
+        '<p class="src">Source: floor log</p></article>';
+    }
+    return '<div class="game"><article class="panel"><h2>Level</h2>' + xpBody + '<p class="src">Source: floor log and cash in the feed. Points are in targets.json.</p></article>' +
+      streak('Filming streak', m.film) + streak('Booked-call streak', m.bookedStreak) + '</div>';
+  }
+  function winsHtml(m) {
+    var body = m.wins.length ? '<ul class="wins">' + m.wins.map(function (w) {
+      return '<li><span>' + esc(w.text) + '</span><span>' + esc([w.when, w.source].filter(Boolean).join(' · ')) + '</span></li>';
+    }).join('') + '</ul>' : '<p class="quiet">' + esc(m.winCopy) + '</p>';
+    return '<section class="panel" style="margin-top:12px"><div class="ph"><h2>Weekly wins</h2><p class="sub">This Monday-start week. Real events only.</p></div>' + body + '</section>';
+  }
+  function rowHtml(r) {
+    return '<div class="qrow filterable" data-open-row="' + esc(r.id) + '"><span class="when">' + esc(r.whenText || '') + '</span><span class="qw"><b>' + esc(r.title) + '</b><span>' + esc(r.meta || '') + '</span></span><span class="badge ' + esc(r.status || '') + '">' + esc(r.badge || '') + '</span><button type="button" class="open" data-open-row="' + esc(r.id) + '">Open</button></div>';
+  }
+  function groupHtml(list, key, label) {
+    var mine = list.filter(function (r) { return r.group === key; });
+    if (!mine.length) return '';
+    return '<h3 class="qhead">' + esc(label) + '</h3>' + mine.map(rowHtml).join('');
+  }
+  function queueHtml(m) {
+    var keys = [['look', 'Do this'], ['today', 'Today'], ['upcoming', 'Coming up'], ['drafts', 'Drafts'], ['podcast', 'Podcast'], ['recent', 'Recent calls']];
+    var body = keys.map(function (k) { return groupHtml(m.rows, k[0], k[1]); }).join('');
+    if (!body) body = '<p class="quiet">No calls or drafts are in this feed.</p>';
+    return '<section class="panel" style="margin-top:12px"><div class="ph"><h2>Today</h2><p class="sub">' + esc(m.fileAge) + '</p></div><div class="qcols"><span>When</span><span>What</span><span>From</span><span></span></div>' + body + '</section>';
+  }
+  function behindHtml(m) {
+    var agents;
+    if (!m.agentsKnown) agents = '<p class="quiet">Not connected yet. The routine has not written an agents list.</p>';
+    else if (!m.agentCards.length) agents = '<p class="quiet">No agents in this feed.</p>';
+    else agents = '<ol class="pipe">' + m.agentCards.map(function (a) {
+      return '<li class="' + esc(a.status || 'missing') + '"><i class="dot"></i><b>' + esc(a.name) + '</b>' +
+        (a.role ? '<span class="role">' + esc(a.role) + '</span>' : '') +
+        (a.work ? '<span class="work">' + esc(a.work) + '</span>' : '') +
+        '<span class="ago">' + esc(a.report || 'No report time') + '</span></li>';
+    }).join('') + '</ol>';
+    var log = '';
+    if (!m.activity) log = '<p class="quiet">No behind-the-scenes log in this feed.</p>';
+    else if (!m.activity.length) log = '<p class="quiet">The log was checked and it is empty.</p>';
+    else log = '<div class="log">' + m.activity.map(function (e) {
+      return '<div class="row"><span>' + esc(formatWhen(e.at)) + '</span><span class="lv ' + esc(e.level || 'info') + '">' + esc(e.level || 'info') + '</span><span>' + esc(clean((e.actor ? e.actor + ': ' : '') + (e.message || ''))) + '</span></div>';
+    }).join('') + '</div>';
+    var callN = m.callsKnown ? m.rows.filter(function (r) { return r.kind === 'call' && r.badge === 'Calendar'; }).length : null;
+    var fathomN = m.callsKnown ? m.rows.filter(function (r) { return r.badge === 'Fathom'; }).length : null;
+    function line(name, value) { return '<li><b>' + esc(name) + '</b><span>' + esc(value) + '</span></li>'; }
+    var sources = '<ul class="src-list">' +
+      line('Calendar', callN == null ? 'Not in this feed' : (callN + ' calls')) +
+      line('Fathom', fathomN == null ? 'Not in this feed' : (fathomN + ' recordings')) +
+      line('Gmail drafts', m.emailsKnown ? (m.rows.filter(function (r) { return r.kind === 'email'; }).length + ' drafts') : 'Not in this feed') +
+      line('Stripe', m.stripeWaiting ? 'Waiting for first Stripe sync' : 'In today.json cash.stripe') +
+      line('Attract', m.metrics['post-ig'] && m.metrics['post-ig'].words === 'Not connected' ? 'Not connected' : 'today.json attract.social') +
+      line('Pipeline', m.pipeItems ? (m.pipeItems.length + ' deals') : 'Not connected') +
+      line('Agents', m.agentsKnown ? (m.agentCards.length + ' desks') : 'Not connected') +
+      '</ul>';
+    return '<details class="behind"><summary>Behind the scenes</summary><div class="inn"><h3 class="qhead">Agent hand-off</h3>' + agents + '<h3 class="qhead">Log</h3>' + log + '<h3 class="qhead">Sources on this page</h3>' + sources + '</div></details>';
+  }
+  function sideHead(side, title, blurb) {
+    var s = S.model.sides[side];
+    return '<div class="ph"><div><p class="gk">' + esc(title) + '</p><h2>' + (s.score == null ? 'No score yet' : (s.score + ' average progress')) + '</h2><p class="sub">' + esc(blurb) + '</p></div></div>';
+  }
+  function platHtml(key) {
+    var post = S.model.metrics['post-' + key];
+    var views = S.model.metrics['views-' + key];
+    var follows = S.model.metrics['follows-' + key];
+    return '<article class="panel plat filterable"><header class="ph"><h2>' + esc(post.platLabel || key) + '</h2><p class="sub">' + esc(post.handle || '') + '</p></header>' +
+      rowMetric(post, 'Posts this week') + rowMetric(views, 'Views this week') + rowMetric(follows, 'Follower growth') + '</article>';
+  }
+  function stripeHtml(m) {
+    if (!m.stripe) return '<article class="panel stripe"><h2>Stripe</h2><p class="v words" style="margin-top:8px">Waiting for first Stripe sync</p><p class="src">Source: today.json cash.stripe</p><p class="quiet">This page does not call Stripe and holds no key.</p></article>';
+    var s = m.stripe;
+    var failed = Array.isArray(s.failedCharges) ? s.failedCharges.length : num(s.failedCharges);
+    var refunds = num(s.refunds);
+    var bal = s.balance || {};
+    var charges = Array.isArray(s.recentCharges) ? s.recentCharges : [];
+    return '<article class="panel stripe"><div class="ph"><h2>Stripe</h2><p class="sub">' + esc(ageInfo(s.asOf, new Date()) || 'Snapshot in the feed') + '</p></div>' +
+      '<p class="src">Source: today.json cash.stripe. This page does not call Stripe.</p>' +
+      '<ul class="src-list">' +
+      '<li><b>Collected this month</b><span>' + (s.monthToDate && num(s.monthToDate.collected) != null ? esc(money(s.monthToDate.collected)) : 'Not in the snapshot') + '</span></li>' +
+      '<li><b>Refunds</b><span>' + (refunds == null ? 'Not in the snapshot' : refunds === 0 ? 'None' : esc(money(refunds))) + '</span></li>' +
+      '<li><b>Failed charges</b><span>' + (failed == null ? 'Not in the snapshot' : failed === 0 ? 'None' : esc(String(failed))) + '</span></li>' +
+      '<li><b>Available</b><span>' + (num(bal.available) == null ? 'Not in the snapshot' : esc(money(bal.available))) + '</span></li>' +
+      '<li><b>Pending</b><span>' + (num(bal.pending) == null ? 'Not in the snapshot' : esc(money(bal.pending))) + '</span></li>' +
+      '</ul>' +
+      (charges.length ? '<h3 class="qhead">Recent charges</h3><ul class="wins">' + charges.map(function (c) {
+        return '<li><span>' + esc(clean(c.customer || 'Unnamed')) + '</span><span>' + esc([c.date, num(c.amount) == null ? '' : money(c.amount), c.status].filter(Boolean).join(' · ')) + '</span></li>';
+      }).join('') + '</ul>' : '') + '</article>';
+  }
+  function pipelineHtml(m) {
+    if (!m.pipeItems) return '<article class="panel"><h2>Pipeline</h2><p class="v words" style="margin-top:8px">Not connected</p><p class="src">Source: today.json convert.pipeline</p></article>';
+    if (!m.pipeItems.length) return '<article class="panel"><h2>Pipeline</h2><p class="quiet">No deals in the pipeline.</p><p class="src">Source: today.json convert.pipeline</p></article>';
+    var list = m.rows.filter(function (r) { return r.group === 'pipeline'; });
+    return '<article class="panel"><div class="ph"><h2>Pipeline</h2><p class="sub">Name, stage, and next step.</p></div><div class="qcols"><span>Stage</span><span>Deal</span><span>Amount</span><span></span></div>' + list.map(rowHtml).join('') + '<p class="src">Source: today.json convert.pipeline</p></article>';
+  }
+  function clientHtml(spec) {
+    var i = spec.index;
+    var wins = S.model.metrics['c' + i + '-win'];
+    var winList = (wins.lines || []).length ? '<ul class="wins">' + wins.lines.map(function (w) {
+      return '<li><span>' + esc(w.text) + '</span><span>' + esc([w.when, w.source].filter(Boolean).join(' · ')) + '</span></li>';
+    }).join('') + '</ul>' : '<p class="quiet">No wins logged</p>';
+    return '<article class="panel client filterable"><header class="ph"><h2>' + esc(spec.name) + '</h2><p class="sub">' + esc(spec.handle || 'No handle on file') + '</p></header>' +
+      rowMetric(S.model.metrics['c' + i + '-views'], 'Views') +
+      rowMetric(S.model.metrics['c' + i + '-follows'], 'Followers') +
+      rowMetric(S.model.metrics['c' + i + '-scripts'], 'Scripts filmed') +
+      rowMetric(S.model.metrics['c' + i + '-overdue'], 'Overdue') +
+      rowMetric(S.model.metrics['c' + i + '-pay'], 'Payment') +
+      rowMetric(S.model.metrics['c' + i + '-health'], 'Health') +
+      '<h3 class="qhead">Wins</h3>' + winList +
+      '<p class="src">Source: ' + esc(wins.source) + '</p>' +
+      '<button type="button" class="btn s" style="margin-top:8px" data-open-kpi="' + esc(wins.id) + '">Log a win</button></article>';
+  }
+  function otherRetainers(m) {
+    var list = m.rows.filter(function (r) { return r.group === 'retainers'; });
+    if (!m.retainersKnown) return '<article class="panel"><h2>Other retainers in the feed</h2><p class="quiet">Not connected.</p><p class="src">Source: today.json retainers</p></article>';
+    if (!list.length) return '';
+    return '<article class="panel"><div class="ph"><h2>Other retainers in the feed</h2><p class="sub">These names are not on the triangle client list.</p></div>' + list.map(rowHtml).join('') + '</article>';
+  }
+
+  function renderBoard() {
+    var now = new Date();
+    S.model = buildBoard(S.feed, S.targets, now);
+    var m = S.model;
+    $('banner').hidden = !S.sample;
+    $('target-banner').hidden = !!S.targets;
+    var names = { home: 'Home', attract: 'Attract', convert: 'Convert', transform: 'Transform' };
+    $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + (names[S.view] || 'Home');
+    $('v-home').innerHTML = guideHtml(m) +
+      '<p class="legend">Green is on pace. Red is behind. Grey means there is no data yet. The score is average progress toward the target, and only metrics with data are counted.</p>' +
+      '<div class="scores">' + scoreCard('attract', 'Attract') + scoreCard('convert', 'Convert') + scoreCard('transform', 'Transform') + '</div>' +
+      gameHtml(m) + winsHtml(m) +
+      '<h2 class="qhead">Morning check</h2><div class="krow">' + card(m.metrics['cash-due']) + card(m.metrics.unsent) + card(m.metrics['delivery-oldest']) + card(m.metrics['failed-charges']) + '</div>' +
+      queueHtml(m) + behindHtml(m);
+    $('v-attract').innerHTML = guideHtml(m) + sideHead('attract', 'Attract', 'Posts, reach, outliers, and the work you log.') +
+      '<div class="plats">' + platHtml('ig') + platHtml('x') + platHtml('youtube') + '</div>' +
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics.outliers) + card(m.metrics.videos) + card(m.metrics.magnets) + card(m.metrics.contacts) + card(m.metrics.community) + '</div>';
+    $('v-convert').innerHTML = guideHtml(m) + sideHead('convert', 'Convert', 'Calls, pipeline, and cash against the MRR target.') +
+      '<div class="funnel">' + card(m.metrics.contacts) + card(m.metrics.booked) + card(m.metrics.showed) + card(m.metrics.closed) + '</div>' +
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics['show-rate']) + card(m.metrics['close-rate']) + card(m.metrics.collected) + card(m.metrics['cash-due']) + '</div>' +
+      '<div class="stack" style="margin-top:12px">' + pipelineHtml(m) + stripeHtml(m) + '</div>' +
+      '<div class="krow" style="margin-top:12px">' + card(m.metrics['cash-out']) + card(m.metrics.unsent) + card(m.metrics['failed-charges']) + '</div>';
+    var clients = m.official.length ? '<div class="clients">' + m.official.map(clientHtml).join('') + '</div>' : '<article class="panel"><h2>Clients</h2><p class="quiet">Targets file did not load, so the client list is not guessed.</p></article>';
+    $('v-transform').innerHTML = guideHtml(m) + sideHead('transform', 'Transform', 'One card per client. Quotes appear only when they were logged.') +
+      '<div class="krow">' + card(m.metrics['delivery-oldest']) + '</div>' +
+      '<div style="margin-top:12px">' + clients + '</div>' +
+      '<div style="margin-top:12px">' + otherRetainers(m) + '</div>';
+    paintSys();
+    markNav();
+    applyFilter();
+    if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
+  }
+  function paintSys() {
+    var ready = S.feedState === 'ready';
+    $('sys').innerHTML = '<b><i class="gdot' + (ready ? '' : ' dim') + '"></i> ' + (S.sample ? 'Sample feed' : 'Feed') + '</b><span>' + esc(ready && S.model ? S.model.fileAge : S.feedNote) + '</span>';
+  }
+  function markNav() {
+    document.querySelectorAll('[data-view]').forEach(function (b) {
+      var on = b.getAttribute('data-view') === S.view;
+      b.classList.toggle('on', on);
+      if (b.classList.contains('navbtn') || b.parentElement === $('bnav')) b.setAttribute('aria-current', on ? 'page' : 'false');
+    });
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.toggle('on', v.id === 'v-' + S.view); });
+    var names = { home: 'Home', attract: 'Attract', convert: 'Convert', transform: 'Transform' };
+    if ($('crumb')) $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + (names[S.view] || 'Home');
+  }
+  function go(view) {
+    if (!namesHas(view)) view = 'home';
+    S.view = view;
+    var next = location.pathname + location.search + '#' + view;
+    if ((location.pathname + location.search + location.hash) !== next) history.replaceState(null, '', next);
+    markNav();
+    applyFilter();
+    window.scrollTo(0, 0);
+  }
+  function namesHas(v) { return VIEWS.some(function (t) { return t[0] === v; }); }
+  function applyFilter() {
+    var q = ($('qsearch').value || '').trim().toLowerCase();
+    document.querySelectorAll('.filterable').forEach(function (el) {
+      el.classList.toggle('hidden', !!q && (el.innerText || '').toLowerCase().indexOf(q) === -1);
+    });
+  }
+  function anyOpen() {
+    return $('drawer').classList.contains('on') || $('kpisheet').classList.contains('on') || $('login').classList.contains('on') || $('chat').classList.contains('on');
+  }
+  function syncLock() {
+    var html = document.documentElement;
+    var open = anyOpen();
+    $('scrim').hidden = !open;
+    $('scrim').classList.toggle('on', open);
+    if (open && !html.classList.contains('lock')) {
+      S.lockY = window.scrollY || 0;
+      html.classList.add('lock');
+      document.body.style.top = (-S.lockY) + 'px';
+    } else if (!open && html.classList.contains('lock')) {
+      html.classList.remove('lock');
+      document.body.style.top = '';
+      window.scrollTo(0, S.lockY);
+    }
+  }
+  function closeSheets() {
+    ['drawer', 'kpisheet', 'login', 'chat'].forEach(function (id) {
+      $(id).classList.remove('on');
+      $(id).setAttribute('aria-hidden', 'true');
+    });
+    S.sheet = null;
+    syncLock();
+  }
+  function show(id) {
+    S.lastFocus = document.activeElement;
+    $(id).classList.add('on');
+    $(id).setAttribute('aria-hidden', 'false');
+    syncLock();
+  }
+  function openRow(id) {
+    var row = S.model && S.model.byId[id];
+    if (!row) return;
+    S.sheet = { type: 'row', id: id };
+    $('d-st').textContent = row.sample ? 'SAMPLE' : (row.badge || '');
+    $('d-st').className = 'badge ' + (row.status || '');
+    $('d-t').textContent = row.title;
+    $('d-m').textContent = [row.whenText, row.meta].filter(Boolean).join(' · ');
+    $('d-b').innerHTML = '<div class="cmpx"><article class="side now"><div class="k">' + esc(row.leftK) + '</div><div class="big">' + esc(row.leftBig || 'None listed') + '</div><p>' + esc(row.leftNote || '') + '</p></article><article class="side"><div class="k">' + esc(row.rightK) + '</div><div class="big">' + esc(row.rightBig || 'None listed') + '</div><p>' + esc(row.rightNote || '') + '</p></article></div><p class="quiet" style="margin-top:12px">Read only. This board does not send mail, stamp a script, or charge a card.</p>';
+    var buttons = '';
+    if (row.href) buttons += '<a class="btn p" href="' + esc(row.href) + '" target="_blank" rel="noopener noreferrer">' + esc(row.hrefLabel || 'Open link') + '</a>';
+    if (row.copyText) buttons += '<button type="button" class="btn s" data-copy="' + esc(id) + '">Copy</button>';
+    buttons += '<button type="button" class="btn s" data-next="' + esc(id) + '">Next</button>';
+    $('d-f').innerHTML = buttons;
+    show('drawer');
+  }
+  function showCaught() {
+    $('d-st').textContent = '';
+    $('d-t').textContent = 'End of the list';
+    $('d-m').textContent = 'That was the last row in this list.';
+    $('d-b').innerHTML = '<p class="quiet">Nothing else is waiting in this list.</p>';
+    $('d-f').innerHTML = '<button type="button" class="btn p" data-close>Close</button>';
+    show('drawer');
+  }
+  function nextRow(id) {
+    var nodes = Array.prototype.slice.call(document.querySelectorAll('.view.on .qrow')).filter(function (el) { return !el.classList.contains('hidden'); });
+    var idx = -1;
+    nodes.forEach(function (el, i) { if (el.getAttribute('data-open-row') === id) idx = i; });
+    if (idx >= 0 && nodes[idx + 1]) openRow(nodes[idx + 1].getAttribute('data-open-row'));
+    else showCaught();
+  }
+  function fillClientSelect(selected) {
+    var names = (S.model && S.model.official || []).map(function (c) { return c.name; }).filter(Boolean);
+    if (selected && names.indexOf(selected) === -1) names.push(selected);
+    $('log-client').innerHTML = names.map(function (name) { return '<option value="' + esc(name) + '">' + esc(name) + '</option>'; }).join('');
+    if (selected) $('log-client').value = selected;
+  }
+  function fillKpi(id) {
+    var m = S.model && S.model.metrics[id];
+    if (!m) return;
+    S.sheet = { type: 'kpi', id: id };
+    $('kpi-k').textContent = m.signalWord;
+    $('kpi-t').textContent = m.label;
+    var posts = (m.posts || []).map(function (p) {
+      var link = p.url ? '<a href="' + esc(p.url) + '" target="_blank" rel="noopener noreferrer">Open</a>' : '';
+      return '<li><span>' + esc(p.title) + '</span><span>' + esc([p.when, compact(p.views) + ' views'].filter(Boolean).join(' · ')) + ' ' + link + '</span></li>';
+    }).join('');
+    var lines = (m.lines || []).map(function (line) {
+      return '<li><span>' + esc(line.text) + '</span><span>' + esc([line.when, line.source].filter(Boolean).join(' · ')) + '</span></li>';
+    }).join('');
+    $('kpi-body').innerHTML = '<p class="' + (m.words ? 'sheet-value words' : 'sheet-value') + '">' + esc(m.words || m.valueText || '') + '</p>' +
+      '<p class="target">Target <b>' + esc(m.targetText) + '</b></p>' +
+      '<p class="src">Source: ' + esc(m.source) + '</p>' +
+      '<p style="margin-top:8px">' + chip(m.signal, m.signalWord) + '</p>' +
+      (m.note ? '<p class="quiet" style="margin-top:8px">' + esc(m.note) + '</p>' : '') +
+      chartSvg(m.history.vals, m.history.labels) +
+      (posts ? '<ul class="wins">' + posts + '</ul>' : '') +
+      (lines ? '<ul class="wins">' + lines + '</ul>' : '');
+    var form = $('log-form');
+    if (m.log) {
+      form.hidden = false;
+      form.dataset.metric = m.log.metric;
+      form.dataset.client = m.log.client || '';
+      $('log-date').value = chicagoDate(new Date());
+      $('log-count').value = '1';
+      var win = m.log.metric === 'client_wins';
+      $('log-client-wrap').hidden = !win;
+      $('log-note').required = win;
+      $('log-note').placeholder = win ? 'What they said' : 'Optional note';
+      $('log-plus').hidden = win;
+      if (win) fillClientSelect(m.log.client || '');
+      $('log-hint').textContent = S.sample ? 'Sample layout does not save.' : 'Saved for you only, after the owner signs in.';
+      var mine = [];
+      if (S.model && logBundle(S.feed).state === 'ready') {
+        mine = sumRows(logBundle(S.feed).rows, m.log.metric, '', '', m.log.client || '').rows;
+      }
+      $('kpi-entries').innerHTML = mine.length ? '<div class="entries">' + mine.slice().sort(function (a, b) { return String(b.logged_on).localeCompare(String(a.logged_on)); }).slice(0, 12).map(function (e) {
+        var remove = S.sample || !S.admin ? '' : '<button type="button" data-remove="' + esc(e.id) + '">Remove</button>';
+        return '<div class="entry"><span>' + esc(e.logged_on + ' · ' + e.count + (e.note ? ' · ' + e.note : '')) + '</span>' + remove + '</div>';
+      }).join('') + '</div>' : '';
+    } else {
+      form.hidden = true;
+      $('kpi-entries').innerHTML = '';
+    }
+    show('kpisheet');
+  }
+  function toast(msg, undo) {
+    var el = $('toast');
+    el.innerHTML = esc(msg) + (undo ? ' <button type="button" data-undo="' + esc(undo) + '">Undo</button>' : '');
+    el.classList.add('on');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove('on'); }, undo ? 6000 : 2400);
+  }
+  function copyText(text) {
+    var value = String(text || '');
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(value).then(function () { toast('Copied'); }, function () { fallbackCopy(value); });
+    } else fallbackCopy(value);
+  }
+  function fallbackCopy(value) {
+    var ta = document.createElement('textarea');
+    ta.value = value;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); toast('Copied'); } catch (e) { toast('Copy failed'); }
+    ta.remove();
+  }
+  function isMissingTable(error) {
+    var code = error && error.code || '';
+    var msg = ((error && error.message) || '').toLowerCase();
+    return code === 'PGRST205' || code === '42P01' || (msg.indexOf('cc_kpi_log') !== -1 && (msg.indexOf('schema') !== -1 || msg.indexOf('does not exist') !== -1 || msg.indexOf('could not find') !== -1));
+  }
+  async function refreshKpis() {
+    if (S.sample || !sb || !S.admin) return;
+    var res = await sb.from('cc_kpi_log').select('id, metric, count, logged_on, note, client_name, created_at').order('logged_on', { ascending: false }).limit(1000);
+    if (res.error) {
+      if (isMissingTable(res.error)) { S.kpiState = 'missing'; S.kpiNote = 'Not set up yet'; }
+      else { S.kpiState = 'error'; S.kpiNote = clean(res.error.message || 'Could not read the log'); }
+      S.kpiRows = [];
+      return;
+    }
+    S.kpiState = 'ready';
+    S.kpiRows = (res.data || []).filter(function (r) { return LOG_SET[r.metric] && num(r.count) >= 1; }).map(function (r) {
+      return { id: r.id, metric: r.metric, count: r.count, logged_on: r.logged_on, note: clean(r.note || ''), client_name: clean(r.client_name || ''), created_at: r.created_at };
+    });
+  }
+  async function saveLog(metric, count, loggedOn, note, clientName) {
+    if (S.sample) { toast('Sample layout does not save.'); return; }
+    count = parseInt(count, 10);
+    note = clean(note || '').slice(0, 240);
+    clientName = clean(clientName || '');
+    if (!LOG_SET[metric] || !(count >= 1 && count <= 500) || !/^\d{4}-\d{2}-\d{2}$/.test(loggedOn)) { toast('Check the count and the date.'); return; }
+    if (metric === 'client_wins' && (!note || !clientName)) { toast('A win needs the client and the words.'); return; }
+    if (!S.admin) {
+      S.pending = { metric: metric, count: count, loggedOn: loggedOn, note: note, clientName: clientName };
+      show('login');
+      return;
+    }
+    if (!sb || S.saving) return;
+    S.saving = true;
+    var row = { metric: metric, count: count, logged_on: loggedOn, note: note };
+    if (metric === 'client_wins') row.client_name = clientName;
+    var res = await sb.from('cc_kpi_log').insert(row).select('id').single();
+    S.saving = false;
+    if (res.error) {
+      if (isMissingTable(res.error)) { S.kpiState = 'missing'; toast('Not set up yet'); renderBoard(); return; }
+      toast(clean(res.error.message || 'Could not save'));
+      return;
+    }
+    S.undoId = res.data && res.data.id;
+    await refreshKpis();
+    renderBoard();
+    toast('Logged', S.undoId);
+  }
+  async function undoLog(id) {
+    if (!sb || !S.admin || S.sample) return;
+    var res = await sb.from('cc_kpi_log').delete().eq('id', id);
+    if (res.error) { toast('Could not undo'); return; }
+    await refreshKpis();
+    renderBoard();
+    toast('Removed');
+  }
+  function paintWho() {
+    var who = $('who');
+    if (S.admin && S.user) { who.textContent = S.user.email || 'Owner'; $('signout').hidden = false; }
+    else if (S.user) { who.textContent = 'Not the owner'; $('signout').hidden = false; }
+    else { who.textContent = ''; $('signout').hidden = true; }
+  }
+  function localAnswer(text) {
+    var t = text.toLowerCase();
+    var m = S.model;
+    if (!m) return 'The board has not loaded yet.';
+    if (t.indexOf('stripe') !== -1) return m.stripeWaiting ? 'Stripe says: Waiting for first Stripe sync.' : 'Stripe is in the feed. Collected this month is on Convert, labeled with its source.';
+    if (t.indexOf('score') !== -1 || t.indexOf('behind') !== -1) {
+      return ['Attract', 'Convert', 'Transform'].map(function (name) {
+        var s = m.sides[name.toLowerCase()];
+        return name + ': ' + (s.score == null ? 'no score yet' : (s.score + ' from ' + s.names.length + ' metrics'));
+      }).join('. ') + '.';
+    }
+    if (t.indexOf('call') !== -1 || t.indexOf('calendar') !== -1) {
+      var calls = m.rows.filter(function (r) { return r.kind === 'call' && (r.group === 'today' || r.group === 'upcoming'); });
+      if (!calls.length) return m.callsKnown ? 'No upcoming calls are in the feed.' : 'Calls are not in this feed.';
+      return calls.slice(0, 4).map(function (c) { return c.title + (c.whenText ? ' (' + c.whenText + ')' : ''); }).join('. ') + '.';
+    }
+    if (t.indexOf('draft') !== -1) {
+      var drafts = m.rows.filter(function (r) { return r.kind === 'email'; });
+      if (!drafts.length) return 'No drafts are in this feed. A draft is not a send.';
+      return drafts.map(function (d) { return d.title; }).join('. ') + '. A draft is not a send.';
+    }
+    if (t.indexOf('agent') !== -1 || t.indexOf('team') !== -1) {
+      if (!m.agentCards.length) return m.agentsKnown ? 'No agents in this feed.' : 'Agents are not connected yet.';
+      return m.agentCards.map(function (a) { return a.name + (a.work ? ': ' + a.work : ''); }).join(' ');
+    }
+    return 'I can read this page only. Ask about the score, Stripe, calls, drafts, or the desks. Nothing is sent.';
+  }
+  function addMsg(text, who) {
+    var div = document.createElement('div');
+    div.className = 'm ' + who;
+    div.textContent = text;
+    $('cb').appendChild(div);
+    $('cb').scrollTop = $('cb').scrollHeight;
+  }
+  function ask(text) {
+    var value = clean(text);
+    if (!value) return;
+    addMsg(value, 'me');
+    addMsg(localAnswer(value), 'bot');
+  }
+  function openChat() {
+    if (!S.chatStarted) {
+      S.chatStarted = true;
+      addMsg('Ask about what is on this page. This chat is not connected to a model.', 'bot');
+      var sugg = document.createElement('div');
+      sugg.className = 'sugg';
+      [['What is behind?', 'Which side is behind?'], ['Stripe', 'What does Stripe say?'], ['Calls', 'What calls are coming up?']].forEach(function (pair) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip';
+        b.textContent = pair[0];
+        b.addEventListener('click', function () { ask(pair[1]); });
+        sugg.appendChild(b);
+      });
+      $('cb').appendChild(sugg);
+    }
+    show('chat');
+  }
+  function isAdmin(user) {
+    return !!(user && user.app_metadata && user.app_metadata.role === 'admin');
+  }
+  async function bootAuth() {
+    if (S.sample) { S.kpiState = 'ready'; return; }
+    if (!window.supabase) { S.kpiState = 'signedout'; return; }
+    try {
+      sb = window.supabase.createClient(SB_URL, SB_KEY, {
+        auth: { storageKey: AUTH_KEY, storage: window.localStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
+      });
+      var got = await sb.auth.getSession();
+      var user = got.data && got.data.session && got.data.session.user;
+      S.user = user || null;
+      S.admin = isAdmin(user);
+      if (S.admin) await refreshKpis();
+      else S.kpiState = user ? 'forbidden' : 'signedout';
+      sb.auth.onAuthStateChange(function (_e, session) {
+        var next = session && session.user;
+        S.user = next || null;
+        S.admin = isAdmin(next);
+        if (!S.admin) { S.kpiState = next ? 'forbidden' : 'signedout'; S.kpiRows = []; paintWho(); renderBoard(); return; }
+        refreshKpis().then(async function () {
+          paintWho();
+          var p = S.pending;
+          S.pending = null;
+          if (p) await saveLog(p.metric, p.count, p.loggedOn, p.note, p.clientName);
+          else renderBoard();
+        });
+      });
+    } catch (e) {
+      S.kpiState = 'signedout';
+    }
+  }
+  async function loadFeed() {
+    var url = S.sample ? 'today.sample.json' : 'today.json';
+    try {
+      var res = await fetch(url, { cache: 'no-store' });
+      if (!res.ok) throw new Error('status');
+      S.feed = await res.json();
+      S.feedState = 'ready';
+    } catch (e) {
+      S.feed = null;
+      S.feedState = 'error';
+      S.feedNote = S.sample ? 'The sample file did not load.' : 'today.json did not load.';
+    }
+    try {
+      var tr = await fetch('targets.json', { cache: 'no-store' });
+      if (!tr.ok) throw new Error('targets');
+      S.targets = await tr.json();
+    } catch (e2) {
+      S.targets = null;
+    }
+  }
+  function tick() { $('clock').textContent = chicagoTime(new Date()) + ' CT'; }
+  function deepLink() {
+    var open = params.get('open');
+    if (!open || !S.model) return;
+    if (open === 'next' && S.model.guide.rowId) { openRow(S.model.guide.rowId); return; }
+    if (S.model.metrics[open]) { fillKpi(open); return; }
+    if (open === 'call') {
+      var call = S.model.rows.filter(function (r) { return r.kind === 'call'; })[0];
+      if (call) openRow(call.id);
+    }
+  }
+  function bind() {
+    var nav = VIEWS.map(function (v) {
+      return '<button type="button" class="navbtn" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + '</button>';
+    }).join('');
+    $('tabs').innerHTML = nav;
+    $('bnav').innerHTML = VIEWS.map(function (v) {
+      return '<button type="button" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + '</button>';
+    }).join('');
+    document.body.addEventListener('click', function (e) {
+      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo]');
+      if (!t) return;
+      if (t.hasAttribute('data-view')) { closeSheets(); go(t.getAttribute('data-view')); return; }
+      if (t.hasAttribute('data-close')) { closeSheets(); return; }
+      if (t.hasAttribute('data-open-row')) { openRow(t.getAttribute('data-open-row')); return; }
+      if (t.hasAttribute('data-open-kpi')) { fillKpi(t.getAttribute('data-open-kpi')); return; }
+      if (t.hasAttribute('data-plus')) {
+        e.preventDefault();
+        e.stopPropagation();
+        saveLog(t.getAttribute('data-plus'), 1, chicagoDate(new Date()), '', '');
+        return;
+      }
+      if (t.hasAttribute('data-copy')) {
+        var row = S.model && S.model.byId[t.getAttribute('data-copy')];
+        if (row) copyText(row.copyText || row.title);
+        return;
+      }
+      if (t.hasAttribute('data-next')) { nextRow(t.getAttribute('data-next')); return; }
+      if (t.hasAttribute('data-remove')) { undoLog(t.getAttribute('data-remove')); return; }
+      if (t.hasAttribute('data-undo')) { undoLog(t.getAttribute('data-undo')); return; }
+    });
+    $('scrim').addEventListener('click', closeSheets);
+    $('qsearch').addEventListener('input', applyFilter);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') closeSheets();
+    });
+    $('log-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var metric = $('log-form').dataset.metric;
+      var client = metric === 'client_wins' ? $('log-client').value : '';
+      saveLog(metric, $('log-count').value, $('log-date').value, $('log-note').value, client);
+    });
+    $('log-plus').addEventListener('click', function () {
+      var metric = $('log-form').dataset.metric;
+      if (!metric || metric === 'client_wins') return;
+      saveLog(metric, 1, chicagoDate(new Date()), '', '');
+    });
+    $('ask').addEventListener('click', openChat);
+    $('signout').addEventListener('click', async function () {
+      if (sb) await sb.auth.signOut();
+      S.user = null; S.admin = false; S.kpiState = 'signedout'; S.kpiRows = [];
+      paintWho(); renderBoard();
+    });
+    $('login-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var err = $('login-err');
+      err.hidden = true;
+      if (!sb) { err.hidden = false; err.textContent = 'Sign-in library did not load.'; return; }
+      var res = await sb.auth.signInWithPassword({ email: $('login-email').value.trim(), password: $('login-pw').value });
+      if (res.error) { err.hidden = false; err.textContent = res.error.message || 'Could not sign in.'; return; }
+      if (!isAdmin(res.data.user)) {
+        await sb.auth.signOut();
+        err.hidden = false;
+        err.textContent = 'That login is not the owner.';
+        return;
+      }
+      $('login-pw').value = '';
+      closeSheets();
+    });
+    $('login-forgot').addEventListener('click', async function () {
+      var email = $('login-email').value.trim();
+      var err = $('login-err');
+      if (!email) { err.hidden = false; err.textContent = 'Enter your email, then tap Forgot password.'; return; }
+      if (!sb) { err.hidden = false; err.textContent = 'Sign-in library did not load.'; return; }
+      var redirect = new URL('../', location.href).href;
+      var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect });
+      err.hidden = false;
+      err.textContent = res.error ? (res.error.message || 'Could not send the reset.') : 'Check your email. The link opens the Hub so you can set a new password.';
+    });
+    $('chat-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var v = $('ci').value;
+      $('ci').value = '';
+      ask(v);
+    });
+    window.addEventListener('hashchange', function () {
+      var h = (location.hash || '').replace('#', '');
+      if (h === 'today' || h === 'money') h = h === 'money' ? 'convert' : 'home';
+      if (h === 'clients') h = 'transform';
+      if (h === 'team' || h === 'floor') h = 'home';
+      if (namesHas(h) && h !== S.view) go(h);
+    });
+  }
+  function sampleHref() {
+    var n = new URLSearchParams(location.search);
+    if (S.sample) n.delete('sample'); else n.set('sample', '1');
+    var s = n.toString();
+    return location.pathname + (s ? '?' + s : '') + (location.hash || '');
+  }
+  async function start() {
+    bind();
+    tick();
+    setInterval(tick, 30000);
+    var hash = (location.hash || '').replace('#', '');
+    if (hash === 'today') hash = 'home';
+    if (hash === 'money') hash = 'convert';
+    if (hash === 'clients') hash = 'transform';
+    if (hash === 'team' || hash === 'floor') hash = 'home';
+    if (namesHas(hash)) S.view = hash;
+    markNav();
+    $('sample-link').textContent = S.sample ? 'Live feed' : 'Sample layout';
+    $('sample-link').setAttribute('href', sampleHref());
+    await Promise.all([loadFeed(), bootAuth()]);
+    paintWho();
+    renderBoard();
+    deepLink();
+    document.body.setAttribute('data-ready', '1');
+    window.__cc = {
+      sample: S.sample,
+      model: function () { return S.model; },
+      metrics: function () { return S.model && S.model.metrics; }
+    };
+  }
+  start();
 })();
 </script>
 </body>

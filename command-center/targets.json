@@ -1,0 +1,60 @@
+{
+  "readme": "Targets for the Signal Command Center. The board loads this file. Results stay out of it. Weeks start Monday in America/Chicago. A weekly or monthly count is on pace when it is at least the target times the fraction of the period that has elapsed. The side score is the average progress toward each target, using only metrics that have data, capped at 100. XP point values below are the only awards. Showed calls, contacts, community posts, and client wins do not award XP.",
+  "timezone": "America/Chicago",
+  "weekStarts": "monday",
+  "attract": {
+    "postsPerWeek": {
+      "ig": { "label": "Instagram", "handle": "@cristianaguilar.ai", "target": 5 },
+      "x": { "label": "X", "handle": "", "target": 7 },
+      "youtube": { "label": "YouTube", "handle": "@SignalRatio", "target": 1 }
+    },
+    "viewsPerWeek": { "direction": "up", "baselineWeeks": 4 },
+    "followerGrowthPerWeek": { "direction": "up", "baselineWeeks": 4 },
+    "outliersPerMonth": { "target": 2, "multiple": 3 },
+    "videosPerWeek": { "target": 5 },
+    "leadMagnetsPerMonth": { "target": 2 },
+    "contactsPerWeek": { "target": 20 },
+    "communityPerWeek": { "target": 5 }
+  },
+  "convert": {
+    "bookedCallsPerWeek": { "target": 15 },
+    "showRate": { "target": 0.7 },
+    "closeRate": { "target": 0.25 },
+    "mrr": {
+      "target": 20000,
+      "retainers": 10,
+      "retainerAmount": 2000,
+      "label": "MRR goal, 10 retainers at $2,000"
+    }
+  },
+  "transform": {
+    "filmedWithinDays": 7,
+    "filmedRate": 1,
+    "overdueActAfterDays": 7,
+    "clients": [
+      { "name": "Andrew George", "handle": "@andrewpreneurship" },
+      { "name": "Devin Shea", "handle": "@teamr3set" },
+      { "name": "Jan Zands", "handle": "" },
+      { "name": "Rich Life Academy", "handle": "@therichlifeacademy" },
+      { "name": "Sagun Sedai", "handle": "" },
+      { "name": "The Austin Report", "handle": "@austinreport" }
+    ]
+  },
+  "xp": {
+    "readme": "Points come only from real floor-log rows and real cash in the feed. Cash awards cashInPoints for each full cashInPer dollars. When cash.stripe.recentCharges is present, only succeeded charges count and Gmail payments are not added. Otherwise the Stripe month total is used. If that is missing, Gmail payments marked in are used.",
+    "points": {
+      "videos": 10,
+      "lead_magnets": 25,
+      "booked_calls": 15,
+      "closed_deals": 40
+    },
+    "cashInPer": 100,
+    "cashInPoints": 1,
+    "levels": [
+      { "name": "Signal 1", "xp": 50 },
+      { "name": "Signal 2", "xp": 150 },
+      { "name": "Signal 3", "xp": 400 },
+      { "name": "Signal 4", "xp": 800 }
+    ]
+  }
+}

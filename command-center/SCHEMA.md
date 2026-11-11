@@ -329,6 +329,31 @@ Top-level object from the reminders bot. The Workforce view shows one focus card
 
 `today.sample.json` carries fake SAMPLE rows for this block. `?fixture=2` loads that file and keeps `reminders` while it swaps the agent list.
 
+### SIGNAL NOW prototypes
+
+`?concept=1` (Mission radar), `?concept=2` (Boss fight), and `?concept=3` (Signal stack) replace the Workforce panel with a prototype. Any other value, including no `concept` param, keeps the focus card and the short list. The prototypes read this same `reminders` object. They do not invent rows, dollar amounts, or due dates.
+
+Marking a row done stores its `id` in `sessionStorage` under `cc-signal-done` for this browser tab. The feed is not written. A new tab shows the feed rows again. **Show the feed again** on a cleared board removes that key.
+
+These figures are computed on the page. Do not write them into the payload.
+
+| Figure | Computation |
+|---|---|
+| Session XP | 100 for each `signalNow` row whose `id` is in the session done list. Ids missing from the current list are ignored. |
+| Level | 1 plus that same count. |
+| Clears | That same count. The flame uses this count. It is a session count, and the page does not store a calendar streak for it. |
+| Heat | How many still-open rows have a due chip of OVERDUE, TODAY, or NOW. |
+| At stake | Sum of `value_usd` on still-open rows that have a number. Rows with `null` stay out of the sum. The readout title says how many of those rows are open. No open number says **No figures**. |
+| Boss bar | The boss row `value_usd` when it is a number. The bar is that amount, full while the row is open. `null` says **No dollar figure** and draws no stake bar. |
+| Quest bars | Width is that row `value_usd` divided by the largest `value_usd` on the open list, capped at 100%. A `null` value has no bar. |
+| Radar distance | Four rings from due urgency: overdue, today or now, soon (inside 7 days, other text, or no due line), later (a dated due more than 7 days out). |
+| Blip size | `value_usd` divided by the largest `value_usd` on the open list. `null` uses the small blip. |
+| Spike height | Same urgency bands: overdue 100%, today or now 78%, soon 54%, later 36%. Money does not change the height. |
+| Money glow | `value_usd` divided by the largest open `value_usd`. `null` does not glow. |
+| Countdown | Only for an ISO due date that is today or later. It counts down to the end of that due day in America/Chicago. A past ISO date shows the calendar days overdue, the same day math as the OVERDUE chip. Free-text due lines keep their chip and do not get a clock. |
+| Noise and future | `counts.noise` and `counts.futureSignal` when those numbers are present. The stack draws up to 18 static ticks when noise is greater than 0. The ticks are a texture for that count. The payload does not include the noise rows. |
+
+
 ### `activityLog`
 
 ```json

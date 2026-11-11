@@ -27,7 +27,7 @@
   --side:240px;
 }
 *{box-sizing:border-box}
-html{color-scheme:dark;-webkit-text-size-adjust:100%}
+html{color-scheme:dark;-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
 html,body{margin:0;background:#080808;color:var(--ink)}
 body{
   font-family:var(--sans);font-size:15px;line-height:1.45;min-height:100dvh;
@@ -182,7 +182,7 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .badge{justify-self:start;font-size:11px;font-weight:750;border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.05);color:var(--muted)}
 .badge.act{background:rgba(237,48,57,.16);color:#ffc9c9}
 .badge.good{background:rgba(61,220,151,.14);color:var(--good-ink)}
-.open{border:0;background:var(--red-deep);color:#fff;border-radius:999px;min-height:34px;padding:0 12px;font-weight:750;font-size:13px}
+.open{border:0;background:var(--red-deep);color:#fff;border-radius:999px;min-height:34px;padding:0 12px;font-weight:750;font-size:13px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;text-align:center}
 .quiet{color:var(--muted);font-size:13px;line-height:1.45}
 .pipe{display:flex;gap:0;overflow-x:auto;list-style:none;margin:8px 0 0;padding:6px 0 2px}
 .pipe li{position:relative;flex:1 0 112px;text-align:center;padding:0 8px 4px}
@@ -215,8 +215,7 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .btn.s{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line)}
 .stripe{border-color:rgba(237,48,57,.35)}
 html.lock,html.lock body{overflow:hidden}
-html.lock body{position:fixed;left:0;right:0;width:100%}
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;z-index:40}
+.scrim{position:fixed;inset:0;background:rgba(8,8,8,.42);opacity:0;pointer-events:none;z-index:40}
 .scrim.on{opacity:1;pointer-events:auto}
 .drawer{
   position:fixed;top:0;right:0;height:100%;width:min(880px,calc(100% - 48px));z-index:65;
@@ -335,6 +334,9 @@ body[data-ready] .shimmer{display:none}
 .vizpanel .ph{flex-direction:column;align-items:flex-start}
 .viz{width:100%;height:auto;display:block}
 .viz text{font-family:var(--sans)}
+.chart-legend{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}
+.chart-legend li{display:flex;gap:8px;align-items:baseline;color:var(--ink);font-size:13px;line-height:1.35}
+.chart-legend b{flex:none;font-family:var(--mono);font-weight:600;color:var(--muted);min-width:1.6em}
 .cashviz{display:grid;grid-template-columns:minmax(0,1fr) 108px;gap:12px;align-items:end}
 .outbar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
 .outbar .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:700}
@@ -711,14 +713,26 @@ footer.site{margin-top:auto}
 <div class="login" id="login" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="login-t">
   <button type="button" class="x" data-close aria-label="Close">×</button>
   <h3 id="login-t">Owner login</h3>
-  <p class="quiet">Same sign-in as the Hub. Only an owner can write the log. Clients cannot read it.</p>
-  <form id="login-form" method="post" action="" autocomplete="on">
+  <p class="quiet" id="login-note">Same sign-in as the Hub. Only an owner can write the log. Clients cannot read it.</p>
+  <form id="login-form" method="post" action="" autocomplete="on" novalidate>
     <p class="err" id="login-err" hidden></p>
     <label>Email<input id="login-email" name="username" type="email" autocomplete="username" inputmode="email" autocapitalize="none" required></label>
     <label style="margin-top:8px">Password<input id="login-pw" name="password" type="password" autocomplete="current-password" required></label>
     <div class="log-actions">
       <button type="submit" class="btn p" id="login-go">Sign in</button>
       <button type="button" class="btn s" id="login-forgot">Forgot password?</button>
+    </div>
+    <div class="log-actions">
+      <button type="button" class="btn s" id="login-magic">Email me a magic link</button>
+    </div>
+  </form>
+  <form id="login-recover" hidden>
+    <p class="err" id="recover-err" hidden></p>
+    <p class="quiet">Choose a new password. At least 8 characters. You will use it the next time you sign in.</p>
+    <label>New password<input id="login-new" type="password" autocomplete="new-password" minlength="8"></label>
+    <label style="margin-top:8px">Type it again<input id="login-new2" type="password" autocomplete="new-password"></label>
+    <div class="log-actions">
+      <button type="submit" class="btn p" id="login-savepw">Save new password</button>
     </div>
   </form>
 </div>
@@ -878,6 +892,19 @@ footer.site{margin-top:auto}
     if (diff === 1) return 'Last updated 1 day ago';
     return 'Last updated ' + diff + ' days ago';
   }
+  function hubSlug(name, handle) {
+    var n = norm(String(name || '') + ' ' + String(handle || ''));
+    if (!n) return '';
+    if (n.indexOf('richlife') >= 0 || n.indexOf('therichlifeacademy') >= 0 || n.indexOf('janzands') >= 0) return 'jan';
+    if (n.indexOf('r3set') >= 0 || n.indexOf('teamr3') >= 0 || n.indexOf('devinshea') >= 0) return 'devin';
+    if (n.indexOf('andrew') >= 0) return 'andrew';
+    if (n.indexOf('sagun') >= 0) return 'sagun';
+    if (n.indexOf('cristianaguilar') >= 0 || n === 'cristian') return 'cristian';
+    return '';
+  }
+  function hubClientHref(slug) {
+    return '../?client=' + encodeURIComponent(slug);
+  }
   function safeHref(v) {
     var s = String(v || '').trim();
     if (/^https:\/\/\S+$/i.test(s)) return s;
@@ -954,7 +981,8 @@ footer.site{margin-top:auto}
   }
   function barChart(bars, target, aria) {
     if (!bars || !bars.length) return '';
-    var w = 520, h = 176, padL = 28, padR = 12, padT = 22, padB = 36;
+    var long = bars.some(function (b) { return clean(b.label).length > 12; });
+    var w = 520, h = long ? 168 : 176, padL = 28, padR = 12, padT = 22, padB = long ? 28 : 36;
     var mx = 0;
     bars.forEach(function (b) { if (b.value > mx) mx = b.value; });
     if (target > 0 && target > mx) mx = target;
@@ -964,16 +992,23 @@ footer.site{margin-top:auto}
     var used = bars.length * bw + Math.max(0, bars.length - 1) * gap;
     var x0 = padL + Math.max(0, (innerW - used) / 2);
     var targetY = target > 0 ? (padT + innerH - (target / mx) * innerH) : null;
-    var ghost = targetY == null ? '' : '<line x1="' + padL + '" y1="' + targetY.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + targetY.toFixed(1) + '" stroke="rgba(255,255,255,.55)" stroke-width="1.4" stroke-dasharray="4 4"/><text x="' + (w - padR) + '" y="' + Math.max(12, targetY - 5).toFixed(1) + '" text-anchor="end" fill="#a3a3a3" font-size="10">Target</text>';
+    var ghost = targetY == null ? '' : '<line x1="' + padL + '" y1="' + targetY.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + targetY.toFixed(1) + '" stroke="rgba(255,255,255,.55)" stroke-width="1.4" stroke-dasharray="4 4"/><text x="' + (w - padR) + '" y="' + Math.max(12, targetY - 5).toFixed(1) + '" text-anchor="end" fill="#d4d4d4" font-size="11">Target</text>';
     var rects = bars.map(function (b, i) {
       var bh = (b.value / mx) * innerH;
       var x = x0 + i * (bw + gap);
       var y = padT + innerH - bh;
-      var bar = bh <= 0 ? '' : '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(bh, 2).toFixed(1) + '" rx="4" fill="#ed3039"><title>' + esc(b.label + ': ' + compact(b.value) + (b.outlier ? ' outlier' : '')) + '</title></rect>';
+      var full = clean(b.label) + ': ' + compact(b.value) + (b.outlier ? ', outlier' : '');
+      var axis = long ? String(i + 1) : (clean(b.label).length > 12 ? String(i + 1) : clean(b.label));
+      var bar = bh <= 0 ? '' : '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(bh, 2).toFixed(1) + '" rx="4" fill="#ed3039"><title>' + esc(full) + '</title></rect>';
       var dot = b.outlier ? '<circle cx="' + (x + bw / 2).toFixed(1) + '" cy="' + (y - 7).toFixed(1) + '" r="4" fill="#ed3039"/>' : '';
-      return bar + dot + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (h - 12) + '" text-anchor="middle" fill="#737373" font-size="10">' + esc(shortLab(b.label)) + '</text>';
+      return bar + dot + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (h - 10) + '" text-anchor="middle" fill="#d4d4d4" font-size="12"><title>' + esc(full) + '</title>' + esc(axis) + '</text>';
     }).join('');
-    return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(aria || 'Bar chart') + '">' + ghost + rects + '</svg>';
+    var svg = '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(aria || 'Bar chart') + '">' + ghost + rects + '</svg>';
+    if (!long) return svg;
+    var legend = '<ol class="chart-legend">' + bars.map(function (b, i) {
+      return '<li><b>' + (i + 1) + '</b><span>' + esc(clean(b.label)) + '</span></li>';
+    }).join('') + '</ol>';
+    return svg + legend;
   }
   function areaChart(bars) {
     if (!bars || !bars.length) return '';
@@ -1577,7 +1612,9 @@ footer.site{margin-top:auto}
         whenText: r.risk === 'late-payment' ? 'Late payment' : r.risk === 'overdue-delivery' ? 'Overdue delivery' : 'Retainer',
         status: (r.risk && r.risk !== 'none') ? 'act' : '',
         badge: r.risk === 'late-payment' ? 'Late payment' : r.risk === 'overdue-delivery' ? 'Overdue' : 'Retainer',
-        href: safeHref(r.href) || '../', hrefLabel: 'Open in Hub',
+        href: (function () { var slug = hubSlug(name, r.who || r.handle || ''); return slug ? hubClientHref(slug) : (safeHref(r.href) || '../'); })(),
+        hrefLabel: 'Open in Hub',
+        hubSlug: hubSlug(name, r.who || r.handle || ''),
         copyText: clean(name + '. ' + (r.why || '')),
         leftK: 'Retainer', leftBig: name, leftNote: clean(r.why || ''),
         rightK: 'Wait', rightBig: num(r.daysWaiting) > 0 ? (r.daysWaiting + ' days') : 'No wait listed',
@@ -2180,7 +2217,10 @@ footer.site{margin-top:auto}
     return '<section class="panel" style="margin-top:12px"><div class="ph"><h2>Weekly wins</h2><p class="sub">This Monday-start week. Real events only.</p></div>' + body + '</section>';
   }
   function rowHtml(r) {
-    return '<div class="qrow filterable" data-open-row="' + esc(r.id) + '"><span class="when">' + esc(r.whenText || '') + '</span><span class="qw"><b>' + esc(r.title) + '</b><span>' + esc(r.meta || '') + '</span></span><span class="badge ' + esc(r.status || '') + '">' + esc(r.badge || '') + '</span><button type="button" class="open" data-open-row="' + esc(r.id) + '">Open</button></div>';
+    var openBtn = r.hubSlug
+      ? '<a class="open" href="' + esc(hubClientHref(r.hubSlug)) + '">Open</a>'
+      : '<button type="button" class="open" data-open-row="' + esc(r.id) + '">Open</button>';
+    return '<div class="qrow filterable" data-open-row="' + esc(r.id) + '"><span class="when">' + esc(r.whenText || '') + '</span><span class="qw"><b>' + esc(r.title) + '</b><span>' + esc(r.meta || '') + '</span></span><span class="badge ' + esc(r.status || '') + '">' + esc(r.badge || '') + '</span>' + openBtn + '</div>';
   }
   function groupHtml(list, key, label) {
     var mine = list.filter(function (r) { return r.group === key; });
@@ -2269,6 +2309,10 @@ footer.site{margin-top:auto}
     var winList = (wins.lines || []).length ? '<ul class="wins">' + wins.lines.map(function (w) {
       return '<li><span>' + esc(w.text) + '</span><span>' + esc([w.when, w.source].filter(Boolean).join(' · ')) + '</span></li>';
     }).join('') + '</ul>' : '<p class="quiet">No wins logged</p>';
+    var slug = hubSlug(spec.name, spec.handle);
+    var openClient = slug
+      ? '<a class="btn p" style="margin-top:10px" href="' + esc(hubClientHref(slug)) + '">Open in Hub</a>'
+      : '<button type="button" class="btn p" style="margin-top:10px" data-open-client="' + esc(spec.name) + '">Open</button>';
     return '<article class="panel client filterable"><header class="ph"><h2>' + esc(spec.name) + '</h2><p class="sub">' + esc(spec.handle || 'No handle on file') + '</p></header>' +
       heatHtml(spec.index) +
       rowMetric(S.model.metrics['c' + i + '-views'], 'Views') +
@@ -2279,7 +2323,8 @@ footer.site{margin-top:auto}
       rowMetric(S.model.metrics['c' + i + '-health'], 'Health') +
       '<h3 class="qhead">Wins</h3>' + winList +
       '<p class="src">Source: ' + esc(wins.source) + '</p>' +
-      '<button type="button" class="btn s" style="margin-top:8px" data-open-kpi="' + esc(wins.id) + '">Log a win</button></article>';
+      '<div class="log-actions">' + openClient +
+      '<button type="button" class="btn s" data-open-kpi="' + esc(wins.id) + '">Log a win</button></div></article>';
   }
   function otherRetainers(m) {
     var list = m.rows.filter(function (r) { return r.group === 'retainers'; });
@@ -2448,18 +2493,18 @@ footer.site{margin-top:auto}
     var targetText = tgt == null ? 'No target in targets.json' : (g.unit === 'money' ? money(tgt) : compact(tgt));
     var center = cur == null ? '' : '<b><span class="cu" data-to="' + esc(String(cur)) + '"' + (g.unit === 'money' ? ' data-money="1"' : '') + '>' + esc(shown) + '</span></b>';
     return '<article class="panel goal filterable"><div class="ringbox lg">' + ringSvg(pct, 150) + '<div class="ctr">' + center + '</div></div>' +
-      (cur == null ? '<p class="v words">Not connected</p>' : '') +
+      (cur == null ? '<p class="v words">No current value yet</p>' : '') +
       '<h2>' + esc(g.label) + '</h2><p class="src">Target ' + esc(targetText) + '</p>' +
       '<p class="quiet">Owner ' + esc(g.owner || 'Unassigned') + '</p>' +
       (g.status ? statusPill(g.status) : '') + tagsHtml(g.side, g.track, tracks) + '</article>';
   }
   function goalsHtml(data) {
-    if (!data.goals) return missPanel('Goals', 'Not connected. Goal targets live in targets.json and the current value lives in the feed.');
+    if (!data.goals) return missPanel('Goals', 'Goals are not connected yet. The rings come from targets.json, and each current value comes from the feed. This page does not guess a number.');
     return '<div class="goalgrid">' + data.goals.map(function (g) { return goalCard(g, data.tracks); }).join('') + '</div>';
   }
   function projectsHtml(data) {
-    if (data.projects == null) return missPanel('Projects', 'Not connected. Projects sit under a goal in the feed.');
-    if (!data.projects.length) return missPanel('Projects', 'No projects in this feed.');
+    if (data.projects == null) return missPanel('Projects', 'Projects are not connected yet. They show up when the feed lists a project under a goal.');
+    if (!data.projects.length) return missPanel('Projects', 'No projects in this feed yet. A project appears here once it is tied to a goal.');
     var goals = data.goals || [];
     var groups = {};
     data.projects.forEach(function (p) {
@@ -2482,8 +2527,8 @@ footer.site{margin-top:auto}
     }).join('');
   }
   function tasksHtml(data) {
-    if (data.tasks == null) return missPanel('Tasks', 'Not connected. Tasks sit under a project in the feed.');
-    if (!data.tasks.length) return missPanel('Tasks', 'No tasks in this feed.');
+    if (data.tasks == null) return missPanel('Tasks', 'Tasks are not connected yet. They show up when the feed lists a task under a project.');
+    if (!data.tasks.length) return missPanel('Tasks', 'No tasks in this feed yet. A task appears here once it is tied to a project.');
     var projects = data.projects || [];
     var groups = {};
     data.tasks.forEach(function (t) {
@@ -2947,6 +2992,7 @@ footer.site{margin-top:auto}
     var w = Math.round(rect.width);
     var h = Math.round(rect.height);
     if (w < 8 || h < 8) {
+      if (FX.w >= 8 && FX.h >= 8) return;
       c.classList.remove('sized');
       var linksHidden = document.querySelector('#v-home .org-links');
       if (linksHidden) linksHidden.classList.remove('sized');
@@ -2960,6 +3006,8 @@ footer.site{margin-top:auto}
       }
       return;
     }
+    if (document.documentElement.classList.contains('lock') && FX.w >= 8 && FX.h >= 8) return;
+    if (c.classList.contains('sized') && Math.abs(w - (FX.w || 0)) < 2 && Math.abs(h - (FX.h || 0)) < 2) return;
     syncFlatLinks();
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     var bw = Math.round(w * dpr);
@@ -3440,19 +3488,23 @@ footer.site{margin-top:auto}
     return $('drawer').classList.contains('on') || $('kpisheet').classList.contains('on') || $('login').classList.contains('on') || $('chat').classList.contains('on');
   }
   function syncLock() {
-    var html = document.documentElement;
     var open = anyOpen();
     $('scrim').hidden = !open;
     $('scrim').classList.toggle('on', open);
-    if (open && !html.classList.contains('lock')) {
-      S.lockY = window.scrollY || 0;
-      html.classList.add('lock');
-      document.body.style.top = (-S.lockY) + 'px';
-    } else if (!open && html.classList.contains('lock')) {
-      html.classList.remove('lock');
-      document.body.style.top = '';
-      window.scrollTo(0, S.lockY);
-    }
+    document.documentElement.classList.toggle('lock', open);
+  }
+  function openClient(name) {
+    var spec = (S.model && S.model.official || []).filter(function (c) { return c.name === name; })[0];
+    var slug = hubSlug(name, spec && spec.handle);
+    $('d-st').textContent = 'Client';
+    $('d-st').className = 'badge';
+    $('d-t').textContent = name;
+    $('d-m').textContent = (spec && spec.handle) || '';
+    $('d-b').innerHTML = '<p class="quiet">' + (slug ? 'This opens their Hub page.' : 'This name is not on the Hub client list yet.') + '</p>';
+    $('d-f').innerHTML = slug
+      ? '<a class="btn p" href="' + esc(hubClientHref(slug)) + '">Open in Hub</a><button type="button" class="btn s" data-close>Close</button>'
+      : '<button type="button" class="btn p" data-close>Close</button>';
+    show('drawer');
   }
   function closeSheets() {
     ['drawer', 'kpisheet', 'login', 'chat'].forEach(function (id) {
@@ -3694,6 +3746,15 @@ footer.site{margin-top:auto}
     }
     show('chat');
   }
+  function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+  function boardReturnUrl() { return location.origin + location.pathname; }
+  function showRecovery() {
+    $('login-form').hidden = true;
+    $('login-recover').hidden = false;
+    $('login-t').textContent = 'Set a new password';
+    if ($('login-note')) $('login-note').textContent = 'This link is only for choosing a new password.';
+    show('login');
+  }
   function isAdmin(user) {
     return !!(user && user.app_metadata && user.app_metadata.role === 'admin');
   }
@@ -3701,19 +3762,32 @@ footer.site{margin-top:auto}
     if (S.sample) { S.kpiState = 'ready'; return; }
     if (!window.supabase) { S.kpiState = 'signedout'; return; }
     try {
-      sb = window.supabase.createClient(SB_URL, SB_KEY, {
-        auth: { storageKey: AUTH_KEY, storage: window.localStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false }
-      });
+      if (!sb) {
+        sb = window.supabase.createClient(SB_URL, SB_KEY, {
+          auth: { storageKey: AUTH_KEY, storage: window.localStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+        });
+        sb.auth.onAuthStateChange(async function (ev, session) {
+          if (ev === 'PASSWORD_RECOVERY') { showRecovery(); return; }
+          if (ev === 'SIGNED_IN' && session && session.user && !S.admin && isAdmin(session.user)) {
+            S.user = session.user;
+            S.admin = true;
+            S.kpiState = 'ready';
+            closeSheets();
+            paintWho();
+            await Promise.all([refreshKpis(), loadFeed()]);
+            renderBoard();
+            return;
+          }
+          if (ev === 'INITIAL_SESSION' || ev === 'TOKEN_REFRESHED' || ev === 'SIGNED_IN') return;
+          if (ev === 'SIGNED_OUT') applySignedOut();
+        });
+      }
       var got = await sb.auth.getSession();
       var user = got.data && got.data.session && got.data.session.user;
       S.user = user || null;
       S.admin = isAdmin(user);
       if (S.admin) await refreshKpis();
       else S.kpiState = user ? 'forbidden' : 'signedout';
-      sb.auth.onAuthStateChange(function (ev) {
-        if (ev === 'INITIAL_SESSION' || ev === 'TOKEN_REFRESHED' || ev === 'SIGNED_IN') return;
-        if (ev === 'SIGNED_OUT') applySignedOut();
-      });
     } catch (e) {
       S.kpiState = 'signedout';
     }
@@ -3932,13 +4006,15 @@ footer.site{margin-top:auto}
     $('bnav').innerHTML = ['home', 'goals', 'tasks', 'winning'].map(function (id) { return navButton(byId[id], ''); }).join('');
     if ($('chips')) $('chips').innerHTML = VIEWS.map(function (v) { return '<button type="button" data-view="' + v[0] + '">' + esc(v[1]) + '</button>'; }).join('');
     document.body.addEventListener('click', function (e) {
-      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-pick],[data-more]');
+      if (e.target.closest('a[href]')) return;
+      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-pick],[data-more]');
       if (!t) return;
       if (t.hasAttribute('data-node')) { openNode(t.getAttribute('data-node')); return; }
       if (t.hasAttribute('data-pick')) { S.pick = t.getAttribute('data-pick'); updateReview(); return; }
       if (t.hasAttribute('data-more')) { var key = t.getAttribute('data-more'); S.more[key] = !S.more[key]; updateToday(); return; }
       if (t.hasAttribute('data-view')) { closeSheets(); go(t.getAttribute('data-view')); return; }
       if (t.hasAttribute('data-close')) { closeSheets(); return; }
+      if (t.hasAttribute('data-open-client')) { openClient(t.getAttribute('data-open-client')); return; }
       if (t.hasAttribute('data-open-row')) { openRow(t.getAttribute('data-open-row')); return; }
       if (t.hasAttribute('data-open-kpi')) { fillKpi(t.getAttribute('data-open-kpi')); return; }
       if (t.hasAttribute('data-plus')) {
@@ -3956,7 +4032,15 @@ footer.site{margin-top:auto}
       if (t.hasAttribute('data-remove')) { undoLog(t.getAttribute('data-remove')); return; }
       if (t.hasAttribute('data-undo')) { undoLog(t.getAttribute('data-undo')); return; }
     });
-    $('scrim').addEventListener('click', closeSheets);
+    $('scrim').addEventListener('click', function () {
+      if ($('login').classList.contains('on')) {
+        var email = ($('login-email') && $('login-email').value || '').trim();
+        var pw = ($('login-pw') && $('login-pw').value) || '';
+        var neu = ($('login-new') && $('login-new').value) || '';
+        if (email || pw || neu) return;
+      }
+      closeSheets();
+    });
     var filterT = 0;
     $('qsearch').addEventListener('input', function () {
       clearTimeout(filterT);
@@ -3992,8 +4076,11 @@ footer.site{margin-top:auto}
       e.preventDefault();
       var err = $('login-err');
       err.hidden = true;
+      var email = $('login-email').value.trim();
+      if (!validEmail(email)) { err.hidden = false; err.textContent = 'Enter a valid email.'; return; }
+      if (!$('login-pw').value) { err.hidden = false; err.textContent = 'Enter your password.'; return; }
       if (!sb) { err.hidden = false; err.textContent = 'Sign-in library did not load.'; return; }
-      var res = await sb.auth.signInWithPassword({ email: $('login-email').value.trim(), password: $('login-pw').value });
+      var res = await sb.auth.signInWithPassword({ email: email, password: $('login-pw').value });
       if (res.error) { err.hidden = false; err.textContent = res.error.message || 'Could not sign in.'; return; }
       if (!isAdmin(res.data.user)) {
         await sb.auth.signOut();
@@ -4016,12 +4103,46 @@ footer.site{margin-top:auto}
     $('login-forgot').addEventListener('click', async function () {
       var email = $('login-email').value.trim();
       var err = $('login-err');
-      if (!email) { err.hidden = false; err.textContent = 'Enter your email, then tap Forgot password.'; return; }
+      if (!validEmail(email)) { err.hidden = false; err.textContent = 'Enter a valid email, then tap Forgot password.'; return; }
       if (!sb) { err.hidden = false; err.textContent = 'Sign-in library did not load.'; return; }
-      var redirect = new URL('../', location.href).href;
-      var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: redirect });
+      var res = await sb.auth.resetPasswordForEmail(email, { redirectTo: boardReturnUrl() });
       err.hidden = false;
-      err.textContent = res.error ? (res.error.message || 'Could not send the reset.') : 'Check your email. The link opens the Hub so you can set a new password.';
+      err.textContent = res.error ? (res.error.message || 'Could not send the reset.') : 'Check your email. The link brings you back here to set a new password.';
+    });
+    $('login-magic').addEventListener('click', async function () {
+      var email = $('login-email').value.trim();
+      var err = $('login-err');
+      if (!validEmail(email)) { err.hidden = false; err.textContent = 'Enter a valid email, then tap Email me a magic link.'; return; }
+      if (!sb) { err.hidden = false; err.textContent = 'Sign-in library did not load.'; return; }
+      var res = await sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: boardReturnUrl() } });
+      err.hidden = false;
+      err.textContent = res.error ? (res.error.message || 'Could not send the link.') : 'Check your email for the sign-in link. It opens this board.';
+    });
+    $('login-recover').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var err = $('recover-err');
+      err.hidden = true;
+      var a = $('login-new').value;
+      var b = $('login-new2').value;
+      if (a.length < 8) { err.hidden = false; err.textContent = 'Use at least 8 characters.'; return; }
+      if (a !== b) { err.hidden = false; err.textContent = 'Those passwords do not match.'; return; }
+      if (!sb) { err.hidden = false; err.textContent = 'Sign-in library did not load.'; return; }
+      var res = await sb.auth.updateUser({ password: a });
+      if (res.error) { err.hidden = false; err.textContent = res.error.message || 'Could not save the password.'; return; }
+      $('login-new').value = '';
+      $('login-new2').value = '';
+      var savedUser = (res.data && res.data.user) || S.user;
+      S.user = savedUser || null;
+      S.admin = isAdmin(savedUser);
+      closeSheets();
+      if (history.replaceState) history.replaceState(null, '', location.pathname + location.search);
+      if (S.admin) {
+        S.kpiState = 'ready';
+        paintWho();
+        await Promise.all([refreshKpis(), loadFeed()]);
+        renderBoard();
+      }
+      toast('New password saved.');
     });
     $('chat-form').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -4057,8 +4178,42 @@ footer.site{margin-top:auto}
     if (S.fixture === '1' && $('banner')) $('banner').textContent = 'SAMPLE. Fake 47-bot fixture for layout checks. These figures are not the live feed and they are not saved.';
     if (S.fixture === '2' && $('banner')) $('banner').textContent = 'SAMPLE. Fake desk-role fixture for layout checks. These figures are not the live feed and they are not saved.';
     if (S.fixture === '3' && $('banner')) $('banner').textContent = 'SAMPLE. Fake plain-role fixture for layout checks. These figures are not the live feed and they are not saved.';
-    $('sample-link').textContent = S.sample ? 'Owner feed' : 'Sample layout';
-    $('sample-link').setAttribute('href', sampleHref());
+    function paintSampleLinks() {
+      if ($('sample-link')) {
+        $('sample-link').textContent = S.sample ? 'Owner feed' : 'Sample layout';
+        $('sample-link').setAttribute('href', sampleHref());
+      }
+      if ($('lock-sample')) $('lock-sample').setAttribute('href', sampleHref());
+    }
+    paintSampleLinks();
+    async function applySampleMode(on) {
+      S.sample = !!on;
+      paintSampleLinks();
+      closeSheets();
+      if (!S.sample) await bootAuth();
+      else S.kpiState = 'ready';
+      await loadFeed();
+      S.authReady = true;
+      paintWho();
+      renderBoard();
+      document.body.setAttribute('data-ready', '1');
+    }
+    function followSample(e) {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+      e.preventDefault();
+      var next = !S.sample;
+      var n = new URLSearchParams(location.search);
+      if (next) n.set('sample', '1'); else n.delete('sample');
+      var s = n.toString();
+      history.pushState({ sample: next }, '', location.pathname + (s ? '?' + s : '') + (location.hash || ''));
+      applySampleMode(next);
+    }
+    $('sample-link').addEventListener('click', followSample);
+    if ($('lock-sample')) $('lock-sample').addEventListener('click', followSample);
+    window.addEventListener('popstate', function () {
+      var on = new URLSearchParams(location.search).get('sample') === '1';
+      if (on !== S.sample) applySampleMode(on);
+    });
     await bootAuth();
     await loadFeed();
     S.authReady = true;

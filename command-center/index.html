@@ -137,17 +137,19 @@ main.stage{padding:16px 22px 40px}
 .kpi .v.num{font-size:32px}
 .kpi .v.words{font-size:22px;font-weight:750;letter-spacing:-.03em;line-height:1.15}
 .sig{width:8px;height:8px;border-radius:50%;background:#6b6b6b;display:inline-block}
-.kpi-hit>.sig,.score>.sig{position:absolute;top:14px;right:14px}
+.kpi-hit>.sig,.score>.sig,.score .sig{position:absolute;top:14px;right:14px}
+.score.sig-good .sig{background:var(--good);box-shadow:0 0 8px var(--good)}
+.score.sig-bad .sig{background:var(--red);box-shadow:0 0 8px var(--red)}
 .sig-good>.sig,.mrow.sig-good .sig{background:var(--good);box-shadow:0 0 8px var(--good)}
 .sig-bad>.sig,.mrow.sig-bad .sig{background:var(--red);box-shadow:0 0 8px var(--red)}
 .target{display:block;margin-top:4px;font-size:12px;font-weight:500;color:var(--dim)}
 .target b{font-weight:650;color:var(--muted);font-variant-numeric:tabular-nums}
 .src{display:block;margin-top:3px;font-size:11px;color:var(--dim)}
-.foot{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;min-height:28px;margin-top:8px}
+.foot{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:28px;margin-top:8px;flex-wrap:wrap}
 .dchip{font-size:11px;font-weight:650;border-radius:999px;padding:3px 7px;background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--line);line-height:1.35}
 .dchip.act{color:#ffd0d0;border-color:rgba(237,48,57,.45);background:rgba(237,48,57,.12)}
 .dchip.good{color:var(--good-ink);border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.12)}
-.spark{width:84px;height:28px;flex:none}
+.spark{width:84px;height:28px;flex:none;margin-left:auto}
 .plus{
   position:absolute;right:10px;bottom:10px;border:0;background:var(--red);color:#fff;border-radius:999px;
   min-height:32px;padding:0 12px;font-weight:800;font-size:14px;box-shadow:0 8px 18px -12px rgba(237,48,57,.9);z-index:1;
@@ -291,11 +293,84 @@ footer.site{padding:8px 22px 28px;color:var(--dim);font-size:12px;line-height:1.
 footer.site a{color:var(--muted)}
 .hidden,[hidden]{display:none !important}
 .kpi.has-plus .foot{padding-right:54px}
+.gdot{animation:pulse 1.8s ease-in-out infinite}
+.gdot.dim{animation:none}
+.live-age{max-width:280px;overflow:hidden;text-overflow:ellipsis}
+.shimmer{display:grid;gap:12px}
+.shimmer i{display:block;height:92px;border-radius:16px;background:linear-gradient(100deg,rgba(255,255,255,.04) 20%,rgba(255,255,255,.12) 40%,rgba(255,255,255,.04) 60%);background-size:200% 100%;animation:shimmer 1.3s linear infinite}
+.shimmer i:nth-child(2){height:150px;animation-delay:.1s}
+.shimmer i:nth-child(3){height:72px;animation-delay:.2s}
+body[data-ready] .shimmer{display:none}
+.ticker{display:flex;align-items:center;gap:8px;margin:0 0 12px;min-height:40px;overflow:hidden;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03)}
+.ticker .tag{flex:none;padding:0 4px 0 14px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--red-soft);font-weight:750}
+.ticker-view{overflow:hidden;flex:1;min-width:0;-webkit-mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent);mask-image:linear-gradient(90deg,transparent,#000 16px,#000 calc(100% - 16px),transparent)}
+.ticker-track{display:flex;gap:32px;width:max-content;padding:8px 0;animation:ticker 32s linear infinite}
+.ticker-track.static{animation:none}
+.ticker:hover .ticker-track{animation-play-state:paused}
+.ticker-track span{white-space:nowrap;color:var(--muted);font-size:13px}
+.ticker.static{padding:8px 14px;color:var(--muted);font-size:13px}
+.desks{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.desk{min-width:0;padding:12px;border:1px solid var(--line);border-radius:16px;background:var(--glass);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.desk .toprow{display:flex;align-items:center;gap:8px}
+.desk i{width:10px;height:10px;border-radius:50%;background:#555;flex:none}
+.desk.working i{background:var(--good);box-shadow:0 0 8px var(--good);animation:pulse 1.6s ease-in-out infinite}
+.desk.idle i{background:var(--watch);box-shadow:0 0 8px rgba(196,163,90,.8);animation:pulse 2.2s ease-in-out infinite}
+.desk.blocked i,.desk.offline i{background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.2s ease-in-out infinite}
+.desk b{font-size:14px;overflow-wrap:anywhere}
+.desk p{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.35}
+.desk .ago{display:block;margin-top:6px;color:var(--dim);font-size:11px}
+.score{display:flex;align-items:center;gap:12px}
+.score>span:last-child{min-width:0}
+.ringbox{position:relative;flex:none;width:84px;height:84px}
+.ringbox svg{width:100%;height:100%;display:block}
+.ringbox .ctr{position:absolute;inset:0;display:grid;place-items:center;text-align:center;pointer-events:none}
+.ringbox .ctr b{font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.04em;line-height:1}
+.foot .ringbox{width:34px;height:34px}
+.sidehead{display:flex;align-items:center;gap:14px;margin:2px 0 12px}
+.sidehead .gk{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--red-soft);font-weight:750}
+.sidehead h2{font-size:22px;letter-spacing:-.03em}
+.vizgrid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin-top:12px}
+.vizpanel .ph{flex-direction:column;align-items:flex-start}
+.viz{width:100%;height:auto;display:block}
+.viz text{font-family:var(--sans)}
+.cashviz{display:grid;grid-template-columns:minmax(0,1fr) 108px;gap:12px;align-items:end}
+.outbar{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.outbar .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.outbar b{font-family:var(--mono);font-size:16px}
+.vbar{width:28px;height:112px;border-radius:8px;border:1px dashed rgba(255,255,255,.35);background:repeating-linear-gradient(135deg,rgba(255,255,255,.14),rgba(255,255,255,.14) 3px,transparent 3px,transparent 7px);display:flex;align-items:flex-end;overflow:hidden}
+.vbar i{display:block;width:100%;background:rgba(255,255,255,.28)}
+.emptyviz{min-height:120px;display:grid;place-items:center;text-align:center;color:var(--muted);border:1px dashed rgba(255,255,255,.16);border-radius:14px;padding:16px;background:rgba(255,255,255,.02)}
+.heat{display:flex;gap:4px;margin-top:10px}
+.heat i{flex:1;height:16px;border-radius:5px;background:#2a2a2a;min-width:10px}
+.heat i.good{background:var(--good);box-shadow:0 0 10px rgba(61,220,151,.35)}
+.heat i.bad{background:var(--red);box-shadow:0 0 10px rgba(237,48,57,.35)}
+.heat i.wait{background:var(--watch)}
+.flame{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+.xpbar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);margin-top:10px;overflow:hidden}
+.xpbar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#b71a23,#ed3039);box-shadow:0 0 16px rgba(237,48,57,.55);transition:width .9s cubic-bezier(.22,.8,.3,1)}
+.arc{transition:stroke-dashoffset .9s cubic-bezier(.22,.8,.3,1)}
+.legend i.dash{display:inline-block;width:16px;height:0;border-top:1.5px dashed rgba(255,255,255,.55);margin:0 4px 0 0;vertical-align:middle}
+@media (hover:hover) and (pointer:fine){
+  .kpi:hover,.score:hover,.panel:hover,.desk:hover{border-color:rgba(237,48,57,.45)}
+  .desk:hover,.panel:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 0 28px rgba(237,48,57,.18)}
+}
+@media (prefers-reduced-motion:no-preference){
+  .view.on .score,.view.on .kpi,.view.on .panel,.view.on .desk{animation:rise .48s ease both}
+  .view.on .scores .score:nth-child(2),.view.on .krow .kpi:nth-child(2),.view.on .desks .desk:nth-child(2){animation-delay:.06s}
+  .view.on .scores .score:nth-child(3),.view.on .krow .kpi:nth-child(3),.view.on .desks .desk:nth-child(3){animation-delay:.12s}
+  .view.on .krow .kpi:nth-child(4),.view.on .desks .desk:nth-child(4){animation-delay:.18s}
+  .view.on .desks .desk:nth-child(5),.view.on .krow .kpi:nth-child(5){animation-delay:.24s}
+}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.45}}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .mrow .quiet{grid-column:1;font-size:12px}
 .sheet-value{font-family:var(--mono);font-size:40px;letter-spacing:-.04em;margin:8px 0}
 .sheet-value.words{font-family:var(--sans);font-size:28px;font-weight:750}
 @media(max-width:1100px){
-  .krow,.scores,.plats,.clients,.funnel,.game{grid-template-columns:1fr 1fr}
+  .krow,.scores,.plats,.clients,.funnel,.game,.desks{grid-template-columns:1fr 1fr}
+  .vizgrid,.cashviz{grid-template-columns:1fr}
   .funnel{grid-template-columns:1fr 1fr}
 }
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
@@ -312,7 +387,11 @@ footer.site a{color:var(--muted)}
   .guide h2{font-size:22px}
   .guide .btn,.btn,.open,.plus,.chip{min-height:44px}
   .guide .btn{width:100%;text-align:center}
-  .krow,.scores,.plats,.clients,.funnel,.game{grid-template-columns:1fr}
+  .krow,.scores,.plats,.clients,.funnel,.game,.vizgrid,.desks,.cashviz{grid-template-columns:1fr}
+  .desks{grid-template-columns:1fr 1fr}
+  .ticker .tag{display:none}
+  .live-age{max-width:42vw}
+  .sidehead{align-items:flex-start}
   .kpi .v.num{font-size:28px}
   .score .v.num{font-size:34px}
   .qcols{display:none}
@@ -379,9 +458,10 @@ footer.site a{color:var(--muted)}
       <span class="who" id="who"></span>
       <button type="button" class="ghost" id="signout" hidden>Sign out</button>
       <button type="button" class="ask" id="ask">Ask your AI team</button>
-      <div class="clock"><i class="gdot" aria-hidden="true"></i><span id="clock">CT</span></div>
+      <div class="clock"><i class="gdot dim" id="livedot" aria-hidden="true"></i><span class="live-age" id="live-age">Checking the feed</span><span id="clock">CT</span></div>
     </header>
     <main class="stage">
+      <div class="shimmer" id="shimmer" aria-hidden="true"><i></i><i></i><i></i></div>
       <div class="banner" id="banner" hidden>SAMPLE. These figures are layout data. They are not the live feed and they are not saved.</div>
       <div class="banner" id="target-banner" hidden>Targets file did not load. This board is not guessing targets.</div>
       <section class="view on" id="v-home" aria-label="Home"></section>
@@ -616,7 +696,7 @@ footer.site a{color:var(--muted)}
       var y = (h - 4) - ((v - mn) / (mx - mn)) * (h - 8);
       return x.toFixed(1) + ',' + y.toFixed(1);
     }).join(' ');
-    return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"><polyline fill="none" stroke="#ed3039" stroke-width="1.7" points="' + pts + '"/></svg>';
+    return '<svg class="spark" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true"><polyline fill="none" stroke="#ed3039" stroke-opacity=".35" stroke-width="4" points="' + pts + '"/><polyline fill="none" stroke="#ed3039" stroke-width="1.8" points="' + pts + '"/></svg>';
   }
   function chartSvg(vals, labels) {
     if (!vals || vals.length < 2) return '';
@@ -633,13 +713,104 @@ footer.site a{color:var(--muted)}
     }).join('');
     return '<svg class="kchart" viewBox="0 0 ' + w + ' ' + h + '" role="img"><polyline fill="none" stroke="#ed3039" stroke-width="2" points="' + poly + '"/>' + dots + labs + '</svg>';
   }
+  function ringSvg(progress, size) {
+    var sw = size >= 72 ? 8 : 5;
+    var r = (size / 2) - sw - 1;
+    var c = 2 * Math.PI * r;
+    var cx = size / 2;
+    var ghost = '<circle cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="' + sw + '" stroke-dasharray="2.2 4.2"/>';
+    var arc = '';
+    if (progress != null && progress > 0) {
+      var p = Math.max(0, Math.min(100, progress));
+      var off = c * (1 - p / 100);
+      arc = '<circle class="arc" cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" fill="none" stroke="#ed3039" stroke-width="' + sw + '" stroke-linecap="round" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + c.toFixed(2) + '" data-off="' + off.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cx + ')"/>';
+    }
+    var label = progress == null ? 'No result yet. The dashed ring is the target.' : ('Progress ' + Math.round(progress) + ' of 100. The dashed ring is the target.');
+    return '<svg class="ring" viewBox="0 0 ' + size + ' ' + size + '" role="img" aria-label="' + esc(label) + '">' + ghost + arc + '</svg>';
+  }
+  function showRing(m) {
+    if (!m) return false;
+    if (/^No target|^No numeric|^No separate|^Used for|^Real quotes/i.test(m.targetText || '')) return false;
+    return !!(m.scoreSide || m.progress != null);
+  }
+  function emptyViz(msg) {
+    return '<div class="emptyviz">' + esc(msg || 'Not connected') + '</div>';
+  }
+  function shortLab(s) {
+    s = clean(s).replace(/^SAMPLE\.?\s*/i, '');
+    return s.length > 9 ? (s.slice(0, 8) + '.') : s;
+  }
+  function barChart(bars, target, aria) {
+    if (!bars || !bars.length) return '';
+    var w = 520, h = 176, padL = 28, padR = 12, padT = 22, padB = 36;
+    var mx = 0;
+    bars.forEach(function (b) { if (b.value > mx) mx = b.value; });
+    if (target > 0 && target > mx) mx = target;
+    if (!(mx > 0)) mx = 1;
+    var innerW = w - padL - padR, innerH = h - padT - padB, gap = 8;
+    var bw = Math.min(46, Math.max(10, (innerW - gap * Math.max(0, bars.length - 1)) / bars.length));
+    var used = bars.length * bw + Math.max(0, bars.length - 1) * gap;
+    var x0 = padL + Math.max(0, (innerW - used) / 2);
+    var targetY = target > 0 ? (padT + innerH - (target / mx) * innerH) : null;
+    var ghost = targetY == null ? '' : '<line x1="' + padL + '" y1="' + targetY.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + targetY.toFixed(1) + '" stroke="rgba(255,255,255,.55)" stroke-width="1.4" stroke-dasharray="4 4"/><text x="' + (w - padR) + '" y="' + Math.max(12, targetY - 5).toFixed(1) + '" text-anchor="end" fill="#a3a3a3" font-size="10">Target</text>';
+    var rects = bars.map(function (b, i) {
+      var bh = (b.value / mx) * innerH;
+      var x = x0 + i * (bw + gap);
+      var y = padT + innerH - bh;
+      var bar = bh <= 0 ? '' : '<rect x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(bh, 2).toFixed(1) + '" rx="4" fill="#ed3039"><title>' + esc(b.label + ': ' + compact(b.value) + (b.outlier ? ' outlier' : '')) + '</title></rect>';
+      var dot = b.outlier ? '<circle cx="' + (x + bw / 2).toFixed(1) + '" cy="' + (y - 7).toFixed(1) + '" r="4" fill="#ed3039"/>' : '';
+      return bar + dot + '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (h - 12) + '" text-anchor="middle" fill="#737373" font-size="10">' + esc(shortLab(b.label)) + '</text>';
+    }).join('');
+    return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(aria || 'Bar chart') + '">' + ghost + rects + '</svg>';
+  }
+  function areaChart(bars) {
+    if (!bars || !bars.length) return '';
+    var w = 520, h = 168, padL = 16, padR = 12, padT = 16, padB = 28;
+    var mx = 0;
+    bars.forEach(function (b) { if (b.value > mx) mx = b.value; });
+    if (!(mx > 0)) mx = 1;
+    var innerW = w - padL - padR, innerH = h - padT - padB;
+    var pts = bars.map(function (b, i) {
+      var x = bars.length === 1 ? (padL + innerW / 2) : (padL + (i / (bars.length - 1)) * innerW);
+      var y = padT + innerH - (b.value / mx) * innerH;
+      return { x: x, y: y, b: b };
+    });
+    var line = pts.map(function (p) { return p.x.toFixed(1) + ',' + p.y.toFixed(1); }).join(' ');
+    var base = padT + innerH;
+    var area = pts[0].x.toFixed(1) + ',' + base.toFixed(1) + ' ' + line + ' ' + pts[pts.length - 1].x.toFixed(1) + ',' + base.toFixed(1);
+    var dots = pts.map(function (p) {
+      return '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3.4" fill="#ed3039"><title>' + esc(p.b.label + ' ' + money(p.b.value)) + '</title></circle>';
+    }).join('');
+    var labs = pts.map(function (p) {
+      return '<text x="' + p.x.toFixed(1) + '" y="' + (h - 8) + '" text-anchor="middle" fill="#737373" font-size="11">' + esc(shortLab(p.b.label)) + '</text>';
+    }).join('');
+    return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Collected by week"><defs><linearGradient id="cashfill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ed3039" stop-opacity=".42"/><stop offset="1" stop-color="#ed3039" stop-opacity="0"/></linearGradient></defs><polygon points="' + area + '" fill="url(#cashfill)"/><polyline fill="none" stroke="#ed3039" stroke-width="2.4" points="' + line + '"/>' + dots + labs + '</svg>';
+  }
+  function funnelChart(steps) {
+    if (!steps || !steps.length) return '';
+    var w = 520, row = 40, h = row * steps.length + 8, max = 0;
+    steps.forEach(function (s) { if (s.value > max) max = s.value; });
+    if (!(max > 0)) max = 1;
+    var body = steps.map(function (s, i) {
+      var width = Math.max(48, (s.value / max) * (w - 150));
+      var y = 6 + i * row;
+      var x = (w - 140 - width) / 2;
+      return '<rect x="' + x.toFixed(1) + '" y="' + y + '" width="' + width.toFixed(1) + '" height="28" rx="8" fill="#ed3039" opacity="' + (1 - i * 0.16).toFixed(2) + '"/><text x="' + (w - 128) + '" y="' + (y + 19) + '" fill="#f6f5f3" font-size="13">' + esc(s.label) + ' ' + esc(compact(s.value)) + '</text>';
+    }).join('');
+    return '<svg class="viz" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Funnel, booked then showed then closed">' + body + '</svg>';
+  }
+  var FLAME = '<svg class="flame" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ed3039" d="M12 2c1 3 4 4 4 8a4 4 0 0 1-8 0c0-1 .4-2 1-3-.2 1.2.6 2 1.6 2C10 7 11 4 12 2z"/><path fill="#ffd0d0" d="M12 13.2c.8 0 1.6.7 1.6 1.8A1.6 1.6 0 1 1 10.4 15c0-1.1.8-1.8 1.6-1.8z"/></svg>';
   function chip(signal, word) {
     var cls = signal === 'good' ? 'good' : signal === 'bad' ? 'act' : '';
     return '<span class="dchip ' + cls + '">' + esc(word) + '</span>';
   }
   function valueHtml(m, big) {
     if (m.words) return '<span class="' + (big ? 'v words' : 'words') + '">' + esc(m.words) + '</span>';
-    return '<span class="' + (big ? 'v num' : 'num') + '">' + esc(m.valueText || '') + '</span>';
+    var inner = esc(m.valueText || '');
+    if (m.countTo != null) {
+      inner = '<span class="cu" data-to="' + esc(String(m.countTo)) + '"' + (m.countMoney ? ' data-money="1"' : '') + (m.countSuffix ? ' data-suffix="' + esc(m.countSuffix) + '"' : '') + '>' + inner + '</span>';
+    }
+    return '<span class="' + (big ? 'v num' : 'num') + '">' + inner + '</span>';
   }
 
   function sampleRows(feed) {
@@ -749,6 +920,9 @@ footer.site a{color:var(--muted)}
         note: o.note || '',
         history: o.history || { vals: [], labels: [] },
         progress: (missingTargets || o.progress == null) ? null : Math.max(0, Math.min(100, o.progress)),
+        countTo: o.countTo == null ? null : o.countTo,
+        countMoney: !!o.countMoney,
+        countSuffix: o.countSuffix || '',
         log: o.log || null,
         lines: o.lines || [],
         posts: o.posts || []
@@ -788,12 +962,14 @@ footer.site a{color:var(--muted)}
         });
       }
       var signal = pace(o.value, o.target, o.elapsed, o.total);
+      var zero = o.value === 0 && o.zeroWord;
       return put({
         id: o.id, scoreSide: o.scoreSide, label: o.label,
-        words: (o.value === 0 && o.zeroWord) ? o.zeroWord : '',
+        words: zero ? o.zeroWord : '',
         valueText: o.money ? money(o.value) : compact(o.value),
         targetText: o.targetText, signal: signal, source: o.source, note: o.note,
         history: o.history, log: o.log, progress: progressTo(o.value, o.target),
+        countTo: zero ? null : o.value, countMoney: !!o.money,
         lines: o.lines, posts: o.posts
       });
     }
@@ -831,13 +1007,13 @@ footer.site a{color:var(--muted)}
           targetText: o.targetText, signal: 'none', signalWord: 'Baseline building',
           source: o.source,
           note: [tr.last == null ? '' : ('Baseline building until ' + tr.need + ' weeks are in.'), o.note || ''].filter(Boolean).join(' '),
-          history: tr.history, progress: null
+          history: tr.history, progress: null, countTo: tr.last
         });
       }
       return put({
         id: o.id, scoreSide: o.scoreSide, label: o.label, valueText: compact(tr.last),
         targetText: o.targetText, signal: tr.up ? 'good' : 'bad', source: o.source, note: o.note,
-        history: tr.history, progress: tr.progress
+        history: tr.history, progress: tr.progress, countTo: tr.last
       });
     }
 
@@ -1016,6 +1192,7 @@ footer.site a{color:var(--muted)}
         id: id, scoreSide: 'convert', label: label, valueText: Math.round(rate * 100) + '%',
         targetText: targetText, signal: rate + 1e-9 >= target ? 'good' : 'bad',
         source: top.source, progress: progressTo(rate, target),
+        countTo: Math.round(rate * 100), countSuffix: '%',
         note: compact(top.value) + ' of ' + compact(bottom.value) + '.'
       });
     }
@@ -1342,6 +1519,130 @@ footer.site a{color:var(--muted)}
       return { score: Math.round(sum / list.length), behind: behind, names: list.map(function (m) { return m.label; }) };
     }
 
+    function seriesBars(arr, labels) {
+      if (!Array.isArray(arr)) return null;
+      var bars = [];
+      arr.forEach(function (v, i) {
+        if (typeof v === 'number' && isFinite(v)) bars.push({ label: clean((labels || [])[i] || ('Week ' + (i + 1))), value: v });
+      });
+      return bars.length ? bars : null;
+    }
+    function weekLabel(ymd) {
+      var bits = String(ymd || '').split('-');
+      if (bits.length < 3) return ymd;
+      return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
+    }
+    var charts = { cash: { state: 'missing', message: 'Waiting for first Stripe sync' }, ig: { state: 'missing', message: 'Not connected' }, posts: [], funnel: { state: 'empty', message: 'Log to start' }, calls: { state: 'empty', message: 'Log to start' }, heat: [] };
+    (function () {
+      var chargeRows = stripe && (Array.isArray(stripe.charges) ? stripe.charges : (Array.isArray(stripe.recentCharges) ? stripe.recentCharges : null));
+      var bars = stripe && Array.isArray(stripe.collectedByWeek) ? seriesBars(stripe.collectedByWeek, stripe.weekLabels) : null;
+      var cashSource = bars ? 'Stripe weekly series, today.json cash.stripe.collectedByWeek' : '';
+      if (!bars && chargeRows) {
+        var buckets = {}, order = [];
+        chargeRows.forEach(function (ch) {
+          if (!ch || ch.status !== 'succeeded') return;
+          var amt = num(ch.amount);
+          var day = dayOf(ch.date || ch.when);
+          if (amt == null || !day) return;
+          var wk = weekStart(day);
+          if (!Object.prototype.hasOwnProperty.call(buckets, wk)) { buckets[wk] = 0; order.push(wk); }
+          buckets[wk] += amt;
+        });
+        order.sort();
+        if (order.length) {
+          bars = order.map(function (wk) { return { label: weekLabel(wk), value: buckets[wk] }; });
+          cashSource = 'Succeeded charges, today.json cash.stripe.' + (Array.isArray(stripe.charges) ? 'charges' : 'recentCharges');
+        }
+      }
+      var outstanding = null, outLabel = '';
+      if (stripe && stripe.balance && num(stripe.balance.pending) != null) { outstanding = stripe.balance.pending; outLabel = 'Pending'; }
+      else if (dueAmount != null) { outstanding = dueAmount; outLabel = 'Still due'; if (!cashSource) cashSource = 'Gmail, today.json cash.stillDue'; }
+      if (!stripe && dueAmount == null) charts.cash = { state: 'missing', message: 'Waiting for first Stripe sync' };
+      else if (!bars && outstanding == null) charts.cash = { state: 'empty', message: stripe ? 'No charge series in this snapshot' : 'Waiting for first Stripe sync' };
+      else charts.cash = { state: 'ready', bars: bars || [], outstanding: outstanding, outLabel: outLabel, source: cashSource || 'today.json cash.stripe' };
+
+      var igPlat = findPlat('ig');
+      if (!platforms) charts.ig = { state: 'missing', message: 'Not connected' };
+      else if (!igPlat || !Array.isArray(igPlat.posts)) charts.ig = { state: 'missing', message: 'Not connected' };
+      else {
+        var igBars = [];
+        igPlat.posts.forEach(function (p) {
+          var views = num(p && p.views);
+          if (views == null) return;
+          igBars.push({ label: clean((p && p.title) || 'Post'), value: views, when: dayOf(p.publishedAt) });
+        });
+        if (!igBars.length) charts.ig = { state: 'empty', message: 'No posts with views' };
+        else {
+          var canOut = withViews.length >= 4 && multiple != null;
+          var medAll = canOut ? median(withViews.map(function (p) { return p.views; })) : null;
+          igBars.forEach(function (b) { b.outlier = !!(canOut && medAll != null && b.value + 1e-9 >= medAll * multiple); });
+          charts.ig = { state: 'ready', bars: igBars, baseline: !canOut, source: 'today.json attract.social posts' };
+        }
+      }
+      ['ig', 'x', 'youtube'].forEach(function (key) {
+        var spec = postSpec[key] || {};
+        var plat = findPlat(key);
+        var target = num(spec.target);
+        var label = clean(spec.label || key);
+        if (!plat) { charts.posts.push({ key: key, label: label, state: 'missing', message: 'Not connected', target: target }); return; }
+        var series = seriesBars(plat.postsByWeek, plat.weekLabels);
+        if (!series && num(plat.postsThisWeek) != null) series = [{ label: 'This week', value: plat.postsThisWeek }];
+        if (!series) charts.posts.push({ key: key, label: label, state: 'empty', message: 'Not connected', target: target });
+        else charts.posts.push({ key: key, label: label, state: 'ready', bars: series, target: target, source: 'today.json attract.social' });
+      });
+      var steps = [];
+      [['Booked', booked], ['Showed', showed], ['Closed', closed]].forEach(function (pair) {
+        if (pair[1] && pair[1].value != null && !pair[1].blocked) steps.push({ label: pair[0], value: pair[1].value });
+      });
+      if (!steps.length) charts.funnel = { state: 'empty', message: (booked && booked.blocked) ? logWords(booked.state) : 'Log to start' };
+      else charts.funnel = { state: 'ready', steps: steps, source: (steps.length && booked && booked.source) || 'floor log' };
+      var callBars = null, callSource = '';
+      if (log.state === 'ready') {
+        var wsBooked = weekSeries(log.rows, 'booked_calls', today);
+        if (wsBooked.vals.length) {
+          callBars = wsBooked.vals.map(function (v, i) { return { label: wsBooked.labels[i], value: v }; });
+          callSource = 'floor log';
+        }
+      }
+      if (!callBars && funnel && Array.isArray(funnel.bookedByWeek)) {
+        var fb = seriesBars(funnel.bookedByWeek, funnel.weekLabels);
+        if (fb) { callBars = fb; callSource = 'today.json convert.funnel.bookedByWeek'; }
+      }
+      if (!callBars && booked && booked.value != null && !booked.blocked) {
+        callBars = [{ label: 'This week', value: booked.value }];
+        callSource = booked.source;
+      }
+      if (!callBars) charts.calls = { state: 'empty', message: (booked && booked.blocked) ? logWords(booked.state) : 'Log to start', target: bookedTarget };
+      else charts.calls = { state: 'ready', bars: callBars, target: bookedTarget, source: callSource };
+      charts.heat = official.map(function (spec, index) {
+        var c = matchClient(spec);
+        if (!c) return { index: index, state: 'missing', message: 'Not connected' };
+        var bits = [];
+        if (Array.isArray(c.scripts)) {
+          c.scripts.forEach(function (s) {
+            var deliveredAt = dayOf(s && s.deliveredAt);
+            if (!deliveredAt) return;
+            var filmedAt = dayOf(s && s.filmedAt);
+            var tone = 'wait', lag = null;
+            if (filmedAt) {
+              lag = daysBetween(deliveredAt, filmedAt);
+              tone = (filmDays != null && lag >= 0 && lag <= filmDays) ? 'good' : 'bad';
+            } else if (filmDays != null && daysBetween(deliveredAt, today) > filmDays) tone = 'bad';
+            bits.push({ title: clean((s && s.title) || 'Script'), tone: tone, lag: lag });
+          });
+        }
+        var lateDays = null;
+        if (Array.isArray(c.overdue)) {
+          if (!c.overdue.length) lateDays = 0;
+          c.overdue.forEach(function (item) {
+            if (num(item && item.days) != null && (lateDays == null || item.days > lateDays)) lateDays = item.days;
+          });
+        }
+        if (!bits.length && lateDays == null) return { index: index, state: 'missing', message: 'Not connected' };
+        return { index: index, state: 'ready', bits: bits, lateDays: lateDays, actDays: actDays == null ? 7 : actDays, message: bits.length ? '' : 'None delivered' };
+      });
+    })();
+
     var wins = [];
     if (log.state === 'ready') {
       log.rows.forEach(function (r) {
@@ -1573,7 +1874,7 @@ footer.site a{color:var(--muted)}
       rows: rows, byId: byId, pipeItems: pipeItems, stripe: stripe, stripeWaiting: !stripe,
       agentsKnown: !!agents, agentCards: agentCards, activity: activity,
       callsKnown: !!calls, emailsKnown: !!emails,
-      wins: wins, winCopy: winCopy, xp: xp, film: streakFilm(), bookedStreak: streakBooked(),
+      wins: wins, winCopy: winCopy, xp: xp, film: streakFilm(), bookedStreak: streakBooked(), charts: charts,
       clientCount: official.length, retainersKnown: !!(feed && feed.retainers),
       official: official.map(function (spec, i) { return { index: i, name: clean(spec.name || ''), handle: clean(spec.handle || '') }; })
     };
@@ -1582,6 +1883,7 @@ footer.site a{color:var(--muted)}
   function card(m) {
     if (!m) return '';
     var plus = (m.log && m.log.quick) ? '<button type="button" class="plus" data-plus="' + esc(m.log.metric) + '" aria-label="Log 1 for ' + esc(m.label) + '">+1</button>' : '';
+    var ring = showRing(m) ? '<span class="ringbox">' + ringSvg(m.progress, 34) + '</span>' : '';
     return '<article class="kpi sig-' + m.signal + (plus ? ' has-plus' : '') + ' filterable" data-kpi="' + esc(m.id) + '">' +
       '<button type="button" class="kpi-hit" data-open-kpi="' + esc(m.id) + '">' +
       '<i class="sig" aria-hidden="true"></i><span class="l">' + esc(m.label) + '</span>' +
@@ -1589,7 +1891,7 @@ footer.site a{color:var(--muted)}
       '<span class="target">Target <b>' + esc(m.targetText) + '</b></span>' +
       '<span class="src">Source: ' + esc(m.source) + '</span>' +
       (m.note ? '<span class="quiet">' + esc(m.note) + '</span>' : '') +
-      '<span class="foot">' + chip(m.signal, m.signalWord) + (spark(m.history.vals) || '') + '</span>' +
+      '<span class="foot">' + chip(m.signal, m.signalWord) + ring + (spark(m.history.vals) || '') + '</span>' +
       '</button>' + plus + '</article>';
   }
   function rowMetric(m, shortLabel) {
@@ -1610,11 +1912,13 @@ footer.site a{color:var(--muted)}
     var word = s.score == null ? 'No data' : (s.behind ? (s.behind + ' behind') : 'On pace');
     var names = s.names.slice(0, 6).join(', ');
     if (s.names.length > 6) names += ', and ' + (s.names.length - 6) + ' more';
+    var num = s.score == null ? '' : '<b><span class="cu" data-to="' + esc(String(s.score)) + '">' + esc(String(s.score)) + '</span></b>';
     return '<button type="button" class="score sig-' + signal + '" data-view="' + side + '">' +
-      '<i class="sig" aria-hidden="true"></i><span class="l">' + esc(label) + '</span>' +
-      (s.score == null ? '<span class="v words">No score yet</span>' : '<span class="v num">' + esc(String(s.score)) + '</span>') +
-      '<span class="src">' + (s.score == null ? 'No metrics with data yet.' : ('Counts ' + esc(names) + '.')) + '</span>' +
-      '<span class="foot">' + chip(signal, word) + '</span></button>';
+      '<span class="ringbox">' + ringSvg(s.score, 84) + '<span class="ctr">' + num + '</span></span>' +
+      '<span><i class="sig" aria-hidden="true"></i><span class="l">' + esc(label) + '</span>' +
+      (s.score == null ? '<span class="v words">No score yet</span>' : '') +
+      '<span class="src">' + (s.score == null ? 'No metrics with data yet. The dashed ring is the target.' : ('Counts ' + esc(names) + '. The dashed ring is the target.')) + '</span>' +
+      '<span class="foot">' + chip(signal, word) + '</span></span></button>';
   }
   function guideHtml(m) {
     var btn = m.guide.button ? '<button type="button" class="btn p" data-open-row="' + esc(m.guide.rowId) + '">' + esc(m.guide.button) + '</button>' : '';
@@ -1624,16 +1928,23 @@ footer.site a{color:var(--muted)}
     var xp = m.xp;
     var xpBody;
     if (xp.state === 'ready') {
-      xpBody = '<span class="v num">' + esc(compact(xp.total)) + '</span><p class="quiet">' + esc(xp.level || 'No level yet') + (xp.next ? (' · Next ' + xp.next) : '') + '</p>' +
-        '<div class="bar" aria-hidden="true"><i style="width:' + Math.max(0, Math.min(100, xp.fill)).toFixed(1) + '%"></i></div>' +
+      var nextBit = '';
+      if (xp.next && xp.level && xp.next.indexOf('Top level') === 0) nextBit = '. ' + xp.next;
+      else if (xp.next) nextBit = '. Next ' + xp.next;
+      xpBody = '<span class="v num"><span class="cu" data-to="' + esc(String(xp.total)) + '">' + esc(compact(xp.total)) + '</span></span><p class="quiet">' + esc((xp.level || 'No level yet') + nextBit) + '</p>' +
+        '<div class="xpbar" aria-hidden="true"><i data-fill="' + Math.max(0, Math.min(100, xp.fill)).toFixed(1) + '"></i></div>' +
         (xp.lines.length ? '<p class="src">' + esc(xp.lines.join(' · ')) + '</p>' : '');
     } else if (xp.state === 'missing') xpBody = '<span class="v words">Targets file did not load</span>';
     else if (xp.state === 'empty') xpBody = '<span class="v words">No XP yet</span><p class="quiet">XP starts when a film, a lead magnet, a booked call, a closed deal, or cash in is on the board.</p>';
     else xpBody = '<span class="v words">' + esc(logWords(xp.state)) + '</span>';
     function streak(title, obj) {
-      return '<article class="panel"><h2>' + esc(title) + '</h2>' +
-        (obj.text ? '<p class="sheet-value" style="font-size:28px">' + esc(obj.text) + '</p>' : '<p class="v words" style="margin-top:8px">' + esc(obj.words || '') + '</p>') +
-        '<p class="src">Source: floor log</p></article>';
+      var flame = obj.text ? FLAME : '';
+      var lead = '';
+      if (obj.text) {
+        var n = String(obj.text).match(/^(\d+)/);
+        lead = n ? '<p class="sheet-value" style="font-size:28px">' + flame + '<span class="cu" data-to="' + esc(n[1]) + '" data-suffix="' + esc(obj.text.slice(n[1].length)) + '">' + esc(obj.text) + '</span></p>' : '<p class="sheet-value" style="font-size:28px">' + flame + esc(obj.text) + '</p>';
+      } else lead = '<p class="v words" style="margin-top:8px">' + esc(obj.words || '') + '</p>';
+      return '<article class="panel"><h2>' + esc(title) + '</h2>' + lead + '<p class="src">Source: floor log</p></article>';
     }
     return '<div class="game"><article class="panel"><h2>Level</h2>' + xpBody + '<p class="src">Source: floor log and cash in the feed. Points are in targets.json.</p></article>' +
       streak('Filming streak', m.film) + streak('Booked-call streak', m.bookedStreak) + '</div>';
@@ -1690,23 +2001,26 @@ footer.site a{color:var(--muted)}
   }
   function sideHead(side, title, blurb) {
     var s = S.model.sides[side];
-    return '<div class="ph"><div><p class="gk">' + esc(title) + '</p><h2>' + (s.score == null ? 'No score yet' : (s.score + ' average progress')) + '</h2><p class="sub">' + esc(blurb) + '</p></div></div>';
+    var num = s.score == null ? '' : '<b><span class="cu" data-to="' + esc(String(s.score)) + '">' + esc(String(s.score)) + '</span></b>';
+    return '<div class="sidehead"><div class="ringbox">' + ringSvg(s.score, 84) + '<div class="ctr">' + num + '</div></div><div><p class="gk">' + esc(title) + '</p><h2>' + (s.score == null ? 'No score yet' : 'Average progress') + '</h2><p class="sub">' + esc(blurb) + ' The dashed ring is the target.</p></div></div>';
   }
   function platHtml(key) {
     var post = S.model.metrics['post-' + key];
     var views = S.model.metrics['views-' + key];
     var follows = S.model.metrics['follows-' + key];
-    return '<article class="panel plat filterable"><header class="ph"><h2>' + esc(post.platLabel || key) + '</h2><p class="sub">' + esc(post.handle || '') + '</p></header>' +
+    var series = (views && views.history && views.history.vals) || [];
+    var sparkline = spark(series) || '<span class="quiet">' + esc(views && views.signalWord === 'Baseline building' ? 'Baseline building' : 'Not connected') + '</span>';
+    return '<article class="panel plat filterable"><header class="ph"><div><h2>' + esc(post.platLabel || key) + '</h2><p class="sub">' + esc(post.handle || '') + '</p></div>' + sparkline + '</header>' +
       rowMetric(post, 'Posts this week') + rowMetric(views, 'Views this week') + rowMetric(follows, 'Follower growth') + '</article>';
   }
   function stripeHtml(m) {
-    if (!m.stripe) return '<article class="panel stripe"><h2>Stripe</h2><p class="v words" style="margin-top:8px">Waiting for first Stripe sync</p><p class="src">Source: today.json cash.stripe</p><p class="quiet">This page does not call Stripe and holds no key.</p></article>';
+    if (!m.stripe) return '<article class="panel stripe"><h2>Stripe</h2><div class="emptyviz">Waiting for first Stripe sync</div><p class="src">Source: today.json cash.stripe</p><p class="quiet">This page does not call Stripe and holds no key.</p></article>';
     var s = m.stripe;
     var failed = Array.isArray(s.failedCharges) ? s.failedCharges.length : num(s.failedCharges);
     var refunds = num(s.refunds);
     var bal = s.balance || {};
     var charges = Array.isArray(s.recentCharges) ? s.recentCharges : [];
-    return '<article class="panel stripe"><div class="ph"><h2>Stripe</h2><p class="sub">' + esc(ageInfo(s.asOf, new Date()) || 'Snapshot in the feed') + '</p></div>' +
+    return cashChartHtml(m) + '<article class="panel stripe"><div class="ph"><h2>Stripe</h2><p class="sub">' + esc(ageInfo(s.asOf, new Date()) || 'Snapshot in the feed') + '</p></div>' +
       '<p class="src">Source: today.json cash.stripe. This page does not call Stripe.</p>' +
       '<ul class="src-list">' +
       '<li><b>Collected this month</b><span>' + (s.monthToDate && num(s.monthToDate.collected) != null ? esc(money(s.monthToDate.collected)) : 'Not in the snapshot') + '</span></li>' +
@@ -1732,6 +2046,7 @@ footer.site a{color:var(--muted)}
       return '<li><span>' + esc(w.text) + '</span><span>' + esc([w.when, w.source].filter(Boolean).join(' · ')) + '</span></li>';
     }).join('') + '</ul>' : '<p class="quiet">No wins logged</p>';
     return '<article class="panel client filterable"><header class="ph"><h2>' + esc(spec.name) + '</h2><p class="sub">' + esc(spec.handle || 'No handle on file') + '</p></header>' +
+      heatHtml(spec.index) +
       rowMetric(S.model.metrics['c' + i + '-views'], 'Views') +
       rowMetric(S.model.metrics['c' + i + '-follows'], 'Followers') +
       rowMetric(S.model.metrics['c' + i + '-scripts'], 'Scripts filmed') +
@@ -1749,6 +2064,78 @@ footer.site a{color:var(--muted)}
     return '<article class="panel"><div class="ph"><h2>Other retainers in the feed</h2><p class="sub">These names are not on the triangle client list.</p></div>' + list.map(rowHtml).join('') + '</article>';
   }
 
+  function chartPanel(title, sub, body, source) {
+    return '<section class="panel vizpanel filterable"><div class="ph"><h2>' + esc(title) + '</h2>' + (sub ? '<p class="sub">' + esc(sub) + '</p>' : '') + '</div>' + body + (source ? '<p class="src">Source: ' + esc(source) + '</p>' : '') + '</section>';
+  }
+  function tickerHtml(m) {
+    if (!m.activity) return '<div class="ticker static">Activity log is not connected.</div>';
+    if (!m.activity.length) return '<div class="ticker static">The activity log was checked and it is empty.</div>';
+    var bits = m.activity.map(function (e) {
+      return '<span>' + esc(clean((e.actor ? e.actor + ': ' : '') + (e.message || ''))) + '</span>';
+    }).join('');
+    var track = m.activity.length > 1 ? (bits + bits) : bits;
+    return '<div class="ticker" aria-label="Activity"><span class="tag">Live</span><div class="ticker-view"><div class="ticker-track' + (m.activity.length > 1 ? '' : ' static') + '">' + track + '</div></div></div>';
+  }
+  function desksHtml(m) {
+    if (!m.agentsKnown) return '<section class="panel"><h2>Desks</h2><p class="v words" style="margin-top:8px">Not connected</p><p class="src">Source: today.json agents</p></section>';
+    if (!m.agentCards.length) return '<section class="panel"><h2>Desks</h2><p class="quiet">No agents in this feed.</p><p class="src">Source: today.json agents</p></section>';
+    var known = { working: 1, idle: 1, blocked: 1, offline: 1, 'not-reported': 1 };
+    return '<div class="desks">' + m.agentCards.map(function (a) {
+      var st = known[a.status] ? a.status : 'missing';
+      return '<article class="desk ' + st + ' filterable"><div class="toprow"><i></i><b>' + esc(a.name) + '</b></div>' +
+        (a.role ? '<p>' + esc(a.role) + '</p>' : '') +
+        '<p>' + esc(a.work || 'Nothing in progress') + '</p>' +
+        '<span class="ago">' + esc(a.report || 'No report time') + '</span></article>';
+    }).join('') + '</div>';
+  }
+  function cashChartHtml(m) {
+    var c = m.charts && m.charts.cash;
+    if (!c || c.state !== 'ready') return chartPanel('Collected', 'Stripe', emptyViz(c && c.message), 'today.json cash.stripe');
+    var area = c.bars.length ? areaChart(c.bars) : emptyViz('No weekly charge series in this snapshot');
+    var bar = '';
+    if (c.outstanding == null) bar = '<div class="outbar"><span class="k">Outstanding</span><b>Not connected</b></div>';
+    else if (c.outstanding === 0) bar = '<div class="outbar"><span class="k">' + esc(c.outLabel || 'Outstanding') + '</span><b>None</b></div>';
+    else {
+      var max = c.outstanding;
+      c.bars.forEach(function (b) { if (b.value > max) max = b.value; });
+      var pct = max > 0 ? Math.max(8, Math.round((c.outstanding / max) * 100)) : 100;
+      bar = '<div class="outbar"><span class="k">' + esc(c.outLabel || 'Outstanding') + '</span><b class="cu" data-to="' + esc(String(c.outstanding)) + '" data-money="1">' + esc(money(c.outstanding)) + '</b><div class="vbar" aria-hidden="true"><i style="height:' + pct + '%"></i></div></div>';
+    }
+    return chartPanel('Collected', 'Succeeded charges by week. The hatched bar is outstanding, not collected.', '<div class="cashviz">' + area + bar + '</div>', c.source);
+  }
+  function attractChartsHtml(m) {
+    var ig = m.charts.ig;
+    var igBody = ig.state === 'ready' ? (barChart(ig.bars, null, 'Instagram views per post') + '<p class="quiet">' + (ig.baseline ? 'Baseline building. Outlier dots wait for 4 posts with views.' : 'Red dots mark outliers, 3x the median or more.') + '</p>') : emptyViz(ig.message);
+    var posts = m.charts.posts || [];
+    var any = posts.some(function (p) { return p.state === 'ready'; });
+    var postBody = any ? '<div class="stack">' + posts.map(function (p) {
+      var body = p.state === 'ready' ? barChart(p.bars, p.target, p.label + ' posts against the target') : emptyViz(p.message);
+      var note = p.target != null ? '<p class="quiet">Dashed line is the target.</p>' : '';
+      return '<div><h3 class="qhead">' + esc(p.label) + '</h3>' + body + note + '</div>';
+    }).join('') + '</div>' : emptyViz('Not connected');
+    return '<div class="vizgrid">' + chartPanel('Instagram views', 'One bar per post with a view count.', igBody, ig.source || 'today.json attract.social posts') + chartPanel('Posts against the target', 'Each week the feed actually counted.', postBody, 'today.json attract.social') + '</div>';
+  }
+  function convertChartsHtml(m) {
+    var f = m.charts.funnel;
+    var calls = m.charts.calls;
+    var funnelBody = f.state === 'ready' ? funnelChart(f.steps) : emptyViz(f.message);
+    var callBody = calls.state === 'ready' ? (barChart(calls.bars, calls.target, 'Booked calls by week') + (calls.target != null ? '<p class="quiet">Dashed line is the weekly target.</p>' : '')) : emptyViz(calls.message);
+    return '<div class="vizgrid">' + chartPanel('Funnel', 'Booked, then showed, then closed. A missing step is left out.', funnelBody, f.source || 'floor log') + chartPanel('Booked calls', 'Weeks with a real count. Empty weeks are not drawn as zero.', callBody, calls.source || 'floor log') + '</div>';
+  }
+  function heatHtml(index) {
+    var h = S.model.charts && S.model.charts.heat && S.model.charts.heat[index];
+    if (!h || h.state !== 'ready') return '<div class="emptyviz">' + esc((h && h.message) || 'Not connected') + '</div>';
+    var cells = (h.bits || []).map(function (bit) {
+      var detail = bit.title + (bit.lag == null ? '' : (', ' + bit.lag + ' days to film'));
+      return '<i class="' + esc(bit.tone) + '" title="' + esc(detail) + '"></i>';
+    }).join('');
+    var late = '';
+    if (h.lateDays == null) late = '<p class="src">Overdue list is not connected.</p>';
+    else if (h.lateDays === 0) late = '<p class="src">None overdue.</p>';
+    else late = '<p class="src">' + esc(h.lateDays + ' days on the oldest open item. Target none past ' + h.actDays + ' days.') + '</p>';
+    var strip = cells ? '<div class="heat" role="img" aria-label="Scripts delivered against filmed">' + cells + '</div>' : '';
+    return strip + (h.message && !cells ? '<p class="quiet">' + esc(h.message) + '</p>' : '') + late + (cells ? '<p class="quiet">Green filmed on time. Gold still inside the window. Red is late.</p>' : '');
+  }
   function renderBoard() {
     var now = new Date();
     S.model = buildBoard(S.feed, S.targets, now);
@@ -1758,16 +2145,20 @@ footer.site a{color:var(--muted)}
     var names = { home: 'Home', attract: 'Attract', convert: 'Convert', transform: 'Transform' };
     $('crumb').textContent = (S.sample ? 'SAMPLE / ' : '') + (names[S.view] || 'Home');
     $('v-home').innerHTML = guideHtml(m) +
-      '<p class="legend">Green is on pace. Red is behind. Grey means there is no data yet. The score is average progress toward the target, and only metrics with data are counted.</p>' +
+      '<p class="legend"><i class="dash"></i>Dashed ring or line is the target. The red arc or bar is the result. Green is on pace. Red is behind. Grey means there is no data yet.</p>' +
+      tickerHtml(m) +
       '<div class="scores">' + scoreCard('attract', 'Attract') + scoreCard('convert', 'Convert') + scoreCard('transform', 'Transform') + '</div>' +
+      desksHtml(m) +
       gameHtml(m) + winsHtml(m) +
       '<h2 class="qhead">Morning check</h2><div class="krow">' + card(m.metrics['cash-due']) + card(m.metrics.unsent) + card(m.metrics['delivery-oldest']) + card(m.metrics['failed-charges']) + '</div>' +
       queueHtml(m) + behindHtml(m);
     $('v-attract').innerHTML = guideHtml(m) + sideHead('attract', 'Attract', 'Posts, reach, outliers, and the work you log.') +
       '<div class="plats">' + platHtml('ig') + platHtml('x') + platHtml('youtube') + '</div>' +
+      attractChartsHtml(m) +
       '<div class="krow" style="margin-top:12px">' + card(m.metrics.outliers) + card(m.metrics.videos) + card(m.metrics.magnets) + card(m.metrics.contacts) + card(m.metrics.community) + '</div>';
     $('v-convert').innerHTML = guideHtml(m) + sideHead('convert', 'Convert', 'Calls, pipeline, and cash against the MRR target.') +
       '<div class="funnel">' + card(m.metrics.contacts) + card(m.metrics.booked) + card(m.metrics.showed) + card(m.metrics.closed) + '</div>' +
+      convertChartsHtml(m) +
       '<div class="krow" style="margin-top:12px">' + card(m.metrics['show-rate']) + card(m.metrics['close-rate']) + card(m.metrics.collected) + card(m.metrics['cash-due']) + '</div>' +
       '<div class="stack" style="margin-top:12px">' + pipelineHtml(m) + stripeHtml(m) + '</div>' +
       '<div class="krow" style="margin-top:12px">' + card(m.metrics['cash-out']) + card(m.metrics.unsent) + card(m.metrics['failed-charges']) + '</div>';
@@ -1779,11 +2170,48 @@ footer.site a{color:var(--muted)}
     paintSys();
     markNav();
     applyFilter();
+    animateVisuals();
     if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
+  }
+  function animateVisuals() {
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll('.cu').forEach(function (el) {
+      var to = parseFloat(el.dataset.to);
+      if (!isFinite(to)) return;
+      var isMoney = el.dataset.money === '1';
+      var suffix = el.dataset.suffix || '';
+      function paint(n) {
+        if (isMoney) el.textContent = money(n);
+        else if (suffix === '%') el.textContent = Math.round(n) + '%';
+        else el.textContent = compact(n) + suffix;
+      }
+      if (reduce) { paint(to); return; }
+      var t0 = performance.now();
+      function frame(t) {
+        var p = Math.min(1, (t - t0) / 800);
+        var e = 1 - Math.pow(1 - p, 3);
+        paint(to * e);
+        if (p < 1) requestAnimationFrame(frame);
+        else paint(to);
+      }
+      requestAnimationFrame(frame);
+    });
+    var arcs = document.querySelectorAll('.arc');
+    var bars = document.querySelectorAll('.xpbar i');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        arcs.forEach(function (arc) { arc.style.strokeDashoffset = arc.getAttribute('data-off') || '0'; });
+        bars.forEach(function (bar) { bar.style.width = (bar.getAttribute('data-fill') || '0') + '%'; });
+      });
+    });
   }
   function paintSys() {
     var ready = S.feedState === 'ready';
-    $('sys').innerHTML = '<b><i class="gdot' + (ready ? '' : ' dim') + '"></i> ' + (S.sample ? 'Sample feed' : 'Feed') + '</b><span>' + esc(ready && S.model ? S.model.fileAge : S.feedNote) + '</span>';
+    var age = ready && S.model ? S.model.fileAge : (S.feedNote || 'Checking the feed');
+    $('sys').innerHTML = '<b><i class="gdot' + (ready ? '' : ' dim') + '"></i> ' + (S.sample ? 'Sample feed' : 'Live') + '</b><span>' + esc(age) + '</span>';
+    var dot = $('livedot');
+    if (dot) dot.className = 'gdot' + (ready ? '' : ' dim');
+    if ($('live-age')) $('live-age').textContent = age;
   }
   function markNav() {
     document.querySelectorAll('[data-view]').forEach(function (b) {

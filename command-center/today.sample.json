@@ -188,6 +188,15 @@
       },
       "refunds": 500,
       "failedCharges": 1,
+      "charges": [
+        { "date": "2026-10-06", "customer": "SAMPLE Northwind Studio", "amount": 1800, "status": "succeeded" },
+        { "date": "2026-10-13", "customer": "SAMPLE Harbor Co", "amount": 2200, "status": "succeeded" },
+        { "date": "2026-10-20", "customer": "SAMPLE Lumen Lab", "amount": 1600, "status": "succeeded" },
+        { "date": "2026-10-27", "customer": "SAMPLE Northwind Studio", "amount": 2400, "status": "succeeded" },
+        { "date": "2026-11-10", "customer": "SAMPLE Northwind Studio", "amount": 2000, "status": "succeeded" },
+        { "date": "2026-11-04", "customer": "SAMPLE Harbor Co", "amount": 2000, "status": "failed" },
+        { "date": "2026-11-02", "customer": "SAMPLE Lumen Lab", "amount": 500, "status": "refunded" }
+      ],
       "balance": {
         "available": 1500,
         "pending": 2000
@@ -414,6 +423,18 @@
       "note": "SAMPLE. One more cut."
     },
     {
+      "metric": "videos",
+      "count": 1,
+      "loggedOn": "2026-11-09",
+      "note": "SAMPLE. Filmed again."
+    },
+    {
+      "metric": "videos",
+      "count": 1,
+      "loggedOn": "2026-11-11",
+      "note": "SAMPLE. Kept the streak."
+    },
+    {
       "metric": "lead_magnets",
       "count": 1,
       "loggedOn": "2026-11-07",
@@ -456,6 +477,24 @@
       "note": "SAMPLE."
     },
     {
+      "metric": "booked_calls",
+      "count": 14,
+      "loggedOn": "2026-11-03",
+      "note": "SAMPLE. Rest of that week."
+    },
+    {
+      "metric": "booked_calls",
+      "count": 15,
+      "loggedOn": "2026-10-27",
+      "note": "SAMPLE. A full week."
+    },
+    {
+      "metric": "booked_calls",
+      "count": 15,
+      "loggedOn": "2026-10-20",
+      "note": "SAMPLE. A full week."
+    },
+    {
       "metric": "closed_deals",
       "count": 1,
       "loggedOn": "2026-11-06",
@@ -496,6 +535,7 @@
           "id": "ig",
           "handle": "@cristianaguilar.ai",
           "postsThisWeek": 6,
+          "postsByWeek": [3, 4, 5, 6],
           "viewsByWeek": [
             800,
             900,
@@ -557,6 +597,7 @@
           "id": "x",
           "handle": "",
           "postsThisWeek": 3,
+          "postsByWeek": [4, 3],
           "viewsByWeek": [
             400,
             350
@@ -575,13 +616,17 @@
           "id": "youtube",
           "handle": "@SignalRatio",
           "postsThisWeek": 1,
+          "postsByWeek": [1, 1],
           "viewsByWeek": [
+            null,
             2000
           ],
           "weekLabels": [
+            "Nov 2",
             "Nov 9"
           ],
           "followersByWeek": [
+            null,
             30
           ],
           "posts": [
@@ -608,7 +653,9 @@
       "contacts": 4,
       "booked": 4,
       "showed": 3,
-      "closed": 1
+      "closed": 1,
+      "bookedByWeek": [15, 15, 15, 2],
+      "weekLabels": ["Oct 19", "Oct 26", "Nov 2", "Nov 9"]
     },
     "pipeline": [
       {
@@ -774,6 +821,21 @@
       {
         "name": "Sagun Sedai",
         "handle": "",
+        "viewsByWeek": [100, 140, 180, 260],
+        "weekLabels": ["Oct 19", "Oct 26", "Nov 2", "Nov 9"],
+        "followersByWeek": [2, 3, 4, 6],
+        "scripts": [
+          {
+            "title": "SAMPLE. Sagun opener",
+            "deliveredAt": "2026-11-01",
+            "filmedAt": "2026-11-09"
+          }
+        ],
+        "overdue": [
+          { "title": "SAMPLE. Thumbnail", "days": 9 }
+        ],
+        "payment": "on-time",
+        "health": 55,
         "wins": []
       },
       {

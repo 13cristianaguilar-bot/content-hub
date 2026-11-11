@@ -151,6 +151,8 @@ Headline rules the page applies when `status` is omitted:
 
 Amounts are USD numbers. `recentCharges[].status` is `succeeded`, `refunded`, or `failed`. `failedCharges` may be a number or an array of charges. `refunds` is a USD number. A present `0` is a real reading from Stripe. Omitting `stripe` is not a zero. `balance.available` and `balance.pending` are USD numbers.
 
+The cash chart reads a weekly series. Prefer `collectedByWeek` (oldest first, one USD number per week, same length as `weekLabels`) when the routine already totaled the weeks. Otherwise the page buckets `charges[]` by Monday-start week, and if `charges` is omitted it buckets `recentCharges`. Only `status: "succeeded"` amounts with a date are drawn. Do not pad a week that had no charge with 0. `charges[]` uses the same fields as `recentCharges` (`date`, `customer`, `amount`, `status`). The outstanding bar uses `balance.pending` when that number is present, otherwise `cash.stillDue.amount`. It is drawn hatched and labeled, never as collected cash. If neither series nor outstanding is present, the chart says **Waiting for first Stripe sync** or **No charge series in this snapshot**.
+
 ### `moneyMoves` (unsent cash sends and proposals)
 
 ```json
@@ -335,7 +337,9 @@ The board is Home, Attract, Convert, and Transform. Omit a section when that sou
 
 `platforms[].id` is `ig`, `x`, or `youtube` (`instagram`, `twitter`, and `yt` are accepted aliases). `postsThisWeek` is this Monday-start week. `viewsByWeek` and `followersByWeek` are oldest first, one number per week. The last point is this week. Until `targets.json` `baselineWeeks` (4) complete weeks exist, the page says **Baseline building** and leaves the trend out of the score. Do not pad a missing week with 0. Use `null` in the array for a gap, or omit the week only if you also shorten `weekLabels` the same way.
 
-`posts[]` feeds the outlier count. A post is an outlier when its `views` are at least `outliersPerMonth.multiple` (3) times the median views of the posts in this payload. The page counts outliers whose `publishedAt` falls in the current Chicago month. Fewer than 4 posts with a views number is **Baseline building**, not a count of 0.
+`posts[]` feeds the outlier count and the Instagram views chart. A post is an outlier when its `views` are at least `outliersPerMonth.multiple` (3) times the median views of the posts in this payload. The page counts outliers whose `publishedAt` falls in the current Chicago month, and it marks those posts with a dot on the views chart. Fewer than 4 posts with a views number is **Baseline building**, not a count of 0. Posts with no `views` number are left off the chart.
+
+`postsByWeek` is optional, oldest first, one count per week, aligned with `weekLabels`. The posts-vs-target chart uses it. The dashed line is the target from `targets.json`. If `postsByWeek` is omitted and `postsThisWeek` is a number, the chart draws that one week. Do not pad a missing week with 0. A platform sparkline uses `viewsByWeek` and only draws when two or more real weeks are present.
 
 `attract.community` is Skool and Discord posts plus replies for this week. The page adds `postsThisWeek` and `repliesThisWeek` when both are numbers. Target is `communityPerWeek` in `targets.json`.
 
@@ -352,6 +356,10 @@ The board is Home, Attract, Convert, and Transform. Omit a section when that sou
 ```
 
 `funnel` numbers are the Calendar and Fathom sales counts for the current week. Omit a key when that step was not counted. Do not send 0 unless the source was read and the count was actually zero.
+
+The funnel chart draws booked, showed, and closed only for steps that have a number. A missing step is left out. It is not drawn as 0.
+
+`bookedByWeek` is optional, oldest first, with `weekLabels`. The calls chart uses the floor log when any booked-call row exists. It uses `bookedByWeek` only when the log has no booked-call rows. Do not pad an empty week with 0. The dashed line on that chart is `bookedCallsPerWeek` from `targets.json`.
 
 The page prefers the floor log for contacts, booked calls, showed calls, and closed deals when any row exists in the window. It does not add the log to `funnel`. Show rate is showed / booked and close rate is closed / showed, and only when both numbers come from the same source and the denominator is greater than 0. A missing denominator is **Log to start**, not 0%.
 
@@ -390,6 +398,8 @@ The page always lists the clients in `targets.json` `transform.clients`. It matc
 `overdue` is items still open. Each item has `title` and `days`. `[]` means the list was checked and nothing is waiting (green, target none). Any item older than `overdueActAfterDays` (7) is red. Omit `overdue` when it was not checked.
 
 `scripts[]` uses `deliveredAt` and `filmedAt` (`YYYY-MM-DD` or ISO). The target is `filmedRate` (1) filmed within `filmedWithinDays` (7). A script still inside that window is on pace. Counts without dates are a fallback: `scriptsDelivered` and `scriptsFilmed`. The page then cannot apply the 7-day check and says so.
+
+The delivery strip draws one cell per script that has `deliveredAt`. Green means filmed within the window. Gold means still inside the window. Red means late. `overdue[].days` labels the oldest open item. An empty `overdue` array is **None overdue**. Omit `overdue` when it was not checked.
 
 `health` is a number the routine computed. Omit it to show **Not connected**. The page does not invent a health target, so health is not part of the side score.
 

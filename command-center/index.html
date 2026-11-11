@@ -510,9 +510,9 @@ body[data-ready] .shimmer{display:none}
 .org-svg.is-zoom .node:not(.in-zoom){opacity:.12;pointer-events:none}
 .org-svg.is-zoom .org-flow,.org-svg.is-zoom .org-wire{opacity:0}
 .org-svg.is-zoom .org-wire.for-zoom{opacity:1;stroke:rgba(255,255,255,.42)}
-.org-flow,.org-wire{fill:none;pointer-events:none}
+.org-flow,.org-wire,.org-loop{fill:none;pointer-events:none}
 .org-flow{stroke:rgba(237,48,57,.32);stroke-width:1.6}
-.org-flow.live{stroke:rgba(237,48,57,.78);stroke-dasharray:5 9;animation:flowdash 3.4s linear infinite}
+.org-flow.live,.org-loop{stroke:rgba(237,48,57,.78);stroke-width:1.6;stroke-dasharray:5 9;animation:flowdash 3.4s linear infinite}
 .org-svg.is-focus .node:not(.in-focus){opacity:.22}
 .org-svg.is-focus .node.in-focus.idle{opacity:.4}
 .org-svg.is-focus .node.in-focus.working .core{stroke:#fff;filter:drop-shadow(0 0 5px #ed3039)}
@@ -528,6 +528,15 @@ body[data-ready] .shimmer{display:none}
 @keyframes dot-bloom{0%{transform:scale(1)}55%{transform:scale(1.22)}100%{transform:scale(1.08)}}
 @keyframes dot-ripple{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.15)}}
 .node.stage.bottleneck .core{stroke:#ed3039;stroke-width:2}
+.org-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
+.viewseg{display:inline-flex;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:2px;background:rgba(0,0,0,.35);flex:none}
+.viewseg button{border:0;background:transparent;color:#c8c8c8;border-radius:999px;min-height:28px;padding:0 12px;font:750 12px/1 var(--sans);cursor:pointer}
+.viewseg button[aria-pressed="true"]{background:#ed3039;color:#fff}
+.org.is-map .org-loop,.org.is-map .sat-loop,.org.is-map .cap-arc,.org.is-map .hubtag{opacity:0;pointer-events:none}
+.org.is-loop .org-flow,.org.is-loop .sat-map,.org.is-loop .hubhalo{opacity:0;pointer-events:none}
+.org.is-map #loop-nav,.org.is-map #loop-board{display:none}
+.org.is-map .node.stage.bottleneck .core{stroke:#fff}
+.org-loop,.org-flow,.sat-map,.sat-loop,.cap-arc,.hubtag,.hubhalo{transition:opacity .28s ease}
 .loop-nav{display:flex;flex-wrap:wrap;gap:6px;padding:8px 14px 0}
 .loop-nav button{border:1px solid rgba(255,255,255,.12);background:transparent;color:#cfcfcf;border-radius:999px;padding:4px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
 .loop-nav button.on{border-color:rgba(237,48,57,.85);color:#fff;background:rgba(237,48,57,.14)}
@@ -642,6 +651,7 @@ body[data-ready] .shimmer{display:none}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
   .hero-grid,.gaugerow,.splitview,.two{grid-template-columns:1fr}
   .org-svg,.org-map,.org-links{display:none}
+  .viewseg button{min-height:44px;padding:0 14px}
   .loop-meters{grid-template-columns:1fr}
   .org-stage{display:none}
   .stepper{display:block}
@@ -1008,6 +1018,7 @@ footer.site{margin-top:auto}
     orgNodes: [],
     orgZoom: '',
     orgFocus: '',
+    orgView: 'map',
     loopRot: 0,
     authReady: false,
     user: null,
@@ -3933,7 +3944,7 @@ footer.site{margin-top:auto}
     (S.orgNodes || []).forEach(function (n) {
       if (n.stageHub && !n.satellite) return;
       if (n.stageHub && n.satellite) {
-        pos[n.id] = { x: n.hx, y: n.hy };
+        pos[n.id] = { x: n.satX, y: n.satY };
         return;
       }
       var hub = pos[n.parent];
@@ -3944,6 +3955,62 @@ footer.site{margin-top:auto}
       pos[n.id] = { x: hub.x + Math.cos(ang) * rad, y: hub.y + Math.sin(ang) * rad };
     });
     return pos;
+  }
+  function orgViewSaved() {
+    try {
+      if (localStorage.getItem('cc-workforce') === 'loop') return 'loop';
+    } catch (e) {}
+    return 'map';
+  }
+  function placeMap() {
+    var spec = { attract: { x: 176, y: 168 }, convert: { x: 480, y: 148 }, transform: { x: 784, y: 168 } };
+    var pos = {};
+    STAGE_ORDER.forEach(function (key) {
+      pos['stage-' + key] = { x: spec[key].x, y: spec[key].y };
+    });
+    (S.orgNodes || []).forEach(function (n) {
+      if (n.stageHub && n.satellite) pos[n.id] = { x: n.mapX, y: n.mapY };
+    });
+    (S.orgNodes || []).forEach(function (n) {
+      if (n.stageHub) return;
+      var hub = pos[n.parent];
+      if (!hub || n.mapR == null || n.mapAng == null) return;
+      var x = hub.x + Math.cos(n.mapAng) * n.mapR;
+      var y = hub.y + Math.sin(n.mapAng) * n.mapR;
+      pos[n.id] = { x: Math.max(14, Math.min(946, x)), y: Math.max(16, Math.min(524, y)) };
+    });
+    return pos;
+  }
+  function labelPoint(n, x, y) {
+    if (n.stageHub && !n.satellite) {
+      if (S.orgView === 'loop' && !S.orgZoom) {
+        var stack = hubStack(n, x, y);
+        return { anchor: stack.anchor, name: stack.name, count: stack.count, tag: stack.tag };
+      }
+      var nameDy = S.orgZoom ? -(n.hr + 22) : (n.nameDy || -(n.hr + 18));
+      var countDy = S.orgZoom ? (nameDy + 14) : (n.countDy != null ? n.countDy : nameDy + 13);
+      return {
+        anchor: 'middle',
+        name: { x: x, y: y + nameDy },
+        count: { x: x, y: y + countDy },
+        tag: { x: x, y: y + countDy + 14, show: false }
+      };
+    }
+    if (n.stageHub) {
+      var nameOff = S.orgZoom ? (n.hr + 20) : (S.orgView === 'loop' ? (n.outerRad + 16) : (n.nameDy || (n.hr + 18)));
+      var countOff = S.orgZoom ? (n.hr + 34) : (S.orgView === 'loop' ? (n.outerRad + 28) : (n.countDy != null ? n.countDy : nameOff + 12));
+      return { anchor: 'middle', name: { x: x, y: y + nameOff }, count: { x: x, y: y + countOff } };
+    }
+    if (S.orgView !== 'loop' && !S.orgZoom) {
+      return { anchor: 'middle', name: { x: x, y: y + n.hr + 14 }, count: { x: x, y: y + n.hr + 26 } };
+    }
+    var ang = S.orgZoom ? (n.zoomAng || 0) : ((n.zang || 0) + (n.satellite ? 0 : (S.loopRot || 0)));
+    var cos = Math.cos(ang);
+    var dist = n.hr + (S.orgZoom ? 18 : 12);
+    var anchor = cos > 0.35 ? 'start' : (cos < -0.35 ? 'end' : 'middle');
+    var lx = x + Math.cos(ang) * dist;
+    var ly = y + Math.sin(ang) * dist;
+    return { anchor: anchor, name: { x: lx, y: ly }, count: { x: lx, y: ly + 11 } };
   }
   function loopBoardHtml(focus) {
     var cap = S.stageCap || {};
@@ -3981,6 +4048,7 @@ footer.site{margin-top:auto}
     S.orgZoom = '';
     S.orgFocus = '';
     S.loopRot = 0;
+    S.orgView = orgViewSaved();
     var reduce = motionReduce();
     var groups = { attract: [], convert: [], transform: [], ops: [], growth: [], build: [] };
     cards.forEach(function (a) {
@@ -4056,6 +4124,7 @@ footer.site{margin-top:auto}
     var satKeys = ['ops', 'growth', 'build'].filter(function (key) { return groups[key].length; });
     var satNames = { ops: 'Ops', growth: 'Personal', build: 'Build' };
     var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [300, 660] : [156, 480, 804]);
+    var satMapXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [330, 630] : [176, 480, 784]);
     satKeys.forEach(function (key, i) {
       var list = groups[key];
       var live = list.some(function (a) { return a.status === 'working'; });
@@ -4066,21 +4135,60 @@ footer.site{margin-top:auto}
         id: 'stage-' + key, name: satNames[key], role: 'Stage', status: live ? 'working' : 'idle',
         work: '', report: '', reportText: '', activeAt: '', parent: '', desk: true, feed: false,
         stageHub: true, stageId: key, liveStage: live, satellite: true, count: list.length,
-        bottleneck: false, outerRad: outer, hr: 14, hx: satXs[i], hy: 430
+        bottleneck: false, outerRad: outer, hr: 16, satX: satXs[i], satY: 430, mapX: satMapXs[i], mapY: 438
       });
       addBots(key, true);
     });
+    function mapOrbit(hub, satellite) {
+      var kids = nodes.filter(function (n) { return n.parent === hub.id; });
+      var total = kids.length;
+      var counts;
+      if (total <= 9) counts = [total];
+      else {
+        var outerN = Math.ceil(total * 0.56);
+        var innerN = total - outerN;
+        counts = innerN < 4 ? [total] : [innerN, outerN];
+      }
+      var cursor = 0;
+      var outerRad = 0;
+      counts.forEach(function (count, ri) {
+        if (!count) return;
+        var need = count <= 1 ? 40 : (20 / (2 * Math.sin(Math.PI / count)));
+        var base = satellite ? [44, 66] : [58, 86];
+        var rad = Math.max(base[ri] || base[0], Math.ceil(need + 2));
+        if (rad > outerRad) outerRad = rad;
+        var gap = 1.05;
+        var span = Math.PI * 2 - gap;
+        var start = (satellite ? Math.PI / 2 : -Math.PI / 2) + gap / 2;
+        var spin = ri % 2 ? (span / count) * 0.5 : 0;
+        kids.slice(cursor, cursor + count).forEach(function (b, i) {
+          b.mapAng = start + spin + (count <= 1 ? span / 2 : (i / count) * span);
+          b.mapR = rad;
+          b.zring = ri;
+        });
+        cursor += count;
+      });
+      hub.mapOuter = outerRad;
+      hub.nameDy = satellite ? outerRad + 16 : -(outerRad + 16);
+      hub.countDy = satellite ? outerRad + 28 : hub.nameDy + 13;
+    }
+    nodes.forEach(function (n) { if (n.stageHub) mapOrbit(n, !!n.satellite); });
     S.orgNodes = nodes;
-    var placed = placeLoop(0, '');
+    var mapPos = placeMap();
+    var loopPos = placeLoop(0, '');
+    var placed = S.orgView === 'loop' ? loopPos : mapPos;
     nodes.forEach(function (n) {
-      var p = placed[n.id] || { x: n.hx || LOOP.cx, y: n.hy || LOOP.cy };
+      var mp = mapPos[n.id] || { x: LOOP.cx, y: LOOP.cy };
+      var p = placed[n.id] || mp;
       p.x = finite(p.x, LOOP.cx);
       p.y = finite(p.y, LOOP.cy);
+      n.mapX = finite(mp.x, p.x);
+      n.mapY = finite(mp.y, p.y);
       n.vx = p.x;
       n.vy = p.y;
-      n.hx = p.x;
-      n.hy = p.y;
-      n.hr = n.hr || (n.stageHub ? 22 : 6.5);
+      n.hx = n.mapX;
+      n.hy = n.mapY;
+      n.hr = n.hr || (n.stageHub ? (n.satellite ? 16 : 26) : 6.5);
       n.hitR = n.hr + 3;
     });
     S.orgLinkSpace = 'view';
@@ -4090,11 +4198,27 @@ footer.site{margin-top:auto}
       if (status === 'not-reported') return '#242424';
       return '#3a3a3a';
     }
-    var paths = '<circle class="org-loop org-flow live" cx="' + LOOP.cx + '" cy="' + LOOP.cy + '" r="' + LOOP.r + '"/>';
+    function qpath(a, b, lift) {
+      if (!a || !b) return null;
+      var mx = (a.x + b.x) / 2;
+      var my = (a.y + b.y) / 2 - lift;
+      if (!isFinite(mx) || !isFinite(my)) return null;
+      return { d: 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' Q' + mx.toFixed(1) + ',' + my.toFixed(1) + ' ' + b.x.toFixed(1) + ',' + b.y.toFixed(1), x0: a.x, y0: a.y, cx: mx, cy: my, x1: b.x, y1: b.y };
+    }
+    var attractLive = groups.attract.some(function (a) { return a.status === 'working'; });
+    var convertLive = groups.convert.some(function (a) { return a.status === 'working'; });
+    var flowA = qpath(mapPos['stage-attract'], mapPos['stage-convert'], 48);
+    var flowB = qpath(mapPos['stage-convert'], mapPos['stage-transform'], 48);
+    var paths = '';
+    if (flowA) paths += '<path class="org-flow' + (attractLive ? ' live' : '') + '" d="' + flowA.d + '"/>';
+    if (flowB) paths += '<path class="org-flow' + (convertLive ? ' live' : '') + '" d="' + flowB.d + '"/>';
+    paths += '<circle class="org-loop" cx="' + LOOP.cx + '" cy="' + LOOP.cy + '" r="' + LOOP.r + '"/>';
     satKeys.forEach(function (key) {
-      var h = placed['stage-' + key];
-      if (!h) return;
-      paths += '<path class="org-wire sat" d="M' + h.x.toFixed(1) + ',' + h.y.toFixed(1) + ' L' + LOOP.cx + ',' + LOOP.cy + '"/>';
+      var hm = mapPos['stage-' + key];
+      var hc = mapPos['stage-convert'];
+      if (hm && hc) paths += '<path class="org-wire sat sat-map" d="M' + hm.x.toFixed(1) + ',' + hm.y.toFixed(1) + ' L' + hc.x.toFixed(1) + ',' + hc.y.toFixed(1) + '"/>';
+      var node = nodes.filter(function (n) { return n.id === 'stage-' + key; })[0];
+      if (node) paths += '<path class="org-wire sat sat-loop" d="M' + node.satX.toFixed(1) + ',' + node.satY.toFixed(1) + ' L' + LOOP.cx + ',' + LOOP.cy + '"/>';
     });
     nodes.forEach(function (n) {
       if (!n.parent || !placed[n.parent] || !placed[n.id]) return;
@@ -4102,9 +4226,13 @@ footer.site{margin-top:auto}
       var b = placed[n.id];
       paths += '<path class="org-wire" data-bot="' + esc(n.stageId) + '" data-from="' + esc(n.parent) + '" data-to="' + esc(n.id) + '" d="M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' L' + b.x.toFixed(1) + ',' + b.y.toFixed(1) + '"/>';
     });
-    S.orgLinks = [0, 0.33, 0.66].map(function (phase) {
+    S.loopLinks = [0, 0.33, 0.66].map(function (phase) {
       return { kind: 'arc', cx: LOOP.cx, cy: LOOP.cy, r: LOOP.r, a0: -Math.PI / 2, a1: Math.PI * 1.5, phase: phase };
     });
+    S.mapLinks = [];
+    if (attractLive && flowA) S.mapLinks.push(flowA);
+    if (convertLive && flowB) S.mapLinks.push(flowB);
+    S.orgLinks = S.orgView === 'loop' ? S.loopLinks : S.mapLinks;
     var pingLeft = reduce ? 0 : 10;
     nodes.forEach(function (n) {
       var hot = n.stageHub ? n.liveStage : n.status === 'working';
@@ -4115,6 +4243,7 @@ footer.site{margin-top:auto}
       var x = n.hx, y = n.hy, r = n.hr;
       var cls = n.stageHub ? ('stage' + (n.liveStage ? ' working' : '') + (n.bottleneck ? ' bottleneck' : '')) : (n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : (n.status === 'offline' ? 'offline' : 'idle')));
       var ping = n.ping ? '<circle class="ringping" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (r + 8).toFixed(1) + '" fill="none" stroke="#ed3039" stroke-width="1.2"/>' : '';
+      var halo = n.stageHub ? '<circle class="hubhalo" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (r + 7).toFixed(1) + '" fill="none" stroke="rgba(237,48,57,.5)" stroke-width="1.3"/>' : '';
       var gauge = '';
       if (n.stageHub && !n.satellite) {
         var gr = r + 9;
@@ -4124,27 +4253,23 @@ footer.site{margin-top:auto}
         var stroke = n.bottleneck ? '#ed3039' : 'rgba(255,255,255,.55)';
         gauge = '<circle class="cap-arc" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + gr.toFixed(1) + '" fill="none" stroke="' + stroke + '" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="' + dash.toFixed(2) + ' ' + circ.toFixed(2) + '" transform="rotate(-90 ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')"/>';
       }
-      var label;
-      if (n.stageHub && !n.satellite) {
-        var stack = hubStack(n, x, y);
-        var liveN = (groups[n.stageId] || []).filter(function (a) { return a.status === 'working'; }).length;
-        function lab(cls, pt, word) {
-          return '<text class="' + cls + '" x="' + pt.x.toFixed(1) + '" y="' + pt.y.toFixed(1) + '" text-anchor="' + stack.anchor + '">' + word + '</text>';
-        }
-        label = lab('hublab', stack.name, esc(n.name)) + lab('hubcount', stack.count, liveN + '/' + n.count);
-        if (n.bottleneck && stack.tag.show) label += lab('hubtag', stack.tag, 'Bottleneck');
-      } else if (n.stageHub) {
-        var countY = y + n.outerRad + 28;
-        var liveSat = (groups[n.stageId] || []).filter(function (a) { return a.status === 'working'; }).length;
-        label = '<text class="hublab" x="' + x.toFixed(1) + '" y="' + (y + n.outerRad + 16).toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
-        label += '<text class="hubcount" x="' + x.toFixed(1) + '" y="' + countY.toFixed(1) + '" text-anchor="middle">' + liveSat + '/' + n.count + '</text>';
+      var liveN = (groups[n.stageId] || []).filter(function (a) { return a.status === 'working'; }).length;
+      var lp = labelPoint(n, x, y);
+      function lab(cls, pt, word) {
+        if (!pt) return '';
+        return '<text class="' + cls + '" x="' + pt.x.toFixed(1) + '" y="' + pt.y.toFixed(1) + '" text-anchor="' + lp.anchor + '">' + word + '</text>';
+      }
+      var label = '';
+      if (n.stageHub) {
+        label = lab('hublab', lp.name, esc(n.name)) + lab('hubcount', lp.count, liveN + '/' + n.count);
+        if (!n.satellite && n.bottleneck) label += lab('hubtag', lp.tag, 'Bottleneck');
       } else {
-        label = '<text class="botlab" x="' + x.toFixed(1) + '" y="' + (y + 14).toFixed(1) + '" text-anchor="middle">' + esc(n.name) + '</text>';
-        if (n.work) label += '<text class="botwork" x="' + x.toFixed(1) + '" y="' + (y + 26).toFixed(1) + '" text-anchor="middle">' + esc(workSnippet(n.work)) + '</text>';
+        label = lab('botlab', lp.name, esc(n.name));
+        if (n.work) label += lab('botwork', lp.count, esc(workSnippet(n.work)));
       }
       var hit = '<circle class="hit" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + (n.hitR).toFixed(1) + '"/>';
       var fillColor = n.stageHub ? (n.liveStage ? '#ed3039' : '#2a2a2a') : fill(n.status);
-      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" data-stage="' + esc(n.stageId) + '" aria-label="' + esc(n.name) + '">' + ping + gauge + hit + '<circle class="core" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fillColor + '"/>' + label + '</g>';
+      return '<g class="node ' + cls + '" data-node="' + esc(n.id) + '" data-stage="' + esc(n.stageId) + '" aria-label="' + esc(n.name) + '">' + ping + halo + gauge + hit + '<circle class="core" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + fillColor + '"/>' + label + '</g>';
     }).join('');
     var nav = STAGE_ORDER.map(function (key, i) {
       return '<button type="button" data-focus="' + key + '">' + (i + 1) + ' ' + esc(spec[key].name) + '</button>';
@@ -4162,8 +4287,15 @@ footer.site{margin-top:auto}
       if (cap) meta += '. ' + playLine(cap.plays);
       return '<li class="' + (hub.liveStage ? 'working' : 'idle') + '" data-stage="' + key + '"><i class="dot"></i><button type="button" class="nodebtn" data-node="' + esc(hub.id) + '"><b>' + esc(hub.name) + '</b><span class="work">' + esc(meta) + '</span></button>' + (botsHtml ? '<ul class="bots">' + botsHtml + '</ul>' : '') + '</li>';
     }).join('');
-    var svg = '<svg class="org-svg" viewBox="0 0 960 540" role="img" aria-label="AI workforce loop. Attract feeds Convert, Convert feeds Transform, and Transform feeds Attract.">' + paths + shapes + '</svg>';
-    return '<section class="org panel"><div class="ph"><h2>AI workforce</h2><p class="sub" id="org-crumb">Attract, Convert, and Transform. A closed loop.</p></div><div class="loop-nav" id="loop-nav">' + nav + '</div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><div id="loop-board">' + loopBoardHtml('') + '</div><ol class="stepper">' + steps + '</ol></section>';
+    var svgLabel = S.orgView === 'loop'
+      ? 'AI workforce loop. Attract feeds Convert, Convert feeds Transform, and Transform feeds Attract.'
+      : 'AI workforce map. Each bot sits on its bucket.';
+    var crumb = S.orgView === 'loop'
+      ? 'Attract, Convert, and Transform. A closed loop.'
+      : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
+    var svg = '<svg class="org-svg" viewBox="0 0 960 540" role="img" aria-label="' + esc(svgLabel) + '">' + paths + shapes + '</svg>';
+    var seg = '<div class="viewseg" id="org-view" role="group" aria-label="Workforce view"><button type="button" data-org-view="map" aria-pressed="' + (S.orgView === 'map' ? 'true' : 'false') + '">Map</button><button type="button" data-org-view="loop" aria-pressed="' + (S.orgView === 'loop' ? 'true' : 'false') + '">Loop</button></div>';
+    return '<section class="org panel is-' + S.orgView + '"><div class="ph"><div class="org-title"><h2>AI workforce</h2>' + seg + '</div><p class="sub" id="org-crumb">' + crumb + '</p></div><div class="loop-nav" id="loop-nav">' + nav + '</div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><div id="loop-board">' + loopBoardHtml('') + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   var zoomGen = 0;
   function refreshOrgWires() {
@@ -4187,63 +4319,197 @@ footer.site{margin-top:auto}
       if (c.classList.contains('cap-arc')) c.setAttribute('transform', 'rotate(-90 ' + x.toFixed(1) + ' ' + y.toFixed(1) + ')');
     });
     var texts = g.querySelectorAll('text');
-    if (n.stageHub && !n.satellite) {
-      var stack = hubStack(n, x, y);
-      function put(el, pt) {
-        if (!el || !pt) return;
-        el.setAttribute('x', pt.x.toFixed(1));
-        el.setAttribute('y', pt.y.toFixed(1));
-        el.setAttribute('text-anchor', stack.anchor);
-      }
-      put(texts[0], stack.name);
-      put(texts[1], stack.count);
-      if (texts[2]) {
-        put(texts[2], stack.tag);
-        texts[2].setAttribute('opacity', stack.tag.show ? '1' : '0');
-      }
-      return;
+    var lp = labelPoint(n, x, y);
+    function put(el, pt) {
+      if (!el || !pt) return;
+      el.setAttribute('x', pt.x.toFixed(1));
+      el.setAttribute('y', pt.y.toFixed(1));
+      el.setAttribute('text-anchor', lp.anchor);
     }
-    if (n.stageHub && n.satellite) {
-      if (texts[0]) { texts[0].setAttribute('x', x.toFixed(1)); texts[0].setAttribute('y', (y + n.outerRad + 16).toFixed(1)); }
-      if (texts[1]) { texts[1].setAttribute('x', x.toFixed(1)); texts[1].setAttribute('y', (y + n.outerRad + 28).toFixed(1)); }
-      return;
-    }
-    var ang = (n.zang || 0) + (n.satellite ? 0 : (S.loopRot || 0));
-    var dist = n.hr + 12;
-    var lx = x + Math.cos(ang) * dist;
-    var ly = y + Math.sin(ang) * dist;
-    var anchor = Math.cos(ang) > 0.35 ? 'start' : (Math.cos(ang) < -0.35 ? 'end' : 'middle');
-    if (texts[0]) {
-      texts[0].setAttribute('x', lx.toFixed(1));
-      texts[0].setAttribute('y', ly.toFixed(1));
-      texts[0].setAttribute('text-anchor', anchor);
-    }
-    if (texts[1]) {
-      texts[1].setAttribute('x', lx.toFixed(1));
-      texts[1].setAttribute('y', (ly + 11).toFixed(1));
-      texts[1].setAttribute('text-anchor', anchor);
+    put(texts[0], lp.name);
+    put(texts[1], lp.count);
+    if (texts[2]) {
+      put(texts[2], lp.tag);
+      var showTag = !!(S.orgView === 'loop' && !S.orgZoom && lp.tag && lp.tag.show && n.bottleneck);
+      texts[2].setAttribute('opacity', showTag ? '1' : '0');
     }
   }
-  function animateOrg(svg, moves) {
+  function animateOrg(svg, moves, box) {
     var gen = ++zoomGen;
     var start = moves.map(function (m) { return { n: m.n, x: m.n.vx, y: m.n.vy, tx: m.x, ty: m.y }; });
-    if (motionReduce()) {
-      start.forEach(function (m) { paintNodeAt(m.n, m.tx, m.ty, !S.orgFocus); });
+    var raw = (svg.getAttribute('viewBox') || '0 0 960 540').split(/[\s,]+/).map(Number);
+    var fromBox = raw.length === 4 && raw.every(function (v) { return isFinite(v); }) ? raw : [0, 0, 960, 540];
+    var toBox = box && box.length === 4 ? box : null;
+    function apply(u) {
+      start.forEach(function (m) { paintNodeAt(m.n, m.x + (m.tx - m.x) * u, m.y + (m.ty - m.y) * u, false); });
+      if (toBox) {
+        var vb = fromBox.map(function (v, i) { return v + (toBox[i] - v) * u; });
+        svg.setAttribute('viewBox', vb.map(function (v) { return v.toFixed(1); }).join(' '));
+      }
       refreshOrgWires();
-      return;
     }
+    if (motionReduce()) { apply(1); return; }
     var t0 = performance.now();
     function frame(now) {
       if (gen !== zoomGen) return;
       var u = Math.min(1, (now - t0) / 360);
       var e = 1 - Math.pow(1 - u, 3);
-      start.forEach(function (m) { paintNodeAt(m.n, m.x + (m.tx - m.x) * e, m.y + (m.ty - m.y) * e, !S.orgFocus); });
-      refreshOrgWires();
+      apply(e);
       if (u < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
   }
+  function viewFor(points) {
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    points.forEach(function (p) {
+      minX = Math.min(minX, p.x - 220);
+      maxX = Math.max(maxX, p.x + 220);
+      minY = Math.min(minY, p.y - 90);
+      maxY = Math.max(maxY, p.y + 70);
+    });
+    var w = Math.max(320, maxX - minX);
+    var h = Math.max(180, maxY - minY);
+    var aspect = 960 / 540;
+    if (w / h < aspect) {
+      var nw = h * aspect;
+      minX -= (nw - w) / 2;
+      w = nw;
+    } else {
+      var nh = w / aspect;
+      minY -= (nh - h) / 2;
+      h = nh;
+    }
+    return [minX, minY, w, h];
+  }
+  function zoomTargets(stageId) {
+    var bots = (S.orgNodes || []).filter(function (n) { return n.stageId === stageId && !n.stageHub; });
+    var hub = (S.orgNodes || []).filter(function (n) { return n.stageHub && n.stageId === stageId; })[0];
+    var targets = {};
+    if (!hub) return targets;
+    var ox = 2400;
+    var oy = 360;
+    targets[hub.id] = { x: ox, y: oy };
+    var rings = [];
+    bots.forEach(function (b) {
+      var ri = b.zring || 0;
+      if (!rings[ri]) rings[ri] = [];
+      rings[ri].push(b);
+    });
+    rings.forEach(function (list, ri) {
+      if (!list || !list.length) return;
+      var rad = rings.length > 1 ? (200 + ri * 168) : (list.length > 8 ? 250 : 210);
+      var gap = 1.05;
+      var span = Math.PI * 2 - gap;
+      var start = (hub.satellite ? Math.PI / 2 : -Math.PI / 2) + gap / 2;
+      var spin = ri % 2 ? (span / list.length) * 0.5 : 0;
+      list.forEach(function (b, i) {
+        var ang = start + spin + (list.length <= 1 ? span / 2 : (i / list.length) * span);
+        b.zoomAng = ang;
+        targets[b.id] = { x: ox + Math.cos(ang) * rad, y: oy + Math.sin(ang) * rad };
+      });
+    });
+    return targets;
+  }
+  function paintOrgView() {
+    var org = document.querySelector('#v-home .org');
+    if (org) {
+      org.classList.toggle('is-map', S.orgView !== 'loop');
+      org.classList.toggle('is-loop', S.orgView === 'loop');
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#org-view button'), function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-org-view') === S.orgView ? 'true' : 'false');
+    });
+    S.orgLinks = S.orgView === 'loop' ? (S.loopLinks || []) : (S.mapLinks || []);
+    S.orgLinkSpace = 'view';
+  }
+  function setOrgView(next) {
+    if (next !== 'loop') next = 'map';
+    if (next === S.orgView && !S.orgZoom && !S.orgFocus) return;
+    S.orgView = next;
+    S.orgZoom = '';
+    S.orgFocus = '';
+    S.loopRot = 0;
+    try { localStorage.setItem('cc-workforce', next); } catch (e) {}
+    hideHover();
+    paintOrgView();
+    var crumb = $('org-crumb');
+    if (crumb) crumb.textContent = next === 'loop'
+      ? 'Attract, Convert, and Transform. A closed loop.'
+      : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
+    var board = $('loop-board');
+    if (board) board.innerHTML = loopBoardHtml('');
+    Array.prototype.forEach.call(document.querySelectorAll('#loop-nav button'), function (btn) { btn.classList.remove('on'); });
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) { li.classList.remove('on'); });
+    var svg = document.querySelector('#v-home .org-svg');
+    if (!svg) return;
+    svg.classList.remove('is-zoom');
+    svg.classList.remove('is-focus');
+    svg.setAttribute('aria-label', next === 'loop'
+      ? 'AI workforce loop. Attract feeds Convert, Convert feeds Transform, and Transform feeds Attract.'
+      : 'AI workforce map. Each bot sits on its bucket.');
+    Array.prototype.forEach.call(svg.querySelectorAll('.node'), function (g) {
+      g.classList.remove('in-zoom');
+      g.classList.remove('in-focus');
+      g.classList.remove('focus-bot');
+    });
+    Array.prototype.forEach.call(svg.querySelectorAll('.org-wire[data-bot]'), function (p) { p.classList.remove('for-zoom'); });
+    var targets = next === 'loop' ? placeLoop(0, '') : null;
+    var moves = [];
+    (S.orgNodes || []).forEach(function (n) {
+      var p = targets ? targets[n.id] : { x: n.mapX, y: n.mapY };
+      if (!p || p.x == null) return;
+      moves.push({ n: n, x: p.x, y: p.y });
+    });
+    animateOrg(svg, moves, [0, 0, 960, 540]);
+  }
+  function zoomOrg(stage) {
+    if (S.orgView !== 'map') return;
+    S.orgZoom = stage || '';
+    S.orgFocus = '';
+    hideHover();
+    var svg = document.querySelector('#v-home .org-svg');
+    var crumb = $('org-crumb');
+    var hub = null;
+    (S.orgNodes || []).forEach(function (n) { if (n.stageHub && n.stageId === S.orgZoom) hub = n; });
+    if (crumb) {
+      var kids = hub ? (S.orgNodes || []).filter(function (n) { return n.parent === hub.id; }) : [];
+      var liveN = kids.filter(function (n) { return n.status === 'working'; }).length;
+      crumb.innerHTML = hub
+        ? '<button type="button" class="org-crumb" data-org-zoom="">Workforce</button> / <b>' + esc(hub.name) + '</b> <span class="org-counts">' + liveN + ' working, ' + (kids.length - liveN) + ' idle</span>'
+        : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .stepper li[data-stage]'), function (li) {
+      li.classList.toggle('on', !!S.orgZoom && li.getAttribute('data-stage') === S.orgZoom);
+    });
+    if (!svg) return;
+    svg.classList.toggle('is-zoom', !!S.orgZoom);
+    Array.prototype.forEach.call(svg.querySelectorAll('.node'), function (g) {
+      g.classList.toggle('in-zoom', !S.orgZoom || g.getAttribute('data-stage') === S.orgZoom);
+    });
+    Array.prototype.forEach.call(svg.querySelectorAll('.org-wire[data-bot]'), function (p) {
+      p.classList.toggle('for-zoom', !!S.orgZoom && p.getAttribute('data-bot') === S.orgZoom);
+    });
+    var moves = [];
+    if (!S.orgZoom) {
+      (S.orgNodes || []).forEach(function (n) {
+        if (n.mapX == null) return;
+        moves.push({ n: n, x: n.mapX, y: n.mapY });
+      });
+      animateOrg(svg, moves, [0, 0, 960, 540]);
+      return;
+    }
+    var targets = zoomTargets(S.orgZoom);
+    var pts = [];
+    (S.orgNodes || []).forEach(function (n) {
+      if (!targets[n.id]) return;
+      moves.push({ n: n, x: targets[n.id].x, y: targets[n.id].y });
+      pts.push(targets[n.id]);
+    });
+    if (!pts.length) return;
+    animateOrg(svg, moves, viewFor(pts));
+  }
   function focusOrg(stage, toggle) {
+    if (S.orgView !== 'loop') return;
     if (STAGE_ORDER.indexOf(stage) < 0) stage = '';
     if (toggle && stage && stage === S.orgFocus) stage = '';
     S.orgFocus = stage || '';
@@ -4282,17 +4548,20 @@ footer.site{margin-top:auto}
       if (!targets[n.id]) return;
       moves.push({ n: n, x: targets[n.id].x, y: targets[n.id].y });
     });
-    animateOrg(svg, moves);
+    animateOrg(svg, moves, [0, 0, 960, 540]);
   }
   function orgActivate(id) {
     var n = nodeById(id);
-    if (n && n.stageHub && !n.satellite) {
-      focusOrg(n.stageId, true);
-      return;
-    }
-    if (n && n.stageHub && n.satellite) {
-      var li = document.querySelector('#v-home .stepper li[data-stage="' + n.stageId + '"]');
-      if (li) li.classList.toggle('on');
+    if (n && n.stageHub) {
+      if (S.orgView === 'loop') {
+        if (!n.satellite) focusOrg(n.stageId, true);
+        else {
+          var li = document.querySelector('#v-home .stepper li[data-stage="' + n.stageId + '"]');
+          if (li) li.classList.toggle('on');
+        }
+        return;
+      }
+      zoomOrg(S.orgZoom === n.stageId ? '' : n.stageId);
       return;
     }
     openNode(id);
@@ -4821,7 +5090,9 @@ footer.site{margin-top:auto}
         title: n.name,
         pill: null,
         rows: stageRows,
-        hint: S.orgFocus === n.stageId ? 'Esc returns to the loop' : (n.satellite ? 'Support for the loop' : 'Click to focus this stage')
+        hint: S.orgView === 'loop'
+          ? (S.orgFocus === n.stageId ? 'Esc returns to the loop' : (n.satellite ? 'Support for the loop' : 'Click to focus this stage'))
+          : (S.orgZoom === n.stageId ? 'Esc returns to the map' : (n.satellite ? 'Support bucket' : 'Click to open this bucket'))
       };
     }
     var kids = nodes.filter(function (k) { return k.parent === n.id && k.feed; });
@@ -5933,12 +6204,23 @@ footer.site{margin-top:auto}
         return;
       }
       if (e.target.closest('a[href]')) return;
-      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-focus],[data-pick],[data-more]');
+      var t = e.target.closest('[data-view],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-org-view],[data-focus],[data-pick],[data-more]');
       if (!t) {
         if (Hover.pointer === 'touch') hideHover();
         return;
       }
-      if (t.hasAttribute('data-focus')) { bubble('pop'); focusOrg(t.getAttribute('data-focus')); return; }
+      if (t.hasAttribute('data-org-view')) {
+        var nextView = t.getAttribute('data-org-view');
+        if (nextView !== S.orgView) bubble('pop');
+        setOrgView(nextView);
+        return;
+      }
+      if (t.hasAttribute('data-focus')) {
+        if (S.orgView !== 'loop') return;
+        bubble('pop');
+        focusOrg(t.getAttribute('data-focus'));
+        return;
+      }
       if (t.hasAttribute('data-node')) {
         var nodeId = t.getAttribute('data-node');
         var svgClick = e.target.closest && e.target.closest('.org-svg');
@@ -5955,7 +6237,7 @@ footer.site{margin-top:auto}
         orgActivate(nodeId);
         return;
       }
-      if (t.hasAttribute('data-org-zoom')) { zoomOrg(t.getAttribute('data-org-zoom')); return; }
+      if (t.hasAttribute('data-org-zoom')) { bubble('pop'); zoomOrg(t.getAttribute('data-org-zoom')); return; }
       if (t.hasAttribute('data-pick')) { S.pick = t.getAttribute('data-pick'); updateReview(); return; }
       if (t.hasAttribute('data-more')) { var key = t.getAttribute('data-more'); S.more[key] = !S.more[key]; updateToday(); return; }
       if (t.hasAttribute('data-view')) { bubble('pop'); closeSheets(); go(t.getAttribute('data-view')); return; }
@@ -6004,20 +6286,36 @@ footer.site{margin-top:auto}
       });
       if (e.key === 'Escape') {
         if (sheetOpen) { closeSheets(); return; }
+        if (S.orgView === 'map' && S.orgZoom) { zoomOrg(''); return; }
         if (S.orgFocus) { focusOrg(''); return; }
       }
-      if (!typing && !sheetOpen && S.orgFocus && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+      if (!typing && !sheetOpen && S.orgView === 'loop' && S.orgFocus && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
         var loopOrder = ['attract', 'convert', 'transform'];
         var loopAt = loopOrder.indexOf(S.orgFocus);
         e.preventDefault();
         focusOrg(loopOrder[(loopAt + (e.key === 'ArrowRight' ? 1 : loopOrder.length - 1)) % loopOrder.length]);
         return;
       }
+      if (!typing && !sheetOpen && S.orgView === 'map' && S.orgZoom && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
+        var mapOrder = ['attract', 'convert', 'transform'];
+        var mapAt = mapOrder.indexOf(S.orgZoom);
+        if (mapAt >= 0) {
+          e.preventDefault();
+          zoomOrg(mapOrder[(mapAt + (e.key === 'ArrowRight' ? 1 : mapOrder.length - 1)) % mapOrder.length]);
+          return;
+        }
+      }
       if (signalKey(e)) return;
       if (e.key === 'Escape') { closeSheets(); return; }
       if (typing || sheetOpen) return;
       var loopKeys = { '1': 'attract', '2': 'convert', '3': 'transform' };
-      if (loopKeys[e.key]) { e.preventDefault(); focusOrg(loopKeys[e.key]); return; }
+      if (loopKeys[e.key]) {
+        e.preventDefault();
+        if (S.orgView === 'map') zoomOrg(loopKeys[e.key]);
+        else focusOrg(loopKeys[e.key]);
+        return;
+      }
+      if (S.orgView !== 'loop') return;
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         var order = ['attract', 'convert', 'transform'];
         var at = order.indexOf(S.orgFocus);

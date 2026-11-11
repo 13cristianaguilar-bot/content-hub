@@ -40,6 +40,89 @@
     "status": "SAMPLE. Date held, invite not sent",
     "nextAction": "SAMPLE. Copy the hold note, then send the invite from Gmail yourself."
   },
+  "reminders": {
+    "asOf": "2026-11-11T08:15:00-06:00",
+    "source": "SAMPLE reminders bot",
+    "counts": {
+      "signalNow": 8,
+      "futureSignal": 2,
+      "noise": 6
+    },
+    "signalNow": [
+      {
+        "id": "sample-rem-1",
+        "title": "SAMPLE. Follow up next",
+        "tied_to": "SAMPLE. Studio hold",
+        "due": "2026-11-13",
+        "value_usd": null,
+        "notes": "SAMPLE. A soon date in the layout file.",
+        "href": null
+      },
+      {
+        "id": "sample-rem-2",
+        "title": "SAMPLE. Stamp the Lumen Lab cut",
+        "tied_to": "SAMPLE. Lumen Lab",
+        "due": "Overdue; stamp this week",
+        "value_usd": null,
+        "notes": "SAMPLE. A waiting stamp in the layout file.",
+        "href": null
+      },
+      {
+        "id": "sample-rem-3",
+        "title": "SAMPLE. Harbor invoice date",
+        "tied_to": "SAMPLE. Harbor Co",
+        "due": "2026-11-16",
+        "value_usd": 1200,
+        "notes": "SAMPLE. An overdue date so the tint can be checked.",
+        "href": "https://signals.marketing"
+      },
+      {
+        "id": "sample-rem-4",
+        "title": "SAMPLE. Call prep for today",
+        "tied_to": "SAMPLE. Alex North",
+        "due": "2026-11-11",
+        "value_usd": null,
+        "notes": "SAMPLE. A today date in the layout file.",
+        "href": null
+      },
+      {
+        "id": "sample-rem-5",
+        "title": "SAMPLE. Failed charge on Northwind",
+        "tied_to": "SAMPLE. Northwind Studio",
+        "due": "Now; failed charge can take delivery offline",
+        "value_usd": 3000,
+        "notes": "SAMPLE. Layout only. This is not a real charge.",
+        "href": "https://signals.marketing"
+      },
+      {
+        "id": "sample-rem-6",
+        "title": "SAMPLE. Deck for Friday",
+        "tied_to": "SAMPLE. Friday room",
+        "due": "2026-11-14",
+        "value_usd": 800,
+        "notes": "SAMPLE. A later date with a value.",
+        "href": "https://signals.marketing"
+      },
+      {
+        "id": "sample-rem-7",
+        "title": "SAMPLE. Call the producer back",
+        "tied_to": "SAMPLE. Producer hold",
+        "due": "Call back; the producer is waiting on a yes",
+        "value_usd": null,
+        "notes": "SAMPLE. Free text that collapses to a short chip.",
+        "href": "https://signals.marketing"
+      },
+      {
+        "id": "sample-rem-8",
+        "title": "SAMPLE. Send the retainer ask",
+        "tied_to": "SAMPLE. Northwind Studio",
+        "due": "2026-11-09",
+        "value_usd": 4500,
+        "notes": "SAMPLE. Highest overdue value. Layout only.",
+        "href": "https://signals.marketing"
+      }
+    ]
+  },
   "dmBridge": null,
   "decisions": {
     "asOf": "2026-11-10T06:47:00-06:00",

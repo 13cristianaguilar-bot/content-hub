@@ -1025,8 +1025,8 @@
       "metric": "client_wins",
       "count": 1,
       "loggedOn": "2026-11-10",
-      "note": "SAMPLE. Logged win for Andrew.",
-      "clientName": "Andrew George"
+      "note": "SAMPLE. Logged win for Lumen Lab.",
+      "clientName": "Lumen Lab"
     }
   ],
   "attract": {
@@ -1202,8 +1202,8 @@
     "asOf": "2026-11-10T06:47:00-06:00",
     "clients": [
       {
-        "name": "Andrew George",
-        "handle": "@andrewpreneurship",
+        "name": "Lumen Lab",
+        "handle": "@lumenlab",
         "viewsByWeek": [
           1200,
           1400,
@@ -1235,13 +1235,13 @@
         "wins": [
           {
             "at": "2026-11-10",
-            "text": "SAMPLE. Andrew said the last cut landed."
+            "text": "SAMPLE. Lumen Lab said the last cut landed."
           }
         ]
       },
       {
-        "name": "Devin Shea",
-        "handle": "@teamr3set",
+        "name": "Northwind Studio",
+        "handle": "@northwind",
         "viewsByWeek": [
           900,
           700
@@ -1272,7 +1272,7 @@
         "wins": []
       },
       {
-        "name": "Jan Zands",
+        "name": "Harbor Co",
         "handle": "",
         "viewsByWeek": [
           400,
@@ -1294,7 +1294,7 @@
         ],
         "scripts": [
           {
-            "title": "SAMPLE. Jan opener",
+            "title": "SAMPLE. Harbor opener",
             "deliveredAt": "2026-11-08",
             "filmedAt": ""
           }
@@ -1310,8 +1310,8 @@
         "wins": []
       },
       {
-        "name": "Rich Life Academy",
-        "handle": "@therichlifeacademy",
+        "name": "Brightline Studio",
+        "handle": "@brightline",
         "viewsByWeek": [
           3000,
           2800,
@@ -1332,7 +1332,7 @@
         ],
         "scripts": [
           {
-            "title": "SAMPLE. Rich Life open",
+            "title": "SAMPLE. Brightline open",
             "deliveredAt": "2026-11-02",
             "filmedAt": "2026-11-04"
           }
@@ -1343,7 +1343,7 @@
         "wins": []
       },
       {
-        "name": "Sagun Sedai",
+        "name": "Plover Pine",
         "handle": "",
         "viewsByWeek": [
           100,
@@ -1365,7 +1365,7 @@
         ],
         "scripts": [
           {
-            "title": "SAMPLE. Sagun opener",
+            "title": "SAMPLE. Plover opener",
             "deliveredAt": "2026-11-01",
             "filmedAt": "2026-11-09"
           }
@@ -1381,8 +1381,8 @@
         "wins": []
       },
       {
-        "name": "The Austin Report",
-        "handle": "@austinreport",
+        "name": "Copper Finch",
+        "handle": "@copperfinch",
         "viewsByWeek": [
           500,
           700,
@@ -1403,7 +1403,7 @@
         ],
         "scripts": [
           {
-            "title": "SAMPLE. Austin report",
+            "title": "SAMPLE. Finch report",
             "deliveredAt": "2026-11-04",
             "filmedAt": "2026-11-06"
           }
@@ -1414,7 +1414,7 @@
         "wins": [
           {
             "at": "2026-11-09",
-            "text": "SAMPLE. Austin Report kept the Thursday slot."
+            "text": "SAMPLE. Copper Finch kept the Thursday slot."
           }
         ]
       }

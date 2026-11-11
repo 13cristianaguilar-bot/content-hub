@@ -293,7 +293,7 @@ The page never prints an `id` field from this array.
 
 ### `reminders` (SIGNAL NOW)
 
-Top-level object from the reminders bot. The Workforce view shows it under "What to do now". Omit the key when the bot has not synced. The page then says **Not connected. Reminders bot has not synced yet.** Do not invent rows.
+Top-level object from the reminders bot. The Workforce view shows one focus card under "What to do now", then the next few rows. Omit the key when the bot has not synced. The page then says **Not connected. Reminders bot has not synced yet.** Do not invent rows.
 
 ```json
 "reminders": {
@@ -316,16 +316,16 @@ Top-level object from the reminders bot. The Workforce view shows it under "What
 
 | Field | Notes |
 |---|---|
-| `asOf` | ISO time the bot wrote this block. The panel says `Reminders bot, updated <time CT>`. |
-| `source` | Who wrote it. The panel source line stays "Reminders bot". |
-| `counts.signalNow` | Count chip. Not computed from the array. |
-| `counts.futureSignal` | Count chip. Those rows are not listed on this panel. |
-| `counts.noise` | Count chip. Those rows are not listed on this panel. |
-| `signalNow` | Only the rows to show. `[]` means the bot synced and nothing is signal-now. |
-| `due` | ISO date (`2026-11-13`, shown as `Nov 13` with an overdue, today, or soon tint) or free text (`Now; failed charge can take delivery offline`), shown as typed in a pill. |
+| `asOf` | ISO time the bot wrote this block. The footer says `Reminders bot, updated <time CT>`. |
+| `source` | Who wrote it. The footer line stays "Reminders bot". |
+| `counts.signalNow` | How many are signal-now. The page does not render this as a chip. The header counts the `signalNow` rows it can show. |
+| `counts.futureSignal` | Kept on the payload. Those rows are not listed on this panel. |
+| `counts.noise` | Kept on the payload. Those rows are not listed on this panel. |
+| `signalNow` | Only the rows to show. The page ranks overdue and today first, then the soonest due, then the highest `value_usd`. One row is the focus card. Up to four more are one line each. `[]` means the bot synced and nothing is signal-now. |
+| `due` | ISO date or free text. A past date shows `OVERDUE`. Today shows `TODAY`. A later date shows `Nov 13`. Free text keeps a short tag (the words before `;`, or the first two words) and the full line is the tooltip. |
 | `value_usd` | Number, or `null`. `$3,000` is shown only when a number is present. |
-| `href` | `https` link, or `null`. A link opens in a new tab. |
-| `title`, `tied_to`, `notes` | Readable text. A row with no title is skipped. |
+| `href` | `https` link, or `null`. On the focus card the whole card opens it in a new tab. |
+| `title`, `tied_to`, `notes` | Readable text. A row with no title is skipped. `tied_to` is the line under the focus title. `notes` stay in the feed and are not printed on this panel. |
 
 `today.sample.json` carries fake SAMPLE rows for this block. `?fixture=2` loads that file and keeps `reminders` while it swaps the agent list.
 

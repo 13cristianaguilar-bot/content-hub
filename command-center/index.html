@@ -111,23 +111,69 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .guide h2{font-size:26px;font-weight:800;letter-spacing:-.03em;line-height:1.15}
 .guide p{color:var(--muted);font-size:14px;margin-top:4px}
 .guide .btn{flex:none}
-.signal-now{margin-bottom:12px}
-.rchips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-.rchip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:11px;font-weight:800;letter-spacing:.08em;border:1px solid var(--line);color:var(--muted);background:rgba(255,255,255,.03)}
-.rchip b{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:0}
-.rchip.now{color:#ffd0d0;border-color:rgba(237,48,57,.5);background:rgba(237,48,57,.14)}
-.rchip.later{color:#f3e2bc;border-color:rgba(196,163,90,.45);background:rgba(196,163,90,.12)}
-.rlist{list-style:none;margin:8px 0 0;padding:0}
-.rrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:10px 2px;border-top:1px solid rgba(255,255,255,.08);color:inherit;text-decoration:none}
-a.rrow:hover{background:rgba(255,255,255,.03)}
-.rmain{flex:1 1 220px;min-width:0}
-.rmain b{display:block;font-weight:750}
-.rmain .tied,.rmain .notes{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-.due{flex:none;font-size:11px;font-weight:700;border-radius:999px;padding:3px 8px;border:1px solid var(--line);color:var(--muted);background:rgba(255,255,255,.04);max-width:100%}
-.due.overdue{color:#ffd0d0;border-color:rgba(237,48,57,.5);background:rgba(237,48,57,.14)}
-.due.today{color:#fff;border-color:rgba(237,48,57,.7);background:rgba(237,48,57,.28)}
-.due.soon{color:#f3e2bc;border-color:rgba(196,163,90,.5);background:rgba(196,163,90,.14)}
-.rval{flex:none;font-family:var(--mono);font-weight:600}
+.signal-now{margin:0 0 16px}
+.sn-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0 2px}
+.sn-kicker{margin:0;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:800;color:var(--ink)}
+.sn-count{margin:0;color:var(--muted);font-size:13px;font-weight:650}
+.sn-hero{
+  display:block;position:relative;text-decoration:none;color:inherit;min-width:0;
+  padding:22px 24px 20px;border-radius:18px;
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.02));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07);
+}
+.sn-hero.hot{
+  border-color:rgba(237,48,57,.32);
+  box-shadow:inset 3px 0 0 var(--red),inset 0 1px 0 rgba(255,255,255,.08),0 18px 36px -28px rgba(237,48,57,.9);
+}
+.sn-hero.has-go{padding-right:72px}
+a.sn-hero:hover{border-color:rgba(237,48,57,.8)}
+a.sn-hero:focus-visible,a.sn-row:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.sn-hero-top{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:36px}
+.sn-chip{
+  display:inline-flex;align-items:center;max-width:100%;
+  min-height:28px;padding:0 10px;border-radius:999px;
+  font-size:12px;font-weight:800;letter-spacing:.06em;line-height:1;
+  color:var(--ink);background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.18);
+}
+.sn-chip.hot{color:#fff;background:var(--red);border-color:transparent;letter-spacing:.12em}
+.sn-chip.lg{min-height:34px;padding:0 14px;font-size:13px}
+.sn-value{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:-.04em;font-size:36px;line-height:1;color:var(--ink)}
+.sn-hero h3{margin:16px 0 0;font-size:32px;font-weight:800;letter-spacing:-.035em;line-height:1.12}
+.sn-tied{margin:8px 0 0;color:var(--muted);font-size:15px;line-height:1.35}
+.sn-go{
+  position:absolute;right:18px;bottom:18px;width:40px;height:40px;border-radius:999px;
+  display:flex;align-items:center;justify-content:center;background:var(--red);color:#fff;
+  box-shadow:0 10px 18px -12px rgba(237,48,57,.95);
+}
+.sn-hero:not(.hot) .sn-go{background:rgba(255,255,255,.1);color:var(--ink);box-shadow:none}
+.sn-list{list-style:none;margin:14px 0 0;padding:0}
+.sn-row{
+  display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px 12px;align-items:center;
+  min-height:52px;padding:0 8px 0 2px;border-top:1px solid rgba(255,255,255,.08);
+  color:inherit;text-decoration:none;
+}
+a.sn-row:hover{background:rgba(255,255,255,.045)}
+.sn-rank{font-family:var(--mono);font-variant-numeric:tabular-nums;font-size:13px;font-weight:600;color:var(--muted)}
+.sn-title{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sn-meta{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+.sn-amt{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap}
+.sn-foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:8px;padding:0 2px}
+.sn-foot p,.sn-more{margin:0;font-size:12px;color:var(--muted);font-weight:550}
+.sn-more{font-weight:750;white-space:nowrap}
+.signal-now-off{
+  border:1px dashed rgba(255,255,255,.14);border-radius:16px;
+  background:rgba(255,255,255,.025);padding:18px 18px;
+}
+.signal-now-off p{margin:0;color:var(--muted);font-size:14px;line-height:1.4}
+@media(max-width:760px){
+  .sn-hero{padding:18px 16px 18px}
+  .sn-hero.has-go{padding-right:16px;padding-bottom:64px}
+  .sn-hero h3{font-size:26px}
+  .sn-value{font-size:28px}
+  .sn-row{grid-template-columns:28px minmax(0,1fr);min-height:0;padding:10px 2px;row-gap:6px}
+  .sn-meta{grid-column:2;justify-content:flex-start}
+}
 .legend{color:var(--dim);font-size:12px;margin:0 0 12px}
 .scores{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
 .score{
@@ -2165,80 +2211,117 @@ footer.site{margin-top:auto}
   function reminderBundle(feed) {
     var block = feed && feed.reminders;
     if (!block || typeof block !== 'object' || Array.isArray(block)) return { known: false };
-    var counts = block.counts && typeof block.counts === 'object' && !Array.isArray(block.counts) ? block.counts : {};
-    function count(key) {
-      var n = num(counts[key]);
-      return n == null ? null : n;
-    }
     return {
       known: true,
       asOf: clean(block.asOf || ''),
-      counts: { signalNow: count('signalNow'), futureSignal: count('futureSignal'), noise: count('noise') },
       items: Array.isArray(block.signalNow) ? block.signalNow : []
     };
+  }
+  function reminderShort(raw) {
+    var head = String(raw || '').split(';')[0].trim();
+    var words = head.split(/\s+/).filter(Boolean).slice(0, 2);
+    if (!words.length) words = String(raw || '').trim().split(/\s+/).filter(Boolean).slice(0, 2);
+    return words.map(function (w) { return w.replace(/^[^A-Za-z0-9$]+|[^A-Za-z0-9$]+$/g, ''); }).filter(Boolean).join(' ');
+  }
+  function reminderMonth(day) {
+    var bits = day.split('-');
+    return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
   }
   function reminderDue(due, today) {
     var raw = clean(due);
     if (!raw) return null;
-    if (!/^\d{4}-\d{2}-\d{2}/.test(raw)) return { text: raw, kind: 'text' };
-    var day = dayOf(raw);
-    if (!day) return { text: raw, kind: 'text' };
-    var bits = day.split('-');
-    var label = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
-    var diff = daysBetween(today, day);
-    var kind = 'soon';
-    if (diff < 0) kind = 'overdue';
-    else if (diff === 0) kind = 'today';
-    else if (diff > 7) kind = 'later';
-    return { text: label, kind: kind };
+    if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+      var day = dayOf(raw);
+      if (!day) return { text: reminderShort(raw) || raw, tip: raw, hot: false, urgency: 2, sortDay: '' };
+      var label = reminderMonth(day);
+      var diff = daysBetween(today, day);
+      if (diff < 0) return { text: 'OVERDUE', tip: label, hot: true, urgency: 0, sortDay: day };
+      if (diff === 0) return { text: 'TODAY', tip: label, hot: true, urgency: 1, sortDay: day };
+      if (diff > 7) return { text: label, tip: label, hot: false, urgency: 3, sortDay: day };
+      return { text: label, tip: label, hot: false, urgency: 2, sortDay: day };
+    }
+    var short = reminderShort(raw);
+    var first = short.toLowerCase();
+    if (first === 'overdue') return { text: 'OVERDUE', tip: raw, hot: true, urgency: 0, sortDay: '9999-99-99' };
+    if (first === 'today') return { text: 'TODAY', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99' };
+    if (first === 'now') return { text: 'NOW', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99' };
+    return { text: short || raw, tip: raw, hot: false, urgency: 2, sortDay: '' };
+  }
+  function reminderRank(items, today) {
+    var rows = [];
+    items.forEach(function (item, index) {
+      if (!item || typeof item !== 'object') return;
+      var title = clean(item.title || '');
+      if (!title) return;
+      rows.push({
+        index: index,
+        title: title,
+        tied: clean(item.tied_to || ''),
+        amount: num(item.value_usd),
+        href: safeHref(item.href),
+        due: reminderDue(item.due, today)
+      });
+    });
+    rows.sort(function (a, b) {
+      var ad = a.due || { urgency: 4, sortDay: '9999-99-99' };
+      var bd = b.due || { urgency: 4, sortDay: '9999-99-99' };
+      if (ad.urgency !== bd.urgency) return ad.urgency - bd.urgency;
+      if (ad.sortDay !== bd.sortDay) return ad.sortDay < bd.sortDay ? -1 : 1;
+      var av = a.amount == null ? -1 : a.amount;
+      var bv = b.amount == null ? -1 : b.amount;
+      if (av !== bv) return bv - av;
+      return a.index - b.index;
+    });
+    return rows;
   }
   function reminderWhen(iso) {
     if (!iso) return '';
     var d = new Date(iso);
     if (isNaN(d.getTime())) return '';
-    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-      var bits = iso.split('-');
-      return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
-    }
+    if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return reminderMonth(iso);
     return chicagoTime(d) + ' CT';
+  }
+  function dueChip(due, large) {
+    if (!due) return '';
+    return '<span class="sn-chip' + (due.hot ? ' hot' : '') + (large ? ' lg' : '') + '" title="' + esc(due.tip) + '">' + esc(due.text) + '</span>';
   }
   function remindersHtml(m) {
     var block = m.reminders;
     if (!block || !block.known) {
-      return '<section class="panel signal-now"><div class="ph"><h2>SIGNAL NOW</h2></div><p class="quiet">Not connected. Reminders bot has not synced yet.</p></section>';
+      return '<section class="signal-now signal-now-off" aria-label="Signal now"><p>Not connected. Reminders bot has not synced yet.</p></section>';
     }
+    var ranked = reminderRank(block.items, m.today);
     var when = reminderWhen(block.asOf);
-    var sub = when ? ('Reminders bot, updated ' + when) : 'Reminders bot. No update time in the feed.';
-    function chip(cls, label, n) {
-      var numHtml = n == null ? '' : '<b>' + esc(compact(n)) + '</b> ';
-      return '<span class="rchip ' + cls + '">' + numHtml + esc(label) + '</span>';
+    var source = when ? ('Reminders bot, updated ' + when) : 'Reminders bot. No update time in the feed.';
+    if (!ranked.length) {
+      return '<section class="signal-now" aria-label="Signal now"><div class="signal-now-off"><p>Nothing to do now.</p></div><footer class="sn-foot"><p>' + esc(source) + '</p></footer></section>';
     }
-    var chips = '<div class="rchips">' +
-      chip('now', 'SIGNAL NOW', block.counts.signalNow) +
-      chip('later', 'FUTURE SIGNAL', block.counts.futureSignal) +
-      chip('', 'NOISE', block.counts.noise) +
-      '</div>';
-    var rows = [];
-    block.items.forEach(function (item) {
-      if (!item || typeof item !== 'object') return;
-      var title = clean(item.title || '');
-      if (!title) return;
-      var tied = clean(item.tied_to || '');
-      var notes = clean(item.notes || '');
-      var due = reminderDue(item.due, m.today);
-      var amount = num(item.value_usd);
-      var href = safeHref(item.href);
-      var body = '<span class="rmain"><b>' + esc(title) + '</b>' +
-        (tied ? '<span class="tied">' + esc(tied) + '</span>' : '') +
-        (notes ? '<span class="notes">' + esc(notes) + '</span>' : '') +
-        '</span>' +
-        (due ? '<span class="due ' + esc(due.kind) + '">' + esc(due.text) + '</span>' : '') +
-        (amount == null ? '' : '<span class="rval">' + esc(money(amount)) + '</span>');
-      if (href) rows.push('<li><a class="rrow" href="' + esc(href) + '" target="_blank" rel="noopener noreferrer">' + body + '</a></li>');
-      else rows.push('<li><div class="rrow">' + body + '</div></li>');
-    });
-    var list = rows.length ? '<ul class="rlist">' + rows.join('') + '</ul>' : '<p class="quiet">Nothing is in SIGNAL NOW.</p>';
-    return '<section class="panel signal-now"><div class="ph"><h2>SIGNAL NOW</h2><p class="sub">' + esc(sub) + '</p></div>' + chips + list + '</section>';
+    var hero = ranked[0];
+    var rest = ranked.slice(1, 5);
+    var hidden = ranked.length - 1 - rest.length;
+    var heroInner = '<div class="sn-hero-top">' + dueChip(hero.due, true) +
+      (hero.amount == null ? '' : '<span class="sn-value">' + esc(money(hero.amount)) + '</span>') +
+      '</div><h3>' + esc(hero.title) + '</h3>' +
+      (hero.tied ? '<p class="sn-tied">' + esc(hero.tied) + '</p>' : '') +
+      (hero.href ? '<span class="sn-go" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>' : '');
+    var heroCls = 'sn-hero' + (hero.due && hero.due.hot ? ' hot' : '') + (hero.href ? ' has-go' : '');
+    var heroHtml = hero.href
+      ? '<a class="' + heroCls + '" href="' + esc(hero.href) + '" target="_blank" rel="noopener noreferrer">' + heroInner + '</a>'
+      : '<div class="' + heroCls + '">' + heroInner + '</div>';
+    var list = rest.map(function (row, i) {
+      var rank = (i + 2 < 10 ? '0' : '') + (i + 2);
+      var body = '<span class="sn-rank">' + rank + '</span><span class="sn-title">' + esc(row.title) + '</span><span class="sn-meta">' +
+        dueChip(row.due, false) +
+        (row.amount == null ? '' : '<span class="sn-amt">' + esc(money(row.amount)) + '</span>') +
+        '</span>';
+      if (row.href) return '<li><a class="sn-row" href="' + esc(row.href) + '" target="_blank" rel="noopener noreferrer">' + body + '</a></li>';
+      return '<li><div class="sn-row">' + body + '</div></li>';
+    }).join('');
+    var more = hidden > 0 ? '<span class="sn-more">+' + hidden + ' more</span>' : '';
+    return '<section class="signal-now" aria-label="Signal now"><header class="sn-head"><p class="sn-kicker">Signal now</p><p class="sn-count">' + ranked.length + ' to do now</p></header>' +
+      heroHtml +
+      (list ? '<ol class="sn-list">' + list + '</ol>' : '') +
+      '<footer class="sn-foot"><p>' + esc(source) + '</p>' + more + '</footer></section>';
   }
   function guideHtml(m) {
     var btn = m.guide.button ? '<button type="button" class="btn p" data-open-row="' + esc(m.guide.rowId) + '">' + esc(m.guide.button) + '</button>' : '';

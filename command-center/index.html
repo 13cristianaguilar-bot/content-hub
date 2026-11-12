@@ -634,6 +634,9 @@ body[data-ready] .shimmer{display:none}
 .st-dot.blocked{background:#ed3039}
 @media (min-width:1024px){
   .stage-scrim{display:none !important}
+  .org.is-stage .stage-panel{width:40%;max-width:40%}
+  .org.is-stage .org-svg{width:60%}
+  .org.is-stage .cash-legend{right:42%}
 }
 @media (max-width:1023px){
   .stage-scrim{bottom:calc(64px + env(safe-area-inset-bottom))}
@@ -943,6 +946,8 @@ footer.site{margin-top:auto}
 .wedge-names b{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .chip-layer{z-index:5}
 .money-chip,.name-tag,.wedge-more{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-size:10px;font-weight:700;line-height:1;letter-spacing:-.03em;color:#fff;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px 6px;white-space:nowrap}
+.wedge-more{pointer-events:auto;cursor:pointer}
+.core.is-empty{max-width:78%}
 .name-tag{font-family:var(--sans);font-weight:750;letter-spacing:0}
 .money-chip.is-bright{background:#ed3039;border-color:#ed3039;font-weight:800}
 .money-chip.is-mute{color:#8d8d8d;font-weight:500;background:rgba(18,18,18,.88);border-color:rgba(255,255,255,.12)}
@@ -2929,18 +2934,22 @@ footer.site{margin-top:auto}
     if (conf === 'long_shot') return 'Long shot';
     return 'Likely';
   }
+  function signalCollects(row) {
+    if (!row || row.cat !== 'cash_now' || row.amount == null || signalHollow(row)) return false;
+    if (row.moneyKind === 'contingent') return false;
+    return signalRing(row) <= 2;
+  }
   function signalCoreText(open) {
     var one = 0, oneN = 0, mo = 0, moN = 0;
     (open || []).forEach(function (row) {
-      if (signalRing(row) !== 0 || row.amount == null || signalHollow(row)) return;
+      if (!signalCollects(row)) return;
       if (row.moneyKind === 'monthly' || row.moneyKind === 'commission') { mo += row.amount; moN += 1; }
-      else if (row.moneyKind === 'contingent') return;
       else { one += row.amount; oneN += 1; }
     });
+    if (!oneN && !moN) return '$0 collectable this week';
     if (oneN && moN) return moneyShort(one) + ' + ' + moneyShort(mo) + '/mo';
     if (moN) return '+ ' + moneyShort(mo) + '/mo';
-    if (oneN) return moneyShort(one);
-    return 'No $';
+    return moneyShort(one);
   }
   function signalHaloId(open) {
     var best = null;
@@ -2985,12 +2994,15 @@ footer.site{margin-top:auto}
   function signalLayout(open) {
     return signalWedge(open, signalDiscPx());
   }
-  function signalWedge(open, disc) {
+  function signalWedge(open, disc, pill) {
     var CATS = ['cash_now', 'future_money', 'clients', 'content', 'ops'];
     var gap = 4;
     var half = disc / 2;
-    var maxR = half - 22;
-    var minR = Math.max(36, half * 0.28);
+    var maxR = half - 16;
+    pill = pill && pill.hw ? pill : { hw: Math.max(42, half * 0.24), hh: 22 };
+    var corner = Math.hypot(pill.hw + 8, pill.hh + 8);
+    var minR = Math.max(corner, 30);
+    if (minR > maxR - 22) minR = Math.max(26, maxR - 22);
     var fracs = [0.34, 0.52, 0.72, 0.9];
     var groups = {};
     CATS.forEach(function (c) { groups[c] = [[], [], [], []]; });
@@ -3007,8 +3019,13 @@ footer.site{margin-top:auto}
     function hits(ang, rad, reach) {
       var p = xy(ang, rad);
       var i, o, q, dx, dy, need;
-      if (rad - reach < minR - 8) return true;
+      if (rad - reach < minR) return true;
       if (rad + reach > maxR) return true;
+      var px = Math.max(-(pill.hw + 8), Math.min(pill.hw + 8, p.x));
+      var py = Math.max(-(pill.hh + 8), Math.min(pill.hh + 8, p.y));
+      dx = p.x - px;
+      dy = p.y - py;
+      if (dx * dx + dy * dy < reach * reach) return true;
       for (i = 0; i < placed.length; i++) {
         o = placed[i];
         q = xy(o.ang, o.rad);
@@ -3058,7 +3075,7 @@ footer.site{margin-top:auto}
       var p = xy(s.ang, s.rad);
       return { kind: 'c', x: disc / 2 + p.x, y: disc / 2 + p.y, r: s.r + 2 };
     });
-    obstacles.push({ kind: 'c', x: disc / 2, y: disc / 2, r: 34 });
+    obstacles.push({ kind: 'r', x: half - pill.hw - 8, y: half - pill.hh - 8, w: (pill.hw + 8) * 2, h: (pill.hh + 8) * 2 });
     var names = [
       ['Cash', 0, '--cat-cash'],
       ['Future', 72, '--cat-future'],
@@ -3155,7 +3172,7 @@ footer.site{margin-top:auto}
       var p = xy(spot.ang, spot.rad);
       var w = Math.max(44, text.length * 7.2 + 16);
       var found = park(disc / 2 + p.x, disc / 2 + p.y, w, 16, spot.ang, spot.rad);
-      if (found) spot.tag = { x: found.x, y: found.y, text: text };
+      spot.tag = { x: found ? found.x : 50, y: found ? found.y : 50, text: text };
     });
     var ringTop = fracs.map(function (f) {
       var rad = Math.max(minR, Math.min(maxR, f * maxR));
@@ -3307,13 +3324,18 @@ footer.site{margin-top:auto}
       }
       var row = null;
       open.forEach(function (item) { if (item.id === id) row = item; });
-      if (!row || !spot.chip) return;
+      var chipText = signalChipText(row);
+      if (!chipText) return;
       var bright = row.confidence === 'guaranteed' ? ' is-bright' : '';
       var mute = signalHollow(row) ? ' is-mute' : '';
-      chips += '<span class="money-chip' + bright + mute + '" data-chip="' + esc(id) + '" style="left:' + spot.chip.x.toFixed(1) + '%;top:' + spot.chip.y.toFixed(1) + '%">' + esc(signalChipText(row)) + '</span>';
+      var cx = spot.chip ? spot.chip.x : 50;
+      var cy = spot.chip ? spot.chip.y : 50;
+      chips += '<span class="money-chip' + bright + mute + '" data-chip="' + esc(id) + '" style="left:' + cx.toFixed(1) + '%;top:' + cy.toFixed(1) + '%">' + esc(chipText) + '</span>';
       if (spot.tag) chips += '<span class="name-tag" data-tag="' + esc(id) + '" style="left:' + spot.tag.x.toFixed(1) + '%;top:' + spot.tag.y.toFixed(1) + '%">' + esc(spot.tag.text) + '</span>';
     });
-    var core = '<div class="core" aria-hidden="true"><b>' + esc(signalCoreText(open)) + '</b><i>collectable now</i></div>';
+    var coreText = signalCoreText(open);
+    var coreEmpty = coreText === '$0 collectable this week';
+    var core = '<div class="core' + (coreEmpty ? ' is-empty' : '') + '" aria-hidden="true"><b>' + esc(coreText) + '</b>' + (coreEmpty ? '' : '<i>collectable now</i>') + '</div>';
     var disc = '<div class="snx-radar">' + signalKeyHtml() + '<div class="disc-wrap"><div class="disc">' +
       '<div class="wedge-lines" aria-hidden="true">' + lines + '</div>' +
       '<div class="disc-grid" aria-hidden="true"></div>' +
@@ -3480,12 +3502,244 @@ footer.site{margin-top:auto}
     pt.x = Math.sin(rad) * radius;
     pt.y = -Math.cos(rad) * radius;
   }
+  function signalPill(disc) {
+    var core = disc.querySelector('.core');
+    var db = disc.getBoundingClientRect();
+    if (!core || db.width < 40) return { hw: Math.max(42, db.width * 0.22), hh: 22 };
+    var cb = core.getBoundingClientRect();
+    return { hw: Math.max(24, cb.width / 2), hh: Math.max(14, cb.height / 2) };
+  }
+  function signalBoxHit(a, b, gap) {
+    gap = gap || 0;
+    return a.left < b.right + gap && a.right + gap > b.left && a.top < b.bottom + gap && a.bottom + gap > b.top;
+  }
+  function signalPad(r, n) {
+    return { left: r.left - n, top: r.top - n, right: r.right + n, bottom: r.bottom + n };
+  }
+  function signalPushDots(disc) {
+    var core = disc.querySelector('.core');
+    if (!core) return;
+    var guard = 0;
+    function centerDist(rect) {
+      var db = disc.getBoundingClientRect();
+      var x = rect.left + rect.width / 2 - (db.left + db.width / 2);
+      var y = rect.top + rect.height / 2 - (db.top + db.height / 2);
+      return Math.hypot(x, y);
+    }
+    function nudgeOut(dot, step) {
+      var blip = dot.closest('.blip');
+      if (!blip) return false;
+      var cur = parseFloat(blip.style.getPropertyValue('--top'));
+      if (!isFinite(cur)) cur = 34;
+      var db = disc.getBoundingClientRect();
+      var rect = dot.getBoundingClientRect();
+      var limit = db.width / 2 - rect.width / 2 - 3;
+      if (centerDist(rect) >= limit - 0.5) return false;
+      var next = Math.max(5, cur - step);
+      if (next >= cur - 0.05) return false;
+      blip.style.setProperty('--top', next.toFixed(2) + '%');
+      return true;
+    }
+    while (guard < 36) {
+      guard += 1;
+      var moved = false;
+      var pill = signalPad(core.getBoundingClientRect(), 8);
+      var dots = Array.prototype.slice.call(disc.querySelectorAll('.dot'));
+      dots.forEach(function (dot) {
+        var rect = dot.getBoundingClientRect();
+        if (rect.width < 1) return;
+        if (signalBoxHit(rect, pill, 0) && nudgeOut(dot, 2.2)) moved = true;
+      });
+      var i, j, a, b;
+      for (i = 0; i < dots.length; i++) {
+        for (j = i + 1; j < dots.length; j++) {
+          a = dots[i].getBoundingClientRect();
+          b = dots[j].getBoundingClientRect();
+          if (a.width < 1 || b.width < 1 || !signalBoxHit(a, b, 1)) continue;
+          var victim = centerDist(a) >= centerDist(b) ? dots[i] : dots[j];
+          if (nudgeOut(victim, 1.5)) moved = true;
+        }
+      }
+      if (!moved) break;
+    }
+  }
+  function signalPlaceChips(disc) {
+    var layer = disc.querySelector('.chip-layer');
+    var core = disc.querySelector('.core');
+    if (!layer || !core) return;
+    var wrap = disc.parentElement || disc;
+    var cats = ['cash_now', 'future_money', 'clients', 'content', 'ops'];
+    var narrow = (window.innerWidth || 1280) <= 800;
+    var leaders = layer.querySelector('.leaders');
+    if (!leaders) {
+      leaders = document.createElement('div');
+      leaders.className = 'leaders';
+      layer.insertBefore(leaders, layer.firstChild);
+    }
+    leaders.innerHTML = '';
+    var chips = Array.prototype.slice.call(layer.querySelectorAll('.money-chip'));
+    var tags = Array.prototype.slice.call(layer.querySelectorAll('.name-tag'));
+    Array.prototype.forEach.call(layer.querySelectorAll('.wedge-more'), function (btn) { btn.style.visibility = 'hidden'; });
+    chips.forEach(function (el) { el.style.visibility = 'hidden'; });
+    tags.forEach(function (el) { el.style.visibility = 'hidden'; });
+    function obstacles() {
+      var list = [signalPad(core.getBoundingClientRect(), 8)];
+      Array.prototype.forEach.call(disc.querySelectorAll('.dot'), function (dot) {
+        var r = dot.getBoundingClientRect();
+        if (r.width >= 1) list.push(signalPad(r, 2));
+      });
+      Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width >= 1) list.push(signalPad(r, 2));
+      });
+      var root = disc.closest('.snx') || disc;
+      Array.prototype.forEach.call(root.querySelectorAll('.ring-tags span'), function (el) {
+        var r = el.getBoundingClientRect();
+        if (r.width >= 1) list.push(signalPad(r, 2));
+      });
+      chips.forEach(function (el) {
+        if (el.style.visibility === 'hidden') return;
+        list.push(el.getBoundingClientRect());
+      });
+      tags.forEach(function (el) {
+        if (el.style.visibility === 'hidden') return;
+        list.push(el.getBoundingClientRect());
+      });
+      Array.prototype.forEach.call(layer.querySelectorAll('.wedge-more'), function (el) {
+        if (el.style.visibility === 'hidden') return;
+        list.push(el.getBoundingClientRect());
+      });
+      return list;
+    }
+    function blocked(box, list) {
+      var bounds = wrap.getBoundingClientRect();
+      if (box.left < bounds.left + 1 || box.top < bounds.top + 1 || box.right > bounds.right - 1 || box.bottom > bounds.bottom - 1) return true;
+      var i;
+      for (i = 0; i < list.length; i++) if (signalBoxHit(box, list[i], 1)) return true;
+      return false;
+    }
+    function parkBox(anchor, w, h) {
+      var dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1], [1.6, 0.2], [-1.6, 0.2], [0.2, 1.6], [-0.2, 1.6]];
+      var list = obstacles();
+      var step, d, dist, box;
+      var ax = anchor.left + anchor.width / 2;
+      var ay = anchor.top + anchor.height / 2;
+      for (step = 0; step < 16; step++) {
+        dist = 6 + step * 7;
+        for (d = 0; d < dirs.length; d++) {
+          box = { left: ax + dirs[d][0] * dist - w / 2, top: ay + dirs[d][1] * dist - h / 2, right: 0, bottom: 0 };
+          box.right = box.left + w;
+          box.bottom = box.top + h;
+          if (!blocked(box, list)) return box;
+        }
+      }
+      return null;
+    }
+    function putCenter(el, box) {
+      var db = disc.getBoundingClientRect();
+      var cx = (box.left + box.right) / 2;
+      var cy = (box.top + box.bottom) / 2;
+      el.style.left = ((cx - db.left) / db.width * 100).toFixed(2) + '%';
+      el.style.top = ((cy - db.top) / db.height * 100).toFixed(2) + '%';
+      el.style.visibility = '';
+    }
+    function leader(dot, box) {
+      var db = disc.getBoundingClientRect();
+      var x1 = dot.left + dot.width / 2;
+      var y1 = dot.top + dot.height / 2;
+      var x2 = (box.left + box.right) / 2;
+      var y2 = (box.top + box.bottom) / 2;
+      var len = Math.hypot(x2 - x1, y2 - y1);
+      if (len < dot.width / 2 + 16) return;
+      var line = document.createElement('i');
+      line.className = 'leader';
+      line.style.left = ((x1 - db.left) / db.width * 100).toFixed(2) + '%';
+      line.style.top = ((y1 - db.top) / db.height * 100).toFixed(2) + '%';
+      line.style.width = Math.max(0, len - dot.width / 2 - 8).toFixed(1) + 'px';
+      line.style.transform = 'rotate(' + (Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI).toFixed(2) + 'deg)';
+      leaders.appendChild(line);
+    }
+    var ranked = chips.map(function (el) {
+      return { el: el, row: signalRowById(el.getAttribute('data-chip')) };
+    }).filter(function (item) { return item.row; });
+    ranked.sort(function (a, b) {
+      var ar = signalRing(a.row), br = signalRing(b.row);
+      if (ar !== br) return ar - br;
+      return (b.row.amount || 0) - (a.row.amount || 0);
+    });
+    var shown = {};
+    var hidden = {};
+    cats.forEach(function (cat) { shown[cat] = 0; hidden[cat] = 0; });
+    ranked.forEach(function (item) {
+      var cat = cats.indexOf(item.row.cat) >= 0 ? item.row.cat : 'ops';
+      var open = S.wedgeOpen && S.wedgeOpen[cat];
+      if (narrow && !open && shown[cat] >= 2) { hidden[cat] += 1; return; }
+      var blip = null;
+      Array.prototype.forEach.call(disc.querySelectorAll('.blip'), function (node) {
+        if (!blip && node.getAttribute('data-id') === item.row.id) blip = node.querySelector('.dot');
+      });
+      var anchor = blip ? blip.getBoundingClientRect() : disc.getBoundingClientRect();
+      var w = Math.max(28, item.el.offsetWidth || 36);
+      var h = Math.max(14, item.el.offsetHeight || 16);
+      var box = parkBox(anchor, w, h);
+      if (!box) { hidden[cat] += 1; return; }
+      putCenter(item.el, box);
+      leader(anchor, box);
+      shown[cat] += 1;
+    });
+    cats.forEach(function (cat) {
+      if (!hidden[cat] || (S.wedgeOpen && S.wedgeOpen[cat])) return;
+      var btn = layer.querySelector('.wedge-more[data-id="' + cat + '"]');
+      if (!btn) {
+        btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'wedge-more';
+        btn.setAttribute('data-snx', 'wedge');
+        btn.setAttribute('data-id', cat);
+        layer.appendChild(btn);
+      }
+      btn.textContent = '+' + hidden[cat];
+      btn.style.visibility = 'hidden';
+      var w = Math.max(28, btn.offsetWidth || 32);
+      var h = Math.max(14, btn.offsetHeight || 16);
+      var db = disc.getBoundingClientRect();
+      var cx = db.left + db.width / 2;
+      var cy = db.top + db.height / 2;
+      var center = cats.indexOf(cat) * 72;
+      var found = null;
+      var step, ang, rad, box;
+      for (step = 0; step < 14 && !found; step++) {
+        ang = (center + (step % 2 ? 1 : -1) * step * 3) * Math.PI / 180;
+        rad = db.width * (0.42 + step * 0.012);
+        box = { left: cx + Math.sin(ang) * rad - w / 2, top: cy - Math.cos(ang) * rad - h / 2, right: 0, bottom: 0 };
+        box.right = box.left + w;
+        box.bottom = box.top + h;
+        if (!blocked(box, obstacles())) found = box;
+      }
+      if (!found) return;
+      putCenter(btn, found);
+    });
+    tags.forEach(function (el) {
+      var id = el.getAttribute('data-tag');
+      var dot = null;
+      Array.prototype.forEach.call(disc.querySelectorAll('.blip'), function (node) {
+        if (!dot && node.getAttribute('data-id') === id) dot = node.querySelector('.dot');
+      });
+      if (!dot) return;
+      var anchor = dot.getBoundingClientRect();
+      var w = Math.max(36, el.offsetWidth || 48);
+      var h = Math.max(14, el.offsetHeight || 16);
+      var box = parkBox(anchor, w, h);
+      if (!box) return;
+      putCenter(el, box);
+    });
+  }
   function signalNudge() {
     var disc = document.querySelector('#v-home .snx .disc');
     if (!disc || !S.signalRows || S.signalRows.length < 1) return;
     var box = disc.getBoundingClientRect();
     if (box.width < 40) return;
-    var place = signalWedge(S.signalRows, box.width);
+    var place = signalWedge(S.signalRows, box.width, signalPill(disc));
     S.signalSpots = place;
     Array.prototype.forEach.call(disc.querySelectorAll('.arm'), function (arm) {
       var blip = arm.querySelector('.blip');
@@ -3496,20 +3750,13 @@ footer.site{margin-top:auto}
       var dot = blip.querySelector('.dot');
       if (dot && spot.r) blip.style.setProperty('--dot', (spot.r * 2).toFixed(1) + 'px');
     });
-    Array.prototype.forEach.call(disc.querySelectorAll('[data-chip],[data-tag],.wedge-more'), function (el) {
-      var id = el.getAttribute('data-chip') || el.getAttribute('data-tag') || ('more-' + (el.getAttribute('data-id') || ''));
-      var spot = place.spots[id];
-      if (!spot) return;
-      var pos = el.classList.contains('name-tag') ? spot.tag : spot.chip;
-      if (!pos) return;
-      el.style.left = pos.x.toFixed(1) + '%';
-      el.style.top = pos.y.toFixed(1) + '%';
-    });
+    signalPushDots(disc);
+    signalPlaceChips(disc);
     signalUnpile();
   }
   function signalUnpile() {
-    var tags = Array.prototype.slice.call(document.querySelectorAll('#v-home .name-tag'));
-    var taken = Array.prototype.slice.call(document.querySelectorAll('#v-home .money-chip, #v-home .wedge-more, #v-home .dot, #v-home .core'));
+    var tags = Array.prototype.slice.call(document.querySelectorAll('#v-home .name-tag')).filter(function (el) { return el.style.visibility !== 'hidden'; });
+    var taken = Array.prototype.slice.call(document.querySelectorAll('#v-home .money-chip, #v-home .wedge-more, #v-home .dot, #v-home .core')).filter(function (el) { return el.style.visibility !== 'hidden'; });
     function hits(a, b) {
       var ar = a.getBoundingClientRect();
       var br = b.getBoundingClientRect();
@@ -3652,6 +3899,7 @@ footer.site{margin-top:auto}
     if (id && !rowBtn && !S.signalAll) {
       S.signalAll = true;
       signalRepaint();
+      signalSelect(id);
       return;
     }
     var root = document.querySelector('#v-home .snx');
@@ -5545,12 +5793,17 @@ footer.site{margin-top:auto}
     var slot = document.querySelector('.stage-slot');
     function apply() {
       if (gen !== stageGen) return;
+      var already = !!S.stagePick;
       S.stagePick = key;
       paintStage(key);
       if (slot) slot.classList.remove('is-out');
       if (!fromHash) {
         var nextHash = '#stage=' + key;
-        if (location.hash !== nextHash) history.pushState({ stage: key }, '', location.pathname + location.search + nextHash);
+        if (location.hash !== nextHash) {
+          var url = location.pathname + location.search + nextHash;
+          if (already) history.replaceState({ stage: key }, '', url);
+          else history.pushState({ stage: key }, '', url);
+        }
       }
     }
     if (S.stagePick && S.stagePick !== key && slot && !motionReduce()) {
@@ -7254,8 +7507,19 @@ footer.site{margin-top:auto}
         openStage(stageGo.getAttribute('data-stage-go'), false);
         return;
       }
+      if (Hover.pointer === 'touch' && Hover.key && Hover.key.indexOf('signal:') === 0 && !e.target.closest('.blip') && !e.target.closest('#hcard')) hideHover();
       var snx = e.target.closest('[data-snx]');
       if (snx && !e.target.closest('a[href]')) {
+        if (snx.getAttribute('data-snx') === 'lock' && snx.classList.contains('blip') && Hover.pointer === 'touch') {
+          var sid = snx.getAttribute('data-id') || '';
+          signalAct('lock', sid, snx);
+          var fresh = null;
+          Array.prototype.forEach.call(document.querySelectorAll('#v-home .blip'), function (node) {
+            if (!fresh && node.getAttribute('data-id') === sid) fresh = node;
+          });
+          if (fresh) armHover(fresh, 'signal:' + sid, signalCard(sid), true);
+          return;
+        }
         var act = snx.getAttribute('data-snx');
         if (act !== 'done' && !(Hover.pointer === 'touch' && TouchScroll.moved)) bubble('pop');
         signalAct(act, snx.getAttribute('data-id') || '', snx);

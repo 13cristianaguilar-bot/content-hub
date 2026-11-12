@@ -495,21 +495,61 @@ body[data-ready] .shimmer{display:none}
 .kbd{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
 .hero-grid{display:grid;grid-template-columns:1.45fr .85fr;gap:12px;margin-bottom:12px}
 @media (min-width:1024px){
-  #v-home.desk-fold{display:grid;grid-template-columns:minmax(0,.82fr) minmax(340px,1.18fr);gap:12px 14px;align-items:start}
+  main.stage:has(#v-home.desk-fold){padding-top:8px}
+  main.stage:has(#v-home.desk-fold)>.banner{margin-bottom:6px;padding:6px 10px;font-size:13px;line-height:1.3}
+  #v-home.desk-fold{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:stretch}
   #v-home.desk-fold>*{grid-column:1 / -1;min-width:0}
-  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2}
-  #v-home.desk-fold>.org{grid-column:2;grid-row:2}
+  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:100%;margin:0;padding:10px 12px 8px}
+  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:100%}
+  #v-home.desk-fold>.guide{padding:6px 12px;margin-bottom:8px;gap:12px}
+  #v-home.desk-fold>.guide>div{display:flex;align-items:baseline;gap:10px;min-width:0;flex:1}
+  #v-home.desk-fold>.guide .gk{margin:0;flex:none;font-size:10px;letter-spacing:.1em}
+  #v-home.desk-fold>.guide h2{font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  #v-home.desk-fold>.guide p{margin:0;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+  #v-home.desk-fold>.guide .btn{min-height:32px;padding:0 12px}
   #v-home.desk-fold>.hero-grid{grid-template-columns:1fr}
   #v-home.desk-fold>.snx-list{margin:0;padding:12px 14px 14px;border-radius:22px;background:#070707;border:1px solid rgba(255,255,255,.1)}
+  #v-home.desk-fold .snx-more{margin-top:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--ink);border-radius:999px;min-height:36px;padding:0 16px;font-weight:750}
+  #v-home.desk-fold .snx-head{display:flex;flex-direction:column;align-items:stretch;gap:4px;margin-bottom:4px}
+  #v-home.desk-fold .snx-head>div:first-child{display:flex;align-items:baseline;gap:8px}
+  #v-home.desk-fold .snx-kicker{font-size:10px}
+  #v-home.desk-fold .snx-head h2{font-size:22px}
+  #v-home.desk-fold .snx-readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;gap:4px}
+  #v-home.desk-fold .snx-readout span{min-width:0;align-items:flex-start}
+  #v-home.desk-fold .snx-readout b{font-size:14px;white-space:nowrap}
+  #v-home.desk-fold .snx-readout i{font-size:9px;letter-spacing:.05em;white-space:nowrap}
+  #v-home.desk-fold .snx-radar{position:relative}
+  #v-home.desk-fold .snx-legend-bar{position:absolute;z-index:6;left:4px;right:4px;top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;margin:0;padding:3px 6px;background:rgba(7,7,7,.9)}
+  #v-home.desk-fold .snx-rule{margin:0;flex:none;font-size:10px;line-height:1.2;white-space:nowrap}
+  #v-home.desk-fold .snx-key{display:contents}
+  #v-home.desk-fold .snx-key span{min-height:18px;padding:0 5px;gap:3px;font-size:10px;line-height:1.2}
   #v-home.desk-fold .snx-grid{grid-template-columns:1fr}
-  #v-home.desk-fold .snx-hud{min-height:0;padding:10px 12px}
-  #v-home.desk-fold .snx-hud h3{font-size:22px}
-  #v-home.desk-fold .snx-val.lg{font-size:26px}
+  #v-home.desk-fold .disc-wrap{width:100%;max-width:none;padding:0;margin:0}
+  #v-home.desk-fold .ring-out{position:absolute;z-index:7;left:0;right:0;top:1px;margin:0;font-size:10px;letter-spacing:.12em}
+  #v-home.desk-fold .disc{width:min(100%,calc(100dvh - 250px));max-width:100%;margin:0 auto}
+  #v-home.desk-fold .snx-hud{min-height:0;padding:8px 10px}
+  #v-home.desk-fold .snx-hud h3{font-size:18px;margin-top:4px}
+  #v-home.desk-fold .snx-val.lg{font-size:22px}
+  #v-home.desk-fold .snx-notes{margin-top:4px;font-size:13px}
+  #v-home.desk-fold .snx-actions{margin-top:8px}
+  #v-home.desk-fold .snx-go,#v-home.desk-fold .snx-link{min-height:36px}
+  #v-home.desk-fold .snx-foot{margin-top:8px}
+  #v-home.desk-fold .org .ph{padding:10px 12px 0}
+  #v-home.desk-fold .org .ph h2{font-size:22px}
+  #v-home.desk-fold .org .sub{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #v-home.desk-fold .loop-nav{padding:4px 12px 0}
   #v-home.desk-fold .org-stage{height:420px;min-height:420px;aspect-ratio:auto}
   #v-home.desk-fold .org-svg{height:100%}
   #v-home.desk-fold .org-svg .hublab{font-size:16px}
   #v-home.desk-fold .org-svg .hubcount{font-size:13px}
   #v-home.desk-fold .org-svg .hubtag{font-size:12px}
+  #v-home.desk-fold .loop-meters{padding:0 10px 8px}
+  #v-home.desk-fold .loop-meter{padding:6px 8px}
+}
+@media (min-width:1024px) and (max-width:1180px){
+  #v-home.desk-fold .snx-legend-bar{gap:1px;padding:2px 3px}
+  #v-home.desk-fold .snx-rule{font-size:8px;letter-spacing:0;padding:0 1px}
+  #v-home.desk-fold .snx-key span{font-size:9px;padding:0 2px}
 }
 @media (min-width:1024px) and (max-width:1279px){
   #v-home.desk-fold .deg{display:none}
@@ -843,7 +883,6 @@ footer.site{margin-top:auto}
 .arm:hover .ping,.arm:focus-within .ping{opacity:1}
 .ping-t{display:inline-block;transform:rotate(calc(var(--ang) * -1));animation:snx-ping 48s linear infinite;white-space:nowrap;padding:3px 7px;border-radius:999px;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:750;letter-spacing:.02em;color:#fff}
 .snx-list{position:relative;z-index:1;margin-top:14px}
-.snx-more{margin-top:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--ink);border-radius:999px;min-height:36px;padding:0 16px;font-weight:750}
 .snx-list h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red-soft);font-weight:800;margin:0 0 6px}
 .snx-plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .snx-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:100%;min-height:44px;text-align:left;color:inherit;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:12px;padding:8px 10px 8px 14px;box-shadow:inset 4px 0 0 var(--row,var(--cat-ops))}

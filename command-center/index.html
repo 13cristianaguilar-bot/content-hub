@@ -20,6 +20,7 @@
   --bg:#080808;--ink:#f6f5f3;--muted:#a3a3a3;--dim:#737373;
   --line:rgba(255,255,255,.08);--glass:rgba(255,255,255,.04);
   --red:#ed3039;--red-deep:#b71a23;--red-soft:#ff8a8e;
+  --cat-cash:#ed3039;--cat-future:#f5a524;--cat-clients:#3b82f6;--cat-content:#22c55e;--cat-ops:#8a8f98;
   --good:#3DDC97;--good-ink:#d7f0e0;--watch:#C4A35A;--act:#ed3039;
   --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
   --sans:Geist,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
@@ -757,6 +758,9 @@ footer.site{margin-top:auto}
 .snx-foot p{color:var(--dim);font-size:12px;line-height:1.4}
 .snx-keys kbd{font-family:var(--mono);font-size:10px;border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:1px 5px;color:var(--muted)}
 .snx-legend{position:relative;z-index:1;color:var(--muted);font-size:12px;line-height:1.4;margin:8px 0 0}
+.snx-key{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.3;font-weight:700}
+.snx-key span{display:inline-flex;align-items:center;gap:6px;min-width:0}
+.snx-key i{width:8px;height:8px;border-radius:50%;background:var(--swatch,var(--cat-ops));box-shadow:0 0 0 1px rgba(255,255,255,.28);flex:none}
 .snx-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(240px,.85fr);gap:14px;align-items:start}
 .snx-hud{min-height:168px;padding:14px 14px 12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
 .snx-hud h3{font-size:clamp(26px,3vw,40px);line-height:1.08;margin-top:8px;overflow-wrap:anywhere}
@@ -791,14 +795,16 @@ footer.site{margin-top:auto}
 .blip{position:absolute;left:50%;top:var(--top);width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:inherit;transform:translate(-50%,-50%);pointer-events:auto}
 .face{position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1));animation:snx-face 48s linear infinite}
 .disc:has(.arm:hover) .orbit,.disc:has(.arm:hover) .face,.disc:has(.arm:hover) .ping-t,.disc:has(.arm:focus-within) .orbit,.disc:has(.arm:focus-within) .face,.disc:has(.arm:focus-within) .ping-t{animation-play-state:paused}
-.dot{display:block;width:calc(12px + var(--scale) * 16px);height:calc(12px + var(--scale) * 16px);border-radius:50%;background:radial-gradient(circle at 35% 32%,#fff,#ed3039 46%,#7a1218);box-shadow:0 0 12px rgba(237,48,57,.85);transition:transform .35s cubic-bezier(.2,1.45,.3,1)}
-.blip.hot .dot{animation:pulse 1.25s ease-in-out infinite}
+.dot{display:block;width:calc(12px + var(--scale) * 16px);height:calc(12px + var(--scale) * 16px);border-radius:50%;background:radial-gradient(circle at 35% 32%,#fff,var(--blip,var(--cat-ops)) 52%,#141416);box-shadow:0 0 12px var(--blip,var(--cat-ops));transition:transform .35s cubic-bezier(.2,1.45,.3,1);animation:pulse var(--pulse, 3.4s) ease-in-out infinite}
+.blip.is-late .dot{box-shadow:0 0 0 4px rgba(255,255,255,.22),0 0 16px var(--blip,var(--cat-ops))}
 .blip.is-on .dot,.blip.is-hot .dot{transform:scale(1.28)}
 .blip:active .dot{transform:scale(.86)}
-.blip.is-on .dot,.blip.is-hot .dot{box-shadow:0 0 0 2px #fff,0 0 18px rgba(237,48,57,.95)}
+.blip.is-on .dot{box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(0,0,0,.72),0 0 18px var(--blip,var(--cat-ops))}
+.blip.is-on.is-late .dot{box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(0,0,0,.72),0 0 0 9px rgba(255,255,255,.22),0 0 18px var(--blip,var(--cat-ops))}
 .blip.is-hot{position:absolute}
 .blip.is-hot:after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:1.5px solid rgba(237,48,57,.85);animation:blip-ripple 520ms ease-out;pointer-events:none}
-.snx-row.is-hot,.qrow.is-hot{box-shadow:0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
+.snx-row.is-hot{box-shadow:inset 4px 0 0 var(--row,var(--cat-ops)),0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
+.qrow.is-hot{box-shadow:0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
 @keyframes blip-ripple{0%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:scale(2.1)}}
 .ping{position:absolute;left:50%;top:calc(var(--top) - 2px);z-index:4;transform:translate(-50%,-130%);opacity:0;pointer-events:none}
 .arm:hover .ping,.arm:focus-within .ping{opacity:1}
@@ -806,8 +812,8 @@ footer.site{margin-top:auto}
 .snx-list{position:relative;z-index:1;margin-top:14px}
 .snx-list h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red-soft);font-weight:800;margin:0 0 6px}
 .snx-plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
-.snx-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:100%;min-height:44px;text-align:left;color:inherit;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:12px;padding:8px 10px}
-.snx-row.is-on{border-color:rgba(237,48,57,.8);background:rgba(237,48,57,.12)}
+.snx-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:100%;min-height:44px;text-align:left;color:inherit;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:12px;padding:8px 10px 8px 14px;box-shadow:inset 4px 0 0 var(--row,var(--cat-ops))}
+.snx-row.is-on{border-color:rgba(255,255,255,.72);background:rgba(255,255,255,.07)}
 .snx-row-title{display:block;font-weight:750;line-height:1.35;overflow:visible;white-space:normal;overflow-wrap:anywhere}
 .snx-row-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:flex-end;flex:none;max-width:46%}
 .snx-row-meta b{font-family:var(--mono);font-size:13px;font-weight:600}
@@ -838,6 +844,7 @@ footer.site{margin-top:auto}
 }
 @media (prefers-reduced-motion:reduce){
   .snx-fx{display:none}
+  .dot,.blip.hot .dot,.blip.is-late .dot{animation:none}
   .blip.is-hot .dot,.blip.is-on .dot,.blip:hover .dot,.snx-go:active{transform:none}
   .blip.is-hot:after{display:none}
 }
@@ -2508,25 +2515,29 @@ footer.site{margin-top:auto}
     var bits = day.split('-');
     return new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' }).format(new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 18)));
   }
+  function reminderWeek(raw) {
+    return /\bthis week\b/i.test(String(raw || ''));
+  }
   function reminderDue(due, today) {
     var raw = clean(due);
     if (!raw) return null;
+    var week = reminderWeek(raw);
     if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
       var day = dayOf(raw);
-      if (!day) return { text: reminderShort(raw) || raw, tip: raw, hot: false, urgency: 2, sortDay: '', kind: 'text' };
+      if (!day) return { text: reminderShort(raw) || raw, tip: raw, hot: false, urgency: 2, sortDay: '', kind: 'text', week: week };
       var label = reminderMonth(day);
       var diff = daysBetween(today, day);
-      if (diff < 0) return { text: 'OVERDUE', tip: label, hot: true, urgency: 0, sortDay: day, kind: 'date' };
-      if (diff === 0) return { text: 'TODAY', tip: label, hot: true, urgency: 1, sortDay: day, kind: 'date' };
-      if (diff > 7) return { text: label, tip: label, hot: false, urgency: 3, sortDay: day, kind: 'date' };
-      return { text: label, tip: label, hot: false, urgency: 2, sortDay: day, kind: 'date' };
+      if (diff < 0) return { text: 'OVERDUE', tip: label, hot: true, urgency: 0, sortDay: day, kind: 'date', week: false };
+      if (diff === 0) return { text: 'TODAY', tip: label, hot: true, urgency: 1, sortDay: day, kind: 'date', week: false };
+      if (diff > 7) return { text: label, tip: label, hot: false, urgency: 3, sortDay: day, kind: 'date', week: false };
+      return { text: label, tip: label, hot: false, urgency: 2, sortDay: day, kind: 'date', week: true };
     }
     var short = reminderShort(raw);
     var first = short.toLowerCase();
-    if (first === 'overdue') return { text: 'OVERDUE', tip: raw, hot: true, urgency: 0, sortDay: '9999-99-99', kind: 'text' };
-    if (first === 'today') return { text: 'TODAY', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99', kind: 'text' };
-    if (first === 'now') return { text: 'NOW', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99', kind: 'text' };
-    return { text: short || raw, tip: raw, hot: false, urgency: 2, sortDay: '', kind: 'text' };
+    if (first === 'overdue') return { text: 'OVERDUE', tip: raw, hot: true, urgency: 0, sortDay: '9999-99-99', kind: 'text', week: false };
+    if (first === 'today') return { text: 'TODAY', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99', kind: 'text', week: false };
+    if (first === 'now') return { text: 'NOW', tip: raw, hot: true, urgency: 1, sortDay: today || '9999-99-99', kind: 'text', week: false };
+    return { text: short || raw, tip: raw, hot: false, urgency: 2, sortDay: '', kind: 'text', week: week };
   }
   function reminderRank(items, today) {
     var rows = [];
@@ -2534,6 +2545,7 @@ footer.site{margin-top:auto}
       if (!item || typeof item !== 'object') return;
       var title = clean(item.title || '');
       if (!title) return;
+      var due = reminderDue(item.due, today);
       rows.push({
         index: index,
         id: clean(item.id || '') || ('row-' + index),
@@ -2542,10 +2554,19 @@ footer.site{margin-top:auto}
         notes: clean(item.notes || ''),
         amount: num(item.value_usd),
         href: safeHref(item.href),
-        due: reminderDue(item.due, today)
+        due: due,
+        ringPin: signalPin(item.ring),
+        ringReason: typeof item.ring_reason === 'string' ? clean(item.ring_reason) : '',
+        cat: signalCategory(item, due, num(item.value_usd))
       });
     });
     rows.sort(function (a, b) {
+      var ar = signalRing(a);
+      var br = signalRing(b);
+      if (ar !== br) return ar - br;
+      var aPin = a.ringPin != null;
+      var bPin = b.ringPin != null;
+      if (aPin !== bPin) return aPin ? -1 : 1;
       var ad = a.due || { urgency: 4, sortDay: '' };
       var bd = b.due || { urgency: 4, sortDay: '' };
       if (ad.urgency !== bd.urgency) return ad.urgency - bd.urgency;
@@ -2615,12 +2636,57 @@ footer.site{margin-top:auto}
       stats: { xp: cleared * SIGNAL_XP_EACH, level: 1 + cleared, clears: cleared, stake: stakeN ? stake : null, stakeN: stakeN, noDollar: noDollar, heat: heat }
     };
   }
+  function signalPin(value) {
+    if (typeof value !== 'number' || !isFinite(value) || Math.floor(value) !== value) return null;
+    if (value < 0 || value > 3) return null;
+    return value;
+  }
+  function signalCategory(item, due, amount) {
+    var raw = item && typeof item.category === 'string' ? item.category : '';
+    if (raw === 'cash_now' || raw === 'future_money' || raw === 'clients' || raw === 'content' || raw === 'ops') return raw;
+    var soon = !!(due && (due.urgency <= 1 || due.week || (due.kind === 'date' && due.urgency === 2)));
+    if (amount != null && soon) return 'cash_now';
+    if (amount != null) return 'future_money';
+    return 'ops';
+  }
+  function signalCatVar(cat) {
+    if (cat === 'cash_now') return '--cat-cash';
+    if (cat === 'future_money') return '--cat-future';
+    if (cat === 'clients') return '--cat-clients';
+    if (cat === 'content') return '--cat-content';
+    return '--cat-ops';
+  }
   function signalRing(row) {
-    var u = row.due ? row.due.urgency : 2;
-    if (u <= 0) return 0;
-    if (u === 1) return 1;
-    if (u === 2) return 2;
+    if (row && row.ringPin != null) return row.ringPin;
+    var due = row && row.due;
+    if (!due) return 3;
+    if (due.urgency <= 0) return 0;
+    if (due.urgency === 1) return 1;
+    if (due.week || (due.kind === 'date' && due.urgency === 2)) return 2;
     return 3;
+  }
+  function signalPace(row) {
+    var due = row && row.due;
+    if (due && due.urgency <= 1) return '0.9s';
+    if (due && (due.week || (due.kind === 'date' && due.urgency === 2))) return '1.8s';
+    return '3.4s';
+  }
+  function signalDotR(row) {
+    var scale = (!row || row.amount == null || !S.signalMax) ? 0 : (row.amount / S.signalMax);
+    var d = 12 + scale * 16;
+    if (row && row.id === S.signalId) d *= 1.28;
+    return d / 2;
+  }
+  function signalDiscPx() {
+    var el = document.querySelector('#signal-now .disc');
+    var w = el && el.getBoundingClientRect ? el.getBoundingClientRect().width : 0;
+    if (w > 40) return w;
+    var view = window.innerWidth || 390;
+    if (view <= 760) return Math.max(160, Math.min(520, view - 56));
+    var stage = Math.max(320, view - 240 - 44);
+    if (view <= 1200) return Math.max(220, Math.min(520, stage - 68));
+    var col = ((stage - 14) * 1.15) / 2;
+    return Math.max(240, Math.min(520, col - 36));
   }
   function signalMaxOf(open) {
     var maxAmt = 0;
@@ -2638,39 +2704,110 @@ footer.site{margin-top:auto}
     if (!row) return null;
     var rows = [];
     if (row.due && (row.due.tip || row.due.text)) rows.push({ k: 'Due', v: row.due.tip || row.due.text });
+    if (row.ringReason) rows.push({ k: 'Why here', v: row.ringReason });
     if (row.amount != null) rows.push({ k: 'Value', v: money(row.amount) });
     if (row.tied) rows.push({ k: 'Tied to', v: row.tied });
     if (row.notes) rows.push({ k: 'Notes', v: row.notes });
     return { title: row.title, rows: rows, hint: 'Click to lock' };
   }
   function signalLayout(open) {
+    var disc = signalDiscPx();
+    var gap = 6;
+    var bases = [34, 26, 16, 7];
     var groups = [[], [], [], []];
     open.forEach(function (row) { groups[signalRing(row)].push(row); });
+    var placed = [];
     var out = {};
-    var bases = [34, 26, 16, 7];
+    var ringTop = bases.slice();
+    function radOf(top) { return ((50 - top) / 100) * disc; }
+    function topOf(rad) {
+      var t = 50 - (rad / disc) * 100;
+      if (t < 6) t = 6;
+      if (t > 44) t = 44;
+      return t;
+    }
+    function blocked(ang, rad, r, extra) {
+      var a = ang * Math.PI / 180;
+      var x = Math.cos(a) * rad;
+      var y = Math.sin(a) * rad;
+      if (rad < 26 + r + gap) return true;
+      if (rad + r > disc / 2 - 4) return true;
+      var pool = extra ? placed.concat(extra) : placed;
+      var i, o, b, dx, dy, need;
+      for (i = 0; i < pool.length; i++) {
+        o = pool[i];
+        b = o.ang * Math.PI / 180;
+        dx = x - Math.cos(b) * o.rad;
+        dy = y - Math.sin(b) * o.rad;
+        need = r + o.r + gap;
+        if (dx * dx + dy * dy < need * need) return true;
+      }
+      return false;
+    }
     groups.forEach(function (list, ring) {
       var n = list.length;
-      if (!n) return;
-      var lanes = n > 16 ? 3 : (n > 8 ? 2 : 1);
-      var shift = lanes === 1 ? [0] : (lanes === 2 ? [-3.2, 3.2] : [-4.2, 0, 4.2]);
-      var counts = [];
-      var seen = [];
-      var lane;
-      for (lane = 0; lane < lanes; lane++) { counts.push(0); seen.push(0); }
-      list.forEach(function (row, i) { counts[i % lanes] += 1; });
-      list.forEach(function (row, i) {
-        lane = i % lanes;
-        var slot = seen[lane];
-        seen[lane] += 1;
-        var slots = counts[lane] || 1;
-        var ang = (360 / slots) * slot + ring * 19 + (lane * 180 / slots);
-        var top = bases[ring] + shift[lane];
-        if (top < 6) top = 6;
-        if (top > 42) top = 42;
-        out[row.id] = { ang: ang, top: top };
+      var floor = radOf(bases[ring]);
+      var outer = 0;
+      placed.forEach(function (o) { if (o.rad + o.r > outer) outer = o.rad + o.r; });
+      if (outer && outer + gap + 10 > floor) floor = outer + gap + 10;
+      if (!n) {
+        ringTop[ring] = topOf(Math.min(disc / 2 - 12, floor));
+        return;
+      }
+      var ceiling = disc / 2 - 8;
+      var spins = [0, 12, 24, 36, 18];
+      var laneCount, spin, rad, found, i, lane, seen, per, slots, slot, ang, row, r, useRad, draft, ok;
+      found = null;
+      for (laneCount = 1; laneCount <= (n >= 6 ? 2 : 1) && !found; laneCount++) {
+        for (spin = 0; spin < spins.length && !found; spin++) {
+          for (rad = floor; rad <= ceiling && !found; rad += 4) {
+            draft = [];
+            per = [0, 0];
+            for (i = 0; i < n; i++) per[i % laneCount] += 1;
+            seen = [0, 0];
+            ok = true;
+            for (i = 0; i < n; i++) {
+              row = list[i];
+              lane = i % laneCount;
+              slot = seen[lane];
+              seen[lane] += 1;
+              slots = per[lane] || 1;
+              r = signalDotR(row);
+              useRad = lane === 0 ? rad : Math.min(ceiling, rad + r * 2 + gap + 6);
+              ang = (360 / slots) * slot + ring * 19 + spins[spin] + (lane ? (180 / slots) : 0);
+              if (blocked(ang, useRad, r, draft)) { ok = false; break; }
+              draft.push({ id: row.id, ang: ang, rad: useRad, r: r });
+            }
+            if (ok) found = draft;
+          }
+        }
+      }
+      if (!found) {
+        found = [];
+        for (i = 0; i < n; i++) {
+          row = list[i];
+          found.push({ id: row.id, ang: (360 / n) * i + ring * 19, rad: Math.min(ceiling, floor), r: signalDotR(row) });
+        }
+      }
+      var inner = found[0].rad;
+      found.forEach(function (spot) {
+        if (spot.rad < inner) inner = spot.rad;
+        spot.top = topOf(spot.rad);
+        placed.push(spot);
+        out[spot.id] = { ang: spot.ang, top: spot.top };
       });
+      ringTop[ring] = topOf(inner);
     });
-    return out;
+    var prev = 0;
+    var ri, rr;
+    for (ri = 0; ri < 4; ri++) {
+      rr = radOf(ringTop[ri]);
+      if (!groups[ri].length && rr < prev + 14) rr = prev + 14;
+      if (rr > disc / 2 - 10) rr = disc / 2 - 10;
+      ringTop[ri] = topOf(rr);
+      prev = Math.max(prev, rr);
+    }
+    return { spots: out, ringTop: ringTop };
   }
   function signalCountBits(block, ranked) {
     var c = (block && block.counts) || {};
@@ -2713,6 +2850,7 @@ footer.site{margin-top:auto}
     return '<p class="snx-kicker">Locked</p><div class="brief-top">' + dueChip(row.due, false) + signalValueHtml(row.amount) + '</div><h3>' + esc(row.title) + '</h3>' +
       (row.tied ? '<p class="snx-tied">' + esc(row.tied) + '</p>' : '') +
       (row.notes ? '<p class="snx-notes">' + esc(row.notes) + '</p>' : '') +
+      (row.ringReason ? '<p class="snx-notes">Why here: ' + esc(row.ringReason) + '</p>' : '') +
       signalActions(row);
   }
   function signalPrepare(ranked) {
@@ -2739,30 +2877,42 @@ footer.site{margin-top:auto}
     var rows = shown.map(function (row) {
       var on = row.id === S.signalId;
       var amt = row.amount == null ? '' : '<b>' + esc(money(row.amount)) + '</b>';
-      return '<li><button type="button" class="snx-row' + (on ? ' is-on' : '') + '" data-snx="lock" data-id="' + esc(row.id) + '" aria-pressed="' + (on ? 'true' : 'false') + '"><span class="snx-row-title">' + esc(row.title) + '</span><span class="snx-row-meta">' + dueChip(row.due, false) + amt + '</span></button></li>';
+      return '<li><button type="button" class="snx-row' + (on ? ' is-on' : '') + '" data-snx="lock" data-id="' + esc(row.id) + '" data-cat="' + esc(row.cat || 'ops') + '" style="--row:var(' + signalCatVar(row.cat) + ')" aria-pressed="' + (on ? 'true' : 'false') + '"><span class="snx-row-title">' + esc(row.title) + '</span><span class="snx-row-meta">' + dueChip(row.due, false) + amt + '</span></button></li>';
     }).join('');
     var more = (narrow && open.length > cap) ? '<button type="button" class="snx-more" data-snx="all">' + (S.signalAll ? 'Show less' : 'Show all') + '</button>' : '';
     return '<div class="snx-list"><h3>On this board</h3><ol class="snx-plain">' + rows + '</ol>' + more + '</div>';
   }
+  function signalKeyHtml() {
+    var items = [
+      ['--cat-cash', 'Cash now'],
+      ['--cat-future', 'Future money'],
+      ['--cat-clients', 'Clients'],
+      ['--cat-content', 'Content'],
+      ['--cat-ops', 'Ops and life']
+    ];
+    return '<p class="snx-key">' + items.map(function (it) {
+      return '<span><i style="--swatch:var(' + it[0] + ')"></i>' + it[1] + '</span>';
+    }).join('') + '</p>';
+  }
   function signalRadarHtml(block, ranked, split, source) {
     var open = split.open;
     var place = signalLayout(open);
-    var names = ['Overdue', 'Now', 'Soon', 'Later'];
-    var tops = ['34%', '26%', '16%', '7%'];
+    var names = ['Urgent now', 'Today', 'This week', 'Later'];
+    var tops = place.ringTop.map(function (top) { return top.toFixed(2) + '%'; });
     var arms = open.map(function (row) {
-      var spot = place[row.id];
-      var ring = signalRing(row);
+      var spot = place.spots[row.id] || { ang: 0, top: 34 };
       var scale = (row.amount == null || !S.signalMax) ? 0 : (row.amount / S.signalMax);
       var on = row.id === S.signalId;
+      var late = !!(row.due && row.due.urgency <= 0);
       var ping = row.amount != null ? money(row.amount) : (row.due ? row.due.text : '');
       var ang = spot.ang.toFixed(2);
       var top = spot.top.toFixed(2);
-      return '<div class="arm' + (on ? ' is-on' : '') + '" style="--ang:' + ang + 'deg" aria-hidden="true"><button type="button" class="blip' + (row.due && row.due.hot ? ' hot' : '') + (on ? ' is-on' : '') + '" tabindex="-1" data-snx="lock" data-id="' + esc(row.id) + '" style="--top:' + top + '%;--scale:' + scale.toFixed(3) + '" aria-label="' + esc(row.title) + '"><span class="face" style="--ang:' + ang + 'deg"><span class="dot"></span></span></button>' + (ping ? '<span class="ping" style="--top:' + top + '%"><span class="ping-t" style="--ang:' + ang + 'deg">' + esc(ping) + '</span></span>' : '') + '</div>';
+      return '<div class="arm' + (on ? ' is-on' : '') + '" style="--ang:' + ang + 'deg" aria-hidden="true"><button type="button" class="blip' + (row.due && row.due.hot ? ' hot' : '') + (late ? ' is-late' : '') + (on ? ' is-on' : '') + '" tabindex="-1" data-snx="lock" data-id="' + esc(row.id) + '" data-cat="' + esc(row.cat || 'ops') + '" style="--top:' + top + '%;--scale:' + scale.toFixed(3) + ';--blip:var(' + signalCatVar(row.cat) + ');--pulse:' + signalPace(row) + '" aria-label="' + esc(row.title) + '"><span class="face" style="--ang:' + ang + 'deg"><span class="dot"></span></span></button>' + (ping ? '<span class="ping" style="--top:' + top + '%"><span class="ping-t" style="--ang:' + ang + 'deg">' + esc(ping) + '</span></span>' : '') + '</div>';
     }).join('');
     var rings = tops.map(function (top, i) {
       return '<i class="r' + i + '" style="inset:' + top + '"></i><span class="ring-label" style="top:' + top + '">' + names[i] + '</span>';
     }).join('');
-    var disc = '<div class="disc-wrap"><div class="disc"><canvas class="snx-fx" width="2" height="2" aria-hidden="true"></canvas><div class="rings" aria-hidden="true">' + rings + '</div><div class="core" aria-hidden="true"><b>SIG</b></div><div class="orbit">' + arms + '</div></div><p class="snx-legend">The inner ring is overdue. A larger blip is a higher dollar figure. A row with no dollar figure stays small. The list under the radar is the same rows, in this order.</p></div>';
+    var disc = '<div class="disc-wrap"><div class="disc"><canvas class="snx-fx" width="2" height="2" aria-hidden="true"></canvas><div class="rings" aria-hidden="true">' + rings + '</div><div class="core" aria-hidden="true"><b>SIG</b></div><div class="orbit">' + arms + '</div></div><p class="snx-legend">Closer to the center is more urgent. Color is the category. A bigger blip is more money. Faster pulse means a closer deadline.</p>' + signalKeyHtml() + '</div>';
     var hud = '<div class="snx-hud" data-hud="radar">' + signalBriefHtml(signalRowById(S.signalId)) + '</div>';
     return signalShell('', signalHead(split.stats) + '<div class="snx-grid">' + disc + hud + '</div>' + signalPlainHtml(open) + signalFoot(source, block, ranked));
   }

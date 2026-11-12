@@ -44,7 +44,7 @@
     "asOf": "2026-11-11T08:15:00-06:00",
     "source": "SAMPLE reminders bot",
     "counts": {
-      "signalNow": 8,
+      "signalNow": 9,
       "futureSignal": 2,
       "noise": 6
     },
@@ -56,6 +56,7 @@
         "due": "2026-11-13",
         "value_usd": null,
         "notes": "SAMPLE. A soon date in the layout file.",
+        "category": "ops",
         "href": null
       },
       {
@@ -65,6 +66,7 @@
         "due": "Overdue; stamp this week",
         "value_usd": null,
         "notes": "SAMPLE. A waiting stamp in the layout file.",
+        "category": "content",
         "href": null
       },
       {
@@ -74,6 +76,7 @@
         "due": "2026-11-16",
         "value_usd": 1200,
         "notes": "SAMPLE. An overdue date so the tint can be checked.",
+        "category": "future_money",
         "href": "https://signals.marketing"
       },
       {
@@ -83,6 +86,7 @@
         "due": "2026-11-11",
         "value_usd": null,
         "notes": "SAMPLE. A today date in the layout file.",
+        "category": "clients",
         "href": null
       },
       {
@@ -92,6 +96,7 @@
         "due": "Now; failed charge can take delivery offline",
         "value_usd": 3000,
         "notes": "SAMPLE. Layout only. This is not a real charge.",
+        "category": "cash_now",
         "href": "https://signals.marketing"
       },
       {
@@ -101,6 +106,7 @@
         "due": "2026-11-14",
         "value_usd": 800,
         "notes": "SAMPLE. A later date with a value.",
+        "category": "content",
         "href": "https://signals.marketing"
       },
       {
@@ -110,6 +116,7 @@
         "due": "Call back; the producer is waiting on a yes",
         "value_usd": null,
         "notes": "SAMPLE. Free text that collapses to a short chip.",
+        "category": "ops",
         "href": "https://signals.marketing"
       },
       {
@@ -119,7 +126,20 @@
         "due": "2026-11-09",
         "value_usd": 4500,
         "notes": "SAMPLE. Highest overdue value. Layout only.",
+        "category": "cash_now",
         "href": "https://signals.marketing"
+      },
+      {
+        "id": "sample-rem-9",
+        "title": "SAMPLE. Pin the fastest cash",
+        "tied_to": "SAMPLE. Copper Finch",
+        "due": "2026-12-18",
+        "value_usd": 2400,
+        "notes": "SAMPLE. A future date pulled to the center.",
+        "ring": 0,
+        "ring_reason": "SAMPLE. Fastest cash, so it sits in the center.",
+        "category": "cash_now",
+        "href": null
       }
     ]
   },

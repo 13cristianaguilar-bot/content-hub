@@ -494,6 +494,26 @@ body[data-ready] .shimmer{display:none}
 .sysline{font-size:12px;color:var(--muted);white-space:nowrap}
 .kbd{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
 .hero-grid{display:grid;grid-template-columns:1.45fr .85fr;gap:12px;margin-bottom:12px}
+@media (min-width:1024px){
+  #v-home.desk-fold{display:grid;grid-template-columns:minmax(0,.82fr) minmax(340px,1.18fr);gap:12px 14px;align-items:start}
+  #v-home.desk-fold>*{grid-column:1 / -1;min-width:0}
+  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2}
+  #v-home.desk-fold>.org{grid-column:2;grid-row:2}
+  #v-home.desk-fold>.hero-grid{grid-template-columns:1fr}
+  #v-home.desk-fold>.snx-list{margin:0;padding:12px 14px 14px;border-radius:22px;background:#070707;border:1px solid rgba(255,255,255,.1)}
+  #v-home.desk-fold .snx-grid{grid-template-columns:1fr}
+  #v-home.desk-fold .snx-hud{min-height:0;padding:10px 12px}
+  #v-home.desk-fold .snx-hud h3{font-size:22px}
+  #v-home.desk-fold .snx-val.lg{font-size:26px}
+  #v-home.desk-fold .org-stage{height:420px;min-height:420px;aspect-ratio:auto}
+  #v-home.desk-fold .org-svg{height:100%}
+  #v-home.desk-fold .org-svg .hublab{font-size:16px}
+  #v-home.desk-fold .org-svg .hubcount{font-size:13px}
+  #v-home.desk-fold .org-svg .hubtag{font-size:12px}
+}
+@media (min-width:1024px) and (max-width:1279px){
+  #v-home.desk-fold .deg{display:none}
+}
 .org{position:relative;min-height:420px;overflow:hidden;background-color:#0c0c0c;background-image:radial-gradient(360px 120px at 50% 100%,rgba(237,48,57,.14),transparent 70%);
   border:1px solid rgba(255,255,255,.08);border-radius:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .org .ph{padding:14px 14px 0;align-items:flex-start}
@@ -823,6 +843,7 @@ footer.site{margin-top:auto}
 .arm:hover .ping,.arm:focus-within .ping{opacity:1}
 .ping-t{display:inline-block;transform:rotate(calc(var(--ang) * -1));animation:snx-ping 48s linear infinite;white-space:nowrap;padding:3px 7px;border-radius:999px;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:750;letter-spacing:.02em;color:#fff}
 .snx-list{position:relative;z-index:1;margin-top:14px}
+.snx-more{margin-top:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--ink);border-radius:999px;min-height:36px;padding:0 16px;font-weight:750}
 .snx-list h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red-soft);font-weight:800;margin:0 0 6px}
 .snx-plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
 .snx-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;width:100%;min-height:44px;text-align:left;color:inherit;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03);border-radius:12px;padding:8px 10px 8px 14px;box-shadow:inset 4px 0 0 var(--row,var(--cat-ops))}
@@ -2887,15 +2908,17 @@ footer.site{margin-top:auto}
   }
   function signalPlainHtml(open) {
     var narrow = window.matchMedia && window.matchMedia('(max-width:760px)').matches;
-    var cap = 5;
-    var cut = !!(narrow && !S.signalAll && open.length > cap);
+    var desk = homeDesk();
+    var cap = desk ? 6 : 5;
+    var fold = !!(narrow || desk);
+    var cut = !!(fold && !S.signalAll && open.length > cap);
     var shown = cut ? open.slice(0, cap) : open;
     var rows = shown.map(function (row) {
       var on = row.id === S.signalId;
       var amt = row.amount == null ? '' : '<b>' + esc(money(row.amount)) + '</b>';
       return '<li><button type="button" class="snx-row' + (on ? ' is-on' : '') + '" data-snx="lock" data-id="' + esc(row.id) + '" data-cat="' + esc(row.cat || 'ops') + '" style="--row:var(' + signalCatVar(row.cat) + ')" aria-pressed="' + (on ? 'true' : 'false') + '"><span class="snx-row-title">' + esc(row.title) + '</span><span class="snx-row-meta">' + dueChip(row.due, false) + amt + '</span></button></li>';
     }).join('');
-    var more = (narrow && open.length > cap) ? '<button type="button" class="snx-more" data-snx="all">' + (S.signalAll ? 'Show less' : 'Show all') + '</button>' : '';
+    var more = (fold && open.length > cap) ? '<button type="button" class="snx-more" data-snx="all">' + (S.signalAll ? 'Show less' : 'Show all') + '</button>' : '';
     return '<div class="snx-list"><h3>On this board</h3><ol class="snx-plain">' + rows + '</ol>' + more + '</div>';
   }
   function signalKeyHtml() {
@@ -3262,6 +3285,19 @@ footer.site{margin-top:auto}
   function homeNarrow() {
     return !!(window.matchMedia && window.matchMedia('(max-width:760px)').matches);
   }
+  function homeDesk() {
+    return !!(window.matchMedia && window.matchMedia('(min-width:1024px)').matches);
+  }
+  function orgLoopBox() {
+    return homeDesk() ? [120, 0, 720, 540] : [0, 0, 960, 540];
+  }
+  function applyOrgFrame() {
+    if (S.orgZoom || S.orgFocus) return;
+    var svg = document.querySelector('#v-home .org-svg');
+    if (!svg) return;
+    var box = S.orgView === 'loop' ? orgLoopBox() : [0, 0, 960, 540];
+    svg.setAttribute('viewBox', box.join(' '));
+  }
   function placeWorkforce() {
     var home = $('v-home');
     if (!home) return;
@@ -3269,20 +3305,32 @@ footer.site{margin-top:auto}
     var grid = home.querySelector('.hero-grid');
     if (!snx || !grid) return;
     var narrow = homeNarrow();
-    if (placeWorkforce.narrow != null && placeWorkforce.narrow !== narrow && S.model && !placeWorkforce.busy) {
-      placeWorkforce.narrow = narrow;
+    var desk = !narrow && homeDesk();
+    var mode = narrow ? 'narrow' : (desk ? 'desk' : 'mid');
+    if (placeWorkforce.mode != null && placeWorkforce.mode !== mode && S.model && !placeWorkforce.busy) {
+      placeWorkforce.mode = mode;
       S.signalAll = false;
       placeWorkforce.busy = true;
       signalRepaint();
       placeWorkforce.busy = false;
       return;
     }
-    placeWorkforce.narrow = narrow;
+    placeWorkforce.mode = mode;
+    var org = home.querySelector('.org');
+    if (!desk && org && org.parentElement !== grid) grid.insertBefore(org, grid.firstChild);
     var list = snx.querySelector('.snx-list') || home.querySelector(':scope > .snx-list');
     var foot = snx.querySelector('.snx-foot');
     Array.prototype.forEach.call(home.querySelectorAll(':scope > .snx-list'), function (el) {
       if (el !== list) el.remove();
     });
+    home.classList.toggle('desk-fold', !!desk);
+    if (desk && org) {
+      if (org.parentElement !== home) snx.after(org);
+      if (list) org.after(list);
+      applyOrgFrame();
+      return;
+    }
+    applyOrgFrame();
     if (narrow && list) {
       if (grid.previousElementSibling !== snx) snx.after(grid);
       if (list.previousElementSibling !== grid) grid.after(list);
@@ -4395,9 +4443,10 @@ footer.site{margin-top:auto}
   }
   function orgViewSaved() {
     try {
-      if (localStorage.getItem('cc-workforce') === 'loop') return 'loop';
+      var saved = localStorage.getItem('cc-workforce');
+      if (saved === 'loop' || saved === 'map') return saved;
     } catch (e) {}
-    return 'map';
+    return homeDesk() ? 'loop' : 'map';
   }
   function placeMap() {
     var spec = { attract: { x: 176, y: 168 }, convert: { x: 480, y: 148 }, transform: { x: 784, y: 168 } };
@@ -4570,6 +4619,7 @@ footer.site{margin-top:auto}
     var satKeys = ['ops', 'growth', 'build'].filter(function (key) { return groups[key].length; });
     var satNames = { ops: 'Ops', growth: 'Personal', build: 'Build' };
     var satXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [300, 660] : [156, 480, 804]);
+    var satY = 430;
     var satMapXs = satKeys.length === 1 ? [480] : (satKeys.length === 2 ? [330, 630] : [176, 480, 784]);
     satKeys.forEach(function (key, i) {
       var list = groups[key];
@@ -4581,7 +4631,7 @@ footer.site{margin-top:auto}
         id: 'stage-' + key, name: satNames[key], role: 'Stage', status: live ? 'working' : 'idle',
         work: '', report: '', reportText: '', activeAt: '', parent: '', desk: true, feed: false,
         stageHub: true, stageId: key, liveStage: live, satellite: true, count: list.length,
-        bottleneck: false, outerRad: outer, hr: 16, satX: satXs[i], satY: 430, mapX: satMapXs[i], mapY: 438
+        bottleneck: false, outerRad: outer, hr: 16, satX: satXs[i], satY: satY, mapX: satMapXs[i], mapY: 438
       });
       addBots(key, true);
     });
@@ -4632,8 +4682,8 @@ footer.site{margin-top:auto}
       n.mapY = finite(mp.y, p.y);
       n.vx = p.x;
       n.vy = p.y;
-      n.hx = n.mapX;
-      n.hy = n.mapY;
+      n.hx = p.x;
+      n.hy = p.y;
       n.hr = n.hr || (n.stageHub ? (n.satellite ? 16 : 26) : 6.5);
       n.hitR = n.hr + 3;
     });
@@ -4739,7 +4789,8 @@ footer.site{margin-top:auto}
     var crumb = S.orgView === 'loop'
       ? 'Attract, Convert, and Transform. A closed loop.'
       : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
-    var svg = '<svg class="org-svg" viewBox="0 0 960 540" role="img" aria-label="' + esc(svgLabel) + '">' + paths + shapes + '</svg>';
+    var frame = S.orgView === 'loop' ? orgLoopBox() : [0, 0, 960, 540];
+    var svg = '<svg class="org-svg" viewBox="' + frame.join(' ') + '" role="img" aria-label="' + esc(svgLabel) + '">' + paths + shapes + '</svg>';
     var seg = '<div class="viewseg" id="org-view" role="group" aria-label="Workforce view"><button type="button" data-org-view="map" aria-pressed="' + (S.orgView === 'map' ? 'true' : 'false') + '">Map</button><button type="button" data-org-view="loop" aria-pressed="' + (S.orgView === 'loop' ? 'true' : 'false') + '">Loop</button></div>';
     return '<section class="org panel is-' + S.orgView + '"><div class="ph"><div class="org-title"><h2>AI workforce</h2>' + seg + '</div><p class="sub" id="org-crumb">' + crumb + '</p></div><div class="loop-nav" id="loop-nav">' + nav + '</div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><div id="loop-board">' + loopBoardHtml('') + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
@@ -4906,7 +4957,7 @@ footer.site{margin-top:auto}
       if (!p || p.x == null) return;
       moves.push({ n: n, x: p.x, y: p.y });
     });
-    animateOrg(svg, moves, [0, 0, 960, 540]);
+    animateOrg(svg, moves, next === 'loop' ? orgLoopBox() : [0, 0, 960, 540]);
   }
   function zoomOrg(stage) {
     if (S.orgView !== 'map') return;
@@ -4994,7 +5045,7 @@ footer.site{margin-top:auto}
       if (!targets[n.id]) return;
       moves.push({ n: n, x: targets[n.id].x, y: targets[n.id].y });
     });
-    animateOrg(svg, moves, [0, 0, 960, 540]);
+    animateOrg(svg, moves, orgLoopBox());
   }
   function orgActivate(id) {
     var n = nodeById(id);
@@ -5246,8 +5297,11 @@ footer.site{margin-top:auto}
     var n = links.length < 8 ? links.length : 8;
     if (n && !S.orgZoom) {
       var cssSpace = S.orgLinkSpace === 'css';
-      var sx = cssSpace ? 1 : FX.w / 960;
-      var sy = cssSpace ? 1 : FX.h / 540;
+      var frame = S.orgView === 'loop' ? orgLoopBox() : [0, 0, 960, 540];
+      var sx = cssSpace ? 1 : FX.w / frame[2];
+      var sy = cssSpace ? 1 : FX.h / frame[3];
+      var ox = cssSpace ? 0 : frame[0];
+      var oy = cssSpace ? 0 : frame[1];
       ctx.globalAlpha = 0.85;
       for (i = 0; i < n; i++) {
         var L = links[i];
@@ -5264,7 +5318,7 @@ footer.site{margin-top:auto}
           y = k * k * L.y0 + 2 * k * u * L.cy + u * u * L.y1;
         } else continue;
         if (!isFinite(x) || !isFinite(y)) continue;
-        ctx.fillRect(x * sx, y * sy, 2.2, 2.2);
+        ctx.fillRect((x - ox) * sx, (y - oy) * sy, 2.2, 2.2);
       }
     }
     ctx.globalAlpha = 1;
@@ -5821,7 +5875,9 @@ footer.site{margin-top:auto}
     var ctm = svg.getScreenCTM();
     if (!ctm) return null;
     var p = pt.matrixTransform(ctm.inverse());
-    var scale = (svg.getBoundingClientRect().width / 960) || 1;
+    var raw = (svg.getAttribute('viewBox') || '0 0 960 540').split(/[\s,]+/).map(Number);
+    var vw = raw.length >= 3 && raw[2] > 0 ? raw[2] : 960;
+    var scale = (svg.getBoundingClientRect().width / vw) || 1;
     var floor = loose ? (24 / scale) : 0;
     var best = null;
     var bestD = Infinity;

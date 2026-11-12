@@ -523,9 +523,9 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold .snx-key{display:contents}
   #v-home.desk-fold .snx-key span{min-height:18px;padding:0 5px;gap:3px;font-size:10px;line-height:1.2}
   #v-home.desk-fold .snx-grid{grid-template-columns:1fr}
-  #v-home.desk-fold .disc-wrap{width:100%;max-width:none;padding:0;margin:0}
+  #v-home.desk-fold .disc-wrap{width:100%;max-width:none;padding:0;margin:0;overflow:visible}
   #v-home.desk-fold .ring-out{position:static;margin:0 0 10px;font-size:10px;letter-spacing:.12em}
-  #v-home.desk-fold .disc{width:min(100%,calc(100dvh - 320px));max-width:100%;margin:0 auto}
+  #v-home.desk-fold .disc{width:min(100%,calc(100dvh - 340px));max-width:100%;margin:0 auto}
   #v-home.desk-fold .snx-hud{min-height:0;padding:8px 10px}
   #v-home.desk-fold .snx-hud h3{font-size:18px;margin-top:4px}
   #v-home.desk-fold .snx-val.lg{font-size:22px}
@@ -590,9 +590,60 @@ body[data-ready] .shimmer{display:none}
 @keyframes dot-ripple{0%{opacity:.9;transform:scale(1)}100%{opacity:0;transform:scale(2.15)}}
 .node.stage.bottleneck .core{stroke:#ed3039;stroke-width:2}
 .org-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap;min-width:0}
-.viewseg{display:inline-flex;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:2px;background:rgba(0,0,0,.35);flex:none}
-.viewseg button{border:0;background:transparent;color:#c8c8c8;border-radius:999px;min-height:28px;padding:0 12px;font:750 12px/1 var(--sans);cursor:pointer}
-.viewseg button[aria-pressed="true"]{background:#ed3039;color:#fff}
+.viewseg{position:relative;display:inline-flex;border:1px solid rgba(255,255,255,.16);border-radius:999px;padding:2px;background:rgba(0,0,0,.35);flex:none}
+.viewseg .seg-ind{position:absolute;top:2px;bottom:2px;left:2px;width:calc(50% - 2px);border-radius:999px;background:#ed3039;z-index:0;transition:transform .3s ease}
+.org.is-loop .seg-ind{transform:translateX(100%)}
+.viewseg button{position:relative;z-index:1;border:0;background:transparent;color:#c8c8c8;border-radius:999px;min-height:28px;padding:0 12px;font:750 12px/1 var(--sans);cursor:pointer}
+.viewseg button[aria-pressed="true"]{background:transparent;color:#fff}
+.node.stage:hover .core,.node.stage:focus .core{filter:drop-shadow(0 0 6px rgba(237,48,57,.85))}
+.org.is-stage .node.is-dim{opacity:.38}
+.org.is-stage .node.is-pick .core{stroke:#fff;filter:drop-shadow(0 0 7px #ed3039)}
+.org-edge{fill:none;stroke:rgba(237,48,57,.4);stroke-width:1.8;pointer-events:none}
+.org.is-stage .org-edge{opacity:.28}
+.org.is-stage .org-edge.is-live{opacity:1;stroke:#ed3039;stroke-width:2.6}
+.cash-legend{position:absolute;left:8px;right:8px;bottom:6px;z-index:4;margin:0;text-align:center;color:#9a9a9a;font-size:11px;font-weight:650;pointer-events:none}
+.org.is-map .cash-legend,.org.is-map .cash-dots,.org.is-map .org-core{opacity:0;pointer-events:none}
+.cash-dots,.org-core{pointer-events:none}
+.cash-halo{fill:none;stroke:#ed3039;animation:cash-ring 3s ease-out infinite}
+@keyframes cash-ring{0%{opacity:.5;stroke-width:2}100%{opacity:0;stroke-width:12}}
+.stage-slot{transition:transform .3s ease,opacity .3s ease}
+.stage-slot.is-out{opacity:0;transform:translateX(16px)}
+.stage-body ul{margin:0;padding:0}
+.stage-panel{width:min(400px,92%)}
+.org-svg .sigmeter{fill:#ed3039;font-size:9px;font-weight:750}
+.stage-scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:32}
+.stage-panel{position:absolute;top:0;right:0;bottom:0;width:min(380px,48%);z-index:8;display:flex;flex-direction:column;background:rgba(12,12,12,.9);border-left:1px solid rgba(255,255,255,.14);box-shadow:-20px 0 40px rgba(0,0,0,.35);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);transform:translateX(104%);transition:transform .3s ease;color:#fff}
+.org.is-stage .stage-panel{transform:none}
+.stage-panel .grab{display:none}
+.stage-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:14px 14px 8px}
+.stage-hd h3{margin:0;font-size:22px}
+.stage-kicker{margin:0 0 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;font-weight:800}
+.stage-blurb{margin:0;color:#bdbdbd;font-size:13px}
+.stage-counts{display:flex;gap:8px;padding:0 14px 8px;color:#9a9a9a;font-size:12px}
+.stage-nav{display:flex;gap:8px;padding:0 14px 8px}
+.stage-nav button,.stage-x{border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;border-radius:999px;min-height:36px;padding:0 12px;font-weight:750}
+.stage-body{overflow:auto;padding:0 14px 16px}
+.stage-body h4{margin:12px 0 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#9a9a9a}
+.stage-body li{list-style:none;margin:0 0 8px;padding:8px 8px 8px 10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.stage-body .wait{border-color:rgba(237,48,57,.7);background:rgba(237,48,57,.12)}
+.stage-body .quiet{color:#9a9a9a}
+.sigbar{height:4px;border-radius:99px;background:rgba(255,255,255,.12);margin-top:6px;overflow:hidden}
+.sigbar i{display:block;height:100%;background:#ed3039}
+.st-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;background:#3a3a3a}
+.st-dot.working{background:#3DDC97}
+.st-dot.blocked{background:#ed3039}
+@media (min-width:1024px){
+  .stage-scrim{display:none !important}
+}
+@media (max-width:1023px){
+  .stage-scrim{bottom:calc(64px + env(safe-area-inset-bottom))}
+  .stage-panel{position:fixed;left:0;right:0;top:auto;bottom:calc(64px + env(safe-area-inset-bottom));width:auto;max-height:min(70dvh,calc(100dvh - 140px));border-left:0;border-top:1px solid rgba(255,255,255,.14);border-radius:18px 18px 0 0;transform:translateY(110%)}
+  .org.is-stage .stage-panel{transform:none}
+  .stage-panel .grab{display:block;width:40px;height:4px;border-radius:4px;background:rgba(255,255,255,.28);margin:8px auto 0;border:0;padding:0}
+}
+@media (prefers-reduced-motion:reduce){
+  .viewseg .seg-ind,.stage-panel,.cash-dots,.org-core,.org-edge{transition:none}
+}
 .org.is-map .org-loop,.org.is-map .sat-loop,.org.is-map .cap-arc,.org.is-map .hubtag{opacity:0;pointer-events:none}
 .org.is-loop .org-flow,.org.is-loop .sat-map,.org.is-loop .hubhalo{opacity:0;pointer-events:none}
 .org.is-map #loop-nav,.org.is-map #loop-board{display:none}
@@ -821,10 +872,15 @@ footer.site{margin-top:auto}
 .snx-rule{margin:0 0 6px;color:var(--muted);font-size:12px;line-height:1.35;font-weight:650}
 .snx-key{display:flex;flex-wrap:wrap;gap:6px;margin:0;color:var(--ink);font-size:11px;line-height:1.25;font-weight:700}
 .snx-key span{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:24px;padding:2px 8px;border-radius:999px;background:rgba(8,8,8,.62);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-.snx-key i{width:8px;height:8px;border-radius:50%;background:var(--swatch,var(--cat-ops));box-shadow:0 0 8px var(--swatch,var(--cat-ops));flex:none}
-.snx-key .s{width:6px;height:6px;background:#fff;box-shadow:none}
-.snx-key .l{width:12px;height:12px;background:#fff;box-shadow:none}
-.cue-pip{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.1s ease-in-out infinite}
+.snx-key i{width:8px;height:8px;border-radius:50%;background:var(--swatch,var(--cat-ops));box-shadow:0 0 3px var(--swatch,var(--cat-ops));flex:none}
+.snx-key .sz{background:#fff;box-shadow:none}
+.snx-key .sz.s{width:6px;height:6px}
+.snx-key .sz.m{width:11px;height:11px}
+.snx-key .sz.l{width:18px;height:18px}
+.snx-key .cue-ring{width:8px;height:8px;background:transparent;box-shadow:0 0 0 1.5px #fff}
+.snx-key .cue-half{background:linear-gradient(90deg,#fff 50%,transparent 50%);box-shadow:0 0 0 1.5px #fff}
+.snx-key .cue-hollow{background:transparent;box-shadow:0 0 0 1.5px #fff}
+.snx-key .size-cue,.snx-key .fit-cue{gap:4px}
 .snx-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(240px,.85fr);gap:14px;align-items:start}
 .snx-hud{min-height:168px;padding:14px 14px 12px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.08)}
 .snx-hud h3{font-size:clamp(26px,3vw,40px);line-height:1.08;margin-top:8px;overflow-wrap:anywhere}
@@ -840,9 +896,9 @@ footer.site{margin-top:auto}
 .snx-go:active{transform:scale(.96)}
 .snx-link{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);color:var(--ink);font-weight:750}
 .snx button:focus-visible,.snx a:focus-visible{outline:2px solid var(--red);outline-offset:3px}
-.snx-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;background:transparent;opacity:0}
+.snx-fx{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;background:transparent;opacity:0;display:none}
 .snx-fx.sized{opacity:1}
-.disc-wrap{width:min(100%,520px);margin:0 auto;padding:0 18px 8px;overflow:hidden}
+.disc-wrap{width:min(100%,520px);margin:0 auto;padding:0 18px 8px;overflow:visible;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .ring-out{margin:0 0 6px;text-align:center;font-size:11px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:800}
 .disc{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:visible;background:radial-gradient(circle at 50% 50%,rgba(237,48,57,.2),rgba(237,48,57,.05) 28%,#050505 70%);box-shadow:inset 0 0 0 1px rgba(237,48,57,.4),0 0 48px rgba(237,48,57,.12)}
 .disc:before,.disc:after{content:"";position:absolute;background:rgba(237,48,57,.22);pointer-events:none;z-index:1}
@@ -859,28 +915,44 @@ footer.site{margin-top:auto}
 .rings i{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 0 14px rgba(237,48,57,.08)}
 .rings .r0{border-color:rgba(237,48,57,.75);box-shadow:inset 0 0 18px rgba(237,48,57,.16),0 0 16px rgba(237,48,57,.2)}
 .ring-label{position:absolute;right:8%;transform:translateY(-50%);z-index:2;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:800;pointer-events:none;white-space:nowrap}
-.core{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;display:grid;place-items:center;z-index:2;pointer-events:none;background:radial-gradient(circle at 38% 32%,#fff 0%,#ff8a8e 26%,#ed3039 52%,#6a1016 80%);box-shadow:0 0 22px rgba(237,48,57,.7),0 0 46px rgba(237,48,57,.28);animation:core-glow 3.4s ease-in-out infinite}
-.core b{font-size:11px;letter-spacing:.16em;color:#fff}
-.orbit{position:absolute;inset:0;z-index:3;animation:snx-orbit 48s linear infinite;transform-origin:50% 50%}
+.core{position:absolute;left:50%;top:50%;width:max-content;max-width:42%;min-width:64px;height:auto;margin:0;padding:7px 8px;border-radius:999px;display:grid;place-items:center;z-index:2;pointer-events:none;text-align:center;transform:translate(-50%,-50%);background:radial-gradient(circle at 38% 32%,#fff 0%,#ff8a8e 18%,#ed3039 58%,#6a1016 100%);box-shadow:0 0 8px rgba(237,48,57,.45)}
+.core b{font-family:var(--mono);font-size:11px;letter-spacing:-.03em;color:#fff;font-weight:700;line-height:1.15}
+.core i{font-style:normal;display:block;margin-top:2px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.86);font-weight:800}
+.orbit{position:absolute;inset:0;z-index:3;animation:none;transform-origin:50% 50%}
 .arm{position:absolute;inset:0;pointer-events:none;transform:rotate(var(--ang))}
 .arm:hover,.arm:focus-within{z-index:6}
-.blip{position:absolute;left:50%;top:var(--top);width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:inherit;transform:translate(-50%,-50%);pointer-events:auto;animation:snx-in .5s cubic-bezier(.2,1.15,.3,1) both}
-.face{position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1));animation:snx-face 48s linear infinite}
-.disc:has(.arm:hover) .orbit,.disc:has(.arm:hover) .face,.disc:has(.arm:hover) .ping-t,.disc:has(.arm:focus-within) .orbit,.disc:has(.arm:focus-within) .face,.disc:has(.arm:focus-within) .ping-t{animation-play-state:paused}
-.dot{display:block;width:calc(12px + var(--scale) * 16px);height:calc(12px + var(--scale) * 16px);border-radius:50%;background:radial-gradient(circle at 35% 32%,#fff,var(--blip,var(--cat-ops)) 52%,#141416);box-shadow:0 0 8px 1px var(--blip,var(--cat-ops)),0 0 calc(14px + var(--hit, 0) * 18px) var(--blip,var(--cat-ops));transform:scale(calc(1 + var(--hit, 0) * .2));transition:transform .35s cubic-bezier(.2,1.45,.3,1),box-shadow .25s ease;animation:pulse var(--pulse, 3.4s) ease-in-out infinite}
-.blip.is-late .dot{box-shadow:0 0 0 4px rgba(255,255,255,.22),0 0 calc(16px + var(--hit, 0) * 18px) var(--blip,var(--cat-ops))}
-.blip.is-on .dot,.blip.is-hot .dot{transform:scale(calc(1.22 + var(--hit, 0) * .12))}
-.blip:hover .dot,.blip:active .dot{transform:scale(1.45);box-shadow:0 0 0 2px #fff,0 0 22px var(--blip,var(--cat-ops))}
-.blip.is-on .dot{box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(0,0,0,.72),0 0 calc(16px + var(--hit, 0) * 14px) var(--blip,var(--cat-ops))}
-.blip.is-on.is-late .dot{box-shadow:0 0 0 2px #fff,0 0 0 5px rgba(0,0,0,.72),0 0 0 9px rgba(255,255,255,.22),0 0 18px var(--blip,var(--cat-ops))}
-.blip.is-hot{position:absolute}
-.blip.is-hot:after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:1.5px solid rgba(237,48,57,.85);animation:blip-ripple 520ms ease-out;pointer-events:none}
+.blip{position:absolute;left:50%;top:var(--top);width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:inherit;transform:translate(-50%,-50%);pointer-events:auto;animation:none}
+.face{position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1));animation:none}
+.dot{display:block;width:var(--dot,12px);height:var(--dot,12px);border-radius:50%;background:var(--blip,var(--cat-ops));box-shadow:0 0 3px 0 var(--blip,var(--cat-ops));animation:none}
+.blip.is-maybe .dot{background:linear-gradient(90deg,var(--blip,var(--cat-ops)) 50%,transparent 50%);box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
+.blip.is-long .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
+.blip.is-soon .dot{box-shadow:0 0 0 1.5px #fff,0 0 3px 0 var(--blip,var(--cat-ops))}
+.blip.is-maybe.is-soon .dot,.blip.is-long.is-soon .dot{box-shadow:0 0 0 1.5px #fff,0 0 0 3px var(--blip,var(--cat-ops))}
+.blip.is-on .dot{box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(0,0,0,.72),0 0 3px 0 var(--blip,var(--cat-ops))}
+.blip:hover .dot,.blip:active .dot{box-shadow:0 0 0 2px #fff,0 0 4px 0 var(--blip,var(--cat-ops))}
+.blip.is-halo:after{content:"";position:absolute;left:50%;top:50%;width:var(--dot,12px);height:var(--dot,12px);margin:calc(var(--dot,12px) / -2) 0 0 calc(var(--dot,12px) / -2);border-radius:50%;border:1.5px solid rgba(237,48,57,.45);animation:cash-halo 3s ease-out infinite;pointer-events:none}
 .snx-row.is-hot{box-shadow:inset 4px 0 0 var(--row,var(--cat-ops)),0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
 .qrow.is-hot{box-shadow:0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
 @keyframes blip-ripple{0%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:scale(2.1)}}
 .ping{position:absolute;left:50%;top:calc(var(--top) - 2px);z-index:4;transform:translate(-50%,-130%);opacity:0;pointer-events:none}
 .arm:hover .ping,.arm:focus-within .ping{opacity:1}
-.ping-t{display:inline-block;transform:rotate(calc(var(--ang) * -1));animation:snx-ping 48s linear infinite;white-space:nowrap;padding:3px 7px;border-radius:999px;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:750;letter-spacing:.02em;color:#fff}
+.ping-t{display:inline-block;transform:rotate(calc(var(--ang) * -1));animation:none;white-space:nowrap;padding:3px 7px;border-radius:999px;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.2);font-size:11px;font-weight:750;letter-spacing:.02em;color:#fff}
+.wedge-lines,.wedge-names,.chip-layer,.ring-tags{position:absolute;inset:0;pointer-events:none;z-index:4}
+.wedge-lines{z-index:0}
+.wedge-lines i{position:absolute;left:50%;top:8%;width:1px;height:42%;background:rgba(255,255,255,.16);transform-origin:50% 100%;transform:translateX(-50%) rotate(var(--ang))}
+.wedge-names b{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+.chip-layer{z-index:5}
+.money-chip,.name-tag,.wedge-more{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-size:10px;font-weight:700;line-height:1;letter-spacing:-.03em;color:#fff;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px 6px;white-space:nowrap}
+.name-tag{font-family:var(--sans);font-weight:750;letter-spacing:0}
+.money-chip.is-bright{background:#ed3039;border-color:#ed3039;font-weight:800}
+.money-chip.is-mute{color:#8d8d8d;font-weight:500;background:rgba(18,18,18,.88);border-color:rgba(255,255,255,.12)}
+.blip.is-hollow .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
+.blip.is-hollow.is-soon .dot{box-shadow:0 0 0 1.5px #fff}
+.leader{position:absolute;height:1px;background:rgba(255,255,255,.38);transform-origin:0 50%;pointer-events:none;z-index:4}
+.ring-tags{position:static;inset:auto;display:flex;flex-direction:column;justify-content:center;gap:6px;min-width:72px;z-index:2}
+.ring-tags span{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.72);white-space:nowrap}
+.ring-tags i{display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:rgba(255,255,255,.28);vertical-align:0}
+@keyframes cash-halo{0%{opacity:.5;transform:scale(1)}100%{opacity:0;transform:scale(2.2)}}
 .snx-list{position:relative;z-index:1;margin-top:14px}
 .snx-list h3{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--red-soft);font-weight:800;margin:0 0 6px}
 .snx-plain{list-style:none;margin:0;padding:0;display:grid;gap:6px}
@@ -918,10 +990,10 @@ footer.site{margin-top:auto}
 }
 @media (prefers-reduced-motion:reduce){
   .snx-fx{display:none}
-  .blip,.core,.cue-pip,.dot,.blip.hot .dot,.blip.is-late .dot{animation:none}
-  .blip.is-hot .dot,.blip.is-on .dot,.snx-go:active{transform:none}
-  .blip:hover .dot,.blip:active .dot{transform:none;box-shadow:0 0 0 2px #fff,0 0 16px var(--blip,var(--cat-ops))}
-  .blip.is-hot:after{display:none}
+  .blip,.core,.dot,.blip.is-halo:after,.cash-halo{animation:none}
+  .blip.is-halo:after,.cash-halo{display:none}
+  .stage-slot{transition:none}
+  .blip:hover .dot,.blip:active .dot{box-shadow:0 0 0 2px #fff,0 0 4px 0 var(--blip,var(--cat-ops))}
 }
 </style>
 </head>
@@ -1126,7 +1198,8 @@ footer.site{margin-top:auto}
     signalId: null,
     signalRows: null,
     signalBusy: false,
-    signalMax: 0
+    signalMax: 0,
+    wedgeOpen: {}
   };
   var sb = null;
   var feedTicket = 0;
@@ -2646,7 +2719,10 @@ footer.site{margin-top:auto}
         due: due,
         ringPin: signalPin(item.ring),
         ringReason: typeof item.ring_reason === 'string' ? clean(item.ring_reason) : '',
-        cat: signalCategory(item, due, num(item.value_usd))
+        cat: signalCategory(item, due, num(item.value_usd)),
+        moneyKind: signalMoneyKind(item.money_kind),
+        cadence: clean(item.cadence || ''),
+        confidence: signalConfidence(item.confidence)
       });
     });
     rows.sort(function (a, b) {
@@ -2788,115 +2864,304 @@ footer.site{margin-top:auto}
     for (i = 0; i < rows.length; i++) if (rows[i].id === id) return rows[i];
     return null;
   }
+  function signalMoneyKind(raw) {
+    if (raw === 'one_time' || raw === 'monthly' || raw === 'commission' || raw === 'contingent') return raw;
+    return '';
+  }
+  function signalConfidence(raw) {
+    if (raw === 'guaranteed' || raw === 'likely' || raw === 'maybe' || raw === 'long_shot') return raw;
+    return 'likely';
+  }
+  function signalHollow(row) {
+    return !!(row && (row.confidence === 'maybe' || row.confidence === 'long_shot'));
+  }
+  function signalTier(amount) {
+    if (amount == null || amount < 500) return 0;
+    if (amount <= 2000) return 1;
+    return 2;
+  }
+  function signalDotPx(amount) {
+    var tier = signalTier(amount);
+    var view = window.innerWidth || 1280;
+    var scale = view <= 420 ? 0.72 : (view < 1100 ? 0.86 : 1);
+    return [12, 22, 36][tier] * scale;
+  }
+  function signalSoon(row) {
+    var due = row && row.due;
+    if (!due) return false;
+    if (due.urgency <= 1) return true;
+    if (due.kind === 'date' && due.sortDay && S.model && S.model.today) {
+      var diff = daysBetween(S.model.today, due.sortDay);
+      return isFinite(diff) && diff >= 0 && diff <= 2;
+    }
+    return false;
+  }
+  function moneyShort(n) {
+    if (n == null || !isFinite(n)) return '';
+    if (Math.abs(n) >= 1000) return moneyFit(n);
+    return money(n);
+  }
+  function signalChipText(row) {
+    if (!row || row.amount == null) return '';
+    var n = moneyShort(row.amount);
+    if (row.moneyKind === 'monthly') return n + '/mo';
+    if (row.moneyKind === 'commission') return n + '/mo ea';
+    if (row.moneyKind === 'contingent') return '~' + n;
+    return n;
+  }
+  function signalCatName(cat) {
+    if (cat === 'cash_now') return 'Cash now';
+    if (cat === 'future_money') return 'Future money';
+    if (cat === 'clients') return 'Clients';
+    if (cat === 'content') return 'Content';
+    return 'Ops';
+  }
+  function signalKindWord(kind) {
+    if (kind === 'monthly') return 'Monthly';
+    if (kind === 'commission') return 'Commission';
+    if (kind === 'contingent') return 'Contingent';
+    if (kind === 'one_time') return 'One time';
+    return '';
+  }
+  function signalConfWord(conf) {
+    if (conf === 'guaranteed') return 'Guaranteed';
+    if (conf === 'maybe') return 'Maybe';
+    if (conf === 'long_shot') return 'Long shot';
+    return 'Likely';
+  }
+  function signalCoreText(open) {
+    var one = 0, oneN = 0, mo = 0, moN = 0;
+    (open || []).forEach(function (row) {
+      if (signalRing(row) !== 0 || row.amount == null || signalHollow(row)) return;
+      if (row.moneyKind === 'monthly' || row.moneyKind === 'commission') { mo += row.amount; moN += 1; }
+      else if (row.moneyKind === 'contingent') return;
+      else { one += row.amount; oneN += 1; }
+    });
+    if (oneN && moN) return moneyShort(one) + ' + ' + moneyShort(mo) + '/mo';
+    if (moN) return '+ ' + moneyShort(mo) + '/mo';
+    if (oneN) return moneyShort(one);
+    return 'No $';
+  }
+  function signalHaloId(open) {
+    var best = null;
+    (open || []).forEach(function (row) {
+      var urgent = signalRing(row) === 0 || (row.due && row.due.urgency <= 0);
+      if (!urgent) return;
+      if (!best) { best = row; return; }
+      var aa = row.amount == null ? -1 : row.amount;
+      var ba = best.amount == null ? -1 : best.amount;
+      if (aa > ba) best = row;
+    });
+    return best ? best.id : '';
+  }
+  function signalShortName(title) {
+    var words = String(title || '').replace(/^SAMPLE\.\s*/i, '').split(/\s+/).filter(Boolean);
+    var s = '';
+    var i, next;
+    for (i = 0; i < words.length && i < 3; i++) {
+      next = s ? s + ' ' + words[i] : words[i];
+      if (next.length > 16) break;
+      s = next;
+    }
+    if (!s && words[0]) s = words[0].slice(0, 14);
+    return s;
+  }
   function signalCard(id) {
     var row = signalRowById(id);
     if (!row) return null;
     var rows = [];
+    rows.push({ k: 'Category', v: signalCatName(row.cat) });
+    if (row.amount != null) rows.push({ k: 'Value', v: signalChipText(row) });
+    var kind = signalKindWord(row.moneyKind);
+    if (kind) rows.push({ k: 'Kind', v: kind });
+    if (row.cadence) rows.push({ k: 'Cadence', v: row.cadence });
+    rows.push({ k: 'Confidence', v: signalConfWord(row.confidence) });
     if (row.due && (row.due.tip || row.due.text)) rows.push({ k: 'Due', v: row.due.tip || row.due.text });
     if (row.ringReason) rows.push({ k: 'Why here', v: row.ringReason });
-    if (row.amount != null) rows.push({ k: 'Value', v: money(row.amount) });
     if (row.tied) rows.push({ k: 'Tied to', v: row.tied });
     if (row.notes) rows.push({ k: 'Notes', v: row.notes });
     return { title: row.title, rows: rows, hint: 'Click to lock' };
   }
   function signalLayout(open) {
-    var disc = signalDiscPx();
-    var gap = 6;
-    var bases = [34, 26, 16, 7];
-    var groups = [[], [], [], []];
-    open.forEach(function (row) { groups[signalRing(row)].push(row); });
+    return signalWedge(open, signalDiscPx());
+  }
+  function signalWedge(open, disc) {
+    var CATS = ['cash_now', 'future_money', 'clients', 'content', 'ops'];
+    var gap = 4;
+    var half = disc / 2;
+    var maxR = half - 22;
+    var minR = Math.max(36, half * 0.28);
+    var fracs = [0.34, 0.52, 0.72, 0.9];
+    var groups = {};
+    CATS.forEach(function (c) { groups[c] = [[], [], [], []]; });
+    (open || []).forEach(function (row) {
+      var cat = CATS.indexOf(row.cat) >= 0 ? row.cat : 'ops';
+      groups[cat][signalRing(row)].push(row);
+    });
     var placed = [];
-    var out = {};
-    var ringTop = bases.slice();
-    function radOf(top) { return ((50 - top) / 100) * disc; }
-    function topOf(rad) {
-      var t = 50 - (rad / disc) * 100;
-      if (t < 6) t = 6;
-      if (t > 44) t = 44;
-      return t;
-    }
-    function blocked(ang, rad, r, extra) {
+    var spots = {};
+    function xy(ang, rad) {
       var a = ang * Math.PI / 180;
-      var x = Math.cos(a) * rad;
-      var y = Math.sin(a) * rad;
-      if (rad < 26 + r + gap) return true;
-      if (rad + r > disc / 2 - 4) return true;
-      var pool = extra ? placed.concat(extra) : placed;
-      var i, o, b, dx, dy, need;
-      for (i = 0; i < pool.length; i++) {
-        o = pool[i];
-        b = o.ang * Math.PI / 180;
-        dx = x - Math.cos(b) * o.rad;
-        dy = y - Math.sin(b) * o.rad;
-        need = r + o.r + gap;
+      return { x: Math.sin(a) * rad, y: -Math.cos(a) * rad };
+    }
+    function hits(ang, rad, reach) {
+      var p = xy(ang, rad);
+      var i, o, q, dx, dy, need;
+      if (rad - reach < minR - 8) return true;
+      if (rad + reach > maxR) return true;
+      for (i = 0; i < placed.length; i++) {
+        o = placed[i];
+        q = xy(o.ang, o.rad);
+        dx = p.x - q.x;
+        dy = p.y - q.y;
+        need = reach + o.r + gap;
         if (dx * dx + dy * dy < need * need) return true;
       }
       return false;
     }
-    groups.forEach(function (list, ring) {
-      var n = list.length;
-      var floor = radOf(bases[ring]);
-      var outer = 0;
-      placed.forEach(function (o) { if (o.rad + o.r > outer) outer = o.rad + o.r; });
-      if (outer && outer + gap + 10 > floor) floor = outer + gap + 10;
-      if (!n) {
-        ringTop[ring] = topOf(Math.min(disc / 2 - 12, floor));
-        return;
-      }
-      var ceiling = disc / 2 - 8;
-      var spins = [0, 12, 24, 36, 18];
-      var laneCount, spin, rad, found, i, lane, seen, per, slots, slot, ang, row, r, useRad, draft, ok;
-      found = null;
-      for (laneCount = 1; laneCount <= (n >= 6 ? 2 : 1) && !found; laneCount++) {
-        for (spin = 0; spin < spins.length && !found; spin++) {
-          for (rad = floor; rad <= ceiling && !found; rad += 4) {
-            draft = [];
-            per = [0, 0];
-            for (i = 0; i < n; i++) per[i % laneCount] += 1;
-            seen = [0, 0];
-            ok = true;
-            for (i = 0; i < n; i++) {
-              row = list[i];
-              lane = i % laneCount;
-              slot = seen[lane];
-              seen[lane] += 1;
-              slots = per[lane] || 1;
-              r = signalDotR(row);
-              useRad = lane === 0 ? rad : Math.min(ceiling, rad + r * 2 + gap + 6);
-              ang = (360 / slots) * slot + ring * 19 + spins[spin] + (lane ? (180 / slots) : 0);
-              if (blocked(ang, useRad, r, draft)) { ok = false; break; }
-              draft.push({ id: row.id, ang: ang, rad: useRad, r: r });
+    CATS.forEach(function (cat, ci) {
+      var center = ci * 72;
+      var ring, list, i, row, r, base, ang, rad, tries, spread;
+      for (ring = 0; ring < 4; ring++) {
+        list = groups[cat][ring].slice().sort(function (a, b) { return a.index - b.index; });
+        for (i = 0; i < list.length; i++) {
+          row = list[i];
+          r = signalDotPx(row.amount) / 2;
+          base = Math.max(minR + r, Math.min(maxR - r, fracs[ring] * maxR));
+          spread = list.length <= 1 ? 0 : ((i - (list.length - 1) / 2) * Math.min(14, 48 / list.length));
+          ang = center + spread;
+          rad = base;
+          tries = 0;
+          while (tries < 28 && hits(ang, rad, r)) {
+            ang = center + spread + ((tries % 2 ? 1 : -1) * Math.ceil((tries + 1) / 2) * 3);
+            if (ang < center - 30 || ang > center + 30) {
+              ang = Math.max(center - 30, Math.min(center + 30, ang));
+              rad = Math.min(maxR - r, base + 4 + tries);
             }
-            if (ok) found = draft;
+            tries += 1;
+          }
+          if (ang < center - 30) ang = center - 30;
+          if (ang > center + 30) ang = center + 30;
+          if (rad < minR + r) rad = minR + r;
+          if (rad > maxR - r) rad = Math.max(minR, maxR - r);
+          var spot = { id: row.id, ang: ang, rad: rad, r: r, cat: cat, ring: ring, top: (0.5 - rad / disc) * 100 };
+          placed.push(spot);
+          spots[row.id] = spot;
+        }
+      }
+    });
+    function pct(ang, rad) {
+      var p = xy(ang, rad);
+      return { x: (disc / 2 + p.x) / disc * 100, y: (disc / 2 + p.y) / disc * 100 };
+    }
+    var obstacles = placed.map(function (s) {
+      var p = xy(s.ang, s.rad);
+      return { kind: 'c', x: disc / 2 + p.x, y: disc / 2 + p.y, r: s.r + 2 };
+    });
+    obstacles.push({ kind: 'c', x: disc / 2, y: disc / 2, r: 34 });
+    var names = [
+      ['Cash', 0, '--cat-cash'],
+      ['Future', 72, '--cat-future'],
+      ['Clients', 144, '--cat-clients'],
+      ['Content', 216, '--cat-content'],
+      ['Ops', 288, '--cat-ops']
+    ];
+    names.forEach(function (n) {
+      var p = pct(n[1], maxR + 12);
+      var w = n[0].length * 6.2;
+      obstacles.push({ kind: 'r', x: p.x / 100 * disc - w / 2, y: p.y / 100 * disc - 7, w: w, h: 14 });
+    });
+    function overlaps(box) {
+      var i, o, dx, dy;
+      for (i = 0; i < obstacles.length; i++) {
+        o = obstacles[i];
+        if (o.kind === 'c') {
+          dx = Math.max(box.x, Math.min(o.x, box.x + box.w)) - o.x;
+          dy = Math.max(box.y, Math.min(o.y, box.y + box.h)) - o.y;
+          if (dx * dx + dy * dy < (o.r + 2) * (o.r + 2)) return true;
+        } else if (box.x < o.x + o.w && box.x + box.w > o.x && box.y < o.y + o.h && box.y + box.h > o.y) return true;
+      }
+      return false;
+    }
+    function park(cx, cy, w, h, ang, rad) {
+      var dirs = [[1, 0], [-1, 0], [0, -1], [0, 1], [1, -1], [-1, -1], [1, 1], [-1, 1]];
+      var step, d, box, ox, oy;
+      for (step = 0; step < 14; step++) {
+        for (d = 0; d < dirs.length; d++) {
+          ox = cx + dirs[d][0] * (10 + step * 8) - w / 2;
+          oy = cy + dirs[d][1] * (8 + step * 7) - h / 2;
+          if (ox < 2 || oy < 2 || ox + w > disc - 2 || oy + h > disc - 2) continue;
+          box = { x: ox, y: oy, w: w, h: h };
+          if (!overlaps(box)) {
+            obstacles.push({ kind: 'r', x: ox, y: oy, w: w, h: h });
+            return { x: (ox + w / 2) / disc * 100, y: (oy + h / 2) / disc * 100, far: step > 1 };
           }
         }
       }
-      if (!found) {
-        found = [];
-        for (i = 0; i < n; i++) {
-          row = list[i];
-          found.push({ id: row.id, ang: (360 / n) * i + ring * 19, rad: Math.min(ceiling, floor), r: signalDotR(row) });
-        }
-      }
-      var inner = found[0].rad;
-      found.forEach(function (spot) {
-        if (spot.rad < inner) inner = spot.rad;
-        spot.top = topOf(spot.rad);
-        placed.push(spot);
-        out[spot.id] = { ang: spot.ang, top: spot.top };
-      });
-      ringTop[ring] = topOf(inner);
-    });
-    var prev = 0;
-    var ri, rr;
-    for (ri = 0; ri < 4; ri++) {
-      rr = radOf(ringTop[ri]);
-      if (!groups[ri].length && rr < prev + 14) rr = prev + 14;
-      if (rr > disc / 2 - 10) rr = disc / 2 - 10;
-      ringTop[ri] = topOf(rr);
-      prev = Math.max(prev, rr);
+      return null;
     }
-    return { spots: out, ringTop: ringTop };
+    var phone = (window.innerWidth || 1280) <= 760;
+    var openMap = {};
+    (open || []).forEach(function (row) { openMap[row.id] = row; });
+    CATS.forEach(function (cat) {
+      var list = [];
+      var ring;
+      for (ring = 0; ring < 4; ring++) list = list.concat(groups[cat][ring]);
+      list.sort(function (a, b) {
+        var ar = signalRing(a), br = signalRing(b);
+        if (ar !== br) return ar - br;
+        var aa = a.amount == null ? -1 : a.amount;
+        var ba = b.amount == null ? -1 : b.amount;
+        return ba - aa;
+      });
+      var shown = 0;
+      var hidden = 0;
+      var expanded = !!(S.wedgeOpen && S.wedgeOpen[cat]);
+      list.forEach(function (row) {
+        var spot = spots[row.id];
+        var text = signalChipText(row);
+        if (!spot || !text) return;
+        var allow = !phone || expanded || shown < 2;
+        if (!allow) { hidden += 1; return; }
+        var p = xy(spot.ang, spot.rad);
+        var cx = disc / 2 + p.x;
+        var cy = disc / 2 + p.y;
+      var w = Math.max(36, text.length * 7.2 + 16);
+        var found = park(cx, cy, w, 16, spot.ang, spot.rad);
+        if (found) { spot.chip = found; shown += 1; }
+        else hidden += 1;
+      });
+      if (hidden > 0 && !expanded) {
+        var hub = pct(CATS.indexOf(cat) * 72, maxR * 0.55);
+        var label = '+' + hidden;
+        var w = 28;
+        var found = park(hub.x / 100 * disc, hub.y / 100 * disc, w, 16, 0, 0);
+        if (found) spots['more-' + cat] = { more: cat, n: hidden, chip: found, text: label };
+      }
+    });
+    var ranked = (open || []).slice().sort(function (a, b) {
+      var ar = signalRing(a), br = signalRing(b);
+      if (ar !== br) return ar - br;
+      var aa = a.amount == null ? -1 : a.amount;
+      var ba = b.amount == null ? -1 : b.amount;
+      if (aa !== ba) return ba - aa;
+      return a.index - b.index;
+    });
+    ranked.slice(0, 3).forEach(function (row) {
+      var spot = spots[row.id];
+      if (!spot) return;
+      var text = signalShortName(row.title);
+      if (!text) return;
+      var p = xy(spot.ang, spot.rad);
+      var w = Math.max(44, text.length * 7.2 + 16);
+      var found = park(disc / 2 + p.x, disc / 2 + p.y, w, 16, spot.ang, spot.rad);
+      if (found) spot.tag = { x: found.x, y: found.y, text: text };
+    });
+    var ringTop = fracs.map(function (f) {
+      var rad = Math.max(minR, Math.min(maxR, f * maxR));
+      return (0.5 - rad / disc) * 100;
+    });
+    return { spots: spots, ringTop: ringTop, names: names, maxR: maxR, disc: disc };
   }
   function signalCountBits(block, ranked) {
     var c = (block && block.counts) || {};
@@ -2985,31 +3250,77 @@ footer.site{margin-top:auto}
     var chips = items.map(function (it) {
       return '<span><i style="--swatch:var(' + it[0] + ')"></i>' + it[1] + '</span>';
     }).join('');
-    return '<div class="snx-legend-bar"><p class="snx-rule">Closer to center = more urgent</p><div class="snx-key">' + chips +
-      '<span class="size-cue"><i class="s"></i><i class="l"></i> more $</span>' +
-      '<span><i class="cue-pip"></i> faster pulse = sooner deadline</span></div></div>';
+    return '<div class="snx-legend-bar"><p class="snx-rule">Closer to center = closer to cash</p><div class="snx-key">' + chips +
+      '<span class="size-cue"><i class="sz s"></i>&lt;$500</span>' +
+      '<span class="size-cue"><i class="sz m"></i>$500-2K</span>' +
+      '<span class="size-cue"><i class="sz l"></i>$2K+</span>' +
+      '<span><i class="cue-ring"></i> outlined = due within 48h</span>' +
+      '<span><i class="sz s" style="background:var(--cat-cash)"></i><i class="cue-hollow"></i> solid = collectable, hollow = not yet real</span>' +
+      '<span>/mo = recurring</span></div></div>';
   }
   function signalRadarHtml(block, ranked, split, source) {
     var open = split.open;
     var place = signalLayout(open);
-    var names = ['', 'Today', 'This week', 'Later'];
-    var tops = place.ringTop.map(function (top) { return top.toFixed(2) + '%'; });
-    var arms = open.map(function (row, i) {
+    S.signalSpots = place;
+    var halo = motionReduce() ? '' : signalHaloId(open);
+    var draw = open.slice().sort(function (a, b) {
+      var ar = signalRing(a), br = signalRing(b);
+      if (ar !== br) return br - ar;
+      var at = signalTier(a.amount), bt = signalTier(b.amount);
+      if (at !== bt) return at - bt;
+      var aa = a.amount == null ? -1 : a.amount;
+      var ba = b.amount == null ? -1 : b.amount;
+      return aa - ba;
+    });
+    var arms = draw.map(function (row) {
       var spot = place.spots[row.id] || { ang: 0, top: 34 };
-      var scale = (row.amount == null || !S.signalMax) ? 0 : (row.amount / S.signalMax);
       var on = row.id === S.signalId;
-      var late = !!(row.due && row.due.urgency <= 0);
-      var ping = row.amount != null ? money(row.amount) : (row.due ? row.due.text : '');
+      var soon = signalSoon(row);
+      var hollow = signalHollow(row);
       var ang = spot.ang.toFixed(2);
       var top = spot.top.toFixed(2);
-      return '<div class="arm' + (on ? ' is-on' : '') + '" style="--ang:' + ang + 'deg" aria-hidden="true"><button type="button" class="blip' + (row.due && row.due.hot ? ' hot' : '') + (late ? ' is-late' : '') + (on ? ' is-on' : '') + '" tabindex="-1" data-snx="lock" data-id="' + esc(row.id) + '" data-cat="' + esc(row.cat || 'ops') + '" style="--top:' + top + '%;--scale:' + scale.toFixed(3) + ';--blip:var(' + signalCatVar(row.cat) + ');--pulse:' + signalPace(row) + ';--hit:0;animation-delay:' + (i * 40) + 'ms" aria-label="' + esc(row.title) + '"><span class="face" style="--ang:' + ang + 'deg"><span class="dot"></span></span></button>' + (ping ? '<span class="ping" style="--top:' + top + '%"><span class="ping-t" style="--ang:' + ang + 'deg">' + esc(ping) + '</span></span>' : '') + '</div>';
+      var dot = signalDotPx(row.amount).toFixed(1) + 'px';
+      var cls = 'blip' + (on ? ' is-on' : '') + (soon ? ' is-soon' : '') + (hollow ? ' is-hollow' : '') + (row.id === halo ? ' is-halo' : '');
+      return '<div class="arm' + (on ? ' is-on' : '') + '" style="--ang:' + ang + 'deg"><button type="button" class="' + cls + '" data-snx="lock" data-id="' + esc(row.id) + '" data-cat="' + esc(row.cat || 'ops') + '" style="--top:' + top + '%;--dot:' + dot + ';--blip:var(' + signalCatVar(row.cat) + ')" aria-label="' + esc(row.title) + '"><span class="face" style="--ang:' + ang + 'deg"><span class="dot"></span></span></button></div>';
     }).join('');
-    var rings = tops.map(function (top, i) {
-      var label = names[i] ? '<span class="ring-label" style="top:' + top + '">' + names[i] + '</span>' : '';
-      return '<i class="r' + i + '" style="inset:' + top + '"></i>' + label;
+    var names = ['Cash now', 'Today', 'This week', 'Later'];
+    var rings = place.ringTop.map(function (top, i) {
+      return '<i class="r' + i + '" style="inset:' + top.toFixed(2) + '%"></i>';
     }).join('');
-    var marks = '<div class="disc-grid" aria-hidden="true"></div><div class="deg" aria-hidden="true"><b>315</b><b>45</b><b>135</b><b>225</b></div>';
-    var disc = '<div class="snx-radar">' + signalKeyHtml() + '<div class="disc-wrap"><p class="ring-out">Urgent now</p><div class="disc">' + marks + '<canvas class="snx-fx" width="2" height="2" aria-hidden="true"></canvas><div class="rings" aria-hidden="true">' + rings + '</div><div class="core" aria-hidden="true"><b>SIG</b></div><div class="orbit">' + arms + '</div></div></div></div>';
+    var ringTags = names.map(function (name) { return '<span>' + name + '</span>'; }).join('');
+    var lines = [-36, 36, 108, 180, 252].map(function (ang) {
+      return '<i style="--ang:' + ang + 'deg"></i>';
+    }).join('');
+    var wedgeNames = (place.names || []).map(function (n) {
+      var a = n[1] * Math.PI / 180;
+      var rad = (place.maxR || 0) + 12;
+      var x = 50 + Math.sin(a) * (rad / place.disc) * 100;
+      var y = 50 - Math.cos(a) * (rad / place.disc) * 100;
+      return '<b style="--x:' + x.toFixed(1) + '%;--y:' + y.toFixed(1) + '%;color:var(' + n[2] + ')">' + n[0] + '</b>';
+    }).join('');
+    var chips = '';
+    Object.keys(place.spots).forEach(function (id) {
+      var spot = place.spots[id];
+      if (spot.more && spot.chip) {
+        chips += '<button type="button" class="wedge-more" data-snx="wedge" data-id="' + esc(spot.more) + '" style="left:' + spot.chip.x.toFixed(1) + '%;top:' + spot.chip.y.toFixed(1) + '%">' + esc(spot.text) + '</button>';
+        return;
+      }
+      var row = null;
+      open.forEach(function (item) { if (item.id === id) row = item; });
+      if (!row || !spot.chip) return;
+      var bright = row.confidence === 'guaranteed' ? ' is-bright' : '';
+      var mute = signalHollow(row) ? ' is-mute' : '';
+      chips += '<span class="money-chip' + bright + mute + '" data-chip="' + esc(id) + '" style="left:' + spot.chip.x.toFixed(1) + '%;top:' + spot.chip.y.toFixed(1) + '%">' + esc(signalChipText(row)) + '</span>';
+      if (spot.tag) chips += '<span class="name-tag" data-tag="' + esc(id) + '" style="left:' + spot.tag.x.toFixed(1) + '%;top:' + spot.tag.y.toFixed(1) + '%">' + esc(spot.tag.text) + '</span>';
+    });
+    var core = '<div class="core" aria-hidden="true"><b>' + esc(signalCoreText(open)) + '</b><i>collectable now</i></div>';
+    var disc = '<div class="snx-radar">' + signalKeyHtml() + '<div class="disc-wrap"><div class="disc">' +
+      '<div class="wedge-lines" aria-hidden="true">' + lines + '</div>' +
+      '<div class="disc-grid" aria-hidden="true"></div>' +
+      '<div class="rings" aria-hidden="true">' + rings + '</div>' +
+      '<div class="wedge-names" aria-hidden="true">' + wedgeNames + '</div>' +
+      core + '<div class="orbit">' + arms + '</div>' +
+      '<div class="chip-layer">' + chips + '</div></div><div class="ring-tags" aria-hidden="true">' + ringTags + '</div></div></div>';
     var hud = '<div class="snx-hud" data-hud="radar">' + signalBriefHtml(signalRowById(S.signalId)) + '</div>';
     return signalShell('', signalHead(split.stats) + '<div class="snx-grid">' + disc + hud + '</div>' + signalPlainHtml(open) + signalFoot(source, block, ranked));
   }
@@ -3062,87 +3373,8 @@ footer.site{margin-top:auto}
     if (!isFinite(a) || !isFinite(b)) return 0;
     return Math.atan2(b, a);
   }
-  function signalSweepHit(ang) {
-    var orbit = SFX.orbit;
-    if (!orbit || !orbit.isConnected) {
-      var disc = SFX.canvas && SFX.canvas.parentNode;
-      orbit = disc ? disc.querySelector('.orbit') : null;
-      SFX.orbit = orbit || null;
-      SFX.blips = null;
-    }
-    if (!orbit) return;
-    var rot = signalRot(orbit);
-    if (!SFX.blips || SFX.blips.length !== orbit.childElementCount) SFX.blips = [].slice.call(orbit.querySelectorAll('.blip'));
-    var trail = 0.42;
-    var i;
-    for (i = 0; i < SFX.blips.length; i++) {
-      var blip = SFX.blips[i];
-      var arm = blip.parentNode;
-      var base = arm ? parseFloat(arm.style.getPropertyValue('--ang')) : 0;
-      if (!isFinite(base)) base = 0;
-      var blipAng = -Math.PI / 2 + base * Math.PI / 180 + rot;
-      var behind = ang - blipAng;
-      behind = Math.atan2(Math.sin(behind), Math.cos(behind));
-      if (behind < 0) behind += Math.PI * 2;
-      var hit = behind < trail ? (1 - behind / trail) : 0;
-      if (blip._hit == null || Math.abs(blip._hit - hit) > 0.04) {
-        blip._hit = hit;
-        blip.style.setProperty('--hit', hit < 0.04 ? '0' : hit.toFixed(2));
-      }
-    }
-  }
-  function signalDrawRadar(ctx, t) {
-    if (SFX.reduce) return;
-    var w = SFX.w, h = SFX.h;
-    var cx = w / 2, cy = h / 2, R = Math.min(w, h) * 0.47;
-    if (!(R > 8)) return;
-    var ang = signalSweepAng(t);
-    var trail = 1.05;
-    var turn = Math.PI * 2;
-    ctx.save();
-    if (ctx.createConicGradient) {
-      var frac = trail / turn;
-      var g = ctx.createConicGradient(ang - trail, cx, cy);
-      g.addColorStop(0, 'rgba(237,48,57,0.015)');
-      g.addColorStop(frac * 0.45, 'rgba(237,48,57,0.05)');
-      g.addColorStop(frac * 0.82, 'rgba(237,48,57,0.14)');
-      g.addColorStop(frac, 'rgba(237,48,57,0.3)');
-      g.addColorStop(Math.min(0.999, frac + 0.006), 'rgba(237,48,57,0)');
-      g.addColorStop(1, 'rgba(237,48,57,0)');
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.arc(cx, cy, R, 0, turn);
-      ctx.fill();
-    } else {
-      var steps = 8;
-      var s;
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.rotate(ang);
-      ctx.fillStyle = '#ed3039';
-      for (s = steps; s >= 1; s--) {
-        ctx.globalAlpha = 0.03 + 0.2 * (1 - (s - 1) / steps);
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.arc(0, 0, R, -trail * s / steps, -trail * (s - 1) / steps);
-        ctx.closePath();
-        ctx.fill();
-      }
-      ctx.restore();
-    }
-    ctx.translate(cx, cy);
-    ctx.rotate(ang);
-    ctx.globalAlpha = 0.8;
-    ctx.strokeStyle = '#ed3039';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(R, 0);
-    ctx.stroke();
-    ctx.restore();
-    ctx.globalAlpha = 1;
-    signalSweepHit(ang);
-  }
+  function signalSweepHit() { return; }
+  function signalDrawRadar() { return; }
   function signalDraw(t) {
     var c = SFX.canvas;
     if (!c || !c.isConnected || c.width < 8 || c.height < 8 || !(SFX.w >= 8) || !(SFX.h >= 8)) return;
@@ -3165,6 +3397,7 @@ footer.site{margin-top:auto}
     signalDraw(t);
   }
   function signalLoopStart() {
+    return;
     if (SFX.running || SFX.reduce || document.hidden || SFX.onScreen === false) return;
     if (!SFX.canvas || !SFX.canvas.classList.contains('sized')) return;
     SFX.running = true;
@@ -3249,45 +3482,44 @@ footer.site{margin-top:auto}
   }
   function signalNudge() {
     var disc = document.querySelector('#v-home .snx .disc');
-    if (!disc) return;
+    if (!disc || !S.signalRows || S.signalRows.length < 1) return;
     var box = disc.getBoundingClientRect();
-    if (box.width < 8 || box.height < 8) return;
-    var arms = [].slice.call(disc.querySelectorAll('.arm'));
-    if (arms.length < 2) return;
-    var width = box.width;
-    var need = Math.max(36, Math.min(48, width * 0.12));
-    var minR = width * 0.12;
-    var maxR = width * 0.40;
-    var pts = arms.map(function (arm) {
+    if (box.width < 40) return;
+    var place = signalWedge(S.signalRows, box.width);
+    S.signalSpots = place;
+    Array.prototype.forEach.call(disc.querySelectorAll('.arm'), function (arm) {
       var blip = arm.querySelector('.blip');
-      var ang = signalReadAng(arm);
-      var top = parseFloat((blip && blip.style.getPropertyValue('--top')) || '20');
-      if (!isFinite(top)) top = 20;
-      var radius = width * (0.5 - top / 100);
-      var rad = ang * Math.PI / 180;
-      return { arm: arm, ang: ang, radius: radius, x: Math.sin(rad) * radius, y: -Math.cos(rad) * radius };
+      if (!blip) return;
+      var spot = place.spots[blip.getAttribute('data-id')];
+      if (!spot) return;
+      signalPlace(arm, spot.ang, spot.top);
+      var dot = blip.querySelector('.dot');
+      if (dot && spot.r) blip.style.setProperty('--dot', (spot.r * 2).toFixed(1) + 'px');
     });
-    var pass, i, j;
-    for (pass = 0; pass < 40; pass++) {
-      var moved = false;
-      for (i = 0; i < pts.length; i++) {
-        for (j = i + 1; j < pts.length; j++) {
-          var dx = pts[j].x - pts[i].x;
-          var dy = pts[j].y - pts[i].y;
-          var dist = Math.sqrt(dx * dx + dy * dy) || 0.1;
-          if (dist >= need) continue;
-          var push = (need - dist) * 0.55;
-          var nx = dx / dist;
-          var ny = dy / dist;
-          signalShift(pts[i], -nx * push, -ny * push, minR, maxR);
-          signalShift(pts[j], nx * push, ny * push, minR, maxR);
-          moved = true;
-        }
-      }
-      if (!moved) break;
+    Array.prototype.forEach.call(disc.querySelectorAll('[data-chip],[data-tag],.wedge-more'), function (el) {
+      var id = el.getAttribute('data-chip') || el.getAttribute('data-tag') || ('more-' + (el.getAttribute('data-id') || ''));
+      var spot = place.spots[id];
+      if (!spot) return;
+      var pos = el.classList.contains('name-tag') ? spot.tag : spot.chip;
+      if (!pos) return;
+      el.style.left = pos.x.toFixed(1) + '%';
+      el.style.top = pos.y.toFixed(1) + '%';
+    });
+    signalUnpile();
+  }
+  function signalUnpile() {
+    var tags = Array.prototype.slice.call(document.querySelectorAll('#v-home .name-tag'));
+    var taken = Array.prototype.slice.call(document.querySelectorAll('#v-home .money-chip, #v-home .wedge-more, #v-home .dot, #v-home .core'));
+    function hits(a, b) {
+      var ar = a.getBoundingClientRect();
+      var br = b.getBoundingClientRect();
+      if (ar.width < 2 || br.width < 2) return false;
+      return ar.right > br.left + 1 && br.right > ar.left + 1 && ar.bottom > br.top + 1 && br.bottom > ar.top + 1;
     }
-    pts.forEach(function (pt) {
-      signalPlace(pt.arm, pt.ang, (0.5 - pt.radius / width) * 100);
+    tags.forEach(function (tag) {
+      var clash = taken.some(function (el) { return el !== tag && hits(tag, el); });
+      tag.style.visibility = clash ? 'hidden' : '';
+      if (!clash) taken.push(tag);
     });
   }
   function signalMount() {
@@ -3413,6 +3645,15 @@ footer.site{margin-top:auto}
   }
   function signalSelect(id) {
     S.signalId = id || '';
+    var rowBtn = null;
+    Array.prototype.forEach.call(document.querySelectorAll('#v-home .snx-row'), function (el) {
+      if (el.getAttribute('data-id') === id) rowBtn = el;
+    });
+    if (id && !rowBtn && !S.signalAll) {
+      S.signalAll = true;
+      signalRepaint();
+      return;
+    }
     var root = document.querySelector('#v-home .snx');
     if (!root) return;
     Array.prototype.forEach.call(document.querySelectorAll('#v-home [data-snx="lock"]'), function (el) {
@@ -3424,6 +3665,7 @@ footer.site{margin-top:auto}
     });
     var hud = root.querySelector('[data-hud]');
     if (hud) hud.innerHTML = signalBriefHtml(signalRowById(S.signalId));
+    if (rowBtn && rowBtn.scrollIntoView) rowBtn.scrollIntoView({ block: 'nearest' });
   }
   function signalLockEl(id) {
     var found = null;
@@ -3510,6 +3752,13 @@ footer.site{margin-top:auto}
     }
     if (action === 'restore') { signalRestore(); return; }
     if (action === 'done') { signalDone(id, el); return; }
+    if (action === 'wedge') {
+      var key = id || '';
+      if (!S.wedgeOpen) S.wedgeOpen = {};
+      S.wedgeOpen[key] = !S.wedgeOpen[key];
+      signalRepaint();
+      return;
+    }
     if (action === 'lock') { signalSelect(id || ''); }
   }
   function signalTyping(e) {
@@ -4487,6 +4736,15 @@ footer.site{margin-top:auto}
       }
       var hub = pos[n.parent];
       if (!hub) return;
+      if (!n.satellite && (n.stageId === 'attract' || n.stageId === 'convert' || n.stageId === 'transform')) {
+        var dx = LOOP.cx - hub.x;
+        var dy = LOOP.cy - hub.y;
+        var len = Math.sqrt(dx * dx + dy * dy) || 1;
+        var along = 0.16;
+        var spread = (n.spread || 0) * 16;
+        pos[n.id] = { x: hub.x + dx * along + (-dy / len) * spread, y: hub.y + dy * along + (dx / len) * spread };
+        return;
+      }
       var spin = n.satellite ? 0 : rot;
       var rad = (!n.satellite && focusKey && n.stageId === focusKey) ? n.focusR : n.orbitR;
       var ang = n.zang + spin;
@@ -4664,6 +4922,8 @@ footer.site{margin-top:auto}
           bot.orbitR = ring.rad;
           bot.focusR = focusRing.rad;
           bot.hr = 6.5;
+          bot.cashScore = 0;
+          bot.spread = i - (chunk.length - 1) / 2;
           nodes.push(bot);
         });
       });
@@ -4762,6 +5022,17 @@ footer.site{margin-top:auto}
     if (flowA) paths += '<path class="org-flow' + (attractLive ? ' live' : '') + '" d="' + flowA.d + '"/>';
     if (flowB) paths += '<path class="org-flow' + (convertLive ? ' live' : '') + '" d="' + flowB.d + '"/>';
     paths += '<circle class="org-loop" cx="' + LOOP.cx + '" cy="' + LOOP.cy + '" r="' + LOOP.r + '"/>';
+    var edgeA = loopPos['stage-attract'];
+    var edgeC = loopPos['stage-convert'];
+    var edgeT = loopPos['stage-transform'];
+    function edgeArc(a, b) {
+      return 'M' + a.x.toFixed(1) + ',' + a.y.toFixed(1) + ' A' + LOOP.r + ',' + LOOP.r + ' 0 0 1 ' + b.x.toFixed(1) + ',' + b.y.toFixed(1);
+    }
+    if (edgeA && edgeC && edgeT) {
+      paths += '<path class="org-edge" data-edge="attract convert" d="' + edgeArc(edgeA, edgeC) + '"/>';
+      paths += '<path class="org-edge" data-edge="convert transform" d="' + edgeArc(edgeC, edgeT) + '"/>';
+      paths += '<path class="org-edge" data-edge="transform attract" d="' + edgeArc(edgeT, edgeA) + '"/>';
+    }
     satKeys.forEach(function (key) {
       var hm = mapPos['stage-' + key];
       var hc = mapPos['stage-convert'];
@@ -4788,6 +5059,7 @@ footer.site{margin-top:auto}
       n.ping = !!(hot && pingLeft > 0);
       if (n.ping) pingLeft -= 1;
     });
+    var stageWords = stageSignalWords();
     var shapes = nodes.map(function (n) {
       var x = n.hx, y = n.hy, r = n.hr;
       var cls = n.stageHub ? ('stage' + (n.liveStage ? ' working' : '') + (n.bottleneck ? ' bottleneck' : '')) : (n.status === 'working' ? 'working' : (n.status === 'blocked' ? 'blocked' : (n.status === 'offline' ? 'offline' : 'idle')));
@@ -4811,6 +5083,7 @@ footer.site{margin-top:auto}
       var label = '';
       if (n.stageHub) {
         label = lab('hublab', lp.name, esc(n.name)) + lab('hubcount', lp.count, liveN + '/' + n.count);
+        if (!n.satellite && stageWords[n.stageId]) label += lab('sigmeter', { x: lp.count.x, y: lp.count.y + 12 }, stageWords[n.stageId]);
         if (!n.satellite && n.bottleneck) label += lab('hubtag', lp.tag, 'Bottleneck');
       } else {
         label = lab('botlab', lp.name, esc(n.name));
@@ -4843,9 +5116,10 @@ footer.site{margin-top:auto}
       ? 'Attract, Convert, and Transform. A closed loop.'
       : 'Attract, Convert, and Transform. Click a bucket to go deeper.';
     var frame = S.orgView === 'loop' ? orgLoopBox() : [0, 0, 960, 540];
-    var svg = '<svg class="org-svg" viewBox="' + frame.join(' ') + '" role="img" aria-label="' + esc(svgLabel) + '">' + paths + shapes + '</svg>';
-    var seg = '<div class="viewseg" id="org-view" role="group" aria-label="Workforce view"><button type="button" data-org-view="map" aria-pressed="' + (S.orgView === 'map' ? 'true' : 'false') + '">Map</button><button type="button" data-org-view="loop" aria-pressed="' + (S.orgView === 'loop' ? 'true' : 'false') + '">Loop</button></div>';
-    return '<section class="org panel is-' + S.orgView + '"><div class="ph"><div class="org-title"><h2>AI workforce</h2>' + seg + '</div><p class="sub" id="org-crumb">' + crumb + '</p></div><div class="loop-nav" id="loop-nav">' + nav + '</div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '</div><div id="loop-board">' + loopBoardHtml('') + '</div><ol class="stepper">' + steps + '</ol></section>';
+    var cashDots = cashDotSvg(loopPos);
+    var svg = '<svg class="org-svg" viewBox="' + frame.join(' ') + '" role="img" aria-label="' + esc(svgLabel) + '">' + paths + shapes + cashDots + '</svg>';
+    var seg = '<div class="viewseg" id="org-view" role="group" aria-label="Workforce view"><i class="seg-ind" aria-hidden="true"></i><button type="button" data-org-view="map" aria-pressed="' + (S.orgView === 'map' ? 'true' : 'false') + '">Map</button><button type="button" data-org-view="loop" aria-pressed="' + (S.orgView === 'loop' ? 'true' : 'false') + '">Loop</button></div>';
+    return '<section class="org panel is-' + S.orgView + '"><div class="ph"><div class="org-title"><h2>AI workforce</h2>' + seg + '</div><p class="sub" id="org-crumb">' + crumb + '</p></div><div class="loop-nav" id="loop-nav">' + nav + '</div><div class="org-stage"><canvas class="org-fx" width="2" height="2" aria-hidden="true"></canvas>' + svg + '<p class="cash-legend">Closer to center = closer to cash</p><div class="stage-scrim" data-stage-close hidden></div><aside class="stage-panel" id="stage-panel" hidden><button type="button" class="grab" data-stage-close aria-label="Close stage"></button><div class="stage-slot"></div></aside></div><div id="loop-board">' + loopBoardHtml('') + '</div><ol class="stepper">' + steps + '</ol></section>';
   }
   var zoomGen = 0;
   function refreshOrgWires() {
@@ -4883,6 +5157,13 @@ footer.site{margin-top:auto}
       var showTag = !!(S.orgView === 'loop' && !S.orgZoom && lp.tag && lp.tag.show && n.bottleneck);
       texts[2].setAttribute('opacity', showTag ? '1' : '0');
     }
+    var meter = g.querySelector('.sigmeter');
+    if (meter && lp.count) {
+      meter.setAttribute('x', lp.count.x.toFixed(1));
+      meter.setAttribute('y', (lp.count.y + 12).toFixed(1));
+      meter.setAttribute('text-anchor', lp.anchor);
+      meter.setAttribute('opacity', S.orgView === 'loop' ? '1' : '0');
+    }
   }
   function animateOrg(svg, moves, box) {
     var gen = ++zoomGen;
@@ -4902,7 +5183,7 @@ footer.site{margin-top:auto}
     var t0 = performance.now();
     function frame(now) {
       if (gen !== zoomGen) return;
-      var u = Math.min(1, (now - t0) / 360);
+      var u = Math.min(1, (now - t0) / 300);
       var e = 1 - Math.pow(1 - u, 3);
       apply(e);
       if (u < 1) requestAnimationFrame(frame);
@@ -5100,8 +5381,206 @@ footer.site{margin-top:auto}
     });
     animateOrg(svg, moves, orgLoopBox());
   }
+  function cashSignalScore(spec) {
+    // 0 sits on the stage node. 1 sits on the cash core.
+    // cash_now or ring 0 = 0.92. future_money, a booked call, or Convert work = 0.72.
+    // Client delivery tied to a paying client = 0.50. Content or Attract = 0.30. Ops = 0.12.
+    // Overdue moves one step inward. A missing value_usd does not change the score.
+    var cat = spec.category || '';
+    var score = 0.12;
+    if (cat === 'cash_now' || spec.ring === 0) score = 0.92;
+    else if (cat === 'future_money' || spec.call || spec.stage === 'convert') score = 0.72;
+    else if (cat === 'clients' || spec.stage === 'transform') score = 0.50;
+    else if (cat === 'content' || spec.stage === 'attract') score = 0.30;
+    if (spec.overdue) score = Math.min(1, score + 0.08);
+    return score;
+  }
+  function stageWord(score) {
+    if (score >= 0.85) return 'high';
+    if (score >= 0.45) return 'med';
+    if (score > 0) return 'low';
+    return '';
+  }
+  function stageCashItems() {
+    var buckets = { attract: [], convert: [], transform: [] };
+    function add(stage, row) {
+      if (!buckets[stage]) return;
+      row.score = cashSignalScore(row);
+      buckets[stage].push(row);
+    }
+    var ranked = S.model && S.model.reminders && S.model.reminders.known ? reminderRank(S.model.reminders.items, S.model.today) : [];
+    ranked.forEach(function (it) {
+      if (it.cat === 'ops') return;
+      var stage = it.cat === 'content' ? 'attract' : (it.cat === 'clients' ? 'transform' : 'convert');
+      var urgency = it.due ? it.due.urgency : 4;
+      add(stage, {
+        title: it.title,
+        category: it.cat,
+        value: it.amount,
+        ring: signalRing(it),
+        overdue: urgency === 0,
+        dueSoon: urgency > 0 && urgency <= 1,
+        waiting: urgency === 0,
+        due: it.due ? it.due.text : '',
+        confidence: it.confidence
+      });
+    });
+    ((S.feed && S.feed.calls) || []).forEach(function (c) {
+      if (!c || c.kind === 'block') return;
+      add('convert', { title: c.who || c.title || 'Call', category: 'future_money', call: true, stage: 'convert', value: null, due: c.when || '', waiting: false });
+    });
+    var pipe = S.feed && S.feed.convert && S.feed.convert.pipeline;
+    (pipe || []).forEach(function (p) {
+      add('convert', { title: p.name || 'Prospect', category: 'future_money', stage: 'convert', value: typeof p.amount === 'number' ? p.amount : null, due: p.nextStep || '', waiting: false });
+    });
+    var clients = S.feed && S.feed.transform && S.feed.transform.clients;
+    (clients || []).forEach(function (c) {
+      var wait = (c.daysWaiting || 0) > 0;
+      add('transform', { title: c.name || 'Client', category: 'clients', stage: 'transform', value: typeof c.amountDue === 'number' ? c.amountDue : null, due: wait ? (c.daysWaiting + 'd waiting') : '', waiting: wait });
+    });
+    ((S.spine && S.spine.projects) || []).forEach(function (p) {
+      var side = String(p.side || '').toLowerCase();
+      if (!buckets[side]) return;
+      var waiting = p.status === 'waiting' || p.status === 'blocked' || p.status === 'needs-send' || p.owner === 'Cristian';
+      add(side, { title: p.name || p.title || 'Project', category: side === 'attract' ? 'content' : (side === 'transform' ? 'clients' : 'future_money'), stage: side, value: null, due: p.status || '', waiting: waiting });
+    });
+    return buckets;
+  }
+  function stageSignalWords() {
+    var packs = stageCashItems();
+    var words = {};
+    STAGE_ORDER.forEach(function (key) {
+      var max = 0;
+      (packs[key] || []).forEach(function (row) { if (row.score > max) max = row.score; });
+      words[key] = stageWord(max);
+    });
+    return words;
+  }
+  function cashDotSvg(loopPos) {
+    var packs = stageCashItems();
+    var best = null;
+    var dots = '';
+    STAGE_ORDER.forEach(function (key) {
+      var hub = loopPos['stage-' + key];
+      var rows = packs[key] || [];
+      if (!hub) return;
+      rows.forEach(function (row, i) {
+        var dx = LOOP.cx - hub.x;
+        var dy = LOOP.cy - hub.y;
+        var len = Math.sqrt(dx * dx + dy * dy) || 1;
+        var along = 0.30 + row.score * 0.55;
+        var spread = (i - (rows.length - 1) / 2) * 12;
+        var x = hub.x + dx * along + (-dy / len) * spread;
+        var y = hub.y + dy * along + (dx / len) * spread;
+        var hollow = signalHollow(row.confidence);
+        var tier = signalTier(row.value);
+        var r = signalDotPx(tier) / 2;
+        var col = signalCatVar(row.category);
+        if (!hollow && (!best || row.score > best.score || (row.score === best.score && (row.value || 0) > (best.value || 0)))) best = { x: x, y: y, r: r, score: row.score, value: row.value };
+        var soon = row.overdue || row.dueSoon;
+        dots += '<circle class="cash-dot' + (soon ? ' is-soon' : '') + '" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="' + r.toFixed(1) + '" fill="' + (hollow ? 'none' : col) + '" stroke="' + (soon ? '#fff' : (hollow ? col : 'none')) + '" stroke-width="1.5"/>';
+      });
+    });
+    var halo = '';
+    if (best && !motionReduce()) halo = '<circle class="cash-halo" cx="' + best.x.toFixed(1) + '" cy="' + best.y.toFixed(1) + '" r="' + (best.r + 4).toFixed(1) + '"/>';
+    return '<g class="org-core"><circle cx="' + LOOP.cx + '" cy="' + LOOP.cy + '" r="16" fill="#141414" stroke="#ed3039" stroke-width="2"/><text x="' + LOOP.cx + '" y="' + (LOOP.cy + 3) + '" text-anchor="middle" fill="#ed3039" font-size="8" font-weight="800">CASH</text></g><g class="cash-dots">' + halo + dots + '</g>';
+  }
+  var STAGE_META = {
+    attract: { name: 'Attract', color: '#22c55e', blurb: 'Content and outreach that bring people in.' },
+    convert: { name: 'Convert', color: '#ed3039', blurb: 'Calls, prospects, and money moving toward a yes.' },
+    transform: { name: 'Transform', color: '#3b82f6', blurb: 'Client delivery for people who already pay.' }
+  };
+  var stageGen = 0;
+  function paintStage(key) {
+    var org = document.querySelector('#v-home .org');
+    var panel = document.getElementById('stage-panel');
+    var scrim = org && org.querySelector('.stage-scrim');
+    var slot = org && org.querySelector('.stage-slot');
+    if (!org || !panel || !slot) return;
+    var on = key === 'attract' || key === 'convert' || key === 'transform';
+    org.classList.toggle('is-stage', on);
+    org.setAttribute('data-stage', on ? key : '');
+    panel.hidden = !on;
+    if (scrim) scrim.hidden = !on;
+    Array.prototype.forEach.call(org.querySelectorAll('.node'), function (g) {
+      var mine = g.getAttribute('data-stage') === key && g.classList.contains('stage');
+      g.classList.toggle('is-pick', on && mine);
+      g.classList.toggle('is-dim', on && !mine);
+    });
+    Array.prototype.forEach.call(org.querySelectorAll('.org-edge'), function (edge) {
+      var bits = (edge.getAttribute('data-edge') || '').split(' ');
+      edge.classList.toggle('is-live', on && bits.indexOf(key) >= 0);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('#loop-nav button'), function (btn) {
+      btn.setAttribute('aria-pressed', btn.getAttribute('data-focus') === key ? 'true' : 'false');
+    });
+    if (!on) { slot.innerHTML = ''; return; }
+    var meta = STAGE_META[key];
+    var packs = stageCashItems();
+    var rows = (packs[key] || []).slice().sort(function (a, b) { return b.score - a.score; });
+    var waiting = rows.filter(function (row) { return row.waiting; });
+    var motion = rows.filter(function (row) { return !row.waiting; });
+    var agents = ((S.feed && S.feed.agents) || []).filter(function (a) { return a.bucket === key; });
+    var activeN = agents.filter(function (a) { return a.status === 'working'; }).length;
+    var order = ['attract', 'convert', 'transform'];
+    var at = order.indexOf(key);
+    var prev = order[(at + 2) % 3];
+    var next = order[(at + 1) % 3];
+    function rowHtml(row) {
+      var dollars = typeof row.value === 'number' ? money(row.value) : '';
+      return '<li class="' + (row.waiting ? 'wait' : '') + '"><b>' + esc(row.title) + '</b>' + (dollars ? ' <span>' + esc(dollars) + '</span>' : '') + (row.due ? '<div class="quiet">' + esc(String(row.due)) + '</div>' : '') + '<div class="sigbar" aria-hidden="true"><i style="width:' + Math.round(row.score * 100) + '%"></i></div></li>';
+    }
+    var activeHtml = agents.length ? agents.map(function (a) {
+      var st = a.status === 'working' || a.status === 'blocked' ? a.status : 'idle';
+      var when = a.lastReportAt ? formatWhen(a.lastReportAt) : '';
+      return '<li><span class="st-dot ' + st + '"></span><b>' + esc(a.name || 'Agent') + '</b><div class="quiet">' + esc(a.currentWork || a.role || 'No current task') + (when ? ' · ' + esc(when) : '') + '</div></li>';
+    }).join('') : '<li class="quiet">Nothing active in ' + meta.name + ' right now</li>';
+    var waitHtml = waiting.length ? waiting.map(rowHtml).join('') : '';
+    var motionHtml = motion.length ? motion.map(rowHtml).join('') : '<li class="quiet">Nothing in motion in ' + meta.name + ' right now</li>';
+    slot.innerHTML = '<div class="stage-hd"><div><p class="stage-kicker" style="color:' + meta.color + '">' + meta.name + (S.sample ? ' · SAMPLE' : '') + '</p><h3>' + meta.name + '</h3><p class="stage-blurb">' + meta.blurb + '</p></div><button type="button" class="stage-x" data-stage-close>Close</button></div><div class="stage-counts"><span>' + activeN + ' active</span><span>' + motion.length + ' in motion</span><span>' + waiting.length + ' waiting on you</span></div><div class="stage-nav"><button type="button" data-stage-go="' + prev + '">Prev</button><button type="button" data-stage-go="' + next + '">Next</button></div><div class="stage-body">' + (waitHtml ? '<h4>Waiting on you</h4><ul>' + waitHtml + '</ul>' : '') + '<h4>Active now</h4><ul>' + activeHtml + '</ul><h4>In motion</h4><ul>' + motionHtml + '</ul></div>';
+  }
+  function openStage(key, fromHash) {
+    if (key !== 'attract' && key !== 'convert' && key !== 'transform') return;
+    var gen = ++stageGen;
+    var slot = document.querySelector('.stage-slot');
+    function apply() {
+      if (gen !== stageGen) return;
+      S.stagePick = key;
+      paintStage(key);
+      if (slot) slot.classList.remove('is-out');
+      if (!fromHash) {
+        var nextHash = '#stage=' + key;
+        if (location.hash !== nextHash) history.pushState({ stage: key }, '', location.pathname + location.search + nextHash);
+      }
+    }
+    if (S.stagePick && S.stagePick !== key && slot && !motionReduce()) {
+      slot.classList.add('is-out');
+      setTimeout(apply, 160);
+      return;
+    }
+    apply();
+  }
+  function closeStage(fromHash) {
+    stageGen += 1;
+    S.stagePick = '';
+    paintStage('');
+    if (!fromHash && /^#stage=/.test(location.hash)) history.back();
+  }
+  function stageKeyFromHash() {
+    var m = (location.hash || '').match(/^#stage=(attract|convert|transform)$/);
+    return m ? m[1] : '';
+  }
+  function syncStagePanel() {
+    var key = stageKeyFromHash();
+    S.stagePick = key;
+    paintStage(key);
+  }
   function orgActivate(id) {
     var n = nodeById(id);
+    if (n && n.stageHub && !n.satellite && (n.stageId === 'attract' || n.stageId === 'convert' || n.stageId === 'transform')) {
+      openStage(n.stageId, false);
+      return;
+    }
     if (n && n.stageHub) {
       if (S.orgView === 'loop') {
         if (!n.satellite) focusOrg(n.stageId, true);
@@ -6069,6 +6548,7 @@ footer.site{margin-top:auto}
       attachOrg();
       placeWorkforce();
       signalMount();
+      syncStagePanel();
     }
     kickVisuals(el);
   }
@@ -6753,7 +7233,27 @@ footer.site{margin-top:auto}
     }).join('');
     $('bnav').innerHTML = ['home', 'goals', 'tasks', 'winning'].map(function (id) { return navButton(byId[id], ''); }).join('');
     if ($('chips')) $('chips').innerHTML = VIEWS.map(function (v) { return '<button type="button" data-view="' + v[0] + '">' + esc(v[1]) + '</button>'; }).join('');
+    var sheetDrag = null;
+    document.addEventListener('pointerdown', function (e) {
+      var grab = e.target.closest && e.target.closest('.stage-panel .grab');
+      if (!grab || window.innerWidth >= 1024) return;
+      sheetDrag = { y: e.clientY, id: e.pointerId };
+    });
+    document.addEventListener('pointerup', function (e) {
+      if (!sheetDrag || e.pointerId !== sheetDrag.id) return;
+      if (e.clientY - sheetDrag.y > 48) closeStage(false);
+      sheetDrag = null;
+    });
     document.body.addEventListener('click', function (e) {
+      if (e.target.closest('[data-stage-close]')) {
+        closeStage(false);
+        return;
+      }
+      var stageGo = e.target.closest('[data-stage-go]');
+      if (stageGo) {
+        openStage(stageGo.getAttribute('data-stage-go'), false);
+        return;
+      }
       var snx = e.target.closest('[data-snx]');
       if (snx && !e.target.closest('a[href]')) {
         var act = snx.getAttribute('data-snx');
@@ -6794,9 +7294,8 @@ footer.site{margin-top:auto}
         return;
       }
       if (t.hasAttribute('data-focus')) {
-        if (S.orgView !== 'loop') return;
         bubble('pop');
-        focusOrg(t.getAttribute('data-focus'));
+        openStage(t.getAttribute('data-focus'), false);
         return;
       }
       if (t.hasAttribute('data-node')) {
@@ -6863,6 +7362,7 @@ footer.site{margin-top:auto}
         return $(id) && $(id).classList.contains('on');
       });
       if (e.key === 'Escape') {
+        if (S.stagePick) { closeStage(false); return; }
         if (sheetOpen) { closeSheets(); return; }
         if (S.orgView === 'map' && S.orgZoom) { zoomOrg(''); return; }
         if (S.orgFocus) { focusOrg(''); return; }
@@ -7000,6 +7500,18 @@ footer.site{margin-top:auto}
       ask(v);
     });
     window.addEventListener('hashchange', function () {
+      var staged = stageKeyFromHash();
+      if (staged) {
+        S.stagePick = staged;
+        paintStage(staged);
+        if (S.view !== 'home' && $('v-home')) {
+          S.view = 'home';
+          markNav();
+        }
+        return;
+      }
+      if (S.stagePick) paintStage('');
+      S.stagePick = '';
       var h = (location.hash || '').replace('#', '');
       if (h === 'today' || h === 'money') h = h === 'money' ? 'convert' : 'home';
       if (h === 'clients') h = 'transform';

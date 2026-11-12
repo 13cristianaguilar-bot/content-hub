@@ -515,18 +515,17 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold .snx-kicker{font-size:10px}
   #v-home.desk-fold .snx-head h2{font-size:22px}
   #v-home.desk-fold .snx-readout{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));width:100%;gap:4px}
-  #v-home.desk-fold .snx-readout span{min-width:0;align-items:flex-start}
-  #v-home.desk-fold .snx-readout b{font-size:14px;white-space:nowrap}
-  #v-home.desk-fold .snx-readout i{font-size:9px;letter-spacing:.05em;white-space:nowrap}
-  #v-home.desk-fold .snx-radar{position:relative}
-  #v-home.desk-fold .snx-legend-bar{position:absolute;z-index:6;left:4px;right:4px;top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;margin:0;padding:3px 6px;background:rgba(7,7,7,.9)}
+  #v-home.desk-fold .snx-readout span{min-width:0;align-items:flex-start;overflow:hidden}
+  #v-home.desk-fold .snx-readout b{font-size:14px;white-space:nowrap;max-width:100%}
+  #v-home.desk-fold .snx-readout i{font-size:9px;letter-spacing:.05em;white-space:nowrap;max-width:100%}
+  #v-home.desk-fold .snx-legend-bar{display:flex;flex-wrap:wrap;align-items:center;gap:2px 4px;margin:0 0 4px;padding:3px 6px;background:rgba(7,7,7,.9)}
   #v-home.desk-fold .snx-rule{margin:0;flex:none;font-size:10px;line-height:1.2;white-space:nowrap}
   #v-home.desk-fold .snx-key{display:contents}
   #v-home.desk-fold .snx-key span{min-height:18px;padding:0 5px;gap:3px;font-size:10px;line-height:1.2}
   #v-home.desk-fold .snx-grid{grid-template-columns:1fr}
   #v-home.desk-fold .disc-wrap{width:100%;max-width:none;padding:0;margin:0}
-  #v-home.desk-fold .ring-out{position:absolute;z-index:7;left:0;right:0;top:1px;margin:0;font-size:10px;letter-spacing:.12em}
-  #v-home.desk-fold .disc{width:min(100%,calc(100dvh - 250px));max-width:100%;margin:0 auto}
+  #v-home.desk-fold .ring-out{position:static;margin:0 0 10px;font-size:10px;letter-spacing:.12em}
+  #v-home.desk-fold .disc{width:min(100%,calc(100dvh - 320px));max-width:100%;margin:0 auto}
   #v-home.desk-fold .snx-hud{min-height:0;padding:8px 10px}
   #v-home.desk-fold .snx-hud h3{font-size:18px;margin-top:4px}
   #v-home.desk-fold .snx-val.lg{font-size:22px}
@@ -1213,6 +1212,20 @@ footer.site{margin-top:auto}
     var digits = Math.round(Math.abs(n) * 100) % 100 === 0 ? 0 : 2;
     try { return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits }); }
     catch (e) { return '$' + n; }
+  }
+  function moneyFit(n) {
+    var abs = Math.abs(n);
+    var sign = n < 0 ? '-' : '';
+    function unit(v, suffix) {
+      var rounded = Math.round(v * 10) / 10;
+      if (rounded >= 1000) return '';
+      var s = rounded.toFixed(1);
+      if (s.slice(-2) === '.0') s = s.slice(0, -2);
+      return sign + '$' + s + suffix;
+    }
+    if (abs >= 999500) return unit(abs / 1000000, 'M') || (sign + '$' + Math.round(abs / 1000000) + 'M');
+    if (abs >= 1000) return unit(abs / 1000, 'K') || unit(abs / 1000000, 'M') || (sign + '$1M');
+    return money(n);
   }
   function compact(n) {
     var r = Math.round(n * 10) / 10;
@@ -2894,9 +2907,10 @@ footer.site{margin-top:auto}
     return bits.join('. ');
   }
   function signalHead(stats) {
-    var stake = stats.stakeN ? money(stats.stake) : 'No figures';
+    var exact = stats.stakeN ? money(stats.stake) : '';
+    var stake = !stats.stakeN ? 'No figures' : (homeDesk() && Math.abs(stats.stake) >= 1000 ? moneyFit(stats.stake) : exact);
     var stakeTitle = stats.stakeN
-      ? ('Sum of dollar figures on ' + stats.stakeN + (stats.stakeN === 1 ? ' open item' : ' open items') + (stats.noDollar ? '. ' + stats.noDollar + (stats.noDollar === 1 ? ' open item has' : ' open items have') + ' no dollar figure.' : '.'))
+      ? ('Sum of dollar figures on ' + stats.stakeN + (stats.stakeN === 1 ? ' open item' : ' open items') + (exact && exact !== stake ? '. Exact figure ' + exact : '') + (stats.noDollar ? '. ' + stats.noDollar + (stats.noDollar === 1 ? ' open item has' : ' open items have') + ' no dollar figure.' : '.'))
       : 'No open item has a dollar figure.';
     var flame = stats.clears > 0 ? FLAME : '';
     return '<header class="snx-head"><div><p class="snx-kicker">Signal now</p><h2>Mission radar</h2></div><div class="snx-readout">' +

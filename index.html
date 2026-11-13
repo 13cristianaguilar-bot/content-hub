@@ -2016,6 +2016,7 @@ body.reel-modal-open { overflow: hidden; }
 <div id="client-view-root"></div>
 <div id="reel-modal-root"></div>
 
+<script src="client-deliverables.js"></script>
 <script>
 // ─────────────────────────────────────────────
 // CONFIG — paste your Supabase values here
@@ -2122,41 +2123,9 @@ if (!hubLeavingForCacheBust && window.supabase) {
 // ─────────────────────────────────────────────
 // CLIENT CONFIG (add more clients here)
 // ─────────────────────────────────────────────
-const CLIENTS = {
-  andrew: { name: 'Andrew George',  label: 'Andrew' },
-  jan:    { name: 'Jan Zands',      label: 'Jan'    },
-  cristian: { name: 'Cristian Aguilar', label: 'Cristian' },
-  devin:  { name: 'Devin Shea',     label: 'Devin'  },
-  sagun:  { name: 'Sagun Sedai',    label: 'Sagun'  },
-};
-
-// Which deliverable a client page is built around. scripts keeps the scripts
-// table. stories_coaching reads the packs and calls below until a table exists.
-const CLIENT_DELIVERABLES = {
-  andrew: { type: 'scripts' },
-  jan: { type: 'scripts' },
-  devin: { type: 'scripts' },
-  cristian: { type: 'scripts' },
-  sagun: {
-    type: 'stories_coaching',
-    stories: [
-      {
-        id: 'stories-2026-10-24',
-        title: 'Stories pack',
-        delivered: '2026-10-24',
-        step: 'shipped',
-        driveId: '121-BzuEH-nScy3y7cukusrD6gnaxDLItUk-Z2NlwSTI',
-      },
-    ],
-    calls: [],
-  },
-};
-const CORE_STEPS = [
-  { id: 'progress', label: 'In progress' },
-  { id: 'review', label: 'Needs your review' },
-  { id: 'shipped', label: 'Shipped' },
-  { id: 'results', label: 'Results' },
-];
+const CLIENTS = window.SignalClients.clients;
+const CLIENT_DELIVERABLES = window.SignalClients.deliverables;
+const CORE_STEPS = window.SignalClients.steps;
 
 // client_slug → pack folder under assets/client-resources/.
 // Add Andrew/Devin/Sagun by dropping a folder (manifest.json + hub/ + png/)
@@ -4769,8 +4738,8 @@ async function afterLogin(u) {
       const want = new URLSearchParams(location.search).get('client');
       if (want && CLIENTS[want]) {
         const own = homeSlug(mySlug);
-        if (own && want === own) { previewSlug = null; viewSlug = own; }
-        else { previewSlug = want; viewSlug = want; }
+        if (own && want === own) { previewSlug = null; viewSlug = own; clientParity = false; }
+        else { previewSlug = want; viewSlug = want; clientParity = true; }
         viewTab = 'list';
         viewSegment = defaultSegmentForClient(want);
       }
@@ -7782,22 +7751,14 @@ function clientCoreOn() {
   return !!viewSlug;
 }
 function coreStepForStatus(status) {
-  if (status === 'Needs Review') return 'review';
-  if (status === 'Posted') return 'results';
-  if (status === 'Approved' || status === 'Passed') return 'shipped';
-  return 'progress';
+  return window.SignalClients.stepForStatus(status);
 }
 function clientScriptGroups() {
   const rows = (typeof scripts !== 'undefined' ? scripts : []).filter(s => s && s.client_slug === viewSlug);
   return groupIntoTakes(rows).filter(g => !g.some(s => s && s.status === 'Archived'));
 }
 function scriptGroupsForStep(groups, step) {
-  return (groups || []).filter(g => {
-    const status = groupStatus(g);
-    if (step === 'shipped') return status === 'Approved' || status === 'Posted' || status === 'Passed';
-    if (step === 'results') return status === 'Posted';
-    return coreStepForStatus(status) === step;
-  });
+  return (groups || []).filter(g => window.SignalClients.groupInStep(groupStatus(g), step));
 }
 function storyItems(slug, kind) {
   const row = deliverableFor(slug);

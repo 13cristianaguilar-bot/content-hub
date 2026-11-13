@@ -917,7 +917,7 @@ assert.ok(script.includes('autocomplete="username"'));
 assert.ok(script.includes('autocomplete="current-password"'));
 assert.ok(script.includes('name="username"'));
 assert.ok(script.includes('name="password"'));
-assert.ok(script.includes("Sign in once — you'll stay signed in on this phone/browser."));
+assert.ok(script.includes('Sign in once. You stay signed in on this phone and browser.'));
 assert.ok(script.includes("signOut({ scope: 'local' })"));
 const mem = Object.create(null);
 const disk = {
@@ -2712,6 +2712,9 @@ assert.ok(ctx.prepReadBodyHtml({
   reference_clip: 'https://www.instagram.com/reel/De7Kwg_hCLn/',
 }).includes('Stop pitching the funder first.'));
 assert.ok(script.includes('class="client-jump"'));
+assert.ok(script.includes('class="cc-tools"'));
+assert.ok(script.includes('window.toggleCcMenu'));
+assert.ok(!script.includes('class="hub-top"'));
 assert.ok(script.includes('window.exitToClients'));
 assert.ok(script.includes('window.openClientResources'));
 assert.ok(script.includes('>Clients</button>'));

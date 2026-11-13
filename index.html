@@ -100,14 +100,11 @@ body.edit-open #app { display: none; }
   min-width: 0;
 }
 .hub-header {
-  position: sticky; top: 0; z-index: 20;
-  background: var(--paper);
-  border-bottom: 1px solid var(--line);
-  padding-top: max(12px, env(safe-area-inset-top, 0px));
-  padding-bottom: 12px;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  display: flex; flex-direction: column; gap: 10px;
+  position: sticky; top: 0; z-index: 30;
+  background: #080808;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  padding: 0;
+  display: flex; flex-direction: column; gap: 0;
 }
 .hub-main {
   flex: 1 1 auto;
@@ -654,7 +651,7 @@ img, iframe, video, pre { max-width: 100%; }
 /* Tablet portrait and up: the card is two columns. Both columns share row 1
    so the reference stays beside the line you say, not under an empty cell. */
 @media (min-width: 768px) {
-  .hub-header, .hub-main {
+  .hub-main {
     padding-left: max(24px, env(safe-area-inset-left, 0px));
     padding-right: max(24px, env(safe-area-inset-right, 0px));
   }
@@ -756,13 +753,16 @@ img, iframe, video, pre { max-width: 100%; }
 .preview-banner.is-slim { flex-direction: row; align-items: center; }
 .preview-banner.is-slim button { width: auto; }
 .client-jump {
-  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  display: flex; gap: 0; overflow-x: auto;
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-left: max(8px, env(safe-area-inset-left, 0px));
+  padding-right: max(8px, env(safe-area-inset-right, 0px));
 }
 .client-jump button {
-  min-height: 48px; padding: 8px 4px; background: #141414; color: var(--ink);
-  border: 1px solid var(--line); font-weight: 650; font-size: 14px; letter-spacing: -0.02em;
+  flex: 0 0 auto; min-height: 44px; padding: 0 14px; background: transparent; color: #a3a3a3;
+  border: 0; border-bottom: 2px solid transparent; font-weight: 650; font-size: 14px; letter-spacing: -0.02em;
 }
-.client-jump button:first-child { background: #ed3039; color: #fff; border-color: var(--ink); }
+.client-jump button.is-on { color: #f6f5f3; border-bottom-color: #ed3039; }
 .view-as { max-width: 560px; }
 .view-as-toggle {
   width: 100%; min-height: 48px; text-align: left; background: #141414; border: 1px solid var(--line);
@@ -1903,13 +1903,16 @@ body.reel-modal-open { overflow: hidden; }
 .hub-shell { flex: 1; }
 .auth-wrap { flex: 1; min-height: 0; }
 .cc-bar {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  padding: 10px 16px; background: #080808;
-  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; gap: 8px; flex-wrap: nowrap; min-height: 60px;
+  padding: 8px 16px;
+  padding-top: max(8px, env(safe-area-inset-top, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: #080808;
   position: sticky; top: 0; z-index: 40;
 }
-.hub-header .cc-bar { position: static; }
-.cc-brand { display: flex; align-items: center; gap: 10px; color: #f6f5f3; text-decoration: none; min-width: 0; }
+.hub-header .cc-bar { position: relative; top: auto; }
+.cc-brand { display: flex; align-items: center; gap: 10px; color: #f6f5f3; text-decoration: none; min-width: 0; flex-shrink: 0; }
 .cc-mark { display: flex; align-items: flex-end; gap: 2px; height: 16px; }
 .cc-mark i { display: block; width: 3px; background: #ed3039; border-radius: 1px; }
 .cc-mark i:nth-child(1) { height: 7px; }
@@ -1918,10 +1921,50 @@ body.reel-modal-open { overflow: hidden; }
 .cc-mark i:nth-child(4) { height: 12px; }
 .cc-mark i:nth-child(5) { height: 8px; }
 .cc-brand b { display: block; font-size: 15px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-.cc-brand small { display: block; margin-top: 2px; color: #a3a3a3; font-size: 11px; font-weight: 550; }
-.cc-nav { display: flex; flex-wrap: wrap; gap: 4px; margin-left: auto; }
-.cc-nav a { color: #d4d4d4; text-decoration: none; font-size: 13px; font-weight: 650; padding: 6px 10px; border-radius: 999px; }
+.cc-brand small { display: block; margin-top: 2px; color: #a3a3a3; font-size: 11px; font-weight: 550; white-space: nowrap; }
+.cc-nav { display: flex; flex-wrap: nowrap; gap: 2px; min-width: 0; }
+.cc-nav a { color: #d4d4d4; text-decoration: none; font-size: 13px; font-weight: 650; padding: 6px 8px; border-radius: 999px; white-space: nowrap; }
 .cc-nav a.on, .cc-nav a:hover { color: #fff; background: #b71a23; }
+.cc-tools { margin-left: auto; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.cc-viewing {
+  display: inline-flex; align-items: center; min-height: 32px; padding: 0 10px;
+  border: 1px solid rgba(237,48,57,.7); border-radius: 999px; color: #f6f5f3;
+  font-size: 12px; font-weight: 650; letter-spacing: -0.01em; white-space: nowrap;
+}
+.cc-menu, .cc-nav-extra { display: none; }
+@media (max-width: 1023px) {
+  .cc-bar {
+    flex-wrap: wrap; row-gap: 0; gap: 4px;
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
+  }
+  .cc-bar .signout-btn { padding: 0 6px; font-size: 13px; }
+  .cc-menu {
+    display: inline-flex; align-items: center; justify-content: center; order: 4;
+    min-height: 44px; padding: 0 8px; background: transparent;
+    border: 1px solid rgba(255,255,255,.18); color: #f6f5f3;
+    font-weight: 700; font-size: 14px; flex-shrink: 0;
+  }
+  .cc-tools { display: contents; }
+  .cc-tools .icon-btn[aria-label="What's new and help"] { margin-left: auto; }
+  .cc-tools .more-btn, .cc-tools .icon-btn[aria-label="Settings"] { display: none; }
+  .cc-viewing {
+    order: 5; flex: 1 0 100%; justify-content: flex-end;
+    border: 0; border-top: 1px solid rgba(255,255,255,.08); border-radius: 0;
+    min-height: 36px; padding: 6px 0 2px; margin-top: 4px;
+  }
+  .cc-nav {
+    display: none; position: absolute; left: 0; right: 0; top: 100%; z-index: 50;
+    flex-direction: column; align-items: stretch; gap: 4px; margin: 0; padding: 8px;
+    background: #141414; border-bottom: 1px solid rgba(255,255,255,.12);
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
+  }
+  .cc-bar.is-menu .cc-nav { display: flex; }
+  .cc-nav a { padding: 12px; font-size: 16px; border-radius: 10px; }
+  .cc-bar.is-menu .cc-nav-extra { display: flex; flex-direction: column; gap: 8px; padding-top: 8px; }
+  .cc-nav-extra .more-btn, .cc-nav-extra .icon-btn { width: 100%; height: auto; min-height: 44px; }
+  .cc-nav-extra .icon-btn[aria-label="Settings"]::after { content: "Settings"; margin-left: 8px; font-size: 16px; font-weight: 650; }
+}
 .hub-skel { width: min(880px, 100%); margin: 0 auto; padding: 22px 16px 40px; display: grid; gap: 12px; }
 .hub-skel i { display: block; height: 92px; border-radius: 16px; background: rgba(255,255,255,.06); animation: hub-pulse 1.3s ease-in-out infinite; }
 .hub-skel i:nth-child(2) { height: 148px; animation-delay: .12s; }
@@ -1941,22 +1984,27 @@ body.reel-modal-open { overflow: hidden; }
 </style>
 
 <div id="app">
-  <nav class="cc-bar" aria-label="Command Center">
-    <a class="cc-brand" href="command-center/">
-      <span class="cc-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
-      <span><b>Signal</b><small>Command Center</small></span>
-    </a>
-    <div class="cc-nav">
-      <a href="command-center/#home">Workforce</a>
-      <a href="command-center/#goals">Goals</a>
-      <a href="command-center/#attract">Attract</a>
-      <a href="command-center/#transform">Transform</a>
-      <a class="on" href="./" aria-current="page">Hub</a>
+  <div class="hub-shell">
+    <div class="hub-header">
+      <header class="cc-bar">
+        <a class="cc-brand" href="command-center/">
+          <span class="cc-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+          <span><b>Signal</b><small>Command Center</small></span>
+        </a>
+        <button type="button" class="cc-menu" aria-expanded="false" aria-controls="cc-nav" onclick="window.toggleCcMenu()">Menu</button>
+        <nav class="cc-nav" id="cc-nav" aria-label="Command Center">
+          <a href="command-center/#home">Workforce</a>
+          <a href="command-center/#goals">Goals</a>
+          <a href="command-center/#attract">Attract</a>
+          <a href="command-center/#transform">Transform</a>
+          <a class="on" href="./" aria-current="page">Hub</a>
+        </nav>
+      </header>
     </div>
-  </nav>
-  <div class="hub-skel" aria-busy="true">
-    <i></i><i></i><i></i>
-    <p>Opening the Hub</p>
+    <div class="hub-skel" aria-busy="true">
+      <i></i><i></i><i></i>
+      <p>Opening the Hub</p>
+    </div>
   </div>
 </div>
 
@@ -7525,10 +7573,12 @@ function renderFormatVaultPage() {
   return renderFormatVaultHtml(typeof FORMAT_VAULT !== 'undefined' ? FORMAT_VAULT : { clients: [] }, formatVaultFilter, formatVaultFormatId);
 }
 function renderClientJumpBar() {
-  return '<nav class="client-jump" aria-label="Clients, vault, and resources">'
-    + '<button type="button" onclick="window.exitToClients()">Clients</button>'
-    + '<button type="button" onclick="window.openFormatVault()">Format Vault</button>'
-    + '<button type="button" onclick="window.openClientResources()">Resources</button>'
+  const on = (id) => hubPage === id ? 'is-on' : '';
+  const pressed = (id) => hubPage === id ? 'true' : 'false';
+  return '<nav class="client-jump" role="tablist" aria-label="Clients, vault, and resources">'
+    + '<button type="button" role="tab" class="' + on('main') + '" aria-selected="' + pressed('main') + '" onclick="window.exitToClients()">Clients</button>'
+    + '<button type="button" role="tab" class="' + on('vault') + '" aria-selected="' + pressed('vault') + '" onclick="window.openFormatVault()">Format Vault</button>'
+    + '<button type="button" role="tab" class="' + on('resources') + '" aria-selected="' + pressed('resources') + '" onclick="window.openClientResources()">Resources</button>'
     + '</nav>';
 }
 function renderClientResourcesPage() {
@@ -7722,7 +7772,6 @@ function renderDashInner() {
   document.body.classList.toggle('more-open', moreOpen && role === 'admin' && hubPage === 'main');
 
   const isAdmin  = uiIsAdmin();
-  const clientName = headerSubtitle();
   const clientTabs = isAdmin ? `<nav class="client-tabs" aria-label="Clients">${Object.entries(CLIENTS).map(([slug, c]) =>
     `<button type="button" onclick="setClient('${slug}')" aria-pressed="${viewSlug === slug}"
       class="client-tab ${viewSlug === slug ? 'is-on' : ''}">${escHtml(c.label)}</button>`
@@ -7862,17 +7911,17 @@ function renderDashInner() {
     ? `<button onclick="window.closeSettings()" aria-label="Close settings" class="fixed inset-0 z-30 bg-transparent cursor-default"></button>`
     : '';
 
-  const headerRow1 = `
-    <div class="hub-top">
-      ${brandLockup(escHtml(clientName))}
-      <div class="hub-top-actions">
+  const viewingChip = (role === 'admin' && previewSlug)
+    ? `<span class="cc-viewing" role="status">Viewing as ${escHtml(CLIENTS[previewSlug] ? CLIENTS[previewSlug].label : clientLabel(previewSlug))}</span>`
+    : '';
+  const headerTools = `
+        ${viewingChip}
         ${helpButton}
         ${requestsButton}
         ${moreButton}
         ${gearButton}
-        <button type="button" onclick="doLogout()" class="signout-btn">Sign out</button>
-      </div>
-    </div>`;
+        <button type="button" onclick="doLogout()" class="signout-btn">Sign out</button>`;
+  const phoneMenuExtras = `${moreButton}${gearButton}`.replace(' data-focus-id="settings-gear"', '');
 
   // ───────────────────────────────────────────
   // ITEM 1 (row 3) — collapsed "Filters" pill + always-visible mode/status chips. Admin + List
@@ -7917,8 +7966,7 @@ function renderDashInner() {
     <div class="hub-shell min-h-screen flex flex-col relative">
 
       <div class="hub-header">
-        ${commandBarHtml()}
-        ${headerRow1}
+        ${commandBarHtml(headerTools, phoneMenuExtras)}
         ${isAdmin && viewingAsClient() ? renderClientJumpBar() : ''}
       </div>
 
@@ -14112,21 +14160,46 @@ function brandMarkSvg(size) {
   size = size || 28;
   return `<svg class="brand-wave" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M2 10v3"/><path d="M6 6v11"/><path d="M10 3v18"/><path d="M14 8v7"/><path d="M18 5v13"/><path d="M22 10v3"/></svg>`;
 }
-function commandBarHtml() {
-  return `<nav class="cc-bar" aria-label="Command Center">
+function commandBarHtml(toolsHtml, navExtraHtml) {
+  const tools = toolsHtml ? `<div class="cc-tools">${toolsHtml}</div>` : '';
+  const extra = navExtraHtml ? `<div class="cc-nav-extra">${navExtraHtml}</div>` : '';
+  return `<header class="cc-bar">
     <a class="cc-brand" href="command-center/">
       <span class="cc-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
       <span><b>Signal</b><small>Command Center</small></span>
     </a>
-    <div class="cc-nav">
+    <button type="button" class="cc-menu" aria-expanded="false" aria-controls="cc-nav" onclick="window.toggleCcMenu()">Menu</button>
+    <nav class="cc-nav" id="cc-nav" aria-label="Command Center">
       <a href="command-center/#home">Workforce</a>
       <a href="command-center/#goals">Goals</a>
       <a href="command-center/#attract">Attract</a>
       <a href="command-center/#transform">Transform</a>
       <a class="on" href="./" aria-current="page">Hub</a>
-    </div>
-  </nav>`;
+      ${extra}
+    </nav>
+    ${tools}
+  </header>`;
 }
+window.toggleCcMenu = (force) => {
+  const bar = document.querySelector('.cc-bar');
+  if (!bar) return;
+  const open = typeof force === 'boolean' ? force : !bar.classList.contains('is-menu');
+  bar.classList.toggle('is-menu', open);
+  const btn = bar.querySelector('.cc-menu');
+  if (btn) {
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    btn.textContent = open ? 'Close' : 'Menu';
+  }
+};
+document.addEventListener('click', (e) => {
+  const bar = document.querySelector('.cc-bar.is-menu');
+  if (!bar) return;
+  if (e.target.closest && e.target.closest('.cc-bar')) return;
+  window.toggleCcMenu(false);
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && document.querySelector('.cc-bar.is-menu')) window.toggleCcMenu(false);
+});
 function brandLockup(sub) {
   return `<div class="brand-lockup">${brandMarkSvg(28)}<div style="min-width:0"><div class="brand-word">signals<span class="brand-ext">.marketing</span></div>${sub ? `<div class="brand-sub">${sub}</div>` : ''}</div></div>`;
 }
@@ -15458,22 +15531,28 @@ window.toggleFiltersOpen = () => { filtersOpen = !filtersOpen; lsSetBool('hub_fi
 // button toggling it shut, the backdrop, Escape, or the ✕ itself) returns focus to the gear
 // button. Both are one requestAnimationFrame after renderDash() rebuilds the DOM, same timing
 // scrollToDayPanel()/restoreFocusAfterRedraw() already rely on.
+function focusGearOrMenu() {
+  const gear = document.querySelector('[data-focus-id="settings-gear"]');
+  const target = gear && gear.offsetParent ? gear : document.querySelector('.cc-menu');
+  if (target) target.focus();
+}
 window.toggleSettings     = () => {
   const opening = !settingsOpen;
   settingsOpen = opening;
   if (opening) moreOpen = false;
   renderDash();
   requestAnimationFrame(() => {
-    const el = document.querySelector(`[data-focus-id="${opening ? 'settings-close' : 'settings-gear'}"]`);
-    if (el) el.focus();
+    if (opening) {
+      const el = document.querySelector('[data-focus-id="settings-close"]');
+      if (el) el.focus();
+    } else focusGearOrMenu();
   });
 };
 window.closeSettings      = () => {
   settingsOpen = false;
   renderDash();
   requestAnimationFrame(() => {
-    const el = document.querySelector('[data-focus-id="settings-gear"]');
-    if (el) el.focus();
+    focusGearOrMenu();
   });
 };
 // K1 -- focus capture now happens generically at the top of renderDashInner() itself (see the

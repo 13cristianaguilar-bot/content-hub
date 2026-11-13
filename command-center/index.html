@@ -1281,7 +1281,7 @@ footer.site{margin-top:auto}
     syncLive: false,
     syncStarted: false
   };
-  var HUB_TABLES = ['scripts', 'client_requests', 'script_edits', 'cc_feed'];
+  var HUB_SCRIPT_COLS = 'status, client_slug, created_at';
   var sb = null;
   var feedTicket = 0;
   var vizSeq = 0;
@@ -7238,65 +7238,98 @@ footer.site{margin-top:auto}
     }).filter(Boolean);
   }
   function financeFixture() {
-    var days = [];
-    var i;
-    for (i = 0; i < 32; i++) {
-      days.push({
-        date: addDays('2026-10-13', i),
-        inn: 80 + (i % 5) * 20,
-        out: 40 + (i % 3) * 15
+    var today = chicagoDate(new Date());
+    var depts = ['attract', 'attract', 'attract', 'attract', 'attract', 'attract', 'fulfillment', 'fulfillment', 'back_office', 'back_office', 'back_office', 'back_office', 'back_office', 'back_office', 'back_office', 'back_office'];
+    var statuses = ['paid', 'unpaid', 'failed', 'trial', 'unknown'];
+    var vendors = depts.map(function (dept, i) {
+      var n = i + 1;
+      return {
+        dept: dept,
+        name: 'Sample vendor ' + (n < 10 ? '0' : '') + n,
+        amount: 20 * n,
+        source: 'sample',
+        status: statuses[i % statuses.length],
+        cadence: i % 4 === 0 ? 'one-time' : 'monthly',
+        card_last4: '0000',
+        next_charge: addDays(today, 7 + (i % 5))
+      };
+    });
+    var capacity = [];
+    var c;
+    for (c = 0; c < 15; c++) {
+      var hasLimit = c % 3 === 0;
+      capacity.push({
+        tool: 'Sample tool ' + (c + 1),
+        plan: 'sample',
+        unit: c % 2 === 0 ? 'credits' : 'projects',
+        used: (c + 1) * 2,
+        limit: hasLimit ? 40 : null,
+        pct: hasLimit ? Math.round(((c + 1) * 2) / 40 * 1000) / 10 : null,
+        status: statuses[c % statuses.length],
+        blocks: 'Sample block ' + (c + 1),
+        resets_at: addDays(today, 10 + c)
       });
     }
+    var history = [];
+    var d;
+    for (d = 0; d < 18; d++) {
+      history.push({
+        date: addDays(today, d - 17),
+        'in': 100 + (d % 4) * 25,
+        out: 40 + (d % 3) * 20
+      });
+    }
+    var upcoming = [];
+    var u;
+    for (u = 0; u < 12; u++) {
+      upcoming.push({
+        date: addDays(today, u - 2),
+        label: (u % 2 === 0 ? 'Sample bill ' : 'Sample payment ') + (u + 1),
+        amount: 50 + u * 10,
+        direction: u % 2 === 0 ? 'out' : 'in',
+        verified: u % 3 !== 0
+      });
+    }
+    var who = ['Sample client A', 'Sample client B', 'Sample client C', 'Sample client D', 'Sample client E'];
+    var receivables = who.map(function (name, i) {
+      return {
+        who: name,
+        amount: 100 * (i + 1),
+        due: addDays(today, i - 1),
+        source: 'sample',
+        status: i < 2 ? 'open' : 'unverified',
+        verified: i < 2
+      };
+    });
+    var gaps = [];
+    var g;
+    for (g = 0; g < 9; g++) {
+      gaps.push({ missing: 'Sample gap ' + (g + 1), closes_with: 'Connect sample source ' + (g + 1) });
+    }
+    var months = [];
+    var m;
+    for (m = 0; m < 4; m++) months.push({ month: addDays(today, -30 * (3 - m)).slice(0, 7), amount: 400 * (m + 1), note: 'sample' });
+    var customers = who.slice(0, 4).map(function (name, i) {
+      return { name: name, email: 'sample' + (i + 1) + '@example.com', amount: 200 * (i + 1), source: 'sample', verified: i < 2 };
+    });
     return {
+      updated_at: today + 'T12:00:00Z',
+      sources: ['sample books', 'sample card', 'sample invoices', 'sample bank', 'sample sheet'],
       burn_monthly_by_dept: {
-        attract: { monthly: 400, vendors: ['Sample ads desk'], powers: 'Sample reach for the layout only.' },
-        convert: { monthly: 250, vendors: ['Sample dialer'], powers: 'Sample calls for the layout only.' },
-        fulfillment: { monthly: 600, vendors: ['Sample editor'], powers: 'Sample delivery for the layout only.' },
-        back_office: { monthly: 150, vendors: ['Sample books'], powers: 'Sample books for the layout only.' }
+        attract: 120,
+        convert: 80,
+        fulfillment: 200,
+        back_office: 60,
+        total: 460,
+        notes: 'Sample split for layout only.'
       },
-      vendors: [
-        { name: 'Sample ads desk', dept: 'attract' },
-        { name: 'Sample dialer', dept: 'convert' },
-        { name: 'Sample editor', dept: 'fulfillment' },
-        { name: 'Sample books', dept: 'back_office' }
-      ],
-      capacity: [
-        { tool: 'Sample editor', used: 12, limit: 40, reset: '2026-12-01', status: 'paid' },
-        { tool: 'Sample inbox', used: 3, limit: 3, reset: '2026-11-20', status: 'unpaid', blocks: 'Sample sending' },
-        { tool: 'Sample trial seat', used: 1, limit: 5, reset: '2026-11-30', status: 'trial' },
-        { tool: 'Sample render', used: 8, limit: 10, reset: '2026-11-18', status: 'failed', blocks: 'Sample exports' }
-      ],
-      revenue: {
-        last_90d: 9000,
-        mtd: 3000,
-        by_month: [
-          { month: '2026-09', amount: 2000 },
-          { month: '2026-10', amount: 4000 },
-          { month: '2026-11', amount: 3000 }
-        ],
-        by_customer: [
-          { name: 'Sample client A', amount: 2000 },
-          { name: 'Sample client B', amount: 1000 }
-        ]
-      },
-      receivables: [
-        { name: 'Sample client A', amount: 2000, verified: true },
-        { name: 'Sample client B', amount: 800, verified: false }
-      ],
-      cashflow: {
-        daily_history: days,
-        upcoming: [
-          { date: '2026-11-10', label: 'Sample bill', amount: 120, direction: 'out', overdue: true },
-          { date: '2026-11-18', label: 'Sample client payment', amount: 500, direction: 'in' },
-          { date: '2026-11-25', label: 'Sample software bill', amount: 90, direction: 'out' },
-          { date: '2026-12-02', label: 'Sample retainer', amount: 700, direction: 'in' }
-        ]
-      },
-      gaps: [
-        { what: 'Bank balance', connect: 'Connect the bank' },
-        { what: 'Card spend', connect: 'Connect the card' }
-      ],
-      leftover: { value: null, reason: 'No bank connection in this sample.' }
+      vendors: vendors,
+      capacity: capacity,
+      revenue: { last_90d: 3000, mtd: 1000, by_month: months, by_customer: customers },
+      receivables: receivables,
+      cashflow: { daily_history: history, upcoming: upcoming },
+      gaps: gaps,
+      leftover: { value: null, reason: 'bank not connected' }
     };
   }
   function finDeptKey(raw) {
@@ -7320,7 +7353,7 @@ footer.site{margin-top:auto}
       if (typeof value === 'number' || typeof value === 'string') monthly = finNum(value);
       else if (value && typeof value === 'object') {
         monthly = finNum(value.monthly != null ? value.monthly : value.cost != null ? value.cost : value.burn);
-        vendors = finNames(value.vendors);
+        vendors = finNames(value.vendors).map(function (name) { return { name: name, amount: null, cadence: '', status: '' }; });
         powers = finText(value.powers || value.what || value.note);
       }
       depts[id] = { monthly: monthly, vendors: vendors, powers: powers };
@@ -7333,7 +7366,15 @@ footer.site{margin-top:auto}
         var id = finDeptKey(item.dept || item.department);
         if (!id || !depts[id]) return;
         var name = finText(item.name || item.vendor);
-        if (name && depts[id].vendors.indexOf(name) < 0) depts[id].vendors.push(name);
+        if (!name) return;
+        if (!depts[id].vendors.some(function (v) { return v.name === name; })) {
+          depts[id].vendors.push({
+            name: name,
+            amount: finNum(item.amount),
+            cadence: finText(item.cadence),
+            status: finText(item.status)
+          });
+        }
         if (!depts[id].powers) depts[id].powers = finText(item.powers || item.what);
       });
     }
@@ -7341,9 +7382,17 @@ footer.site{margin-top:auto}
     Object.keys(depts).forEach(function (key) {
       if (depts[key] && depts[key].monthly != null) burnSum = (burnSum || 0) + depts[key].monthly;
     });
+    var burnTotal = burn && typeof burn === 'object' && !Array.isArray(burn) ? finNum(burn.total) : null;
+    var burnNote = burn && typeof burn === 'object' && !Array.isArray(burn) ? finText(burn.notes) : '';
     var recs = Array.isArray(raw.receivables) ? raw.receivables.map(function (row) {
       var verified = row && (row.verified === true || row.verified === 'true' || row.verified === 'verified');
-      return { name: finText(row && (row.name || row.customer || row.client)) || 'Unnamed', amount: finNum(row && row.amount), verified: verified };
+      return {
+        name: finText(row && (row.who || row.name || row.customer || row.client)) || 'Unnamed',
+        amount: finNum(row && row.amount),
+        verified: verified,
+        due: dayOf(row && row.due),
+        status: finText(row && row.status)
+      };
     }).filter(function (row) { return row.amount != null; }) : null;
     var owed = null;
     if (recs) {
@@ -7352,7 +7401,12 @@ footer.site{margin-top:auto}
     }
     var rev = raw.revenue && typeof raw.revenue === 'object' && !Array.isArray(raw.revenue) ? raw.revenue : {};
     var customers = Array.isArray(rev.by_customer) ? rev.by_customer.map(function (row) {
-      return { name: finText(row && (row.name || row.customer)) || 'Unnamed', amount: finNum(row && (row.amount != null ? row.amount : row.total)) };
+      var verified = !(row && (row.verified === false || row.verified === 'false'));
+      return {
+        name: finText(row && (row.name || row.customer)) || 'Unnamed',
+        amount: finNum(row && (row.amount != null ? row.amount : row.total)),
+        verified: verified
+      };
     }).filter(function (row) { return row.amount != null; }) : [];
     var history = [];
     var flow = raw.cashflow && typeof raw.cashflow === 'object' ? raw.cashflow : {};
@@ -7371,12 +7425,14 @@ footer.site{margin-top:auto}
       var dir = finText(row && (row.direction || row.kind || row.side)).toLowerCase();
       if (dir !== 'in' && dir !== 'out') dir = finNum(row && row.amount) < 0 ? 'out' : 'in';
       var overdue = !!(row && (row.overdue === true || row.overdue === 'true' || (date && date < today)));
+      var verified = !(row && (row.verified === false || row.verified === 'false'));
       return {
         date: date,
         label: finText(row && (row.label || row.name || row.what)) || (dir === 'out' ? 'Bill' : 'Payment'),
         amount: Math.abs(finNum(row && row.amount) || 0),
         direction: dir === 'out' ? 'out' : 'in',
-        overdue: overdue
+        overdue: overdue,
+        verified: verified
       };
     }).filter(function (row) {
       if (!row.date) return false;
@@ -7388,20 +7444,21 @@ footer.site{margin-top:auto}
       var pct = finNum(row && row.pct);
       if (pct == null && used != null && limit) pct = (used / limit) * 100;
       var status = finText(row && row.status).toLowerCase();
-      if (['paid', 'unpaid', 'failed', 'trial'].indexOf(status) < 0) status = '';
+      if (['paid', 'unpaid', 'failed', 'trial', 'unknown'].indexOf(status) < 0) status = status || '';
       return {
         tool: finText(row && (row.tool || row.name)) || 'Unnamed tool',
         used: used,
         limit: limit,
+        unit: finText(row && row.unit),
         pct: pct,
-        reset: dayOf(row && (row.reset || row.reset_at || row.resets)),
+        reset: dayOf(row && (row.resets_at || row.reset || row.reset_at || row.resets)),
         status: status,
         blocks: finText(row && (row.blocks || row.block || row.blocked))
       };
     });
     var gaps = (Array.isArray(raw.gaps) ? raw.gaps : []).map(function (row) {
       if (typeof row === 'string') return { what: finText(row), connect: '' };
-      return { what: finText(row && (row.what || row.missing || row.name)), connect: finText(row && (row.connect || row.action || row.fix)) };
+      return { what: finText(row && (row.missing || row.what || row.name)), connect: finText(row && (row.closes_with || row.connect || row.action || row.fix)) };
     }).filter(function (row) { return row.what; });
     var left = raw.leftover && typeof raw.leftover === 'object' ? raw.leftover : {};
     var leftValue = left.value == null || left.value === '' ? null : finNum(left.value);
@@ -7409,7 +7466,8 @@ footer.site{margin-top:auto}
       mtd: finNum(rev.mtd != null ? rev.mtd : rev.month),
       last90: finNum(rev.last_90d != null ? rev.last_90d : rev.last90d),
       customers: customers,
-      burn: burnSum,
+      burn: burnTotal != null ? burnTotal : burnSum,
+      burnNote: burnNote,
       depts: depts,
       owed: owed,
       recs: recs,
@@ -7463,10 +7521,10 @@ footer.site{margin-top:auto}
     var recHtml = '';
     if (pack.recs && pack.recs.length) {
       recHtml = '<span class="fin-rec">' + pack.recs.map(function (row) {
-        return '<span class="fin-chip' + (row.verified ? '' : ' is-hollow') + '">' + esc((row.verified ? '' : 'Unverified ') + row.name + ' ' + money(row.amount)) + '</span>';
+        return '<span class="fin-chip' + (row.verified ? '' : ' is-hollow') + '">' + esc((row.verified ? '' : 'Unverified ') + row.name + ' ' + money(row.amount) + (row.due ? ' due ' + finWhen(row.due) : '')) + '</span>';
       }).join('') + '</span>';
     } else if (pack.recs) recHtml = '<span class="fin-sub">No receivables in this feed.</span>';
-    var cust = pack.customers.length ? '<span class="fin-sub">' + pack.customers.map(function (row) { return esc(row.name + ' ' + money(row.amount)); }).join(' · ') + '</span>' : '';
+    var cust = pack.customers.length ? '<span class="fin-sub">' + pack.customers.map(function (row) { return esc((row.verified ? '' : 'Unverified ') + row.name + ' ' + money(row.amount)); }).join(' · ') + '</span>' : '';
     var leftHtml = pack.leftover == null
       ? '<span class="fin-bank">Connect bank to see leftover</span><span class="fin-sub">' + esc(pack.leftoverReason) + '</span>'
       : '';
@@ -7480,14 +7538,19 @@ footer.site{margin-top:auto}
     var deptHtml = deptOrder.map(function (pair) {
       var row = pack.depts[pair[0]];
       if (!row) return '<article class="fin-dept"><span class="l">' + esc(pair[1]) + '</span><h3>' + esc(pair[1]) + '</h3><span class="cost">Not in this feed</span></article>';
-      var vendors = row.vendors.length ? '<span class="fin-vendors">' + row.vendors.map(function (name) { return '<span class="fin-chip">' + esc(name) + '</span>'; }).join('') + '</span>' : '<span class="fin-sub">No vendors on this desk.</span>';
+      var vendors = row.vendors.length ? '<span class="fin-vendors">' + row.vendors.map(function (vendor) {
+        var name = vendor && vendor.name ? vendor.name : vendor;
+        var extra = vendor && vendor.amount != null ? ' ' + money(vendor.amount) : '';
+        if (vendor && vendor.cadence) extra += vendor.cadence === 'monthly' ? '/mo' : ' ' + vendor.cadence;
+        return '<span class="fin-chip">' + esc(name + extra) + '</span>';
+      }).join('') + '</span>' : '<span class="fin-sub">No vendors on this desk.</span>';
       return '<article class="fin-dept"><span class="l">Department</span><h3>' + esc(pair[1]) + '</h3><span class="cost">' + esc(row.monthly == null ? 'Not in this feed' : money(row.monthly) + ' / mo') + '</span>' + vendors + '<span class="fin-sub">' + esc(row.powers || 'No note on what this desk powers.') + '</span></article>';
     }).join('');
     var toolHtml = pack.tools.length ? pack.tools.map(function (tool) {
       var bad = tool.status === 'unpaid' || tool.status === 'failed';
       var pct = tool.pct == null ? null : Math.max(0, tool.pct);
       var fill = pct == null ? 0 : Math.min(100, pct);
-      var use = (tool.used == null ? 'Used not set' : compact(tool.used)) + (tool.limit == null ? '' : ' / ' + compact(tool.limit));
+      var use = (tool.used == null ? 'Used not set' : compact(tool.used)) + (tool.limit == null ? '' : ' / ' + compact(tool.limit)) + (tool.unit ? ' ' + tool.unit : '');
       var pill = tool.status || 'no status';
       var blocks = bad ? '<p class="fin-blocks">Blocks: ' + esc(tool.blocks || 'not named in this feed') + '</p>' : '';
       return '<div class="fin-tool' + (bad ? ' is-block' : '') + '"><div><b>' + esc(tool.tool) + '</b><span class="meta">' + esc(use) + (pct == null ? '' : ' · ' + Math.round(pct) + '%') + '</span></div><div class="fin-track" aria-hidden="true"><i class="fin-fill" style="width:' + fill.toFixed(1) + '%"></i></div><div><span class="fin-pill' + (bad ? ' is-bad' : '') + '">' + esc(pill) + '</span><span class="fin-sub">Resets ' + esc(tool.reset ? finWhen(tool.reset) : 'with no date') + '</span></div>' + blocks + '</div>';
@@ -7507,7 +7570,8 @@ footer.site{margin-top:auto}
     }).join('');
     var up = pack.upcoming.length ? '<ul class="fin-up">' + pack.upcoming.map(function (row) {
       var flag = row.overdue ? '<span class="fin-flag">Overdue</span>' : '';
-      return '<li><span class="when">' + esc(finWhen(row.date)) + '</span><span>' + esc(row.label) + ' ' + flag + '</span><b class="amt">' + esc((row.direction === 'out' ? 'Out ' : 'In ') + money(row.amount)) + '</b></li>';
+      var unver = row.verified === false ? '<span class="fin-chip is-hollow">Unverified</span>' : '';
+      return '<li><span class="when">' + esc(finWhen(row.date)) + '</span><span>' + esc(row.label) + ' ' + flag + ' ' + unver + '</span><b class="amt">' + esc((row.direction === 'out' ? 'Out ' : 'In ') + money(row.amount)) + '</b></li>';
     }).join('') + '</ul>' : '<p class="quiet">No upcoming cash in the next 30 days.</p>';
     var gaps = pack.gaps.length ? '<ul class="fin-gaps">' + pack.gaps.map(function (row) {
       return '<li><b>' + esc(row.what) + '</b><span>' + esc(row.connect || 'Nothing named to connect.') + '</span></li>';
@@ -7516,7 +7580,7 @@ footer.site{margin-top:auto}
       '<section class="guide"><div><p class="gk">Finance</p><h2>Money desk</h2><p>Money in, tool burn, verified receivables, and leftover. Hollow amounts are not real yet and stay out of the total.</p></div></section>' +
       '<div class="fin-stats">' +
         stat('Money in this month', finMoney(pack.mtd), (pack.last90 == null ? '' : '<span class="fin-sub">Last 90 days ' + esc(money(pack.last90)) + '</span>') + cust) +
-        stat('Tool burn per month', finMoney(pack.burn), '') +
+        stat('Tool burn per month', finMoney(pack.burn), pack.burnNote ? '<span class="fin-sub">' + esc(pack.burnNote) + '</span>' : '') +
         stat('Receivables owed', pack.owed == null ? 'Not in this feed' : money(pack.owed), recHtml + '<span class="fin-sub">Verified is solid. Unverified is hollow and is not in the total.</span>') +
         stat('Leftover', leftValue, leftHtml) +
       '</div>' +
@@ -7534,11 +7598,8 @@ footer.site{margin-top:auto}
   function hubBucket(row) {
     var status = row && row.status ? String(row.status) : '';
     if (status === 'Posted') return 'posted';
-    var qa = row && row.pipeline_audit && typeof row.pipeline_audit === 'object' ? (row.pipeline_audit.humanQa || row.pipeline_audit.human_qa) : null;
-    var checks = qa && qa.checks && typeof qa.checks === 'object' ? qa.checks : {};
-    var stamped = !!(qa && (qa.complete === true || (checks.nicheShift && checks.thesisVoice && checks.shareable && checks.referenceOpened)));
-    if (status === 'Filming' || (qa && (qa.filmEndAt || qa.film_end_at))) return 'filmed';
-    if (stamped) return 'stamped';
+    if (status === 'Filming') return 'filmed';
+    if (status === 'Approved') return 'stamped';
     if (status === 'Needs Review') return 'needsReview';
     return '';
   }
@@ -7570,7 +7631,7 @@ footer.site{margin-top:auto}
     }
     var sec = Math.max(0, Math.round((Date.now() - S.syncAt) / 1000));
     el.textContent = 'Synced ' + sec + 's ago';
-    el.title = S.syncLive ? 'Live from Supabase Realtime.' : 'Realtime is down. Checking again every 60 seconds.';
+    el.title = S.syncLive ? 'Hub status is live from scripts. The feed is checked every 60 seconds.' : 'Realtime is down. The feed and Hub counts are checked every 60 seconds.';
   }
   async function loadHubStatus() {
     if (!sb || !S.admin || S.sample) {
@@ -7578,7 +7639,7 @@ footer.site{margin-top:auto}
       paintHub();
       return;
     }
-    var res = await sb.from('scripts').select('id, status, pipeline_audit');
+    var res = await sb.from('scripts').select(HUB_SCRIPT_COLS);
     if (res.error) {
       S.hubCounts = null;
       paintHub();
@@ -7594,28 +7655,28 @@ footer.site{margin-top:auto}
     paintHub();
     paintSync();
   }
-  function stopHubPoll() {
-    if (S.syncPoll) { clearInterval(S.syncPoll); S.syncPoll = null; }
+  function stopFeedPoll() {
+    if (S.feedPoll) { clearInterval(S.feedPoll); S.feedPoll = null; }
   }
-  async function pullLiveBoard() {
+  async function pollFeed() {
     if (!S.admin || S.sample || !sb) return;
+    var before = S.feed ? JSON.stringify(S.feed) : '';
     await loadFeed();
-    await loadHubStatus();
+    if (!S.syncLive) await loadHubStatus();
+    var after = S.feed ? JSON.stringify(S.feed) : '';
     S.syncAt = Date.now();
-    renderBoard();
-    paintSync();
+    if (before !== after) renderBoard();
+    else paintSync();
   }
-  function startHubPoll() {
-    if (S.syncPoll || !S.admin || S.sample) return;
-    S.syncLive = false;
-    S.syncPoll = setInterval(function () { pullLiveBoard(); }, 60000);
-    paintSync();
+  function startFeedPoll() {
+    if (S.feedPoll || !S.admin || S.sample) return;
+    S.feedPoll = setInterval(pollFeed, 60000);
   }
   function stopHubSync() {
     S.syncStarted = false;
     S.syncLive = false;
     S.hubCounts = null;
-    stopHubPoll();
+    stopFeedPoll();
     if (S.syncAge) { clearInterval(S.syncAge); S.syncAge = null; }
     if (S.syncChannel && sb) {
       try { sb.removeChannel(S.syncChannel); } catch (e) {}
@@ -7632,25 +7693,22 @@ footer.site{margin-top:auto}
     S.syncStarted = true;
     if (!S.syncAge) S.syncAge = setInterval(paintSync, 1000);
     var channel = sb.channel('cc-hub-live');
-    HUB_TABLES.forEach(function (table) {
-      channel.on('postgres_changes', { event: '*', schema: 'public', table: table }, function () {
-        if (S.syncWait) clearTimeout(S.syncWait);
-        S.syncWait = setTimeout(function () { pullLiveBoard(); }, 250);
-      });
+    channel.on('postgres_changes', { event: '*', schema: 'public', table: 'scripts' }, function () {
+      if (S.syncWait) clearTimeout(S.syncWait);
+      S.syncWait = setTimeout(function () { loadHubStatus(); }, 250);
     });
     channel.subscribe(function (status) {
       if (status === 'SUBSCRIBED') {
         S.syncLive = true;
-        stopHubPoll();
         S.syncAt = S.syncAt || Date.now();
         paintSync();
         return;
       }
-      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') startHubPoll();
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') S.syncLive = false;
     });
     S.syncChannel = channel;
     loadHubStatus();
-    setTimeout(function () { if (S.syncStarted && !S.syncLive) startHubPoll(); }, 8000);
+    startFeedPoll();
   }
   function viewHtml(id) {
     var m = S.model;

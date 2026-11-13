@@ -577,3 +577,26 @@ Omit `spine` when it was not built. Goals, Projects, Tasks, and Funnels then say
 Status words the board knows: `active`, `waiting`, `blocked`, `done`, `live`, `draft`, `paused`.
 
 Events and Travel (`events`) is the bot that asks venues, flights, and hotels to sponsor a trip so Cristian can network and film. The board does not book the trip. Winning is computed from the floor log and from cash in the feed. Do not write a fake streak into `spine`.
+
+## `finance`
+
+Optional object on the `today` payload. The Finance desk reads only this key. A missing key, or a signed-out board, shows a SAMPLE fixture and does not invent a private figure. Hollow receivables (`verified` not true) are shown and are not added into the owed total. `leftover.value: null` means the bank is not connected.
+
+```json
+{
+  "finance": {
+    "burn_monthly_by_dept": {
+      "attract": { "monthly": 0, "vendors": [], "powers": "" }
+    },
+    "vendors": [],
+    "capacity": [{ "tool": "", "used": 0, "limit": 0, "pct": 0, "reset": "2026-12-01", "status": "paid", "blocks": "" }],
+    "revenue": { "last_90d": 0, "mtd": 0, "by_month": [], "by_customer": [] },
+    "receivables": [{ "name": "", "amount": 0, "verified": true }],
+    "cashflow": { "daily_history": [{ "date": "2026-11-01", "in": 0, "out": 0 }], "upcoming": [] },
+    "gaps": [{ "what": "", "connect": "" }],
+    "leftover": { "value": null, "reason": "" }
+  }
+}
+```
+
+`capacity.status` is `paid`, `unpaid`, `failed`, or `trial`. Department keys are `attract`, `convert`, `fulfillment`, and `back_office`. The zeros above are the shape, not a reading.

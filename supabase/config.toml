@@ -1,0 +1,6 @@
+project_id = "udkbnlpnfyjuwlstfxhr"
+
+# Public booking endpoint. Visitors do not have a Supabase login.
+# The function uses the service role on the server and checks Origin itself.
+[functions.booking]
+verify_jwt = false

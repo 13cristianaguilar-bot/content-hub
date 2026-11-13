@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Geist:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="../client-deliverables.js"></script>
 <style>
 :root{
   --bg:#080808;--ink:#f6f5f3;--muted:#a3a3a3;--dim:#737373;
@@ -132,6 +133,19 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .score .v.words{font-size:22px;font-weight:750;letter-spacing:-.03em}
 .krow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .plats,.clients{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.clients-core{margin:12px 0}
+.clients-core .ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.client-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cscard{display:flex;flex-direction:column;gap:8px;min-height:44px;min-width:0;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:14px;color:inherit;text-decoration:none}
+.cscard:hover{border-color:rgba(237,48,57,.45)}
+.cscard .who{font-size:18px;font-weight:750;letter-spacing:-.03em;line-height:1.15}
+.cscard .kind{color:var(--muted);font-size:12px;line-height:1.3}
+.cscard ol{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.cscard li{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:13px;line-height:1.3;min-width:0}
+.cscard li span{min-width:0}
+.cscard li b{font-variant-numeric:tabular-nums;flex:none}
+.cscard li.is-wait b{color:var(--red-soft,#ff6a70)}
+.cscard .wait{color:var(--muted);font-size:12px;line-height:1.35}
 .funnel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .game{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:12px;margin-top:12px}
 .kpi{position:relative;background:var(--glass);border:1px solid var(--line);border-radius:16px;box-shadow:inset 3px 0 0 #555,inset 0 1px 0 rgba(255,255,255,.05);min-width:0}
@@ -421,6 +435,7 @@ body[data-ready] .shimmer{display:none}
 .sheet-value.words{font-family:var(--sans);font-size:28px;font-weight:750}
 @media(max-width:1100px){
   .krow,.scores,.plats,.clients,.funnel,.game,.desks{grid-template-columns:1fr 1fr}
+  .client-steps{grid-template-columns:1fr 1fr}
   .vizgrid,.cashviz{grid-template-columns:1fr}
   .funnel{grid-template-columns:1fr 1fr}
 }
@@ -439,7 +454,7 @@ body[data-ready] .shimmer{display:none}
   .guide h2{font-size:22px}
   .guide .btn,.btn,.open,.plus,.chip{min-height:44px}
   .guide .btn{width:100%;text-align:center}
-  .krow,.scores,.plats,.clients,.funnel,.game,.vizgrid,.desks,.cashviz{grid-template-columns:1fr}
+  .krow,.scores,.plats,.clients,.funnel,.game,.vizgrid,.desks,.cashviz,.client-steps{grid-template-columns:1fr}
   .desks{grid-template-columns:1fr 1fr}
   .ticker .tag{display:none}
   .live-age{max-width:42vw}
@@ -966,6 +981,7 @@ footer.site{margin-top:auto}
       <div class="banner" id="banner" hidden>SAMPLE. These figures are layout data. They are not the live feed and they are not saved.</div>
       <div class="banner" id="target-banner" hidden>Targets file did not load. This board is not guessing targets.</div>
       <div class="banner" id="feed-banner" hidden></div>
+      <div id="client-steps-host" hidden></div>
       <section class="lock" id="lock" hidden>
         <h2>Private feed</h2>
         <p id="lock-copy">Sign in as the owner to load the private feed. The sample layout stays on this page without a login.</p>
@@ -1113,6 +1129,10 @@ footer.site{margin-top:auto}
     kpiState: 'signedout',
     kpiRows: [],
     kpiNote: '',
+    clientScripts: null,
+    clientScriptsState: 'idle',
+    clientChannel: null,
+    clientTimer: 0,
     model: null,
     pending: null,
     saving: false,
@@ -5597,12 +5617,78 @@ footer.site{margin-top:auto}
     var btn = rows.length > 4 ? '<button type="button" class="ghost" data-more="today">' + (open ? 'Show less' : 'View all') + '</button>' : '';
     return '<article class="panel" id="today-panel"><div class="ph"><h2>Today</h2>' + btn + '</div>' + body + '</article>';
   }
+  function clientsSectionHtml() {
+    var lib = window.SignalClients;
+    if (!lib) return '<section class="panel clients-core" id="clients-core"><h2>Clients</h2><p class="quiet">The client list did not load.</p></section>';
+    var sample = S.sample || !S.admin;
+    var live = !sample && S.clientScriptsState === 'ready';
+    var rows = sample ? lib.sampleScripts(new Date()) : (S.clientScripts || []);
+    var note = sample
+      ? 'SAMPLE. Script counts on this row are layout data. Stories counts come from the deliverable list.'
+      : (S.clientScriptsState === 'error' ? 'The scripts table did not load.' : (live ? 'Live from the scripts table.' : 'Loading the scripts table.'));
+    var badge = sample ? '<span class="badge">SAMPLE</span>' : '';
+    var cards = lib.board.map(function (slug) {
+      var person = lib.clients[slug] || { label: slug };
+      var summary = (sample || live) ? lib.summarize(slug, rows, new Date()) : null;
+      var steps = lib.steps.map(function (step) {
+        var n = summary ? summary.counts[step.id] : null;
+        var cls = step.id === 'review' && n > 0 ? ' class="is-wait"' : '';
+        return '<li' + cls + '><span>' + esc(step.label) + '</span><b>' + esc(n == null ? '…' : String(n)) + '</b></li>';
+      }).join('');
+      var waiting = summary ? summary.waiting : (S.clientScriptsState === 'error' ? 'Not loaded' : 'Loading');
+      var kind = summary && summary.type === 'stories_coaching' ? 'Stories and coaching' : 'Scripts';
+      return '<a class="cscard" href="' + esc(hubClientHref(slug)) + '"><div class="who">' + esc(person.label) + '</div><div class="kind">' + esc(person.name || '') + ' · ' + esc(kind) + '</div><ol>' + steps + '</ol><p class="wait">' + esc(waiting) + '</p></a>';
+    }).join('');
+    return '<section class="panel clients-core" id="clients-core"><div class="ph"><h2>Clients</h2>' + badge + '</div><p class="sub">' + esc(note) + '</p><div class="client-steps">' + cards + '</div></section>';
+  }
+  function refreshClientStepsDom() {
+    var next = clientsSectionHtml();
+    var cur = document.getElementById('clients-core');
+    if (cur) { cur.outerHTML = next; return; }
+    var host = $('client-steps-host');
+    if (host && !host.hidden) host.innerHTML = next;
+  }
+  async function loadClientScripts() {
+    if (!sb || !S.admin || S.sample) return;
+    var res = await sb.from('scripts').select('id, client_slug, status, batch, reel_number, title, created_at');
+    if (res.error) {
+      S.clientScriptsState = 'error';
+      refreshClientStepsDom();
+      return;
+    }
+    S.clientScripts = res.data || [];
+    S.clientScriptsState = 'ready';
+    refreshClientStepsDom();
+  }
+  function subscribeClientScripts() {
+    if (!sb || S.clientChannel || S.sample || !S.admin || !window.supabase) return;
+    try {
+      S.clientChannel = sb.channel('cc-client-scripts')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'scripts' }, function () {
+          clearTimeout(S.clientTimer);
+          S.clientTimer = setTimeout(function () { loadClientScripts(); }, 150);
+        })
+        .subscribe();
+    } catch (e) {
+      S.clientScriptsState = S.clientScriptsState === 'ready' ? 'ready' : 'error';
+    }
+  }
+  function stopClientScripts() {
+    clearTimeout(S.clientTimer);
+    if (S.clientChannel && sb) {
+      try { sb.removeChannel(S.clientChannel); } catch (e) {}
+    }
+    S.clientChannel = null;
+    S.clientScripts = null;
+    S.clientScriptsState = 'idle';
+  }
   function homeHtml(m) {
     var tiles = '<div class="krow">' + tileHtml(m.metrics.collected) + tileHtml(m.metrics.videos) + tileHtml(m.metrics.booked) + tileHtml(m.metrics.unsent) + '</div>';
     return guideHtml(m) + remindersHtml(m) + '<div class="hero-grid">' + orgHtml(m) + termHtml(m) + '</div>' + gaugeRow(m) + tiles +
       '<div class="two">' + cashChartHtml(m) + donutHtml(m) + '</div>' +
       '<div style="margin-top:12px">' + approvalHtml(m) + '</div>' +
-      '<div class="two">' + compactWins(m) + compactToday(m) + '</div>';
+      '<div class="two">' + compactWins(m) + compactToday(m) + '</div>' +
+      clientsSectionHtml();
   }
   function pillOf(st) {
     var raw = clean(st || '');
@@ -6122,12 +6208,15 @@ footer.site{margin-top:auto}
       el.innerHTML = '';
       el.classList.remove('enter');
     });
+    var host = $('client-steps-host');
     if (locked) {
       S.model = null;
+      if (host) { host.hidden = false; host.innerHTML = clientsSectionHtml(); }
       paintSys();
       markNav();
       return;
     }
+    if (host) { host.hidden = true; host.innerHTML = ''; }
     S.model = buildBoard(S.feed, S.targets, new Date());
     S.spine = spineData();
     markNav();
@@ -6492,7 +6581,8 @@ footer.site{margin-top:auto}
             S.kpiState = 'ready';
             closeSheets();
             paintWho();
-            await Promise.all([refreshKpis(), loadFeed()]);
+            await Promise.all([refreshKpis(), loadFeed(), loadClientScripts()]);
+            subscribeClientScripts();
             renderBoard();
             return;
           }
@@ -6504,8 +6594,11 @@ footer.site{margin-top:auto}
       var user = got.data && got.data.session && got.data.session.user;
       S.user = user || null;
       S.admin = isAdmin(user);
-      if (S.admin) await refreshKpis();
-      else S.kpiState = user ? 'forbidden' : 'signedout';
+      if (S.admin) {
+        await refreshKpis();
+        await loadClientScripts();
+        subscribeClientScripts();
+      } else S.kpiState = user ? 'forbidden' : 'signedout';
     } catch (e) {
       S.kpiState = 'signedout';
     }
@@ -6520,6 +6613,7 @@ footer.site{margin-top:auto}
     }
   }
   function applySignedOut() {
+    stopClientScripts();
     if (!S.user && !S.admin && (S.sample || S.feedState === 'locked' || S.feedState === 'checking')) {
       S.user = null;
       S.admin = false;

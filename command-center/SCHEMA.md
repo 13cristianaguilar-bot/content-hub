@@ -580,23 +580,38 @@ Events and Travel (`events`) is the bot that asks venues, flights, and hotels to
 
 ## `finance`
 
-Optional object on the `today` payload. The Finance desk reads only this key. A missing key, or a signed-out board, shows a SAMPLE fixture and does not invent a private figure. Hollow receivables (`verified` not true) are shown and are not added into the owed total. `leftover.value: null` means the bank is not connected.
+Optional object on the `today` payload. The Finance desk reads only this key. A missing key, or a signed-out board, shows a SAMPLE fixture and does not invent a private figure. Hollow receivables (`verified` not true) are shown and are not added into the owed total. `leftover.value: null` means the bank is not connected. The reason string from the feed is shown next to **Connect bank to see leftover**.
 
 ```json
 {
   "finance": {
+    "updated_at": null,
+    "sources": [],
     "burn_monthly_by_dept": {
-      "attract": { "monthly": 0, "vendors": [], "powers": "" }
+      "attract": null,
+      "convert": null,
+      "fulfillment": null,
+      "back_office": null,
+      "total": null,
+      "notes": ""
     },
-    "vendors": [],
-    "capacity": [{ "tool": "", "used": 0, "limit": 0, "pct": 0, "reset": "2026-12-01", "status": "paid", "blocks": "" }],
-    "revenue": { "last_90d": 0, "mtd": 0, "by_month": [], "by_customer": [] },
-    "receivables": [{ "name": "", "amount": 0, "verified": true }],
-    "cashflow": { "daily_history": [{ "date": "2026-11-01", "in": 0, "out": 0 }], "upcoming": [] },
-    "gaps": [{ "what": "", "connect": "" }],
+    "vendors": [{ "dept": "attract", "name": "", "amount": null, "source": "", "status": "paid", "cadence": "monthly", "card_last4": "", "next_charge": null }],
+    "capacity": [{ "tool": "", "plan": "", "unit": "", "used": null, "limit": null, "pct": null, "status": "paid", "blocks": "", "resets_at": null }],
+    "revenue": {
+      "last_90d": null,
+      "mtd": null,
+      "by_month": [{ "month": "", "amount": null, "note": "" }],
+      "by_customer": [{ "name": "", "email": "", "amount": null, "source": "", "verified": true }]
+    },
+    "receivables": [{ "who": "", "amount": null, "due": null, "source": "", "status": "", "verified": false }],
+    "cashflow": {
+      "daily_history": [{ "date": null, "in": null, "out": null }],
+      "upcoming": [{ "date": null, "label": "", "amount": null, "direction": "out", "verified": true }]
+    },
+    "gaps": [{ "missing": "", "closes_with": "" }],
     "leftover": { "value": null, "reason": "" }
   }
 }
 ```
 
-`capacity.status` is `paid`, `unpaid`, `failed`, or `trial`. Department keys are `attract`, `convert`, `fulfillment`, and `back_office`. The zeros above are the shape, not a reading.
+Department values are monthly numbers, not nested objects. `capacity.status` is `paid`, `unpaid`, `failed`, `trial`, or `unknown`. Unpaid and failed show the `blocks` line. The nulls above are the shape, not a reading.

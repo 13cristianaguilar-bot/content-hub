@@ -28,6 +28,8 @@ h1 span{color:var(--acc)}
 .btn{flex:1;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:15px;font-weight:600;text-align:center;cursor:pointer}
 .btn.pri{background:var(--acc);color:#04130a;border-color:var(--acc)}
 input[type=file]{display:none}
+.quick input{font-size:19px;padding:15px}
+details summary{padding:8px 0;cursor:pointer}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px}
 .result{display:none}
 .result h2{margin:0 0 4px;font-size:20px}
@@ -196,7 +198,7 @@ window.addEventListener("online", () => flushQueue().then(refresh));
 
 const LABEL = { in_crm: "In CRM", pending_crm: "CRM pending", needs_review: "Needs review", processing: "Processing", queued: "Saved on phone", error: "Error" };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const title = (e) => e.name || [e.firstName, e.lastName].filter(Boolean).join(" ") || e.business || "Unknown lead";
+const title = (e) => e.name || [e.firstName, e.lastName].filter(Boolean).join(" ") || e.business || "Unreviewed photo";
 const fmtPhone = (p) => { const d = (p || "").replace(/\D/g, "").replace(/^1(?=\d{10}$)/, ""); return d.length === 10 ? `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}` : p; };
 
 function showResult(c) {
@@ -219,19 +221,50 @@ async function refresh() {
   $("items").innerHTML = html || `<p class="k">Nothing yet. Snap your first lead.</p>`;
 }
 
-const EDIT = [["firstName", "First name"], ["lastName", "Last name"], ["business", "Business"], ["title", "Title"], ["phone", "Phone"], ["email", "Email"], ["website", "Website"], ["address1", "Street"], ["city", "City"], ["state", "State"], ["postalCode", "ZIP"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["trade", "Trade / niche"]];
-function openItem(id) {
+const EDIT = [["title", "Title"], ["website", "Website"], ["address1", "Street"], ["city", "City"], ["state", "State"], ["postalCode", "ZIP"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["trade", "Trade / niche"]];
+function openItem(id, autoRead = true) {
   const c = STATE.items.find((x) => x.id === id); if (!c) return;
   const e = c.extracted || {};
-  $("sheetIn").innerHTML = `${c.photo_url ? `<img src="${c.photo_url}">` : ""}<p><span class="badge b-${c.status}">${LABEL[c.status] || c.status}</span> <span class="k">${esc(c.place || "")}</span></p>${c.error ? `<div class="err">${esc(c.error)}</div>` : ""}<div class="edit">${EDIT.map(([k, l]) => `<label>${l}</label><input data-k="${k}" value="${esc(e[k] || "")}">`).join("")}<label>My note</label><textarea id="editNote">${esc(c.note || "")}</textarea><label>Text read from photo</label><textarea readonly>${esc(e.rawText || c.ocr_text || "")}</textarea></div><div class="row"><button class="btn" onclick="closeSheet()">Close</button><button class="btn pri" id="saveBtn">Save${STATE.crm ? " + push to CRM" : ""}</button></div><div class="row"><button class="btn" onclick="archiveItem('${id}')">Archive</button></div>`;
+  const fullName = e.name || [e.firstName, e.lastName].filter(Boolean).join(" ");
+  $("sheetIn").innerHTML = `${c.photo_url ? `<img src="${c.photo_url}">` : ""}
+  <p><span class="badge b-${c.status}">${LABEL[c.status] || c.status}</span> <span class="k">${esc(c.place || "")}</span></p>
+  ${c.error ? `<div class="err">${esc(c.error)}</div>` : ""}
+  <div id="aiRow"></div>
+  <div class="edit quick">
+    <div class="k" style="margin-top:6px">Quick entry</div>
+    <label>Name</label><input id="qName" autocomplete="off" autocapitalize="words" value="${esc(fullName)}" placeholder="Full name">
+    <label>Phone</label><input id="qPhone" type="tel" inputmode="tel" value="${esc(fmtPhone(e.phone || ""))}" placeholder="(512) 555-0123">
+    <label>Email</label><input id="qEmail" type="email" inputmode="email" autocapitalize="off" value="${esc(e.email || "")}">
+    <label>Business</label><input id="qBiz" autocapitalize="words" value="${esc(e.business || "")}">
+  </div>
+  <div class="row"><button class="btn pri" id="saveBtn">Save${STATE.crm ? " + push to CRM" : ""}</button></div>
+  <details style="margin-top:12px"><summary class="k">More fields, note, text from photo</summary>
+  <div class="edit">${EDIT.map(([k, l]) => `<label>${l}</label><input data-k="${k}" value="${esc(e[k] || "")}">`).join("")}<label>My note</label><textarea id="editNote">${esc(c.note || "")}</textarea><label>Text read from photo</label><textarea readonly>${esc(e.rawText || c.ocr_text || "")}</textarea></div>
+  </details>
+  <div class="row"><button class="btn" onclick="closeSheet()">Close</button><button class="btn" onclick="archiveItem('${id}')">Archive</button></div>
+  <div class="k" style="margin-top:8px">${esc(c.extractor || "")}</div>`;
+  if (STATE.vision && c.photo_path) {
+    $("aiRow").innerHTML = `<div class="row"><button class="btn" id="aiBtn">Re-read photo with AI</button></div>`;
+    $("aiBtn").onclick = () => reRead(id);
+    if (autoRead && c.status === "needs_review" && !/vision/.test(c.extractor || "")) reRead(id);
+  }
   $("saveBtn").onclick = async () => {
     const fields = {}; document.querySelectorAll("#sheetIn input[data-k]").forEach((i) => (fields[i.dataset.k] = i.value.trim()));
-    if (fields.firstName || fields.lastName) fields.name = [fields.firstName, fields.lastName].filter(Boolean).join(" ");
+    const nm = $("qName").value.trim().replace(/\s+/g, " "); const parts = nm.split(" ").filter(Boolean);
+    Object.assign(fields, { name: nm, firstName: parts[0] || "", lastName: parts.slice(1).join(" "), phone: $("qPhone").value.trim(), email: $("qEmail").value.trim().toLowerCase(), business: $("qBiz").value.trim() });
     $("saveBtn").textContent = "Saving…";
     try { const j = await api("update", { id, fields, note: $("editNote").value }); closeSheet(); showResult(j.capture); refresh(); }
     catch (err) { $("saveBtn").textContent = "Retry"; alert(err.message); }
   };
   $("sheet").style.display = "flex";
+}
+async function reRead(id) {
+  const btn = $("aiBtn"); if (btn) { btn.textContent = "Reading with AI…"; btn.disabled = true; }
+  try {
+    const j = await api("reextract", { id });
+    const i = STATE.items.findIndex((x) => x.id === id); if (i >= 0) STATE.items[i] = j.capture;
+    openItem(id, false); refresh();
+  } catch (err) { if (btn) { btn.textContent = "Re-read photo with AI"; btn.disabled = false; } alert(err.message); }
 }
 function closeSheet() { $("sheet").style.display = "none"; }
 $("sheet").onclick = (e) => { if (e.target.id === "sheet") closeSheet(); };

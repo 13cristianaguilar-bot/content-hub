@@ -951,6 +951,8 @@ footer.site{margin-top:auto}
 .name-tag{font-family:var(--sans);font-weight:750;letter-spacing:0}
 .money-chip.is-bright{background:#ed3039;border-color:#ed3039;font-weight:800}
 .money-chip.is-mute{color:#8d8d8d;font-weight:500;background:rgba(18,18,18,.88);border-color:rgba(255,255,255,.12)}
+.money-chip.is-tight{padding:1px 4px;font-size:9px;letter-spacing:-.05em}
+.disc:not(.is-settled) .orbit,.disc:not(.is-settled) .chip-layer{visibility:hidden}
 .blip.is-hollow .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
 .blip.is-hollow.is-soon .dot{box-shadow:0 0 0 1.5px #fff}
 .leader{position:absolute;height:1px;background:rgba(255,255,255,.38);transform-origin:0 50%;pointer-events:none;z-index:4}
@@ -2914,6 +2916,27 @@ footer.site{margin-top:auto}
     if (row.moneyKind === 'contingent') return '~' + n;
     return n;
   }
+  function signalChipForms(row) {
+    var full = signalChipText(row);
+    if (!full) return [];
+    var forms = [full];
+    var fit = moneyFit(row.amount);
+    var mid = fit;
+    if (row.moneyKind === 'monthly' || row.moneyKind === 'commission') mid = fit + '/mo';
+    else if (row.moneyKind === 'contingent') mid = '~' + fit;
+    if (row.moneyKind === 'commission') {
+      var ea = moneyShort(row.amount) + '/mo';
+      if (forms.indexOf(ea) < 0) forms.push(ea);
+    }
+    if (forms.indexOf(mid) < 0) forms.push(mid);
+    return forms;
+  }
+  function signalTagLimit() {
+    var w = window.innerWidth || 1280;
+    if (w <= 400) return 0;
+    if (w <= 480) return 2;
+    return 3;
+  }
   function signalCatName(cat) {
     if (cat === 'cash_now') return 'Cash now';
     if (cat === 'future_money') return 'Future money';
@@ -3000,9 +3023,8 @@ footer.site{margin-top:auto}
     var half = disc / 2;
     var maxR = half - 16;
     pill = pill && pill.hw ? pill : { hw: Math.max(42, half * 0.24), hh: 22 };
-    var corner = Math.hypot(pill.hw + 8, pill.hh + 8);
-    var minR = Math.max(corner, 30);
-    if (minR > maxR - 22) minR = Math.max(26, maxR - 22);
+    var corner = Math.hypot(pill.hw + 6, pill.hh + 6);
+    var minR = Math.max(corner, 28);
     var fracs = [0.34, 0.52, 0.72, 0.9];
     var groups = {};
     CATS.forEach(function (c) { groups[c] = [[], [], [], []]; });
@@ -3019,13 +3041,26 @@ footer.site{margin-top:auto}
     function hits(ang, rad, reach) {
       var p = xy(ang, rad);
       var i, o, q, dx, dy, need;
-      if (rad - reach < minR) return true;
-      if (rad + reach > maxR) return true;
-      var px = Math.max(-(pill.hw + 8), Math.min(pill.hw + 8, p.x));
-      var py = Math.max(-(pill.hh + 8), Math.min(pill.hh + 8, p.y));
+      if (rad - reach < minR - 2) return true;
+      if (rad + reach > maxR + 10) return true;
+      var px = Math.max(-(pill.hw + 6), Math.min(pill.hw + 6, p.x));
+      var py = Math.max(-(pill.hh + 6), Math.min(pill.hh + 6, p.y));
       dx = p.x - px;
       dy = p.y - py;
-      if (dx * dx + dy * dy < reach * reach) return true;
+      if (dx * dx + dy * dy < (reach + 2) * (reach + 2)) return true;
+      var labels = [['CASH', 0], ['FUTURE', 72], ['CLIENTS', 144], ['CONTENT', 216], ['OPS', 288]];
+      var li, lab, lp, hw, hh, nx, ny;
+      for (li = 0; li < labels.length; li++) {
+        lab = labels[li];
+        lp = xy(lab[1], maxR + 18);
+        hw = lab[0].length * 3.8 + 2;
+        hh = 9;
+        nx = Math.max(lp.x - hw, Math.min(lp.x + hw, p.x));
+        ny = Math.max(lp.y - hh, Math.min(lp.y + hh, p.y));
+        dx = p.x - nx;
+        dy = p.y - ny;
+        if (dx * dx + dy * dy < (reach + 3) * (reach + 3)) return true;
+      }
       for (i = 0; i < placed.length; i++) {
         o = placed[i];
         q = xy(o.ang, o.rad);
@@ -3036,6 +3071,31 @@ footer.site{margin-top:auto}
       }
       return false;
     }
+    var maxReach = [0, 0, 0, 0];
+    CATS.forEach(function (cat) {
+      var ring;
+      for (ring = 0; ring < 4; ring++) {
+        groups[cat][ring].forEach(function (row) {
+          var reach = signalDotPx(row.amount) / 2;
+          if (reach > maxReach[ring]) maxReach[ring] = reach;
+        });
+      }
+    });
+    var ringRad = fracs.map(function (f, ring) {
+      return Math.max(minR + maxReach[ring], Math.min(maxR - 8, f * maxR));
+    });
+    var ringHold;
+    for (ringHold = 1; ringHold < 4; ringHold++) {
+      if (ringRad[ringHold] < ringRad[ringHold - 1] + 6) ringRad[ringHold] = ringRad[ringHold - 1] + 6;
+    }
+    var outerCap = maxR + 6 - maxReach[3];
+    if (ringRad[3] > outerCap) {
+      var over = ringRad[3] - outerCap;
+      for (ringHold = 3; ringHold >= 0; ringHold--) {
+        var floor = ringHold === 0 ? (minR + maxReach[0]) : (ringRad[ringHold - 1] + 6);
+        ringRad[ringHold] = Math.max(floor, ringRad[ringHold] - over);
+      }
+    }
     CATS.forEach(function (cat, ci) {
       var center = ci * 72;
       var ring, list, i, row, r, base, ang, rad, tries, spread;
@@ -3044,23 +3104,20 @@ footer.site{margin-top:auto}
         for (i = 0; i < list.length; i++) {
           row = list[i];
           r = signalDotPx(row.amount) / 2;
-          base = Math.max(minR + r, Math.min(maxR - r, fracs[ring] * maxR));
-          spread = list.length <= 1 ? 0 : ((i - (list.length - 1) / 2) * Math.min(14, 48 / list.length));
+          base = ringRad[ring];
+          spread = list.length <= 1 ? 0 : ((i - (list.length - 1) / 2) * Math.min(12, 44 / list.length));
           ang = center + spread;
           rad = base;
           tries = 0;
           while (tries < 28 && hits(ang, rad, r)) {
-            ang = center + spread + ((tries % 2 ? 1 : -1) * Math.ceil((tries + 1) / 2) * 3);
-            if (ang < center - 30 || ang > center + 30) {
-              ang = Math.max(center - 30, Math.min(center + 30, ang));
-              rad = Math.min(maxR - r, base + 4 + tries);
-            }
+            var step = Math.ceil((tries + 1) / 2) * 2;
+            ang = center + (tries % 2 ? step : -step);
+            if (ang < center - 34) ang = center - 34;
+            if (ang > center + 34) ang = center + 34;
             tries += 1;
           }
-          if (ang < center - 30) ang = center - 30;
-          if (ang > center + 30) ang = center + 30;
-          if (rad < minR + r) rad = minR + r;
-          if (rad > maxR - r) rad = Math.max(minR, maxR - r);
+          if (ang < center - 34) ang = center - 34;
+          if (ang > center + 34) ang = center + 34;
           var spot = { id: row.id, ang: ang, rad: rad, r: r, cat: cat, ring: ring, top: (0.5 - rad / disc) * 100 };
           placed.push(spot);
           spots[row.id] = spot;
@@ -3084,8 +3141,8 @@ footer.site{margin-top:auto}
       ['Ops', 288, '--cat-ops']
     ];
     names.forEach(function (n) {
-      var p = pct(n[1], maxR + 12);
-      var w = n[0].length * 6.2;
+      var p = pct(n[1], maxR + 18);
+      var w = n[0].length * 8.6;
       obstacles.push({ kind: 'r', x: p.x / 100 * disc - w / 2, y: p.y / 100 * disc - 7, w: w, h: 14 });
     });
     function overlaps(box) {
@@ -3172,7 +3229,8 @@ footer.site{margin-top:auto}
       var p = xy(spot.ang, spot.rad);
       var w = Math.max(44, text.length * 7.2 + 16);
       var found = park(disc / 2 + p.x, disc / 2 + p.y, w, 16, spot.ang, spot.rad);
-      spot.tag = { x: found ? found.x : 50, y: found ? found.y : 50, text: text };
+      var home = pct(spot.ang, spot.rad);
+      spot.tag = { x: found ? found.x : home.x, y: found ? found.y : home.y, text: text };
     });
     var ringTop = fracs.map(function (f) {
       var rad = Math.max(minR, Math.min(maxR, f * maxR));
@@ -3310,7 +3368,7 @@ footer.site{margin-top:auto}
     }).join('');
     var wedgeNames = (place.names || []).map(function (n) {
       var a = n[1] * Math.PI / 180;
-      var rad = (place.maxR || 0) + 12;
+      var rad = (place.maxR || 0) + 18;
       var x = 50 + Math.sin(a) * (rad / place.disc) * 100;
       var y = 50 - Math.cos(a) * (rad / place.disc) * 100;
       return '<b style="--x:' + x.toFixed(1) + '%;--y:' + y.toFixed(1) + '%;color:var(' + n[2] + ')">' + n[0] + '</b>';
@@ -3328,8 +3386,11 @@ footer.site{margin-top:auto}
       if (!chipText) return;
       var bright = row.confidence === 'guaranteed' ? ' is-bright' : '';
       var mute = signalHollow(row) ? ' is-mute' : '';
-      var cx = spot.chip ? spot.chip.x : 50;
-      var cy = spot.chip ? spot.chip.y : 50;
+      var chipAng = (spot.ang || 0) * Math.PI / 180;
+      var chipRad = spot.rad || 0;
+      var chipDisc = place.disc || 1;
+      var cx = spot.chip ? spot.chip.x : (50 + Math.sin(chipAng) * (chipRad / chipDisc) * 100);
+      var cy = spot.chip ? spot.chip.y : (50 - Math.cos(chipAng) * (chipRad / chipDisc) * 100);
       chips += '<span class="money-chip' + bright + mute + '" data-chip="' + esc(id) + '" style="left:' + cx.toFixed(1) + '%;top:' + cy.toFixed(1) + '%">' + esc(chipText) + '</span>';
       if (spot.tag) chips += '<span class="name-tag" data-tag="' + esc(id) + '" style="left:' + spot.tag.x.toFixed(1) + '%;top:' + spot.tag.y.toFixed(1) + '%">' + esc(spot.tag.text) + '</span>';
     });
@@ -3516,58 +3577,55 @@ footer.site{margin-top:auto}
   function signalPad(r, n) {
     return { left: r.left - n, top: r.top - n, right: r.right + n, bottom: r.bottom + n };
   }
-  function signalPushDots(disc) {
-    var core = disc.querySelector('.core');
-    if (!core) return;
-    var guard = 0;
-    function centerDist(rect) {
-      var db = disc.getBoundingClientRect();
-      var x = rect.left + rect.width / 2 - (db.left + db.width / 2);
-      var y = rect.top + rect.height / 2 - (db.top + db.height / 2);
-      return Math.hypot(x, y);
-    }
-    function nudgeOut(dot, step) {
-      var blip = dot.closest('.blip');
-      if (!blip) return false;
-      var cur = parseFloat(blip.style.getPropertyValue('--top'));
-      if (!isFinite(cur)) cur = 34;
-      var db = disc.getBoundingClientRect();
-      var rect = dot.getBoundingClientRect();
-      var limit = db.width / 2 - rect.width / 2 - 3;
-      if (centerDist(rect) >= limit - 0.5) return false;
-      var next = Math.max(5, cur - step);
-      if (next >= cur - 0.05) return false;
-      blip.style.setProperty('--top', next.toFixed(2) + '%');
-      return true;
-    }
-    while (guard < 36) {
-      guard += 1;
-      var moved = false;
-      var pill = signalPad(core.getBoundingClientRect(), 8);
-      var dots = Array.prototype.slice.call(disc.querySelectorAll('.dot'));
-      dots.forEach(function (dot) {
-        var rect = dot.getBoundingClientRect();
-        if (rect.width < 1) return;
-        if (signalBoxHit(rect, pill, 0) && nudgeOut(dot, 2.2)) moved = true;
+  function signalOverlapArea(a, b) {
+    var left = Math.max(a.left, b.left);
+    var right = Math.min(a.right, b.right);
+    var top = Math.max(a.top, b.top);
+    var bottom = Math.min(a.bottom, b.bottom);
+    var w = right - left;
+    var h = bottom - top;
+    if (w <= 0 || h <= 0) return 0;
+    return w * h;
+  }
+  function signalDotItems(disc) {
+    var cats = ['cash_now', 'future_money', 'clients', 'content', 'ops'];
+    var items = [];
+    Array.prototype.forEach.call(disc.querySelectorAll('.arm'), function (arm) {
+      var blip = arm.querySelector('.blip');
+      var dot = blip && blip.querySelector('.dot');
+      if (!blip || !dot) return;
+      var id = blip.getAttribute('data-id') || '';
+      var row = signalRowById(id);
+      var spot = S.signalSpots && S.signalSpots.spots && S.signalSpots.spots[id];
+      var cat = (row && row.cat) || (spot && spot.cat) || 'ops';
+      var ci = cats.indexOf(cat);
+      items.push({
+        arm: arm,
+        blip: blip,
+        dot: dot,
+        id: id,
+        ring: spot && spot.ring != null ? spot.ring : (row ? signalRing(row) : 3),
+        center: (ci < 0 ? 4 : ci) * 72
       });
-      var i, j, a, b;
-      for (i = 0; i < dots.length; i++) {
-        for (j = i + 1; j < dots.length; j++) {
-          a = dots[i].getBoundingClientRect();
-          b = dots[j].getBoundingClientRect();
-          if (a.width < 1 || b.width < 1 || !signalBoxHit(a, b, 1)) continue;
-          var victim = centerDist(a) >= centerDist(b) ? dots[i] : dots[j];
-          if (nudgeOut(victim, 1.5)) moved = true;
-        }
-      }
-      if (!moved) break;
-    }
+    });
+    items.sort(function (a, b) {
+      if (a.ring !== b.ring) return a.ring - b.ring;
+      if (a.id < b.id) return -1;
+      if (a.id > b.id) return 1;
+      return 0;
+    });
+    return items;
+  }
+  function signalDotRad(disc, blip) {
+    var top = parseFloat(blip.style.getPropertyValue('--top'));
+    if (!isFinite(top)) top = 34;
+    var w = disc.getBoundingClientRect().width || 1;
+    return w * (0.5 - top / 100);
   }
   function signalPlaceChips(disc) {
     var layer = disc.querySelector('.chip-layer');
     var core = disc.querySelector('.core');
     if (!layer || !core) return;
-    var wrap = disc.parentElement || disc;
     var cats = ['cash_now', 'future_money', 'clients', 'content', 'ops'];
     var narrow = (window.innerWidth || 1280) <= 800;
     var leaders = layer.querySelector('.leaders');
@@ -3579,78 +3637,72 @@ footer.site{margin-top:auto}
     leaders.innerHTML = '';
     var chips = Array.prototype.slice.call(layer.querySelectorAll('.money-chip'));
     var tags = Array.prototype.slice.call(layer.querySelectorAll('.name-tag'));
-    Array.prototype.forEach.call(layer.querySelectorAll('.wedge-more'), function (btn) { btn.style.visibility = 'hidden'; });
-    chips.forEach(function (el) { el.style.visibility = 'hidden'; });
+    var mores = Array.prototype.slice.call(layer.querySelectorAll('.wedge-more'));
+    chips.forEach(function (el) { el.style.visibility = 'hidden'; el.classList.remove('is-tight'); });
     tags.forEach(function (el) { el.style.visibility = 'hidden'; });
-    function obstacles() {
-      var list = [signalPad(core.getBoundingClientRect(), 8)];
-      Array.prototype.forEach.call(disc.querySelectorAll('.dot'), function (dot) {
-        var r = dot.getBoundingClientRect();
-        if (r.width >= 1) list.push(signalPad(r, 2));
-      });
-      Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.width >= 1) list.push(signalPad(r, 2));
-      });
-      var root = disc.closest('.snx') || disc;
-      Array.prototype.forEach.call(root.querySelectorAll('.ring-tags span'), function (el) {
-        var r = el.getBoundingClientRect();
-        if (r.width >= 1) list.push(signalPad(r, 2));
-      });
-      chips.forEach(function (el) {
-        if (el.style.visibility === 'hidden') return;
-        list.push(el.getBoundingClientRect());
-      });
-      tags.forEach(function (el) {
-        if (el.style.visibility === 'hidden') return;
-        list.push(el.getBoundingClientRect());
-      });
-      Array.prototype.forEach.call(layer.querySelectorAll('.wedge-more'), function (el) {
-        if (el.style.visibility === 'hidden') return;
-        list.push(el.getBoundingClientRect());
-      });
-      return list;
+    mores.forEach(function (el) { el.style.visibility = 'hidden'; });
+    var blocked = [];
+    function addRect(r) {
+      if (!r) return;
+      var w = r.width != null && isFinite(r.width) ? r.width : (r.right - r.left);
+      var h = r.height != null && isFinite(r.height) ? r.height : (r.bottom - r.top);
+      if (w >= 1 && h >= 1) blocked.push(r);
     }
-    function blocked(box, list) {
-      var bounds = wrap.getBoundingClientRect();
-      if (box.left < bounds.left + 1 || box.top < bounds.top + 1 || box.right > bounds.right - 1 || box.bottom > bounds.bottom - 1) return true;
+    addRect(signalPad(core.getBoundingClientRect(), 2));
+    Array.prototype.forEach.call(disc.querySelectorAll('.dot'), function (dot) { addRect(signalPad(dot.getBoundingClientRect(), 1)); });
+    Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) { addRect(signalPad(el.getBoundingClientRect(), 2)); });
+    var root = disc.closest('.snx') || disc;
+    Array.prototype.forEach.call(root.querySelectorAll('.ring-tags span'), function (el) { addRect(signalPad(el.getBoundingClientRect(), 1)); });
+    var legend = root.querySelector('.snx-legend-bar');
+    if (legend) addRect(legend.getBoundingClientRect());
+    var limit = root.getBoundingClientRect();
+    function clearBox(box) {
+      if (!box || box.width < 1 || box.height < 1) return false;
+      if (box.left < 1 || box.top < 1 || box.right > (window.innerWidth || 0) - 1 || box.bottom > (window.innerHeight || 0) - 1) return false;
+      if (box.left < limit.left - 2 || box.top < limit.top - 2 || box.right > limit.right + 2 || box.bottom > limit.bottom - 2) return false;
       var i;
-      for (i = 0; i < list.length; i++) if (signalBoxHit(box, list[i], 1)) return true;
-      return false;
+      for (i = 0; i < blocked.length; i++) if (signalBoxHit(box, blocked[i], 0)) return false;
+      return true;
     }
-    function parkBox(anchor, w, h) {
-      var dirs = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, 1], [1, -1], [-1, -1], [1.6, 0.2], [-1.6, 0.2], [0.2, 1.6], [-0.2, 1.6]];
-      var list = obstacles();
-      var step, d, dist, box;
+    function moveTo(el, cx, cy) {
+      var db = disc.getBoundingClientRect();
+      el.style.left = ((cx - db.left) / db.width * 100).toFixed(2) + '%';
+      el.style.top = ((cy - db.top) / db.height * 100).toFixed(2) + '%';
+      var rect = el.getBoundingClientRect();
+      var ox = (rect.left + rect.right) / 2 - cx;
+      var oy = (rect.top + rect.bottom) / 2 - cy;
+      if (Math.abs(ox) > 0.75 || Math.abs(oy) > 0.75) {
+        el.style.left = ((cx - ox - db.left) / db.width * 100).toFixed(2) + '%';
+        el.style.top = ((cy - oy - db.top) / db.height * 100).toFixed(2) + '%';
+        rect = el.getBoundingClientRect();
+      }
+      return rect;
+    }
+    function trySides(el, anchor) {
+      var dirs = [[1, 0], [-1, 0], [0, -1], [0, 1], [1, -1], [-1, -1], [1, 1], [-1, 1]];
+      var w = Math.max(18, el.offsetWidth || 28);
+      var h = Math.max(12, el.offsetHeight || 14);
       var ax = anchor.left + anchor.width / 2;
       var ay = anchor.top + anchor.height / 2;
-      for (step = 0; step < 16; step++) {
-        dist = 6 + step * 7;
+      var step, d, dist, rect;
+      for (step = 0; step < 12; step++) {
+        dist = anchor.width / 2 + Math.max(w, h) / 2 + 4 + step * 7;
         for (d = 0; d < dirs.length; d++) {
-          box = { left: ax + dirs[d][0] * dist - w / 2, top: ay + dirs[d][1] * dist - h / 2, right: 0, bottom: 0 };
-          box.right = box.left + w;
-          box.bottom = box.top + h;
-          if (!blocked(box, list)) return box;
+          if (step < 8 && d > 3) continue;
+          rect = moveTo(el, ax + dirs[d][0] * dist, ay + dirs[d][1] * dist);
+          if (clearBox(rect)) return rect;
         }
       }
       return null;
     }
-    function putCenter(el, box) {
-      var db = disc.getBoundingClientRect();
-      var cx = (box.left + box.right) / 2;
-      var cy = (box.top + box.bottom) / 2;
-      el.style.left = ((cx - db.left) / db.width * 100).toFixed(2) + '%';
-      el.style.top = ((cy - db.top) / db.height * 100).toFixed(2) + '%';
-      el.style.visibility = '';
-    }
-    function leader(dot, box) {
+    function leader(dot, rect) {
       var db = disc.getBoundingClientRect();
       var x1 = dot.left + dot.width / 2;
       var y1 = dot.top + dot.height / 2;
-      var x2 = (box.left + box.right) / 2;
-      var y2 = (box.top + box.bottom) / 2;
+      var x2 = (rect.left + rect.right) / 2;
+      var y2 = (rect.top + rect.bottom) / 2;
       var len = Math.hypot(x2 - x1, y2 - y1);
-      if (len < dot.width / 2 + 16) return;
+      if (len < dot.width / 2 + 14) return;
       var line = document.createElement('i');
       line.className = 'leader';
       line.style.left = ((x1 - db.left) / db.width * 100).toFixed(2) + '%';
@@ -3659,13 +3711,23 @@ footer.site{margin-top:auto}
       line.style.transform = 'rotate(' + (Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI).toFixed(2) + 'deg)';
       leaders.appendChild(line);
     }
+    function dotFor(id) {
+      var found = null;
+      Array.prototype.forEach.call(disc.querySelectorAll('.blip'), function (node) {
+        if (!found && node.getAttribute('data-id') === id) found = node.querySelector('.dot');
+      });
+      return found;
+    }
     var ranked = chips.map(function (el) {
       return { el: el, row: signalRowById(el.getAttribute('data-chip')) };
     }).filter(function (item) { return item.row; });
     ranked.sort(function (a, b) {
       var ar = signalRing(a.row), br = signalRing(b.row);
       if (ar !== br) return ar - br;
-      return (b.row.amount || 0) - (a.row.amount || 0);
+      var aa = a.row.amount == null ? -1 : a.row.amount;
+      var ba = b.row.amount == null ? -1 : b.row.amount;
+      if (aa !== ba) return ba - aa;
+      return a.row.index - b.row.index;
     });
     var shown = {};
     var hidden = {};
@@ -3674,22 +3736,32 @@ footer.site{margin-top:auto}
       var cat = cats.indexOf(item.row.cat) >= 0 ? item.row.cat : 'ops';
       var open = S.wedgeOpen && S.wedgeOpen[cat];
       if (narrow && !open && shown[cat] >= 2) { hidden[cat] += 1; return; }
-      var blip = null;
-      Array.prototype.forEach.call(disc.querySelectorAll('.blip'), function (node) {
-        if (!blip && node.getAttribute('data-id') === item.row.id) blip = node.querySelector('.dot');
-      });
-      var anchor = blip ? blip.getBoundingClientRect() : disc.getBoundingClientRect();
-      var w = Math.max(28, item.el.offsetWidth || 36);
-      var h = Math.max(14, item.el.offsetHeight || 16);
-      var box = parkBox(anchor, w, h);
-      if (!box) { hidden[cat] += 1; return; }
-      putCenter(item.el, box);
-      leader(anchor, box);
+      var dot = dotFor(item.row.id);
+      var anchor = dot ? dot.getBoundingClientRect() : disc.getBoundingClientRect();
+      var forms = signalChipForms(item.row);
+      var placed = null;
+      var fi, tight;
+      for (fi = 0; fi < forms.length && !placed; fi++) {
+        for (tight = 0; tight < 2 && !placed; tight++) {
+          item.el.textContent = forms[fi];
+          item.el.classList.toggle('is-tight', tight === 1);
+          placed = trySides(item.el, anchor);
+        }
+      }
+      if (!placed) {
+        hidden[cat] += 1;
+        item.el.style.visibility = 'hidden';
+        return;
+      }
+      item.el.style.visibility = 'visible';
+      blocked.push(item.el.getBoundingClientRect());
+      if (dot) leader(anchor, item.el.getBoundingClientRect());
       shown[cat] += 1;
     });
     cats.forEach(function (cat) {
       if (!hidden[cat] || (S.wedgeOpen && S.wedgeOpen[cat])) return;
-      var btn = layer.querySelector('.wedge-more[data-id="' + cat + '"]');
+      var btn = null;
+      mores.forEach(function (el) { if (!btn && el.getAttribute('data-id') === cat) btn = el; });
       if (!btn) {
         btn = document.createElement('button');
         btn.type = 'button';
@@ -3697,49 +3769,306 @@ footer.site{margin-top:auto}
         btn.setAttribute('data-snx', 'wedge');
         btn.setAttribute('data-id', cat);
         layer.appendChild(btn);
+        mores.push(btn);
       }
       btn.textContent = '+' + hidden[cat];
       btn.style.visibility = 'hidden';
-      var w = Math.max(28, btn.offsetWidth || 32);
-      var h = Math.max(14, btn.offsetHeight || 16);
       var db = disc.getBoundingClientRect();
-      var cx = db.left + db.width / 2;
-      var cy = db.top + db.height / 2;
       var center = cats.indexOf(cat) * 72;
       var found = null;
-      var step, ang, rad, box;
-      for (step = 0; step < 14 && !found; step++) {
-        ang = (center + (step % 2 ? 1 : -1) * step * 3) * Math.PI / 180;
-        rad = db.width * (0.42 + step * 0.012);
-        box = { left: cx + Math.sin(ang) * rad - w / 2, top: cy - Math.cos(ang) * rad - h / 2, right: 0, bottom: 0 };
-        box.right = box.left + w;
-        box.bottom = box.top + h;
-        if (!blocked(box, obstacles())) found = box;
+      var step, ang, rad, rect;
+      for (step = 0; step < 18 && !found; step++) {
+        ang = (center + (step % 2 ? 1 : -1) * Math.floor(step / 2) * 4) * Math.PI / 180;
+        rad = db.width * (0.36 + (step % 6) * 0.07);
+        rect = moveTo(btn, db.left + db.width / 2 + Math.sin(ang) * rad, db.top + db.height / 2 - Math.cos(ang) * rad);
+        if (clearBox(rect)) found = rect;
       }
-      if (!found) return;
-      putCenter(btn, found);
+      if (!found) { btn.style.visibility = 'hidden'; return; }
+      btn.style.visibility = 'visible';
+      blocked.push(btn.getBoundingClientRect());
     });
+    tags.sort(function (a, b) {
+      var ra = signalRowById(a.getAttribute('data-tag'));
+      var rb = signalRowById(b.getAttribute('data-tag'));
+      var ar = ra ? signalRing(ra) : 9;
+      var br = rb ? signalRing(rb) : 9;
+      if (ar !== br) return ar - br;
+      var aa = ra && ra.amount != null ? ra.amount : -1;
+      var ba = rb && rb.amount != null ? rb.amount : -1;
+      if (aa !== ba) return ba - aa;
+      return (ra ? ra.index : 0) - (rb ? rb.index : 0);
+    });
+    var cap = signalTagLimit();
+    var kept = 0;
     tags.forEach(function (el) {
-      var id = el.getAttribute('data-tag');
-      var dot = null;
-      Array.prototype.forEach.call(disc.querySelectorAll('.blip'), function (node) {
-        if (!dot && node.getAttribute('data-id') === id) dot = node.querySelector('.dot');
-      });
-      if (!dot) return;
-      var anchor = dot.getBoundingClientRect();
-      var w = Math.max(36, el.offsetWidth || 48);
-      var h = Math.max(14, el.offsetHeight || 16);
-      var box = parkBox(anchor, w, h);
-      if (!box) return;
-      putCenter(el, box);
+      if (kept >= cap) { el.style.visibility = 'hidden'; return; }
+      var dot = dotFor(el.getAttribute('data-tag'));
+      if (!dot) { el.style.visibility = 'hidden'; return; }
+      var placed = trySides(el, dot.getBoundingClientRect());
+      if (!placed) { el.style.visibility = 'hidden'; return; }
+      el.style.visibility = 'visible';
+      blocked.push(el.getBoundingClientRect());
+      kept += 1;
     });
+  }
+  function signalCenterBox(disc, rect, pad) {
+    var db = disc.getBoundingClientRect();
+    var cx = db.left + db.width / 2;
+    var cy = db.top + db.height / 2;
+    pad = pad || 0;
+    return {
+      l: rect.left - cx - pad,
+      t: rect.top - cy - pad,
+      r: rect.right - cx + pad,
+      b: rect.bottom - cy + pad
+    };
+  }
+  function signalRelBox(ang, rad, size) {
+    var a = ang * Math.PI / 180;
+    var x = Math.sin(a) * rad;
+    var y = -Math.cos(a) * rad;
+    var h = size / 2;
+    return { l: x - h, r: x + h, t: y - h, b: y + h };
+  }
+  function signalRectHit(a, b, gap) {
+    gap = gap || 0;
+    return a.l < b.r + gap && a.r + gap > b.l && a.t < b.b + gap && a.b + gap > b.t;
+  }
+  function signalSolveWedge(list, obstacles) {
+    var rings = {};
+    list.forEach(function (it) {
+      var key = String(it.ring);
+      if (!rings[key]) rings[key] = [];
+      rings[key].push(it);
+    });
+    var groups = Object.keys(rings).map(function (k) { return rings[k]; });
+    groups.sort(function (a, b) {
+      if (a.length !== b.length) return b.length - a.length;
+      return b[0].ring - a[0].ring;
+    });
+    groups.forEach(function (group) {
+      group.sort(function (a, b) {
+        if (a.size !== b.size) return b.size - a.size;
+        if (a.id < b.id) return -1;
+        if (a.id > b.id) return 1;
+        return 0;
+      });
+    });
+    var offsets = [0];
+    var k;
+    for (k = 2; k <= 34; k += 2) { offsets.push(-k); offsets.push(k); }
+    var placed = obstacles.slice();
+    var nodes = 0;
+    var found = false;
+    function blocked(box) {
+      var i;
+      for (i = 0; i < placed.length; i++) if (signalRectHit(box, placed[i], 0)) return true;
+      return false;
+    }
+    function walk(gi, di) {
+      if (found || nodes > 25000) return;
+      if (gi >= groups.length) { found = true; return; }
+      var group = groups[gi];
+      if (di >= group.length) { walk(gi + 1, 0); return; }
+      var it = group[di];
+      var oi;
+      for (oi = 0; oi < offsets.length; oi++) {
+        nodes += 1;
+        var ang = it.center + offsets[oi];
+        var box = signalRelBox(ang, it.rad, it.size);
+        if (blocked(box)) continue;
+        it.ang = ang;
+        placed.push({ l: box.l - 0.75, t: box.t - 0.75, r: box.r + 0.75, b: box.b + 0.75 });
+        walk(gi, di + 1);
+        if (found) return;
+        placed.pop();
+      }
+    }
+    walk(0, 0);
+    return found;
+  }
+  function signalApplyScale(list, scale) {
+    list.forEach(function (it) {
+      if (scale >= 0.999) it.size = it.tier;
+      else it.size = Math.max(7, Math.round(it.tier * scale * 10) / 10);
+    });
+  }
+  function signalSpreadWedge(list, scale) {
+    var rings = {};
+    list.forEach(function (it) {
+      var key = String(it.ring);
+      if (!rings[key]) rings[key] = [];
+      rings[key].push(it);
+    });
+    Object.keys(rings).forEach(function (key) {
+      var group = rings[key].slice().sort(function (a, b) {
+        if (a.id < b.id) return -1;
+        if (a.id > b.id) return 1;
+        return 0;
+      });
+      group.forEach(function (it, idx) {
+        var span = group.length <= 1 ? 0 : 60 / group.length;
+        var stagger = (it.ring % 2) * (span / 2);
+        var ang = it.center + (idx - (group.length - 1) / 2) * span + stagger;
+        if (ang < it.center - 34) ang = it.center - 34;
+        if (ang > it.center + 34) ang = it.center + 34;
+        it.ang = ang;
+        it.size = Math.max(7, Math.round(it.tier * scale * 10) / 10);
+      });
+    });
+  }
+  function signalSolveDots(disc, items) {
+    var obstacles = [];
+    var core = disc.querySelector('.core');
+    if (core) obstacles.push(signalCenterBox(disc, core.getBoundingClientRect(), 1));
+    Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) {
+      var rect = el.getBoundingClientRect();
+      if (rect.width >= 1) obstacles.push(signalCenterBox(disc, rect, 1));
+    });
+    items.forEach(function (it) {
+      var row = signalRowById(it.id);
+      it.tier = signalDotPx(row ? row.amount : null);
+      it.size = it.tier;
+      it.rad = signalDotRad(disc, it.blip);
+      it.ang = it.center;
+      it.blip.style.setProperty('--dot', it.tier.toFixed(1) + 'px');
+    });
+    var groups = {};
+    items.forEach(function (it) {
+      var key = String(it.center);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(it);
+    });
+    var scales = [1, 0.96, 0.92, 0.88, 0.84, 0.78, 0.72, 0.64, 0.56, 0.48];
+    var placed = [];
+    Object.keys(groups).sort(function (a, b) {
+      var diff = groups[b].length - groups[a].length;
+      if (diff) return diff;
+      return (+a) - (+b);
+    }).forEach(function (key) {
+      var list = groups[key];
+      var solved = false;
+      var si;
+      for (si = 0; si < scales.length && !solved; si++) {
+        signalApplyScale(list, scales[si]);
+        solved = signalSolveWedge(list, obstacles.concat(placed));
+      }
+      if (!solved) signalSpreadWedge(list, 0.44);
+      list.forEach(function (it) {
+        signalSetAng(it.arm, it.ang);
+        it.blip.style.setProperty('--dot', it.size.toFixed(1) + 'px');
+        var box = signalRelBox(it.ang, it.rad, it.size);
+        placed.push({ l: box.l - 0.75, t: box.t - 0.75, r: box.r + 0.75, b: box.b + 0.75 });
+      });
+    });
+  }
+  function signalRepairDots(disc, items) {
+    function fixedBoxes() {
+      var list = [];
+      var core = disc.querySelector('.core');
+      if (core) list.push(core.getBoundingClientRect());
+      Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) {
+        var rect = el.getBoundingClientRect();
+        if (rect.width >= 1) list.push(rect);
+      });
+      return list;
+    }
+    function readRects() {
+      return items.map(function (it) { return it.dot.getBoundingClientRect(); });
+    }
+    function count(rs, fx) {
+      var n = 0;
+      var i, j;
+      for (i = 0; i < rs.length; i++) {
+        if (rs[i].width < 1) continue;
+        for (j = 0; j < fx.length; j++) if (signalBoxHit(rs[i], fx[j], 0)) n += 1;
+        for (j = i + 1; j < rs.length; j++) {
+          if (rs[j].width >= 1 && signalBoxHit(rs[i], rs[j], 0)) n += 1;
+        }
+      }
+      return n;
+    }
+    var stuck = {};
+    var guard = 0;
+    while (guard < 40) {
+      guard += 1;
+      var fx = fixedBoxes();
+      var rs = readRects();
+      var before = count(rs, fx);
+      if (before === 0) return;
+      var worst = -1;
+      var worstN = 0;
+      var i, j;
+      for (i = 0; i < items.length; i++) {
+        if (stuck[items[i].id]) continue;
+        var n = 0;
+        if (rs[i].width < 1) continue;
+        for (j = 0; j < fx.length; j++) if (signalBoxHit(rs[i], fx[j], 0)) n += 1;
+        for (j = 0; j < rs.length; j++) if (j !== i && rs[j].width >= 1 && signalBoxHit(rs[i], rs[j], 0)) n += 1;
+        if (n > worstN) { worstN = n; worst = i; }
+      }
+      if (worst < 0) return;
+      var it = items[worst];
+      var cur = signalReadAng(it.arm);
+      var bestAng = cur;
+      var best = before;
+      var ang;
+      for (ang = it.center - 34; ang <= it.center + 34; ang++) {
+        signalSetAng(it.arm, ang);
+        var next = count(readRects(), fx);
+        if (next < best) { best = next; bestAng = ang; }
+      }
+      signalSetAng(it.arm, bestAng);
+      it.ang = bestAng;
+      if (best < before) continue;
+      var w = it.dot.getBoundingClientRect().width;
+      if (w <= 7.5) { stuck[it.id] = true; signalSetAng(it.arm, cur); continue; }
+      var shrunk = Math.max(7, w - 1);
+      it.blip.style.setProperty('--dot', shrunk.toFixed(1) + 'px');
+      it.size = shrunk;
+    }
+  }
+  function signalClearLabels(disc) {
+    var root = disc.closest('.snx') || disc;
+    var col = root.querySelector('.ring-tags');
+    if (!col) return;
+    col.style.transform = '';
+    var tags = Array.prototype.slice.call(col.querySelectorAll('span'));
+    var need = 0;
+    var right = 0;
+    Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) {
+      var rect = el.getBoundingClientRect();
+      tags.forEach(function (tag) {
+        var tr = tag.getBoundingClientRect();
+        if (tr.width < 1 || !signalBoxHit(rect, tr, 2)) return;
+        var overlap = rect.right + 2 - tr.left;
+        if (overlap > need) need = overlap;
+        if (tr.right > right) right = tr.right;
+      });
+    });
+    if (need <= 0) return;
+    var room = (window.innerWidth || 0) - right - 4;
+    if (room < 1) return;
+    col.style.transform = 'translateX(' + Math.ceil(Math.min(need, room)) + 'px)';
   }
   function signalNudge() {
     var disc = document.querySelector('#v-home .snx .disc');
     if (!disc || !S.signalRows || S.signalRows.length < 1) return;
     var box = disc.getBoundingClientRect();
     if (box.width < 40) return;
-    var place = signalWedge(S.signalRows, box.width, signalPill(disc));
+    var pill = signalPill(disc);
+    var openKey = JSON.stringify(S.wedgeOpen || {});
+    var view = window.innerWidth || 0;
+    var fontsReady = !document.fonts || document.fonts.status === 'loaded';
+    var prev = disc._settle;
+    if (prev && disc.classList.contains('is-settled') &&
+        Math.abs(prev.w - box.width) <= 1 &&
+        Math.abs(prev.hw - pill.hw) <= 1.5 &&
+        Math.abs(prev.hh - pill.hh) <= 1.5 &&
+        prev.view === view &&
+        prev.rows === S.signalRows.length &&
+        prev.open === openKey) return;
+    var place = signalWedge(S.signalRows, box.width, pill);
     S.signalSpots = place;
     Array.prototype.forEach.call(disc.querySelectorAll('.arm'), function (arm) {
       var blip = arm.querySelector('.blip');
@@ -3747,26 +4076,66 @@ footer.site{margin-top:auto}
       var spot = place.spots[blip.getAttribute('data-id')];
       if (!spot) return;
       signalPlace(arm, spot.ang, spot.top);
-      var dot = blip.querySelector('.dot');
-      if (dot && spot.r) blip.style.setProperty('--dot', (spot.r * 2).toFixed(1) + 'px');
+      blip.setAttribute('data-ring', String(spot.ring));
+      if (spot.r) blip.style.setProperty('--dot', (spot.r * 2).toFixed(1) + 'px');
     });
-    signalPushDots(disc);
+    var items = signalDotItems(disc);
+    signalSolveDots(disc, items);
+    signalRepairDots(disc, items);
+    signalClearLabels(disc);
     signalPlaceChips(disc);
-    signalUnpile();
+    signalAudit(disc);
+    if (fontsReady) {
+      var settledPill = signalPill(disc);
+      disc._settle = {
+        w: disc.getBoundingClientRect().width,
+        hw: settledPill.hw,
+        hh: settledPill.hh,
+        view: view,
+        rows: S.signalRows.length,
+        open: openKey
+      };
+      disc.classList.add('is-settled');
+    } else {
+      disc.classList.remove('is-settled');
+      disc._settle = null;
+    }
   }
-  function signalUnpile() {
-    var tags = Array.prototype.slice.call(document.querySelectorAll('#v-home .name-tag')).filter(function (el) { return el.style.visibility !== 'hidden'; });
-    var taken = Array.prototype.slice.call(document.querySelectorAll('#v-home .money-chip, #v-home .wedge-more, #v-home .dot, #v-home .core')).filter(function (el) { return el.style.visibility !== 'hidden'; });
-    function hits(a, b) {
+  function signalAudit(disc) {
+    if (!disc) disc = document.querySelector('#v-home .snx .disc');
+    if (!disc) return;
+    var core = disc.querySelector('.core');
+    if (!core) return;
+    function shown(sel, root) {
+      return Array.prototype.filter.call((root || disc).querySelectorAll(sel), function (el) {
+        if (el.style.visibility === 'hidden') return false;
+        var r = el.getBoundingClientRect();
+        return r.width > 1 && r.height > 1;
+      });
+    }
+    function hit(a, b) {
+      if (!a || !b || a === b) return false;
       var ar = a.getBoundingClientRect();
       var br = b.getBoundingClientRect();
-      if (ar.width < 2 || br.width < 2) return false;
-      return ar.right > br.left + 1 && br.right > ar.left + 1 && ar.bottom > br.top + 1 && br.bottom > ar.top + 1;
+      if (ar.width < 1 || br.width < 1 || ar.height < 1 || br.height < 1) return false;
+      return signalBoxHit(ar, br, 0);
     }
-    tags.forEach(function (tag) {
-      var clash = taken.some(function (el) { return el !== tag && hits(tag, el); });
-      tag.style.visibility = clash ? 'hidden' : '';
-      if (!clash) taken.push(tag);
+    var fixed = [core];
+    Array.prototype.forEach.call(disc.querySelectorAll('.wedge-names b'), function (el) { fixed.push(el); });
+    var root = disc.closest('.snx') || disc;
+    Array.prototype.forEach.call(root.querySelectorAll('.ring-tags span'), function (el) { fixed.push(el); });
+    var dots = shown('.dot');
+    shown('.name-tag').forEach(function (el) {
+      var clash = fixed.some(function (ob) { return hit(el, ob); });
+      if (!clash) clash = dots.some(function (ob) { return hit(el, ob); });
+      if (!clash) clash = shown('.money-chip, .wedge-more, .name-tag').some(function (ob) { return hit(el, ob); });
+      if (clash) el.style.visibility = 'hidden';
+    });
+    shown('.money-chip, .wedge-more').forEach(function (el) {
+      var clash = fixed.some(function (ob) { return hit(el, ob); });
+      if (!clash) clash = dots.some(function (ob) { return hit(el, ob); });
+      if (!clash) clash = shown('.money-chip, .wedge-more').some(function (ob) { return hit(el, ob); });
+      if (clash) el.style.visibility = 'hidden';
     });
   }
   function signalMount() {
@@ -3792,6 +4161,10 @@ footer.site{margin-top:auto}
         else signalLoopStop();
       }, { threshold: [0, 0.04] });
       SFX.io.observe(root);
+    }
+    signalNudge();
+    if (document.fonts && document.fonts.status !== 'loaded' && document.fonts.ready) {
+      document.fonts.ready.then(function () { signalNudge(); });
     }
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {

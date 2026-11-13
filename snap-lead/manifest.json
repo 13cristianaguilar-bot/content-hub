@@ -1,0 +1,25 @@
+{
+  "name": "Snap Lead",
+  "short_name": "Snap Lead",
+  "description": "Snap a photo of a card, flyer, truck or sign and drop the lead into GoHighLevel.",
+  "start_url": "/content-hub/snap-lead/",
+  "scope": "/content-hub/snap-lead/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "icons": [
+    {
+      "src": "/content-hub/snap-lead/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/content-hub/snap-lead/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

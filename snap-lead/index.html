@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Snap Lead">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+<title>Snap Lead</title>
+<style>
+:root{--bg:#0b0f14;--card:#141b24;--line:#223041;--txt:#e9eef5;--mut:#8a9bb0;--acc:#22c55e;--warn:#f59e0b;--bad:#ef4444;--blue:#3b82f6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:560px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 40px)}
+header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{font-size:22px;margin:0;letter-spacing:-.02em}
+h1 span{color:var(--acc)}
+.pill{font-size:12px;padding:4px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+.pill.ok{color:var(--acc);border-color:#1f5134}.pill.warn{color:var(--warn);border-color:#5a4313}
+.snap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;width:100%;height:34vh;min-height:220px;border-radius:28px;border:0;background:radial-gradient(120% 120% at 50% 0%,#1e7a45 0%,#14532d 55%,#0f3d22 100%);color:#fff;font-size:22px;font-weight:700;box-shadow:0 10px 40px rgba(34,197,94,.25);cursor:pointer}
+.snap svg{width:64px;height:64px}
+.snap small{font-weight:500;font-size:14px;opacity:.85}
+.row{display:flex;gap:10px;margin-top:10px}
+.btn{flex:1;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-size:15px;font-weight:600;text-align:center;cursor:pointer}
+.btn.pri{background:var(--acc);color:#04130a;border-color:var(--acc)}
+input[type=file]{display:none}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:14px}
+.result{display:none}
+.result h2{margin:0 0 4px;font-size:20px}
+.k{color:var(--mut);font-size:13px}
+.fields{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin-top:10px;font-size:15px}
+.fields div:nth-child(odd){color:var(--mut)}
+.badge{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-bottom:8px}
+.b-in_crm{background:#123d24;color:#4ade80}.b-pending_crm{background:#3d2e0e;color:#fbbf24}.b-needs_review{background:#3a1a1a;color:#f87171}.b-processing,.b-queued{background:#14284a;color:#93c5fd}.b-error{background:#3a1a1a;color:#f87171}
+.list h3{font-size:15px;color:var(--mut);margin:22px 0 6px;font-weight:600;display:flex;justify-content:space-between}
+.item{display:flex;gap:12px;align-items:center;padding:10px;border-radius:14px;background:var(--card);border:1px solid var(--line);margin-bottom:8px;cursor:pointer}
+.item img,.ph{width:56px;height:56px;border-radius:10px;object-fit:cover;background:#0e141b;flex:none}
+.item .t{font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .m{min-width:0;flex:1}.item .badge{flex:none;margin:0}
+.prog{display:none;align-items:center;gap:10px;margin-top:12px;color:var(--mut)}
+.spin{width:18px;height:18px;border-radius:50%;border:3px solid #234;border-top-color:var(--acc);animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.login{margin-top:20vh;text-align:center}
+.login input,.edit input,.edit textarea{width:100%;padding:14px;border-radius:12px;border:1px solid var(--line);background:#0e141b;color:var(--txt);font-size:17px}
+.edit label{display:block;font-size:12px;color:var(--mut);margin:8px 0 3px}
+.edit textarea{min-height:70px;font-size:15px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-end;z-index:9}
+.sheet .in{background:var(--bg);border-top:1px solid var(--line);border-radius:22px 22px 0 0;width:100%;max-height:92vh;overflow:auto;padding:16px 16px calc(env(safe-area-inset-bottom) + 20px)}
+.sheet img{width:100%;border-radius:12px;max-height:40vh;object-fit:contain;background:#000}
+.err{color:#f87171;font-size:14px;margin-top:8px}
+a{color:#7dd3fc}
+.note{width:100%;margin-top:10px;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0e141b;color:var(--txt);font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <div id="loginView" class="login" style="display:none">
+    <h1>Snap <span>Lead</span></h1>
+    <p class="k">Enter your passcode once. This phone will remember it.</p>
+    <input id="pass" type="password" autocomplete="current-password" placeholder="Passcode">
+    <div class="row"><button class="btn pri" id="loginBtn">Unlock</button></div>
+    <div class="err" id="loginErr"></div>
+  </div>
+
+  <div id="mainView" style="display:none">
+    <header><h1>Snap <span>Lead</span></h1><span class="pill" id="crmPill">CRM…</span></header>
+    <label class="snap" for="cam">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.6l1.3-2h7.2l1.3 2h1.6A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="4"/></svg>
+      Snap a lead
+      <small>Card, flyer, truck, sign, badge</small>
+    </label>
+    <input id="cam" type="file" accept="image/*" capture="environment">
+    <input id="lib" type="file" accept="image/*">
+    <input class="note" id="quickNote" placeholder="Optional note (where you met, what they need)">
+    <div class="row"><label class="btn" for="lib">Upload photo / screenshot</label></div>
+    <div class="prog" id="prog"><div class="spin"></div><span id="progTxt">Reading photo…</span></div>
+    <div class="card result" id="result"></div>
+    <div class="list">
+      <h3><span>Recent captures</span><span id="queueInfo"></span></h3>
+      <div id="items"><p class="k">Nothing yet. Snap your first lead.</p></div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
+
+<script>
+const API = "https://udkbnlpnfyjuwlstfxhr.supabase.co/functions/v1/snap-lead";
+const $ = (id) => document.getElementById(id);
+let PASS = localStorage.getItem("snap_pass") || "";
+let STATE = { crm: false, vision: null, items: [] };
+const TEST = new URLSearchParams(location.search).has("test");
+
+async function api(a, body) {
+  const r = await fetch(`${API}?a=${a}`, {
+    method: body === undefined && a === "list" ? "GET" : "POST",
+    headers: { "Content-Type": "application/json", "x-snap-pass": PASS },
+    body: body === undefined || a === "list" ? undefined : JSON.stringify(body),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 401) { localStorage.removeItem("snap_pass"); PASS = ""; showLogin("Passcode no longer valid."); throw new Error("auth"); }
+  if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+  return j;
+}
+
+// ---------- offline queue (IndexedDB) so no photo is ever lost ----------
+const idb = () => new Promise((res, rej) => { const o = indexedDB.open("snaplead", 1); o.onupgradeneeded = () => o.result.createObjectStore("q", { keyPath: "qid" }); o.onsuccess = () => res(o.result); o.onerror = () => rej(o.error); });
+async function qPut(v) { const d = await idb(); return new Promise((r) => { const t = d.transaction("q", "readwrite"); t.objectStore("q").put(v); t.oncomplete = r; }); }
+async function qDel(k) { const d = await idb(); return new Promise((r) => { const t = d.transaction("q", "readwrite"); t.objectStore("q").delete(k); t.oncomplete = r; }); }
+async function qAll() { const d = await idb(); return new Promise((r) => { const q = d.transaction("q").objectStore("q").getAll(); q.onsuccess = () => r(q.result || []); }); }
+
+function showLogin(msg) { $("mainView").style.display = "none"; $("loginView").style.display = "block"; $("loginErr").textContent = msg || ""; }
+async function doLogin() {
+  PASS = $("pass").value.trim().toLowerCase();
+  try { const j = await api("login", {}); localStorage.setItem("snap_pass", PASS); STATE.crm = j.crm_connected; STATE.vision = j.vision; showMain(); }
+  catch (e) { if (e.message !== "auth") $("loginErr").textContent = e.message; else $("loginErr").textContent = "Wrong passcode."; }
+}
+$("loginBtn").onclick = doLogin; $("pass").onkeydown = (e) => { if (e.key === "Enter") doLogin(); };
+
+function setPill() {
+  const p = $("crmPill");
+  if (STATE.crm) { p.textContent = "GHL connected"; p.className = "pill ok"; }
+  else { p.textContent = "Saving, CRM sync pending"; p.className = "pill warn"; }
+}
+async function showMain() {
+  $("loginView").style.display = "none"; $("mainView").style.display = "block"; setPill();
+  await flushQueue(); await refresh();
+}
+
+// ---------- image prep ----------
+function loadImg(file) { return new Promise((res, rej) => { const u = URL.createObjectURL(file); const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = u; }); }
+async function prep(file) {
+  const img = await loadImg(file);
+  const max = 1600, s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  const dataUrl = c.toDataURL("image/jpeg", 0.85);
+  return { canvas: c, b64: dataUrl.split(",")[1], dataUrl };
+}
+function getGeo() {
+  return new Promise((res) => {
+    if (!navigator.geolocation) return res(null);
+    const t = setTimeout(() => res(null), 6000);
+    navigator.geolocation.getCurrentPosition((p) => { clearTimeout(t); res({ lat: p.coords.latitude, lng: p.coords.longitude }); }, () => { clearTimeout(t); res(null); }, { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 });
+  });
+}
+let tessP = null;
+function loadTess() { if (!tessP) tessP = new Promise((res, rej) => { const s = document.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); return tessP; }
+async function ocr(canvas) {
+  await loadTess();
+  const r = await Tesseract.recognize(canvas, "eng");
+  const lines = (r.data.lines || []).map((l) => ({ t: l.text.trim(), h: (l.bbox.y1 - l.bbox.y0) })).filter((l) => l.t);
+  return { text: r.data.text || "", lines };
+}
+
+async function handleFile(file) {
+  if (!file) return;
+  $("result").style.display = "none"; $("prog").style.display = "flex"; $("progTxt").textContent = "Grabbing location…";
+  const taken_at = new Date().toISOString();
+  const note = $("quickNote").value.trim();
+  const [p, geo] = await Promise.all([prep(file), getGeo()]);
+  const qid = crypto.randomUUID();
+  const payload = { image: p.b64, mime: "image/jpeg", taken_at, note, test: TEST, ...(geo || {}) };
+  if (geo) { try { const g = await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${geo.lat}&longitude=${geo.lng}&localityLanguage=en`, { signal: AbortSignal.timeout(4000) })).json(); payload.place = [g.locality || g.city, g.principalSubdivisionCode || g.principalSubdivision, g.postcode].filter(Boolean).join(", "); } catch (e) {} }
+  await qPut({ qid, payload, thumb: p.dataUrl, created: taken_at }); // saved on phone first
+  try {
+    if (!STATE.vision) { $("progTxt").textContent = "Reading text on the photo…"; const o = await ocr(p.canvas); payload.ocr_text = o.text; payload.lines = o.lines; await qPut({ qid, payload, thumb: p.dataUrl, created: taken_at }); }
+    $("progTxt").textContent = "Saving + sending to CRM…";
+    const j = await api("capture", payload);
+    await qDel(qid);
+    $("quickNote").value = "";
+    showResult(j.capture);
+  } catch (e) {
+    showResult({ status: "queued", extracted: {}, error: "No connection. Saved on this phone, will upload automatically." , photo_url: p.dataUrl });
+  } finally { $("prog").style.display = "none"; $("cam").value = ""; $("lib").value = ""; refresh(); }
+}
+$("cam").onchange = (e) => handleFile(e.target.files[0]);
+$("lib").onchange = (e) => handleFile(e.target.files[0]);
+
+async function flushQueue() {
+  const q = await qAll(); $("queueInfo").textContent = q.length ? `${q.length} waiting to upload` : "";
+  for (const it of q) {
+    try {
+      if (!STATE.vision && !it.payload.ocr_text) { const img = await loadImg(await (await fetch(it.thumb)).blob()); const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight; c.getContext("2d").drawImage(img, 0, 0); const o = await ocr(c); it.payload.ocr_text = o.text; it.payload.lines = o.lines; }
+      await api("capture", it.payload); await qDel(it.qid);
+    } catch (e) { break; }
+  }
+  const left = await qAll(); $("queueInfo").textContent = left.length ? `${left.length} waiting to upload` : "";
+}
+window.addEventListener("online", () => flushQueue().then(refresh));
+
+const LABEL = { in_crm: "In CRM", pending_crm: "CRM pending", needs_review: "Needs review", processing: "Processing", queued: "Saved on phone", error: "Error" };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const title = (e) => e.name || [e.firstName, e.lastName].filter(Boolean).join(" ") || e.business || "Unknown lead";
+const fmtPhone = (p) => { const d = (p || "").replace(/\D/g, "").replace(/^1(?=\d{10}$)/, ""); return d.length === 10 ? `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}` : p; };
+
+function showResult(c) {
+  const e = c.extracted || {}; const r = $("result");
+  const rows = [["Business", e.business], ["Title", e.title], ["Phone", fmtPhone(e.phone)], ["Email", e.email], ["Website", e.website], ["Address", [e.address1, e.city, e.state, e.postalCode].filter(Boolean).join(", ")], ["Trade", e.trade], ["IG", e.instagram], ["Where", c.place]].filter((x) => x[1]);
+  const crmMsg = c.status === "in_crm" ? (c.ghl_new ? "New contact created in GHL, tagged snap-lead." : "Existing GHL contact updated, tagged snap-lead.") : c.status === "pending_crm" ? "Saved. Will push to GHL as soon as the CRM key is connected." : c.status === "needs_review" ? "No phone or email found. Saved for review, tap it below to fill in." : "";
+  r.innerHTML = `<span class="badge b-${c.status}">${LABEL[c.status] || c.status}</span><h2>${esc(title(e))}</h2><div class="k">${esc(crmMsg)}</div>${rows.length ? `<div class="fields">${rows.map(([k, v]) => `<div>${k}</div><div>${esc(v)}</div>`).join("")}</div>` : ""}${c.error ? `<div class="err">${esc(c.error)}</div>` : ""}${c.id ? `<div class="row"><button class="btn" onclick="openItem('${c.id}')">Edit / fix</button></div>` : ""}`;
+  r.style.display = "block";
+}
+
+async function refresh() {
+  try {
+    const j = await api("list"); STATE.items = j.captures || []; STATE.crm = j.crm_connected; setPill();
+  } catch (e) { if (e.message === "auth") return; }
+  const q = await qAll();
+  const html = [
+    ...q.map((it) => `<div class="item"><img src="${it.thumb}"><div class="m"><div class="t">Waiting to upload</div><div class="s">${new Date(it.created).toLocaleString()}</div></div><span class="badge b-queued">On phone</span></div>`),
+    ...STATE.items.map((c) => { const e = c.extracted || {}; return `<div class="item" onclick="openItem('${c.id}')">${c.photo_url ? `<img loading="lazy" src="${c.photo_url}">` : `<div class="ph"></div>`}<div class="m"><div class="t">${esc(title(e))}</div><div class="s">${esc([fmtPhone(e.phone) || e.email, e.trade, new Date(c.taken_at || c.created_at).toLocaleString([], { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })].filter(Boolean).join(" · "))}</div></div><span class="badge b-${c.status}">${LABEL[c.status] || c.status}</span></div>`; }),
+  ].join("");
+  $("items").innerHTML = html || `<p class="k">Nothing yet. Snap your first lead.</p>`;
+}
+
+const EDIT = [["firstName", "First name"], ["lastName", "Last name"], ["business", "Business"], ["title", "Title"], ["phone", "Phone"], ["email", "Email"], ["website", "Website"], ["address1", "Street"], ["city", "City"], ["state", "State"], ["postalCode", "ZIP"], ["instagram", "Instagram"], ["facebook", "Facebook"], ["trade", "Trade / niche"]];
+function openItem(id) {
+  const c = STATE.items.find((x) => x.id === id); if (!c) return;
+  const e = c.extracted || {};
+  $("sheetIn").innerHTML = `${c.photo_url ? `<img src="${c.photo_url}">` : ""}<p><span class="badge b-${c.status}">${LABEL[c.status] || c.status}</span> <span class="k">${esc(c.place || "")}</span></p>${c.error ? `<div class="err">${esc(c.error)}</div>` : ""}<div class="edit">${EDIT.map(([k, l]) => `<label>${l}</label><input data-k="${k}" value="${esc(e[k] || "")}">`).join("")}<label>My note</label><textarea id="editNote">${esc(c.note || "")}</textarea><label>Text read from photo</label><textarea readonly>${esc(e.rawText || c.ocr_text || "")}</textarea></div><div class="row"><button class="btn" onclick="closeSheet()">Close</button><button class="btn pri" id="saveBtn">Save${STATE.crm ? " + push to CRM" : ""}</button></div><div class="row"><button class="btn" onclick="archiveItem('${id}')">Archive</button></div>`;
+  $("saveBtn").onclick = async () => {
+    const fields = {}; document.querySelectorAll("#sheetIn input[data-k]").forEach((i) => (fields[i.dataset.k] = i.value.trim()));
+    if (fields.firstName || fields.lastName) fields.name = [fields.firstName, fields.lastName].filter(Boolean).join(" ");
+    $("saveBtn").textContent = "Saving…";
+    try { const j = await api("update", { id, fields, note: $("editNote").value }); closeSheet(); showResult(j.capture); refresh(); }
+    catch (err) { $("saveBtn").textContent = "Retry"; alert(err.message); }
+  };
+  $("sheet").style.display = "flex";
+}
+function closeSheet() { $("sheet").style.display = "none"; }
+$("sheet").onclick = (e) => { if (e.target.id === "sheet") closeSheet(); };
+async function archiveItem(id) { if (!confirm("Archive this capture?")) return; await api("archive", { id }); closeSheet(); refresh(); }
+
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+fetch(`${API}?a=health`).then((r) => r.json()).then((h) => { STATE.crm = h.crm_connected; STATE.vision = h.vision; if (!STATE.vision) loadTess().catch(() => {}); }).catch(() => {});
+if (PASS) showMain(); else showLogin();
+</script>
+</body>
+</html>

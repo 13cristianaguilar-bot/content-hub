@@ -875,7 +875,7 @@ footer.site{margin-top:auto}
 .snx-rule{margin:0 0 6px;color:var(--muted);font-size:12px;line-height:1.35;font-weight:650}
 .snx-key{display:flex;flex-wrap:wrap;gap:6px;margin:0;color:var(--ink);font-size:11px;line-height:1.25;font-weight:700}
 .snx-key span{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:24px;padding:2px 8px;border-radius:999px;background:rgba(8,8,8,.62);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
-.snx-key i{width:8px;height:8px;border-radius:50%;background:var(--swatch,var(--cat-ops));box-shadow:0 0 3px var(--swatch,var(--cat-ops));flex:none}
+.snx-key i{width:8px;height:8px;border-radius:50%;background:var(--swatch,var(--cat-ops));box-shadow:0 0 1.5px var(--swatch,var(--cat-ops));flex:none}
 .snx-key .sz{background:#fff;box-shadow:none}
 .snx-key .sz.s{width:6px;height:6px}
 .snx-key .sz.m{width:11px;height:11px}
@@ -903,7 +903,7 @@ footer.site{margin-top:auto}
 .snx-fx.sized{opacity:1}
 .disc-wrap{width:min(100%,520px);margin:0 auto;padding:0 18px 8px;overflow:visible;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center}
 .ring-out{margin:0 0 6px;text-align:center;font-size:11px;line-height:1.2;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.72);font-weight:800}
-.disc{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:visible;background:radial-gradient(circle at 50% 50%,rgba(237,48,57,.2),rgba(237,48,57,.05) 28%,#050505 70%);box-shadow:inset 0 0 0 1px rgba(237,48,57,.4),0 0 48px rgba(237,48,57,.12)}
+.disc{position:relative;width:100%;aspect-ratio:1;border-radius:50%;overflow:visible;background:radial-gradient(circle at 50% 50%,rgba(237,48,57,.1),rgba(237,48,57,.03) 28%,#050505 70%);box-shadow:inset 0 0 0 1px rgba(237,48,57,.28),0 0 24px rgba(237,48,57,.06)}
 .disc:before,.disc:after{content:"";position:absolute;background:rgba(237,48,57,.22);pointer-events:none;z-index:1}
 .disc:before{left:8%;right:8%;top:50%;height:1px}
 .disc:after{top:8%;bottom:8%;left:50%;width:1px}
@@ -915,10 +915,10 @@ footer.site{margin-top:auto}
 .deg b:nth-child(3){bottom:5px;right:7px}
 .deg b:nth-child(4){bottom:5px;left:7px}
 .rings{position:absolute;inset:0;pointer-events:none;z-index:0}
-.rings i{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 0 14px rgba(237,48,57,.08)}
-.rings .r0{border-color:rgba(237,48,57,.75);box-shadow:inset 0 0 18px rgba(237,48,57,.16),0 0 16px rgba(237,48,57,.2)}
+.rings i{position:absolute;border-radius:50%;border:1px solid rgba(255,255,255,.16);box-shadow:inset 0 0 7px rgba(237,48,57,.04)}
+.rings .r0{border-color:rgba(237,48,57,.75);box-shadow:inset 0 0 9px rgba(237,48,57,.08),0 0 8px rgba(237,48,57,.1)}
 .ring-label{position:absolute;right:8%;transform:translateY(-50%);z-index:2;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:800;pointer-events:none;white-space:nowrap}
-.core{position:absolute;left:50%;top:50%;width:max-content;max-width:42%;min-width:64px;height:auto;margin:0;padding:7px 8px;border-radius:999px;display:grid;place-items:center;z-index:2;pointer-events:none;text-align:center;transform:translate(-50%,-50%);background:radial-gradient(circle at 38% 32%,#fff 0%,#ff8a8e 18%,#ed3039 58%,#6a1016 100%);box-shadow:0 0 8px rgba(237,48,57,.45)}
+.core{position:absolute;left:50%;top:50%;width:max-content;max-width:42%;min-width:64px;height:auto;margin:0;padding:7px 8px;border-radius:999px;display:grid;place-items:center;z-index:2;pointer-events:none;text-align:center;transform:translate(-50%,-50%);background:radial-gradient(circle at 38% 32%,#fff 0%,#ff8a8e 18%,#ed3039 58%,#6a1016 100%);box-shadow:0 0 4px rgba(237,48,57,.22)}
 .core b{font-family:var(--mono);font-size:11px;letter-spacing:-.03em;color:#fff;font-weight:700;line-height:1.15}
 .core i{font-style:normal;display:block;margin-top:2px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.86);font-weight:800}
 .orbit{position:absolute;inset:0;z-index:3;animation:none;transform-origin:50% 50%}
@@ -926,14 +926,15 @@ footer.site{margin-top:auto}
 .arm:hover,.arm:focus-within{z-index:6}
 .blip{position:absolute;left:50%;top:var(--top);width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:12px;background:transparent;color:inherit;transform:translate(-50%,-50%);pointer-events:auto;animation:none}
 .face{position:absolute;left:50%;top:50%;display:flex;align-items:center;justify-content:center;transform:translate(-50%,-50%) rotate(calc(var(--ang) * -1));animation:none}
-.dot{display:block;width:var(--dot,12px);height:var(--dot,12px);border-radius:50%;background:var(--blip,var(--cat-ops));box-shadow:0 0 3px 0 var(--blip,var(--cat-ops));animation:none}
+.dot{display:block;width:var(--dot,12px);height:var(--dot,12px);border-radius:50%;background:var(--blip,var(--cat-ops));box-shadow:0 0 1.5px 0 var(--blip,var(--cat-ops));animation:none}
 .blip.is-maybe .dot{background:linear-gradient(90deg,var(--blip,var(--cat-ops)) 50%,transparent 50%);box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
 .blip.is-long .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
-.blip.is-soon .dot{box-shadow:0 0 0 1.5px #fff,0 0 3px 0 var(--blip,var(--cat-ops))}
+.blip.is-soon .dot{box-shadow:0 0 0 1.5px #fff,0 0 1.5px 0 var(--blip,var(--cat-ops))}
 .blip.is-maybe.is-soon .dot,.blip.is-long.is-soon .dot{box-shadow:0 0 0 1.5px #fff,0 0 0 3px var(--blip,var(--cat-ops))}
-.blip.is-on .dot{box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(0,0,0,.72),0 0 3px 0 var(--blip,var(--cat-ops))}
-.blip:hover .dot,.blip:active .dot{box-shadow:0 0 0 2px #fff,0 0 4px 0 var(--blip,var(--cat-ops))}
-.blip.is-halo:after{content:"";position:absolute;left:50%;top:50%;width:var(--dot,12px);height:var(--dot,12px);margin:calc(var(--dot,12px) / -2) 0 0 calc(var(--dot,12px) / -2);border-radius:50%;border:1.5px solid rgba(237,48,57,.45);animation:cash-halo 3s ease-out infinite;pointer-events:none}
+.blip.is-halo .dot{box-shadow:0 0 0 1.5px #fff,0 0 0 3.5px rgba(237,48,57,.95)}
+.blip.is-on .dot{box-shadow:0 0 0 2px #fff,0 0 0 3px rgba(0,0,0,.72),0 0 1.5px 0 var(--blip,var(--cat-ops))}
+.blip:hover .dot,.blip:active .dot{box-shadow:0 0 0 2px #fff,0 0 2px 0 var(--blip,var(--cat-ops))}
+.blip.is-halo:after{content:none;animation:none}
 .snx-row.is-hot{box-shadow:inset 4px 0 0 var(--row,var(--cat-ops)),0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
 .qrow.is-hot{box-shadow:0 0 0 1px rgba(237,48,57,.55),0 0 18px rgba(237,48,57,.28)}
 @keyframes blip-ripple{0%{opacity:.9;transform:scale(.7)}100%{opacity:0;transform:scale(2.1)}}
@@ -945,13 +946,16 @@ footer.site{margin-top:auto}
 .wedge-lines i{position:absolute;left:50%;top:8%;width:1px;height:42%;background:rgba(255,255,255,.16);transform-origin:50% 100%;transform:translateX(-50%) rotate(var(--ang))}
 .wedge-names b{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
 .chip-layer{z-index:5}
-.money-chip,.name-tag,.wedge-more{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-size:10px;font-weight:700;line-height:1;letter-spacing:-.03em;color:#fff;background:rgba(8,8,8,.92);border:1px solid rgba(255,255,255,.22);border-radius:999px;padding:3px 6px;white-space:nowrap}
+.money-chip,.name-tag,.wedge-more{position:absolute;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--mono);font-size:11px;font-weight:750;line-height:1;letter-spacing:-.02em;color:#fff;background:#141414;border:1px solid rgba(255,255,255,.62);border-radius:999px;padding:3px 6px;white-space:nowrap}
 .wedge-more{pointer-events:auto;cursor:pointer}
 .core.is-empty{max-width:78%}
 .name-tag{font-family:var(--sans);font-weight:750;letter-spacing:0}
-.money-chip.is-bright{background:#ed3039;border-color:#ed3039;font-weight:800}
-.money-chip.is-mute{color:#8d8d8d;font-weight:500;background:rgba(18,18,18,.88);border-color:rgba(255,255,255,.12)}
-.money-chip.is-tight{padding:1px 4px;font-size:9px;letter-spacing:-.05em}
+.money-chip.is-bright{background:#141414;border-color:rgba(255,255,255,.72);color:#fff;font-weight:800}
+.money-chip.is-mute{color:#b5b5b5;font-weight:650;background:#141414;border-color:rgba(255,255,255,.28)}
+.money-chip.is-tight{padding:2px 5px;font-size:11px;letter-spacing:-.03em}
+.chip-dock{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0 0;position:relative;z-index:2}
+.chip-dock:empty{display:none}
+.chip-dock .money-chip{position:static;transform:none}
 .disc:not(.is-settled) .orbit,.disc:not(.is-settled) .chip-layer{visibility:hidden}
 .blip.is-hollow .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
 .blip.is-hollow.is-soon .dot{box-shadow:0 0 0 1.5px #fff}
@@ -974,7 +978,8 @@ footer.site{margin-top:auto}
 .snx-sparks i{position:absolute;left:0;top:0;width:3px;height:3px;border-radius:1px;background:#ed3039;transform:rotate(var(--a)) translateY(0);animation:snx-spark .55s ease-out forwards}
 .snx-sparks i:nth-child(odd){background:#fff}
 .xp-num.pop{animation:snx-pop .45s cubic-bezier(.2,1.4,.3,1)}
-.blip.is-boom .dot{animation:snx-boom .5s ease forwards}
+.blip.is-boom .dot{animation:none}
+.snx-radar,.snx-radar *,.snx-radar *::before,.snx-radar *::after{animation:none!important;transition:none!important}
 @keyframes core-glow{0%,100%{box-shadow:0 0 18px rgba(237,48,57,.55),0 0 36px rgba(237,48,57,.2)}50%{box-shadow:0 0 28px rgba(237,48,57,.8),0 0 52px rgba(237,48,57,.32)}}
 @keyframes snx-in{from{opacity:0;transform:translate(-50%,-50%) scale(.55)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 @keyframes snx-orbit{to{transform:rotate(360deg)}}
@@ -3330,14 +3335,14 @@ footer.site{margin-top:auto}
       '<span class="size-cue"><i class="sz m"></i>$500-2K</span>' +
       '<span class="size-cue"><i class="sz l"></i>$2K+</span>' +
       '<span><i class="cue-ring"></i> outlined = due within 48h</span>' +
-      '<span><i class="sz s" style="background:var(--cat-cash)"></i><i class="cue-hollow"></i> solid = collectable, hollow = not yet real</span>' +
+      '<span><i class="sz s" style="background:var(--cat-cash)"></i><i class="cue-hollow"></i> solid = collectable, hollow = not real yet</span>' +
       '<span>/mo = recurring</span></div></div>';
   }
   function signalRadarHtml(block, ranked, split, source) {
     var open = split.open;
     var place = signalLayout(open);
     S.signalSpots = place;
-    var halo = motionReduce() ? '' : signalHaloId(open);
+    var halo = signalHaloId(open);
     var draw = open.slice().sort(function (a, b) {
       var ar = signalRing(a), br = signalRing(b);
       if (ar !== br) return br - ar;
@@ -3403,7 +3408,7 @@ footer.site{margin-top:auto}
       '<div class="rings" aria-hidden="true">' + rings + '</div>' +
       '<div class="wedge-names" aria-hidden="true">' + wedgeNames + '</div>' +
       core + '<div class="orbit">' + arms + '</div>' +
-      '<div class="chip-layer">' + chips + '</div></div><div class="ring-tags" aria-hidden="true">' + ringTags + '</div></div></div>';
+      '<div class="chip-layer">' + chips + '</div></div><div class="ring-tags" aria-hidden="true">' + ringTags + '</div></div><div class="chip-dock"></div></div>';
     var hud = '<div class="snx-hud" data-hud="radar">' + signalBriefHtml(signalRowById(S.signalId)) + '</div>';
     return signalShell('', signalHead(split.stats) + '<div class="snx-grid">' + disc + hud + '</div>' + signalPlainHtml(open) + signalFoot(source, block, ranked));
   }
@@ -3627,7 +3632,13 @@ footer.site{margin-top:auto}
     var core = disc.querySelector('.core');
     if (!layer || !core) return;
     var cats = ['cash_now', 'future_money', 'clients', 'content', 'ops'];
-    var narrow = (window.innerWidth || 1280) <= 800;
+    var radar = disc.closest('.snx-radar');
+    var dock = radar ? radar.querySelector('.chip-dock') : null;
+    if (dock) {
+      Array.prototype.slice.call(dock.querySelectorAll('.money-chip')).forEach(function (el) {
+        layer.appendChild(el);
+      });
+    }
     var leaders = layer.querySelector('.leaders');
     if (!leaders) {
       leaders = document.createElement('div');
@@ -3656,10 +3667,17 @@ footer.site{margin-top:auto}
     var legend = root.querySelector('.snx-legend-bar');
     if (legend) addRect(legend.getBoundingClientRect());
     var limit = root.getBoundingClientRect();
+    var discBox = disc.getBoundingClientRect();
+    var hud = root.querySelector('.snx-hud');
+    var list = root.querySelector('.snx-list');
+    if (hud) addRect(hud.getBoundingClientRect());
+    if (list) addRect(list.getBoundingClientRect());
     function clearBox(box) {
       if (!box || box.width < 1 || box.height < 1) return false;
       if (box.left < 1 || box.top < 1 || box.right > (window.innerWidth || 0) - 1 || box.bottom > (window.innerHeight || 0) - 1) return false;
       if (box.left < limit.left - 2 || box.top < limit.top - 2 || box.right > limit.right + 2 || box.bottom > limit.bottom - 2) return false;
+      if (box.bottom > discBox.bottom + 6 || box.top < discBox.top - 6) return false;
+      if (box.left < discBox.left - 8 || box.right > discBox.right + 8) return false;
       var i;
       for (i = 0; i < blocked.length; i++) if (signalBoxHit(box, blocked[i], 0)) return false;
       return true;
@@ -3732,23 +3750,27 @@ footer.site{margin-top:auto}
     var shown = {};
     var hidden = {};
     cats.forEach(function (cat) { shown[cat] = 0; hidden[cat] = 0; });
-    ranked.forEach(function (item) {
+    function parkChip(item, allowDock) {
       var cat = cats.indexOf(item.row.cat) >= 0 ? item.row.cat : 'ops';
-      var open = S.wedgeOpen && S.wedgeOpen[cat];
-      if (narrow && !open && shown[cat] >= 2) { hidden[cat] += 1; return; }
       var dot = dotFor(item.row.id);
       var anchor = dot ? dot.getBoundingClientRect() : disc.getBoundingClientRect();
       var forms = signalChipForms(item.row);
       var placed = null;
-      var fi, tight;
+      var fi;
       for (fi = 0; fi < forms.length && !placed; fi++) {
-        for (tight = 0; tight < 2 && !placed; tight++) {
-          item.el.textContent = forms[fi];
-          item.el.classList.toggle('is-tight', tight === 1);
-          placed = trySides(item.el, anchor);
-        }
+        item.el.textContent = forms[fi];
+        item.el.classList.remove('is-tight');
+        placed = trySides(item.el, anchor);
       }
       if (!placed) {
+        if (allowDock && dock) {
+          item.el.textContent = signalChipText(item.row);
+          item.el.style.visibility = 'visible';
+          item.el.classList.remove('is-tight');
+          dock.appendChild(item.el);
+          shown[cat] += 1;
+          return;
+        }
         hidden[cat] += 1;
         item.el.style.visibility = 'hidden';
         return;
@@ -3757,7 +3779,17 @@ footer.site{margin-top:auto}
       blocked.push(item.el.getBoundingClientRect());
       if (dot) leader(anchor, item.el.getBoundingClientRect());
       shown[cat] += 1;
+    }
+    var solids = ranked.filter(function (item) { return !signalHollow(item.row); });
+    var hollows = ranked.filter(function (item) { return signalHollow(item.row); });
+    solids.sort(function (a, b) {
+      var aa = a.row.amount == null ? -1 : a.row.amount;
+      var ba = b.row.amount == null ? -1 : b.row.amount;
+      if (aa !== ba) return ba - aa;
+      return a.row.index - b.row.index;
     });
+    solids.forEach(function (item) { parkChip(item, true); });
+    hollows.forEach(function (item) { parkChip(item, false); });
     cats.forEach(function (cat) {
       if (!hidden[cat] || (S.wedgeOpen && S.wedgeOpen[cat])) return;
       var btn = null;
@@ -4132,6 +4164,7 @@ footer.site{margin-top:auto}
       if (clash) el.style.visibility = 'hidden';
     });
     shown('.money-chip, .wedge-more').forEach(function (el) {
+      if (el.classList.contains('money-chip') && !el.classList.contains('is-mute')) return;
       var clash = fixed.some(function (ob) { return hit(el, ob); });
       if (!clash) clash = dots.some(function (ob) { return hit(el, ob); });
       if (!clash) clash = shown('.money-chip, .wedge-more').some(function (ob) { return hit(el, ob); });
@@ -4349,11 +4382,10 @@ footer.site{margin-top:auto}
     if (S.signalId === id) S.signalId = null;
     var root = document.querySelector('#v-home .snx');
     var lockEl = signalLockEl(id) || el;
-    if (lockEl) lockEl.classList.add('is-boom');
+    if (lockEl) lockEl.classList.remove('is-boom');
     if (root) root.classList.add('is-hit');
-    signalBurstAt(lockEl || el);
     signalBump(root);
-    var wait = motionReduce() ? 0 : 540;
+    var wait = 0;
     setTimeout(function () {
       S.signalBusy = false;
       signalRepaint();

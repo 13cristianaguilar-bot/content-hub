@@ -524,10 +524,11 @@ body[data-ready] .shimmer{display:none}
 @media (min-width:1024px){
   main.stage:has(#v-home.desk-fold){padding-top:8px}
   main.stage:has(#v-home.desk-fold)>.banner{margin-bottom:6px;padding:6px 10px;font-size:13px;line-height:1.3}
-  #v-home.desk-fold.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:stretch}
+  #v-home.desk-fold.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:start}
   #v-home.desk-fold>*{grid-column:1 / -1;min-width:0}
-  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:auto;margin:0;padding:10px 12px 8px}
-  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:auto;min-height:0;overflow:visible;align-self:stretch}
+  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:auto;margin:0;padding:10px 12px 8px;align-self:start}
+  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:auto;min-height:0;overflow:visible;align-self:start}
+  #v-home.desk-fold>.snx-hud{grid-column:1 / -1;align-self:start;min-height:0}
   #v-home.desk-fold>.guide{overflow:visible;align-items:center;padding:12px 14px;margin-bottom:8px;gap:12px}
   #v-home.desk-fold>.guide>div{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;flex:1}
   #v-home.desk-fold>.guide .gk{margin:0;flex:none;font-size:11px;letter-spacing:.1em;line-height:1.4}
@@ -690,7 +691,7 @@ body[data-ready] .shimmer{display:none}
 .wf-client>b{font-size:13px;font-weight:750}
 .wf-client ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;list-style:none;margin:0;padding:0}
 .wf-client li{min-width:0}
-.wf-client span{display:block;font-size:10px;line-height:1.2;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-client span{display:block;font-size:10px;line-height:1.2;color:var(--dim);white-space:normal;overflow:visible}
 .wf-client li b{display:block;font-size:14px;font-weight:750}
 #v-home.desk-fold .org.is-summary{display:flex;flex-direction:column;overflow:visible;height:auto;min-height:0}
 #v-home.desk-fold .wf-clients{display:flex;flex-direction:column;justify-content:flex-start;padding-bottom:14px}
@@ -1010,13 +1011,8 @@ footer.site{margin-top:auto}
 .snx-raw{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.45;white-space:pre-wrap}
 .livepill.is-stamp{letter-spacing:0;text-transform:none;font-size:12px;font-weight:700}
 .money-chip.is-tight{padding:2px 5px;font-size:11px;letter-spacing:-.03em}
-.chip-dock{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0 0;position:relative;z-index:2}
-.chip-dock:empty{display:none}
-.chip-dock .money-chip{position:static;transform:none}
-@media(max-width:760px){
-  .snx .chip-dock{flex-wrap:nowrap;overflow-x:auto;margin:8px 0 0;max-width:100%}
-  .snx .chip-dock .money-chip{flex:none}
-}
+.chip-dock,.wedge-more{display:none}
+.money-chip.is-tight{padding:1px 4px;font-size:10px;line-height:1.1}
 .disc:not(.is-settled) .orbit,.disc:not(.is-settled) .chip-layer{visibility:hidden}
 .blip.is-hollow .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
 .blip.is-hollow.is-soon .dot{box-shadow:0 0 0 1.5px #fff}
@@ -1073,16 +1069,16 @@ footer.site{margin-top:auto}
 .hubsync[hidden]{display:none}
 .hubsync b{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:700;flex:none}
 .hubsync span{font-family:var(--mono);font-size:12px;font-weight:650;color:#fff;background:#141414;border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:4px 8px;white-space:nowrap}
-.snx-phone{display:none;list-style:none;margin:10px 0 0;padding:0}
+.snx-phone{display:block;list-style:none;margin:10px 0 0;padding:0}
 .snx-phone li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 2px;border-top:1px solid rgba(255,255,255,.08)}
 .snx-phone i{width:8px;height:8px;border-radius:50%;background:var(--row,#888)}
 .snx-phone span{min-width:0;white-space:normal;overflow:visible;font-size:13px;line-height:1.3}
 .snx-phone b{font-family:var(--mono);font-size:13px;font-weight:750;white-space:nowrap}
 .snx-phone li.is-out b{color:#b5b5b5;font-weight:650}
 @media(max-width:760px){
-  .chip-layer,.chip-dock,.wedge-more{display:none}
-  .snx-phone{display:block}
-  .hubsync{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 18px),transparent)}
+  .hubsync{flex-wrap:wrap;overflow:visible;-webkit-mask-image:none;mask-image:none}
+  .hubsync b{letter-spacing:.06em}
+  .hubsync span{font-size:11px;padding:3px 6px}
 }
 .fin{min-width:0}
 .fin,.fin *{animation:none!important;transition:none!important}
@@ -3189,16 +3185,7 @@ footer.site{margin-top:auto}
   }
   function signalChipForms(row) {
     var money = signalMoneyLabel(row);
-    if (!money) return [];
-    var what = signalChipWhat(row);
-    var forms = [];
-    function add(text) { if (text && forms.indexOf(text) < 0) forms.push(text); }
-    if (what) {
-      add(what + ' ' + money);
-      var short = what.split(/\s+/).slice(0, 2).join(' ');
-      if (short && short !== what) add(short + ' ' + money);
-    }
-    return forms;
+    return money ? [money] : [];
   }
   function signalTagLimit() {
     var w = window.innerWidth || 1280;
@@ -3653,16 +3640,12 @@ footer.site{margin-top:auto}
       }
       var row = null;
       open.forEach(function (item) { if (item.id === id) row = item; });
-      var chipText = signalBlipLabel(row);
+      var chipText = signalMoneyLabel(row);
       if (!chipText) return;
       var bright = row.confidence === 'guaranteed' ? ' is-bright' : '';
       var mute = signalHollow(row) ? ' is-mute' : '';
       var out = signalOut(row) ? ' is-out' : '';
-      if (!spot.chip) {
-        dock.push('<span class="money-chip' + bright + mute + out + '" data-chip="' + esc(id) + '">' + esc(chipText) + '</span>');
-        return;
-      }
-      chips += '<span class="money-chip' + bright + mute + out + '" data-chip="' + esc(id) + '" style="left:' + spot.chip.x.toFixed(1) + '%;top:' + spot.chip.y.toFixed(1) + '%">' + esc(chipText) + '</span>';
+      chips += '<span class="money-chip is-tight' + bright + mute + out + '" data-chip="' + esc(id) + '" style="left:' + (spot.chip ? spot.chip.x.toFixed(1) : 50) + '%;top:' + (spot.chip ? spot.chip.y.toFixed(1) : 50) + '%">' + esc(chipText) + '</span>';
     });
     var coreText = signalCoreText(open);
     var coreEmpty = coreText === '$0 collectable this week';
@@ -4021,30 +4004,16 @@ footer.site{margin-top:auto}
       var cat = cats.indexOf(item.row.cat) >= 0 ? item.row.cat : 'ops';
       var dot = dotFor(item.row.id);
       var anchor = dot ? dot.getBoundingClientRect() : disc.getBoundingClientRect();
-      var forms = signalChipForms(item.row);
-      var placed = null;
-      var fi;
-      for (fi = 0; fi < forms.length && !placed; fi++) {
-        item.el.textContent = forms[fi];
-        item.el.classList.remove('is-tight');
-        placed = trySides(item.el, anchor);
-      }
+      item.el.textContent = signalMoneyLabel(item.row) || '';
+      item.el.classList.add('is-tight');
+      var placed = trySides(item.el, anchor);
       if (!placed) {
-        if (allowDock && dock) {
-          item.el.textContent = signalBlipLabel(item.row) || signalChipText(item.row);
-          item.el.style.visibility = 'visible';
-          item.el.classList.remove('is-tight');
-          dock.appendChild(item.el);
-          shown[cat] += 1;
-          return;
-        }
         hidden[cat] += 1;
         item.el.style.visibility = 'hidden';
         return;
       }
       item.el.style.visibility = 'visible';
       blocked.push(item.el.getBoundingClientRect());
-      if (dot) leader(anchor, item.el.getBoundingClientRect());
       shown[cat] += 1;
     }
     var solids = ranked.filter(function (item) { return !signalHollow(item.row); });
@@ -4055,7 +4024,7 @@ footer.site{margin-top:auto}
       if (aa !== ba) return ba - aa;
       return a.row.index - b.row.index;
     });
-    solids.forEach(function (item) { parkChip(item, true); });
+    solids.forEach(function (item) { parkChip(item, false); });
     hollows.forEach(function (item) { parkChip(item, false); });
     cats.forEach(function (cat) {
       if (!hidden[cat] || (S.wedgeOpen && S.wedgeOpen[cat])) return;
@@ -4529,12 +4498,16 @@ footer.site{margin-top:auto}
       if (el !== list) el.remove();
     });
     home.classList.toggle('desk-fold', !!desk);
+    var hud = snx.querySelector('.snx-hud') || home.querySelector(':scope > .snx-hud');
     if (desk && org) {
       if (org.parentElement !== home) snx.after(org);
-      if (list) org.after(list);
+      if (hud) org.after(hud);
+      if (list) (hud && hud.parentElement === home ? hud : org).after(list);
       applyOrgFrame();
       return;
     }
+    var back = snx.querySelector('.snx-grid');
+    if (hud && back && hud.parentElement !== back) back.appendChild(hud);
     applyOrgFrame();
     if (narrow && list) {
       if (grid.previousElementSibling !== snx) snx.after(grid);
@@ -4554,7 +4527,7 @@ footer.site{margin-top:auto}
     if (!old) return;
     signalHide();
     SFX.canvas = null;
-    Array.prototype.forEach.call(home.querySelectorAll(':scope > .snx-list'), function (el) { el.remove(); });
+    Array.prototype.forEach.call(home.querySelectorAll(':scope > .snx-list, :scope > .snx-hud'), function (el) { el.remove(); });
     var holder = document.createElement('div');
     holder.innerHTML = remindersHtml(S.model);
     var next = holder.firstElementChild;
@@ -4584,7 +4557,7 @@ footer.site{margin-top:auto}
       var arm = el.closest('.arm');
       if (arm) arm.classList.toggle('is-on', on);
     });
-    var hud = root.querySelector('[data-hud]');
+    var hud = document.querySelector('#v-home [data-hud]');
     if (hud) {
       var brief = signalBriefHtml(signalRowById(S.signalId));
       hud.innerHTML = brief;
@@ -5790,13 +5763,14 @@ footer.site{margin-top:auto}
     var sample = S.sample || !S.admin;
     var live = !sample && S.clientScriptsState === 'ready';
     var rows = sample ? lib.sampleScripts(new Date()) : (S.clientScripts || []);
-    var labels = { progress: 'In progress', review: 'Needs review', shipped: 'Shipped', results: 'Results' };
+    var labels = { progress: 'Doing', review: 'Review', shipped: 'Shipped', results: 'Results' };
+    var titles = { progress: 'In progress', review: 'Needs review', shipped: 'Shipped', results: 'Results' };
     var body = lib.board.map(function (slug) {
       var person = lib.clients[slug] || { label: slug };
       var summary = (sample || live) ? lib.summarize(slug, rows, new Date()) : null;
       var cells = lib.steps.map(function (step) {
         var n = summary ? summary.counts[step.id] : null;
-        return '<li><span>' + esc(labels[step.id] || step.label) + '</span><b>' + esc(n == null ? '…' : String(n)) + '</b></li>';
+        return '<li><span title="' + esc(titles[step.id] || step.label) + '">' + esc(labels[step.id] || step.label) + '</span><b>' + esc(n == null ? '…' : String(n)) + '</b></li>';
       }).join('');
       return '<div class="wf-client"><b>' + esc(person.label) + '</b><ol>' + cells + '</ol></div>';
     }).join('');

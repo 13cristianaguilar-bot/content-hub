@@ -86,14 +86,21 @@ a{color:var(--red-soft);text-decoration:none}
 .gdot.dim{background:#555;box-shadow:none}
 .maincol{min-width:0;display:flex;flex-direction:column;min-height:100dvh}
 .top{
-  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:14px 22px;min-width:0;
-  background:#0c0c0c;border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:14px 22px;min-width:0;
+  flex-wrap:nowrap;background:#0c0c0c;border-bottom:1px solid var(--line);
 }
-.crumb{font-size:13px;color:var(--muted);white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.toplogo{display:none;align-items:center;gap:8px;flex:none;color:#fff;font-size:12px;font-weight:750;letter-spacing:.12em;text-transform:uppercase}
+.toplogo .mark{width:22px;height:22px}
+.crumb{font-size:13px;color:var(--muted);white-space:nowrap;min-width:0;flex:1 1 auto;overflow:hidden;text-overflow:ellipsis}
 .crumb b{color:var(--ink);font-weight:650}
-.search{flex:1;max-width:420px;min-width:0;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:0 10px;min-height:40px}
+.search{flex:1 1 220px;max-width:420px;min-width:200px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:0 10px;min-height:40px}
 .search input{flex:1;border:0;background:transparent;outline:none;font-size:14px;min-width:0}
-.snd{width:36px;height:36px;margin-left:auto;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;display:grid;place-items:center;padding:0;flex:none}
+.search-open{display:none;width:36px;height:36px;border-radius:999px;border:1px solid var(--line);background:transparent;color:#fff;place-items:center;padding:0;flex:none}
+.search-open svg{width:16px;height:16px}
+.account{display:contents}
+.account-pop{display:contents}
+.avatar{width:36px;height:36px;border-radius:999px;border:1px solid var(--line);background:#161616;color:#fff;font-weight:750;font-size:14px;padding:0;flex:none}
+.snd{width:36px;height:36px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:transparent;color:#fff;display:grid;place-items:center;padding:0;flex:none}
 .snd svg{width:18px;height:18px;display:block}
 .snd .slash{display:none}
 .snd[aria-pressed="false"]{color:#777}
@@ -102,10 +109,10 @@ a{color:var(--red-soft);text-decoration:none}
 .clock{display:flex;align-items:center;gap:8px;color:var(--muted);font-variant-numeric:tabular-nums;font-size:13px;white-space:nowrap}
 .ask{
   border:1px solid rgba(237,48,57,.4);background:rgba(237,48,57,.12);color:var(--ink);
-  border-radius:999px;min-height:36px;padding:0 12px;font-weight:700;font-size:13px;
+  border-radius:999px;min-height:36px;padding:0 12px;font-weight:700;font-size:13px;white-space:nowrap;flex:none;
 }
-.who{font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ghost{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:650;min-height:36px;padding:0 8px}
+.who{display:none;font-size:13px;color:var(--ink);white-space:nowrap}
+.ghost{border:0;background:transparent;color:var(--muted);font-size:12px;font-weight:650;min-height:36px;padding:0 8px;white-space:nowrap;flex:none}
 main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .view{display:none}
 .view.on{display:block}
@@ -436,13 +443,16 @@ body[data-ready] .shimmer{display:none}
 @media(max-width:760px),(max-height:520px) and (max-width:980px){
   .app{display:block}
   .sidenav{display:none}
-  .top{flex-wrap:wrap;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 12px 10px}
-  .crumb{flex:1 1 auto}
-  .ask{min-height:44px;order:2}
-  .snd{order:2;width:44px;height:44px}
-  .who,.ghost{order:3}
-  .clock{order:4;margin-left:0;width:100%}
-  .search{order:5;max-width:none;flex:1 1 100%;min-height:44px}
+  .top{flex-wrap:nowrap;gap:8px;padding:calc(6px + env(safe-area-inset-top)) 12px 6px}
+  .toplogo{display:flex}
+  .crumb,.ask,.clock,.search,.search-open,.sysline,.syncage{display:none}
+  .account{display:block;position:relative;margin-left:auto}
+  .account-pop{display:none;position:absolute;right:0;top:calc(100% + 6px);z-index:40;min-width:220px;padding:10px;border-radius:14px;border:1px solid var(--line);background:#141414;box-shadow:0 12px 32px rgba(0,0,0,.45)}
+  .account.is-open .account-pop{display:flex;flex-direction:column;align-items:stretch;gap:4px}
+  .account-pop .who{display:block;padding:4px 4px 8px;white-space:normal}
+  .account-pop .ghost,.account-pop .snd{width:100%;min-height:40px;justify-content:flex-start}
+  .livepill{max-width:58vw}
+  .chips{padding:4px 12px 0}
   main.stage{padding:12px 12px 16px}
   .guide{flex-direction:column;align-items:stretch}
   .guide h2{font-size:22px}
@@ -452,6 +462,8 @@ body[data-ready] .shimmer{display:none}
   .desks{grid-template-columns:1fr 1fr}
   .ticker .tag{display:none}
   .live-age{max-width:42vw}
+  .snx .disc{width:min(100%,max(220px,calc(100dvh - 610px)));margin:0 auto}
+  .snx-rule{font-size:11px}
   .sidehead{align-items:flex-start}
   .kpi .v.num{font-size:28px}
   .score .v.num{font-size:34px}
@@ -498,7 +510,7 @@ body[data-ready] .shimmer{display:none}
   .org-fx{display:none}
 }
 .guide h2,.tile .num,.speedo .num,.sidehead h2{font-family:var(--serif);font-weight:400;letter-spacing:-.02em}
-.livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;background:rgba(61,220,151,.12);color:var(--good);border:1px solid rgba(61,220,151,.35);font-size:11px;font-weight:800;letter-spacing:.12em}
+.livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 10px;background:rgba(61,220,151,.12);color:var(--good);border:1px solid rgba(61,220,151,.35);font-size:11px;font-weight:800;letter-spacing:.12em;white-space:nowrap;flex:none}
 .livepill .gdot{background:var(--good);box-shadow:0 0 8px var(--good)}
 .sysline{font-size:12px;color:var(--muted);white-space:nowrap}
 .kbd{font-family:var(--mono);font-size:11px;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:2px 6px}
@@ -506,16 +518,16 @@ body[data-ready] .shimmer{display:none}
 @media (min-width:1024px){
   main.stage:has(#v-home.desk-fold){padding-top:8px}
   main.stage:has(#v-home.desk-fold)>.banner{margin-bottom:6px;padding:6px 10px;font-size:13px;line-height:1.3}
-  #v-home.desk-fold{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:start}
+  #v-home.desk-fold{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:stretch}
   #v-home.desk-fold>*{grid-column:1 / -1;min-width:0}
   #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:auto;margin:0;padding:10px 12px 8px}
-  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:auto}
+  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:100%;align-self:stretch}
   #v-home.desk-fold>.guide{overflow:visible;align-items:center;padding:12px 14px;margin-bottom:8px;gap:12px}
   #v-home.desk-fold>.guide>div{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;flex:1}
   #v-home.desk-fold>.guide .gk{margin:0;flex:none;font-size:11px;letter-spacing:.1em;line-height:1.4}
   #v-home.desk-fold>.guide h2{font-size:22px;line-height:1.35;white-space:normal;overflow:visible;min-width:0}
   #v-home.desk-fold>.guide p{margin:0;font-size:14px;line-height:1.4;white-space:normal;overflow:visible;min-width:0}
-  #v-home.desk-fold>.guide .btn{min-height:32px;padding:0 12px}
+  #v-home.desk-fold>.guide .btn{min-height:40px;padding:0 14px}
   #v-home.desk-fold>.hero-grid{grid-template-columns:1fr}
   #v-home.desk-fold>.snx-list{margin:0;padding:12px 14px 14px;border-radius:22px;background:#070707;border:1px solid rgba(255,255,255,.1)}
   #v-home.desk-fold .snx-more{margin-top:8px;border:1px solid rgba(255,255,255,.16);background:transparent;color:var(--ink);border-radius:999px;min-height:36px;padding:0 16px;font-weight:750}
@@ -528,7 +540,7 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold .snx-readout b{font-size:14px;white-space:nowrap;max-width:100%}
   #v-home.desk-fold .snx-readout i{font-size:9px;letter-spacing:.05em;white-space:nowrap;max-width:100%}
   #v-home.desk-fold .snx-legend-bar{display:block;margin:0 0 8px;padding:0;background:transparent}
-  #v-home.desk-fold .snx-rule{margin:0;font-size:13px;line-height:1.4;white-space:normal;letter-spacing:0}
+  #v-home.desk-fold .snx-rule{margin:0;font-size:12px;line-height:1.3;white-space:nowrap;letter-spacing:0}
   #v-home.desk-fold .snx-key{display:contents}
   #v-home.desk-fold .snx-key span{min-height:18px;padding:0 5px;gap:3px;font-size:10px;line-height:1.2}
   #v-home.desk-fold .snx-grid{grid-template-columns:1fr}
@@ -555,7 +567,7 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold .loop-meter{padding:6px 8px}
 }
 @media (min-width:1024px) and (max-width:1180px){
-  #v-home.desk-fold .snx-rule{font-size:12px}
+  #v-home.desk-fold .snx-rule{font-size:11px}
 }
 @media (min-width:1024px) and (max-width:1279px){
   #v-home.desk-fold .deg{display:none}
@@ -666,6 +678,16 @@ body[data-ready] .shimmer{display:none}
 .loop-meter{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);color:inherit;border-radius:14px;text-align:left;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0;cursor:default;font:inherit}
 .loop-meter .swatch{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
 .org.is-summary{min-height:0;overflow:visible;background-image:none}
+.wf-clients{padding:0 12px 12px}
+.wf-clients .wf-k{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:700}
+.wf-client{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06)}
+.wf-client>b{font-size:13px;font-weight:750}
+.wf-client ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;list-style:none;margin:0;padding:0}
+.wf-client li{min-width:0}
+.wf-client span{display:block;font-size:10px;line-height:1.2;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wf-client li b{display:block;font-size:14px;font-weight:750}
+#v-home.desk-fold .org.is-summary{display:flex;flex-direction:column}
+#v-home.desk-fold .wf-clients{flex:1;display:flex;flex-direction:column;justify-content:space-between}
 .org.is-summary .loop-meters{padding:4px 12px 14px}
 .loop-meter b{font-size:13px}
 .loop-meter span{color:#9a9a9a;font-size:11px;line-height:1.35}
@@ -841,9 +863,19 @@ body[data-ready] .shimmer{display:none}
 .stepper li.on > .bots{display:flex}
 .speedo .lbl{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
 footer.site{margin-top:auto}
+@media(max-width:1439px){
+  .search{display:none}
+  .search-open{display:grid}
+  .top.is-search .search{display:flex;position:absolute;left:12px;right:12px;top:calc(100% + 6px);max-width:none;min-width:0;z-index:30;background:#141414}
+}
+@media(max-width:900px){
+  .clock,.search-open{display:none}
+}
+@media(max-width:760px){
+  .search-open,.top.is-search .search{display:none}
+}
 @media(max-width:1180px){
   .sysline,.kbd{display:none}
-  .search{max-width:260px}
 }
 @media(max-width:1100px){
   .trackgrid{grid-template-columns:1fr 1fr}
@@ -882,7 +914,7 @@ footer.site{margin-top:auto}
 .snx-keys kbd{font-family:var(--mono);font-size:10px;border:1px solid rgba(255,255,255,.16);border-radius:5px;padding:1px 5px;color:var(--muted)}
 .snx-radar{position:relative;z-index:1;min-width:0;max-width:100%}
 .snx-legend-bar{position:relative;z-index:2;margin:0 0 10px;padding:8px 10px 9px;border-radius:16px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
-.snx-rule{margin:0 0 6px;color:var(--muted);font-size:12px;line-height:1.35;font-weight:650}
+.snx-rule{margin:0 0 6px;color:var(--muted);font-size:12px;line-height:1.35;font-weight:650;white-space:nowrap}
 .snx-key{display:flex;flex-wrap:wrap;gap:6px;margin:0;color:var(--ink);font-size:11px;line-height:1.25;font-weight:700}
 .snx-key span{display:inline-flex;align-items:center;gap:6px;max-width:100%;min-height:24px;padding:2px 8px;border-radius:999px;background:rgba(8,8,8,.62);border:1px solid rgba(255,255,255,.12);box-shadow:inset 0 1px 0 rgba(255,255,255,.06)}
 .snx-key i{width:8px;height:8px;border-radius:50%;background:var(--swatch,var(--cat-ops));box-shadow:0 0 1.5px var(--swatch,var(--cat-ops));flex:none}
@@ -962,10 +994,18 @@ footer.site{margin-top:auto}
 .name-tag{font-family:var(--sans);font-weight:750;letter-spacing:0}
 .money-chip.is-bright{background:#141414;border-color:rgba(255,255,255,.72);color:#fff;font-weight:800}
 .money-chip.is-mute{color:#b5b5b5;font-weight:650;background:#141414;border-color:rgba(255,255,255,.28)}
+.money-chip.is-out{color:#b5b5b5;background:transparent;border:1px dashed rgba(255,255,255,.5);font-weight:650}
+.snx-row-meta b.is-out{color:#b5b5b5;font-weight:650}
+.snx-raw{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.45;white-space:pre-wrap}
+.livepill.is-stamp{letter-spacing:0;text-transform:none;font-size:12px;font-weight:700}
 .money-chip.is-tight{padding:2px 5px;font-size:11px;letter-spacing:-.03em}
 .chip-dock{display:flex;flex-wrap:wrap;gap:4px;margin:12px 0 0;position:relative;z-index:2}
 .chip-dock:empty{display:none}
 .chip-dock .money-chip{position:static;transform:none}
+@media(max-width:760px){
+  .snx .chip-dock{flex-wrap:nowrap;overflow-x:auto;margin:8px 0 0;max-width:100%}
+  .snx .chip-dock .money-chip{flex:none}
+}
 .disc:not(.is-settled) .orbit,.disc:not(.is-settled) .chip-layer{visibility:hidden}
 .blip.is-hollow .dot{background:transparent;box-shadow:0 0 0 1.5px var(--blip,var(--cat-ops))}
 .blip.is-hollow.is-soon .dot{box-shadow:0 0 0 1.5px #fff}
@@ -1096,22 +1136,29 @@ footer.site{margin-top:auto}
   </aside>
   <div class="maincol">
     <header class="top">
+      <span class="toplogo"><span class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span> Signal</span>
       <span class="livepill off" id="livepill"><i class="gdot"></i> WAIT</span>
       <span class="sysline" id="sysline">Checking the feed</span>
       <span class="syncage" id="syncage" hidden>Synced 0s ago</span>
       <div class="crumb">Command Center / <b id="crumb">Workforce</b></div>
       <label class="search"><input id="qsearch" type="search" placeholder="Search the board" aria-label="Search the board" autocomplete="off"><kbd class="kbd">Cmd K</kbd></label>
-      <span class="who" id="who"></span>
-      <button type="button" class="ghost" id="signout" hidden>Sign out</button>
+      <button type="button" class="search-open" id="search-open" aria-label="Search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
       <button type="button" class="ask" id="ask">Ask your AI team</button>
-      <button type="button" class="snd" id="snd" aria-pressed="true" aria-label="Sound on" title="Sound on">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 10h3l4-3v10l-4-3H4z" fill="currentColor"/>
-          <path class="waves" d="M15 9.2c1.1.8 1.8 1.8 1.8 2.8s-.7 2-1.8 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          <path class="waves" d="M17.6 7c1.8 1.5 2.9 3.2 2.9 5s-1.1 3.5-2.9 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          <path class="slash" d="M6 18L18 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
-        </svg>
-      </button>
+      <div class="account" id="account">
+        <button type="button" class="avatar" id="avatar" hidden aria-haspopup="true" aria-expanded="false"></button>
+        <div class="account-pop" id="account-pop">
+          <span class="who" id="who"></span>
+          <button type="button" class="ghost" id="signout" hidden>Sign out</button>
+          <button type="button" class="snd" id="snd" aria-pressed="true" aria-label="Sound on" title="Sound on">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 10h3l4-3v10l-4-3H4z" fill="currentColor"/>
+              <path class="waves" d="M15 9.2c1.1.8 1.8 1.8 1.8 2.8s-.7 2-1.8 2.8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path class="waves" d="M17.6 7c1.8 1.5 2.9 3.2 2.9 5s-1.1 3.5-2.9 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              <path class="slash" d="M6 18L18 6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
       <div class="clock"><span id="clock">CT</span></div>
     </header>
     <div class="chips" id="chips" aria-label="More sections"></div>
@@ -2994,8 +3041,11 @@ footer.site{margin-top:auto}
   }
   function moneyShort(n) {
     if (n == null || !isFinite(n)) return '';
-    if (Math.abs(n) >= 1000) return moneyFit(n);
-    return money(n);
+    var sign = n < 0 ? '-' : '';
+    var abs = Math.abs(n);
+    if (abs >= 1000) return moneyFit(n);
+    if (Math.round(abs * 100) % 100 === 0) return sign + '$' + Math.round(abs);
+    return sign + '$' + abs.toFixed(2);
   }
   function signalChipText(row) {
     if (!row || row.amount == null) return '';
@@ -3017,18 +3067,90 @@ footer.site{margin-top:auto}
     return '';
   }
   function signalPlainTitle(row) {
-    var raw = String((row && row.title) || '').replace(/^SAMPLE\.\s*/i, '').replace(/\bCORE\b/gi, ' ').replace(/\s+/g, ' ').trim();
+    var raw = String((row && row.title) || '').replace(/^SAMPLE\.\s*/i, '').replace(/\bCORE\b/gi, ' ').replace(/\bstamp\s+rows\b/gi, 'scripts').replace(/\s+/g, ' ').trim();
     if (/\bstamp\b/i.test(raw)) {
       var who = signalNameWord(row && row.tied) || signalNameWord(raw) || 'the client';
       return 'Review ' + who + "'s scripts";
     }
-    if (raw.length > 32) return signalShortName(raw);
     return raw;
   }
+  function signalOut(row) {
+    if (!row || row.amount == null) return false;
+    var title = String(row.title || '');
+    var notes = String(row.notes || '');
+    if (/^(pay|fix)\b/i.test(title)) return true;
+    if (/\bcash out\b/i.test(notes)) return true;
+    if (/\bcard payment\b/i.test(title + ' ' + notes)) return true;
+    return false;
+  }
+  function signalMoneyLabel(row) {
+    var n = signalChipText(row);
+    if (!n) return '';
+    if (!signalOut(row)) return n;
+    return '-' + n.replace(/^[-~]/, '');
+  }
+  function signalClientName(row) {
+    var tied = String((row && row.tied) || '').split('/')[0].split(',')[0].trim();
+    tied = tied.replace(/\bCORE\b/gi, '').replace(/\s+/g, ' ').trim();
+    return tied;
+  }
+  function signalPlainMoney(text) {
+    return String(text || '').replace(/\$\s?\d[\d,]*(?:\.\d+)?/g, function (bit) {
+      var n = parseFloat(bit.replace(/[$,\s]/g, ''));
+      return isFinite(n) ? moneyShort(n) : bit;
+    });
+  }
+  function signalPlainSentence(row) {
+    var raw = String((row && row.notes) || '');
+    raw = raw.replace(/\bmemos?\s*\[?\d+\]?/gi, '');
+    raw = raw.replace(/\bCORE\b/gi, '');
+    raw = raw.replace(/\bstamp\s+rows\b/gi, 'scripts');
+    raw = raw.replace(/\brow\s+ids?\b/gi, '');
+    raw = raw.replace(/\brows?\s+#?\d+\b/gi, '');
+    raw = raw.replace(/\b[0-9a-f]{8}-[0-9a-f-]{13,}\b/gi, '');
+    raw = signalPlainMoney(raw).replace(/\s+/g, ' ').replace(/\s+:/g, ':').trim();
+    if (!raw) return '';
+    var sentence = raw.split(/(?<=[.!?])\s+/)[0] || raw;
+    sentence = sentence.replace(/\s+/g, ' ').trim();
+    if (sentence.length > 140) sentence = sentence.slice(0, 137).replace(/\s+\S*$/, '').trim() + '.';
+    return sentence;
+  }
+  function signalChipWhat(row) {
+    var raw = signalPlainTitle(row);
+    var day = '';
+    raw = raw.replace(/\(([^)]*)\)/g, function (_, inner) {
+      var hit = String(inner).match(/\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun)(?:day)?\b/i);
+      if (!hit) return ' ';
+      var w = hit[1].slice(0, 3);
+      day = '(' + w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() + ')';
+      return ' ';
+    });
+    raw = raw.replace(/\$?\d[\d,]*(?:\.\d+)?\s*[kKmM]\b/g, ' ');
+    raw = raw.replace(/\$\s?\d[\d,]*(?:\.\d+)?/g, ' ');
+    if (row && row.amount != null) {
+      var abs = Math.abs(row.amount);
+      [String(row.amount), String(Math.round(abs)), abs.toFixed(2)].forEach(function (token) {
+        if (!token) return;
+        raw = raw.replace(new RegExp('\\b' + token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b'), ' ');
+      });
+    }
+    raw = raw.replace(/\s+/g, ' ').trim();
+    if (/^fix\b/i.test(raw)) raw = raw.split(/\s+/).slice(0, 2).join(' ');
+    else if (/^pay\b/i.test(raw)) raw = /rent/i.test(raw) ? 'Pay rent' : raw.split(/\s+/).slice(0, 3).join(' ');
+    else if (/^check\b/i.test(raw)) {
+      var who = signalNameWord(row && row.tied) || signalNameWord(raw);
+      raw = who ? ('Check ' + who) : raw.split(/\s+/).slice(0, 2).join(' ');
+    } else if (/^collect\b/i.test(raw)) {
+      var name = signalNameWord(row && row.tied) || signalNameWord(raw);
+      raw = name ? ('Collect ' + name) : raw.split(/\s+/).slice(0, 2).join(' ');
+    }
+    if (day) raw = (raw + ' ' + day).trim();
+    return raw.replace(/\s+/g, ' ').trim();
+  }
   function signalBlipLabel(row) {
-    var money = signalChipText(row);
+    var money = signalMoneyLabel(row);
     if (!money) return '';
-    var what = signalPlainTitle(row);
+    var what = signalChipWhat(row);
     return what ? (what + ' ' + money) : money;
   }
   function signalPast(row) {
@@ -3040,15 +3162,15 @@ footer.site{margin-top:auto}
     return !!(row && row.amount != null && !signalPast(row));
   }
   function signalChipForms(row) {
-    var money = signalChipText(row);
+    var money = signalMoneyLabel(row);
     if (!money) return [];
-    var what = signalPlainTitle(row);
+    var what = signalChipWhat(row);
     var forms = [];
     function add(text) { if (text && forms.indexOf(text) < 0) forms.push(text); }
     if (what) {
       add(what + ' ' + money);
-      var short = signalShortName(what);
-      if (short) add(short + ' ' + money);
+      var short = what.split(/\s+/).slice(0, 2).join(' ');
+      if (short && short !== what) add(short + ' ' + money);
     }
     return forms;
   }
@@ -3079,7 +3201,7 @@ footer.site{margin-top:auto}
     return 'Likely';
   }
   function signalCollects(row) {
-    if (!row || row.cat !== 'cash_now' || row.amount == null || signalHollow(row)) return false;
+    if (!row || row.cat !== 'cash_now' || row.amount == null || row.amount < 0 || signalHollow(row) || signalOut(row)) return false;
     if (row.moneyKind === 'contingent') return false;
     return signalRing(row) <= 2;
   }
@@ -3366,9 +3488,8 @@ footer.site{margin-top:auto}
   function signalHead(stats) {
     var stake = '';
     if (stats.stakeN) {
-      var exact = money(stats.stake);
-      var shown = homeDesk() && Math.abs(stats.stake) >= 1000 ? moneyFit(stats.stake) : exact;
-      var title = 'Solid collectable money' + (exact && exact !== shown ? '. Exact figure ' + exact : '') + '.';
+      var shown = moneyShort(stats.stake);
+      var title = 'Solid collectable money. Exact figure ' + money(stats.stake) + '.';
       stake = '<div class="snx-readout"><span title="' + esc(title) + '"><b>' + esc(shown) + '</b><i>At stake</i></span></div>';
     }
     return '<header class="snx-head"><div><p class="snx-kicker">Signal now</p><h2>Mission radar</h2></div>' + stake + '</header>';
@@ -3381,7 +3502,7 @@ footer.site{margin-top:auto}
   }
   function signalValueHtml(amount) {
     if (amount == null) return '<span class="snx-noval">No dollar figure</span>';
-    return '<span class="snx-val lg">' + esc(money(amount)) + '</span>';
+    return '<span class="snx-val lg">' + esc(moneyShort(amount)) + '</span>';
   }
   function signalActions(row) {
     var link = row.href ? '<a class="snx-link" href="' + esc(row.href) + '" target="_blank" rel="noopener noreferrer">Open source</a>' : '';
@@ -3390,11 +3511,15 @@ footer.site{margin-top:auto}
   function signalBriefHtml(row) {
     if (!signalBriefable(row)) return '';
     if (!row) return '<p class="snx-kicker">Scan</p><h3>Choose a target</h3><p class="snx-notes">Arrows move the lock. D marks it done in this browser.</p>';
-    return '<p class="snx-kicker">Locked</p><div class="brief-top">' + dueChip(row.due, false) + signalValueHtml(row.amount) + '</div><h3>' + esc(signalPlainTitle(row)) + '</h3>' +
-      (row.tied ? '<p class="snx-tied">' + esc(row.tied) + '</p>' : '') +
-      (row.notes ? '<p class="snx-notes">' + esc(row.notes) + '</p>' : '') +
-      (row.ringReason ? '<p class="snx-notes">Why here: ' + esc(row.ringReason) + '</p>' : '') +
-      signalActions(row);
+    var client = signalClientName(row);
+    var amount = signalOut(row) ? ('-' + moneyShort(row.amount).replace(/^-/, '')) : moneyShort(row.amount);
+    var sentence = signalPlainSentence(row);
+    var raw = String(row.notes || '').trim();
+    var more = raw ? '<button type="button" class="snx-more" data-snx="notes">More</button><p class="snx-raw" hidden>' + esc(raw) + '</p>' : '';
+    return '<p class="snx-kicker">Locked</p><div class="brief-top">' + dueChip(row.due, false) + '<span class="snx-val lg">' + esc(amount) + '</span></div><h3>' + esc(signalPlainTitle(row)) + '</h3>' +
+      (client ? '<p class="snx-tied">' + esc(client) + '</p>' : '') +
+      (sentence ? '<p class="snx-notes">' + esc(sentence) + '</p>' : '') +
+      more + signalActions(row);
   }
   function signalPrepare(ranked) {
     var split = signalSplit(ranked);
@@ -3426,14 +3551,15 @@ footer.site{margin-top:auto}
     var shown = cut ? open.slice(0, cap) : open;
     var rows = shown.map(function (row) {
       var on = row.id === S.signalId;
-      var amt = row.amount == null ? '' : '<b>' + esc(money(row.amount)) + '</b>';
+      var shownAmt = row.amount == null ? '' : (signalOut(row) ? ('-' + moneyShort(row.amount).replace(/^-/, '')) : moneyShort(row.amount));
+      var amt = shownAmt ? '<b class="' + (signalOut(row) ? 'is-out' : '') + '">' + esc(shownAmt) + '</b>' : '';
       return '<li><button type="button" class="snx-row' + (on ? ' is-on' : '') + '" data-snx="lock" data-id="' + esc(row.id) + '" data-cat="' + esc(row.cat || 'ops') + '" style="--row:var(' + signalCatVar(row.cat) + ')" aria-pressed="' + (on ? 'true' : 'false') + '"><span class="snx-row-title">' + esc(signalPlainTitle(row)) + '</span><span class="snx-row-meta">' + dueChip(row.due, false) + amt + '</span></button></li>';
     }).join('');
     var more = (fold && open.length > cap) ? '<button type="button" class="snx-more" data-snx="all">' + (S.signalAll ? 'Show less' : 'Show all') + '</button>' : '';
     return '<div class="snx-list"><h3>On this board</h3><ol class="snx-plain">' + rows + '</ol>' + more + '</div>';
   }
   function signalKeyHtml() {
-    return '<div class="snx-legend-bar"><p class="snx-rule">Closer to center = closer to cash. Solid = collectable, hollow = not real yet.</p></div>';
+    return '<div class="snx-legend-bar"><p class="snx-rule">Closer to center = closer to cash. Solid = real money.</p></div>';
   }
   function signalRadarHtml(block, ranked, split, source) {
     var open = split.open;
@@ -3489,11 +3615,12 @@ footer.site{margin-top:auto}
       if (!chipText) return;
       var bright = row.confidence === 'guaranteed' ? ' is-bright' : '';
       var mute = signalHollow(row) ? ' is-mute' : '';
+      var out = signalOut(row) ? ' is-out' : '';
       if (!spot.chip) {
-        dock.push('<span class="money-chip' + bright + mute + '" data-chip="' + esc(id) + '">' + esc(chipText) + '</span>');
+        dock.push('<span class="money-chip' + bright + mute + out + '" data-chip="' + esc(id) + '">' + esc(chipText) + '</span>');
         return;
       }
-      chips += '<span class="money-chip' + bright + mute + '" data-chip="' + esc(id) + '" style="left:' + spot.chip.x.toFixed(1) + '%;top:' + spot.chip.y.toFixed(1) + '%">' + esc(chipText) + '</span>';
+      chips += '<span class="money-chip' + bright + mute + out + '" data-chip="' + esc(id) + '" style="left:' + spot.chip.x.toFixed(1) + '%;top:' + spot.chip.y.toFixed(1) + '%">' + esc(chipText) + '</span>';
     });
     var coreText = signalCoreText(open);
     var coreEmpty = coreText === '$0 collectable this week';
@@ -4502,6 +4629,13 @@ footer.site{margin-top:auto}
     if (action === 'all') {
       S.signalAll = !S.signalAll;
       signalRepaint();
+      return;
+    }
+    if (action === 'notes') {
+      var raw = el && el.parentElement && el.parentElement.querySelector('.snx-raw');
+      if (!raw) return;
+      raw.hidden = !raw.hidden;
+      el.textContent = raw.hidden ? 'More' : 'Less';
       return;
     }
     if (action === 'restore') { signalRestore(); return; }
@@ -5605,7 +5739,25 @@ footer.site{margin-top:auto}
       return n ? (names[key] + ' ' + n) : '';
     }).filter(Boolean);
     var more = extra.length ? '<p class="quiet" style="padding:0 14px 14px">Also in the feed: ' + esc(extra.join(', ')) + '.</p>' : '';
-    return '<section class="org panel is-summary"><div class="ph"><h2>AI workforce</h2><p class="sub">Attract, Convert, and Transform.</p></div><div class="loop-meters">' + cols + '</div>' + more + '</section>';
+    return '<section class="org panel is-summary"><div class="ph"><h2>AI workforce</h2><p class="sub">Attract, Convert, and Transform.</p></div><div class="loop-meters">' + cols + '</div>' + more + workforceClientsHtml() + '</section>';
+  }
+  function workforceClientsHtml() {
+    var lib = window.SignalClients;
+    if (!lib) return '';
+    var sample = S.sample || !S.admin;
+    var live = !sample && S.clientScriptsState === 'ready';
+    var rows = sample ? lib.sampleScripts(new Date()) : (S.clientScripts || []);
+    var labels = { progress: 'In progress', review: 'Needs review', shipped: 'Shipped', results: 'Results' };
+    var body = lib.board.map(function (slug) {
+      var person = lib.clients[slug] || { label: slug };
+      var summary = (sample || live) ? lib.summarize(slug, rows, new Date()) : null;
+      var cells = lib.steps.map(function (step) {
+        var n = summary ? summary.counts[step.id] : null;
+        return '<li><span>' + esc(labels[step.id] || step.label) + '</span><b>' + esc(n == null ? '…' : String(n)) + '</b></li>';
+      }).join('');
+      return '<div class="wf-client"><b>' + esc(person.label) + '</b><ol>' + cells + '</ol></div>';
+    }).join('');
+    return '<div class="wf-clients"><p class="wf-k">Clients</p>' + body + '</div>';
   }
   function loopBoardHtml(focus) {
     var cap = S.stageCap || {};
@@ -6902,6 +7054,8 @@ footer.site{margin-top:auto}
   function refreshClientStepsDom() {
     var next = clientsSectionHtml();
     var cur = document.getElementById('clients-core');
+    var slot = document.querySelector('#v-home .wf-clients');
+    if (slot) slot.outerHTML = workforceClientsHtml();
     if (cur) { cur.outerHTML = next; return; }
     var host = $('client-steps-host');
     if (host && !host.hidden) host.innerHTML = next;
@@ -7753,23 +7907,27 @@ footer.site{margin-top:auto}
     el.hidden = false;
     el.innerHTML = '<b>Hub</b><span>Needs Review ' + counts.needsReview + '</span><span>Stamped ' + counts.stamped + '</span><span>Filmed ' + counts.filmed + '</span><span>Posted ' + counts.posted + '</span>';
   }
+  function feedClock() {
+    var raw = S.feed && S.feed.asOf;
+    if (!raw) return null;
+    var d = new Date(raw);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  function feedFresh(d) {
+    if (!d) return false;
+    var age = Date.now() - d.getTime();
+    return age >= -60000 && age < 2 * 60 * 60 * 1000;
+  }
+  function feedStamp(d) {
+    var wd = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short' }).format(d);
+    var tm = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' }).format(d);
+    return 'Updated ' + wd + ' ' + tm;
+  }
   function paintSync() {
     var el = $('syncage');
     if (!el) return;
-    if (S.sample || !S.admin) {
-      el.hidden = true;
-      el.textContent = '';
-      return;
-    }
-    var stamp = S.model && S.model.fileAge ? S.model.fileAge : '';
-    if (!stamp) {
-      el.hidden = true;
-      el.textContent = '';
-      return;
-    }
-    el.hidden = false;
-    el.textContent = stamp;
-    el.title = 'When the feed file was written.';
+    el.hidden = true;
+    el.textContent = '';
   }
   async function loadHubStatus() {
     if (!sb || !S.admin || S.sample) {
@@ -7993,8 +8151,17 @@ footer.site{margin-top:auto}
     $('sys').innerHTML = '<b><i class="gdot' + (ready && !locked ? '' : ' dim') + '"></i> ' + esc(title) + '</b><span>' + esc(tail) + '</span>';
     var pill = $('livepill');
     if (pill) {
-      pill.classList.toggle('off', !ready || locked);
-      pill.innerHTML = '<i class="gdot"></i> ' + (locked ? 'LOCKED' : (ready ? 'LIVE' : 'WAIT'));
+      var clock = (!S.sample && S.admin && ready) ? feedClock() : null;
+      var fresh = !clock || feedFresh(clock);
+      var stale = !!(clock && !fresh);
+      pill.classList.toggle('off', !ready || locked || stale);
+      pill.classList.toggle('is-stamp', stale);
+      var word = locked ? 'LOCKED' : (!ready ? 'WAIT' : (stale ? feedStamp(clock) : 'LIVE'));
+      pill.textContent = '';
+      var dot = document.createElement('i');
+      dot.className = 'gdot';
+      pill.appendChild(dot);
+      pill.appendChild(document.createTextNode(' ' + word));
     }
     var line = $('sysline');
     if (line) line.textContent = locked ? 'Private feed locked' : (S.sample ? 'Sample layout' : (ready ? 'All systems operational' : (S.feedNote || 'Feed offline')));
@@ -8248,9 +8415,23 @@ footer.site{margin-top:auto}
   }
   function paintWho() {
     var who = $('who');
-    if (S.admin && S.user) { who.textContent = S.user.email || 'Owner'; $('signout').hidden = false; }
-    else if (S.user) { who.textContent = 'Not the owner'; $('signout').hidden = false; }
-    else { who.textContent = ''; $('signout').hidden = true; }
+    var avatar = $('avatar');
+    var email = (S.user && S.user.email) || '';
+    var initial = email ? email.trim().charAt(0).toUpperCase() : '';
+    if (S.user) {
+      who.textContent = S.admin ? (email || 'Owner') : 'Not the owner';
+      avatar.hidden = false;
+      avatar.textContent = initial || (S.admin ? 'O' : '?');
+      avatar.title = email || who.textContent;
+      avatar.setAttribute('aria-label', email || who.textContent);
+      $('signout').hidden = false;
+    } else {
+      who.textContent = '';
+      avatar.hidden = true;
+      avatar.textContent = '';
+      avatar.title = '';
+      $('signout').hidden = true;
+    }
   }
   function localAnswer(text) {
     var t = text.toLowerCase();
@@ -8618,6 +8799,14 @@ footer.site{margin-top:auto}
       sheetDrag = null;
     });
     document.body.addEventListener('click', function (e) {
+      if (!e.target.closest('#account')) {
+        $('account').classList.remove('is-open');
+        if ($('avatar')) $('avatar').setAttribute('aria-expanded', 'false');
+      }
+      if (!e.target.closest('.search') && e.target.id !== 'search-open' && !e.target.closest('#search-open')) {
+        var top = document.querySelector('.top');
+        if (top) top.classList.remove('is-search');
+      }
       if (e.target.closest('[data-stage-close]')) {
         closeStage(false);
         return;
@@ -8743,6 +8932,8 @@ footer.site{margin-top:auto}
     document.addEventListener('keydown', function (e) {
       if ((e.metaKey || e.ctrlKey) && (e.key === 'k' || e.key === 'K')) {
         e.preventDefault();
+        var top = document.querySelector('.top');
+        if (top && window.innerWidth < 1440 && window.innerWidth > 760) top.classList.add('is-search');
         if ($('qsearch')) $('qsearch').focus();
         return;
       }
@@ -8805,6 +8996,18 @@ footer.site{margin-top:auto}
       saveLog(metric, 1, chicagoDate(new Date()), '', '');
     });
     $('ask').addEventListener('click', openChat);
+    $('avatar').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = !$('account').classList.contains('is-open');
+      $('account').classList.toggle('is-open', open);
+      $('avatar').setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    $('search-open').addEventListener('click', function (e) {
+      e.stopPropagation();
+      var top = document.querySelector('.top');
+      var open = top.classList.toggle('is-search');
+      if (open) $('qsearch').focus();
+    });
     $('signout').addEventListener('click', async function () {
       if (!sb) { applySignedOut(); return; }
       try { await sb.auth.signOut(); }

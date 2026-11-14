@@ -234,6 +234,38 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .btn.p{background:var(--red);color:#fff}
 .btn.p:hover{background:var(--red-deep)}
 .btn.s{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line)}
+.level{margin:0 0 12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.lvl-boss,.lvl-quest,.lvl-meter,.lvl-moved{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
+.lvl-boss.is-pending,.lvl-quest.is-pending{border-style:dashed}
+.lvl-k{margin:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);font-weight:800}
+.lvl-verb{margin:8px 0 0;font-family:var(--serif);font-size:32px;line-height:1.05;letter-spacing:-.03em;overflow-wrap:anywhere}
+.lvl-reward{display:inline-flex;margin-top:10px;border-radius:999px;padding:4px 10px;background:rgba(237,48,57,.16);color:#fff;border:1px solid rgba(237,48,57,.45);font-size:13px;font-weight:750}
+.lvl-reward.is-hollow{background:transparent;color:#b5b5b5;border-style:dashed;border-color:rgba(255,255,255,.38)}
+.lvl-why{margin:8px 0 0;color:var(--muted);font-size:14px}
+.lvl-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.level .btn{min-height:48px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.lvl-meters{display:flex;flex-direction:column;gap:10px;min-width:0}
+.lvl-meter h2{margin:0;font-size:16px}
+.lvl-meter .bar{height:10px}
+.lvl-meter .bar i{width:0;transition:width .45s ease}
+.lvl-rank{margin:6px 0 0;font-weight:750}
+.lvl-xp{margin:0;color:var(--muted);font-size:13px}
+.lvl-quests{display:flex;flex-direction:column;gap:8px;min-width:0}
+.lvl-quest h3{margin:0;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.lvl-quest p{margin:6px 0 0;overflow-wrap:anywhere}
+.lvl-moved{margin:0;padding:12px 14px;list-style:none}
+.lvl-moved li{padding:8px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13px;overflow-wrap:anywhere}
+.lvl-moved li:first-child{border-top:0}
+.lvl-flash{position:fixed;inset:0;z-index:80;pointer-events:none;background:transparent;animation:lvl-gold 1s ease-out 1}
+@keyframes lvl-gold{0%{background:rgba(196,163,90,0)}18%{background:rgba(196,163,90,.42)}100%{background:rgba(196,163,90,0)}}
+@media(prefers-reduced-motion:reduce){.lvl-flash{animation:none}.lvl-meter .bar i{transition:none}}
+@media(min-width:1024px){
+  .level{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.9fr);gap:12px;align-items:start}
+  .lvl-boss{grid-column:1;grid-row:1}
+  .lvl-meters{grid-column:1;grid-row:2}
+  .lvl-quests{grid-column:2;grid-row:1 / span 2}
+  .lvl-moved{grid-column:1 / -1}
+}
 .stripe{border-color:rgba(237,48,57,.35)}
 html.lock,html.lock body{overflow:hidden}
 .scrim{position:fixed;inset:0;background:rgba(8,8,8,.42);opacity:0;pointer-events:none;z-index:40}
@@ -514,8 +546,10 @@ body[data-ready] .shimmer{display:none}
   main.stage:has(#v-home.desk-fold)>.banner{margin-bottom:6px;padding:6px 10px;font-size:13px;line-height:1.3}
   #v-home.desk-fold{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:stretch}
   #v-home.desk-fold>*{grid-column:1 / -1;min-width:0}
-  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:100%;margin:0;padding:10px 12px 8px}
-  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:100%}
+  #v-home.desk-fold>.level{grid-column:1 / -1;grid-row:1}
+  #v-home.desk-fold>.guide{grid-column:1 / -1;grid-row:2}
+  #v-home.desk-fold>#signal-now{grid-column:1;grid-row:3;height:100%;margin:0;padding:10px 12px 8px}
+  #v-home.desk-fold>.org{grid-column:2;grid-row:3;height:100%}
   #v-home.desk-fold>.guide{padding:6px 12px;margin-bottom:8px;gap:12px}
   #v-home.desk-fold>.guide>div{display:flex;align-items:baseline;gap:10px;min-width:0;flex:1}
   #v-home.desk-fold>.guide .gk{margin:0;flex:none;font-size:10px;letter-spacing:.1em}
@@ -2817,6 +2851,7 @@ footer.site{margin-top:auto}
         notes: clean(item.notes || ''),
         amount: num(item.value_usd),
         href: safeHref(item.href),
+        actionUrl: safeHref(item.action_url || ''),
         due: due,
         ringPin: signalPin(item.ring),
         ringReason: typeof item.ring_reason === 'string' ? clean(item.ring_reason) : '',
@@ -6888,9 +6923,422 @@ footer.site{margin-top:auto}
     S.clientScripts = null;
     S.clientScriptsState = 'idle';
   }
+  var LEVEL_PENDING = 'cc-level-pending';
+  var LEVEL_SEEN = 'cc-level-payments';
+  var LEVEL_SNAP = 'cc-level-snap';
+  function levelRead(key, fallback) {
+    try {
+      var raw = localStorage.getItem(key);
+      if (!raw) return fallback;
+      var parsed = JSON.parse(raw);
+      return parsed == null ? fallback : parsed;
+    } catch (err) { return fallback; }
+  }
+  function levelWrite(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (err) {}
+  }
+  function levelPending() {
+    var arr = levelRead(LEVEL_PENDING, []);
+    return Array.isArray(arr) ? arr.filter(function (id) { return !!clean(String(id || '')); }) : [];
+  }
+  function levelPlain(s) { return clean(s).replace(/^SAMPLE\.\s*/i, ''); }
+  function levelPoss(name) {
+    if (!name) return '';
+    return /s$/i.test(name) ? (name + "'") : (name + "'s");
+  }
+  function levelSampleOn() { return !!(S.sample || !S.admin); }
+  function levelWhy(row, today) {
+    var due = row && row.due;
+    if (due && due.kind === 'date' && due.sortDay && /^\d{4}-\d{2}-\d{2}$/.test(due.sortDay) && today) {
+      var diff = daysBetween(today, due.sortDay);
+      if (diff < 0) return 'overdue ' + Math.abs(diff) + (Math.abs(diff) === 1 ? ' day' : ' days');
+      if (diff === 0) return 'due today';
+      if (diff === 1) return 'due tomorrow';
+      return 'due in ' + diff + ' days';
+    }
+    if (due && due.text === 'OVERDUE') return 'overdue';
+    if (due && (due.text === 'TODAY' || due.text === 'NOW')) return 'due now';
+    if (due && (due.tip || due.text)) return levelPlain(due.tip || due.text);
+    return 'On the board';
+  }
+  function levelLink(row) {
+    if (!row) return '';
+    if (row.actionUrl) return row.actionUrl;
+    if (row.href) return row.href;
+    var slug = hubSlug(row.tied || '', '') || hubSlug(row.title || '', '');
+    if (slug) return hubClientHref(slug);
+    return '';
+  }
+  function levelCta(href) {
+    var h = String(href || '').toLowerCase();
+    if (h.indexOf('mail.google') >= 0 || h.indexOf('gmail') >= 0) return 'Open the thread';
+    if (h.indexOf('calendar.google') >= 0 || h.indexOf('calendar') >= 0) return 'Open the call';
+    if (h.indexOf('?client=') >= 0 || h.indexOf('../') === 0) return 'Open the client';
+    return 'Open it';
+  }
+  function levelCashDue(row) {
+    if (!row || signalHollow(row)) return false;
+    if (row.moneyKind === 'contingent') return false;
+    if (row.cat !== 'cash_now' && row.amount == null) return false;
+    return signalRing(row) <= 2;
+  }
+  function levelSort(a, b) {
+    var ar = signalRing(a);
+    var br = signalRing(b);
+    if (ar !== br) return ar - br;
+    var as = (a.due && a.due.sortDay) || '9999-99-98';
+    var bs = (b.due && b.due.sortDay) || '9999-99-98';
+    if (as !== bs) return as < bs ? -1 : 1;
+    var aa = a.amount == null ? -1 : a.amount;
+    var ba = b.amount == null ? -1 : b.amount;
+    if (aa !== ba) return ba - aa;
+    return a.index - b.index;
+  }
+  function levelReviewMove() {
+    var lib = window.SignalClients;
+    if (!lib) return null;
+    var sample = levelSampleOn();
+    if (!sample && S.clientScriptsState !== 'ready') return null;
+    var rows = sample ? lib.sampleScripts(new Date()) : (S.clientScripts || []);
+    var best = null;
+    lib.board.forEach(function (slug) {
+      var summary = lib.summarize(slug, rows, new Date());
+      if (!summary || !summary.counts || summary.counts.review < 1) return;
+      var age = null;
+      var waiting = summary.waiting || '';
+      if (/Today/i.test(waiting)) age = 0;
+      else {
+        var found = waiting.match(/(\d+)\s+day/);
+        if (found) age = +found[1];
+      }
+      if (best && (age == null || (best.age != null && age <= best.age))) return;
+      var person = lib.clients[slug] || { label: slug };
+      best = { slug: slug, age: age, label: person.label || slug, title: summary.oldestTitle || '' };
+    });
+    if (!best) return null;
+    var why = best.age == null ? 'oldest Needs Review' : ('oldest Needs Review, ' + best.age + (best.age === 1 ? ' day' : ' days'));
+    return {
+      id: 'review:' + best.slug,
+      kind: 'clients',
+      verb: 'Review ' + levelPoss(best.label) + ' batch',
+      reward: 'posts shipped +1',
+      why: why,
+      href: hubClientHref(best.slug),
+      amount: null
+    };
+  }
+  function levelFromRow(row, today, kind, reward) {
+    var who = levelPlain(row.tied || '');
+    var verb = levelPlain(row.title);
+    if (kind === 'cash' && who && row.amount != null) verb = 'Chase ' + levelPoss(who) + ' ' + moneyShort(row.amount);
+    else if (kind === 'content' && who) verb = 'Ship ' + levelPoss(who) + ' post';
+    else if (kind === 'clients' && who) verb = 'Book ' + levelPoss(who) + ' call';
+    return {
+      id: row.id,
+      kind: kind,
+      verb: verb,
+      reward: reward,
+      why: levelWhy(row, today),
+      href: levelLink(row),
+      amount: row.amount
+    };
+  }
+  function levelMoves(m) {
+    var block = m && m.reminders;
+    var rows = block && block.known ? reminderRank(block.items, m.today).filter(function (row) { return !signalHollow(row); }) : [];
+    rows.sort(levelSort);
+    var events = levelEvents(S.feed, m.today);
+    var confirmed = {};
+    events.forEach(function (ev) { if (ev.itemId) confirmed[ev.itemId] = true; });
+    var cash = rows.filter(function (row) { return levelCashDue(row) && row.amount != null && !confirmed[row.id]; });
+    var review = levelReviewMove();
+    if (review && confirmed[review.id]) review = null;
+    var boss = cash.length ? levelFromRow(cash[0], m.today, 'cash', '+' + money(cash[0].amount) + ' to Cash now') : review;
+    var used = {};
+    if (boss) used[boss.id] = true;
+    function take(list) {
+      var i;
+      for (i = 0; i < list.length; i++) if (!used[list[i].id] && !confirmed[list[i].id]) return list[i];
+      return null;
+    }
+    var cashRow = take(cash.length && boss && boss.kind === 'cash' ? cash.slice(1) : cash);
+    var clientRows = rows.filter(function (row) { return row.cat === 'clients'; });
+    var contentRows = rows.filter(function (row) { return row.cat === 'content'; });
+    var clientMove = review && !used[review.id] ? review : null;
+    if (!clientMove) {
+      var clientRow = take(clientRows);
+      if (clientRow) clientMove = levelFromRow(clientRow, m.today, 'clients', 'call booked +1');
+    }
+    if (clientMove) used[clientMove.id] = true;
+    var contentRow = take(contentRows);
+    var contentMove = contentRow ? levelFromRow(contentRow, m.today, 'content', 'posts shipped +1') : null;
+    var cashMove = cashRow ? levelFromRow(cashRow, m.today, 'cash', '+' + money(cashRow.amount) + ' to Cash now') : null;
+    return { boss: boss, quests: [
+      { name: 'Cash', move: cashMove, empty: 'No cash move in this feed.' },
+      { name: 'Clients', move: clientMove, empty: 'No client move in this feed.' },
+      { name: 'Content', move: contentMove, empty: 'No content move in this feed.' }
+    ], rows: rows };
+  }
+  function levelDay(v) {
+    if (!v) return '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(v)) return dayOf(v) || String(v).slice(0, 10);
+    return '';
+  }
+  function levelEvents(feed, today) {
+    var out = [];
+    var explicit = feed && Array.isArray(feed.confirmed_events) ? feed.confirmed_events : null;
+    if (explicit) {
+      explicit.forEach(function (ev, i) {
+        if (!ev || typeof ev !== 'object') return;
+        var kind = ev.kind === 'cash' || ev.kind === 'call' || ev.kind === 'script' || ev.kind === 'post' ? ev.kind : '';
+        if (!kind) return;
+        out.push({
+          id: clean(ev.id || '') || ('event-' + i),
+          kind: kind,
+          date: levelDay(ev.at || ev.date || ''),
+          amount: num(ev.amount),
+          label: levelPlain(ev.label || ''),
+          itemId: clean(ev.item_id || '')
+        });
+      });
+      return out;
+    }
+    var cash = feed && feed.cash;
+    var stripe = cash && cash.stripe;
+    var charges = stripe && (Array.isArray(stripe.recentCharges) ? stripe.recentCharges : (Array.isArray(stripe.charges) ? stripe.charges : []));
+    (charges || []).forEach(function (ch, i) {
+      if (!ch || ch.status && ch.status !== 'succeeded' && ch.status !== 'paid') return;
+      if (num(ch.amount) == null) return;
+      out.push({ id: clean(ch.id || '') || ('stripe-' + i), kind: 'cash', date: levelDay(ch.created || ch.date || ch.at || ''), amount: num(ch.amount), label: levelPlain(ch.description || ch.customer || 'Payment'), itemId: clean(ch.item_id || '') });
+    });
+    if (cash && Array.isArray(cash.payments)) cash.payments.forEach(function (p, i) {
+      if (!p || p.direction && p.direction !== 'in') return;
+      if (num(p.amount) == null) return;
+      out.push({ id: clean(p.id || '') || ('pay-' + i), kind: 'cash', date: levelDay(p.date || p.at || ''), amount: num(p.amount), label: levelPlain(p.who || p.from || 'Payment'), itemId: clean(p.item_id || '') });
+    });
+    var calls = feed && Array.isArray(feed.calls) ? feed.calls : [];
+    calls.forEach(function (c, i) {
+      if (!c) return;
+      var when = levelDay(c.when || '');
+      if (!when) return;
+      out.push({ id: 'call-' + i, kind: 'call', date: when, amount: null, label: levelPlain(c.title || c.who || 'Call'), itemId: '' });
+    });
+    var lib = window.SignalClients;
+    var scripts = levelSampleOn() && lib ? lib.sampleScripts(new Date()) : (S.clientScripts || []);
+    scripts.forEach(function (row) {
+      if (!row || (row.status !== 'Approved' && row.status !== 'Posted')) return;
+      out.push({ id: 'script-' + (row.id || ''), kind: row.status === 'Posted' ? 'post' : 'script', date: levelDay(row.created_at || ''), amount: null, label: levelPlain(row.title || row.status), itemId: '' });
+    });
+    var social = feed && feed.attract && feed.attract.social;
+    var platforms = social && Array.isArray(social.platforms) ? social.platforms : [];
+    platforms.forEach(function (p) {
+      (p && p.posts || []).forEach(function (post, i) {
+        if (!post) return;
+        out.push({ id: 'post-' + (p.id || '') + '-' + i, kind: 'post', date: levelDay(post.publishedAt || ''), amount: null, label: levelPlain(post.title || 'Post'), itemId: '' });
+      });
+    });
+    return out;
+  }
+  function levelXpOf(ev) {
+    if (!ev) return 0;
+    if (ev.kind === 'cash') return ev.amount == null ? 0 : Math.round(ev.amount);
+    if (ev.kind === 'call' || ev.kind === 'script' || ev.kind === 'post') return 25;
+    return 0;
+  }
+  function levelWeekday(ymd) {
+    var day = new Date(ymd + 'T12:00:00Z').getUTCDay();
+    return day !== 0 && day !== 6;
+  }
+  function levelStreak(events, today) {
+    var days = {};
+    events.forEach(function (ev) { if (ev.date) days[ev.date] = true; });
+    var cursor = today;
+    if (!levelWeekday(cursor)) {
+      while (cursor && !levelWeekday(cursor)) cursor = addDays(cursor, -1);
+    } else if (!days[cursor]) cursor = addDays(cursor, -1);
+    var n = 0;
+    var guard = 0;
+    while (cursor && guard < 40) {
+      guard += 1;
+      if (!levelWeekday(cursor)) { cursor = addDays(cursor, -1); continue; }
+      if (!days[cursor]) break;
+      n += 1;
+      cursor = addDays(cursor, -1);
+    }
+    return n;
+  }
+  function levelRetainers(feed) {
+    var goals = feed && feed.goals;
+    if (typeof goals === 'number' && isFinite(goals)) return { n: goals, sample: false };
+    if (goals && typeof goals === 'object' && !Array.isArray(goals) && num(goals.retainers) != null) return { n: num(goals.retainers), sample: false };
+    var spineGoals = feed && feed.spine && Array.isArray(feed.spine.goals) ? feed.spine.goals : (Array.isArray(goals) ? goals : []);
+    var i;
+    for (i = 0; i < spineGoals.length; i++) {
+      var g = spineGoals[i];
+      if (g && (g.id === 'retainers' || g.label === 'retainers') && num(g.current) != null) return { n: num(g.current), sample: false };
+    }
+    var block = feed && feed.retainers;
+    if (block && typeof block.paying === 'number') return { n: block.paying, sample: false };
+    if (block && Array.isArray(block.items)) {
+      var paying = block.items.filter(function (item) {
+        if (!item) return false;
+        if (item.paying === true) return true;
+        return item.status === 'good' || item.risk === 'none';
+      });
+      if (paying.length) return { n: paying.length, sample: false };
+      if (block.items.length) return { n: block.items.length, sample: false };
+    }
+    return { n: null, sample: true };
+  }
+  function levelFloor(feed, sample) {
+    var finance = feed && feed.finance && typeof feed.finance === 'object' && !Array.isArray(feed.finance) ? feed.finance : null;
+    if (!finance && sample) finance = financeFixture();
+    if (!finance) return { floor: null, collected: null, sample: false };
+    var burn = finance.burn_monthly_by_dept && num(finance.burn_monthly_by_dept.total);
+    var rent = num(finance.rent);
+    if (rent == null && Array.isArray(finance.vendors)) {
+      finance.vendors.forEach(function (v) {
+        if (!v || rent != null) return;
+        if (/rent/i.test(String(v.name || ''))) rent = num(v.amount);
+      });
+    }
+    var floor = null;
+    if (burn != null || rent != null) floor = (burn || 0) + (rent || 0);
+    var collected = finance.revenue && num(finance.revenue.mtd);
+    return { floor: floor, collected: collected, sample: !!(sample && !(feed && feed.finance)) };
+  }
+  function levelRankName(collected, floor) {
+    if (collected == null || floor == null) return '';
+    if (collected < floor) return 'Survival';
+    if (collected < floor * 2) return 'Stable';
+    return 'Growth';
+  }
+  function levelMoved(feed, rows, today) {
+    var lines = [];
+    var moved = feed && Array.isArray(feed.moved) ? feed.moved : null;
+    if (moved) {
+      moved.forEach(function (row) {
+        if (!row || lines.length >= 5) return;
+        var title = levelPlain(row.title || row.id || 'Item');
+        var from = levelPlain(row.from || 'the outer ring');
+        var to = levelPlain(row.to || 'inward');
+        lines.push(title + ' moved from ' + from + ' to ' + to);
+      });
+      return lines;
+    }
+    var snap = levelRead(LEVEL_SNAP, null);
+    var now = rows.map(function (row) { return { id: row.id, ring: signalRing(row), title: levelPlain(row.title) }; });
+    if (snap && snap.date && snap.date < today && Array.isArray(snap.rows)) {
+      var prev = {};
+      snap.rows.forEach(function (row) { prev[row.id] = row; });
+      now.forEach(function (row) {
+        if (lines.length >= 5) return;
+        var old = prev[row.id];
+        if (!old || old.ring == null || old.ring <= row.ring) return;
+        var from = old.ring >= 3 ? 'noise' : (old.ring === 2 ? 'future signal' : 'cash');
+        var to = row.ring <= 1 ? 'cash' : 'future signal';
+        lines.push(row.title + ' moved from ' + from + ' to ' + to);
+      });
+    }
+    if (!levelSampleOn()) levelWrite(LEVEL_SNAP, { date: today, rows: now });
+    return lines;
+  }
+  function levelCard(move, pending) {
+    if (!move) return '';
+    var hold = pending.indexOf(move.id) >= 0;
+    var href = move.href || '';
+    var act = href
+      ? '<a class="btn p" href="' + esc(href) + '">' + esc(levelCta(href)) + '</a>'
+      : '<button type="button" class="btn p" data-level-open="' + esc(move.id) + '">Open the item</button>';
+    var done = hold
+      ? '<button type="button" class="btn s" disabled>Pending</button>'
+      : '<button type="button" class="btn s" data-level-done="' + esc(move.id) + '">Done</button>';
+    return { hold: hold, act: act, done: done };
+  }
+  function levelHtml(m) {
+    var pack = levelMoves(m);
+    var pendingAll = levelPending();
+    var confirmedNow = {};
+    levelEvents(S.feed, m.today).forEach(function (ev) { if (ev.itemId) confirmedNow[ev.itemId] = true; });
+    var pending = pendingAll.filter(function (id) { return !confirmedNow[id]; });
+    if (pending.length !== pendingAll.length) levelWrite(LEVEL_PENDING, pending);
+    var sample = levelSampleOn();
+    var badge = sample ? '<span class="badge">SAMPLE</span>' : '';
+    var boss = pack.boss;
+    var bossCard = levelCard(boss, pending);
+    var bossHtml = boss ? (
+      '<article class="lvl-boss' + (bossCard.hold ? ' is-pending' : '') + '">' +
+      '<div class="ph"><p class="lvl-k">Next move</p>' + badge + '</div>' +
+      '<p class="lvl-verb">' + esc(boss.verb) + '</p>' +
+      '<span class="lvl-reward' + (bossCard.hold ? ' is-hollow' : '') + '">' + esc(bossCard.hold ? 'Pending' : boss.reward) + '</span>' +
+      '<p class="lvl-why">' + esc(bossCard.hold ? 'Pending until the feed confirms it. ' + boss.why : boss.why) + '</p>' +
+      '<div class="lvl-actions">' + bossCard.act + bossCard.done + '</div></article>'
+    ) : '<article class="lvl-boss"><div class="ph"><p class="lvl-k">Next move</p>' + badge + '</div><p class="lvl-verb">Nothing due</p><p class="lvl-why">No solid cash item is due, and no client batch is in Needs Review.</p></article>';
+    var quests = pack.quests.map(function (q) {
+      if (!q.move) return '<article class="lvl-quest"><h3>' + esc(q.name) + '</h3><p class="quiet">' + esc(q.empty) + '</p></article>';
+      var card = levelCard(q.move, pending);
+      return '<article class="lvl-quest' + (card.hold ? ' is-pending' : '') + '"><h3>' + esc(q.name) + '</h3><p>' + esc(q.move.verb) + '</p><span class="lvl-reward' + (card.hold ? ' is-hollow' : '') + '">' + esc(card.hold ? 'Pending' : q.move.reward) + '</span><p class="lvl-why">' + esc(q.move.why) + '</p><div class="lvl-actions">' + card.act + card.done + '</div></article>';
+    }).join('');
+    var retain = levelRetainers(sample ? S.feed : S.feed);
+    var retainSample = retain.n == null;
+    var retainN = retain.n == null ? 0 : Math.max(0, retain.n);
+    var retainPct = Math.max(0, Math.min(100, (retainN / 10) * 100));
+    var retainLabel = retain.n == null ? 'Not in this feed' : ('Level ' + compact(retain.n) + ' / 10 retainers');
+    var moneyPack = levelFloor(S.feed, sample);
+    var rank = levelRankName(moneyPack.collected, moneyPack.floor);
+    var cashPct = moneyPack.collected == null || moneyPack.floor == null || moneyPack.floor <= 0 ? 0 : Math.max(0, Math.min(100, (moneyPack.collected / (moneyPack.floor * 2)) * 100));
+    var cashLabel = moneyPack.collected == null && moneyPack.floor == null ? 'Not in this feed' : ((moneyPack.collected == null ? 'Collected not in this feed' : money(moneyPack.collected) + ' collected') + (moneyPack.floor == null ? '' : (' of ' + money(moneyPack.floor) + ' floor')));
+    var events = levelEvents(S.feed, m.today);
+    var todayXp = 0;
+    events.forEach(function (ev) { if (ev.date === m.today) todayXp += levelXpOf(ev); });
+    var streak = levelStreak(events, m.today);
+    var moved = levelMoved(S.feed, pack.rows, m.today);
+    var movedHtml = moved.length ? moved.map(function (line) { return '<li>' + esc(line) + '</li>'; }).join('') : '<li>No moves since yesterday.</li>';
+    return '<section class="level" id="level-layer" aria-label="Today is a level">' + bossHtml +
+      '<div class="lvl-meters">' +
+      '<article class="lvl-meter"><div class="ph"><h2>' + esc(retainLabel) + '</h2>' + (retainSample ? '<span class="badge">SAMPLE</span>' : '') + '</div><div class="bar" aria-hidden="true"><i style="width:' + retainPct.toFixed(1) + '%"></i></div><p class="quiet">Paying retainers toward 10. From goals or retainers in the feed.</p></article>' +
+      '<article class="lvl-meter"><div class="ph"><h2>Cash rank' + (rank ? ' · ' + esc(rank) : '') + '</h2>' + (moneyPack.sample ? '<span class="badge">SAMPLE</span>' : '') + '</div><div class="bar" aria-hidden="true"><i style="width:' + cashPct.toFixed(1) + '%"></i></div><p class="lvl-rank">' + esc(cashLabel) + '</p><p class="quiet">Floor is rent plus tool burn when finance is in the feed. Survival is under the floor, Stable clears it, Growth clears twice the floor.</p></article>' +
+      '<p class="lvl-xp">Today ' + esc(compact(todayXp)) + ' XP. Weekday streak ' + esc(String(streak)) + '. 1 XP per dollar collected. 25 for a booked call, an approved or posted script, or a post that went live. Done does not add XP.</p>' +
+      '</div>' +
+      '<div class="lvl-quests">' + quests + '</div>' +
+      '<ul class="lvl-moved"><li class="lvl-k">What moved since yesterday</li>' + movedHtml + '</ul></section>';
+  }
+  function levelRepaint() {
+    var home = $('v-home');
+    var cur = home && home.querySelector('#level-layer');
+    if (!cur || !S.model) return;
+    var holder = document.createElement('div');
+    holder.innerHTML = levelHtml(S.model);
+    if (holder.firstElementChild) cur.replaceWith(holder.firstElementChild);
+  }
+  function levelLoot() {
+    if (levelSampleOn() || !S.feed) return;
+    var events = levelEvents(S.feed, S.model && S.model.today);
+    var pays = events.filter(function (ev) { return ev.kind === 'cash' && ev.id; });
+    var seen = levelRead(LEVEL_SEEN, null);
+    var ids = pays.map(function (ev) { return ev.id; });
+    if (!seen || !Array.isArray(seen.ids)) {
+      levelWrite(LEVEL_SEEN, { ids: ids });
+      return;
+    }
+    var known = {};
+    seen.ids.forEach(function (id) { known[id] = true; });
+    var fresh = pays.filter(function (ev) { return !known[ev.id]; });
+    levelWrite(LEVEL_SEEN, { ids: ids });
+    if (!fresh.length) return;
+    fresh.sort(function (a, b) { return (b.amount || 0) - (a.amount || 0); });
+    var top = fresh[0];
+    toast('+' + money(top.amount || 0) + ' collected');
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var flash = document.createElement('div');
+    flash.className = 'lvl-flash';
+    flash.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(flash);
+    setTimeout(function () { if (flash.parentNode) flash.remove(); }, 1000);
+  }
   function homeHtml(m) {
     var tiles = '<div class="krow">' + tileHtml(m.metrics.collected) + tileHtml(m.metrics.videos) + tileHtml(m.metrics.booked) + tileHtml(m.metrics.unsent) + '</div>';
-    return guideHtml(m) + remindersHtml(m) + '<div class="hero-grid">' + orgHtml(m) + termHtml(m) + '</div>' + gaugeRow(m) + tiles +
+    return levelHtml(m) + guideHtml(m) + remindersHtml(m) + '<div class="hero-grid">' + orgHtml(m) + termHtml(m) + '</div>' + gaugeRow(m) + tiles +
       '<div class="two">' + cashChartHtml(m) + donutHtml(m) + '</div>' +
       '<div style="margin-top:12px">' + approvalHtml(m) + '</div>' +
       '<div class="two">' + compactWins(m) + compactToday(m) + '</div>' +
@@ -7926,6 +8374,7 @@ footer.site{margin-top:auto}
     paintSys();
     applyFilter();
     if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
+    levelLoot();
   }
   function paintSys() {
     var ready = S.feedState === 'ready';
@@ -8590,6 +9039,29 @@ footer.site{margin-top:auto}
         var act = snx.getAttribute('data-snx');
         if (act !== 'done' && !(Hover.pointer === 'touch' && TouchScroll.moved)) bubble('pop');
         signalAct(act, snx.getAttribute('data-id') || '', snx);
+        return;
+      }
+      var levelDone = e.target.closest('[data-level-done]');
+      if (levelDone) {
+        var doneId = clean(levelDone.getAttribute('data-level-done') || '');
+        if (doneId) {
+          var pendingIds = levelPending();
+          if (pendingIds.indexOf(doneId) < 0) pendingIds.push(doneId);
+          levelWrite(LEVEL_PENDING, pendingIds);
+          toast('Marked pending. It counts when the feed confirms it.');
+          levelRepaint();
+        }
+        return;
+      }
+      var levelOpen = e.target.closest('[data-level-open]');
+      if (levelOpen) {
+        var openId = levelOpen.getAttribute('data-level-open') || '';
+        if (openId.indexOf('review:') === 0) {
+          location.href = hubClientHref(openId.slice(7));
+          return;
+        }
+        go('home');
+        signalSelect(openId);
         return;
       }
       if (e.target.closest('a[href]')) return;

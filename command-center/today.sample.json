@@ -127,7 +127,8 @@
         "value_usd": 4500,
         "notes": "SAMPLE. Highest overdue value. Layout only.",
         "category": "cash_now",
-        "href": "https://signals.marketing"
+        "href": "https://signals.marketing",
+        "action_url": "https://mail.google.com/mail/"
       },
       {
         "id": "sample-rem-9",
@@ -143,6 +144,40 @@
       }
     ]
   },
+  "moved": [
+    {
+      "id": "sample-move-1",
+      "title": "SAMPLE. Retainer ask",
+      "from": "future signal",
+      "to": "cash",
+      "at": "2026-11-13"
+    },
+    {
+      "id": "sample-move-2",
+      "title": "SAMPLE. Lumen stamp",
+      "from": "noise",
+      "to": "future signal",
+      "at": "2026-11-13"
+    }
+  ],
+  "confirmed_events": [
+    {
+      "id": "sample-event-1",
+      "kind": "cash",
+      "amount": 500,
+      "at": "2026-11-14",
+      "label": "SAMPLE. Layout payment",
+      "item_id": ""
+    },
+    {
+      "id": "sample-event-2",
+      "kind": "call",
+      "amount": null,
+      "at": "2026-11-13",
+      "label": "SAMPLE. Layout call",
+      "item_id": ""
+    }
+  ],
   "dmBridge": null,
   "decisions": {
     "asOf": "2026-11-10T06:47:00-06:00",

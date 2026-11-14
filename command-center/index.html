@@ -505,8 +505,10 @@ body[data-ready] .shimmer{display:none}
   .toast{bottom:calc(84px + env(safe-area-inset-bottom));max-width:calc(100% - 24px)}
   html,body{height:100%;overflow:hidden}
   .app{height:100dvh;min-height:0;overflow:hidden}
-  .maincol{height:calc(100dvh - 80px - env(safe-area-inset-bottom));min-height:0;overflow:auto;padding-bottom:20px}
-  footer.site{padding-bottom:12px}
+  .maincol{height:calc(100dvh - 80px - env(safe-area-inset-bottom));min-height:0;overflow:auto;padding-bottom:28px;scroll-padding-top:64px}
+  main.stage{min-height:0;flex:0 0 auto}
+  footer.site{position:static;margin-top:16px;padding-bottom:8px}
+  #clients-core{scroll-margin-top:72px}
   .lock{margin:12px 16px 8px}
 }
 @media(prefers-reduced-motion:reduce){
@@ -525,7 +527,7 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold.on{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px 12px;align-items:stretch}
   #v-home.desk-fold>*{grid-column:1 / -1;min-width:0}
   #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:auto;margin:0;padding:10px 12px 8px}
-  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:auto;min-height:0;overflow:visible;align-self:start}
+  #v-home.desk-fold>.org{grid-column:2;grid-row:2;height:auto;min-height:0;overflow:visible;align-self:stretch}
   #v-home.desk-fold>.guide{overflow:visible;align-items:center;padding:12px 14px;margin-bottom:8px;gap:12px}
   #v-home.desk-fold>.guide>div{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;flex:1}
   #v-home.desk-fold>.guide .gk{margin:0;flex:none;font-size:11px;letter-spacing:.1em;line-height:1.4}
@@ -560,7 +562,7 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold .snx-foot{margin-top:8px}
   #v-home.desk-fold .org .ph{padding:10px 12px 0}
   #v-home.desk-fold .org .ph h2{font-size:22px}
-  #v-home.desk-fold .org .sub{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #v-home.desk-fold .org .sub{font-size:12px;white-space:normal;overflow:visible;text-overflow:clip}
   #v-home.desk-fold .loop-nav{padding:4px 12px 0}
   #v-home.desk-fold .org-stage{height:420px;min-height:420px;aspect-ratio:auto}
   #v-home.desk-fold .org-svg{height:100%}
@@ -867,6 +869,11 @@ body[data-ready] .shimmer{display:none}
 .stepper li.on > .bots{display:flex}
 .speedo .lbl{display:block;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-top:1px}
 footer.site{margin-top:auto}
+@media(max-width:760px),(max-height:520px) and (max-width:980px){
+  main.stage{min-height:0;flex:0 0 auto}
+  footer.site{position:static;margin-top:16px}
+  #clients-core{scroll-margin-top:72px}
+}
 @media(max-width:1439px){
   .search{display:none}
   .search-open{display:grid}
@@ -1368,7 +1375,7 @@ footer.site{margin-top:auto}
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
   function clean(s) {
-    return signalPlainMoney(String(s == null ? '' : s).replace(/\u2014/g, ', ').replace(/\u2013/g, '-').replace(/\u2212/g, '-').replace(/[ \t]{2,}/g, ' ').replace(/\s+,/g, ',').trim());
+    return signalPlainMoney(String(s == null ? '' : s).replace(/\u2014/g, ', ').replace(/\u2013/g, '-').replace(/\u2212/g, '-').replace(/\bCORE\b/g, ' ').replace(/[ \t]{2,}/g, ' ').replace(/\s+,/g, ',').trim());
   }
   function textField(obj, keys) {
     if (!obj) return '';
@@ -5775,7 +5782,7 @@ footer.site{margin-top:auto}
       return n ? (names[key] + ' ' + n) : '';
     }).filter(Boolean);
     var more = extra.length ? '<p class="quiet" style="padding:0 14px 14px">Also in the feed: ' + esc(extra.join(', ')) + '.</p>' : '';
-    return '<section class="org panel is-summary"><div class="ph"><h2>AI workforce</h2><p class="sub">Attract, Convert, and Transform.</p></div><div class="loop-meters">' + cols + '</div>' + more + workforceClientsHtml() + '</section>';
+    return '<section class="org panel is-summary"><div class="ph"><h2>AI workforce</h2><p class="sub">A closed loop.</p></div><div class="loop-meters">' + cols + '</div>' + more + workforceClientsHtml() + '</section>';
   }
   function workforceClientsHtml() {
     var lib = window.SignalClients;
@@ -6423,7 +6430,7 @@ footer.site{margin-top:auto}
       var side = String(p.side || '').toLowerCase();
       if (!buckets[side]) return;
       var waiting = p.status === 'waiting' || p.status === 'blocked' || p.status === 'needs-send' || p.owner === 'Cristian';
-      add(side, { title: p.name || p.title || 'Project', category: side === 'attract' ? 'content' : (side === 'transform' ? 'clients' : 'future_money'), stage: side, value: null, due: p.status || '', waiting: waiting });
+      add(side, { title: clean(p.name || p.title || 'Project'), category: side === 'attract' ? 'content' : (side === 'transform' ? 'clients' : 'future_money'), stage: side, value: null, due: p.status || '', waiting: waiting });
     });
     return buckets;
   }

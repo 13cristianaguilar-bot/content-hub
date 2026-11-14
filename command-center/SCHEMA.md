@@ -330,6 +330,7 @@ Workforce opens on Mission radar. The radar is the SIGNAL NOW view. There is no 
 | `value_usd` | Number, or `null` when there is no dollar figure. `0` is a real number. |
 | `notes` | Printed in the radar briefing. |
 | `href` | `https` only, or `null`. The page opens it as Open source. |
+| `action_url` | Optional. `https` link, or a same-site path such as `../?client=slug`. The Today is a level card uses this before `href`. A Gmail thread, a Calendar event, or a Hub client link belongs here. |
 | `ring` | Optional integer 0 to 3. When it is present and valid, it overrides the due-based ring. `0` is the center. A missing value, a string, a fraction, or a number outside 0 to 3 keeps the due-based ring. |
 | `ring_reason` | Optional string. When it has text, the blip detail card and the locked briefing show it as Why here. |
 | `category` | Optional. One of `cash_now`, `future_money`, `clients`, `content`, `ops`. Anything else is ignored. Missing category: a dollar figure that is overdue or due within 7 days (including today, now, or this week) is `cash_now`. Any other dollar figure is `future_money`. No dollar figure is `ops`. |
@@ -503,6 +504,20 @@ The delivery strip draws one cell per script that has `deliveredAt`. Green means
 `wins[]` are real logged quotes only. Do not put placeholder praise here. An empty list or a missing key shows **No wins logged**. Sample mode is the only place a SAMPLE quote belongs. The floor log metric `client_wins` is the other source, and those rows require `client_name`.
 
 `viewsByWeek` and `followersByWeek` follow the same baseline rule as Attract.
+
+### Today is a level
+
+Optional keys. The Workforce page reads them for the card above the radar. Omit a key when that source was not read. The page does not invent a private figure. Signed out, the card wears SAMPLE and uses layout data.
+
+| Key | Notes |
+|---|---|
+| `action_url` | On a `reminders.signalNow` row. See the reminders table. |
+| `goals` | A number of paying retainers, or `{ "retainers": 2 }`, or the `spine.goals` row whose `id` is `retainers` and whose `current` is that count. The level bar is that count toward 10. |
+| `retainers` | The roster above. A numeric `paying` field wins. Otherwise the page counts items with `paying: true`, then `status: "good"` or `risk: "none"`, then the roster length. |
+| `moved` | Up to the first 5 rows. Each row is `{ "id", "title", "from", "to", "at" }`. `from` and `to` are `noise`, `future signal`, or `cash`. When `moved` is omitted, the page compares the last visit kept in this browser. |
+| `confirmed_events` | Rows that already happened: `{ "id", "kind", "amount", "at", "label", "item_id" }`. `kind` is `cash`, `call`, `script`, or `post`. `item_id` matches a reminder or review id when that outcome closes a pending move. Done in the browser never adds XP. XP counts these events, or, when this array is omitted, succeeded Stripe charges, inbound payments, calendar calls, scripts Approved or Posted, and posts with `publishedAt`. |
+
+`finance.rent` is an optional monthly number. The cash rank floor is that rent plus `finance.burn_monthly_by_dept.total`. Collected cash is `finance.revenue.mtd` when it is a number. Survival is under the floor, Stable clears it, and Growth clears twice the floor.
 
 ### Game layer (computed, not stored)
 

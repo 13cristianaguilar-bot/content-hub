@@ -244,6 +244,21 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .btn{border:0;border-radius:999px;min-height:40px;padding:0 14px;font-weight:700}
 .btn.p{background:var(--red);color:#fff}
 .btn.p:hover{background:var(--red-deep)}
+.next-up{background:#0c0c0c;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px 14px;min-width:0;max-width:100%}
+.next-up h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red-soft);font-weight:800}
+.next-up .nu-sec{margin-top:12px;min-width:0}
+.next-up .nu-sec h3{margin:0 0 6px;font-size:10px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;color:var(--nu,var(--cat-ops));line-height:1.3}
+.next-up ol{list-style:none;margin:0;padding:0;display:grid;gap:8px;min-width:0}
+.next-up li{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;border-left:3px solid var(--nu,var(--cat-ops));padding:2px 0 2px 8px}
+.next-up .nu-main{display:flex;align-items:flex-start;gap:8px;min-width:0;flex:1}
+.next-up .nu-dot{width:6px;height:6px;border-radius:50%;background:var(--nu,var(--cat-ops));flex:none;margin-top:6px}
+.next-up b{display:block;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
+.next-up .nu-main span{display:block;color:var(--muted);font-size:12px;margin-top:2px;overflow-wrap:anywhere}
+.next-up .btn{min-height:36px;flex:none;text-decoration:none;display:inline-flex;align-items:center;background:var(--red);color:#fff}
+@media(max-width:420px){
+  .next-up{padding:12px}
+  .next-up .btn{padding:0 10px}
+}
 .btn.s{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--line)}
 .stripe{border-color:rgba(237,48,57,.35)}
 html.lock,html.lock body{overflow:hidden}
@@ -535,14 +550,6 @@ body[data-ready] .shimmer{display:none}
   #v-home.desk-fold>#signal-now{grid-column:1;grid-row:2;height:auto;margin:0;padding:10px 12px 8px;align-self:start}
   #v-home.desk-fold>.desk-side{grid-column:2;grid-row:2;display:flex;flex-direction:column;gap:10px;align-self:start;min-width:0}
   #v-home.desk-fold>.snx-hud{grid-column:1 / -1;align-self:start;min-height:0}
-  .next-up{background:#0c0c0c;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:12px 14px;min-width:0}
-  .next-up h2{margin:0;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red-soft);font-weight:800}
-  .next-up ol{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:8px}
-  .next-up li{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
-  .next-up li div{min-width:0}
-  .next-up b{display:block;font-size:14px;line-height:1.3;overflow-wrap:anywhere}
-  .next-up span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
-  .next-up .btn{min-height:36px;flex:none;text-decoration:none;display:inline-flex;align-items:center}
   #v-home.desk-fold>.guide{overflow:visible;align-items:center;padding:12px 14px;margin-bottom:8px;gap:12px}
   #v-home.desk-fold>.guide>div{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;flex:1}
   #v-home.desk-fold>.guide .gk{margin:0;flex:none;font-size:11px;letter-spacing:.1em;line-height:1.4}
@@ -2905,6 +2912,9 @@ footer.site{margin-top:auto}
         ringPin: signalPin(item.ring),
         ringReason: typeof item.ring_reason === 'string' ? clean(item.ring_reason) : '',
         cat: signalCategory(item, due, num(item.value_usd)),
+        feedCategory: typeof item.category === 'string' ? item.category : '',
+        feedWedge: typeof item.wedge === 'string' ? item.wedge : '',
+        feedLane: typeof item.lane === 'string' ? item.lane : '',
         moneyKind: signalMoneyKind(item.money_kind),
         cadence: clean(item.cadence || ''),
         confidence: signalConfidence(item.confidence)
@@ -4653,45 +4663,115 @@ footer.site{margin-top:auto}
     var box = S.orgView === 'loop' ? orgLoopBox() : [0, 0, 960, 540];
     svg.setAttribute('viewBox', box.join(' '));
   }
+  function nextUpDueKey(row) {
+    var due = row && row.due;
+    if (!due) return '9999-99-99';
+    if (due.urgency === 0 && (!due.sortDay || due.sortDay > '9000')) return '0000-00-00';
+    return due.sortDay || '9999-99-99';
+  }
   function nextUpRows() {
     var rows = (S.signalRows || []).filter(function (row) { return row && !signalOut(row); });
     rows.sort(function (a, b) {
       var ar = signalRing(a);
       var br = signalRing(b);
       if (ar !== br) return ar - br;
-      return (Number(b.amount) || 0) - (Number(a.amount) || 0);
+      var aa = Number(a.amount) || 0;
+      var ba = Number(b.amount) || 0;
+      if (aa !== ba) return ba - aa;
+      var ad = nextUpDueKey(a);
+      var bd = nextUpDueKey(b);
+      if (ad !== bd) return ad < bd ? -1 : 1;
+      return a.index - b.index;
     });
     return rows;
   }
+  function nextUpField(item) {
+    if (!item) return '';
+    var raw = item.category || item.wedge || item.lane || '';
+    raw = String(raw).toLowerCase().replace(/[\s-]+/g, '_');
+    if (raw === 'clients' || raw === 'client' || raw === 'delivery' || raw === 'transform') return 'delivery';
+    if (raw === 'future_money' || raw === 'future' || raw === 'sales' || raw === 'convert') return 'sales';
+    if (raw === 'cash_now' || raw === 'cash' || raw === 'jobs') return 'cash';
+    if (raw === 'ops' || raw === 'content' || raw === 'personal' || raw === 'attract') return 'ops';
+    return '';
+  }
+  function nextUpKeyword(text) {
+    var t = String(text || '').toLowerCase();
+    if (/job application|marketing job|\bresume\b|closest to paying|\bcollect\b|money owed|\bpayment\b/.test(t)) return 'cash';
+    if (/sponsorship|\baurea\b|\banand\b|\bten\b|corey morrison|prospect|partner deal|\bfollow up\b|\bfollow-up\b/.test(t)) return 'sales';
+    if (/\bscripts?\b|open thread|zandshq|story post|\bmuse\b|accountable|github website|client delivery/.test(t)) return 'delivery';
+    return '';
+  }
+  function nextUpNamed(title) {
+    var t = String(title || '').toLowerCase();
+    if (/aurea|sponsorship|sooth|corey morrison|\banand\b|\bten\b/.test(t)) return 'sales';
+    if (/job application|closest to paying|\bresume\b/.test(t)) return 'cash';
+    return '';
+  }
+  function nextUpGroup(item) {
+    var title = String((item && item.title) || '');
+    var field = nextUpField(item);
+    var named = nextUpNamed(title);
+    if (named) return named;
+    if (field) return field;
+    var blob = title + ' ' + String((item && item.notes) || '') + ' ' + String((item && item.tied) || '');
+    return nextUpKeyword(blob) || 'ops';
+  }
+  function nextUpItem(row, color) {
+    var title = signalPlainTitle(row);
+    var bits = [];
+    if (row.amount != null && isFinite(row.amount) && row.amount !== 0) {
+      var label = signalMoneyLabel(row);
+      if (label) bits.push(row.amount > 0 && label.charAt(0) !== '+' && label.charAt(0) !== '-' ? ('+' + label) : label);
+    }
+    var today = S.model && S.model.today;
+    var due = row.due || null;
+    var when = '';
+    if (due && due.kind === 'date' && due.sortDay) {
+      var future = '';
+      var text = String(due.text || '');
+      if (text && text.length <= 16 && !/\d{4}/.test(text)) future = text;
+      else if (due.tip && String(due.tip).length <= 16 && !/\d{4}/.test(due.tip)) future = String(due.tip);
+      when = lateOrDue(due.sortDay, today, future);
+    } else if (due && String(due.text || '') === 'OVERDUE') when = 'late';
+    if (when) bits.push(when);
+    var meta = bits.join(', ');
+    var href = String(row.href || '');
+    var action = /^https:\/\//.test(href)
+      ? '<a class="btn p" href="' + esc(href) + '" target="_blank" rel="noopener">Open</a>'
+      : '<button type="button" class="btn p" data-snx="lock" data-id="' + esc(row.id) + '">Do</button>';
+    return '<li style="--nu:var(' + color + ')"><div class="nu-main"><i class="nu-dot" aria-hidden="true"></i><div><b>' + esc(title) + '</b>' + (meta ? '<span>' + esc(meta) + '</span>' : '') + '</div></div>' + action + '</li>';
+  }
   function nextUpHtml(limit) {
-    var rows = nextUpRows().slice(0, limit || 3);
+    var rows = nextUpRows();
+    if (limit != null) rows = rows.slice(0, limit);
     if (!rows.length) return '';
-    var items = rows.map(function (row) {
-      var title = signalPlainTitle(row);
-      var bits = [];
-      if (row.amount != null && isFinite(row.amount) && row.amount !== 0) {
-        var label = signalMoneyLabel(row);
-        if (label) bits.push(row.amount > 0 && label.charAt(0) !== '+' && label.charAt(0) !== '-' ? ('+' + label) : label);
-      }
-      var today = S.model && S.model.today;
-      var due = row.due || null;
-      var when = '';
-      if (due && due.kind === 'date' && due.sortDay) {
-        var future = '';
-        var text = String(due.text || '');
-        if (text && text.length <= 16 && !/\d{4}/.test(text)) future = text;
-        else if (due.tip && String(due.tip).length <= 16 && !/\d{4}/.test(due.tip)) future = String(due.tip);
-        when = lateOrDue(due.sortDay, today, future);
-      } else if (due && String(due.text || '') === 'OVERDUE') when = 'late';
-      if (when) bits.push(when);
-      var meta = bits.join(', ');
-      var href = String(row.href || '');
-      var action = /^https:\/\//.test(href)
-        ? '<a class="btn p" href="' + esc(href) + '" target="_blank" rel="noopener">Open</a>'
-        : '<button type="button" class="btn p" data-snx="lock" data-id="' + esc(row.id) + '">Do</button>';
-      return '<li><div><b>' + esc(title) + '</b>' + (meta ? '<span>' + esc(meta) + '</span>' : '') + '</div>' + action + '</li>';
+    var sections = [
+      { id: 'delivery', label: 'Client delivery', color: '--cat-clients' },
+      { id: 'sales', label: 'Sales', color: '--cat-future' },
+      { id: 'cash', label: 'Cash and jobs', color: '--cat-cash' },
+      { id: 'ops', label: 'Ops and personal', color: '--cat-ops' }
+    ];
+    var buckets = { delivery: [], sales: [], cash: [], ops: [] };
+    rows.forEach(function (row) {
+      var id = nextUpGroup({
+        title: signalPlainTitle(row),
+        notes: row.notes,
+        tied: row.tied,
+        category: row.feedCategory,
+        wedge: row.feedWedge,
+        lane: row.feedLane
+      });
+      if (!buckets[id]) id = 'ops';
+      buckets[id].push(row);
+    });
+    var body = sections.map(function (sec) {
+      var list = buckets[sec.id];
+      if (!list.length) return '';
+      var items = list.map(function (row) { return nextUpItem(row, sec.color); }).join('');
+      return '<div class="nu-sec" data-nu="' + sec.id + '" style="--nu:var(' + sec.color + ')"><h3>' + esc(sec.label) + ' ' + list.length + '</h3><ol>' + items + '</ol></div>';
     }).join('');
-    return '<section class="next-up"><h2>Next up</h2><ol>' + items + '</ol></section>';
+    return '<section class="next-up"><h2>Next up</h2>' + body + '</section>';
   }
   function paintNextUp() {
     var home = $('v-home');

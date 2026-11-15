@@ -3201,32 +3201,59 @@ footer.site{margin-top:auto}
       return isFinite(n) ? moneyShort(n) : bit;
     });
   }
+  function signalNoteJargon(sentence) {
+    var s = String(sentence || '');
+    if (/\bR\d+\b/.test(s)) return true;
+    if (/\brow\s+(?:ids?|lists?|codes?)\b/i.test(s)) return true;
+    if (/\brows?\s+#\d+\b/i.test(s)) return true;
+    if (/\bstamp(?:ed|ing|s)?\b/i.test(s)) return true;
+    if (/\bCORE\b/.test(s)) return true;
+    if (/\blast-known\b/i.test(s)) return true;
+    if (/\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b/i.test(s)) return true;
+    if (/\[[^\]]*\d{3,}[^\]]*\]/.test(s)) return true;
+    if (/\bmemos?\s+\d/i.test(s)) return true;
+    if (/\bmemo bank\b/i.test(s)) return true;
+    if (/\brem-[a-z0-9]+(?:-[a-z0-9]+)+\b/i.test(s)) return true;
+    if (/:\s*(?:,\s*)+(?:and|or)?\b/i.test(s)) return true;
+    if (/:\s*(?:,\s*)*(?:and|or)\s*[.!?]*\s*$/i.test(s)) return true;
+    var words = s.replace(/[^A-Za-z]+/g, ' ').trim().split(/\s+/).filter(Boolean);
+    var glue = { and: 1, or: 1, with: 1, the: 1, a: 1, an: 1, of: 1, to: 1, for: 1, on: 1, in: 1, at: 1 };
+    var solid = words.filter(function (word) { return !glue[word.toLowerCase()]; });
+    return !solid.length;
+  }
+  function signalNoteKeep(chunk) {
+    var s = String(chunk || '').replace(/\s+/g, ' ').trim();
+    if (!s || signalNoteJargon(s)) return '';
+    s = s.replace(/\s+([,.;:])/g, '$1').replace(/,{2,}/g, ',').replace(/([;:]){2,}/g, '$1').replace(/\(\s*\)/g, '');
+    s = s.replace(/^[,;:\s]+|[,;:\s]+$/g, '').replace(/[.!?]+$/g, '').replace(/\s+/g, ' ').trim();
+    if (!s || signalNoteJargon(s) || !/[A-Za-z]{3}/.test(s)) return '';
+    return signalPlainMoney(s) + '. ';
+  }
   function signalPlainNotes(raw) {
-    var text = String(raw || '');
-    text = text.replace(/[^.]*\brow list\b[^.]*\./gi, 'The script list was not rechecked, so use it as the last copy on file. ');
-    text = text.replace(/\bnone stamped\b/gi, 'none of the scripts are ready');
-    text = text.replace(/\bwith\s+\d+\s+rows?\s+awaiting review\s*:\s*(?:R\d+\s*,?\s*(?:and\s+)?)+/gi, 'Scripts are waiting for review');
-    text = text.replace(/\btreat the(?:\s+row\s+ids?)?\s+as last-known,?\s*(?:not freshly audited)?/gi, 'use that list as the last copy on file');
-    text = text.replace(/\blast-known\b/gi, 'last copy on file');
-    text = text.replace(/\bnot freshly audited\b/gi, 'not rechecked');
-    text = text.replace(/\bmemos?\s*\[[^\]]*\]/gi, '');
-    text = text.replace(/\(\s*memos?[^)]*\)/gi, '');
-    text = text.replace(/\bmemo bank\b[^.]{0,80}/gi, '');
-    text = text.replace(/\bmemos?\s+\d[\d,\s]*/gi, '');
-    text = text.replace(/\bstamp\s+rows\b/gi, 'scripts');
-    text = text.replace(/\brow\s+ids?\b/gi, '');
-    text = text.replace(/\brows?\s+#?\d+\b/gi, '');
-    text = text.replace(/\bR\d+\b/g, '');
-    text = text.replace(/\bCORE\b/g, '');
-    text = text.replace(/\b[0-9a-f]{8}-[0-9a-f-]{13,}\b/gi, '');
-    text = signalPlainMoney(text).replace(/\s+/g, ' ').replace(/\s+([,.;:])/g, '$1').replace(/,\s*,/g, ',').replace(/\(\s*\)/g, '').trim();
-    var parts = text.split(/(?<=[.!?])\s+/).map(function (s) { return s.replace(/\s+/g, ' ').trim(); }).filter(function (s) {
-      if (s.length < 12) return false;
-      if (/^(memo|row|id|stamp)\b/i.test(s)) return false;
-      if (/\bR\d+\b|none stamped|last-known|row ids?|treat the as\b/i.test(s)) return false;
-      return /[A-Za-z]{3}/.test(s);
-    });
-    return parts.join(' ');
+    var text = String(raw || '').replace(/\s+/g, ' ').trim();
+    if (!text) return '';
+    var parts = [];
+    var buf = '';
+    var i, ch, prev, next, piece;
+    for (i = 0; i < text.length; i++) {
+      ch = text.charAt(i);
+      if (ch === '.' || ch === '!' || ch === '?') {
+        prev = i > 0 ? text.charAt(i - 1) : '';
+        next = i + 1 < text.length ? text.charAt(i + 1) : '';
+        if (ch === '.' && /[0-9]/.test(prev) && /[0-9]/.test(next)) {
+          buf += ch;
+          continue;
+        }
+        piece = signalNoteKeep(buf + ch);
+        if (piece) parts.push(piece);
+        buf = '';
+        continue;
+      }
+      buf += ch;
+    }
+    piece = signalNoteKeep(buf);
+    if (piece) parts.push(piece);
+    return parts.join('');
   }
   function signalPlainSentence(row) {
     var notes = signalPlainNotes(row && row.notes);

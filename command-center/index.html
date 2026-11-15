@@ -1145,6 +1145,15 @@ footer.site{margin-top:auto}
 @media(max-width:760px){
   .guide .rq-chip{display:inline-flex;align-items:center;margin-top:10px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(237,48,57,.45);background:rgba(237,48,57,.14);color:#fff;font-weight:800}
   .rq-links .btn{min-height:44px}
+  .maincol{padding-bottom:8px}
+  main.stage{padding-bottom:8px}
+  #v-review .guide{padding:8px 12px;margin-bottom:6px}
+  #v-review .rq-note{margin-bottom:6px}
+  #v-review .rq{gap:6px}
+  #v-review .rq-card{padding:8px 12px}
+  #v-review .rq-who,#v-review .rq-due,#v-review .rq-money{margin-top:4px}
+  #v-review .rq-links{margin-top:6px}
+  #v-review .rq-fold{padding:0 12px 4px}
 }
 .fin-track{height:8px;border-radius:999px;background:#1c1c1c;overflow:hidden}
 .fin-fill{height:100%;background:#ed3039;border-radius:999px}
@@ -8448,9 +8457,37 @@ footer.site{margin-top:auto}
     });
     return out;
   }
+  function reviewChicagoOffsetMs(instant) {
+    var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', timeZoneName: 'longOffset' }).formatToParts(instant);
+    var name = '';
+    parts.forEach(function (p) { if (p.type === 'timeZoneName') name = p.value; });
+    var m = name.match(/GMT([+-])(\d{1,2})(?::(\d{2}))?/);
+    if (!m) return -6 * 60 * 60 * 1000;
+    var sign = m[1] === '-' ? -1 : 1;
+    return sign * ((+m[2]) * 60 + (+m[3] || 0)) * 60 * 1000;
+  }
+  function reviewEndOfChicagoDay(ymd) {
+    var bits = ymd.split('-');
+    var localMidnight = Date.UTC(+bits[0], +bits[1] - 1, +bits[2] + 1);
+    var utc = new Date(localMidnight - reviewChicagoOffsetMs(new Date(localMidnight)));
+    utc = new Date(localMidnight - reviewChicagoOffsetMs(utc));
+    return new Date(utc.getTime() - 1);
+  }
+  function reviewDayLabel(ymd) {
+    var bits = ymd.split('-');
+    var noon = new Date(Date.UTC(+bits[0], +bits[1] - 1, +bits[2], 12));
+    var map = {};
+    new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' }).formatToParts(noon).forEach(function (p) { map[p.type] = p.value; });
+    return map.weekday + ' ' + map.month + ' ' + map.day;
+  }
   function reviewDueParts(iso) {
     if (!iso) return null;
-    var d = new Date(iso);
+    var raw = String(iso).trim();
+    if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+      var today = chicagoDate(new Date());
+      return { text: reviewDayLabel(raw), hot: today >= raw, at: reviewEndOfChicagoDay(raw).getTime() };
+    }
+    var d = new Date(raw);
     if (isNaN(d.getTime())) return null;
     var delta = d.getTime() - Date.now();
     var ct = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(d);

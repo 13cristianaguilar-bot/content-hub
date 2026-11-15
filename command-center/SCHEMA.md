@@ -360,7 +360,7 @@ Mark reviewed writes `localStorage` key `cc-review-done`, an array of item ids, 
 
 Open items are `ready` and `decision` that are not in `cc-review-done`. The sidebar badge and the phone chip count those. `reference` and `done` are not open. `reference` sits in a collapsed Reference section. `done`, and anything marked in this browser, sit in a collapsed Reviewed section.
 
-Sort the open list by due soonest. A missing due sorts last. The same due puts `decision` before `ready`. A due within 3 hours, or already past, is red. The clock is America/Chicago, next to a relative phrase.
+Sort the open list by due soonest. A missing due sorts last. The same due puts `decision` before `ready`. A due within 3 hours, or already past, is red. The clock is America/Chicago, next to a relative phrase. A date-only `due` (`2026-11-16`) is that whole day in America/Chicago, not UTC midnight. The card shows the day with no clock, for example Mon Nov 16. It turns red on that day and after. It sorts as the end of that day.
 
 `money_note` is a short amber line when it has text. `link` is the Open button. `links` are extra buttons. Every URL must be `https`. The phone chip sits in What to do now and opens `#review`. It is not a dock tab.
 
@@ -396,7 +396,7 @@ Sort the open list by due soonest. A missing due sorts last. The same due puts `
 | `links` | Optional extra `{ label, url }` buttons. `url` is `https` only. |
 | `status` | `ready`, `decision`, `reference`, or `done`. Anything else is skipped. |
 | `action` | The one step left. This is the bold line on the card. |
-| `due` | Optional ISO time. Missing due sorts last and shows no clock. |
+| `due` | Optional ISO time, or a date-only day (`2026-11-16`). A date-only value is the whole Chicago day: no clock on the card, red on that day and after, sorted at the end of that day. Missing due sorts last and shows no clock. |
 | `money_note` | Optional short money line. Omit it when there is no money to mention. |
 | `source` | Where the item came from. The card does not require it. |
 | `added` | When it landed in the queue. Optional ISO time. |

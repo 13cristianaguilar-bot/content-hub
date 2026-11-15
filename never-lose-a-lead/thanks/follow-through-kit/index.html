@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Shop Follow-Through Kit files</title>
+<meta name="description" content="Download the kit, the guide, and unlock seasonal lines after you have a working review link.">
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@450;500;600;650;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../site.css">
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in"><a class="brand" href="../../"><span class="mark"></span> Never Lose a Lead</a></div></header>
+<main class="wrap" style="padding:48px 0 80px">
+
+<p class="kicker">You're in. The kit is below.</p>
+<h1>Download The Shop Follow-Through Kit.</h1>
+<p class="lead">You already have the missed-call guide. This kit is the next leak: the quiet quote, and the job with no review.</p>
+<div class="card file">
+  <a href="../../resources/The_Shop_Follow_Through_Kit.pdf">Download The Shop Follow-Through Kit (PDF)</a>
+  <a href="../../resources/The_Missed_Call_Fix.pdf">Download The Missed Call Fix (included)</a>
+  <a href="../../resources/The_Missed_Call_Checklist.pdf">Download the checklist</a>
+  <a href="../../videos/follow-up-pack.mp4">Watch the follow-up walkthrough</a>
+  <a href="../../videos/reviews-pack.mp4">Watch the reviews walkthrough</a>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3>Honor-system unlock: Seasonal Follow-Up Lines</h3>
+  <p>Check this only if you have a working Google review link and have sent it after a real job.</p>
+  <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px"><input type="checkbox" id="unlock"> I have a working Google review link, and I have sent it after a real job.</label>
+  <div id="bonus" class="unlock"><p><a href="../../resources/Bonus_Seasonal_Follow_Up_Lines.pdf">Download Seasonal Follow-Up Lines</a></p></div>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3>The problem after this one</h3>
+  <p>Once follow-up and reviews are in motion, the next leaks are repeats, referrals, and you still being the bottleneck. That is the $247 playbook. Not required. No timer.</p>
+  <div class="cta-row"><a class="btn btn-c" href="https://buy.stripe.com/dRmaEWajMfztbm61Zqco00j">Get the full playbook, $247</a></div>
+</div>
+<div class="dark-note">Day 7 and day 14 check-in drafts exist. They will not go out until a send is approved. We will not publish a word without your permission.</div>
+
+</main>
+<footer><div class="wrap"><p>Instant digital download. Signal Marketing, Austin. This page is unlisted.</p></div></footer>
+<script>
+document.getElementById('unlock').addEventListener('change', function(){
+  document.getElementById('bonus').classList.toggle('show', this.checked);
+  try{localStorage.setItem('nll-unlock-seasonal', this.checked?'1':'0')}catch(e){}
+});
+try{if(localStorage.getItem('nll-unlock-seasonal')==='1'){document.getElementById('unlock').checked=true;document.getElementById('bonus').classList.add('show')}}catch(e){}
+</script>
+</body></html>

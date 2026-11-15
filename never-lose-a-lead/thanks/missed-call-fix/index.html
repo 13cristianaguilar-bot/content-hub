@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your Missed Call Fix files</title>
+<meta name="description" content="Download the guide, put the 7 days on your calendar, unlock the reply pack after the test.">
+<meta name="robots" content="noindex,nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@450;500;600;650;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="../../site.css">
+</head>
+<body>
+<header class="nav"><div class="wrap nav-in"><a class="brand" href="../../"><span class="mark"></span> Never Lose a Lead</a></div></header>
+<main class="wrap" style="padding:48px 0 80px">
+
+<p class="kicker">You're in. The files are below.</p>
+<h1>Download The Missed Call Fix.</h1>
+<p class="lead">Start with the guide. Put the 7 days on your calendar. Run the test. We do not set this up for you.</p>
+<div class="card file">
+  <a href="../../resources/The_Missed_Call_Fix.pdf">Download The Missed Call Fix (PDF)</a>
+  <a href="../../resources/The_Missed_Call_Checklist.pdf">Download the checklist (PDF)</a>
+  <a href="../../videos/seven-day-plan.mp4">Watch the 7-day plan walkthrough (captioned, no paid voice)</a>
+  <a href="../../videos/missed-call-problem.mp4">Watch the short problem walkthrough</a>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3>First 7 days, on a calendar</h3>
+  <p>These blocks start today in your local time. Add them all at once, or one day at a time. Do the work in the block. That is the point.</p>
+  <p style="margin-top:12px"><a class="btn btn-c" id="ics-all" href="#">Download the 7-day .ics file</a></p>
+  <div id="gcal-days" style="margin-top:12px"></div>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3>Honor-system unlock: Reply Scripts Pack</h3>
+  <p>Check this only if you completed the test missed call (Day 5): the text arrived, and a reply reached you.</p>
+  <label style="display:flex;gap:8px;align-items:flex-start;margin-top:10px"><input type="checkbox" id="unlock"> I ran the test. The text arrived, and a reply reached me.</label>
+  <div id="bonus" class="unlock"><p><a href="../../resources/Bonus_Reply_Scripts_Pack.pdf">Download the Reply Scripts Pack</a></p>
+  <p><a href="../../videos/reply-scripts.mp4">Watch the short reply-scripts walkthrough</a></p></div>
+</div>
+<div class="card" style="margin-top:16px">
+  <h3>The problem you're about to hit next</h3>
+  <p>Once callers text you back, some will ask for a price and go quiet. Some will finish the job and never leave a review. Those packs are in The Shop Follow-Through Kit, $97, instant download. Not required to finish this guide. No timer.</p>
+  <div class="cta-row">
+    <a class="btn btn-c" href="https://buy.stripe.com/8x26oGbnQ0Ez9dY47yco00i">Add the Follow-Through Kit, $97</a>
+    <a class="btn btn-g" href="https://buy.stripe.com/dRmaEWajMfztbm61Zqco00j">Or get the full five-layer playbook, $247</a>
+  </div>
+  <p class="fine">The kit page also has short captioned videos for follow-up and reviews.</p>
+</div>
+<div class="dark-note">Day 7 and day 14: if we have your email from Stripe, we have a short check-in draft ready. It asks what changed. We will not publish a word without your permission, and we will not send those emails until the shop owner approves a send.</div>
+
+</main>
+<footer><div class="wrap"><p>Instant digital download. Signal Marketing, Austin. This page is unlisted.</p></div></footer>
+<script>
+document.getElementById('unlock').addEventListener('change', function(){
+  document.getElementById('bonus').classList.toggle('show', this.checked);
+  try{localStorage.setItem('nll-unlock-reply', this.checked?'1':'0')}catch(e){}
+});
+try{if(localStorage.getItem('nll-unlock-reply')==='1'){document.getElementById('unlock').checked=true;document.getElementById('bonus').classList.add('show')}}catch(e){}
+</script>
+<script src="../../resources/calendar.js"></script>
+</body></html>

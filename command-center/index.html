@@ -77,6 +77,7 @@ a{color:var(--red-soft);text-decoration:none}
 }
 .navbtn svg,.bnav svg{width:18px;height:18px;flex:none}
 .navbtn.on{color:#fff;background:var(--red-deep);box-shadow:0 0 22px rgba(237,48,57,.35)}
+.navbtn.on .navcount{background:#fff;color:var(--red-deep)}
 .side-link{font-weight:550;color:var(--muted)}
 .side-link:hover{color:var(--ink)}
 .sys{margin-top:auto;padding:12px;border-radius:14px;background:var(--glass);border:1px solid var(--line)}
@@ -786,6 +787,7 @@ body[data-ready] .shimmer{display:none}
 .speedo-face{position:relative;width:min(100%,200px);margin:0 auto}
 .speedo svg{width:100%;height:auto;display:block}
 .speedo-read{position:absolute;left:0;right:0;top:44%;text-align:center;pointer-events:none}
+.speedo .src{margin-top:8px}
 .speedo .num{font-size:34px;line-height:.85;display:block}
 .gcard .num{font-size:32px;line-height:.9}
 .gcard{text-align:center}
@@ -1119,6 +1121,31 @@ footer.site{margin-top:auto}
 .fin-tool.is-block{margin:0 -8px;padding:10px 8px;border-radius:12px;box-shadow:0 0 0 1px rgba(237,48,57,.7),0 0 10px rgba(237,48,57,.22)}
 .fin-tool b{display:block;font-weight:750}
 .fin-tool .meta{color:var(--muted);font-size:12px}
+.navcount{margin-left:auto;min-width:18px;height:18px;padding:0 6px;border-radius:999px;background:var(--red);color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex:none}
+.navcount[hidden]{display:none}
+.rq{display:grid;gap:12px}
+.rq-card{background:#0c0c0c;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;min-width:0}
+.rq-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.rq-top h2{font-size:20px;line-height:1.2;margin:0;overflow-wrap:anywhere}
+.rq-pill{flex:none;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:4px 8px;border:1px solid rgba(255,255,255,.28);color:var(--muted)}
+.rq-pill.is-decision{color:#fff;background:var(--red);border-color:transparent}
+.rq-pill.is-ready{color:#fff;border-color:rgba(255,255,255,.45)}
+.rq-who{color:var(--muted);margin:6px 0 0;font-size:13px}
+.rq-action{margin:8px 0 0;font-size:16px;line-height:1.35;overflow-wrap:anywhere}
+.rq-due{margin:6px 0 0;font-size:13px;color:var(--muted)}
+.rq-due.is-hot{color:#ffb4b4;font-weight:750}
+.rq-money{margin:6px 0 0;font-size:13px;color:#e0b15a;overflow-wrap:anywhere}
+.rq-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.rq-links .btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.rq-fold{border:1px solid rgba(255,255,255,.1);border-radius:16px;background:#0c0c0c;padding:4px 14px 12px}
+.rq-fold summary{cursor:pointer;font-weight:750;min-height:44px;display:flex;align-items:center}
+.rq-fold .rq{margin-top:8px}
+.rq-note{color:var(--dim);font-size:13px;margin:0 0 12px}
+.rq-chip{display:none}
+@media(max-width:760px){
+  .guide .rq-chip{display:inline-flex;align-items:center;margin-top:10px;min-height:44px;padding:0 14px;border-radius:999px;border:1px solid rgba(237,48,57,.45);background:rgba(237,48,57,.14);color:#fff;font-weight:800}
+  .rq-links .btn{min-height:44px}
+}
 .fin-track{height:8px;border-radius:999px;background:#1c1c1c;overflow:hidden}
 .fin-fill{height:100%;background:#ed3039;border-radius:999px}
 .fin-pill{justify-self:start;font-size:11px;font-weight:750;border-radius:999px;padding:3px 8px;background:#141414;color:#fff;border:1px solid rgba(255,255,255,.28)}
@@ -1211,6 +1238,7 @@ footer.site{margin-top:auto}
         <p style="margin-top:14px"><a id="lock-sample" href="?sample=1">Open the sample layout</a></p>
       </section>
       <section class="view on" id="v-home" aria-label="Workforce"></section>
+      <section class="view" id="v-review" aria-label="Review"></section>
       <section class="view" id="v-goals" aria-label="Goals"></section>
       <section class="view" id="v-projects" aria-label="Projects"></section>
       <section class="view" id="v-tasks" aria-label="Tasks"></section>
@@ -1309,6 +1337,7 @@ footer.site{margin-top:auto}
   var AUTH_KEY = 'sb-udkbnlpnfyjuwlstfxhr-auth-token';
   var VIEWS = [
     ['home', 'Workforce', '<circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>'],
+    ['review', 'Review', '<path d="M6 4h12v16H6z" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M9 9h6M9 13h6M9 17h3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'],
     ['goals', 'Goals', '<circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.7"/>'],
     ['projects', 'Projects', '<path d="M4 7h6l2 2h8v10H4z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>'],
     ['tasks', 'Tasks', '<path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>'],
@@ -5074,7 +5103,8 @@ footer.site{margin-top:auto}
   }
   function guideHtml(m) {
     var btn = m.guide.button ? '<button type="button" class="btn p" data-open-row="' + esc(m.guide.rowId) + '">' + esc(m.guide.button) + '</button>' : '';
-    return '<section class="guide"' + actionTip(m.guide.title, m.guide.hover) + '><div><p class="gk">' + esc(m.guide.kicker) + '</p><h2>' + esc(m.guide.title) + '</h2><p>' + esc(m.guide.sub) + '</p></div>' + btn + '</section>';
+    var chip = '<button type="button" class="rq-chip" data-view="review">Review ' + reviewOpenCount() + '</button>';
+    return '<section class="guide"' + actionTip(m.guide.title, m.guide.hover) + '><div><p class="gk">' + esc(m.guide.kicker) + '</p><h2>' + esc(m.guide.title) + '</h2><p>' + esc(m.guide.sub) + '</p>' + chip + '</div>' + btn + '</section>';
   }
   function gameHtml(m) {
     var xp = m.xp;
@@ -8353,8 +8383,179 @@ footer.site{margin-top:auto}
     signalHide();
     SFX.canvas = null;
   }
+  var REVIEW_DONE_KEY = 'cc-review-done';
+  function reviewDoneIds() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(REVIEW_DONE_KEY) || '[]');
+      if (!Array.isArray(raw)) return [];
+      return raw.map(function (id) { return String(id); });
+    } catch (e) { return []; }
+  }
+  function reviewHttps(url) {
+    var s = String(url || '').trim();
+    return /^https:\/\//i.test(s) ? s : '';
+  }
+  function reviewStatus(v) {
+    var s = String(v || '').toLowerCase();
+    if (s === 'ready' || s === 'decision' || s === 'reference' || s === 'done') return s;
+    return '';
+  }
+  function reviewSamplePack() {
+    var now = Date.now();
+    return {
+      rule: 'Sample cards for layout. They are not the live queue and they are not saved.',
+      items: [
+        { id: 'sample-script', title: 'Sample script pack', who: 'Sample client', link: 'https://signals.marketing', links: [{ label: 'Notes', url: 'https://signals.marketing' }], status: 'ready', action: 'Read the sample and mark it reviewed.', due: new Date(now + 2 * 60 * 60 * 1000).toISOString(), money_note: 'Sample figure, not a balance.', source: 'Sample', added: new Date(now - 86400000).toISOString() },
+        { id: 'sample-choice', title: 'Sample decision', who: 'Sample owner', link: 'https://signals.marketing', status: 'decision', action: 'Pick the sample option.', due: new Date(now - 60 * 60 * 1000).toISOString(), source: 'Sample', added: new Date(now - 2 * 86400000).toISOString() },
+        { id: 'sample-ref', title: 'Sample reference', who: 'Sample desk', link: 'https://signals.marketing', status: 'reference', action: 'Keep this for the layout only.', source: 'Sample', added: new Date(now - 3 * 86400000).toISOString() }
+      ]
+    };
+  }
+  function reviewSource() {
+    var live = S.admin && !S.sample && S.feed && S.feed.reviewQueue && typeof S.feed.reviewQueue === 'object' && !Array.isArray(S.feed.reviewQueue);
+    if (live) return { sample: false, pack: S.feed.reviewQueue };
+    if (!S.admin || S.sample) return { sample: true, pack: reviewSamplePack() };
+    return { sample: false, pack: null };
+  }
+  function reviewRows(pack) {
+    var list = pack && Array.isArray(pack.items) ? pack.items : [];
+    var out = [];
+    list.forEach(function (raw, i) {
+      if (!raw || typeof raw !== 'object') return;
+      var status = reviewStatus(raw.status);
+      if (!status) return;
+      var links = [];
+      if (Array.isArray(raw.links)) {
+        raw.links.forEach(function (link) {
+          if (!link || typeof link !== 'object') return;
+          var url = reviewHttps(link.url);
+          if (url) links.push({ label: clean(link.label || 'Link') || 'Link', url: url });
+        });
+      }
+      out.push({
+        id: raw.id != null && String(raw.id).trim() ? String(raw.id).trim() : ('row-' + i),
+        title: clean(raw.title || 'Untitled') || 'Untitled',
+        who: clean(raw.who || ''),
+        link: reviewHttps(raw.link),
+        links: links,
+        status: status,
+        action: clean(raw.action || ''),
+        due: raw.due ? String(raw.due) : '',
+        money_note: clean(raw.money_note || ''),
+        source: clean(raw.source || ''),
+        added: raw.added ? String(raw.added) : ''
+      });
+    });
+    return out;
+  }
+  function reviewDueParts(iso) {
+    if (!iso) return null;
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return null;
+    var delta = d.getTime() - Date.now();
+    var ct = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit' }).format(d);
+    var rel;
+    if (delta < 0) rel = 'Overdue';
+    else if (delta < 3 * 60 * 60 * 1000) {
+      var mins = Math.max(1, Math.round(delta / 60000));
+      var hrs = Math.floor(mins / 60);
+      var rem = mins % 60;
+      rel = hrs && rem ? ('In ' + hrs + 'h ' + rem + 'm') : (hrs ? ('In ' + hrs + 'h') : ('In ' + rem + ' min'));
+    } else if (delta < 48 * 60 * 60 * 1000) rel = 'In ' + Math.max(1, Math.round(delta / 3600000)) + 'h';
+    else rel = 'In ' + Math.round(delta / 86400000) + 'd';
+    return { text: rel + ' · ' + ct + ' CT', hot: delta < 3 * 60 * 60 * 1000, at: d.getTime() };
+  }
+  function reviewDueKey(row) {
+    var parts = reviewDueParts(row.due);
+    return parts ? parts.at : Infinity;
+  }
+  function reviewRank(status) {
+    if (status === 'decision') return 0;
+    if (status === 'ready') return 1;
+    return 2;
+  }
+  function reviewSplit(rows) {
+    var done = {};
+    reviewDoneIds().forEach(function (id) { done[id] = 1; });
+    var open = [], reference = [], reviewed = [];
+    rows.forEach(function (row) {
+      if (done[row.id] || row.status === 'done') reviewed.push(row);
+      else if (row.status === 'reference') reference.push(row);
+      else open.push(row);
+    });
+    open.sort(function (a, b) {
+      var da = reviewDueKey(a), db = reviewDueKey(b);
+      if (da !== db) return da - db;
+      return reviewRank(a.status) - reviewRank(b.status);
+    });
+    return { open: open, reference: reference, reviewed: reviewed };
+  }
+  function reviewOpenCount() {
+    var src = reviewSource();
+    if (!src.pack) return 0;
+    return reviewSplit(reviewRows(src.pack)).open.length;
+  }
+  function reviewCard(row, allowMark) {
+    var pill = row.status === 'decision' ? 'Decision' : (row.status === 'ready' ? 'Ready' : (row.status === 'reference' ? 'Reference' : 'Done'));
+    var due = reviewDueParts(row.due);
+    var links = '';
+    if (row.link) links += '<a class="btn p" href="' + esc(row.link) + '" target="_blank" rel="noopener noreferrer">Open</a>';
+    row.links.forEach(function (link) {
+      links += '<a class="btn s" href="' + esc(link.url) + '" target="_blank" rel="noopener noreferrer">' + esc(link.label) + '</a>';
+    });
+    if (allowMark) links += '<button type="button" class="btn s" data-review-done="' + esc(row.id) + '">Mark reviewed</button>';
+    return '<article class="rq-card filterable" data-review-id="' + esc(row.id) + '">' +
+      '<div class="rq-top"><h2>' + esc(row.title) + '</h2><span class="rq-pill is-' + row.status + '">' + pill + '</span></div>' +
+      (row.who ? '<p class="rq-who">' + esc(row.who) + '</p>' : '') +
+      '<p class="rq-action"><b>' + esc(row.action || 'No action in this item.') + '</b></p>' +
+      (due ? '<p class="rq-due' + (due.hot ? ' is-hot' : '') + '">' + esc(due.text) + '</p>' : '') +
+      (row.money_note ? '<p class="rq-money">' + esc(row.money_note) + '</p>' : '') +
+      (links ? '<div class="rq-links">' + links + '</div>' : '') +
+      '</article>';
+  }
+  function reviewFold(title, rows, allowMark) {
+    if (!rows.length) return '';
+    return '<details class="rq-fold"><summary>' + esc(title) + ' (' + rows.length + ')</summary><div class="rq">' + rows.map(function (row) { return reviewCard(row, allowMark); }).join('') + '</div></details>';
+  }
+  function paintReviewNav() {
+    var n = reviewOpenCount();
+    document.querySelectorAll('.navcount').forEach(function (el) {
+      el.textContent = n ? String(n) : '';
+      el.hidden = !n;
+    });
+    document.querySelectorAll('.rq-chip').forEach(function (el) {
+      el.textContent = 'Review ' + n;
+    });
+  }
+  function reviewMark(id) {
+    var key = String(id || '').trim();
+    if (!key) return;
+    var ids = reviewDoneIds();
+    if (ids.indexOf(key) < 0) ids.push(key);
+    try { localStorage.setItem(REVIEW_DONE_KEY, JSON.stringify(ids)); } catch (e) {}
+    paintReview();
+    paintReviewNav();
+  }
+  function paintReview() {
+    var el = $('v-review');
+    if (!el) return;
+    var src = reviewSource();
+    var badge = src.sample ? '<span class="badge">SAMPLE</span>' : '';
+    if (!src.pack) {
+      el.innerHTML = '<section class="guide"><div><p class="gk">Review</p><h2>One place to re-review</h2><p>Not connected. The feed has no review queue.</p></div></section>';
+      S.painted.review = 1;
+      return;
+    }
+    var split = reviewSplit(reviewRows(src.pack));
+    var rule = clean((src.pack && src.pack.rule) || '');
+    var note = rule ? '<p class="rq-note">' + esc(rule) + '</p>' : '';
+    var body = split.open.length ? '<div class="rq">' + split.open.map(function (row) { return reviewCard(row, true); }).join('') + '</div>' : '<p class="quiet">No open review items.</p>';
+    el.innerHTML = '<section class="guide"><div><p class="gk">Review</p><h2>One place to re-review</h2>' + badge + '</div></section>' + note + body + reviewFold('Reference', split.reference, true) + reviewFold('Reviewed', split.reviewed, false);
+    S.painted.review = 1;
+  }
   function ensureView(id) {
     if (id === 'finance') { paintFinance(); return; }
+    if (id === 'review') { paintReview(); return; }
     if (!S.model || lockedNow()) return;
     var el = $('v-' + id);
     if (!el || S.painted[id]) return;
@@ -8408,7 +8609,7 @@ footer.site{margin-top:auto}
       if (showB) fb.textContent = S.feedNote || 'The private feed did not load.';
     }
     if ($('lock')) {
-      $('lock').hidden = !locked || S.view === 'finance';
+      $('lock').hidden = !locked || S.view === 'finance' || S.view === 'review';
       var lp = $('lock-copy');
       if (lp) lp.textContent = S.kpiState === 'forbidden' ? 'That login is not the owner.' : 'Sign in as the owner to load the private feed. The sample layout stays on this page without a login.';
     }
@@ -8424,10 +8625,16 @@ footer.site{margin-top:auto}
     var host = $('client-steps-host');
     if (locked) {
       S.model = null;
-      if (host) { host.hidden = false; host.innerHTML = clientsSectionHtml(); }
+      if (host) {
+        var showClients = S.view !== 'review';
+        host.hidden = !showClients;
+        host.innerHTML = showClients ? clientsSectionHtml() : '';
+      }
       paintSys();
       markNav();
       if (S.view === 'finance') paintFinance();
+      if (S.view === 'review') paintReview();
+      paintReviewNav();
       paintHub();
       paintSync();
       return;
@@ -8440,6 +8647,7 @@ footer.site{margin-top:auto}
     paintHub();
     paintSync();
     paintSys();
+    paintReviewNav();
     applyFilter();
     if (S.sheet && S.sheet.type === 'kpi') fillKpi(S.sheet.id);
   }
@@ -8480,10 +8688,18 @@ footer.site{margin-top:auto}
     });
     var locked = !S.sample && !S.admin;
     var checking = !S.authReady && !S.sample && S.feedState === 'checking';
-    if ($('lock')) $('lock').hidden = !locked || S.view === 'finance';
+    if ($('lock')) $('lock').hidden = !locked || S.view === 'finance' || S.view === 'review';
+    var host = $('client-steps-host');
+    if (host && locked) {
+      var showClients = S.view !== 'review';
+      host.hidden = !showClients;
+      if (!showClients) host.innerHTML = '';
+      else if (!host.innerHTML) host.innerHTML = clientsSectionHtml();
+    }
     document.querySelectorAll('.view').forEach(function (v) {
       var finance = v.id === 'v-finance' && S.view === 'finance';
-      var show = checking ? v.id === 'v-' + S.view : (finance || (!locked && v.id === 'v-' + S.view));
+      var review = v.id === 'v-review' && S.view === 'review';
+      var show = checking ? v.id === 'v-' + S.view : (finance || review || (!locked && v.id === 'v-' + S.view));
       v.classList.toggle('on', show);
     });
     var label = 'Workforce';
@@ -8500,6 +8716,8 @@ footer.site{margin-top:auto}
     ensureView(view);
     applyFilter();
     window.scrollTo(0, 0);
+    var col = document.querySelector('.maincol');
+    if (col) col.scrollTop = 0;
     if (view !== 'home') signalHide();
     if (view === 'home' && FX.org && !FX.reduce && !document.hidden) {
       FX.visible = true;
@@ -9085,11 +9303,12 @@ footer.site{margin-top:auto}
       if (Hover.anchor && Hover.el && Hover.el.classList.contains('on')) placeHover(Hover.anchor);
     }, true);
     function navButton(v, cls) {
-      return '<button type="button" class="' + cls + '" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + '</button>';
+      var badge = v[0] === 'review' ? '<span class="navcount" hidden></span>' : '';
+      return '<button type="button" class="' + cls + '" data-view="' + v[0] + '"><svg viewBox="0 0 24 24" aria-hidden="true">' + v[2] + '</svg>' + esc(v[1]) + badge + '</button>';
     }
     var byId = {};
     VIEWS.forEach(function (v) { byId[v[0]] = v; });
-    var groups = [['Workforce', ['home']], ['Money', ['finance']], ['Spine', ['goals', 'projects', 'tasks', 'winning']], ['Triangle', ['attract', 'convert', 'transform']], ['Lists', ['tracks', 'funnels']]];
+    var groups = [['Workforce', ['home', 'review']], ['Money', ['finance']], ['Spine', ['goals', 'projects', 'tasks', 'winning']], ['Triangle', ['attract', 'convert', 'transform']], ['Lists', ['tracks', 'funnels']]];
     $('tabs').innerHTML = groups.map(function (g) {
       return '<div class="side-k">' + esc(g[0]) + '</div>' + g[1].map(function (id) { return navButton(byId[id], 'navbtn'); }).join('');
     }).join('');
@@ -9163,7 +9382,7 @@ footer.site{margin-top:auto}
         orgActivate(tapped.id);
         return;
       }
-      var t = e.target.closest('[data-view],[data-fin-range],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-org-view],[data-focus],[data-pick],[data-more]');
+      var t = e.target.closest('[data-view],[data-review-done],[data-fin-range],[data-open-row],[data-open-kpi],[data-open-client],[data-plus],[data-close],[data-copy],[data-next],[data-remove],[data-undo],[data-node],[data-org-zoom],[data-org-view],[data-focus],[data-pick],[data-more]');
       if (!t) {
         if (Hover.pointer === 'touch') hideHover();
         return;
@@ -9203,6 +9422,7 @@ footer.site{margin-top:auto}
         paintFinance();
         return;
       }
+      if (t.hasAttribute('data-review-done')) { reviewMark(t.getAttribute('data-review-done')); return; }
       if (t.hasAttribute('data-view')) { bubble('pop'); closeSheets(); go(t.getAttribute('data-view')); return; }
       if (t.hasAttribute('data-close')) { closeSheets(); return; }
       if (t.hasAttribute('data-open-client')) { bubble('pop'); openClient(t.getAttribute('data-open-client')); return; }

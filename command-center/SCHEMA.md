@@ -352,6 +352,55 @@ Mark done writes `sessionStorage` key `cc-signal-done` in this browser only. It 
 
 Boss fight, Signal stack, and the earlier focus card with a short list are not in this build. They lived on branch `cursor/signal-now-concepts-008b` (pull request 72) and the focus card on `cursor/signal-now-reminders-92d2` (pull request 69).
 
+### `reviewQueue` (one place to re-review)
+
+Optional object. Every finished deliverable or task from a bot lands here so Cristian can re-review it in one list. The page reads it only after the owner signs in. Signed out, and on `?sample=1`, the Review view shows three layout cards and a SAMPLE badge. Those three cards are not in this file and they are not a real queue.
+
+Mark reviewed writes `localStorage` key `cc-review-done`, an array of item ids, in this browser only. It does not write `cc_feed` and it does not call Supabase. A new browser shows the feed status again.
+
+Open items are `ready` and `decision` that are not in `cc-review-done`. The sidebar badge and the phone chip count those. `reference` and `done` are not open. `reference` sits in a collapsed Reference section. `done`, and anything marked in this browser, sit in a collapsed Reviewed section.
+
+Sort the open list by due soonest. A missing due sorts last. The same due puts `decision` before `ready`. A due within 3 hours, or already past, is red. The clock is America/Chicago, next to a relative phrase.
+
+`money_note` is a short amber line when it has text. `link` is the Open button. `links` are extra buttons. Every URL must be `https`. The phone chip sits in What to do now and opens `#review`. It is not a dock tab.
+
+```json
+"reviewQueue": {
+  "rule": "Finished bot work waits here until it is reviewed.",
+  "items": [
+    {
+      "id": "sample-script",
+      "title": "Sample script pack",
+      "who": "Sample client",
+      "link": "https://example.com/sample",
+      "links": [{ "label": "Notes", "url": "https://example.com/notes" }],
+      "status": "ready",
+      "action": "Read the sample and mark it reviewed.",
+      "due": "2026-11-14T18:00:00-06:00",
+      "money_note": "Sample figure, not a balance.",
+      "source": "Sample",
+      "added": "2026-11-13T09:00:00-06:00"
+    }
+  ]
+}
+```
+
+| Field | What it is |
+|---|---|
+| `rule` | One sentence above the list. Optional. |
+| `items` | The queue. An empty array means the source was read and nothing is waiting. A missing `reviewQueue` says **Not connected**. |
+| `id` | Stable string. Mark reviewed stores this id locally. |
+| `title` | Card title. |
+| `who` | Person or bot the item is for. |
+| `link` | `https` URL for the Open button, or omit it. |
+| `links` | Optional extra `{ label, url }` buttons. `url` is `https` only. |
+| `status` | `ready`, `decision`, `reference`, or `done`. Anything else is skipped. |
+| `action` | The one step left. This is the bold line on the card. |
+| `due` | Optional ISO time. Missing due sorts last and shows no clock. |
+| `money_note` | Optional short money line. Omit it when there is no money to mention. |
+| `source` | Where the item came from. The card does not require it. |
+| `added` | When it landed in the queue. Optional ISO time. |
+
 ### `stages` (plays on the flywheel)
 
 Optional object. Keys are `attract`, `convert`, and `transform`. The workforce loop reads `stages[stage].plays` for the capacity panel. Omit `stages`, or omit one stage, and that stage says **No plays logged yet**. The page does not invent plays.

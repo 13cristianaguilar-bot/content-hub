@@ -4161,6 +4161,23 @@ footer.site{margin-top:auto}
     var shown = {};
     var hidden = {};
     cats.forEach(function (cat) { shown[cat] = 0; hidden[cat] = 0; });
+    function parkInside(el) {
+      var w = Math.max(18, el.offsetWidth || 36);
+      var h = Math.max(12, el.offsetHeight || 14);
+      var x0 = limit.left + 10 + w / 2;
+      var x1 = limit.right - 10 - w / 2;
+      var y0 = limit.top + 10 + h / 2;
+      var y1 = limit.bottom - 10 - h / 2;
+      if (x1 < x0 || y1 < y0) return null;
+      var y, x, rect;
+      for (y = y0; y <= y1; y += 16) {
+        for (x = x0; x <= x1; x += 16) {
+          rect = moveTo(el, x, y);
+          if (clearBox(rect, true)) return rect;
+        }
+      }
+      return null;
+    }
     function parkChip(item) {
       var cat = cats.indexOf(item.row.cat) >= 0 ? item.row.cat : 'ops';
       var dot = dotFor(item.row.id);
@@ -4173,9 +4190,8 @@ footer.site{margin-top:auto}
         item.el.classList.add('is-mini');
         placed = trySides(item.el, anchor, true) || tryOutward(item.el, anchor);
       }
-      if (!placed) {
-        placed = tryOutward(item.el, anchor);
-      }
+      if (!placed) placed = tryOutward(item.el, anchor);
+      if (!placed) placed = parkInside(item.el);
       item.el.style.visibility = 'visible';
       if (placed) blocked.push(item.el.getBoundingClientRect());
       shown[cat] += 1;
@@ -4462,27 +4478,32 @@ footer.site{margin-top:auto}
       it.size = shrunk;
     }
   }
-  function signalClearCaption(disc, items) {
+  function signalClearCaption(disc) {
     var legend = (disc.closest('.snx') || disc).querySelector('.snx-legend-bar');
-    if (!legend || !items) return;
+    if (!legend) return;
+    var dots = [];
+    Array.prototype.forEach.call(disc.querySelectorAll('.blip'), function (blip) {
+      var dot = blip.querySelector('.dot');
+      if (dot) dots.push({ blip: blip, dot: dot });
+    });
     var guard = 0;
-    while (guard < 28) {
+    while (guard < 80) {
       guard += 1;
-      var lb = signalPad(legend.getBoundingClientRect(), 2);
+      var lb = signalPad(legend.getBoundingClientRect(), 3);
       var hit = null;
-      items.forEach(function (it) {
-        if (hit || !it.dot) return;
+      dots.forEach(function (it) {
+        if (hit) return;
         var rect = it.dot.getBoundingClientRect();
         if (rect.width > 1 && signalBoxHit(rect, lb, 0)) hit = it;
       });
       if (!hit) return;
       var top = parseFloat(hit.blip.style.getPropertyValue('--top'));
-      if (!isFinite(top)) top = 34;
-      var next = top < 50 ? Math.min(88, top + 2.5) : Math.max(12, top - 2.5);
+      if (!isFinite(top)) top = 20;
+      var next = top < 50 ? Math.min(42, top + 6) : Math.max(58, top - 6);
       if (Math.abs(next - top) < 0.4) {
         var width = hit.dot.getBoundingClientRect().width;
         if (width <= 7) return;
-        hit.blip.style.setProperty('--dot', (width - 1).toFixed(1) + 'px');
+        hit.blip.style.setProperty('--dot', Math.max(7, width - 2).toFixed(1) + 'px');
         continue;
       }
       hit.blip.style.setProperty('--top', next.toFixed(2) + '%');
@@ -4542,7 +4563,7 @@ footer.site{margin-top:auto}
     var items = signalDotItems(disc);
     signalSolveDots(disc, items);
     signalRepairDots(disc, items);
-    signalClearCaption(disc, items);
+    signalClearCaption(disc);
     signalClearLabels(disc);
     signalPlaceChips(disc);
     signalAudit(disc);

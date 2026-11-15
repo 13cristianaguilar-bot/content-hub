@@ -145,7 +145,7 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .clients-core{margin:12px 0}
 .clients-core .ph{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
 .client-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.cscard{display:flex;flex-direction:column;gap:8px;min-height:44px;min-width:0;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:14px;color:inherit;text-decoration:none}
+.cscard{display:flex;flex-direction:column;gap:8px;min-height:44px;min-width:0;background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:14px;color:inherit;text-decoration:none;scroll-margin-top:112px}
 .cscard:hover{border-color:rgba(237,48,57,.45)}
 .cscard .who{font-size:18px;font-weight:750;letter-spacing:-.03em;line-height:1.15}
 .cscard .kind{color:var(--muted);font-size:12px;line-height:1.3}
@@ -206,14 +206,14 @@ main.stage{position:relative;padding:16px 22px 40px;min-height:70dvh}
 .qcols{display:grid;grid-template-columns:92px minmax(0,1.5fr) minmax(0,.9fr) 108px;gap:10px;padding:0 4px 6px;color:var(--dim);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700}
 .qhead{margin:14px 0 4px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--red-soft);font-weight:700}
 .qhead:first-child{margin-top:0}
-.qrow{display:grid;grid-template-columns:92px minmax(0,1.5fr) minmax(0,.9fr) 108px;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid rgba(255,255,255,.08);cursor:pointer;border-radius:10px}
+.qrow{display:grid;grid-template-columns:92px minmax(0,1.5fr) minmax(0,.9fr) 108px;gap:10px;align-items:center;padding:10px 4px;border-top:1px solid rgba(255,255,255,.08);cursor:pointer;border-radius:10px;scroll-margin-top:112px}
 .qrow:hover{background:rgba(255,255,255,.03)}
 .qrow .qw b{display:block;font-weight:700;line-height:1.3;overflow-wrap:anywhere}
 .qrow .qw span,.when{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
 .badge{justify-self:start;font-size:11px;font-weight:750;border-radius:999px;padding:3px 8px;background:rgba(255,255,255,.05);color:var(--muted)}
 .badge.act{background:rgba(237,48,57,.16);color:#ffc9c9}
 .badge.good{background:rgba(61,220,151,.14);color:var(--good-ink)}
-.open{border:0;background:var(--red-deep);color:#fff;border-radius:999px;min-height:34px;padding:0 12px;font-weight:750;font-size:13px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;text-align:center;scroll-margin-top:96px}
+.open{border:0;background:var(--red-deep);color:#fff;border-radius:999px;min-height:34px;padding:0 12px;font-weight:750;font-size:13px;display:inline-flex;align-items:center;justify-content:center;text-decoration:none;text-align:center;scroll-margin-top:112px}
 .quiet{color:var(--muted);font-size:13px;line-height:1.45}
 .pipe{display:flex;gap:0;overflow-x:auto;list-style:none;margin:8px 0 0;padding:6px 0 2px}
 .pipe li{position:relative;flex:1 0 112px;text-align:center;padding:0 8px 4px}
@@ -701,7 +701,7 @@ body[data-ready] .shimmer{display:none}
 .org.is-summary{min-height:0;overflow:visible;background-image:none}
 .wf-clients{padding:0 12px 12px}
 .wf-clients .wf-k{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);font-weight:700}
-.wf-client{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06);color:inherit;text-decoration:none}
+.wf-client{display:grid;grid-template-columns:64px minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.06);color:inherit;text-decoration:none;scroll-margin-top:112px}
 .wf-client>b{font-size:13px;font-weight:750}
 .wf-client ol{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px;list-style:none;margin:0;padding:0}
 .wf-client li{min-width:0}
@@ -2767,7 +2767,7 @@ footer.site{margin-top:auto}
     if (!feed) {
       guide = { kicker: 'What to do now', title: 'The feed did not load.', sub: S.feedNote || 'The feed did not load.', button: '', rowId: '' };
     } else if (moveRows.length) {
-      var moneyLine = guideMoneyLine(leadMove);
+      var moneyLine = guideMoneyLine(leadMove, today);
       guide = { kicker: S.sample ? 'Sample. What to do now' : 'What to do now', title: moveRows[0].title, sub: moneyLine || (moveRows[1] ? ('Then: ' + moveRows[1].title) : (moveRows[0].meta || '')), button: 'Open this move', rowId: moveRows[0].id, hover: moveRows[0].hover || null };
     } else if (decisions.state === 'ready' && !gaps.length && !rows.some(function (r) { return r.group === 'look'; })) {
       guide = { kicker: 'You are clear', title: 'All caught up', sub: 'Nothing is waiting on a decision.', button: '', rowId: '' };
@@ -3081,7 +3081,41 @@ footer.site{margin-top:auto}
     }
     return false;
   }
-  function guideMoneyLine(move) {
+  function monthDayYmd(label, yearText, today) {
+    var months = { jan: '01', feb: '02', mar: '03', apr: '04', may: '05', jun: '06', jul: '07', aug: '08', sep: '09', oct: '10', nov: '11', dec: '12' };
+    var m = String(label || '').match(/^([A-Za-z]+)\s+(\d{1,2})$/);
+    if (!m) return '';
+    var mm = months[m[1].slice(0, 3).toLowerCase()];
+    var dom = +m[2];
+    if (!mm || dom < 1 || dom > 31) return '';
+    var year = yearText ? +yearText : (today ? +String(today).slice(0, 4) : 0);
+    if (!year) return '';
+    var dd = (dom < 10 ? '0' : '') + dom;
+    function ymdFor(y) {
+      var ymd = y + '-' + mm + '-' + dd;
+      var check = new Date(ymd + 'T12:00:00Z');
+      if (check.getUTCMonth() + 1 !== +mm || check.getUTCDate() !== dom) return '';
+      return ymd;
+    }
+    var ymd = ymdFor(year);
+    if (!ymd) return '';
+    if (!yearText && today && daysBetween(today, ymd) > 200) ymd = ymdFor(year - 1);
+    return ymd || '';
+  }
+  function lateOrDue(sortDay, today, futureLabel) {
+    var future = futureLabel ? String(futureLabel).replace(/\s+/g, ' ').trim() : '';
+    if (sortDay && today) {
+      var diff = daysBetween(today, sortDay);
+      if (diff < 0) {
+        var n = -diff;
+        return n === 1 ? '1 day late' : (n + ' days late');
+      }
+      if (diff === 0) return 'due today';
+    }
+    if (!future || /^(OVERDUE|TODAY|NOW)$/i.test(future)) return '';
+    return /^due\b/i.test(future) ? future : ('due ' + future);
+  }
+  function guideMoneyLine(move, today) {
     if (!move) return '';
     var title = String(move.title || '');
     var why = String(move.why || '');
@@ -3090,14 +3124,20 @@ footer.site{margin-top:auto}
     var whyHit = why.match(/\$\s?(\d[\d,]*(?:\.\d+)?)/);
     var raw = titleHit ? titleHit[1] : (whyHit ? whyHit[1] : '');
     var money = raw ? parseFloat(raw.replace(/,/g, '')) : NaN;
-    var day = '';
+    var named = blob.match(/\bdue\s+((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2})(?:\s*,?\s*(\d{4}))?/i);
     var week = blob.match(/\bdue\s+(Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b/i);
-    var named = blob.match(/\bdue\s+((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2})\b/i);
-    if (week) day = week[1].slice(0, 1).toUpperCase() + week[1].slice(1, 3).toLowerCase();
-    else if (named) day = named[1].replace(/\s+/g, ' ');
+    var when = '';
+    if (named) {
+      var label = named[1].replace(/\s+/g, ' ');
+      label = label.charAt(0).toUpperCase() + label.slice(1);
+      when = lateOrDue(monthDayYmd(label, named[2], today), today, label);
+    } else if (week) {
+      var short = week[1].slice(0, 1).toUpperCase() + week[1].slice(1, 3).toLowerCase();
+      when = 'due ' + short;
+    }
     var bits = [];
     if (isFinite(money)) bits.push('+' + moneyShort(Math.abs(money)));
-    if (day) bits.push('due ' + day);
+    if (when) bits.push(when);
     return bits.join(', ');
   }
   function moneyShort(n) {
@@ -3163,6 +3203,12 @@ footer.site{margin-top:auto}
   }
   function signalPlainNotes(raw) {
     var text = String(raw || '');
+    text = text.replace(/[^.]*\brow list\b[^.]*\./gi, 'The script list was not rechecked, so use it as the last copy on file. ');
+    text = text.replace(/\bnone stamped\b/gi, 'none of the scripts are ready');
+    text = text.replace(/\bwith\s+\d+\s+rows?\s+awaiting review\s*:\s*(?:R\d+\s*,?\s*(?:and\s+)?)+/gi, 'Scripts are waiting for review');
+    text = text.replace(/\btreat the(?:\s+row\s+ids?)?\s+as last-known,?\s*(?:not freshly audited)?/gi, 'use that list as the last copy on file');
+    text = text.replace(/\blast-known\b/gi, 'last copy on file');
+    text = text.replace(/\bnot freshly audited\b/gi, 'not rechecked');
     text = text.replace(/\bmemos?\s*\[[^\]]*\]/gi, '');
     text = text.replace(/\(\s*memos?[^)]*\)/gi, '');
     text = text.replace(/\bmemo bank\b[^.]{0,80}/gi, '');
@@ -3170,12 +3216,14 @@ footer.site{margin-top:auto}
     text = text.replace(/\bstamp\s+rows\b/gi, 'scripts');
     text = text.replace(/\brow\s+ids?\b/gi, '');
     text = text.replace(/\brows?\s+#?\d+\b/gi, '');
+    text = text.replace(/\bR\d+\b/g, '');
     text = text.replace(/\bCORE\b/g, '');
     text = text.replace(/\b[0-9a-f]{8}-[0-9a-f-]{13,}\b/gi, '');
-    text = signalPlainMoney(text).replace(/\s+/g, ' ').replace(/\s+([,.;:])/g, '$1').replace(/\(\s*\)/g, '').trim();
+    text = signalPlainMoney(text).replace(/\s+/g, ' ').replace(/\s+([,.;:])/g, '$1').replace(/,\s*,/g, ',').replace(/\(\s*\)/g, '').trim();
     var parts = text.split(/(?<=[.!?])\s+/).map(function (s) { return s.replace(/\s+/g, ' ').trim(); }).filter(function (s) {
       if (s.length < 12) return false;
       if (/^(memo|row|id|stamp)\b/i.test(s)) return false;
+      if (/\bR\d+\b|none stamped|last-known|row ids?|treat the as\b/i.test(s)) return false;
       return /[A-Za-z]{3}/.test(s);
     });
     return parts.join(' ');
@@ -3977,7 +4025,7 @@ footer.site{margin-top:auto}
     function clearBox(box, loose) {
       if (!box || box.width < 1 || box.height < 1) return false;
       if (box.left < 1 || box.top < 1 || box.right > (window.innerWidth || 0) - 1 || box.bottom > (window.innerHeight || 0) - 1) return false;
-      if (box.left < limit.left - 2 || box.top < limit.top - 2 || box.right > limit.right + 2 || box.bottom > limit.bottom - 2) return false;
+      if (box.left < limit.left + 10 || box.top < limit.top + 10 || box.right > limit.right - 10 || box.bottom > limit.bottom - 10) return false;
       if (!loose) {
         if (box.bottom > discBox.bottom + 6 || box.top < discBox.top - 6) return false;
         if (box.left < discBox.left - 8 || box.right > discBox.right + 8) return false;
@@ -4316,6 +4364,8 @@ footer.site{margin-top:auto}
         var rect = el.getBoundingClientRect();
         if (rect.width >= 1) list.push(rect);
       });
+      var legend = (disc.closest('.snx') || disc).querySelector('.snx-legend-bar, .snx-rule');
+      if (legend) list.push(signalPad(legend.getBoundingClientRect(), 4));
       return list;
     }
     function readRects() {
@@ -4373,6 +4423,32 @@ footer.site{margin-top:auto}
       it.size = shrunk;
     }
   }
+  function signalClearCaption(disc, items) {
+    var legend = (disc.closest('.snx') || disc).querySelector('.snx-legend-bar');
+    if (!legend || !items) return;
+    var guard = 0;
+    while (guard < 28) {
+      guard += 1;
+      var lb = signalPad(legend.getBoundingClientRect(), 2);
+      var hit = null;
+      items.forEach(function (it) {
+        if (hit || !it.dot) return;
+        var rect = it.dot.getBoundingClientRect();
+        if (rect.width > 1 && signalBoxHit(rect, lb, 0)) hit = it;
+      });
+      if (!hit) return;
+      var top = parseFloat(hit.blip.style.getPropertyValue('--top'));
+      if (!isFinite(top)) top = 34;
+      var next = top < 50 ? Math.min(88, top + 2.5) : Math.max(12, top - 2.5);
+      if (Math.abs(next - top) < 0.4) {
+        var width = hit.dot.getBoundingClientRect().width;
+        if (width <= 7) return;
+        hit.blip.style.setProperty('--dot', (width - 1).toFixed(1) + 'px');
+        continue;
+      }
+      hit.blip.style.setProperty('--top', next.toFixed(2) + '%');
+    }
+  }
   function signalClearLabels(disc) {
     var root = disc.closest('.snx') || disc;
     var col = root.querySelector('.ring-tags');
@@ -4427,6 +4503,7 @@ footer.site{margin-top:auto}
     var items = signalDotItems(disc);
     signalSolveDots(disc, items);
     signalRepairDots(disc, items);
+    signalClearCaption(disc, items);
     signalClearLabels(disc);
     signalPlaceChips(disc);
     signalAudit(disc);
@@ -4569,12 +4646,17 @@ footer.site{margin-top:auto}
         var label = signalMoneyLabel(row);
         if (label) bits.push(row.amount > 0 && label.charAt(0) !== '+' && label.charAt(0) !== '-' ? ('+' + label) : label);
       }
-      var due = row.due && row.due.text ? String(row.due.text) : '';
-      if (due && due.length <= 16 && !/\d{4}/.test(due)) {
-        if (due === 'OVERDUE' || due === 'TODAY' || due === 'NOW') bits.push(due.toLowerCase());
-        else if (!/^due\b/i.test(due)) bits.push('due ' + due);
-        else bits.push(due);
-      }
+      var today = S.model && S.model.today;
+      var due = row.due || null;
+      var when = '';
+      if (due && due.kind === 'date' && due.sortDay) {
+        var future = '';
+        var text = String(due.text || '');
+        if (text && text.length <= 16 && !/\d{4}/.test(text)) future = text;
+        else if (due.tip && String(due.tip).length <= 16 && !/\d{4}/.test(due.tip)) future = String(due.tip);
+        when = lateOrDue(due.sortDay, today, future);
+      } else if (due && String(due.text || '') === 'OVERDUE') when = 'late';
+      if (when) bits.push(when);
       var meta = bits.join(', ');
       var href = String(row.href || '');
       var action = /^https:\/\//.test(href)

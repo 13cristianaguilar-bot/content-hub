@@ -206,6 +206,77 @@ body.edit-open #app { display: none; }
   font-size: 11px; font-weight: 500; letter-spacing: 0.04em; opacity: 0.8;
 }
 .core-lead { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.35; }
+.client-action-banner {
+  max-width: 560px;
+  background: var(--signal);
+  color: #fff;
+  padding: 14px 16px;
+  margin: 0 0 16px;
+  font-size: 17px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+}
+.client-action-title {
+  margin: 0 0 10px;
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+.client-action-section { max-width: 560px; margin: 0 0 22px; }
+.client-batch { display: flex; flex-direction: column; gap: 14px; margin: 0 0 16px; }
+.client-batch-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--muted);
+}
+.client-card-batch, .client-card-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.35;
+}
+.client-card-date { font-weight: 650; color: var(--ink); }
+.client-status-badge {
+  display: inline-block;
+  margin-left: auto;
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 6px;
+  background: #141414;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.client-status-badge.is-done {
+  background: transparent;
+  color: var(--muted);
+}
+.client-done {
+  max-width: 560px;
+  margin-top: 8px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+.client-done summary {
+  min-height: 52px;
+  padding: 12px 14px;
+  cursor: pointer;
+  font-weight: 750;
+  font-size: 18px;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.client-done-body { padding: 0 14px 14px; }
+@media (max-width: 640px) {
+  .client-action-banner { font-size: 16px; }
+  .client-action-title { font-size: 24px; }
+}
 .core-block { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
 .core-kicker {
   margin: 4px 0 0; font-size: 13px; font-weight: 650; letter-spacing: -0.02em;
@@ -2040,7 +2111,7 @@ let authLinkError = authUrlParams.get('error_description');
 // Bump when What's new should show again. Must match RELEASES[0].version.
 // Defined here, not beside RELEASES, because the cache-bust below has to run
 // before the auth client exists.
-const APP_VERSION = '2026.11.06.1';
+const APP_VERSION = '2026.11.15.1';
 
 // Opening the shared Hub link (no ?cv=) used to build the auth client and then
 // location.replace() to add ?cv=. On a phone that second navigation can refresh
@@ -3415,6 +3486,20 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.11.15.1',
+    date: 'November 15, 2026',
+    title: 'Your scripts, by what to do next',
+    items: [
+      'Scripts ready to film are at the top, with a Film by date and a New badge until you open them.',
+      'Filmed scripts waiting to post come next. Done and posted scripts are folded at the bottom.',
+      'You only see scripts that are ready for you. Drafts and work still being prepared stay hidden.',
+    ],
+    steps: [
+      'Open the Hub. The banner tells you how many new scripts are ready to film and the film-by date.',
+      'Tap a script to read it and film. After you open it, the New badge goes away.',
+    ],
+  },
   {
     version: '2026.11.06.1',
     date: 'November 6, 2026',
@@ -5941,10 +6026,12 @@ function setNavIndex(scope, i) {
 function markGroupOpened(group) {
   if (!group) return;
   let changed = false;
+  const fresh = [];
   group.forEach(s => {
-    if (s && s.id && !openedIds.has(s.id)) { openedIds.add(s.id); changed = true; }
+    if (s && s.id && !openedIds.has(s.id)) { openedIds.add(s.id); changed = true; fresh.push(s.id); }
   });
   if (changed) persistOpened();
+  if (fresh.length) persistClientOpened(fresh);
 }
 function renderScriptNav(groups, index, scope) {
   const rows = groups.map((group, i) => {
@@ -7878,9 +7965,255 @@ function renderReelBank(groups) {
     </div>
   </details>`;
 }
+function clientActionBucket(status) {
+  const st = status || 'Draft';
+  if (st === 'Approved') return 'ready';
+  if (st === 'Filming') return 'filmed';
+  if (st === 'Posted' || st === 'Passed') return 'done';
+  return 'hidden';
+}
+function groupActionBucket(group) {
+  const rows = group || [];
+  let bucket = 'hidden';
+  rows.forEach(s => {
+    const next = clientActionBucket(s && s.status);
+    if (next === 'ready') bucket = 'ready';
+    else if (next === 'filmed' && bucket !== 'ready') bucket = 'filmed';
+    else if (next === 'done' && bucket === 'hidden') bucket = 'done';
+  });
+  return bucket;
+}
+function scriptFilmBy(s) {
+  return asText(s && s.film_by).trim();
+}
+function scriptPostBy(s) {
+  return asText(s && s.post_by).trim();
+}
+function formatClientDate(ymdStr) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymdStr || '')) return '';
+  const parts = ymdStr.split('-').map(Number);
+  const dt = new Date(parts[0], parts[1] - 1, parts[2]);
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return days[dt.getDay()] + ' ' + months[dt.getMonth()] + ' ' + dt.getDate();
+}
+function scriptIsUnopened(s, opened) {
+  if (!s || !s.id) return false;
+  if (s.client_opened_at) return false;
+  const set = opened || (typeof openedIds !== 'undefined' ? openedIds : null);
+  if (set && typeof set.has === 'function' && set.has(s.id)) return false;
+  return true;
+}
+function actionAnchor(group, bucket) {
+  const rows = group || [];
+  for (let i = 0; i < rows.length; i++) {
+    if (clientActionBucket(rows[i] && rows[i].status) === bucket) return rows[i];
+  }
+  return rows[0] || {};
+}
+function compareReadyGroups(a, b) {
+  const da = groupBatchDate(a);
+  const db = groupBatchDate(b);
+  if (da !== db) return db.localeCompare(da);
+  const sa = actionAnchor(a, 'ready') || a[0] || {};
+  const sb = actionAnchor(b, 'ready') || b[0] || {};
+  const ra = Number(sa.reel_number) || 0;
+  const rb = Number(sb.reel_number) || 0;
+  if (ra !== rb) return ra - rb;
+  return asText(sa.id).localeCompare(asText(sb.id));
+}
+function splitClientActionQueue(groups) {
+  const ready = [];
+  const filmed = [];
+  const done = [];
+  (groups || []).forEach(g => {
+    if (!g || !g.length) return;
+    const bucket = groupActionBucket(g);
+    if (bucket === 'ready') ready.push(g);
+    else if (bucket === 'filmed') filmed.push(g);
+    else if (bucket === 'done') done.push(g);
+  });
+  ready.sort(compareReadyGroups);
+  filmed.sort(compareReadyGroups);
+  done.sort(compareReadyGroups);
+  return { ready: ready, filmed: filmed, done: done };
+}
+function earliestFilmBy(groups) {
+  let best = '';
+  (groups || []).forEach(g => {
+    (g || []).forEach(s => {
+      const d = scriptFilmBy(s);
+      if (d && (!best || d < best)) best = d;
+    });
+  });
+  return best;
+}
+function earliestPostBy(groups) {
+  let best = '';
+  (groups || []).forEach(g => {
+    (g || []).forEach(s => {
+      const d = scriptPostBy(s);
+      if (d && (!best || d < best)) best = d;
+    });
+  });
+  return best;
+}
+function newestReadyBatchDate(groups) {
+  let best = '';
+  (groups || []).forEach(g => {
+    const d = groupBatchDate(g);
+    if (d && d > best) best = d;
+  });
+  return best;
+}
+function isNewReadyGroup(group, opened, newestDate) {
+  const s = actionAnchor(group, 'ready') || (group && group[0]);
+  if (!scriptIsUnopened(s, opened)) return false;
+  if (newestDate) return groupBatchDate(group) === newestDate;
+  return true;
+}
+function clientActionBannerText(split, opened) {
+  split = split || { ready: [], filmed: [], done: [] };
+  const ready = split.ready || [];
+  const newest = newestReadyBatchDate(ready);
+  const newGroups = ready.filter(g => isNewReadyGroup(g, opened, newest));
+  if (newGroups.length) {
+    const n = newGroups.length;
+    let line = 'You have ' + n + ' new script' + (n === 1 ? '' : 's') + ' ready to film.';
+    const filmBy = formatClientDate(earliestFilmBy(newGroups));
+    if (filmBy) line += ' Film by ' + filmBy + '.';
+    return line;
+  }
+  if (ready.length) {
+    const n = ready.length;
+    let line = 'You have ' + n + ' script' + (n === 1 ? '' : 's') + ' ready to film.';
+    const filmBy = formatClientDate(earliestFilmBy(ready));
+    if (filmBy) line += ' Film by ' + filmBy + '.';
+    return line;
+  }
+  const filmed = split.filmed || [];
+  if (filmed.length) {
+    const n = filmed.length;
+    let line = 'You have ' + n + ' filmed script' + (n === 1 ? '' : 's') + ' waiting to post.';
+    const postBy = formatClientDate(earliestPostBy(filmed));
+    if (postBy) line += ' Post by ' + postBy + '.';
+    return line;
+  }
+  return '';
+}
+function clientActionStatusLabel(s, opened, opts) {
+  const bucket = clientActionBucket(s && s.status);
+  const allowNew = !opts || opts.allowNew !== false;
+  if (bucket === 'ready' && allowNew && scriptIsUnopened(s, opened)) return 'New';
+  if (bucket === 'ready') return 'Ready to film';
+  if (bucket === 'filmed') return 'Filmed, waiting to post';
+  if (bucket === 'done') return 'Posted';
+  return '';
+}
+function clientDateLinesHtml(s) {
+  const film = formatClientDate(scriptFilmBy(s));
+  const post = formatClientDate(scriptPostBy(s));
+  const batch = asText(s && s.batch).trim();
+  const lines = [];
+  if (batch) lines.push('<p class="client-card-batch">' + escHtml(batch) + '</p>');
+  if (film) lines.push('<p class="client-card-date">Film by ' + escHtml(film) + '</p>');
+  if (post) lines.push('<p class="client-card-date">Post by ' + escHtml(post) + '</p>');
+  return lines.join('');
+}
+function persistClientOpened(ids) {
+  if (!ids || !ids.length) return;
+  if (typeof role !== 'undefined' && role !== 'client') return;
+  if (typeof viewingAsClient === 'function' && viewingAsClient()) return;
+  const at = new Date().toISOString();
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  ids.forEach(id => {
+    const row = rows.find(s => s && s.id === id);
+    if (row && !row.client_opened_at) row.client_opened_at = at;
+  });
+  if (typeof sb === 'undefined' || !sb || typeof sb.from !== 'function') return;
+  Promise.resolve(sb.from('scripts').update({ client_opened_at: at }).in('id', ids).is('client_opened_at', null)).catch(function () {});
+}
+function renderClientActionCard(group, index, bucket, opened, newestDate) {
+  const s = actionAnchor(group, bucket) || (typeof shownScript === 'function' ? shownScript(group) : (group && group[0]));
+  if (!s) return '';
+  const ids = (group || []).map(g => g && g.id).filter(Boolean);
+  const allowNew = bucket === 'ready' && isNewReadyGroup(group, opened, newestDate);
+  const label = clientActionStatusLabel(s, opened, { allowNew: allowNew });
+  const isNew = label === 'New';
+  const title = (typeof reviewDisplayTitle === 'function' && reviewDisplayTitle(s)) || s.title || ('Script ' + (index + 1));
+  const badgeClass = isNew ? 'new-badge' : 'client-status-badge is-' + (bucket || 'ready');
+  const actionLabel = bucket === 'ready' ? 'Film' : 'Open';
+  const edit = (typeof editBadgeHtml === 'function') ? editBadgeHtml(s.id) : '';
+  const canEdit = (typeof canEditScripts === 'function' && canEditScripts())
+    || (typeof viewingAsClient === 'function' && viewingAsClient());
+  return `<article class="batch-card client-action-card" data-script-ids="${escHtml(ids.join(','))}">
+    <button type="button" class="batch-card-hit" onclick="window.filmScript('${s.id}')">
+      <span class="batch-card-top">
+        <span class="batch-card-n">${index + 1}</span>
+        <span class="${badgeClass}">${escHtml(label)}</span>
+      </span>
+      <span class="batch-card-title">${escHtml(title)}</span>
+      ${clientDateLinesHtml(s)}
+    </button>
+    ${edit}
+    <div class="batch-actions">
+      ${canEdit ? `<button type="button" class="batch-edit" onclick="window.openScriptEdit('${s.id}')">Edit</button>` : ''}
+      <button type="button" class="batch-film" onclick="window.filmScript('${s.id}')">${actionLabel}</button>
+    </div>
+  </article>`;
+}
+function renderClientActionBatches(groups, bucket, opened) {
+  const newest = bucket === 'ready' ? newestReadyBatchDate(groups) : '';
+  const blocks = [];
+  (groups || []).forEach(g => {
+    const name = groupBatchName(g) || 'Scripts';
+    let row = null;
+    for (let i = 0; i < blocks.length; i++) if (blocks[i].name === name) row = blocks[i];
+    if (!row) { row = { name: name, groups: [] }; blocks.push(row); }
+    row.groups.push(g);
+  });
+  let n = 0;
+  return `<div class="batch-list">${blocks.map(b => {
+    const cards = b.groups.map(g => { n += 1; return renderClientActionCard(g, n - 1, bucket, opened, newest); }).join('');
+    return `<section class="client-batch"><h3 class="client-batch-name">${escHtml(b.name)}</h3>${cards}</section>`;
+  }).join('')}</div>`;
+}
+function renderClientActionView() {
+  const groups = typeof clientScriptGroups === 'function' ? clientScriptGroups() : [];
+  const split = splitClientActionQueue(groups);
+  navSets = { fresh: split.ready, previous: split.filmed, flat: split.ready.concat(split.filmed) };
+  const banner = clientActionBannerText(split);
+  const bannerHtml = banner ? `<div class="client-action-banner" role="status">${escHtml(banner)}</div>` : '';
+  const readyBody = split.ready.length
+    ? renderClientActionBatches(split.ready, 'ready')
+    : '<p class="fresh-empty">No scripts ready to film right now.</p>';
+  const filmedHtml = split.filmed.length
+    ? `<section class="client-action-section" aria-label="Filmed, waiting to post">
+        <h2 class="client-action-title">Filmed, waiting to post</h2>
+        ${renderClientActionBatches(split.filmed, 'filmed')}
+      </section>`
+    : '';
+  const doneCount = split.done.length;
+  const doneHtml = doneCount
+    ? `<details class="client-done">
+        <summary>Done / posted <span class="core-count">${doneCount}</span></summary>
+        <div class="client-done-body">${renderClientActionBatches(split.done, 'done')}</div>
+      </details>`
+    : '';
+  return `<section class="client-core client-action-view" aria-label="Your scripts">
+    ${bannerHtml}
+    <section class="client-action-section" aria-label="Ready to film">
+      <h2 class="client-action-title">Ready to film</h2>
+      ${readyBody}
+    </section>
+    ${filmedHtml}
+    ${doneHtml}
+  </section>`;
+}
 function renderClientCore() {
   const slug = viewSlug;
   const type = deliverableFor(slug).type;
+  if (type !== 'stories_coaching') return renderClientActionView();
   const groups = clientScriptGroups();
   const counts = coreCounts(slug, groups);
   const step = ensureClientStep(slug, counts);

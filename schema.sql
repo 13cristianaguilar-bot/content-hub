@@ -22,6 +22,9 @@ create table if not exists scripts (
   batch          text,
   reel_number    integer,
   date_planned   date,
+  film_by        date,                -- client-facing "Film by" date. See migrations/2026-11-15_scripts_film_dates.sql
+  post_by        date,                -- client-facing "Post by" date.
+  client_opened_at timestamptz,       -- when the client first opened the script. Admin preview does not set this.
   created_at     timestamptz default now()
 );
 

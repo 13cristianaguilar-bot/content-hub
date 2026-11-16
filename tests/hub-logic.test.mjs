@@ -87,6 +87,10 @@ const names = [
   'csvCell', 'editsToCsv', 'editsToJson', 'editFieldLabel', 'editorLabel',
   'homeSlug', 'sessionLanding', 'viewingAsClient', 'unseenReleasesFor',
   'hubAuthGetItem', 'hubAuthSetItem', 'hubAuthRemoveItem',
+  'clientActionBucket', 'groupActionBucket', 'scriptFilmBy', 'scriptPostBy', 'formatClientDate',
+  'scriptIsUnopened', 'actionAnchor', 'compareReadyGroups', 'splitClientActionQueue',
+  'earliestFilmBy', 'earliestPostBy', 'newestReadyBatchDate', 'isNewReadyGroup', 'clientActionBannerText', 'clientActionStatusLabel',
+  'clientDateLinesHtml', 'renderClientActionCard', 'renderClientActionBatches', 'renderClientActionView',
 ];
 const appVersion = (script.match(/const APP_VERSION = '([^']+)'/) || [])[1];
 function extractAssignment(name) {
@@ -856,55 +860,58 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.11.06.1');
+assert.strictEqual(appVersion, '2026.11.15.1');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.11.06.1');
+assert.strictEqual(firstUnseen[0].version, '2026.11.15.1');
 assert.strictEqual(firstUnseen[0].version, appVersion);
-assert.strictEqual(firstUnseen[0].audience, 'admin');
+assert.notStrictEqual(firstUnseen[0].audience, 'admin');
 const releaseNotes = firstUnseen[0].items.join(' ');
-assert.ok(/Past one-off scripts/.test(releaseNotes));
-assert.ok(/visual hook/.test(releaseNotes));
-assert.ok(/spoken script/.test(releaseNotes));
+assert.ok(/ready to film/.test(releaseNotes));
+assert.ok(/Film by/.test(releaseNotes));
+assert.ok(/New badge/.test(releaseNotes));
+assert.ok(/Done and posted/.test(releaseNotes));
 assert.ok(!/See what the client sees/.test(firstUnseen[0].title));
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.06.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.06.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.15.1', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.15.1');
 const clientUnseen = ctx.unseenReleasesFor('', false, '', 'client');
 assert.strictEqual(clientUnseen.length, 1);
-assert.strictEqual(clientUnseen[0].version, '2026.11.05.1');
+assert.strictEqual(clientUnseen[0].version, '2026.11.15.1');
 assert.ok(!clientUnseen.some(r => r.audience === 'admin'));
 assert.ok(!/see what the client sees/i.test(clientUnseen[0].title + ' ' + clientUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '', 'client').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', false, '', 'client').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '', 'client').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '', 'client')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.15.1', false, '', 'client').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '', 'client')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', false, '', 'client')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '', 'client')[0].version, '2026.11.15.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '', 'client')[0].version, '2026.11.15.1');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
 assert.ok(!/see what the client sees/i.test(ctx.unseenReleasesFor('2026.10.28.4', true, '')[0].title));
 assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', true, appVersion).length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.05.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.15.1');
 assert.ok(script.includes('persistSession: true'));
 assert.ok(script.includes('autoRefreshToken: true'));
 assert.ok(script.includes('storageKey: HUB_AUTH_STORAGE_KEY'));
@@ -917,7 +924,7 @@ assert.ok(script.includes('autocomplete="username"'));
 assert.ok(script.includes('autocomplete="current-password"'));
 assert.ok(script.includes('name="username"'));
 assert.ok(script.includes('name="password"'));
-assert.ok(script.includes("Sign in once — you'll stay signed in on this phone/browser."));
+assert.ok(script.includes('Sign in once. You stay signed in on this phone and browser.'));
 assert.ok(script.includes("signOut({ scope: 'local' })"));
 const mem = Object.create(null);
 const disk = {
@@ -3529,5 +3536,89 @@ assert.ok(script.includes("audience: 'admin'"));
 assert.ok(script.includes('id="past-one-offs"'));
 assert.ok(html.includes('body.prep-open #app'));
 assert.ok(html.includes('body.prep-open #app,\nbody.edit-open #app { display: none; }') || html.includes('body.edit-open #app { display: none; }'));
+
+
+// Client action view: hide drafts and Needs Review, plain labels, banner, dates.
+assert.strictEqual(ctx.clientActionBucket('Draft'), 'hidden');
+assert.strictEqual(ctx.clientActionBucket('Needs Review'), 'hidden');
+assert.strictEqual(ctx.clientActionBucket('Approved'), 'ready');
+assert.strictEqual(ctx.clientActionBucket('Filming'), 'filmed');
+assert.strictEqual(ctx.clientActionBucket('Posted'), 'done');
+assert.strictEqual(ctx.clientActionBucket('Passed'), 'done');
+assert.strictEqual(ctx.clientActionBucket('Archived'), 'hidden');
+assert.strictEqual(ctx.formatClientDate('2026-11-18'), 'Wed Nov 18');
+assert.strictEqual(ctx.formatClientDate('2026-11-19'), 'Thu Nov 19');
+assert.strictEqual(ctx.formatClientDate(''), '');
+
+function actionRow(id, status, batch, extra) {
+  return Object.assign({
+    id,
+    client_slug: 'jan',
+    title: id,
+    status,
+    batch,
+    reel_number: extra && extra.reel_number || 1,
+    film_by: extra && extra.film_by || '',
+    post_by: extra && extra.post_by || '',
+    created_at: '2026-11-12T15:28:54Z',
+  }, extra || {});
+}
+const actionGroups = [
+  [actionRow('nr-old', 'Needs Review', 'Jan FINAL · 10.23.2026')],
+  [actionRow('draft', 'Draft', 'Jan FILM · 11.14.2026')],
+  [actionRow('story', 'Approved', 'Jan FILM · 11.14.2026', { title: 'What Story Are You Bringing Into the Room?', reel_number: 1, film_by: '2026-11-18', post_by: '2026-11-19' })],
+  [actionRow('three', 'Approved', 'Jan FILM · 11.14.2026', { title: 'Three Questions to Becoming Who You Actually Are', reel_number: 2, film_by: '2026-11-18', post_by: '2026-11-19' })],
+  [actionRow('product', 'Approved', 'Jan FILM · 11.14.2026', { title: "It's Not About the Product", reel_number: 3, film_by: '2026-11-18', post_by: '2026-11-19' })],
+  [actionRow('old-approved', 'Approved', 'Jan FINAL · 10.23.2026', { title: 'Leaders Who Lead From the Inside Out', reel_number: 2 })],
+  [actionRow('filmed-1', 'Filming', 'Jan FILM · 11.07.2026', { title: 'Filmed sample', post_by: '2026-11-19' })],
+  [actionRow('posted-1', 'Posted', 'Jan NOLAN · 10.30.2026', { title: 'Posted sample' })],
+  [actionRow('archived-1', 'Archived', 'Jan Batch-01 · 7.11.2026')],
+];
+const split = ctx.splitClientActionQueue(actionGroups);
+assert.strictEqual(split.ready.map(g => g[0].id).join(','), 'story,three,product,old-approved');
+assert.strictEqual(split.filmed.map(g => g[0].id).join(','), 'filmed-1');
+assert.strictEqual(split.done.map(g => g[0].id).join(','), 'posted-1');
+assert.ok(!split.ready.some(g => g[0].status === 'Needs Review' || g[0].status === 'Draft'));
+assert.ok(!split.filmed.concat(split.done).some(g => ['Needs Review', 'Draft', 'Archived'].includes(g[0].status)));
+
+const newestReady = ctx.newestReadyBatchDate(split.ready);
+assert.strictEqual(newestReady, '2026-11-14');
+assert.strictEqual(ctx.isNewReadyGroup(split.ready[0], new Set(), newestReady), true);
+assert.strictEqual(ctx.isNewReadyGroup(split.ready[3], new Set(), newestReady), false);
+assert.strictEqual(ctx.clientActionStatusLabel(split.ready[0][0], new Set()), 'New');
+assert.strictEqual(ctx.clientActionStatusLabel(split.ready[0][0], new Set(['story'])), 'Ready to film');
+assert.strictEqual(ctx.clientActionStatusLabel(Object.assign({}, split.ready[0][0], { client_opened_at: '2026-11-15T12:00:00Z' }), new Set()), 'Ready to film');
+assert.strictEqual(ctx.clientActionStatusLabel(split.filmed[0][0], new Set()), 'Filmed, waiting to post');
+assert.strictEqual(ctx.clientActionStatusLabel(split.done[0][0], new Set()), 'Posted');
+
+const bannerNew = ctx.clientActionBannerText(split, new Set());
+assert.strictEqual(bannerNew, 'You have 3 new scripts ready to film. Film by Wed Nov 18.');
+const bannerSeen = ctx.clientActionBannerText(split, new Set(['story', 'three', 'product']));
+assert.ok(bannerSeen.startsWith('You have 4 scripts ready to film.'));
+const bannerFilmedOnly = ctx.clientActionBannerText({ ready: [], filmed: split.filmed, done: split.done }, new Set());
+assert.strictEqual(bannerFilmedOnly, 'You have 1 filmed script waiting to post. Post by Thu Nov 19.');
+assert.strictEqual(ctx.clientActionBannerText({ ready: [], filmed: [], done: split.done }, new Set()), '');
+
+ctx.openedIds = new Set();
+const readyHtml = ctx.renderClientActionBatches(split.ready, 'ready');
+assert.ok(readyHtml.includes('Leaders Who Lead From the Inside Out'));
+assert.ok(readyHtml.includes('Ready to film'));
+assert.ok(readyHtml.includes('What Story Are You Bringing Into the Room?'));
+assert.ok(readyHtml.includes('Jan FILM · 11.14.2026'));
+assert.ok(readyHtml.includes('Film by Wed Nov 18'));
+assert.ok(readyHtml.includes('Post by Thu Nov 19'));
+assert.ok(readyHtml.includes('new-badge'));
+assert.ok(!readyHtml.includes('Needs Review'));
+assert.ok(!readyHtml.includes('Needs your review'));
+assert.ok(readyHtml.indexOf('Jan FILM · 11.14.2026') < readyHtml.indexOf('Jan FINAL · 10.23.2026'));
+
+const filmedHtml = ctx.renderClientActionBatches(split.filmed, 'filmed');
+assert.ok(filmedHtml.includes('Filmed, waiting to post'));
+assert.ok(filmedHtml.includes('Post by Thu Nov 19'));
+assert.ok(!filmedHtml.includes('Needs Review'));
+
+const doneHtml = ctx.renderClientActionBatches(split.done, 'done');
+assert.ok(doneHtml.includes('Posted'));
+assert.ok(!doneHtml.includes('Needs Review'));
 
 console.log('hub-logic tests passed');

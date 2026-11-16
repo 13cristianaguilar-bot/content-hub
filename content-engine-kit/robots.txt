@@ -1,0 +1,2 @@
+User-agent: *
+Disallow: /content-hub/content-engine-kit/thanks/

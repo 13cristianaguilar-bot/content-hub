@@ -89,6 +89,7 @@ body.prompter-open, body.prep-open, body.edit-open {
 body.prompter-open #app,
 body.prep-open #app,
 body.edit-open #app { display: none; }
+body.client-reader-open #app { display: none; }
 .sr-only {
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
@@ -273,9 +274,151 @@ body.edit-open #app { display: none; }
   gap: 8px;
 }
 .client-done-body { padding: 0 14px 14px; }
+.client-easy { max-width: 560px; }
+.film-next,
+.client-door-card,
+.reader-back,
+.reader-next,
+.reader-done {
+  min-height: 48px;
+  touch-action: manipulation;
+}
+.film-next {
+  display: block;
+  width: 100%;
+  min-height: 64px;
+  margin: 0 0 22px;
+  padding: 16px 18px;
+  border: 0;
+  background: var(--signal);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+.client-door { margin: 0 0 28px; }
+.client-door-title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+.client-door-lead {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.35;
+}
+.client-door-empty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.35;
+}
+.client-door-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  min-height: 72px;
+  margin: 0 0 12px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.client-door-top { display: flex; width: 100%; min-height: 18px; }
+.client-door-name {
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+.client-door-date { font-size: 17px; font-weight: 650; line-height: 1.3; }
+.client-all-heading {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  margin: 8px 0 10px;
+  font-size: 20px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+#client-reader {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  color: var(--ink);
+}
+.reader-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 16px;
+}
+.reader-back,
+.reader-next,
+.reader-done {
+  font-size: 18px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  cursor: pointer;
+}
+.reader-back {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+.reader-count { margin: 0 0 0 auto; color: var(--muted); font-size: 16px; }
+.reader-scroll { flex: 1 1 auto; overflow: auto; padding: 4px 16px 20px; }
+.reader-title {
+  margin: 0 0 8px;
+  font-size: 28px;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+.reader-date { margin: 0 0 16px; font-size: 18px; font-weight: 650; }
+.reader-script {
+  font-size: 32px;
+  font-weight: 650;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+  white-space: pre-wrap;
+}
+.reader-state { margin: 0; font-size: 18px; color: var(--muted); }
+.reader-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px max(16px, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.reader-done,
+.reader-next { width: 100%; padding: 14px 16px; }
+.reader-done { min-height: 64px; border: 0; background: var(--signal); color: #fff; font-size: 20px; }
+.reader-next { border: 1px solid var(--line); background: var(--card); color: var(--ink); }
+.reader-next:disabled { opacity: 0.45; cursor: default; }
+body.client-reader-open { overflow: hidden; }
 @media (max-width: 640px) {
   .client-action-banner { font-size: 16px; }
   .client-action-title { font-size: 24px; }
+  .client-door-title { font-size: 26px; }
+  .reader-script { font-size: 28px; }
+  .film-next { font-size: 20px; }
 }
 .core-block { display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
 .core-kicker {
@@ -2085,6 +2228,7 @@ body.reel-modal-open { overflow: hidden; }
 <div id="prep-root"></div>
 <div id="edit-root"></div>
 <div id="client-view-root"></div>
+<div id="client-reader-root"></div>
 <div id="reel-modal-root"></div>
 
 <script src="client-deliverables.js"></script>
@@ -2111,7 +2255,7 @@ let authLinkError = authUrlParams.get('error_description');
 // Bump when What's new should show again. Must match RELEASES[0].version.
 // Defined here, not beside RELEASES, because the cache-bust below has to run
 // before the auth client exists.
-const APP_VERSION = '2026.11.15.1';
+const APP_VERSION = '2026.11.16.1';
 
 // Opening the shared Hub link (no ?cv=) used to build the auth client and then
 // location.replace() to add ?cv=. On a phone that second navigation can refresh
@@ -3487,6 +3631,20 @@ const FILMING_GUIDE = [
 
 const RELEASES = [
   {
+    version: '2026.11.16.1',
+    date: 'November 16, 2026',
+    title: 'Film the next script',
+    items: [
+      'Film next script is the big button at the top. It opens the next script you have not filmed.',
+      'To do lists the scripts to film, with the film-by date and a New badge. All your scripts lists ready, filmed, and posted.',
+      'Each script is one screen of big text. Next script and Back are large. Done, I filmed it moves it to filmed, waiting to post.',
+    ],
+    steps: [
+      'Open the Hub. Tap Film next script, or tap a card under To do.',
+      'Read the script. Tap Done, I filmed it when you have filmed it. Tap Back to return to the list.',
+    ],
+  },
+  {
     version: '2026.11.15.1',
     date: 'November 15, 2026',
     title: 'Your scripts, by what to do next',
@@ -4245,6 +4403,7 @@ let viewAsOpen = false;
 // brain check stay up until an admin taps See what they see. Does not change
 // role, app_metadata, or the Supabase session.
 let clientParity = false;
+let clientReader = null;
 let viewStatus = 'all';
 let viewType = 'all'; // 'all' | 'interview' | 'broll' — default stays all so unlettered scripts stay visible
 let viewMode = 'all'; // 'testing' (only multi-take groups) | 'all' (full backlog) -- default
@@ -6162,6 +6321,11 @@ window.filmScript = (id) => {
       markGroupOpened(groups[i]);
       setNavIndex(scopes[s], i);
     }
+  }
+  if (typeof clientUsesEasyReader === 'function' && clientUsesEasyReader()) {
+    const bucket = typeof clientBucketForScript === 'function' ? clientBucketForScript(id) : 'ready';
+    window.openClientReader(id, bucket);
+    return;
   }
   window.openPrep(id);
 };
@@ -8178,38 +8342,238 @@ function renderClientActionBatches(groups, bucket, opened) {
     return `<section class="client-batch"><h3 class="client-batch-name">${escHtml(b.name)}</h3>${cards}</section>`;
   }).join('')}</div>`;
 }
+function clientDomId(id) {
+  return asText(id).replace(/[^A-Za-z0-9_-]/g, '');
+}
+function clientGroupCountLabel(label, count) {
+  return asText(label).trim() + ' (' + (Number(count) || 0) + ')';
+}
+function clientFilmedStatus() {
+  return 'Filming';
+}
+function clientScriptTitle(s) {
+  const titled = (typeof reviewDisplayTitle === 'function' && reviewDisplayTitle(s)) || '';
+  return asText(titled || (s && s.title) || 'Script');
+}
+function clientTodoIsNew(s, opened, newestDate) {
+  if (clientActionBucket(s && s.status) !== 'ready') return false;
+  if (!scriptIsUnopened(s, opened)) return false;
+  if (newestDate) return groupBatchDate([s]) === newestDate;
+  return true;
+}
+function nextReadyScript(groups) {
+  const rows = groups || [];
+  for (let i = 0; i < rows.length; i++) {
+    const s = actionAnchor(rows[i], 'ready') || (rows[i] && rows[i][0]);
+    if (s && clientActionBucket(s.status) === 'ready') return s;
+  }
+  return null;
+}
+function renderClientTodoCard(group, opened, newestDate) {
+  const s = actionAnchor(group, 'ready') || (group && group[0]) || {};
+  const id = clientDomId(s.id);
+  const film = formatClientDate(scriptFilmBy(s));
+  const dateHtml = film ? '<span class="client-door-date">Film by ' + escHtml(film) + '</span>' : '';
+  const badge = clientTodoIsNew(s, opened, newestDate) ? '<span class="new-badge">New</span>' : '';
+  return '<button type="button" class="client-door-card" onclick="window.openClientReader(\'' + id + '\',\'ready\')">'
+    + '<span class="client-door-top">' + badge + '</span>'
+    + '<span class="client-door-name">' + escHtml(clientScriptTitle(s)) + '</span>'
+    + dateHtml
+    + '</button>';
+}
+function clientAllHeading(bucket, count) {
+  const label = bucket === 'filmed'
+    ? 'Filmed, waiting to post'
+    : (bucket === 'done' ? 'Done / posted' : 'Ready to film');
+  return clientGroupCountLabel(label, count);
+}
+function renderClientAllCard(group, bucket, opened, newestDate) {
+  const s = actionAnchor(group, bucket) || (group && group[0]) || {};
+  const id = clientDomId(s.id);
+  const film = formatClientDate(scriptFilmBy(s));
+  const post = formatClientDate(scriptPostBy(s));
+  let meta = '';
+  if (bucket === 'ready' && film) meta = 'Film by ' + film;
+  else if (bucket === 'filmed' && post) meta = 'Post by ' + post;
+  else if (bucket === 'done') meta = 'Posted';
+  const metaHtml = meta ? '<span class="client-door-date">' + escHtml(meta) + '</span>' : '';
+  const badge = bucket === 'ready' && clientTodoIsNew(s, opened, newestDate) ? '<span class="new-badge">New</span>' : '';
+  return '<button type="button" class="client-door-card" onclick="window.openClientReader(\'' + id + '\',\'' + bucket + '\')">'
+    + '<span class="client-door-top">' + badge + '</span>'
+    + '<span class="client-door-name">' + escHtml(clientScriptTitle(s)) + '</span>'
+    + metaHtml
+    + '</button>';
+}
+function renderClientAllGroup(groups, bucket, opened, newestDate) {
+  const heading = clientAllHeading(bucket, (groups || []).length);
+  const cards = (groups || []).map(g => renderClientAllCard(g, bucket, opened, newestDate)).join('');
+  return '<section class="client-all-group" aria-label="' + escHtml(heading) + '"><h3 class="client-all-heading">' + escHtml(heading) + '</h3>' + cards + '</section>';
+}
+function renderClientEasyHome(split, opened) {
+  split = split || { ready: [], filmed: [], done: [] };
+  const ready = split.ready || [];
+  const filmed = split.filmed || [];
+  const done = split.done || [];
+  const newest = newestReadyBatchDate(ready);
+  const next = nextReadyScript(ready);
+  const banner = clientActionBannerText(split, opened);
+  const bannerHtml = banner ? '<div class="client-action-banner" role="status">' + escHtml(banner) + '</div>' : '';
+  const filmNext = next ? '<button type="button" class="film-next" onclick="window.filmNextScript()">Film next script</button>' : '';
+  const todoCards = ready.map(g => renderClientTodoCard(g, opened, newest)).join('');
+  const todoBody = todoCards || '<p class="client-door-empty">Nothing to film right now.</p>';
+  const allParts = [
+    ready.length ? renderClientAllGroup(ready, 'ready', opened, newest) : '',
+    filmed.length ? renderClientAllGroup(filmed, 'filmed', opened, newest) : '',
+    done.length ? renderClientAllGroup(done, 'done', opened, newest) : '',
+  ].join('');
+  const allBody = allParts || '<p class="client-door-empty">No scripts yet.</p>';
+  return '<section class="client-easy" aria-label="Your scripts">'
+    + bannerHtml
+    + filmNext
+    + '<section class="client-door" aria-label="To do: scripts to film">'
+    + '<h2 class="client-door-title">' + escHtml(clientGroupCountLabel('To do: scripts to film', ready.length)) + '</h2>'
+    + '<p class="client-door-lead">Look at these. Tap one to start.</p>'
+    + todoBody
+    + '</section>'
+    + '<section class="client-door" aria-label="All your scripts">'
+    + '<h2 class="client-door-title">All your scripts</h2>'
+    + '<p class="client-door-lead">These are all your scripts. Tap one to open it.</p>'
+    + allBody
+    + '</section>'
+    + '</section>';
+}
+function clientReaderHtml(s, opts) {
+  opts = opts || {};
+  const index = Math.max(0, Number(opts.index) || 0);
+  const total = Math.max(1, Number(opts.total) || 1);
+  const title = clientScriptTitle(s);
+  const spoken = (typeof clientSpokenScript === 'function' ? clientSpokenScript(s) : '') || asText(s && s.full_script).trim();
+  const body = spoken || 'No script text on this one yet.';
+  const film = formatClientDate(scriptFilmBy(s));
+  const filmHtml = film ? '<p class="reader-date">Film by ' + escHtml(film) + '</p>' : '';
+  const bucket = clientActionBucket(s && s.status);
+  const id = clientDomId(s && s.id);
+  const done = bucket === 'ready'
+    ? '<button type="button" class="reader-done" onclick="window.markScriptFilmed(\'' + id + '\')">Done, I filmed it</button>'
+    : '<p class="reader-state">' + escHtml(clientActionStatusLabel(s, opts.opened, { allowNew: false })) + '</p>';
+  const nextAttrs = index >= total - 1 ? ' disabled' : '';
+  return '<div id="client-reader" role="dialog" aria-modal="true" aria-label="' + escHtml(title) + '">'
+    + '<header class="reader-top"><button type="button" class="reader-back" onclick="window.closeClientReader()">Back</button>'
+    + '<p class="reader-count">Script ' + (index + 1) + ' of ' + total + '</p></header>'
+    + '<div class="reader-scroll"><h1 class="reader-title">' + escHtml(title) + '</h1>'
+    + filmHtml
+    + '<div class="reader-script">' + escHtml(body) + '</div></div>'
+    + '<div class="reader-bar">' + done
+    + '<button type="button" class="reader-next"' + nextAttrs + ' onclick="window.stepClientReader(1)">Next script</button>'
+    + '</div></div>';
+}
 function renderClientActionView() {
   const groups = typeof clientScriptGroups === 'function' ? clientScriptGroups() : [];
   const split = splitClientActionQueue(groups);
-  navSets = { fresh: split.ready, previous: split.filmed, flat: split.ready.concat(split.filmed) };
-  const banner = clientActionBannerText(split);
-  const bannerHtml = banner ? `<div class="client-action-banner" role="status">${escHtml(banner)}</div>` : '';
-  const readyBody = split.ready.length
-    ? renderClientActionBatches(split.ready, 'ready')
-    : '<p class="fresh-empty">No scripts ready to film right now.</p>';
-  const filmedHtml = split.filmed.length
-    ? `<section class="client-action-section" aria-label="Filmed, waiting to post">
-        <h2 class="client-action-title">Filmed, waiting to post</h2>
-        ${renderClientActionBatches(split.filmed, 'filmed')}
-      </section>`
-    : '';
-  const doneCount = split.done.length;
-  const doneHtml = doneCount
-    ? `<details class="client-done">
-        <summary>Done / posted <span class="core-count">${doneCount}</span></summary>
-        <div class="client-done-body">${renderClientActionBatches(split.done, 'done')}</div>
-      </details>`
-    : '';
-  return `<section class="client-core client-action-view" aria-label="Your scripts">
-    ${bannerHtml}
-    <section class="client-action-section" aria-label="Ready to film">
-      <h2 class="client-action-title">Ready to film</h2>
-      ${readyBody}
-    </section>
-    ${filmedHtml}
-    ${doneHtml}
-  </section>`;
+  navSets = { fresh: split.ready, previous: split.filmed, flat: split.ready.concat(split.filmed, split.done) };
+  const opened = typeof openedIds !== 'undefined' ? openedIds : new Set();
+  return renderClientEasyHome(split, opened);
 }
+function clientUsesEasyReader() {
+  if (typeof clientCoreOn !== 'function' || !clientCoreOn()) return false;
+  const slug = typeof viewSlug !== 'undefined' ? viewSlug : '';
+  if (typeof deliverableFor === 'function' && deliverableFor(slug).type === 'stories_coaching') return false;
+  return true;
+}
+function clientBucketForScript(id) {
+  const groups = typeof clientScriptGroups === 'function' ? clientScriptGroups() : [];
+  const split = splitClientActionQueue(groups);
+  const keys = ['ready', 'filmed', 'done'];
+  for (let k = 0; k < keys.length; k++) {
+    const key = keys[k];
+    const hit = (split[key] || []).some(g => (g || []).some(row => row && row.id === id));
+    if (hit) return key;
+  }
+  return 'ready';
+}
+function clientReaderRows(bucket) {
+  const groups = typeof clientScriptGroups === 'function' ? clientScriptGroups() : [];
+  const split = splitClientActionQueue(groups);
+  const key = bucket === 'filmed' || bucket === 'done' ? bucket : 'ready';
+  return (split[key] || []).map(g => actionAnchor(g, key) || (g && g[0])).filter(Boolean);
+}
+function renderClientReader() {
+  const root = document.getElementById('client-reader-root');
+  if (!root || !clientReader) return;
+  const list = clientReaderRows(clientReader.bucket);
+  let index = list.findIndex(row => row && row.id === clientReader.id);
+  if (index < 0) index = 0;
+  const s = list[index];
+  if (!s) { closeClientReader(); return; }
+  clientReader.id = s.id;
+  root.innerHTML = clientReaderHtml(s, {
+    index: index,
+    total: list.length,
+    opened: typeof openedIds !== 'undefined' ? openedIds : null,
+  });
+  document.body.classList.add('client-reader-open');
+}
+function openClientReader(id, bucket) {
+  const key = bucket === 'filmed' || bucket === 'done' ? bucket : 'ready';
+  clientReader = { id: id, bucket: key };
+  const list = clientReaderRows(key);
+  const s = list.find(row => row && row.id === id) || list[0];
+  if (s && typeof markGroupOpened === 'function') markGroupOpened([s]);
+  renderClientReader();
+}
+function closeClientReader() {
+  clientReader = null;
+  const root = document.getElementById('client-reader-root');
+  if (root) root.innerHTML = '';
+  if (typeof document !== 'undefined' && document.body) document.body.classList.remove('client-reader-open');
+  if (typeof renderDash === 'function') renderDash();
+}
+function stepClientReader(delta) {
+  if (!clientReader) return;
+  const list = clientReaderRows(clientReader.bucket);
+  const index = list.findIndex(row => row && row.id === clientReader.id);
+  const next = index + delta;
+  if (next < 0 || next >= list.length) return;
+  clientReader = { id: list[next].id, bucket: clientReader.bucket };
+  if (typeof markGroupOpened === 'function') markGroupOpened([list[next]]);
+  renderClientReader();
+}
+async function markScriptFilmed(id) {
+  const rows = typeof scripts !== 'undefined' ? scripts : [];
+  const s = rows.find(row => row && row.id === id);
+  if (!s || clientActionBucket(s.status) !== 'ready') return;
+  const preview = (typeof role !== 'undefined' && role !== 'client')
+    || (typeof viewingAsClient === 'function' && viewingAsClient());
+  if (preview) {
+    if (typeof showToast === 'function') showToast('Preview only. The client marks this filmed.');
+    return;
+  }
+  const list = clientReaderRows('ready');
+  const at = list.findIndex(row => row && row.id === id);
+  const following = at >= 0 ? list[at + 1] : null;
+  if (typeof setStatus !== 'function') return;
+  await setStatus(id, clientFilmedStatus(), null, { message: 'Marked as filmed. It is waiting to post.' });
+  const after = rows.find(row => row && row.id === id);
+  if (!after || after.status !== clientFilmedStatus()) return;
+  if (!clientReader) return;
+  if (following && following.id && clientActionBucket(following.status) === 'ready') {
+    clientReader = { id: following.id, bucket: 'ready' };
+    if (typeof markGroupOpened === 'function') markGroupOpened([following]);
+    renderClientReader();
+  } else {
+    closeClientReader();
+  }
+}
+window.openClientReader = openClientReader;
+window.closeClientReader = closeClientReader;
+window.stepClientReader = stepClientReader;
+window.markScriptFilmed = markScriptFilmed;
+window.filmNextScript = function () {
+  const groups = typeof clientScriptGroups === 'function' ? clientScriptGroups() : [];
+  const next = nextReadyScript(splitClientActionQueue(groups).ready);
+  if (!next) return;
+  openClientReader(next.id, 'ready');
+};
 function renderClientCore() {
   const slug = viewSlug;
   const type = deliverableFor(slug).type;

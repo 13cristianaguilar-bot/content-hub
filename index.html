@@ -412,6 +412,61 @@ body.client-reader-open #app { display: none; }
 .reader-done { min-height: 64px; border: 0; background: var(--signal); color: #fff; font-size: 20px; }
 .reader-next { border: 1px solid var(--line); background: var(--card); color: var(--ink); }
 .reader-next:disabled { opacity: 0.45; cursor: default; }
+.reader-edit {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 18px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.reader-example {
+  margin: 0 0 18px;
+  padding: 14px;
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+.reader-example h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+  font-weight: 750;
+  letter-spacing: -0.03em;
+}
+.reader-example-thumb {
+  display: block;
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  margin: 0 0 12px;
+  background: #111;
+}
+.reader-example-open {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 14px 16px;
+  background: var(--signal);
+  color: #fff;
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 750;
+}
+.client-door-card .new-badge,
+.client-door-card .client-status-badge {
+  margin-left: 0;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  padding: 4px 8px;
+}
 body.client-reader-open { overflow: hidden; }
 @media (max-width: 640px) {
   .client-action-banner { font-size: 16px; }
@@ -1781,7 +1836,7 @@ body.modal-open { overflow: hidden; }
   flex: 1; min-height: 56px; padding: 0 14px; background: var(--signal); color: #fff; border: 0; font-size: 17px;
 }
 #edit-sheet {
-  position: fixed; inset: 0; z-index: 78; background: var(--paper); color: var(--ink);
+  position: fixed; inset: 0; z-index: 96; background: var(--paper); color: var(--ink);
   display: flex; flex-direction: column; overflow: hidden;
 }
 .edit-scroll { flex: 1; min-height: 0; overflow: auto; padding: 8px 16px 24px; }
@@ -2255,7 +2310,7 @@ let authLinkError = authUrlParams.get('error_description');
 // Bump when What's new should show again. Must match RELEASES[0].version.
 // Defined here, not beside RELEASES, because the cache-bust below has to run
 // before the auth client exists.
-const APP_VERSION = '2026.11.16.1';
+const APP_VERSION = '2026.11.16.2';
 
 // Opening the shared Hub link (no ?cv=) used to build the auth client and then
 // location.replace() to add ?cv=. On a phone that second navigation can refresh
@@ -3630,6 +3685,21 @@ const FILMING_GUIDE = [
 ];
 
 const RELEASES = [
+  {
+    version: '2026.11.16.2',
+    date: 'November 16, 2026',
+    title: 'Watch the example, then edit the words',
+    items: [
+      'Watch the example first sits above the script. Open on Instagram when that script has a reel.',
+      'Edit changes the title, the hook, and the spoken script. The original stays, so it can be restored.',
+      'To do lists the scripts to film, with the film-by date and a New badge until you open one. After that the card says Ready to film.',
+      'Film next script is the big button. Done, I filmed it moves a script under All your scripts.',
+    ],
+    steps: [
+      'Open a script. Watch the example first, then read the hook and the script.',
+      'Tap Edit to change the words you say. Tap Done, I filmed it when you have filmed it.',
+    ],
+  },
   {
     version: '2026.11.16.1',
     date: 'November 16, 2026',
@@ -5107,7 +5177,13 @@ function unsubscribeLiveChanges() {
 // DATA
 // ─────────────────────────────────────────────
 async function fetchScripts() {
-  let q = sb.from('scripts').select('*').order('reel_number', { ascending: false }); // newest first
+  // reel_number is the primary order. created_at then id keep two rows that
+  // share a batch and reel_number from swapping places on the next refetch.
+  // Do not order by updated_at: an edit would reshuffle the client list.
+  let q = sb.from('scripts').select('*')
+    .order('reel_number', { ascending: false })
+    .order('created_at', { ascending: true })
+    .order('id', { ascending: true });
   if (role === 'client') {
     if (!mySlug) { scripts = []; return; }
     q = q.eq('client_slug', mySlug);
@@ -5211,7 +5287,19 @@ async function setStatus(id, status, extra, opts) {
   // this a client could tap "Film", watch the card move, and the change never reach Cristian.
   let data = null, error = null;
   try {
-    ({ data, error } = await sb.from('scripts').update(payload).eq('id', id).select('id'));
+    if (role === 'client') {
+      // Clients have no table UPDATE. Filming is the only status they can write,
+      // and only from Approved (or back to Approved on Undo).
+      if (extra || (status !== 'Filming' && !(opts.isUndo && status === 'Approved'))) {
+        showToast('That change is not available here.', { tone: 'error' });
+        return;
+      }
+      const filmed = await sb.rpc('client_mark_script_filmed', { p_id: id, p_status: status });
+      data = filmed.data ? [{ id: filmed.data }] : [];
+      error = filmed.error;
+    } else {
+      ({ data, error } = await sb.from('scripts').update(payload).eq('id', id).select('id'));
+    }
   } catch (e) { error = e; }
   if (error || !data || data.length !== 1) {
     if (error) console.error(error);
@@ -5505,8 +5593,14 @@ function groupIntoTakes(list) {
     if (!groups[key]) { groups[key] = []; order.push(key); }
     groups[key].push(s);
   });
-  // Within a group, order by take_label so 'Take A' < 'Take B' < 'Take C' when present.
-  order.forEach(key => groups[key].sort((a, b) => (a.take_label || '').localeCompare(b.take_label || '')));
+  // Within a group, Take A < Take B. Equal labels stay put by created_at, then id.
+  order.forEach(key => groups[key].sort((a, b) => {
+    const take = (a.take_label || '').localeCompare(b.take_label || '');
+    if (take) return take;
+    const created = asText(a && a.created_at).localeCompare(asText(b && b.created_at));
+    if (created) return created;
+    return asText(a && a.id).localeCompare(asText(b && b.id));
+  }));
   return order.map(key => groups[key]);
 }
 
@@ -8176,14 +8270,18 @@ function actionAnchor(group, bucket) {
   return rows[0] || {};
 }
 function compareReadyGroups(a, b) {
-  const da = groupBatchDate(a);
-  const db = groupBatchDate(b);
-  if (da !== db) return db.localeCompare(da);
   const sa = actionAnchor(a, 'ready') || a[0] || {};
   const sb = actionAnchor(b, 'ready') || b[0] || {};
-  const ra = Number(sa.reel_number) || 0;
-  const rb = Number(sb.reel_number) || 0;
-  if (ra !== rb) return ra - rb;
+  const fa = scriptFilmBy(sa);
+  const fb = scriptFilmBy(sb);
+  if (fa !== fb) {
+    if (!fa) return 1;
+    if (!fb) return -1;
+    return fa < fb ? -1 : 1;
+  }
+  const ca = asText(sa.created_at);
+  const cb = asText(sb.created_at);
+  if (ca !== cb) return ca < cb ? -1 : 1;
   return asText(sa.id).localeCompare(asText(sb.id));
 }
 function splitClientActionQueue(groups) {
@@ -8230,11 +8328,10 @@ function newestReadyBatchDate(groups) {
   });
   return best;
 }
-function isNewReadyGroup(group, opened, newestDate) {
+function isNewReadyGroup(group, opened) {
   const s = actionAnchor(group, 'ready') || (group && group[0]);
-  if (!scriptIsUnopened(s, opened)) return false;
-  if (newestDate) return groupBatchDate(group) === newestDate;
-  return true;
+  if (clientActionBucket(s && s.status) !== 'ready') return false;
+  return scriptIsUnopened(s, opened);
 }
 function clientActionBannerText(split, opened) {
   split = split || { ready: [], filmed: [], done: [] };
@@ -8294,8 +8391,8 @@ function persistClientOpened(ids) {
     const row = rows.find(s => s && s.id === id);
     if (row && !row.client_opened_at) row.client_opened_at = at;
   });
-  if (typeof sb === 'undefined' || !sb || typeof sb.from !== 'function') return;
-  Promise.resolve(sb.from('scripts').update({ client_opened_at: at }).in('id', ids).is('client_opened_at', null)).catch(function () {});
+  if (typeof sb === 'undefined' || !sb || typeof sb.rpc !== 'function') return;
+  Promise.resolve(sb.rpc('client_mark_scripts_opened', { p_ids: ids })).catch(function () {});
 }
 function renderClientActionCard(group, index, bucket, opened, newestDate) {
   const s = actionAnchor(group, bucket) || (typeof shownScript === 'function' ? shownScript(group) : (group && group[0]));
@@ -8304,7 +8401,7 @@ function renderClientActionCard(group, index, bucket, opened, newestDate) {
   const allowNew = bucket === 'ready' && isNewReadyGroup(group, opened, newestDate);
   const label = clientActionStatusLabel(s, opened, { allowNew: allowNew });
   const isNew = label === 'New';
-  const title = (typeof reviewDisplayTitle === 'function' && reviewDisplayTitle(s)) || s.title || ('Script ' + (index + 1));
+  const title = clientScriptTitle(s) || ('Script ' + (index + 1));
   const badgeClass = isNew ? 'new-badge' : 'client-status-badge is-' + (bucket || 'ready');
   const actionLabel = bucket === 'ready' ? 'Film' : 'Open';
   const edit = (typeof editBadgeHtml === 'function') ? editBadgeHtml(s.id) : '';
@@ -8351,15 +8448,16 @@ function clientGroupCountLabel(label, count) {
 function clientFilmedStatus() {
   return 'Filming';
 }
-function clientScriptTitle(s) {
-  const titled = (typeof reviewDisplayTitle === 'function' && reviewDisplayTitle(s)) || '';
-  return asText(titled || (s && s.title) || 'Script');
+function clientStoredTitle(s) {
+  const title = asText(s && s.title).trim().replace(/\s*\([^)]*\)\s*$/g, '').trim();
+  return title || 'Script';
 }
-function clientTodoIsNew(s, opened, newestDate) {
+function clientScriptTitle(s) {
+  return clientStoredTitle(s);
+}
+function clientTodoIsNew(s, opened) {
   if (clientActionBucket(s && s.status) !== 'ready') return false;
-  if (!scriptIsUnopened(s, opened)) return false;
-  if (newestDate) return groupBatchDate([s]) === newestDate;
-  return true;
+  return scriptIsUnopened(s, opened);
 }
 function nextReadyScript(groups) {
   const rows = groups || [];
@@ -8369,12 +8467,14 @@ function nextReadyScript(groups) {
   }
   return null;
 }
-function renderClientTodoCard(group, opened, newestDate) {
+function renderClientTodoCard(group, opened) {
   const s = actionAnchor(group, 'ready') || (group && group[0]) || {};
   const id = clientDomId(s.id);
   const film = formatClientDate(scriptFilmBy(s));
   const dateHtml = film ? '<span class="client-door-date">Film by ' + escHtml(film) + '</span>' : '';
-  const badge = clientTodoIsNew(s, opened, newestDate) ? '<span class="new-badge">New</span>' : '';
+  const badge = clientTodoIsNew(s, opened)
+    ? '<span class="new-badge">New</span>'
+    : '<span class="client-status-badge is-ready">Ready to film</span>';
   return '<button type="button" class="client-door-card" onclick="window.openClientReader(\'' + id + '\',\'ready\')">'
     + '<span class="client-door-top">' + badge + '</span>'
     + '<span class="client-door-name">' + escHtml(clientScriptTitle(s)) + '</span>'
@@ -8442,17 +8542,63 @@ function renderClientEasyHome(split, opened) {
     + '</section>'
     + '</section>';
 }
+// The reader speaks the hook column and full_script only. It does not call
+// clientSpokenScript(), which also appends filming_direction. If the hook is
+// already inside the script, it is not repeated.
+function clientReaderSpoken(s) {
+  const hook = asText(s && s.hook).trim();
+  const body = asText(s && s.full_script).trim();
+  if (!hook) return body;
+  if (!body) return hook;
+  if (typeof clientSpokenContains === 'function' && clientSpokenContains(body, hook)) return body;
+  if (typeof clientSpokenContains === 'function' && clientSpokenContains(hook, body)) return hook;
+  return hook + '\n\n' + body;
+}
+function clientExampleThumb(s, info) {
+  const stored = asText(s && s.thumbnail_url).trim();
+  if (/^https?:\/\//i.test(stored) && !/\.(mp4|webm|m4v|mov)(\?|#|$)/i.test(stored)) return stored;
+  if (!info || info.kind !== 'ig' || typeof vaultReelShortcode !== 'function' || typeof hubThumbSrc !== 'function') return '';
+  const code = vaultReelShortcode({ reelUrl: info.watch });
+  if (!code) return '';
+  return hubThumbSrc(code);
+}
+function clientExampleReelHtml(s) {
+  if (typeof videoInfo !== 'function') return '';
+  const info = videoInfo(s && s.reference_clip);
+  if (!info || info.kind === 'text' || !info.watch) return '';
+  const thumb = clientExampleThumb(s, info);
+  const img = thumb
+    ? '<img class="reader-example-thumb" alt="" src="' + escHtml(thumb) + '" referrerpolicy="no-referrer" onerror="this.remove()">'
+    : '';
+  const label = info.kind === 'ig' ? 'Open on Instagram' : (typeof openReferenceLabel === 'function' ? openReferenceLabel(info) : 'Open reference');
+  return '<section class="reader-example" aria-label="Watch the example first">'
+    + '<h2>Watch the example first</h2>'
+    + img
+    + '<a class="reader-example-open" href="' + escHtml(info.watch) + '" target="_blank" rel="noopener noreferrer">' + escHtml(label) + '</a>'
+    + '</section>';
+}
+function refreshClientReaderIfOpen(id) {
+  if (typeof clientReader === 'undefined' || !clientReader || clientReader.id !== id) return;
+  if (typeof renderClientReader === 'function') renderClientReader();
+}
+function clientReaderMayEdit(s) {
+  if (typeof finalScriptEditAllowed !== 'function' || typeof scriptEditSession !== 'function') return false;
+  return finalScriptEditAllowed(scriptEditSession(s), s);
+}
 function clientReaderHtml(s, opts) {
   opts = opts || {};
   const index = Math.max(0, Number(opts.index) || 0);
   const total = Math.max(1, Number(opts.total) || 1);
   const title = clientScriptTitle(s);
-  const spoken = (typeof clientSpokenScript === 'function' ? clientSpokenScript(s) : '') || asText(s && s.full_script).trim();
+  const spoken = clientReaderSpoken(s);
   const body = spoken || 'No script text on this one yet.';
   const film = formatClientDate(scriptFilmBy(s));
   const filmHtml = film ? '<p class="reader-date">Film by ' + escHtml(film) + '</p>' : '';
   const bucket = clientActionBucket(s && s.status);
   const id = clientDomId(s && s.id);
+  const edit = clientReaderMayEdit(s)
+    ? '<button type="button" class="reader-edit" onclick="window.openClientReaderEdit(\'' + id + '\')">Edit</button>'
+    : '';
   const done = bucket === 'ready'
     ? '<button type="button" class="reader-done" onclick="window.markScriptFilmed(\'' + id + '\')">Done, I filmed it</button>'
     : '<p class="reader-state">' + escHtml(clientActionStatusLabel(s, opts.opened, { allowNew: false })) + '</p>';
@@ -8462,8 +8608,9 @@ function clientReaderHtml(s, opts) {
     + '<p class="reader-count">Script ' + (index + 1) + ' of ' + total + '</p></header>'
     + '<div class="reader-scroll"><h1 class="reader-title">' + escHtml(title) + '</h1>'
     + filmHtml
+    + clientExampleReelHtml(s)
     + '<div class="reader-script">' + escHtml(body) + '</div></div>'
-    + '<div class="reader-bar">' + done
+    + '<div class="reader-bar">' + edit + done
     + '<button type="button" class="reader-next"' + nextAttrs + ' onclick="window.stepClientReader(1)">Next script</button>'
     + '</div></div>';
 }
@@ -14548,6 +14695,7 @@ function editorLabel(u) {
   return words.replace(/\b[a-z]/g, function (ch) { return ch.toUpperCase(); }).slice(0, 120);
 }
 function editFieldLabel(field) {
+  if (field === 'title') return 'Title';
   if (field === 'hook') return 'Hook';
   if (field === 'on_screen') return 'On-screen text';
   if (field === 'body') return 'Body';
@@ -14630,6 +14778,7 @@ function prompterEditHtml(s) {
 }
 function scriptEditValue(s, field) {
   s = s || {};
+  if (field === 'title') return asText(s.title).trim();
   if (field === 'hook') return asText(s.hook).trim();
   if (field === 'body') return asText(s.full_script).trim();
   if (field === 'cta') return asText(s.cta).trim();
@@ -14644,7 +14793,7 @@ function scriptEditValue(s, field) {
 }
 function scriptEditDiff(s, values) {
   values = values || {};
-  const fields = ['hook', 'on_screen', 'body', 'cta', 'caption', 'notes'];
+  const fields = ['title', 'hook', 'on_screen', 'body', 'cta', 'caption', 'notes'];
   const changes = [];
   fields.forEach(field => {
     if (!Object.prototype.hasOwnProperty.call(values, field)) return;
@@ -14654,6 +14803,7 @@ function scriptEditDiff(s, values) {
   });
   const patch = {};
   changes.forEach(change => {
+    if (change.field === 'title') patch.title = change.after_text;
     if (change.field === 'hook') patch.hook = change.after_text;
     if (change.field === 'body') patch.full_script = change.after_text;
     if (change.field === 'cta') patch.cta = change.after_text;
@@ -14687,6 +14837,7 @@ function editOriginalMap(rows) {
 }
 function restoreEditValues(s, rows) {
   const values = {
+    title: scriptEditValue(s, 'title'),
     hook: scriptEditValue(s, 'hook'),
     on_screen: scriptEditValue(s, 'on_screen'),
     body: scriptEditValue(s, 'body'),
@@ -14741,14 +14892,21 @@ function clearEdit() {
   document.body.classList.remove('edit-open');
 }
 function renderEditForm(s) {
-  const fields = [
-    ['hook', 'Hook', false],
-    ['on_screen', 'On-screen text', false],
-    ['body', 'Body', true],
-    ['cta', 'CTA', false],
-    ['caption', 'Caption', false],
-    ['notes', 'Notes', false],
-  ];
+  const simple = (editState && editState.simple) || (typeof role !== 'undefined' && role !== 'admin');
+  const fields = simple
+    ? [
+      ['title', 'Title', false],
+      ['hook', 'Hook', false],
+      ['body', 'Spoken script', true],
+    ]
+    : [
+      ['hook', 'Hook', false],
+      ['on_screen', 'On-screen text', false],
+      ['body', 'Body', true],
+      ['cta', 'CTA', false],
+      ['caption', 'Caption', false],
+      ['notes', 'Notes', false],
+    ];
   const inputs = fields.map(item => {
     const value = scriptEditValue(s, item[0]);
     return `<label class="edit-field"><span>${escHtml(item[1])}</span><textarea data-edit-field="${item[0]}" class="${item[2] ? 'edit-body' : ''}">${escHtml(value)}</textarea></label>`;
@@ -14833,6 +14991,7 @@ function finishLocalEdit(s, diff, name, reason, toastMessage) {
   clearEdit();
   if (user) renderDash();
   if (prepState && prepState.id === s.id) renderPrep();
+  if (typeof refreshClientReaderIfOpen === 'function') refreshClientReaderIfOpen(s.id);
   if (toastMessage !== false) showToast(toastMessage || (reason === 'Restored original' ? 'Original restored.' : 'Edits saved.'));
 }
 async function commitScriptEdit(s, values, reason, opts) {
@@ -14856,10 +15015,14 @@ async function commitScriptEdit(s, values, reason, opts) {
     showToast(note === 'Restored original' ? 'Already the original.' : 'Nothing changed.');
     return 'noop';
   }
-  // Clients can update their own row. Never send admin audit columns, and
-  // never let an edit rewrite who owns the script.
+  // A client may change title, hook, and the spoken script. The save goes
+  // through client_save_script_text, which also keeps the previous words in
+  // script_edits. Status, client_slug, and every other column stay put.
   const patch = {};
-  ['hook', 'full_script', 'cta', 'editor_notes', 'filming_direction'].forEach(key => {
+  const keys = role === 'admin'
+    ? ['title', 'hook', 'full_script', 'cta', 'editor_notes', 'filming_direction']
+    : ['title', 'hook', 'full_script'];
+  keys.forEach(key => {
     if (Object.prototype.hasOwnProperty.call(diff.patch, key)) patch[key] = diff.patch[key];
   });
   if (role === 'admin') {
@@ -14872,12 +15035,51 @@ async function commitScriptEdit(s, values, reason, opts) {
   }
   const name = editorLabel(user);
   if (previewMode || (user && String(user.id).indexOf('preview') === 0)) {
-    finishLocalEdit(s, { patch: patch, changes: diff.changes }, name, note, successToast);
+    const loggedChanges = diff.changes.filter(change => {
+      if (change.field === 'title') return Object.prototype.hasOwnProperty.call(patch, 'title');
+      if (change.field === 'hook') return Object.prototype.hasOwnProperty.call(patch, 'hook');
+      if (change.field === 'body') return Object.prototype.hasOwnProperty.call(patch, 'full_script');
+      if (change.field === 'cta') return Object.prototype.hasOwnProperty.call(patch, 'cta');
+      return role === 'admin' && (change.field === 'on_screen' || change.field === 'caption' || change.field === 'notes');
+    });
+    finishLocalEdit(s, { patch: patch, changes: loggedChanges }, name, note, successToast);
     return 'saved';
   }
   editSaving = true;
   const saveBtn = document.querySelector('.edit-save, .edit-restore');
   if (saveBtn) saveBtn.disabled = true;
+  if (role !== 'admin') {
+    const nextTitle = Object.prototype.hasOwnProperty.call(patch, 'title') ? patch.title : asText(s.title);
+    const nextHook = Object.prototype.hasOwnProperty.call(patch, 'hook') ? patch.hook : asText(s.hook);
+    const nextBody = Object.prototype.hasOwnProperty.call(patch, 'full_script') ? patch.full_script : asText(s.full_script);
+    let saved = null, saveError = null;
+    try {
+      ({ data: saved, error: saveError } = await sb.rpc('client_save_script_text', {
+        p_id: s.id,
+        p_title: nextTitle,
+        p_hook: nextHook,
+        p_full_script: nextBody,
+        p_edited_by: name,
+        p_reason: note || null,
+      }));
+    } catch (e) { saveError = e; }
+    editSaving = false;
+    if (saveError || !Array.isArray(saved) || !saved.length) {
+      if (saveBtn) saveBtn.disabled = false;
+      showToast(saveError ? ('Could not save: ' + (saveError.message || saveError)) : 'Could not save that change.', { tone: 'error' });
+      return 'failed';
+    }
+    Object.assign(s, { title: nextTitle, hook: nextHook, full_script: nextBody });
+    scriptEdits = saved.concat(scriptEdits);
+    editsError = '';
+    editsLoaded = true;
+    clearEdit();
+    if (user) renderDash();
+    if (prepState && prepState.id === s.id) renderPrep();
+    if (typeof refreshClientReaderIfOpen === 'function') refreshClientReaderIfOpen(s.id);
+    if (successToast !== false) showToast(successToast);
+    return 'saved';
+  }
   let data = null, error = null;
   try {
     ({ data, error } = await sb.from('scripts').update(patch).eq('id', s.id).eq('client_slug', s.client_slug).select('id'));
@@ -14915,9 +15117,16 @@ async function commitScriptEdit(s, values, reason, opts) {
   if (user) renderDash();
   if (prepState && prepState.id === s.id) renderPrep();
   if (prompterState && prompterState.id === s.id && !prompterState.editing) renderPrompter();
+  if (typeof refreshClientReaderIfOpen === 'function') refreshClientReaderIfOpen(s.id);
   if (successToast !== false) showToast(successToast);
   return 'saved';
 }
+window.openClientReaderEdit = (id) => {
+  const s = scripts.find(row => row && row.id === id);
+  if (!s || !clientReaderMayEdit(s)) return;
+  editState = { id: id, mode: 'edit', simple: true };
+  renderEdit();
+};
 window.openScriptEdit = (id) => {
   const s = scripts.find(row => row && row.id === id);
   if (!s || !(canEditScripts() || viewingAsClient())) return;

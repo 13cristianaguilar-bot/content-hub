@@ -91,8 +91,9 @@ const names = [
   'scriptIsUnopened', 'actionAnchor', 'compareReadyGroups', 'splitClientActionQueue',
   'earliestFilmBy', 'earliestPostBy', 'newestReadyBatchDate', 'isNewReadyGroup', 'clientActionBannerText', 'clientActionStatusLabel',
   'clientDateLinesHtml', 'renderClientActionCard', 'renderClientActionBatches', 'renderClientActionView',
-  'clientDomId', 'clientGroupCountLabel', 'clientFilmedStatus', 'clientScriptTitle', 'clientTodoIsNew', 'nextReadyScript',
-  'renderClientTodoCard', 'clientAllHeading', 'renderClientAllCard', 'renderClientAllGroup', 'renderClientEasyHome', 'clientReaderHtml',
+  'clientDomId', 'clientGroupCountLabel', 'clientFilmedStatus', 'clientStoredTitle', 'clientScriptTitle', 'clientTodoIsNew', 'nextReadyScript',
+  'renderClientTodoCard', 'clientAllHeading', 'renderClientAllCard', 'renderClientAllGroup', 'renderClientEasyHome',
+  'clientReaderSpoken', 'clientExampleThumb', 'clientExampleReelHtml', 'refreshClientReaderIfOpen', 'clientReaderMayEdit', 'clientReaderHtml',
 ];
 const appVersion = (script.match(/const APP_VERSION = '([^']+)'/) || [])[1];
 function extractAssignment(name) {
@@ -862,13 +863,13 @@ assert.strictEqual(ctx.sessionLanding('admin', 'cristian').viewSlug, 'cristian')
 assert.strictEqual(ctx.sessionLanding('client', 'jan').viewSlug, 'jan');
 assert.strictEqual(ctx.sessionLanding('client', 'andrew').viewSlug, 'andrew');
 
-assert.strictEqual(appVersion, '2026.11.16.1');
+assert.strictEqual(appVersion, '2026.11.16.2');
 assert.ok(/WALKTHROUGH_VIDEO_URL = ''/.test(script));
 assert.ok(/Paste a Loom, YouTube/.test(script));
 assert.ok(!/function helpDismissed|let showHelp|window\.toggleHelp|hub_help_dismissed/.test(script));
 const firstUnseen = ctx.unseenReleasesFor('', false, '');
 assert.strictEqual(firstUnseen.length, 1);
-assert.strictEqual(firstUnseen[0].version, '2026.11.16.1');
+assert.strictEqual(firstUnseen[0].version, '2026.11.16.2');
 assert.strictEqual(firstUnseen[0].version, appVersion);
 assert.notStrictEqual(firstUnseen[0].audience, 'admin');
 const releaseNotes = firstUnseen[0].items.join(' ');
@@ -878,45 +879,45 @@ assert.ok(/New badge/.test(releaseNotes));
 assert.ok(/Done, I filmed it/.test(releaseNotes));
 assert.ok(/All your scripts/.test(releaseNotes));
 assert.ok(!/See what the client sees/.test(firstUnseen[0].title));
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.16.1', false, '').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.15.1', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.16.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.16.2', false, '').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.15.1', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.11', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.10', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.9', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.8', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.7', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.6', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.5', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.2', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.1', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.5', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.4', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.3', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.2', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.27.1', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.3', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.2', false, '')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.26.1', false, '')[0].version, '2026.11.16.2');
 const clientUnseen = ctx.unseenReleasesFor('', false, '', 'client');
 assert.strictEqual(clientUnseen.length, 1);
-assert.strictEqual(clientUnseen[0].version, '2026.11.16.1');
+assert.strictEqual(clientUnseen[0].version, '2026.11.16.2');
 assert.ok(!clientUnseen.some(r => r.audience === 'admin'));
 assert.ok(!/see what the client sees/i.test(clientUnseen[0].title + ' ' + clientUnseen[0].items.join(' ')));
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.16.1', false, '', 'client').length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.15.1', false, '', 'client')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '', 'client')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', false, '', 'client')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '', 'client')[0].version, '2026.11.16.1');
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '', 'client')[0].version, '2026.11.16.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.16.2', false, '', 'client').length, 0);
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.15.1', false, '', 'client')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', false, '', 'client')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.1', false, '', 'client')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.11.06.1', false, '', 'client')[0].version, '2026.11.16.2');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.22', false, '', 'client')[0].version, '2026.11.16.2');
 assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.4', true, '').length, 1);
 assert.ok(!/see what the client sees/i.test(ctx.unseenReleasesFor('2026.10.28.4', true, '')[0].title));
 assert.strictEqual(ctx.unseenReleasesFor('2026.11.05.2', true, appVersion).length, 0);
-assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.16.1');
+assert.strictEqual(ctx.unseenReleasesFor('2026.10.28.3', true, '2026.10.24.2')[0].version, '2026.11.16.2');
 assert.ok(script.includes('persistSession: true'));
 assert.ok(script.includes('autoRefreshToken: true'));
 assert.ok(script.includes('storageKey: HUB_AUTH_STORAGE_KEY'));
@@ -3571,10 +3572,10 @@ function actionRow(id, status, batch, extra) {
 const actionGroups = [
   [actionRow('nr-old', 'Needs Review', 'Jan FINAL · 10.23.2026')],
   [actionRow('draft', 'Draft', 'Jan FILM · 11.14.2026')],
-  [actionRow('story', 'Approved', 'Jan FILM · 11.14.2026', { title: 'What Story Are You Bringing Into the Room?', reel_number: 1, film_by: '2026-11-18', post_by: '2026-11-19' })],
-  [actionRow('three', 'Approved', 'Jan FILM · 11.14.2026', { title: 'Three Questions to Becoming Who You Actually Are', reel_number: 2, film_by: '2026-11-18', post_by: '2026-11-19' })],
-  [actionRow('product', 'Approved', 'Jan FILM · 11.14.2026', { title: "It's Not About the Product", reel_number: 3, film_by: '2026-11-18', post_by: '2026-11-19' })],
-  [actionRow('old-approved', 'Approved', 'Jan FINAL · 10.23.2026', { title: 'Leaders Who Lead From the Inside Out', reel_number: 2 })],
+  [actionRow('story', 'Approved', 'Jan FILM · 11.14.2026', { title: 'What Story Are You Bringing Into the Room?', reel_number: 1, film_by: '2026-11-18', post_by: '2026-11-19', created_at: '2026-11-12T15:00:00Z', updated_at: '2026-11-20T00:00:00Z' })],
+  [actionRow('three', 'Approved', 'Jan FILM · 11.14.2026', { title: 'Three Questions to Becoming Who You Actually Are', reel_number: 2, film_by: '2026-11-18', post_by: '2026-11-19', created_at: '2026-11-12T16:00:00Z', updated_at: '2026-11-01T00:00:00Z' })],
+  [actionRow('product', 'Approved', 'Jan FILM · 11.14.2026', { title: "It's Not About the Product", reel_number: 3, film_by: '2026-11-18', post_by: '2026-11-19', created_at: '2026-11-12T17:00:00Z', updated_at: '2026-11-19T00:00:00Z' })],
+  [actionRow('old-approved', 'Approved', 'Jan FINAL · 10.23.2026', { title: 'Leaders Who Lead From the Inside Out', reel_number: 2, created_at: '2026-10-23T12:00:00Z', updated_at: '2026-11-21T00:00:00Z' })],
   [actionRow('filmed-1', 'Filming', 'Jan FILM · 11.07.2026', { title: 'Filmed sample', post_by: '2026-11-19' })],
   [actionRow('posted-1', 'Posted', 'Jan NOLAN · 10.30.2026', { title: 'Posted sample' })],
   [actionRow('archived-1', 'Archived', 'Jan Batch-01 · 7.11.2026')],
@@ -3589,7 +3590,8 @@ assert.ok(!split.filmed.concat(split.done).some(g => ['Needs Review', 'Draft', '
 const newestReady = ctx.newestReadyBatchDate(split.ready);
 assert.strictEqual(newestReady, '2026-11-14');
 assert.strictEqual(ctx.isNewReadyGroup(split.ready[0], new Set(), newestReady), true);
-assert.strictEqual(ctx.isNewReadyGroup(split.ready[3], new Set(), newestReady), false);
+assert.strictEqual(ctx.isNewReadyGroup(split.ready[3], new Set(), newestReady), true);
+assert.strictEqual(ctx.isNewReadyGroup(split.ready[3], new Set(['old-approved']), newestReady), false);
 assert.strictEqual(ctx.clientActionStatusLabel(split.ready[0][0], new Set()), 'New');
 assert.strictEqual(ctx.clientActionStatusLabel(split.ready[0][0], new Set(['story'])), 'Ready to film');
 assert.strictEqual(ctx.clientActionStatusLabel(Object.assign({}, split.ready[0][0], { client_opened_at: '2026-11-15T12:00:00Z' }), new Set()), 'Ready to film');
@@ -3597,9 +3599,11 @@ assert.strictEqual(ctx.clientActionStatusLabel(split.filmed[0][0], new Set()), '
 assert.strictEqual(ctx.clientActionStatusLabel(split.done[0][0], new Set()), 'Posted');
 
 const bannerNew = ctx.clientActionBannerText(split, new Set());
-assert.strictEqual(bannerNew, 'You have 3 new scripts ready to film. Film by Wed Nov 18.');
+assert.strictEqual(bannerNew, 'You have 4 new scripts ready to film. Film by Wed Nov 18.');
 const bannerSeen = ctx.clientActionBannerText(split, new Set(['story', 'three', 'product']));
-assert.ok(bannerSeen.startsWith('You have 4 scripts ready to film.'));
+assert.strictEqual(bannerSeen, 'You have 1 new script ready to film.');
+const bannerAllSeen = ctx.clientActionBannerText(split, new Set(['story', 'three', 'product', 'old-approved']));
+assert.ok(bannerAllSeen.startsWith('You have 4 scripts ready to film.'));
 const bannerFilmedOnly = ctx.clientActionBannerText({ ready: [], filmed: split.filmed, done: split.done }, new Set());
 assert.strictEqual(bannerFilmedOnly, 'You have 1 filmed script waiting to post. Post by Thu Nov 19.');
 assert.strictEqual(ctx.clientActionBannerText({ ready: [], filmed: [], done: split.done }, new Set()), '');
@@ -3607,7 +3611,7 @@ assert.strictEqual(ctx.clientActionBannerText({ ready: [], filmed: [], done: spl
 ctx.openedIds = new Set();
 const readyHtml = ctx.renderClientActionBatches(split.ready, 'ready');
 assert.ok(readyHtml.includes('Leaders Who Lead From the Inside Out'));
-assert.ok(readyHtml.includes('Ready to film'));
+assert.ok(readyHtml.includes('>New<'));
 assert.ok(readyHtml.includes('What Story Are You Bringing Into the Room?'));
 assert.ok(readyHtml.includes('Jan FILM · 11.14.2026'));
 assert.ok(readyHtml.includes('Film by Wed Nov 18'));
@@ -3632,8 +3636,25 @@ assert.strictEqual(ctx.clientFilmedStatus(), 'Filming');
 assert.strictEqual(ctx.nextReadyScript(split.ready).id, 'story');
 assert.strictEqual(ctx.nextReadyScript([]), null);
 assert.strictEqual(ctx.clientTodoIsNew(split.ready[0][0], new Set(), newestReady), true);
-assert.strictEqual(ctx.clientTodoIsNew(split.ready[3][0], new Set(), newestReady), false);
+assert.strictEqual(ctx.clientTodoIsNew(split.ready[3][0], new Set(), newestReady), true);
 assert.strictEqual(ctx.clientTodoIsNew(split.ready[0][0], new Set(['story']), newestReady), false);
+const openedTodo = ctx.renderClientTodoCard(split.ready[0], new Set(['story']));
+assert.ok(openedTodo.includes('Ready to film'));
+assert.ok(openedTodo.includes('Film by Wed Nov 18'));
+assert.ok(!openedTodo.includes('new-badge'));
+const freshTodo = ctx.renderClientTodoCard(split.ready[3], new Set());
+assert.ok(freshTodo.includes('new-badge'));
+assert.ok(freshTodo.includes('>New<'));
+const byFilmDate = ctx.splitClientActionQueue([
+  [actionRow('edited-later', 'Approved', 'Batch Z', { film_by: '2026-11-20', created_at: '2026-11-02T00:00:00Z', updated_at: '2026-12-01T00:00:00Z' })],
+  [actionRow('created-first', 'Approved', 'Batch Z', { film_by: '2026-11-20', created_at: '2026-11-01T00:00:00Z', updated_at: '2026-10-01T00:00:00Z' })],
+  [actionRow('sooner', 'Approved', 'Batch A', { film_by: '2026-11-10', created_at: '2026-12-01T00:00:00Z', updated_at: '2026-12-02T00:00:00Z' })],
+  [actionRow('same-b', 'Approved', 'Batch A', { film_by: '2026-11-10', created_at: '2026-12-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' })],
+]);
+assert.strictEqual(byFilmDate.ready.map(g => g[0].id).join(','), 'same-b,sooner,created-first,edited-later');
+assert.ok(!script.includes(".order('updated_at'"));
+assert.ok(script.includes(".order('created_at', { ascending: true })"));
+assert.ok(script.includes(".order('id', { ascending: true })"));
 
 const home = ctx.renderClientEasyHome(split, new Set());
 assert.ok(home.includes('Film next script'));
@@ -3653,28 +3674,80 @@ assert.ok(!home.includes('Needs your review'));
 assert.ok(!home.includes('<details'));
 assert.ok(home.indexOf('To do: scripts to film') < home.indexOf('All your scripts'));
 assert.ok(home.indexOf('Film next script') < home.indexOf('To do: scripts to film'));
-const homeSeen = ctx.renderClientEasyHome(split, new Set(['story', 'three', 'product']));
+const homeSeen = ctx.renderClientEasyHome(split, new Set(['story', 'three', 'product', 'old-approved']));
+assert.ok(homeSeen.includes('Ready to film'));
 assert.ok(!homeSeen.includes('new-badge'));
+assert.strictEqual(ctx.clientScriptTitle({ title: 'What Story Are You Bringing Into the Room? (Nov 14 short)', hook: 'A different spoken hook' }), 'What Story Are You Bringing Into the Room?');
 const homeEmpty = ctx.renderClientEasyHome({ ready: [], filmed: [], done: [] }, new Set());
 assert.ok(!homeEmpty.includes('Film next script'));
 assert.ok(homeEmpty.includes('Nothing to film right now.'));
 assert.ok(homeEmpty.includes('To do: scripts to film (0)'));
 
 const readerScript = Object.assign({}, split.ready[0][0], {
+  title: 'What Story Are You Bringing Into the Room? (Nov 14 short)',
   hook: 'What story are you bringing into the room?',
   full_script: 'Say the story in one breath. Then stop.',
   cta: 'Comment STORY',
+  reference_clip: 'Watch this https://www.instagram.com/reel/Dej6DYnye-H/ first',
+  thumbnail_url: 'https://cdn.example.com/devin-cover.jpg',
+  proof_stats: 'INVENTED PROOF 999',
+  pipeline_audit: { note: 'INVENTED AUDIT' },
+  editor_notes: 'INVENTED NOTES',
+  filming_setup: 'INVENTED SETUP',
+  filming_direction: { 'Verbal Hook': 'INVENTED VERBAL HOOK' },
 });
+ctx.role = 'client';
+ctx.mySlug = 'jan';
+ctx.viewSlug = 'jan';
+ctx.previewSlug = null;
+assert.strictEqual(ctx.clientReaderSpoken({
+  hook: 'Say the hook.',
+  full_script: 'Say the hook.\n\nThen the rest.',
+  filming_direction: { 'Verbal Hook': 'INVENTED VERBAL HOOK' },
+  proof_stats: 'INVENTED PROOF',
+  editor_notes: 'INVENTED NOTES',
+  filming_setup: 'INVENTED SETUP',
+}), 'Say the hook.\n\nThen the rest.');
+assert.strictEqual(ctx.clientReaderSpoken({ hook: 'Only the hook.', full_script: 'The body is different.' }), 'Only the hook.\n\nThe body is different.');
 const reader = ctx.clientReaderHtml(readerScript, { index: 0, total: 4 });
 assert.ok(reader.includes('Done, I filmed it'));
 assert.ok(reader.includes('Next script'));
 assert.ok(reader.includes('Back'));
 assert.ok(reader.includes('Script 1 of 4'));
+assert.ok(reader.includes('What story are you bringing into the room?'));
 assert.ok(reader.includes('Say the story in one breath. Then stop.'));
+assert.strictEqual(reader.split('What story are you bringing into the room?').length, 2);
 assert.ok(reader.includes('class="reader-script"'));
 assert.ok(reader.includes('Film by Wed Nov 18'));
 assert.ok(reader.includes("markScriptFilmed('story')"));
+assert.ok(reader.includes('Watch the example first'));
+assert.ok(reader.includes('Open on Instagram'));
+assert.ok(reader.includes('target="_blank"'));
+assert.ok(reader.includes('https://www.instagram.com/reel/Dej6DYnye-H/'));
+assert.ok(reader.includes('https://cdn.example.com/devin-cover.jpg'));
+assert.ok(reader.includes('class="reader-edit"'));
+assert.ok(reader.includes('What Story Are You Bringing Into the Room?'));
+assert.ok(!reader.includes('(Nov 14 short)'));
+assert.ok(!reader.includes('INVENTED'));
+assert.ok(!reader.includes('Comment STORY'));
+assert.ok(!reader.includes('proof_stats'));
+assert.ok(!reader.includes('filming_direction'));
 assert.ok(!reader.includes('disabled'));
+const readerWithoutReel = ctx.clientReaderHtml(Object.assign({}, readerScript, { reference_clip: '', thumbnail_url: '' }), { index: 0, total: 1 });
+assert.ok(!readerWithoutReel.includes('Watch the example first'));
+assert.ok(!readerWithoutReel.includes('Open on Instagram'));
+const titleDiff = ctx.scriptEditDiff(readerScript, { title: 'A clearer title', hook: readerScript.hook, body: readerScript.full_script });
+assert.deepStrictEqual(Object.keys(titleDiff.patch).sort(), ['title']);
+assert.strictEqual(titleDiff.patch.title, 'A clearer title');
+assert.strictEqual(titleDiff.changes[0].field, 'title');
+assert.strictEqual('status' in titleDiff.patch, false);
+assert.strictEqual('client_slug' in titleDiff.patch, false);
+const migration = fs.readFileSync(new URL('../migrations/2026-11-16_client_script_text_only.sql', import.meta.url), 'utf8');
+assert.ok(migration.includes('drop policy if exists "admin_or_own_client_can_update"'));
+assert.ok(migration.includes('admin_can_update_scripts'));
+assert.ok(migration.includes('client_save_script_text'));
+assert.ok(migration.includes("field in ('hook', 'on_screen', 'body', 'cta', 'caption', 'notes', 'title')"));
+assert.ok(!/update public\.scripts[\s\S]{0,80}set status/.test(migration.slice(0, migration.indexOf('client_mark_script_filmed'))));
 const readerLast = ctx.clientReaderHtml(readerScript, { index: 3, total: 4 });
 assert.ok(readerLast.includes('disabled'));
 const readerFilmed = ctx.clientReaderHtml(split.filmed[0][0], { index: 0, total: 1 });

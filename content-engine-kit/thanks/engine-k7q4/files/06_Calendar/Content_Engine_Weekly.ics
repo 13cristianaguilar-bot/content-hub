@@ -1,0 +1,67 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Signal Marketing//Content Engine Kit//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Content Engine
+BEGIN:VEVENT
+UID:content-engine-0@signalmarketing
+DTSTAMP:20261116T120000Z
+DTSTART:20261123T090000
+DTEND:20261123T095000
+RRULE:FREQ=WEEKLY;BYDAY=MO
+SUMMARY:Content Engine: Review + research refresh
+DESCRIPTION:Review last week in your Content Hub\, then refresh outlier r
+ esearch for you and 5 to 15 creators (outliers.py or Prompt 02).
+END:VEVENT
+BEGIN:VEVENT
+UID:content-engine-1@signalmarketing
+DTSTAMP:20261116T120000Z
+DTSTART:20261124T090000
+DTEND:20261124T103000
+RRULE:FREQ=WEEKLY;BYDAY=TU
+SUMMARY:Content Engine: Write scripts (Format DNA) + QA
+DESCRIPTION:Pick the batch\, write scripts with Format DNA\, weave 3+ phr
+ ase-bank lines into the middle\, run the voice check and batch QA\, read
+  every script.
+END:VEVENT
+BEGIN:VEVENT
+UID:content-engine-2@signalmarketing
+DTSTAMP:20261116T120000Z
+DTSTART:20261125T090000
+DTEND:20261125T093000
+RRULE:FREQ=WEEKLY;BYDAY=WE
+SUMMARY:Content Engine: Hooks + captions
+DESCRIPTION:Match proven hooks from your hook bank to each approved scrip
+ t. Write captions.
+END:VEVENT
+BEGIN:VEVENT
+UID:content-engine-3@signalmarketing
+DTSTAMP:20261116T120000Z
+DTSTART:20261126T100000
+DTEND:20261126T113000
+RRULE:FREQ=WEEKLY;BYDAY=TH
+SUMMARY:Content Engine: Film from the teleprompter
+DESCRIPTION:Batch film every approved script from the teleprompter.
+END:VEVENT
+BEGIN:VEVENT
+UID:content-engine-4@signalmarketing
+DTSTAMP:20261116T120000Z
+DTSTART:20261127T090000
+DTEND:20261127T092000
+RRULE:FREQ=WEEKLY;BYDAY=FR
+SUMMARY:Content Engine: Post + log results
+DESCRIPTION:Post\, log views against your own median in the Content Hub\,
+  note edits for next week.
+END:VEVENT
+BEGIN:VEVENT
+UID:content-engine-5@signalmarketing
+DTSTAMP:20261116T120000Z
+DTSTART:20261207T100000
+DTEND:20261207T104500
+RRULE:FREQ=MONTHLY;BYDAY=1MO
+SUMMARY:Content Engine: Monthly refresh
+DESCRIPTION:Update your phrase bank\, refresh formats\, retire what stopp
+ ed working\, check tool costs.
+END:VEVENT
+END:VCALENDAR

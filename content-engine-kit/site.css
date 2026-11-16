@@ -116,3 +116,6 @@ footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .viz figcaption{font-size:14px;color:var(--mut);text-align:center;margin-top:6px}
 .viz figure{margin:0}
 @media (max-width:900px){.viz.pair,.viz.pair2{grid-template-columns:1fr}.viz.pair2 figure:last-child img{max-width:300px;margin:0 auto}}
+.cta-inline{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:34px}.cta-inline span{color:var(--mut);font-size:15px}
+.outcomes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}.oc{background:var(--card);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:16px;padding:20px}.oc b{display:block;font-size:19px;line-height:1.25;margin-bottom:8px;font-family:Geist,sans-serif}.oc span{color:var(--mut);font-size:15.5px;line-height:1.5}
+@media (max-width:900px){.outcomes{grid-template-columns:1fr}}

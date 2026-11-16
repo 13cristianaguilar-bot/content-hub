@@ -1,0 +1,18 @@
+item,your_number,example,notes
+creators_tracked,,20,10 to 30 creators in and around your niche
+reels_per_creator_full_run,,50,about the last 50 reels gives a fair median
+full_runs_per_month,,1,
+creators_in_weekly_refresh,,11,you + 10 competitors
+reels_per_creator_refresh,,30,
+refreshes_per_month,,4,
+reels_per_month,,2320,= creators x reels x runs + refresh creators x reels x refreshes
+apify_price_per_1000,,2.60,2.60 on Free / 2.30 on Starter (read Nov 16 2026)
+apify_cost,,6.03,= reels_per_month / 1000 x price
+apify_included_credit,,5.00,5 on Free / 19 on Starter
+apify_overage,,1.03,"= max(0, apify_cost - included)"
+bright_data_free_records,,5000,first 5000 each month free
+bright_data_cost,,0.00,"= max(0, reels_per_month - 5000) / 1000 x 1.50"
+ai_plan,,20,Claude Pro or ChatGPT Plus
+optional_research_app,,0,Sandcastles Pro 49 / Visionary 99 / Titan 499
+optional_muse,,0,Power 20 / Maximum 100
+monthly_total,,21.03,= ai_plan + scraper cost or overage + optional apps

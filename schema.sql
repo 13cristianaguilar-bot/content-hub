@@ -30,8 +30,9 @@ create table if not exists scripts (
 
 -- ─────────────────────────────────────────────
 -- ROW LEVEL SECURITY
--- Admins can read/update/insert everything. A client can only read/update their OWN
--- client_slug's rows, and can't insert at all. Checked against app_metadata, not
+-- Admins can read/update/insert everything. A client can read their own rows and
+-- cannot update the table directly. Text edits go through client_save_script_text.
+-- Checked against app_metadata, not
 -- user_metadata -- app_metadata can only be set by an admin/service-role, so a client can't
 -- grant themselves admin or claim another client's slug by editing their own account data.
 -- See migrations/2026-10-22_scripts_client_isolation_rls.sql for the full writeup and the
@@ -46,16 +47,13 @@ create policy "admin_or_own_client_can_read" on scripts
     or client_slug = (auth.jwt() -> 'app_metadata' ->> 'client_slug')
   );
 
-create policy "admin_or_own_client_can_update" on scripts
+-- Clients do not update this table. Text edits, the opened marker, and the
+-- Approved -> Filming move go through the functions in
+-- migrations/2026-11-16_client_script_text_only.sql.
+create policy "admin_can_update_scripts" on scripts
   for update to authenticated
-  using (
-    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    or client_slug = (auth.jwt() -> 'app_metadata' ->> 'client_slug')
-  )
-  with check (
-    (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin'
-    or client_slug = (auth.jwt() -> 'app_metadata' ->> 'client_slug')
-  );
+  using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
+  with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
 
 create policy "admin_only_insert" on scripts
   for insert to authenticated
@@ -328,7 +326,7 @@ create table if not exists public.script_edits (
   edited_at timestamptz not null default now(),
   reason text,
   constraint script_edits_field_check check (
-    field in ('hook', 'on_screen', 'body', 'cta', 'caption', 'notes')
+    field in ('hook', 'on_screen', 'body', 'cta', 'caption', 'notes', 'title')
   ),
   constraint script_edits_edited_by_check check (char_length(edited_by) between 1 and 120)
 );

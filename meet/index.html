@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Meet Cristian Aguilar</title>
+  <meta name="description" content="Cristian Aguilar, 22, Austin. Founder of Signal Marketing. This is his story, the rooms he is in, and what he builds.">
+  <meta property="og:title" content="Meet Cristian Aguilar">
+  <meta property="og:description" content="Cristian Aguilar, 22, Austin. Founder of Signal Marketing. This is his story, the rooms he is in, and what he builds.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://13cristianaguilar-bot.github.io/content-hub/meet/">
+  <meta property="og:image" content="https://13cristianaguilar-bot.github.io/content-hub/meet/og.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Meet Cristian Aguilar">
+  <meta name="twitter:description" content="Cristian Aguilar, 22, Austin. Founder of Signal Marketing. This is his story, the rooms he is in, and what he builds.">
+  <meta name="twitter:image" content="https://13cristianaguilar-bot.github.io/content-hub/meet/og.jpg">
+  <meta name="theme-color" content="#080808">
+  <link rel="canonical" href="https://13cristianaguilar-bot.github.io/content-hub/meet/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080808;
+      --red: #ce2029;
+      --accent: #e6313a;
+      --text: #ffffff;
+      --muted: #b8b8b8;
+      --dim: #8a8a8a;
+      --card: #121212;
+      --line: #242424;
+      --radius: 16px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: "DM Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-size: 17px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    a { color: inherit; }
+    img { max-width: 100%; display: block; }
+    .wrap {
+      width: min(1080px, calc(100% - 40px));
+      margin: 0 auto;
+    }
+    header {
+      padding: 22px 0 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .brand {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .brand span {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      background: var(--red);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .hero {
+      padding: 28px 0 8px;
+      display: grid;
+      gap: 28px;
+    }
+    .kicker {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 14px;
+    }
+    h1 {
+      font-family: "Archivo Black", "Arial Black", Impact, sans-serif;
+      font-size: clamp(42px, 12vw, 76px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .name {
+      font-family: "Archivo Black", "Arial Black", Impact, sans-serif;
+      font-size: clamp(18px, 5vw, 22px);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .meta {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .lede {
+      color: #ececec;
+      font-size: 18px;
+      max-width: 34em;
+    }
+    .portrait {
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: #111;
+      aspect-ratio: 4 / 5;
+    }
+    .portrait img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 50% 20%;
+    }
+    section {
+      padding: 48px 0;
+      border-top: 1px solid var(--line);
+    }
+    h2 {
+      font-family: "Archivo Black", "Arial Black", Impact, sans-serif;
+      font-size: clamp(22px, 6vw, 32px);
+      letter-spacing: -0.01em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .prose {
+      color: #e8e8e8;
+      max-width: 38em;
+    }
+    .prose p + p { margin-top: 14px; }
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--red);
+      border-radius: 12px;
+      padding: 18px 18px 18px 16px;
+    }
+    .card h3 {
+      font-family: "Archivo Black", "Arial Black", Impact, sans-serif;
+      font-size: 16px;
+      letter-spacing: 0.01em;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .tag {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .card p, .build p {
+      color: #d6d6d6;
+      font-size: 15.5px;
+      line-height: 1.5;
+    }
+    .note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 15.5px;
+      max-width: 40em;
+    }
+    .build {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .build h3 {
+      font-family: "Archivo Black", "Arial Black", Impact, sans-serif;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .clients {
+      margin-top: 22px;
+    }
+    .clients .label {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: #101010;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 13.5px;
+      color: #eee;
+    }
+    .cta-row {
+      display: grid;
+      gap: 10px;
+      margin: 22px 0 16px;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      padding: 12px 18px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+    }
+    .btn.primary {
+      background: var(--red);
+      color: #fff;
+    }
+    .btn.primary:hover { background: var(--accent); }
+    .btn.ghost {
+      background: transparent;
+      color: #fff;
+      border: 1px solid #3a3a3a;
+    }
+    .btn.ghost:hover { border-color: #fff; }
+    .cta-note {
+      color: var(--muted);
+      font-size: 16px;
+    }
+    footer {
+      padding: 10px 0 40px;
+      border-top: 1px solid var(--line);
+    }
+    footer p {
+      font-family: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #5a5a5a;
+    }
+    @media (min-width: 720px) {
+      .wrap { width: min(1080px, calc(100% - 64px)); }
+      .hero {
+        grid-template-columns: 1.05fr 0.95fr;
+        gap: 48px;
+        align-items: center;
+        padding: 48px 0 24px;
+      }
+      .grid.people, .grid.builds {
+        grid-template-columns: 1fr 1fr;
+      }
+      .cta-row {
+        grid-template-columns: 1fr 1fr;
+        max-width: 520px;
+      }
+      section { padding: 64px 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span></span>Signal Marketing</div>
+    </header>
+
+    <div class="hero">
+      <div>
+        <h1>This is my story.</h1>
+        <div class="name">Cristian Aguilar</div>
+        <div class="meta">22 &middot; Austin, Texas</div>
+        <p class="lede">Founder of Signal Marketing. He builds AI-leveraged content strategy and AI systems for business owners.</p>
+      </div>
+      <div class="portrait">
+        <img src="cristian.jpg" width="1000" height="1250" alt="Cristian Aguilar, photographed in Austin">
+      </div>
+    </div>
+
+    <section>
+      <div class="kicker">Origin</div>
+      <h2>From below zero</h2>
+      <div class="prose">
+        <p>He started from below zero and has been open about that climb. A year ago he was working a regular job while building on the side. Then he bet on getting into the rooms where founders already do this work, and he has been documenting the path in public, including a series called Escaping $0.</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="kicker">The rooms</div>
+      <h2>Learning from the best.</h2>
+      <div class="grid people">
+        <article class="card">
+          <div class="tag">Prime Elite</div>
+          <h3>Joe Stolte</h3>
+          <p>Cristian is in Joe Stolte's mastermind, Prime Elite.</p>
+        </article>
+        <article class="card">
+          <div class="tag">Agentic Society</div>
+          <h3>Austin Distel</h3>
+          <p>Cristian worked with Austin Distel in the Agentic Society mastermind.</p>
+        </article>
+        <article class="card">
+          <div class="tag">Mastermind</div>
+          <h3>Ryan Kohler</h3>
+          <p>Cristian worked for Ryan Kohler in his mastermind.</p>
+        </article>
+        <article class="card">
+          <div class="tag">The Foundation</div>
+          <h3>Dane Maxwell</h3>
+          <p>Cristian is learning from Dane Maxwell in The Foundation.</p>
+        </article>
+      </div>
+      <p class="note">This year he has interviewed founders in podcasts, sit-downs, and rooms, including the IMP Think Tank. In December he will be at Prime Elite Q4 in Los Cabos.</p>
+    </section>
+
+    <section>
+      <div class="kicker">Proof</div>
+      <h2>What he builds</h2>
+      <div class="grid builds">
+        <article class="build">
+          <h3>Content Hub</h3>
+          <p>A format-research system that finds viral outliers at 3x a creator's average and turns them into scripts in the client's voice. The system placed 3rd of 25 builds, with 10 votes, at the Agentic Society Mastermind Mixer on November 6, 2026.</p>
+        </article>
+        <article class="build">
+          <h3>A second brain</h3>
+          <p>One shared memory that every AI agent he uses can write to and work from, so the work stays in one place.</p>
+        </article>
+        <article class="build">
+          <h3>Live dashboards</h3>
+          <p>Working views of the business, built so progress stays visible instead of buried in tools.</p>
+        </article>
+        <article class="build">
+          <h3>AI audits</h3>
+          <p>He sits with a business, finds the bottleneck, and maps the system that should run it.</p>
+        </article>
+      </div>
+      <div class="clients">
+        <div class="label">Clients he has worked with</div>
+        <div class="pills">
+          <span class="pill">Rich Life Academy</span>
+          <span class="pill">Team R3SET</span>
+          <span class="pill">The Austin Report</span>
+          <span class="pill">How To Use HighLevel (Andrew George)</span>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="kicker">For builders</div>
+      <h2>Why meet him</h2>
+      <div class="prose">
+        <p>This page is for someone who already lives in AI. Cristian likes to trade setups, compare what is actually working, and build resources live on a call. If you want to see how a second brain, agents, and content systems fit together in real work, that is the conversation.</p>
+      </div>
+      <div class="cta-row">
+        <a class="btn primary" href="https://instagram.com/cristianaguilar.ai" target="_blank" rel="noopener noreferrer">Follow on Instagram</a>
+        <a class="btn ghost" href="https://youtube.com/@SignalRatio" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
+      </div>
+      <p class="cta-note">Or reply to Cavin's text to get connected.</p>
+    </section>
+
+    <footer>
+      <p>Signal Marketing &middot; Austin</p>
+    </footer>
+  </div>
+</body>
+</html>

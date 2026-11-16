@@ -358,7 +358,7 @@ Optional object. Every finished deliverable or task from a bot lands here so Cri
 
 Mark reviewed writes `localStorage` key `cc-review-done`, an array of item ids, in this browser only. It does not write `cc_feed` and it does not call Supabase. A new browser shows the feed status again.
 
-Open items are `ready` and `decision` that are not in `cc-review-done`. The sidebar badge and the phone chip count those. `reference` and `done` are not open. `reference` sits in a collapsed Reference section. `done`, and anything marked in this browser, sit in a collapsed Reviewed section.
+Open items are `ready`, `decision`, `needs review`, `in progress`, and any other status that is not `reference` or `done`, when they are not in `cc-review-done`. The sidebar badge and the phone chip count those. `in progress` shows as a muted badge. Any other wording stays on the card as the status line. `reference` and `done` are not open. `reference` sits in a collapsed Reference section. `done`, and anything marked in this browser, sit in a collapsed Reviewed section.
 
 Sort the open list by due soonest. A missing due sorts last. The same due puts `decision` before `ready`. A due within 3 hours, or already past, is red. The clock is America/Chicago, next to a relative phrase. A date-only `due` (`2026-11-16`) is that whole day in America/Chicago, not UTC midnight. The card shows the day with no clock, for example Mon Nov 16. It turns red on that day and after. It sorts as the end of that day.
 
@@ -394,7 +394,7 @@ Sort the open list by due soonest. A missing due sorts last. The same due puts `
 | `who` | Person or bot the item is for. |
 | `link` | `https` URL for the Open button, or omit it. |
 | `links` | Optional extra `{ label, url }` buttons. `url` is `https` only. |
-| `status` | `ready`, `decision`, `reference`, or `done`. Anything else is skipped. |
+| `status` | `ready`, `decision`, `reference`, or `done`. `needs review` and `in progress` stay open. `in progress` is a muted badge. Any other text stays open and is shown as the status line. An item is never skipped because of its status. |
 | `action` | The one step left. This is the bold line on the card. |
 | `due` | Optional ISO time, or a date-only day (`2026-11-16`). A date-only value is the whole Chicago day: no clock on the card, red on that day and after, sorted at the end of that day. Missing due sorts last and shows no clock. |
 | `money_note` | Optional short money line. Omit it when there is no money to mention. |

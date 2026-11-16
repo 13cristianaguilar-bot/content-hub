@@ -1137,6 +1137,8 @@ footer.site{margin-top:auto}
 .rq-pill{flex:none;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:4px 8px;border:1px solid rgba(255,255,255,.28);color:var(--muted)}
 .rq-pill.is-decision{color:#fff;background:var(--red);border-color:transparent}
 .rq-pill.is-ready{color:#fff;border-color:rgba(255,255,255,.45)}
+.rq-pill.is-muted{color:var(--dim);border-color:rgba(255,255,255,.16);background:transparent;font-weight:650}
+.rq-status{margin:6px 0 0;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
 .rq-who{color:var(--muted);margin:6px 0 0;font-size:13px}
 .rq-action{margin:8px 0 0;font-size:16px;line-height:1.35;overflow-wrap:anywhere}
 .rq-due{margin:6px 0 0;font-size:13px;color:var(--muted)}
@@ -1159,7 +1161,7 @@ footer.site{margin-top:auto}
   #v-review .rq-note{margin-bottom:6px}
   #v-review .rq{gap:6px}
   #v-review .rq-card{padding:8px 12px}
-  #v-review .rq-who,#v-review .rq-due,#v-review .rq-money{margin-top:4px}
+  #v-review .rq-who,#v-review .rq-due,#v-review .rq-money,#v-review .rq-status{margin-top:4px}
   #v-review .rq-links{margin-top:6px}
   #v-review .rq-fold{padding:0 12px 4px}
 }
@@ -8534,9 +8536,15 @@ footer.site{margin-top:auto}
     return /^https:\/\//i.test(s) ? s : '';
   }
   function reviewStatus(v) {
-    var s = String(v || '').toLowerCase();
-    if (s === 'ready' || s === 'decision' || s === 'reference' || s === 'done') return s;
-    return '';
+    var raw = String(v == null ? '' : v).replace(/\u2014/g, ' - ').replace(/\u2013/g, '-').replace(/\u2212/g, '-').replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim();
+    var key = raw.toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    if (key === 'ready' || key === 'decision' || key === 'reference' || key === 'done') {
+      var known = key.charAt(0).toUpperCase() + key.slice(1);
+      return { status: key, badge: known, line: '', muted: false };
+    }
+    if (key === 'needs review') return { status: 'open', badge: 'Needs review', line: '', muted: false };
+    if (key === 'in progress') return { status: 'open', badge: 'In progress', line: '', muted: true };
+    return { status: 'open', badge: 'Open', line: raw, muted: false };
   }
   function reviewSamplePack() {
     var now = Date.now();
@@ -8561,7 +8569,6 @@ footer.site{margin-top:auto}
     list.forEach(function (raw, i) {
       if (!raw || typeof raw !== 'object') return;
       var status = reviewStatus(raw.status);
-      if (!status) return;
       var links = [];
       if (Array.isArray(raw.links)) {
         raw.links.forEach(function (link) {
@@ -8576,7 +8583,10 @@ footer.site{margin-top:auto}
         who: clean(raw.who || ''),
         link: reviewHttps(raw.link),
         links: links,
-        status: status,
+        status: status.status,
+        badge: status.badge,
+        statusLine: status.line,
+        muted: status.muted,
         action: clean(raw.action || ''),
         due: raw.due ? String(raw.due) : '',
         money_note: clean(raw.money_note || ''),
@@ -8662,7 +8672,8 @@ footer.site{margin-top:auto}
     return reviewSplit(reviewRows(src.pack)).open.length;
   }
   function reviewCard(row, allowMark) {
-    var pill = row.status === 'decision' ? 'Decision' : (row.status === 'ready' ? 'Ready' : (row.status === 'reference' ? 'Reference' : 'Done'));
+    var kind = row.status === 'decision' || row.status === 'ready' || row.status === 'reference' || row.status === 'done' || row.status === 'open' ? row.status : 'open';
+    var pill = row.badge || (kind === 'decision' ? 'Decision' : (kind === 'ready' ? 'Ready' : (kind === 'reference' ? 'Reference' : (kind === 'done' ? 'Done' : 'Open'))));
     var due = reviewDueParts(row.due);
     var links = '';
     if (row.link) links += '<a class="btn p" href="' + esc(row.link) + '" target="_blank" rel="noopener noreferrer">Open</a>';
@@ -8671,8 +8682,9 @@ footer.site{margin-top:auto}
     });
     if (allowMark) links += '<button type="button" class="btn s" data-review-done="' + esc(row.id) + '">Mark reviewed</button>';
     return '<article class="rq-card filterable" data-review-id="' + esc(row.id) + '">' +
-      '<div class="rq-top"><h2>' + esc(row.title) + '</h2><span class="rq-pill is-' + row.status + '">' + pill + '</span></div>' +
+      '<div class="rq-top"><h2>' + esc(row.title) + '</h2><span class="rq-pill is-' + kind + (row.muted ? ' is-muted' : '') + '">' + esc(pill) + '</span></div>' +
       (row.who ? '<p class="rq-who">' + esc(row.who) + '</p>' : '') +
+      (row.statusLine ? '<p class="rq-status">' + esc(row.statusLine) + '</p>' : '') +
       '<p class="rq-action"><b>' + esc(row.action || 'No action in this item.') + '</b></p>' +
       (due ? '<p class="rq-due' + (due.hot ? ' is-hot' : '') + '">' + esc(due.text) + '</p>' : '') +
       (row.money_note ? '<p class="rq-money">' + esc(row.money_note) + '</p>' : '') +

@@ -37,7 +37,7 @@ img{max-width:100%;display:block}
 /* hero */
 .hero{position:relative;overflow:hidden;padding:56px 0 90px}
 .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:40px;align-items:center;position:relative}
-.hero h1{font-size:clamp(44px,7vw,82px);margin:14px 0 18px}
+.hero h1{font-size:clamp(46px,7vw,84px);margin:6px 0 18px}
 .hero h1 em{font-style:normal;background:linear-gradient(90deg,#c9b8ff,#8b5cf6);-webkit-background-clip:text;background-clip:text;color:transparent}
 .hero .lead{font-size:19px;margin-bottom:28px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 0}
@@ -53,7 +53,7 @@ img{max-width:100%;display:block}
 .rating .st{color:#ffd166;letter-spacing:2px;font-size:16px}
 /* pain */
 .clock{font-family:Fraunces,serif;font-size:clamp(56px,10vw,110px);color:var(--violet);line-height:1}
-.thought-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.thought-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:40px}
 .bubble{background:#fff;border:1px solid var(--line);border-radius:22px 22px 22px 6px;padding:18px 20px;font-size:16px;font-weight:500;box-shadow:0 10px 30px -18px #1b1d3a44}
 .bubble small{display:block;color:var(--muted);font-weight:400;font-size:12px;margin-bottom:4px}
 /* hard way */
@@ -130,21 +130,24 @@ td:first-child{color:var(--muted);font-weight:600;width:24%}
 .rcard.doc{background:var(--night);color:#eef0ff;border-color:var(--night)}
 .rcard.doc .who{color:#b7bbe0}
 /* offer */
-.offer{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px;align-items:stretch}
+.offer{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:44px;align-items:stretch}
 .ocard{background:#fff;color:var(--ink);border-radius:26px;padding:26px 24px 28px;text-align:center;position:relative;border:2px solid transparent;display:flex;flex-direction:column}
+.kicker{font-family:Fraunces,serif;font-size:clamp(22px,2.6vw,30px);color:#d9d4ff;margin-top:14px;line-height:1.2}
+.pill{display:inline-block;margin-top:14px;font-size:13px;font-weight:600;color:#fff;background:#ffffff14;border:1px solid #b49bff66;border-radius:999px;padding:6px 14px}
+.terms-line{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
 .ocard.pop{border-color:var(--violet);transform:translateY(-10px);box-shadow:0 30px 60px -30px #8b5cf6}
 .ocard .flag{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--violet);color:#fff;font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 14px;border-radius:999px;white-space:nowrap}
-.ocard img{height:190px;object-fit:contain;margin:6px auto 10px}
+.ocard img{height:150px;object-fit:contain;margin:6px auto 10px}
 .ocard h3{font-size:24px}
 .ocard .supply{font-size:13px;color:var(--muted);margin-top:2px}
-.price{font-family:Fraunces,serif;font-size:44px;margin:14px 0 0;line-height:1}
+.price{font-family:Fraunces,serif;font-size:38px;margin:14px 0 0;line-height:1}
 .price small{font-size:16px;font-family:Inter;color:var(--muted)}
 .was{font-size:14px;color:var(--muted);text-decoration:line-through;margin-top:4px}
 .ocard ul{list-style:none;margin:16px 0 20px;font-size:14px;display:grid;gap:7px;text-align:left}
 .ocard li{padding-left:24px;position:relative}
 .ocard li:before{content:"";position:absolute;left:0;top:4px;width:14px;height:14px;border-radius:50%;background:var(--ok) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='4'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E") center/9px no-repeat}
 .ocard .btn{margin-top:auto;width:100%;padding:16px 20px}
-.ocard.plain .btn{background:var(--night);box-shadow:none}
+
 /* trust */
 .terms{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:36px}
 .term{background:#ffffff0c;border:1px solid #ffffff1c;border-radius:20px;padding:22px}
@@ -178,6 +181,7 @@ footer p{margin-bottom:10px}
  .hero-grid,.dialbox,.vs,.factsrow{grid-template-columns:1fr}
  .hero{padding:30px 0 60px}.hero .moonwrap{max-width:360px;order:-1}
  .thought-grid,.rev,.offer{grid-template-columns:1fr}
+ @media (min-width:600px){.offer{grid-template-columns:1fr 1fr}}
  .tried,.ing,.terms{grid-template-columns:1fr 1fr}
  .feel{grid-template-columns:repeat(2,1fr)}.feel .fcard:last-child{grid-column:span 2}
  .steps{grid-template-columns:1fr}
@@ -193,7 +197,7 @@ footer p{margin-bottom:10px}
 </head>
 <body>
 
-<div class="topbar">Subscribe and save on every bottle. <b>Cancel anytime, no fees.</b> 30-day money-back guarantee.</div>
+<div class="topbar">Buy once or choose AutoRefill. <b>Contains no GLP-1. Not a GLP-1 drug.</b> 30-day money-back guarantee.</div>
 
 <!-- HERO -->
 <header class="hero dark">
@@ -201,12 +205,13 @@ footer p{margin-bottom:10px}
  <div class="wrap hero-grid">
   <div>
    <div class="rating"><span class="st">&#9733;&#9733;&#9733;&#9733;&#9733;</span> 4.86 average from 91 reviews on innosupps.com</div>
-   <div class="eyebrow">Night Shred GLP-1</div>
-   <h1>Tune out the <em>food noise.</em></h1>
-   <p class="lead">Two capsules before bed. Supports your body's own GLP-1, the fullness hormone, plus deep sleep, so late-night food thoughts get quieter.*</p>
-   <a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Quiet the noise tonight <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-   <p class="micro">Dietary supplement, not a drug. 8 ingredients, every dose on the label.</p>
-   <div class="chips"><span class="chip">Supports natural GLP-1*</span><span class="chip">Fewer late-night cravings*</span><span class="chip">Deep sleep, no grogginess*</span></div>
+   <div class="eyebrow">Night Shred GLP-1, the nighttime formula</div>
+   <p class="kicker">When the house goes quiet, the food noise gets loud.</p>
+   <h1>Tune it out <em>tonight.</em><sup style="font-size:.35em;vertical-align:super;color:#b7bbe0">*</sup></h1>
+   <p class="lead">Two capsules before bed to support your body's natural GLP-1 and deep sleep, so you feel in control of late-night cravings.*</p>
+   <a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Tune it out tonight <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+   <p class="pill">Contains no GLP-1. Not a GLP-1 drug.</p><p class="micro">Dietary supplement. 8 ingredients, every dose on the label.</p>
+   <div class="chips"><span class="chip">Supports natural GLP-1*</span><span class="chip">Feel in control of late-night cravings*</span><span class="chip">Deep sleep, no grogginess*</span></div>
   </div>
   <div class="moonwrap">
    <div class="moon"><img src="img/bottle.webp" alt="Night Shred GLP-1 bottle"></div>
@@ -225,10 +230,13 @@ footer p{margin-bottom:10px}
   <div class="clock">10:47 PM</div>
   <h2 class="h2">You already ate. The pantry is still talking.</h2>
   <p class="lead">It isn't hunger. It's the loop. The chatter that starts after dinner and gets louder when the house goes quiet.</p>
+  <div class="eyebrow" style="margin-top:44px">Sound familiar?</div>
+  <p class="micro" style="margin-top:6px">Real posts from people online, quoted word for word and shared anonymously. Not customer reviews.</p>
   <div class="thought-grid" style="text-align:left">
-   <div class="bubble"><small>9:12 PM</small>"I'm not even hungry. Why am I standing in the kitchen?"</div>
-   <div class="bubble"><small>10:30 PM</small>"Just one handful. Okay, two."</div>
-   <div class="bubble"><small>11:58 PM</small>"Still awake. Still thinking about that cookie."</div>
+   <div class="bubble"><small>Anonymous post, Reddit</small>"I've opened the fridge door for the 4th time just to look"</div>
+   <div class="bubble"><small>Anonymous post, Reddit</small>"I am tired of undoing my whole day of good choices in twenty minutes at night."</div>
+   <div class="bubble"><small>Anonymous post, X</small>"why can't i eat one snack and then be done"</div>
+   <div class="bubble"><small>Anonymous post, Reddit</small>"the repetitive question in my head that's asking, What are you eating next?"</div>
   </div>
  </div>
 </section>
@@ -250,7 +258,7 @@ footer p{margin-bottom:10px}
 <section class="sec dark" style="position:relative;overflow:hidden">
  <div class="stars"></div>
  <div class="wrap reveal" style="position:relative">
-  <div class="center"><div class="eyebrow">The solution</div><h2 class="h2">Turn the volume down. Don't fight it.</h2><p class="lead">Night Shred GLP-1 is built for the hours when food noise is loudest: support for natural GLP-1, a calmer mind, and deep sleep in one nightly step.*</p></div>
+  <div class="center"><div class="eyebrow">The solution</div><h2 class="h2">Turn the volume down. Don't fight it.</h2><p class="lead">Most appetite products are made for the daytime. Night Shred GLP-1 is made for after dinner and bedtime, when food noise is loudest: support for natural GLP-1, a calmer mind, and deep sleep in one nightly step.*</p></div>
   <div class="dialbox">
    <div class="dial">
     <svg viewBox="0 0 300 300" aria-label="Food noise volume dial">
@@ -287,7 +295,7 @@ footer p{margin-bottom:10px}
   </div>
   <div class="glp">
    <div class="badge">GLP-1</div>
-   <div><h3 style="font-size:24px;margin-bottom:6px">Your body already makes a "fullness hormone."</h3><p style="color:var(--muted)">GLP-1 is a natural hormone released from your gut after you eat. It helps signal that you've had enough. Night Shred GLP-1 contains Sukre, Berberine and Akkermansia to support your body's own GLP-1 production.* It contains no GLP-1, is not a GLP-1 receptor agonist drug, and is not a substitute for prescription medication.</p></div>
+   <div><h3 style="font-size:24px;margin-bottom:6px">Your body already makes a "fullness hormone."</h3><p style="color:var(--muted)">GLP-1 is a natural hormone released from your gut after you eat. It helps signal that you've had enough. Night Shred GLP-1 contains Sukre, Berberine and Akkermansia to support your body's own GLP-1 production.* <b>Contains no GLP-1. Not a GLP-1 drug.</b> Not a substitute for any prescription medication.</p></div>
   </div>
  </div>
 </section>
@@ -321,9 +329,9 @@ footer p{margin-bottom:10px}
     <text x="900" y="275" text-anchor="middle" font-family="Fraunces" font-size="22" fill="#1b1d3a">Sleep</text>
    </svg>
    <div class="steps">
-    <div class="step"><div class="num">01</div><h3>Support natural GLP-1</h3><p>Sukre, Berberine and Akkermansia support your body's own GLP-1, the fullness hormone, to help curb cravings.*</p></div>
-    <div class="step"><div class="num">02</div><h3>Quiet late-night food thoughts</h3><p>GABA calms the mind. Saffron helps with emotional and boredom snacking. Ashwagandha supports healthy cortisol.*</p></div>
-    <div class="step"><div class="num">03</div><h3>Sleep deep, wake clear</h3><p>Melatonin supports natural sleep, and Paradoxine (grains of paradise) supports overnight calorie burn.*</p></div>
+    <div class="step"><div class="num">01</div><h3>Support natural GLP-1</h3><p>Sukre, Berberine and Akkermansia support healthy levels of your body's own GLP-1, the fullness hormone.*</p></div>
+    <div class="step"><div class="num">02</div><h3>Feel calmer at night</h3><p>GABA supports a calm mind. Saffron supports mood. Ashwagandha supports healthy cortisol, so you feel more in control of late-night cravings.*</p></div>
+    <div class="step"><div class="num">03</div><h3>Sleep deep, wake clear</h3><p>Melatonin supports natural sleep, and Paradoxine (grains of paradise) supports a healthy metabolism.*</p></div>
    </div>
   </div>
  </div>
@@ -335,13 +343,13 @@ footer p{margin-bottom:10px}
  <div class="wrap reveal" style="position:relative">
   <div class="center"><div class="eyebrow">What's inside</div><h2 class="h2">8 ingredients. Every dose on the label.</h2><p class="lead">Per 2-capsule serving, as printed on the Supplement Facts panel.</p></div>
   <div class="ing">
-   <div class="icard"><div class="dose">500 mg</div><h3>GABA</h3><p>Calms the brain and quiets late-night food thoughts.*</p><span class="tag">Mind</span></div>
+   <div class="icard"><div class="dose">500 mg</div><h3>GABA</h3><p>Supports a calm, relaxed mind at night.*</p><span class="tag">Mind</span></div>
    <div class="icard"><div class="dose">500 mg</div><h3>Sukre (L-Arabinose)</h3><p>A prebiotic that supports healthy GLP-1 levels and appetite control.*</p><span class="tag">GLP-1</span></div>
-   <div class="icard"><div class="dose">200 mg</div><h3>Berberine HCl</h3><p>Stimulates GLP-1 production and fights fat accumulation.*</p><span class="tag">GLP-1</span></div>
-   <div class="icard"><div class="dose">5 mg</div><h3>Akkermansia muciniphila</h3><p>Supports gut health to boost GLP-1, the fullness hormone.*</p><span class="tag">GLP-1</span></div>
-   <div class="icard"><div class="dose">15 mg</div><h3>Saffron bulb extract</h3><p>Helps reduce emotional and boredom-related snacking.*</p><span class="tag">Mind</span></div>
-   <div class="icard"><div class="dose">200 mg</div><h3>Ashwagandha root</h3><p>Combats cortisol and stress to promote relaxation.*</p><span class="tag">Mind</span></div>
-   <div class="icard"><div class="dose">30 mg</div><h3>Paradoxine</h3><p>Grains of paradise. Supports brown fat activity and calorie burn.*</p><span class="tag">Metabolism</span></div>
+   <div class="icard"><div class="dose">200 mg</div><h3>Berberine HCl</h3><p>Supports healthy GLP-1 levels.*</p><span class="tag">GLP-1</span></div>
+   <div class="icard"><div class="dose">5 mg</div><h3>Akkermansia muciniphila</h3><p>Supports gut health and healthy GLP-1 levels.*</p><span class="tag">GLP-1</span></div>
+   <div class="icard"><div class="dose">15 mg</div><h3>Saffron bulb extract</h3><p>Supports a balanced mood in the evening.*</p><span class="tag">Mind</span></div>
+   <div class="icard"><div class="dose">200 mg</div><h3>Ashwagandha root</h3><p>Supports healthy cortisol levels and relaxation.*</p><span class="tag">Mind</span></div>
+   <div class="icard"><div class="dose">30 mg</div><h3>Paradoxine</h3><p>Grains of paradise. Supports a healthy metabolism.*</p><span class="tag">Metabolism</span></div>
    <div class="icard"><div class="dose">3 mg</div><h3>Melatonin</h3><p>Supports falling asleep faster and staying asleep longer.*</p><span class="tag">Sleep</span></div>
   </div>
   <div class="factsrow">
@@ -357,8 +365,8 @@ footer p{margin-bottom:10px}
   <div class="center"><div class="eyebrow">Your night, quieter</div><h2 class="h2">One step. Then let the night do the work.</h2></div>
   <div class="tl">
    <div class="tli"><div class="dot" style="background:#f6b26b">9:30</div><div><h3>Take 2 capsules</h3><p>About 30 minutes before bed. That's the whole routine.</p></div></div>
-   <div class="tli"><div class="dot" style="background:#8b5cf6">10:00</div><div><h3>The kitchen goes quiet</h3><p>Support for natural GLP-1 and a calmer mind, right when cravings usually hit.*</p></div></div>
-   <div class="tli"><div class="dot" style="background:#2a2470">2:00</div><div><h3>Deep, restorative sleep</h3><p>Rest that supports recovery while your body keeps working.*</p></div></div>
+   <div class="tli"><div class="dot" style="background:#8b5cf6">10:00</div><div><h3>A calmer evening</h3><p>Support for natural GLP-1 and a calm mind, right when cravings usually show up.*</p></div></div>
+   <div class="tli"><div class="dot" style="background:#2a2470">2:00</div><div><h3>Deep, restorative sleep</h3><p>Support for natural, restful sleep.*</p></div></div>
    <div class="tli"><div class="dot" style="background:#e9b949">7:00</div><div><h3>Wake up clear</h3><p>No morning grogginess. Ready for the day.*</p></div></div>
   </div>
  </div>
@@ -369,34 +377,34 @@ footer p{margin-bottom:10px}
  <div class="wrap reveal center">
   <div class="eyebrow">What it supports</div><h2 class="h2">Less noise. More you.</h2>
   <div class="feel">
-   <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M8 16v8h6l8 7V9l-8 7z"/><path d="M28 15l8 10M36 15l-8 10"/></svg><p>Fewer late-night cravings*</p></div>
+   <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M8 16v8h6l8 7V9l-8 7z"/><path d="M28 15l8 10M36 15l-8 10"/></svg><p>Feel in control of late-night cravings*</p></div>
    <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M26 8a13 13 0 1 0 6 22 11 11 0 0 1-6-22z"/></svg><p>Deep sleep, no grogginess*</p></div>
    <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M6 26c6-10 10 6 14-4s8 4 14-6"/></svg><p>Healthy cortisol and less stress*</p></div>
-   <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M20 6c6 8 10 12 10 18a10 10 0 0 1-20 0c0-6 4-10 10-18z"/></svg><p>Overnight metabolism support*</p></div>
+   <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M20 6c6 8 10 12 10 18a10 10 0 0 1-20 0c0-6 4-10 10-18z"/></svg><p>Healthy metabolism support*</p></div>
    <div class="fcard"><svg viewBox="0 0 40 40" fill="none" stroke="#8b5cf6" stroke-width="2.5"><path d="M22 4L10 22h9l-2 14 13-19h-9z"/></svg><p>Sustained energy for the day*</p></div>
   </div>
-  <p class="micro" style="margin-top:22px">Best results with a healthy diet and exercise. The brand notes many users report benefits within the first few weeks, with best results over 90 to 180 days.*</p>
+  <p class="micro" style="margin-top:22px">Use nightly with a balanced diet and regular exercise. Individual results vary.*</p>
  </div>
 </section>
 
 <!-- COMPARE -->
 <section class="sec">
  <div class="wrap reveal">
-  <div class="center"><div class="eyebrow">Know your options</div><h2 class="h2">Three ways people handle food noise.</h2><p class="lead">Different tools for different needs. This is not a medical comparison and Night Shred GLP-1 is not a substitute for any medication.</p></div>
+  <div class="center"><div class="eyebrow">Know your options</div><h2 class="h2">Three ways people handle food noise.</h2><p class="lead">Different tools for different needs. Not a medical comparison. Night Shred GLP-1 is not a substitute for any medication.</p></div>
   <div class="tablewrap">
    <table>
-    <thead><tr><th></th><th class="us">Night Shred GLP-1</th><th>Prescription GLP-1 medication</th><th>Willpower alone</th></tr></thead>
+    <thead><tr><th></th><th class="us">Night Shred GLP-1</th><th>Medication route (talk to your doctor)</th><th>Willpower alone</th></tr></thead>
     <tbody>
-     <tr><td>What it is</td><td class="us">Dietary supplement that supports your body's own GLP-1*</td><td>FDA-regulated drug (GLP-1 receptor agonist)</td><td>Habits and self-control</td></tr>
-     <tr><td>How you get it</td><td class="us">Order online, no prescription</td><td>Prescribed by a doctor</td><td>Free</td></tr>
+     <tr><td>What it is</td><td class="us">Dietary supplement. Contains no GLP-1. Supports your body's own GLP-1*</td><td>Prescription medication, if your doctor recommends it</td><td>Habits and self-control</td></tr>
+     <tr><td>How you get it</td><td class="us">Order online, no prescription</td><td>Through your doctor</td><td>Free</td></tr>
      <tr><td>How you take it</td><td class="us">2 capsules before bed</td><td>As your doctor directs</td><td>Every decision, all day</td></tr>
-     <tr><td>Built for nights</td><td class="us">Yes: GLP-1 support, calm mind and sleep in one step*</td><td>Not designed as a sleep aid</td><td>Weakest when you're tired</td></tr>
-     <tr><td>Sleep support</td><td class="us">GABA, melatonin, ashwagandha*</td><td>No</td><td>No</td></tr>
-     <tr><td>Who it's for</td><td class="us">Healthy adults who want nightly support*</td><td>People their doctor decides it's right for</td><td>Anyone, on good days</td></tr>
+     <tr><td>Built for nights</td><td class="us">Yes: GLP-1 support, calm mind and sleep in one step*</td><td>Ask your doctor</td><td>Weakest when you're tired</td></tr>
+     <tr><td>Sleep support</td><td class="us">GABA, melatonin, ashwagandha*</td><td>Ask your doctor</td><td>No</td></tr>
+     <tr><td>Who it's for</td><td class="us">Healthy adults who want nightly support*</td><td>People whose doctor recommends it</td><td>Anyone, on good days</td></tr>
     </tbody>
    </table>
   </div>
-  <p class="note">If you take prescription medication, including GLP-1 medication, talk to your doctor before adding any supplement.</p>
+  <p class="note">If you take any prescription medication, talk to your doctor before adding a supplement.</p>
  </div>
 </section>
 
@@ -407,7 +415,7 @@ footer p{margin-bottom:10px}
   <div class="rev">
    <div class="rcard"><div class="st">&#9733;&#9733;&#9733;&#9733;&#9733;</div><h3>"Best nighttime supplement I've tried!"</h3><p>"It helps me fall asleep faster, stay asleep through the night, and I wake up feeling rested... I also notice less late-night snacking, which has been a huge plus."</p><div class="who">Nadya, review dated 09/16/2025, innosupps.com</div></div>
    <div class="rcard"><div class="st">&#9733;&#9733;&#9733;&#9733;&#9733;</div><h3>"Loving this so far!"</h3><p>"Used for 1 month so far, def helps me sleep better and eat less! I want to try one more month to see if it will assist with weight loss, have not noticed a difference."</p><div class="who">Jennifer, review dated 09/10/2025, innosupps.com</div></div>
-   <div class="rcard doc"><div class="st" style="color:#ffd166">Expert view</div><h3>"Nighttime cravings and poor sleep quality are two of the biggest obstacles I've seen among my patients."</h3><p>"This formula combined with a healthy diet and exercise can help overcome this."*</p><div class="who">Dr. David M. Filsoof, M.D., Board-Certified Cardiologist. Disclosure: Inno Supps Health Ambassador.</div></div>
+   <div class="rcard"><div class="st">&#9733;&#9733;&#9733;&#9733;&#9733;</div><h3>"deep rest"</h3><p>"I've been trying this product for a week now, after I started having trouble sleeping through the night. Now I'm getting a good night's sleep."</p><div class="who">Valeria, review dated 09/09/2025, innosupps.com</div></div>
   </div>
   <p class="note center">Individual results vary. Reviews shown are a selection from the brand's product page; see all reviews, including lower ratings, on innosupps.com.</p>
  </div>
@@ -417,17 +425,19 @@ footer p{margin-bottom:10px}
 <section class="sec dark" id="offer" style="position:relative;overflow:hidden">
  <div class="stars"></div>
  <div class="wrap reveal" style="position:relative">
-  <div class="center"><div class="eyebrow">Choose your supply</div><h2 class="h2">Consistency quiets the noise.</h2><p class="lead">Subscription prices as listed on innosupps.com on Nov 17, 2026. One-time purchase also available.</p></div>
+  <div class="center"><div class="eyebrow">Choose your supply</div><h2 class="h2">Pick what works for you.</h2><p class="lead">Buy once or choose AutoRefill. Prices and terms as listed on innosupps.com on Nov 17, 2026.</p></div>
+  <p class="pill" style="margin:18px auto 0;display:table">Contains no GLP-1. Not a GLP-1 drug.</p>
   <div class="offer">
-   <div class="ocard plain"><img src="img/bottle.webp" alt="1 bottle"><h3>1 Bottle</h3><div class="supply">30-day supply. Ships every 28 days.</div><div class="price">$55.99<small> /bottle</small></div><div class="was">$69.99</div><ul><li>Try it for a month</li><li>Cancel anytime, no fees</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Start with 1</a></div>
-   <div class="ocard pop"><span class="flag">Most popular</span><img src="img/bottle-3.webp" alt="3 bottles"><h3>3 Bottles</h3><div class="supply">90-day supply. Ships every 90 days.</div><div class="price">$48.00<small> /bottle</small></div><div class="was">$63.99</div><ul><li>Covers the 90-day window the brand recommends</li><li>Cancel anytime, no fees</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Get the 90-day supply</a></div>
-   <div class="ocard plain"><img src="img/bottle-6.webp" alt="6 bottles"><h3>6 Bottles</h3><div class="supply">180-day supply. Ships every 180 days.</div><div class="price">$45.00<small> /bottle</small></div><div class="was">$59.99</div><ul><li>Lowest price per bottle</li><li>Cancel anytime, no fees</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Get the 180-day supply</a></div>
+   <div class="ocard"><img src="img/bottle.webp" alt="1 bottle"><h3>Buy once</h3><div class="supply">1 bottle, 30 servings. No subscription.</div><div class="price">$69.99</div><ul><li>One-time charge</li><li>Nothing renews</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Buy 1 bottle once</a><p class="terms-line">Charged $69.99 once. No future orders.</p></div>
+   <div class="ocard"><img src="img/bottle.webp" alt="1 bottle AutoRefill"><h3>AutoRefill, 1 bottle</h3><div class="supply">Ships every 28 days.</div><div class="price">$55.99</div><ul><li>$55.99 per bottle</li><li>Cancel anytime by email</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Start AutoRefill</a><p class="terms-line">Renews at $55.99 every 28 days until you cancel by emailing customerservice@innosupps.com.</p></div>
+   <div class="ocard"><img src="img/bottle-3.webp" alt="3 bottles AutoRefill"><h3>AutoRefill, 3 bottles</h3><div class="supply">Ships every 90 days.</div><div class="price">$143.98</div><ul><li>$48.00 per bottle</li><li>Cancel anytime by email</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Start AutoRefill</a><p class="terms-line">Renews at $143.98 ($48 a bottle) every 90 days until you cancel by emailing customerservice@innosupps.com.</p></div>
+   <div class="ocard"><img src="img/bottle-6.webp" alt="6 bottles AutoRefill"><h3>AutoRefill, 6 bottles</h3><div class="supply">Ships every 180 days.</div><div class="price">$269.96</div><ul><li>$45.00 per bottle</li><li>Cancel anytime by email</li><li>30-day money-back guarantee</li></ul><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Start AutoRefill</a><p class="terms-line">Renews at $269.96 ($45 a bottle) every 180 days until you cancel by emailing customerservice@innosupps.com.</p></div>
   </div>
   <!-- TRUST / CLEAR TERMS -->
   <div class="center" style="margin-top:70px"><div class="eyebrow">No surprises</div><h2 class="h2" style="font-size:clamp(26px,3.6vw,36px)">The terms, in plain words.</h2></div>
   <div class="terms">
-   <div class="term"><svg viewBox="0 0 30 30" fill="none" stroke="#b49bff" stroke-width="2.2"><rect x="4" y="6" width="22" height="20" rx="3"/><path d="M4 12h22M10 3v6M20 3v6"/></svg><h3>You pick the schedule</h3><p>Subscriptions ship every 28, 90 or 180 days, based on the size you choose. Or buy once with no subscription.</p></div>
-   <div class="term"><svg viewBox="0 0 30 30" fill="none" stroke="#b49bff" stroke-width="2.2"><circle cx="15" cy="15" r="11"/><path d="M10 10l10 10M20 10L10 20"/></svg><h3>Cancel anytime</h3><p>The brand states: "Cancel anytime. No fees."</p></div>
+   <div class="term"><svg viewBox="0 0 30 30" fill="none" stroke="#b49bff" stroke-width="2.2"><rect x="4" y="6" width="22" height="20" rx="3"/><path d="M4 12h22M10 3v6M20 3v6"/></svg><h3>You pick the schedule</h3><p>Buy once at $69.99 with nothing renewing. Or AutoRefill every 28, 90 or 180 days, based on the size you choose.</p></div>
+   <div class="term"><svg viewBox="0 0 30 30" fill="none" stroke="#b49bff" stroke-width="2.2"><circle cx="15" cy="15" r="11"/><path d="M10 10l10 10M20 10L10 20"/></svg><h3>Cancel by email</h3><p>Per the product page, AutoRefill is cancelled by emailing customerservice@innosupps.com. The page lists no fees to cancel.</p></div>
    <div class="term"><svg viewBox="0 0 30 30" fill="none" stroke="#b49bff" stroke-width="2.2"><path d="M15 3l10 4v7c0 7-4.5 11-10 13C9.5 25 5 21 5 14V7z"/><path d="M10 15l4 4 6-7"/></svg><h3>30-day guarantee</h3><p>Email customerservice@innosupps.com within 30 calendar days of receiving your order.</p></div>
    <div class="term"><svg viewBox="0 0 30 30" fill="none" stroke="#b49bff" stroke-width="2.2"><path d="M5 8h20v14H5z"/><path d="M5 8l10 8 10-8"/></svg><h3>Real reviews</h3><p>4.86 average from 91 reviews on the product page. Read them all, not just the highlights.</p></div>
   </div>
@@ -439,13 +449,13 @@ footer p{margin-bottom:10px}
  <div class="wrap reveal">
   <div class="center"><div class="eyebrow">Questions</div><h2 class="h2">Good questions.</h2></div>
   <div class="faq">
-   <details open><summary>Is this a GLP-1 drug like Ozempic or Wegovy?</summary><p>No. Night Shred GLP-1 is a dietary supplement. It does not contain GLP-1 or semaglutide and is not a substitute for any prescription medication. Its ingredients are chosen to support your body's own GLP-1 production.*</p></details>
+   <details open><summary>Is this a GLP-1 drug?</summary><p>No. Night Shred GLP-1 is a dietary supplement. It contains no GLP-1, is not a GLP-1 drug, and is not a substitute for any prescription medication. Its ingredients are chosen to support your body's own GLP-1.*</p></details>
    <details><summary>What is "food noise"?</summary><p>It's the common name for persistent, intrusive thoughts about food, like the snack you keep thinking about after dinner. It's different from true hunger.</p></details>
    <details><summary>How do I take it?</summary><p>Two capsules about 30 minutes before bedtime.</p></details>
-   <details><summary>When will I notice a difference?</summary><p>According to the brand, many users report benefits within the first few weeks, with best results over 90 to 180 days of consistent use. Individual results vary.*</p></details>
+   <details><summary>When will I notice a difference?</summary><p>It varies by person. The brand recommends consistent nightly use alongside a balanced diet and regular exercise. Individual results vary.*</p></details>
    <details><summary>Will I feel groggy in the morning?</summary><p>It's designed to support deep, restorative sleep without morning grogginess.*</p></details>
    <details><summary>Can I take it with my medication?</summary><p>Talk to your doctor first, especially if you take prescription medication, are pregnant or nursing, or have a medical condition. It contains melatonin and berberine.</p></details>
-   <details><summary>How do I cancel or return?</summary><p>Subscriptions can be cancelled anytime with no fees, per the brand. For the 30-day money-back guarantee, email customerservice@innosupps.com within 30 calendar days of receiving your order.</p></details>
+   <details><summary>How do I cancel or return?</summary><p>A one-time purchase never renews. AutoRefill is cancelled by emailing customerservice@innosupps.com, per the product page. For the 30-day money-back guarantee, email the same address within 30 calendar days of receiving your order.</p></details>
   </div>
  </div>
 </section>
@@ -455,23 +465,23 @@ footer p{margin-bottom:10px}
  <div class="stars"></div>
  <div class="wrap" style="position:relative">
   <div class="eyebrow">Tonight</div>
-  <h2 style="margin:14px 0 16px">Let the kitchen go quiet.</h2>
+  <h2 style="margin:14px 0 16px">When the house goes quiet, tune it out.</h2>
   <p class="lead" style="margin:0 auto 30px">Two capsules. Deep sleep. Less noise.*</p>
   <a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Tune out the food noise</a>
-  <p class="micro">Cancel anytime, no fees. 30-day money-back guarantee.</p>
+  <p class="micro">Buy once or AutoRefill (cancel by email). Contains no GLP-1. 30-day money-back guarantee.</p>
  </div>
 </section>
 
 <footer>
  <div class="wrap">
   <div class="box">*These statements have not been evaluated by the Food and Drug Administration. This product is not intended to diagnose, treat, cure, or prevent any disease.</div>
-  <p>Night Shred GLP-1 is a dietary supplement. It is not a drug, does not contain GLP-1 or semaglutide, and is not a substitute for prescription medication. Consult your physician before use, especially if you are pregnant, nursing, taking medication, or have a medical condition. Individual results vary. Use with a healthy diet and exercise.</p>
-  <p>Product images, ingredient information, prices, reviews and claims are taken from innosupps.com as of Nov 17, 2026. Night Shred and Inno Supps are trademarks of their owner.</p>
+  <p>Night Shred GLP-1 is a dietary supplement. It contains no GLP-1, is not a GLP-1 drug, and is not a substitute for prescription medication. Consult your physician before use, especially if you are pregnant, nursing, taking medication, or have a medical condition. Individual results vary. Use with a healthy diet and exercise.</p>
+  <p>Product images, ingredient information, prices, terms and reviews are taken from innosupps.com as of Nov 17, 2026. Audience quotes are anonymous public posts, not customer reviews. Night Shred and Inno Supps are trademarks of their owner.</p>
   <p><b style="color:#c9ccef">Concept demo by Signal Marketing, not affiliated with Innosupps.</b></p>
  </div>
 </footer>
 
-<div class="sticky"><img src="img/bottle.webp" alt=""><div class="t">Night Shred GLP-1<small>Cancel anytime. 30-day guarantee.</small></div><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Shop now</a></div>
+<div class="sticky"><img src="img/bottle.webp" alt=""><div class="t">Night Shred GLP-1<small>Contains no GLP-1. 30-day guarantee.</small></div><a class="btn" href="https://www.innosupps.com/products/night-shred-glp1?listid=162058731656">Shop now</a></div>
 
 <script>
 (function(){

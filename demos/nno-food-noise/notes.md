@@ -19,7 +19,7 @@ Built Nov 17, 2026 by Grok Bot for Cristian Aguilar (Signal Marketing). Concept 
 - Pendulum GLP-1 Probiotic (https://pendulumlife.com/) leads with Akkermansia and a survey stat with footnotes. Borrowed: ingredient spotlight. Did NOT borrow survey stats.
 - Lemme GLP-1 Daily / Reset: CSPI (https://www.cspi.org/article/can-glp-1-supplement-help-you-lose-weight) and Supplement Magazine (https://supplementmagazine.com/everyday-benefits/lemme-glp-1-review/) report class actions over GLP-1 claims; Lemme states its product "does not contain GLP-1... and is not a GLP-1 receptor agonist." Borrowed: the explicit "not a drug" disclaimer, plus full-dose transparency as a trust lever (critics fault proprietary blends).
 - Muse Researcher (InnoSupps VOC on another product): top objection is trust in InnoSupps itself (subscription billing, discount clawback claim, upsell pop-ups, all-5-star feed, a California class action). Response: plain-words terms section, verbatim mixed review, ambassador disclosure, "see all reviews including lower ratings." Meta: no copy implying the viewer has a condition, so the page talks about the food-noise experience only.
-- Meta Ad Library: not checked (requires login/JS); Muse Researcher's ad research is pending.
+- Meta Ad Library: not checked directly by me. Muse Researcher's Night Shred report (https://docs.google.com/document/d/1iPYMSMw2xtPcXCXAv4IJklq8ANIexNjFlDDAxgzPIxQ/edit) used third-party Ad Library copies.
 
 ## Funnel structure borrowed
 - Camila Markson (https://passive.camilamarkson.com/home) and Cristian's Content Engine Kit page: hook > pain > hard way > solution > education > how it works > product > what you'll feel > offer stack > FAQ > repeated CTAs > sticky mobile CTA. Value stack mapped to a 3-tier bundle with "Most popular" anchor (mirrors the brand's own 1/3/6 structure).
@@ -29,3 +29,34 @@ Moon hero with crossed-out "noise" chips, interactive food-noise volume dial + s
 
 ## Compliance choices
 "Supports" language, brand claims only, asterisks + FDA disclaimer, "not a drug / no GLP-1 or semaglutide / not a substitute for prescription medication", doctor-first note, dial labeled as illustration not a measured result, no invented stats or testimonials, no em dashes, no emojis.
+
+## v2 revision (Nov 17, 2026, after Muse Researcher's Night Shred report)
+Report: https://docs.google.com/document/d/1iPYMSMw2xtPcXCXAv4IJklq8ANIexNjFlDDAxgzPIxQ/edit
+- Night as the open lane: competitors sell daytime appetite help; people say food noise is worst after dinner and at bedtime. Hero now: "When the house goes quiet, the food noise gets loud. Tune it out tonight.*"
+- Re-verified on the live product page (Nov 17, 2026): one-time $69.99; AutoRefill 1 bottle $55.99 every 28 days; 3 bottles $143.98 every 90 days ($48/bottle); 6 bottles $269.96 every 180 days ($45/bottle). Checkout text: "By clicking Add To Cart I will be enrolled in AutoRefill... I can easily cancel at anytime by emailing: customerservice@innosupps.com". The page shows "Regularly $479.94" style anchors; the concept page does not use them.
+- Compliance: UK ASA ruling A25-1281257 (https://www.asa.org.uk/rulings/the-clean-supps-llc-a25-1281257-the-clean-supps-llc.html) found Inno's "Quiet The Food Noise" and "Boost GLP-1 Production" ads to be medicinal claims and banned the Ozempic comparisons and the white-coat doctor. Changes: "helps you feel in control of late-night cravings*", "supports" language, "Contains no GLP-1. Not a GLP-1 drug." at the top bar, hero, education, offer, FAQ, sticky bar and footer; no drug names; comparison column renamed "Medication route (talk to your doctor)"; removed fat-burning, calorie burn, timeframes, anchors, strikethrough prices, "Most popular" and the doctor quote.
+- Trust: one-time purchase shown as an equal card; renewal terms printed under every button; cancel-by-email stated plainly; mixed review (Jennifer) kept, Valeria review added.
+
+### Pain-section quotes (anonymous public posts, verbatim, not testimonials)
+- "I've opened the fridge door for the 4th time just to look" r/WeightLossAdvice, Aug 17, 2026: https://www.reddit.com/r/WeightLossAdvice/comments/1vqdnmx/tips_for_quieting_the_food_noise_at_night/
+- "I am tired of undoing my whole day of good choices in twenty minutes at night." r/WeightLossAdvice, Apr 2026: https://www.reddit.com/r/WeightLossAdvice/comments/1so9ika/how_do_i_stop_mindless_snacking_at_night_when_i/
+- "why can't i eat one snack and then be done" @imspirxling on X, Sep 13, 2026: https://x.com/imspirxling/status/2099086561673380345 (trailing emoticon omitted)
+- "the repetitive question in my head that's asking, What are you eating next?" r/Semaglutide, Jan 2024: https://www.reddit.com/r/Semaglutide/comments/198gu3k/what_is_food_noise/
+Note: Muse pulled the Reddit quotes from search excerpts; I did not open each thread myself.
+
+## Ad hooks to test (compliant drafts; no condition language, no drug names, no timeframes)
+1. "When the house goes quiet, the food noise gets loud. Tune it out tonight.*"
+2. "Opened the fridge for the 4th time just to look? Meet the nighttime formula.*"
+3. "Good choices all day, then 20 minutes at night. Your evenings deserve backup.*"
+4. "Most appetite supplements stop at dinner. This one starts at bedtime.*"
+5. "2 capsules before bed. Support your natural GLP-1 and deep sleep, so you feel in control of late-night cravings.* Contains no GLP-1."
+All need the FDA disclaimer on the landing page, 18+ targeting, and no targeting of eating-disorder communities.
+
+### Long-running reference ads (from Muse's report; "days" = run length, not spend)
+- Night Shred: "Silence Late-Night Food Noise..." 385 ads, longest 179 days: https://admanage.ai/ad-library/inno-supps-night-shred (note: "Torch Fat While You Sleep" wording would not pass our rules)
+- Inno Supps: "End The Hunger Loop!" and "Quiet The Food Noise... THE DEEPEST Sleep", each 250 days: https://admanage.ai/ad-library/inno-supps
+- Kind Patches: "Food noise running on a loop? ... quietly turns down the volume." 407 ads: https://admanage.ai/ad/14671808 (closest to our volume-dial motif)
+- Arrae: "Not everyone needs a GLP-1," creator video, 93 days: https://eyepatchads.com/ad/arrae-1571843874326583
+- Absorption WLP-1: after-dinner "snack attacks" creator ad: https://fluid.app/home/blog/absorption-wlp1-nighttime-snacking-creator
+- Visual reference: @mollyy.health TikTok, kitchen counter after dinner, 3.1M plays: https://www.tiktok.com/@mollyy.health/video/7601703026906221838
+- Competitor funnels: Inno ad page https://www.innosupps.com/products/night-shred-glp1-cf-v2 ; Absorption https://www.absorbmore.com/pages/wlp-1-welcome-nc ; Lemme Reset https://lemmelive.com/pages/reset-lp

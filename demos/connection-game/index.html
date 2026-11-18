@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Connection Game (Prototype)</title>
+<meta name="description" content="A playful two-player game for practicing healthy relationship dynamics. Prototype.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f1ea; --bg2:#efe5d9; --card:#fffaf4; --ink:#2b2420; --muted:#7a6c62;
+  --sage:#6f8f7a; --sage-d:#557363; --clay:#c9785d; --clay-d:#a85f47; --gold:#c9a45c;
+  --line:#e4d7c8; --shadow:0 10px 30px rgba(74,52,36,.10); --r:20px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:radial-gradient(1200px 600px at 20% -10%,#fbf5ee 0%,var(--bg) 55%,var(--bg2) 100%);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100%}
+body{min-height:100vh;display:flex;flex-direction:column}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:-.01em;margin:0 0 .4em}
+h1{font-size:clamp(30px,6vw,46px);line-height:1.05}
+h2{font-size:clamp(22px,4.5vw,30px)}
+p{line-height:1.55;margin:.4em 0 .9em}
+.wrap{width:100%;max-width:720px;margin:0 auto;padding:22px 18px 30px;flex:1}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;font-family:Fraunces,serif;font-size:18px}
+.dot{width:28px;height:28px;border-radius:50%;background:conic-gradient(var(--sage),var(--gold),var(--clay),var(--sage));box-shadow:inset 0 0 0 6px var(--card)}
+.pill{font-size:12px;color:var(--muted);border:1px solid var(--line);padding:5px 10px;border-radius:999px;background:var(--card)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:22px;box-shadow:var(--shadow);margin-bottom:16px}
+.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--sage-d);font-weight:600;margin-bottom:6px}
+.muted{color:var(--muted)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px}
+input[type=text],textarea{width:100%;border:1px solid var(--line);background:#fff;border-radius:14px;padding:13px 14px;font:inherit;color:var(--ink);outline:none;transition:border .2s,box-shadow .2s}
+input[type=text]:focus,textarea:focus{border-color:var(--sage);box-shadow:0 0 0 4px rgba(111,143,122,.15)}
+textarea{min-height:92px;resize:vertical}
+.btn{appearance:none;border:0;border-radius:999px;padding:13px 20px;font:600 15px Inter,sans-serif;cursor:pointer;transition:transform .08s,background .2s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--sage);color:#fff}.btn.primary:hover{background:var(--sage-d)}
+.btn.warm{background:var(--clay);color:#fff}.btn.warm:hover{background:var(--clay-d)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.block{width:100%}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.choices{display:grid;gap:12px;grid-template-columns:1fr 1fr;margin-top:8px}
+@media(max-width:520px){.choices{grid-template-columns:1fr}}
+.choice{border:1px solid var(--line);background:#fff;border-radius:18px;padding:18px;cursor:pointer;text-align:left;font:inherit;color:inherit;transition:border .2s,transform .1s}
+.choice:hover{border-color:var(--sage);transform:translateY(-1px)}
+.choice b{font-family:Fraunces,serif;font-size:19px;display:block;margin-bottom:4px}
+.turnbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}
+.who{display:flex;align-items:center;gap:8px;font-weight:600}
+.avatar{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:13px}
+.a1{background:var(--sage)}.a2{background:var(--clay)}
+.meter{height:10px;background:var(--bg2);border-radius:999px;overflow:hidden;flex:1;min-width:90px}
+.meter>i{display:block;height:100%;background:linear-gradient(90deg,var(--sage),var(--gold));width:0;transition:width .5s}
+.prompt{font-family:Fraunces,serif;font-size:clamp(20px,4.2vw,26px);line-height:1.3;margin:6px 0 14px}
+.tag{display:inline-block;font-size:12px;padding:4px 10px;border-radius:999px;background:#eef3ef;color:var(--sage-d);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 12px}
+.chip{border:1px dashed var(--line);background:#fff;border-radius:999px;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--ink)}
+.chip:hover{border-color:var(--sage)}
+.log{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.bubble{padding:10px 13px;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:14px;line-height:1.45}
+.bubble.p2{background:#fbf1ec}
+.bubble small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px}
+.bubble.flag{border-color:var(--clay)}
+.coach{display:flex;gap:10px;align-items:flex-start;background:#eef3ef;border-radius:14px;padding:12px 14px;font-size:14px;margin-top:10px}
+.coach .ic{width:26px;height:26px;border-radius:50%;background:var(--sage);flex:none;display:grid;place-items:center;color:#fff;font-weight:700;font-size:12px}
+.modal-bg{position:fixed;inset:0;background:rgba(43,36,32,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:50;backdrop-filter:blur(3px)}
+.modal-bg.show{display:flex}
+.modal{background:var(--card);max-width:460px;width:100%;border-radius:24px;padding:26px;box-shadow:0 30px 80px rgba(0,0,0,.25);animation:pop .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-6deg)}75%{transform:rotate(6deg)}}
+.beep{width:58px;height:58px;border-radius:50%;background:var(--clay);display:grid;place-items:center;color:#fff;font:700 15px Inter;margin-bottom:12px;animation:wobble .5s 2}
+.kind{font-size:12px;font-weight:600;color:var(--clay-d);text-transform:uppercase;letter-spacing:.1em}
+.repaircard{border:1px solid var(--line);border-radius:16px;padding:14px;background:#fff;margin-top:12px;display:flex;gap:12px;align-items:center}
+.thumb{width:76px;height:56px;border-radius:10px;background:linear-gradient(135deg,var(--sage),var(--gold));display:grid;place-items:center;color:#fff;flex:none}
+.tri{width:0;height:0;border-left:14px solid #fff;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.q{margin:16px 0 4px;font-weight:600}
+.scale{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.scale button{border:1px solid var(--line);background:#fff;border-radius:12px;padding:10px 0;font:600 14px Inter;cursor:pointer;color:var(--ink)}
+.scale button.on{background:var(--sage);color:#fff;border-color:var(--sage)}
+.scale-l{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px}
+.mandalas{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.mandalas{grid-template-columns:1fr}}
+.mcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;text-align:center}
+.mcard svg{width:100%;height:auto;max-width:300px}
+.placeholder{font-size:12px;background:#fff6e6;border:1px solid #f0dcb4;color:#7d6331;padding:10px 12px;border-radius:12px;margin-top:12px}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:13px;margin-top:12px}
+.legend span{display:flex;align-items:center;gap:6px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-family:Fraunces,serif;font-size:26px}
+.stat span{font-size:12px;color:var(--muted)}
+footer{text-align:center;font-size:12px;color:var(--muted);padding:18px 16px 28px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><div class="dot"></div>The Connection Game</div>
+    <div class="pill">Prototype</div>
+  </div>
+
+  <!-- HOME -->
+  <section id="home">
+    <div class="card">
+      <div class="eyebrow">Welcome</div>
+      <h1>Play the Connection Game together.</h1>
+      <p class="muted">Take turns answering prompt cards. The game cheers on moves that bring you closer and gently beeps when a move slides into the Disconnection Game.</p>
+      <div class="grid2" style="margin-top:14px">
+        <div><label for="p1">Player one</label><input id="p1" type="text" placeholder="Name" maxlength="20"></div>
+        <div><label for="p2">Player two</label><input id="p2" type="text" placeholder="Name" maxlength="20"></div>
+      </div>
+      <div class="choices">
+        <button class="choice" id="startGame"><b>Start the game</b><span class="muted">8 rounds of prompt cards. Phones, laptops, or face to face.</span></button>
+        <button class="choice" id="startQuiz"><b>Make my mandala</b><span class="muted">A short questionnaire that draws your connection mandala.</span></button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">How it works</div>
+      <p><b>Connection moves</b> earn points: bids for connection, curiosity, appreciation, and repair attempts.</p>
+      <p><b>Disconnection moves</b> trigger the beep: criticism, contempt, defensiveness, and shutting down. You can try a repair or keep going. It is your game.</p>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="game" class="hidden">
+    <div class="card">
+      <div class="turnbar">
+        <div class="who"><div id="turnAvatar" class="avatar a1">A</div><span><span id="turnName">Player</span>'s turn</span></div>
+        <div class="pill" id="roundPill">Round 1 of 8</div>
+      </div>
+      <div class="row" style="margin-bottom:12px"><span class="muted" style="font-size:13px">Connection</span><div class="meter"><i id="meter"></i></div></div>
+      <span class="tag" id="cardTag">Bid for connection</span>
+      <div class="prompt" id="cardPrompt">Prompt</div>
+      <div class="muted" style="font-size:13px">Tap an idea or write your own:</div>
+      <div class="chips" id="chips"></div>
+      <textarea id="answer" placeholder="Say it the way you would say it out loud..."></textarea>
+      <div class="row" style="margin-top:12px;justify-content:space-between">
+        <button class="btn ghost" id="skipBtn">Pass this card</button>
+        <button class="btn primary" id="playBtn">Play this move</button>
+      </div>
+      <div id="coachBox"></div>
+    </div>
+    <div class="card">
+      <div class="eyebrow">Your game so far</div>
+      <div class="log" id="log"><span class="muted" style="font-size:14px">Moves will show here.</span></div>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summary" class="hidden">
+    <div class="card">
+      <div class="eyebrow">Game complete</div>
+      <h2 id="sumTitle">Nice playing.</h2>
+      <div class="stats">
+        <div class="stat"><b id="sConn">0</b><span>Connection moves</span></div>
+        <div class="stat"><b id="sRep">0</b><span>Repairs</span></div>
+        <div class="stat"><b id="sBeep">0</b><span>Beeps</span></div>
+      </div>
+      <p id="sumText" class="muted"></p>
+      <div class="row"><button class="btn primary" id="againBtn">Play again</button><button class="btn ghost" id="toQuiz">Make our mandala</button></div>
+    </div>
+  </section>
+
+  <!-- QUIZ -->
+  <section id="quiz" class="hidden">
+    <div class="card">
+      <div class="eyebrow">Mandala questionnaire</div>
+      <h2>How does connection feel right now?</h2>
+      <p class="muted">1 means rarely, 5 means almost always. There are no right answers.</p>
+      <div id="qList"></div>
+      <button class="btn primary block" id="drawBtn" style="margin-top:18px">Draw my mandala</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="hidden">
+    <div class="card">
+      <div class="eyebrow">Your connection mandala</div>
+      <h2>Where you are, and where you are headed.</h2>
+      <div class="mandalas">
+        <div class="mcard"><div class="eyebrow">Now</div><div id="mNow"></div></div>
+        <div class="mcard"><div class="eyebrow">Where you are headed</div><div id="mNext"></div></div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <p id="growth" style="margin-top:14px"></p>
+      <div class="placeholder"><b>Placeholder artwork.</b> This generic mandala stands in for Jesse's original mandala artwork, which will replace it in the real version.</div>
+      <div class="row" style="margin-top:14px"><button class="btn primary" id="playFromResult">Play the game</button><button class="btn ghost" id="retake">Retake</button></div>
+    </div>
+  </section>
+</div>
+
+<!-- DISCONNECTION MODAL -->
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true">
+  <div class="modal">
+    <div class="beep">BEEP</div>
+    <div class="kind" id="mKind">Criticism</div>
+    <h2 style="margin-top:6px">This is the disconnection game.</h2>
+    <p><b>Are you sure you want to play this?</b></p>
+    <p class="muted" id="mWhy"></p>
+    <div class="coach"><div class="ic">C</div><div><b>Try a repair:</b> <span id="mTry"></span></div></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn primary" id="rephraseBtn">Let me rephrase</button>
+      <button class="btn ghost" id="anywayBtn">Play it anyway</button>
+    </div>
+  </div>
+</div>
+
+<footer>Prototype by Signal Marketing for Jesse. Educational, not therapy or medical advice.</footer>
+
+<script>
+/* =====================================================================
+   CONFIG (optional). Leave blank and the game runs fully offline with
+   rule-based logic. Fill these in later to save games to Supabase and
+   to turn on the live AI coach (see the "Build It Yourself" guide).
+   - SUPABASE_URL: like https://abcd1234.supabase.co
+   - SUPABASE_KEY: your PUBLISHABLE (or legacy anon) key. Never a secret key.
+   - COACH_URL: your Edge Function URL, like
+     https://abcd1234.supabase.co/functions/v1/ai-coach
+   The Claude API key NEVER goes in this file. It lives only in Supabase
+   Edge Function secrets.
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: "",
+  SUPABASE_KEY: "",
+  COACH_URL: ""
+};
+
+/* ---------------- Prompt cards ---------------- */
+const CARDS = [
+  {tag:"Bid for connection", p:"Share one small thing from today you want your partner to know about.", ideas:["Something made me laugh today...","I kept thinking about you when...","Can I show you something?"]},
+  {tag:"Curiosity", p:"Ask your partner a question you have never asked before.", ideas:["What is something you are proud of that I may not know?","What helps you feel close to me?","What is on your mind lately?"]},
+  {tag:"Appreciation", p:"Name one specific thing your partner did this week that you appreciated.", ideas:["Thank you for...","I noticed when you...","It meant a lot that you..."]},
+  {tag:"Rupture and repair", p:"Think of a small recent misunderstanding. Say what you wish you had said.", ideas:["I think I came in hot earlier. Can we try again?","I can see how that landed. I am sorry.","I want to understand your side."], repair:true},
+  {tag:"Turning toward", p:"Your partner says, \"I had a rough day.\" What do you say?", ideas:["Tell me about it. I am listening.","Want a hug or want to vent?","That sounds hard. What happened?"]},
+  {tag:"Needs", p:"Finish this sentence: \"I feel close to you when...\"", ideas:["I feel close to you when we...","It helps me when you...","I would love more of..."]},
+  {tag:"Gentle start", p:"Bring up a small wish without blame. Start with \"I feel\" and \"I need\".", ideas:["I feel stretched thin, and I need help with...","I feel a bit lonely lately. Could we plan...","I would love it if we..."]},
+  {tag:"Rupture and repair", p:"Your partner sighs and goes quiet during a talk. How do you reach back in?", ideas:["I notice we got quiet. Want a short break and then come back?","I am still here. Take your time.","Did I say something that stung?"], repair:true},
+  {tag:"Play", p:"Invent a silly name for your team and say why it fits.", ideas:["We are Team...","Our team motto is...","Our superpower is..."]},
+  {tag:"Dreams", p:"Describe a perfect ordinary Sunday together, one year from now.", ideas:["We wake up and...","I picture us...","The best part would be..."]}
+];
+
+/* ---------------- Disconnection detector (rule-based) ----------------
+   Each pattern family maps to a type, an explanation, and a repair idea.
+   LIVE AI COACH PLUG-IN POINT: see aiCoach() below. Rules stay as the
+   instant first check; the AI can add a softer, personal suggestion.   */
+const DETECT = [
+  {type:"Criticism", why:"Words like always, never, or \"what is wrong with you\" turn one moment into a verdict on the whole person.",
+   try:"Name the specific moment and your feeling. \"I felt hurt when the plans changed last minute. Could we check in first next time?\"",
+   re:[/\byou (always|never)\b/i,/what'?s wrong with you/i,/\byou'?re (so )?(lazy|selfish|useless|careless|impossible|crazy)\b/i,/\bwhy (can'?t|don'?t) you ever\b/i,/\byou don'?t care\b/i,/\byou only think about yourself\b/i]},
+  {type:"Contempt", why:"Mocking, name-calling, eye rolls, or sarcasm say \"I am above you.\" It is the hardest move on a connection.",
+   try:"Swap the jab for appreciation or a real need. \"I am frustrated, and I still love how hard you try.\"",
+   re:[/\bwhatever\b/i,/\b(pathetic|ridiculous|stupid|idiot|loser|dumb|joke)\b/i,/\beye ?roll/i,/\bgrow up\b/i,/\bas if\b/i,/\byeah,? right\b/i,/\bget a life\b/i,/\bseriously\?+/i]},
+  {type:"Defensiveness", why:"Defending or counter-blaming makes sense when we feel attacked, but it tells your partner their concern does not count.",
+   try:"Take responsibility for even a small part. \"You are right that I was late. I am sorry, that matters to you.\"",
+   re:[/\bit'?s not my fault\b/i,/\bthat'?s not true\b/i,/\bi didn'?t do anything\b/i,/\bwell,? you\b/i,/\bbut you\b/i,/\bnot my problem\b/i,/\bi was just\b/i,/\byou started it\b/i,/\bwhat about you\b/i]},
+  {type:"Stonewalling", why:"Shutting down or walking away often means we are flooded. A pause is healthy when you say it out loud and come back.",
+   try:"Ask for a timed break. \"I am overwhelmed. Can we take 20 minutes and then come back to this?\"",
+   re:[/\bi'?m done\b/i,/\bleave me alone\b/i,/\bi don'?t (want to|wanna) talk\b/i,/^\s*(fine|ok|k|sure)\.?\s*$/i,/\bforget it\b/i,/\bnever ?mind\b/i,/\bshut up\b/i,/\bi don'?t care\b/i,/\bwhatever you want\b/i]}
+];
+const REPAIR_WORDS = /\b(sorry|apologi[sz]e|my bad|i hear you|i understand|can we (try|start) again|let'?s try again|i was wrong|you'?re right|i want to understand|take a break and come back|i love you)\b/i;
+const CONNECT_WORDS = /\b(thank|appreciate|grateful|love|curious|tell me|i feel|i need|i notice|together|proud|miss you|listening)\b/i;
+
+function detect(text){
+  for(const d of DETECT){ if(d.re.some(r=>r.test(text))) return d; }
+  return null;
+}
+
+/* ---------------- Live AI coach plug-in point ----------------
+   Today: returns null, so the rule-based coach is used.
+   Later: when CONFIG.COACH_URL is set, the game sends the move to a
+   Supabase Edge Function (which holds the Claude API key as a secret)
+   and shows the AI's short, playful suggestion. The browser never
+   sees the Claude key.                                              */
+async function aiCoach(move, card, flagType){
+  if(!CONFIG.COACH_URL) return null;
+  try{
+    const res = await fetch(CONFIG.COACH_URL,{method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+CONFIG.SUPABASE_KEY,"apikey":CONFIG.SUPABASE_KEY},
+      body:JSON.stringify({move, prompt:card.p, cardType:card.tag, flag:flagType||null})});
+    if(!res.ok) return null;
+    const data = await res.json();
+    return data.suggestion || null;
+  }catch(e){ return null; }
+}
+
+/* ---------------- Optional saving to Supabase ---------------- */
+async function save(table,row){
+  if(!CONFIG.SUPABASE_URL||!CONFIG.SUPABASE_KEY) return;
+  try{
+    await fetch(CONFIG.SUPABASE_URL+"/rest/v1/"+table,{method:"POST",
+      headers:{"Content-Type":"application/json","apikey":CONFIG.SUPABASE_KEY,"Authorization":"Bearer "+CONFIG.SUPABASE_KEY,"Prefer":"return=minimal"},
+      body:JSON.stringify(row)});
+  }catch(e){}
+}
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+Math.random().toString(16).slice(2));
+
+/* ---------------- Beep sound ---------------- */
+function beep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    [0,0.18].forEach((t,i)=>{
+      const o=ctx.createOscillator(), g=ctx.createGain();
+      o.type="sine"; o.frequency.value = i? 523 : 659;
+      g.gain.setValueAtTime(0.0001,ctx.currentTime+t);
+      g.gain.exponentialRampToValueAtTime(0.18,ctx.currentTime+t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+t+0.16);
+      o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime+t); o.stop(ctx.currentTime+t+0.18);
+    });
+  }catch(e){}
+}
+
+/* ---------------- State ---------------- */
+const $ = id => document.getElementById(id);
+const ROUNDS = 8;
+let S = {};
+function show(id){ ["home","game","summary","quiz","result"].forEach(s=>$(s).classList.toggle("hidden",s!==id)); window.scrollTo({top:0,behavior:"smooth"}); }
+function names(){ return [$("p1").value.trim()||"Player one", $("p2").value.trim()||"Player two"]; }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+function newGame(){
+  const deck = shuffle(CARDS);
+  // make sure at least one repair card appears early
+  const ri = deck.findIndex(c=>c.repair); if(ri>3){ const [c]=deck.splice(ri,1); deck.splice(2,0,c); }
+  S = {id:uid(), players:names(), round:0, turn:0, deck, score:0, conn:0, rep:0, beeps:0, moves:[], pendingRepair:false};
+  save("players",{id:uid(),display_name:S.players[0]}); save("players",{id:uid(),display_name:S.players[1]});
+  $("log").innerHTML='<span class="muted" style="font-size:14px">Moves will show here.</span>';
+  show("game"); renderCard();
+}
+function card(){ return S.deck[S.round % S.deck.length]; }
+function renderCard(){
+  const c = card(), n = S.players[S.turn];
+  $("turnName").textContent = n; $("turnAvatar").textContent = n[0].toUpperCase();
+  $("turnAvatar").className = "avatar " + (S.turn? "a2":"a1");
+  $("roundPill").textContent = "Round " + (S.round+1) + " of " + ROUNDS;
+  $("cardTag").textContent = c.tag; $("cardPrompt").textContent = c.p;
+  $("chips").innerHTML = ""; c.ideas.forEach(t=>{ const b=document.createElement("button"); b.className="chip"; b.textContent=t; b.onclick=()=>{$("answer").value=t; $("answer").focus();}; $("chips").appendChild(b); });
+  $("answer").value = ""; $("coachBox").innerHTML = "";
+  $("meter").style.width = Math.min(100, S.score) + "%";
+}
+function addLog(text,flag){
+  if(S.moves.length===0) $("log").innerHTML="";
+  const d=document.createElement("div"); d.className="bubble"+(S.turn?" p2":"")+(flag?" flag":"");
+  d.innerHTML="<small></small>"; d.querySelector("small").textContent=S.players[S.turn]+(flag?" (beep: "+flag+")":"");
+  d.appendChild(document.createTextNode(text)); $("log").prepend(d);
+}
+function coachNote(html){ $("coachBox").innerHTML = '<div class="coach"><div class="ic">C</div><div>'+html+'</div></div>'; }
+function repairCard(topic){
+  return '<div class="repaircard"><div class="thumb"><div class="tri"></div></div><div><b>Watch how others repair this</b><div class="muted" style="font-size:13px">Placeholder for Jesse\'s role-model video and audio on '+topic+'. A real clip of people like you pivoting back into connection goes here.</div></div></div>';
+}
+
+let pending = null;
+async function play(){
+  const text = $("answer").value.trim();
+  if(!text){ $("answer").focus(); return; }
+  const c = card(); const hit = detect(text);
+  if(hit){ pending = {text, hit}; openModal(hit); return; }
+  await commit(text, null);
+}
+function openModal(hit){
+  beep(); S.beeps++;
+  $("mKind").textContent = hit.type; $("mWhy").textContent = hit.why; $("mTry").textContent = hit.try;
+  $("modalBg").classList.add("show");
+}
+function closeModal(){ $("modalBg").classList.remove("show"); }
+$("rephraseBtn").onclick = ()=>{ closeModal(); S.pendingRepair = true; coachNote("<b>Good call.</b> Rephrasing is a repair attempt, and repairs are the heart of this game. Try the suggestion above in your own words."); $("answer").focus(); };
+$("anywayBtn").onclick = async ()=>{ closeModal(); const p=pending; pending=null; await commit(p.text, p.hit.type); };
+
+async function commit(text, flagType){
+  const c = card(); let pts = 0, note = "";
+  const isRepair = REPAIR_WORDS.test(text) || S.pendingRepair;
+  if(flagType){
+    pts = -6; S.score = Math.max(0, S.score + pts);
+    note = "<b>Rupture noticed.</b> That move came from the Disconnection Game. Next player: you have a chance to lead the repair." + repairCard(flagType.toLowerCase());
+  } else if(isRepair){
+    pts = 16; S.rep++; S.conn++;
+    note = "<b>Repair attempt.</b> Beautiful. Reaching back in after a bumpy moment is one of the strongest moves in the game." + (c.repair? repairCard("rupture and repair") : "");
+  } else {
+    pts = CONNECT_WORDS.test(text) ? 12 : 9; S.conn++;
+    note = "<b>Connection move.</b> " + (c.tag==="Curiosity" ? "Curiosity says \"you matter to me.\" Partner, take a moment to really answer." : "Partner, turn toward it. A simple \"tell me more\" counts.");
+  }
+  S.score = Math.min(100, Math.max(0, S.score + (flagType?0:pts)));
+  S.pendingRepair = false;
+  addLog(text, flagType);
+  S.moves.push({player:S.players[S.turn], card:c.tag, text, flag:flagType});
+  const ai = await aiCoach(text, c, flagType); // null unless the live coach is connected
+  coachNote(ai ? "<b>Coach:</b> " + ai.replace(/</g,"&lt;") : note);
+  $("meter").style.width = S.score + "%";
+  setTimeout(nextTurn, ai ? 2600 : 1900);
+}
+function nextTurn(){
+  S.round++; S.turn = 1 - S.turn;
+  if(S.round >= ROUNDS){ finish(); return; }
+  renderCard();
+}
+function finish(){
+  $("sConn").textContent=S.conn; $("sRep").textContent=S.rep; $("sBeep").textContent=S.beeps;
+  $("sumTitle").textContent = S.players[0]+" and "+S.players[1]+", nice playing.";
+  $("sumText").textContent = S.rep ? "You made "+S.rep+" repair "+(S.rep>1?"moves":"move")+". Repair matters more than never slipping. Keep practicing the moves that felt good." : (S.beeps ? "A few beeps came up. That is the point of practice. Next round, try leading with a repair." : "Lots of connection moves this round. Try a repair card next time to practice the comeback.");
+  save("game_sessions",{id:S.id, player_one:S.players[0], player_two:S.players[1], rounds_played:ROUNDS, connection_score:S.score, connection_moves:S.conn, repairs:S.rep, beeps:S.beeps, moves:S.moves});
+  show("summary");
+}
+$("skipBtn").onclick = ()=>{ nextTurn(); };
+$("playBtn").onclick = play;
+$("startGame").onclick = newGame; $("againBtn").onclick = newGame; $("playFromResult").onclick = newGame;
+
+/* ---------------- Mandala questionnaire ---------------- */
+const DIMS = [
+  {k:"safety", label:"Safety", q:"I feel safe being fully myself with the people closest to me.", c:"#6f8f7a"},
+  {k:"curiosity", label:"Curiosity", q:"I ask questions and stay curious, even when we disagree.", c:"#8aa6a0"},
+  {k:"bids", label:"Turning toward", q:"When someone reaches for me, I notice and turn toward them.", c:"#c9a45c"},
+  {k:"appreciation", label:"Appreciation", q:"I say out loud what I appreciate about the people I love.", c:"#d9b77a"},
+  {k:"repair", label:"Repair", q:"After a rough moment, I reach back in to make things right.", c:"#c9785d"},
+  {k:"boundaries", label:"Boundaries", q:"I can say what I need and hear what others need.", c:"#b06a6a"},
+  {k:"play", label:"Play", q:"There is room for fun and lightness in my relationships.", c:"#9b7fa6"},
+  {k:"trust", label:"Trust", q:"I trust that the people close to me will be there for me.", c:"#6d86a8"}
+];
+let answers = {};
+function renderQuiz(){
+  answers = {}; const L = $("qList"); L.innerHTML = "";
+  DIMS.forEach((d,i)=>{
+    const w=document.createElement("div");
+    w.innerHTML='<div class="q">'+(i+1)+". "+d.q+'</div><div class="scale"></div><div class="scale-l"><span>Rarely</span><span>Almost always</span></div>';
+    const sc=w.querySelector(".scale");
+    for(let v=1;v<=5;v++){ const b=document.createElement("button"); b.textContent=v; b.onclick=()=>{answers[d.k]=v; [...sc.children].forEach(x=>x.classList.toggle("on",+x.textContent===v));}; sc.appendChild(b); }
+    L.appendChild(w);
+  });
+  show("quiz");
+}
+function mandalaSVG(vals, distort){
+  const N = DIMS.length, cx=150, cy=150; let s='<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Connection mandala">';
+  s+='<defs><radialGradient id="g'+(distort?1:0)+'"><stop offset="0" stop-color="#fffaf4"/><stop offset="1" stop-color="#efe5d9"/></radialGradient></defs>';
+  s+='<circle cx="150" cy="150" r="146" fill="url(#g'+(distort?1:0)+')" stroke="#e4d7c8"/>';
+  [130,100,70].forEach(r=> s+='<circle cx="150" cy="150" r="'+r+'" fill="none" stroke="#e4d7c8" stroke-dasharray="2 5"/>');
+  for(let layer=0; layer<3; layer++){
+    DIMS.forEach((d,i)=>{
+      const v = vals[d.k]; const base = 34 + v*19; const len = base*(1-layer*0.28);
+      const jitter = distort ? (((i*37+layer*11)%7)-3)*4*(5-v)/4 : 0;
+      const ang = (i/N)*Math.PI*2 - Math.PI/2 + (layer%2? Math.PI/N : 0) + (distort? jitter*0.012:0);
+      const w = (distort? 13+((i*13)%5) : 15) * (1-layer*0.22);
+      const L2 = len + jitter;
+      const tipx=cx+Math.cos(ang)*L2, tipy=cy+Math.sin(ang)*L2;
+      const lx=cx+Math.cos(ang-0.5)*w, ly=cy+Math.sin(ang-0.5)*w, rx=cx+Math.cos(ang+0.5)*w, ry=cy+Math.sin(ang+0.5)*w;
+      const c1x=cx+Math.cos(ang-0.22)*L2*0.62, c1y=cy+Math.sin(ang-0.22)*L2*0.62, c2x=cx+Math.cos(ang+0.22)*L2*0.62, c2y=cy+Math.sin(ang+0.22)*L2*0.62;
+      const op = distort ? (0.35 + v*0.1)*(1-layer*0.2) : (0.55+0.12*(2-layer));
+      s+='<path d="M'+lx.toFixed(1)+','+ly.toFixed(1)+' Q'+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+tipx.toFixed(1)+','+tipy.toFixed(1)+' Q'+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+rx.toFixed(1)+','+ry.toFixed(1)+' Z" fill="'+d.c+'" fill-opacity="'+op.toFixed(2)+'" stroke="#fffaf4" stroke-width="1.2"/>';
+      if(layer===0) s+='<circle cx="'+tipx.toFixed(1)+'" cy="'+tipy.toFixed(1)+'" r="3.2" fill="'+d.c+'"/>';
+    });
+  }
+  s+='<circle cx="150" cy="150" r="20" fill="#fffaf4" stroke="#c9a45c" stroke-width="2"/><circle cx="150" cy="150" r="8" fill="#c9a45c"/>';
+  return s+'</svg>';
+}
+function drawResult(){
+  const vals = {}; DIMS.forEach(d=> vals[d.k] = answers[d.k] || 3);
+  const next = {}; DIMS.forEach(d=> next[d.k] = Math.min(5, Math.max(4, vals[d.k]+1)));
+  $("mNow").innerHTML = mandalaSVG(vals, true); $("mNext").innerHTML = mandalaSVG(next, false);
+  $("legend").innerHTML = DIMS.map(d=>'<span><i style="background:'+d.c+'"></i>'+d.label+' <b style="margin-left:auto">'+vals[d.k]+'</b></span>').join("");
+  const sorted = DIMS.slice().sort((a,b)=>vals[a.k]-vals[b.k]);
+  $("growth").innerHTML = "<b>Strongest petals:</b> "+sorted.slice(-2).map(d=>d.label).join(" and ")+". <b>Growth edge:</b> "+sorted.slice(0,2).map(d=>d.label).join(" and ")+". The game cards for these areas are a good next step.";
+  save("questionnaire_answers",{id:uid(), answers:vals});
+  save("mandala_results",{id:uid(), now_scores:vals, headed_scores:next, strongest:sorted.slice(-2).map(d=>d.k), growth_edges:sorted.slice(0,2).map(d=>d.k)});
+  show("result");
+}
+$("startQuiz").onclick = renderQuiz; $("toQuiz").onclick = renderQuiz; $("retake").onclick = renderQuiz;
+$("drawBtn").onclick = drawResult;
+</script>
+</body>
+</html>

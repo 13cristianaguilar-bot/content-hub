@@ -565,7 +565,11 @@ function handleEvents() {
     else if (e.t === "coin") audio.play("ui_tap", 0.45, 0.03);
     else if (e.t === "glide" && e.id === 0) audio.play("jump", 0.22, 0.08);
     else if (e.t === "grab" && e.id === 0) audio.play("bump", 0.35, 0.05);
-    else if (e.t === "qualify" && e.id === 0) audio.play("seat", 0.45, 0.05);
+    else if (e.t === "qualify" && e.id === 0) {
+      audio.play("seat", 0.45, 0.05);
+      race.slowMo = 0.45;
+      race.popConfetti = (race.popConfetti || 0) + 1;
+    }
     else if (e.t === "roundwin") audio.play("escaped", 0.55, 0.1);
     else if (e.t === "eliminated") audio.play("missed", 0.6, 0.1);
     else if (e.t === "respawn" && e.fade && fadeEl) {
@@ -659,6 +663,8 @@ function frame(now) {
     }
     return;
   }
+  if (race.slowMo > 0) race.slowMo = Math.max(0, race.slowMo - dt);
+  const simScale = race.slowMo > 0 ? 0.35 : 1;
   let wish = {
     x: steer.x,
     z: steer.z,
@@ -671,7 +677,7 @@ function frame(now) {
   if (hitStop > 0) {
     hitStop -= dt;
   } else {
-  acc += dt;
+  acc += dt * simScale;
   }
   let steps = 0;
   while (hitStop <= 0 && acc >= STEP && steps < 8) {

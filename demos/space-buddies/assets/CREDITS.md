@@ -1,6 +1,8 @@
 # Asset credits
 
-Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated).
+Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated). The playable Buddy is `assets/space_buddy_rigged.glb`: one skinned mesh, 20 bones, and named clips (Idle, Run, Jump, Fall, Land, Dive, Grab, Tumble, Celebrate, Eliminated, Emote). Root motion stays in place. The escape ship is `assets/escape_ship_web.glb`.
+
+The zone music bed is an original procedural party loop written for this demo. Countdown, qualify, eliminated, and escape stingers are the existing files in `assets/audio/`.
 
 # Meadow asset credits
 

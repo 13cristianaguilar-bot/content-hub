@@ -814,10 +814,13 @@ function separate(race) {
       if (player) {
         const other = player === a ? b : a;
         const side = player === a ? 1 : -1;
+        const driving = Math.hypot(player.vel.x, player.vel.z) > 1.2;
         other.pos.x += nx * side * push * 1.8;
         other.pos.z += nz * side * push * 1.8;
-        player.pos.x -= nx * side * push * 0.15;
-        player.pos.z -= nz * side * push * 0.15;
+        if (driving) {
+          player.pos.x -= nx * side * push * 0.15;
+          player.pos.z -= nz * side * push * 0.15;
+        }
         const slip = -nz * side;
         const slipZ = nx * side;
         other.vel.x += slip * 2.2;
@@ -1096,7 +1099,8 @@ function updateCollapse(race, dt) {
   const cfg = race.cfg;
   if (race.time < cfg.collapseDelay) return;
   const stop = race.course.ship.z - 18;
-  race.collapseZ += race.collapseSpeed * dt;
+  const hurry = 1 + Math.min(2.4, (race.time || 0) / 45);
+  race.collapseZ += race.collapseSpeed * hurry * dt;
   if (race.collapseZ > stop) race.collapseZ = stop;
   race.lavaY = cfg.lavaStartY + race.time * cfg.lavaRisePerSec;
   let cracked = false;
@@ -1121,7 +1125,7 @@ function updateCollapse(race, dt) {
       }
     } else if (chunk.state === "falling") {
       chunk.fallT -= dt;
-      chunk.fallY -= (7 + chunk.jitter * 6) * dt;
+      chunk.fallY -= (7 + chunk.jitter * 6) * hurry * dt;
       chunk.dirty = true;
       if (chunk.fallT <= 0) {
         chunk.state = "gone";

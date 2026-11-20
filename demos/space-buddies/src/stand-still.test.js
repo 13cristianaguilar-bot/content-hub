@@ -45,8 +45,9 @@ function standStill(label, setup) {
 
 standStill("qualify-idle", (race) => {
   race.shipRound = false;
-  race.finishZ = 82;
+  race.finishZ = 148;
   race.qualifyN = 12;
+  race.gate = { x: 0, z: 148, rx: 12, rz: 8, y: 0.25 };
 });
 
 standStill("ship-idle", (race) => {

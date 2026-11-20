@@ -235,8 +235,8 @@ const GRAPE = [0.55, 0.42, 1];
 const ROCK = [0.73, 0.64, 0.85];
 const NAVY = [0.18, 0.23, 0.42];
 
-const eye = move(sphere(0.16, 8, 6), 0, 0, 0);
-const shine = move(sphere(0.05, 6, 4), 0, 0, 0);
+const eye = move(sphere(0.24, 10, 8), 0, 0, 0);
+const shine = move(sphere(0.08, 6, 4), 0, 0, 0);
 
 save("enemy_roller.glb", [
   { name: "RollerBody", color: ROCK, geo: merge([
@@ -245,7 +245,7 @@ save("enemy_roller.glb", [
     move(sphere(0.22, 6, 4), -0.62, 0.1, 0.4),
     move(sphere(0.18, 5, 4), 0.2, -0.45, 0.7),
   ]) },
-  { name: "RollerEye", color: INK, geo: merge([move(eye, 0.28, 0.18, 0.78), move(eye, -0.28, 0.18, 0.78)]) },
+  { name: "RollerEye", color: INK, geo: merge([move(eye, 0.32, 0.22, 0.72), move(eye, -0.32, 0.22, 0.72)]) },
   { name: "RollerMouth", color: CORAL, geo: move(box(0.34, 0.08, 0.08), 0, -0.12, 0.92) },
 ]);
 
@@ -255,8 +255,8 @@ save("enemy_hopper.glb", [
     move(sphere(0.22, 8, 6), -0.28, -0.42, 0.1, 1, 0.45, 1.2),
     move(sphere(0.22, 8, 6), 0.28, -0.42, 0.1, 1, 0.45, 1.2),
   ]) },
-  { name: "HopperEye", color: INK, geo: merge([move(eye, 0.2, 0.16, 0.5), move(eye, -0.2, 0.16, 0.5)]) },
-  { name: "HopperShine", color: [1, 1, 1], geo: merge([move(shine, 0.24, 0.22, 0.6), move(shine, -0.16, 0.22, 0.6)]) },
+  { name: "HopperEye", color: INK, geo: merge([move(eye, 0.22, 0.2, 0.42), move(eye, -0.22, 0.2, 0.42)]) },
+  { name: "HopperShine", color: [1, 1, 1], geo: merge([move(shine, 0.3, 0.28, 0.58), move(shine, -0.14, 0.28, 0.58)]) },
   { name: "HopperAntenna", color: CREAM, geo: merge([
     move(cylinder(0.035, 0.035, 0.42, 6), -0.18, 0.72, 0),
     move(cylinder(0.035, 0.035, 0.42, 6), 0.18, 0.72, 0),
@@ -277,7 +277,7 @@ save("enemy_flyer.glb", [
     move(box(0.85, 0.06, 0.42), 0.7, 0.02, 0),
     move(box(0.85, 0.06, 0.42), -0.7, 0.02, 0),
   ]) },
-  { name: "FlyerEye", color: INK, geo: merge([move(sphere(0.09, 8, 6), 0.16, 0.12, 0.36), move(sphere(0.09, 8, 6), -0.16, 0.12, 0.36)]) },
+  { name: "FlyerEye", color: INK, geo: merge([move(sphere(0.14, 8, 6), 0.18, 0.14, 0.32), move(sphere(0.14, 8, 6), -0.18, 0.14, 0.32)]) },
 ]);
 
 save("hazard_geyser.glb", [

@@ -115,7 +115,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       uniforms: {
         top: { value: new THREE.Color(0x5cc8ff) },
         mid: { value: new THREE.Color(0x9fe8ff) },
-        bot: { value: new THREE.Color(0x2b1b4d) },
+        bot: { value: new THREE.Color(0x8ed7b0) },
       },
       vertexShader: "varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
       fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; void main(){ float h=normalize(vP).y; vec3 c=mix(mid, top, smoothstep(0.0, 0.55, h)); c=mix(bot, c, smoothstep(-0.35, 0.08, h)); gl_FragColor=vec4(c,1.0); }",
@@ -215,6 +215,59 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.add(mesh);
     chunk.mesh = mesh;
     chunkMeshes.push(mesh);
+  }
+
+  const crustColors = {
+    meadow: [0.26, 0.52, 0.3],
+    canyon: [0.5, 0.16, 0.1],
+    sky: [0.42, 0.58, 0.75],
+    ice: [0.5, 0.75, 0.95],
+    climb: [0.58, 0.32, 0.14],
+    ship: [0.68, 0.5, 0.28],
+  };
+  const crustPos = [];
+  const crustCol = [];
+  const crustIdx = [];
+  const crustRows = [];
+  const crustStep = 14;
+  const crustAcross = 9;
+  for (let z = 0; z <= course.len; z += crustStep) {
+    const st = course.stations[Math.min(course.stations.length - 1, Math.round(z / 2))];
+    const pal = crustColors[st.zone] || crustColors.meadow;
+    const row = [];
+    for (let c = 0; c < crustAcross; c++) {
+      const lat = ((c / (crustAcross - 1)) * 2 - 1) * 32;
+      const drop = (Math.abs(lat) / 12) ** 2;
+      crustPos.push(st.x + lat, st.y - 8.2 - drop, st.z);
+      const n = 0.86 + Math.sin(st.z * 0.04 + lat * 0.2) * 0.08;
+      crustCol.push(pal[0] * n, pal[1] * n, pal[2] * n);
+      row.push(crustPos.length / 3 - 1);
+    }
+    crustRows.push(row);
+  }
+  for (let r = 0; r < crustRows.length - 1; r++) {
+    for (let c = 0; c < crustAcross - 1; c++) {
+      const a = crustRows[r][c];
+      const b = crustRows[r][c + 1];
+      const d = crustRows[r + 1][c];
+      const e = crustRows[r + 1][c + 1];
+      crustIdx.push(a, d, b, b, d, e);
+    }
+  }
+  const crustGeo = new THREE.BufferGeometry();
+  crustGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(crustPos), 3));
+  crustGeo.setAttribute("color", new THREE.BufferAttribute(new Float32Array(crustCol), 3));
+  crustGeo.setIndex(crustIdx);
+  crustGeo.computeVertexNormals();
+  scene.add(new THREE.Mesh(crustGeo, terrainMat));
+
+  for (const isle of course.islands || []) {
+    const mesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(isle.r, isle.r * 0.7, 0.85, 10),
+      new THREE.MeshToonMaterial({ color: isle.zone === "canyon" ? 0xd15a32 : 0x8fd08a, gradientMap: TOON_MAP })
+    );
+    mesh.position.set(isle.x, isle.y - 0.25, isle.z);
+    scene.add(mesh);
   }
 
   const debrisGeo = partsOf(gltfs.chunk.scene)[0].geom;
@@ -357,6 +410,21 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const rollerMeshes = course.rollers.map((r) => {
     const group = cloneDrawn(gltfs.roller);
     group.scale.setScalar(r.radius);
+    if (r.snow) {
+      group.traverse((node) => {
+        if (!node.isMesh || !node.material || !node.material.color) return;
+        if (node.name === "RollerEye" || node.name === "RollerMouth") return;
+        node.material.color.set(0xf7fbff);
+      });
+    }
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(1.2, 0.07, 6, 18),
+      new THREE.MeshBasicMaterial({ color: r.snow ? 0xd7f4ff : 0xffd23f, transparent: true, opacity: 0.85 })
+    );
+    ring.rotation.x = Math.PI / 2;
+    ring.position.y = -0.82;
+    group.add(ring);
+    group.userData.ring = ring;
     scene.add(group);
     return group;
   });
@@ -673,19 +741,34 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const r = race.rollers[i];
       rollerMeshes[i].position.set(r.x, r.y, r.z);
       rollerMeshes[i].rotation.z = r.rot;
+      const ring = rollerMeshes[i].userData.ring;
+      if (ring) ring.scale.setScalar(1 + Math.sin(race.time * 7 + i) * 0.14);
+      let bumped = false;
+      for (const racer of race.racers) {
+        if (racer.flail < 0.2) continue;
+        const dx = racer.pos.x - r.x;
+        const dz = racer.pos.z - r.z;
+        if (dx * dx + dz * dz < 5) bumped = true;
+      }
+      const squ = bumped ? 0.78 : 1;
+      rollerMeshes[i].scale.set(r.radius * (bumped ? 1.15 : 1), r.radius * squ, r.radius);
     }
     for (let i = 0; i < race.hoppers.length; i++) {
       const h = race.hoppers[i];
       hopperMeshes[i].position.set(h.x, h.y + 0.55, h.z);
       const body = hopperMeshes[i].userData.body;
-      if (body) body.scale.y = h.hopping ? 1.05 : 0.7;
+      if (body) {
+        body.scale.y = h.hopping ? 1.18 : 0.62;
+        body.scale.x = h.hopping ? 0.86 : 1.12;
+      }
     }
     for (let i = 0; i < race.flyers.length; i++) {
       const f = race.flyers[i];
       flyerMeshes[i].position.set(f.x, f.y, f.z);
       flyerMeshes[i].rotation.y = -f.ang;
       const wing = flyerMeshes[i].userData.wing;
-      if (wing) wing.rotation.z = Math.sin(race.time * 14 + i) * 0.45;
+      if (wing) wing.rotation.z = Math.sin(race.time * 14 + i) * 0.55;
+      flyerMeshes[i].scale.y = 1 + Math.sin(race.time * 14 + i) * 0.08;
     }
 
     lava.position.y = race.lavaY;
@@ -774,6 +857,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const skyNow = zoneSky(race.zoneId || "meadow");
     sky.material.uniforms.top.value.setHex(skyNow.top);
     sky.material.uniforms.mid.value.setHex(skyNow.mid);
+    if (skyNow.bot) sky.material.uniforms.bot.value.setHex(skyNow.bot);
     scene.fog.color.setHex(skyNow.fog);
     scene.fog.near = skyNow.near;
     scene.fog.far = skyNow.far;

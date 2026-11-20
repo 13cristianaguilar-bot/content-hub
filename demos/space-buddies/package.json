@@ -6,7 +6,8 @@
     "build": "esbuild src/main.js --bundle --format=iife --target=es2020 --minify --legal-comments=eof --outfile=game.js",
     "sim": "node src/sim-cli.js",
     "test:stand": "node src/stand-still.test.js && node src/qa-regress.test.js",
-    "test:qa": "node qa/playtest.mjs"
+    "test:qa": "node qa/playtest.mjs",
+    "test:qa2": "node qa/playtest.mjs --batch2"
   },
   "dependencies": {
     "three": "0.170.0"

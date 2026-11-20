@@ -1,6 +1,7 @@
 import { resolveConfig } from "./config.js";
 import { createCourse, floorsAt } from "./course.js";
 import { createRace, step } from "./sim.js";
+import { isSnag, isUnfair } from "./feel.js";
 import { hideControls, placeLabel } from "./place.js";
 import { spectateFrame } from "./spectate.js";
 
@@ -33,6 +34,12 @@ assert(hideControls("race", true, true) === true, "seated race should hide contr
 assert(hideControls("launch", true, true) === true, "launch should hide controls");
 assert(hideControls("results", false, true) === true, "results should hide controls");
 assert(hideControls("race", false, true) === false, "a racing player should see controls");
+assert(isSnag(8, 3, 0.8, false) === true, "a steered speed cut with no hit is a snag");
+assert(isSnag(8, 3, 0.8, true) === false, "a real hit is not a snag");
+assert(isSnag(8, 6, 0.8, false) === false, "a small slowdown is not a snag");
+assert(isUnfair(0.2) === true, "a hit with 0.2s of warning is unfair");
+assert(isUnfair(null) === true, "a hit with no warning is unfair");
+assert(isUnfair(0.8) === false, "a hit you could see coming is fair");
 
 const focus = { x: 2, y: 1, z: 40 };
 const open = spectateFrame(focus, 0, 0, []);
@@ -52,6 +59,29 @@ const laterBack = Math.hypot(later.x - focus.x, later.z - focus.z);
 assert(laterBack >= 10 && laterBack <= 14, "orbit radius drifted: " + laterBack.toFixed(2));
 
 const course = createCourse(resolveConfig({ quick: true, seed: 4 }));
+const diveJump = createRace(course, resolveConfig({ quick: true, seed: 4, feel: true }), 4);
+diveJump.phase = "race";
+diveJump.player.useAI = false;
+diveJump.player.grounded = true;
+diveJump.player.vel.y = 0;
+step(diveJump, 1 / 60, { x: 0, z: 1, jump: true, dive: true, grab: false, holdJump: false });
+let leftGround = false;
+for (let i = 0; i < 40; i++) {
+  step(diveJump, 1 / 60, { x: 0, z: 1, jump: false, dive: false, grab: false, holdJump: false });
+  if (diveJump.player.vel.y > 4) leftGround = true;
+}
+assert(leftGround, "a jump pressed during a dive never left the ground");
+const fastFall = createRace(course, resolveConfig({ quick: true, seed: 4, feel: true }), 4);
+fastFall.phase = "race";
+fastFall.player.useAI = false;
+fastFall.player.grounded = false;
+fastFall.player.pos.y = fastFall.player.pos.y + 1.2;
+fastFall.player.vel.y = -24;
+const floorY = fastFall.player.pos.y - 1.2;
+step(fastFall, 1 / 60, { x: 0, z: 0, jump: false, dive: false, grab: false, holdJump: false });
+assert(fastFall.player.pos.y > floorY - 0.35, "a fast fall tunneled the floor, y " + fastFall.player.pos.y.toFixed(2));
+assert(fastFall.feel.missed === 0, "a fast fall counted a missed landing");
+
 let spot = null;
 for (let z = 90; z < 140 && !spot; z += 1.2) {
   for (let x = -10; x <= 10 && !spot; x += 1.2) {

@@ -39,6 +39,8 @@ function jobUrl(job) {
   q.set("round", String(job.round || 0));
   if (job.bot) q.set("bot", job.bot);
   if (job.qa) q.set("qa", String(job.qa));
+  if (job.feel) q.set("feel", "1");
+  if (job.low) q.set("low", "1");
   return base + "?" + q.toString();
 }
 
@@ -122,6 +124,28 @@ async function sample(page) {
       renderer,
       heap: performance.memory ? performance.memory.usedJSHeapSize : null,
       zoom: localStorage.getItem("space-buddies-zoom"),
+      feel: sb.feel ? { snags: sb.feel.snags, unfair: sb.feel.unfair, missed: sb.feel.missed, jumps: sb.feel.jumps, lands: sb.feel.lands, falls: sb.feel.falls, dies: sb.feel.dies, marks: sb.feel.marks } : null,
+      nearSeen: (() => {
+        if (!sb.sees) return true;
+        const groups = [r.course.bumpers, r.course.spinners, r.course.sweepers, r.course.pendulums];
+        let best = null;
+        for (const list of groups) {
+          if (!list) continue;
+          for (const o of list) {
+            const dz = (o.z || 0) - p.pos.z;
+            if (dz < 2 || dz > 14) continue;
+            if (Math.abs((o.x || 0) - p.pos.x) > 6) continue;
+            const d = Math.hypot((o.x || 0) - p.pos.x, dz);
+            if (!best || d < best.d) best = { x: o.x || 0, y: (o.y || p.pos.y) + 1, z: o.z || 0, d };
+          }
+        }
+        if (!best) return null;
+        return sb.sees(best.x, best.y, best.z);
+      })(),
+      clock: window.__sbClock || null,
+      listeners: window.__sbListeners || null,
+      titleText: document.getElementById("result-title") ? document.getElementById("result-title").textContent : "",
+      podium: ["pod-1", "pod-2", "pod-3"].map((id) => { const el = document.getElementById(id); return el ? el.textContent : ""; }),
     };
   });
 }
@@ -152,6 +176,10 @@ async function shot(page, name) {
 
 async function openJob(context, job, errors) {
   const page = await context.newPage();
+  if (job.throttle) {
+    const client = await context.newCDPSession(page);
+    await client.send("Emulation.setCPUThrottlingRate", { rate: job.throttle });
+  }
   page.on("pageerror", (err) => errors.push(String(err && err.stack || err)));
   page.on("console", (msg) => {
     if (msg.type() === "error") errors.push(msg.text());
@@ -582,7 +610,341 @@ async function memoryRun(context) {
   return { name: "memory-5", planet: 1, round: 0, seed: 9, bot: "memory", viewport: "phone", issues, heaps, phase: "memory", result: growth };
 }
 
+function gradeFeel(feel, extra) {
+  const issues = [];
+  if (!feel) return issues;
+  if (feel.missed > 1) issues.push({ code: "missed-land", severity: "P1", detail: feel.missed + " jumps fell through a floor" });
+  if (feel.snags > 14) issues.push({ code: "snag", severity: "P2", detail: feel.snags + " collider snags" });
+  if (feel.unfair > 8) issues.push({ code: "unfair", severity: "P2", detail: feel.unfair + " hits with under 0.5s warning" });
+  if (extra.clips > 4) issues.push({ code: "cam-clip", severity: "P2", detail: extra.clips + " camera clips" });
+  if (extra.unseen > 10 && extra.near > 16 && extra.unseen / extra.near > 0.55) {
+    issues.push({ code: "unseen", severity: "P2", detail: extra.unseen + " of " + extra.near + " nearby obstacles were off screen" });
+  }
+  return issues;
+}
+
+async function watchFeel(page, job) {
+  const extra = { clips: 0, blocked: 0, unseen: 0, near: 0 };
+  let streak = 0;
+  const deadline = Date.now() + (job.wallMs || 70000);
+  let snap = await waitRace(page);
+  while (Date.now() < deadline) {
+    snap = await sample(page);
+    if (!snap.ready) break;
+    if (snap.view && snap.view.minSolid < 0.3) {
+      streak++;
+      if (streak === 2) extra.clips++;
+    } else streak = 0;
+    if (snap.view && snap.view.blocked) extra.blocked++;
+    if (snap.nearSeen === false) extra.unseen++;
+    if (snap.nearSeen != null) extra.near++;
+    if (snap.phase === "results" || snap.phase === "launch") break;
+    if (job.simCap && snap.time >= job.simCap) break;
+    await sleep(job.poll || 250);
+  }
+  snap = await sample(page);
+  const issues = gradeFeel(snap.feel, extra);
+  if (snap.tunneled) issues.push({ code: "fall", severity: "P1", detail: "tunneled at low frame rate" });
+  return { snap, extra, issues };
+}
+
+async function batch2() {
+  await mkdir(shotDir, { recursive: true });
+  const browser = await chromium.launch({
+    channel: "chrome",
+    headless: true,
+    args: ["--enable-precise-memory-info", "--disable-dev-shm-usage"],
+  });
+  const reports = [];
+  const marks = { 1: [], 2: [], 3: [] };
+  const jobs = [];
+  for (let planet = 1; planet <= 3; planet++) {
+    for (let n = 0; n < 4; n++) {
+      jobs.push({
+        name: "feel-p" + planet + "-r" + (n % 3) + "-s" + n,
+        planet,
+        round: n % 3,
+        seed: 300 + planet * 20 + n * 7,
+        bot: "follow",
+        qa: 4,
+        feel: true,
+        viewport: n === 3 ? LAND : PHONE,
+        wallMs: 70000,
+        skipLobby: true,
+      });
+    }
+  }
+  let cursor = 0;
+  async function worker() {
+    while (cursor < jobs.length) {
+      const job = jobs[cursor++];
+      const context = await browser.newContext(contextOptions(job.viewport));
+      try {
+        const page = await openJob(context, job, []);
+        const watched = await watchFeel(page, job);
+        const feel = watched.snap.feel || {};
+        for (const mark of feel.marks || []) marks[job.planet].push(mark);
+        reports.push({ name: job.name, planet: job.planet, round: job.round, seed: job.seed, result: watched.snap.result, feel, extra: watched.extra, issues: watched.issues, clock: watched.snap.clock });
+        console.log(job.name, watched.snap.result || watched.snap.phase, "snag", feel.snags, "unfair", feel.unfair, "miss", feel.missed, "fall", feel.falls, "clip", watched.extra.clips, "unseen", watched.extra.unseen, "issues", watched.issues.length);
+        await page.close();
+      } catch (err) {
+        reports.push({ name: job.name, planet: job.planet, issues: [{ code: "crash", severity: "P0", detail: String(err && err.message || err) }] });
+        console.log(job.name, "CRASH", err.message);
+      } finally {
+        await context.close();
+      }
+    }
+  }
+  await Promise.all([worker(), worker(), worker()]);
+
+  const phone = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
+  await phone.addInitScript(() => {
+    const tally = { add: 0, remove: 0 };
+    const add = EventTarget.prototype.addEventListener;
+    const remove = EventTarget.prototype.removeEventListener;
+    EventTarget.prototype.addEventListener = function () { tally.add++; return add.apply(this, arguments); };
+    EventTarget.prototype.removeEventListener = function () { tally.remove++; return remove.apply(this, arguments); };
+    window.__sbListeners = tally;
+  });
+  reports.push(await longSession(phone));
+  reports.push(await touchEdges(phone));
+  for (let planet = 1; planet <= 3; planet++) reports.push(await eliminatedPodium(phone, planet));
+  await phone.close();
+
+  for (let planet = 1; planet <= 3; planet++) {
+    const context = await browser.newContext(contextOptions(PHONE));
+    const job = { name: "throttle-p" + planet, planet, round: 0, seed: 80 + planet, bot: "follow", qa: 1, feel: true, low: true, throttle: 4, viewport: PHONE, wallMs: 50000, simCap: 14, skipLobby: true };
+    try {
+      const page = await openJob(context, job, []);
+      const watched = await watchFeel(page, job);
+      const clock = watched.snap.clock || {};
+      const issues = watched.issues.filter((issue) => issue.code === "fall" || issue.code === "missed-land");
+      if (clock.stepsMax > 8) issues.push({ code: "step", severity: "P1", detail: "fixed step budget exceeded: " + clock.stepsMax });
+      reports.push({ name: job.name, planet, result: watched.snap.result, clock, feel: watched.snap.feel, issues, low: true });
+      console.log(job.name, "wall", clock.maxWall && clock.maxWall.toFixed(3), "steps", clock.stepsMax, "big", clock.big, "tunnel", !!(watched.snap.tunneled), "issues", issues.length);
+      await page.close();
+    } catch (err) {
+      reports.push({ name: job.name, issues: [{ code: "crash", severity: "P0", detail: String(err && err.message || err) }] });
+      console.log(job.name, "CRASH", err.message);
+    }
+    await context.close();
+  }
+
+  await saveHeatmaps(browser, marks);
+  const failed = reports.filter((report) => (report.issues || []).some((issue) => issue.severity === "P0" || issue.severity === "P1" || issue.severity === "P2"));
+  const summary = { runs: reports.length, passed: reports.length - failed.length, failed: failed.length, passRate: reports.length ? (reports.length - failed.length) / reports.length : 0 };
+  await writeFile(path.join(outDir, "batch2-report.json"), JSON.stringify({ summary, reports, marks }, null, 2));
+  console.log(JSON.stringify(summary, null, 2));
+  await browser.close();
+  if (failed.length) process.exitCode = 1;
+}
+
+async function longSession(context) {
+  const page = await openJob(context, { planet: 1, round: 0, seed: 11, bot: "follow", qa: 4, feel: true, viewport: PHONE, skipLobby: true }, []);
+  const issues = [];
+  let heap0 = null;
+  let listeners0 = null;
+  const resets = [];
+  for (let round = 0; round < 10; round++) {
+    let snap = await waitRace(page);
+    if (snap.phase !== "race") {
+      await page.evaluate(() => {
+        const land = document.getElementById("land");
+        if (land && !land.hidden) land.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      });
+      snap = await waitRace(page);
+    }
+    const start = Date.now();
+    if (snap.phase === "race" && snap.time > 3) issues.push({ code: "timer", severity: "P2", detail: "round " + round + " started at t " + snap.time.toFixed(1) });
+    if (snap.phase !== "race") issues.push({ code: "softlock", severity: "P1", detail: "round " + round + " did not start" });
+    while (Date.now() - start < 28000) {
+      snap = await sample(page);
+      if (snap.phase === "results" || snap.phase === "launch") break;
+      await sleep(250);
+    }
+    const end = await sample(page);
+    if (heap0 == null) heap0 = end.heap;
+    if (listeners0 == null && end.listeners) listeners0 = end.listeners.add - end.listeners.remove;
+    resets.push(end.time);
+    if (round < 9) {
+      await page.evaluate(() => {
+        const planet = document.getElementById("planet");
+        if (planet && !planet.hidden) {
+          const land = document.getElementById("land");
+          if (land) land.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+          return;
+        }
+        const ids = ["next-round", "again", "next-planet"];
+        for (const id of ids) {
+          const btn = document.getElementById(id);
+          if (btn && !btn.hidden) {
+            btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+            return;
+          }
+        }
+      });
+      await sleep(500);
+    }
+  }
+  const last = await sample(page);
+  const growth = heap0 != null && last.heap != null ? last.heap - heap0 : null;
+  if (growth != null && growth > 80 * 1024 * 1024) issues.push({ code: "memory", severity: "P2", detail: "heap grew " + Math.round(growth / (1024 * 1024)) + "MB over 10 rounds" });
+  if (last.listeners && listeners0 != null) {
+    const live = last.listeners.add - last.listeners.remove;
+    if (live - listeners0 > 40) issues.push({ code: "listeners", severity: "P2", detail: "listeners grew by " + (live - listeners0) });
+  }
+  await page.close();
+  console.log("long-session", "issues", issues.length, "rounds", resets.length);
+  return { name: "long-session", issues, resets, growth };
+}
+
+async function touchEdges(context) {
+  const page = await openJob(context, { planet: 1, round: 0, seed: 15, bot: "", qa: 1, feel: true, viewport: PHONE, skipLobby: true }, []);
+  await waitRace(page);
+  const issues = [];
+  await page.evaluate(() => {
+    const app = document.getElementById("app");
+    const fire = (type, id, x, y) => app.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, clientX: x, clientY: y, pointerType: "touch", isPrimary: id === 1 }));
+    fire("pointerdown", 1, 70, 640);
+    fire("pointerdown", 2, 280, 520);
+    fire("pointermove", 1, 70, 520);
+    fire("pointermove", 2, 320, 500);
+    window.__sbTouch = "down";
+  });
+  await sleep(350);
+  const moving = await sample(page);
+  await page.evaluate(() => {
+    const app = document.getElementById("app");
+    const fire = (type, id, x, y) => app.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, clientX: x, clientY: y, pointerType: "touch", isPrimary: id === 1 }));
+    fire("pointermove", 1, -30, 500);
+    fire("pointerup", 1, -30, 500);
+    fire("pointerup", 2, 320, 500);
+  });
+  await sleep(700);
+  const released = await sample(page);
+  const speed = Math.hypot(released.vx || 0, released.vz || 0);
+  if (speed > 4) issues.push({ code: "stick", severity: "P1", detail: "joystick drag offscreen left speed " + speed.toFixed(1) });
+  if (![moving.x, moving.y, moving.z].every(Number.isFinite)) issues.push({ code: "nan", severity: "P0", detail: "NaN during multi-touch" });
+  const beforeHop = await sample(page);
+  await page.evaluate(() => {
+    const dive = document.getElementById("dive");
+    const jump = document.getElementById("jump");
+    dive.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 3, pointerType: "touch", clientX: 300, clientY: 760 }));
+    jump.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, pointerId: 4, pointerType: "touch", clientX: 330, clientY: 680 }));
+  });
+  let hopped = beforeHop;
+  const hopDeadline = Date.now() + 900;
+  while (Date.now() < hopDeadline) {
+    await sleep(120);
+    hopped = await sample(page);
+    if ((hopped.vy || 0) > 3 || (hopped.feel && beforeHop.feel && hopped.feel.jumps > beforeHop.feel.jumps)) break;
+  }
+  if (!((hopped.vy || 0) > 3 || (hopped.feel && beforeHop.feel && hopped.feel.jumps > beforeHop.feel.jumps))) {
+    issues.push({ code: "dive-jump", severity: "P2", detail: "jump during dive did not leave the ground" });
+  }
+  const beforeZoom = hopped.zoom;
+  await page.evaluate(() => {
+    const app = document.getElementById("app");
+    const fire = (type, id, x, y) => app.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerId: id, clientX: x, clientY: y, pointerType: "touch", isPrimary: id === 1 }));
+    fire("pointerdown", 5, 60, 640);
+    fire("pointermove", 5, 60, 540);
+    fire("pointerdown", 6, 160, 420);
+    fire("pointermove", 6, 250, 420);
+    fire("pointerup", 5, 60, 540);
+    fire("pointerup", 6, 250, 420);
+  });
+  await sleep(300);
+  const pinched = await sample(page);
+  if (pinched.zoom === beforeZoom) issues.push({ code: "pinch", severity: "P2", detail: "pinch during movement left zoom " + pinched.zoom });
+  await page.setViewportSize({ width: 390, height: 700 });
+  await sleep(250);
+  const bar = await sample(page);
+  if (bar.boxes && bar.boxes.place && (bar.boxes.place.y < -4 || bar.boxes.place.y > 700)) issues.push({ code: "ui-offscreen", severity: "P2", detail: "place badge left the screen when the address bar showed" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await sleep(200);
+  const back = await sample(page);
+  if (![back.x, back.y, back.z].every(Number.isFinite)) issues.push({ code: "nan", severity: "P0", detail: "NaN after the address bar hid" });
+  await page.close();
+  console.log("touch", "issues", issues.length, issues.map((issue) => issue.code).join(","));
+  return { name: "touch-edges", issues };
+}
+
+async function eliminatedPodium(context, planet) {
+  const page = await openJob(context, { planet, round: 2, seed: 21 + planet, bot: "still", qa: 4, viewport: PHONE, skipLobby: true }, []);
+  const deadline = Date.now() + 40000;
+  let snap = await sample(page);
+  while (Date.now() < deadline) {
+    snap = await sample(page);
+    if (snap.phase === "results") break;
+    await sleep(250);
+  }
+  const issues = [];
+  if (snap.phase !== "results") issues.push({ code: "softlock", severity: "P0", detail: "planet " + planet + " eliminated path never reached the podium" });
+  else {
+    const title = snap.titleText || "";
+    if (!/ELIMINATED|MISSED/i.test(title)) issues.push({ code: "podium", severity: "P1", detail: "planet " + planet + " eliminated title was " + title });
+    if (!snap.podium || !snap.podium.filter(Boolean).length) issues.push({ code: "podium", severity: "P2", detail: "planet " + planet + " podium was empty" });
+    if (snap.againHidden) issues.push({ code: "softlock", severity: "P1", detail: "planet " + planet + " podium has no try again" });
+  }
+  await shot(page, "podium-out-p" + planet);
+  await page.close();
+  console.log("eliminated-p" + planet, snap.result, snap.titleText, "issues", issues.length);
+  return { name: "eliminated-p" + planet, planet, result: snap.result, issues };
+}
+
+function heatmapHtml(marks, planet) {
+  const rows = marks.length ? marks : [{ x: 0, z: 0, kind: "none" }];
+  return `<!DOCTYPE html><meta charset="utf-8"><title>Planet ${planet}</title>
+<style>body{margin:0;background:#1e2440;color:#fff6e5;font-family:sans-serif}h1{font-size:22px;margin:16px}canvas{margin:16px;background:#243056}</style>
+<h1>Planet ${planet} hot spots</h1><canvas id="c" width="600" height="720"></canvas>
+<script>
+const marks = ${JSON.stringify(rows)};
+const canvas = document.getElementById("c");
+const g = canvas.getContext("2d");
+const zs = marks.map(m => m.z), xs = marks.map(m => m.x);
+const z0 = Math.min(...zs) - 8, z1 = Math.max(...zs) + 8, x0 = Math.min(...xs) - 8, x1 = Math.max(...xs) + 8;
+const cell = 16;
+const cols = Math.max(1, Math.ceil((x1 - x0) / cell));
+const gridRows = Math.max(1, Math.ceil((z1 - z0) / cell));
+const bins = new Map();
+for (const m of marks) {
+  if (m.kind === "none") continue;
+  const key = Math.floor((m.x - x0) / cell) + "," + Math.floor((m.z - z0) / cell);
+  const bin = bins.get(key) || { snag: 0, fall: 0, die: 0, miss: 0, unfair: 0 };
+  bin[m.kind] = (bin[m.kind] || 0) + 1;
+  bins.set(key, bin);
+}
+const sx = 560 / cols, sy = 640 / gridRows;
+g.fillStyle = "#1b2438";
+g.fillRect(20, 40, 560, 640);
+for (const [key, bin] of bins) {
+  const [cx, cz] = key.split(",").map(Number);
+  const heat = (bin.die || 0) * 3 + (bin.fall || 0) * 2 + (bin.miss || 0) * 2 + (bin.snag || 0) + (bin.unfair || 0);
+  const t = Math.max(0, Math.min(1, heat / 6));
+  g.fillStyle = "rgb(" + Math.round(40 + 200 * t) + "," + Math.round(180 - 120 * t) + ",80)";
+  g.fillRect(20 + cx * sx, 40 + (gridRows - 1 - cz) * sy, Math.max(2, sx - 1), Math.max(2, sy - 1));
+}
+g.fillStyle = "#fff6e5";
+g.font = "16px sans-serif";
+g.fillText(marks.filter(m => m.kind !== "none").length + " marks", 24, 28);
+</script>`;
+}
+
+async function saveHeatmaps(browser, marks) {
+  const context = await browser.newContext({ viewport: { width: 640, height: 800 } });
+  const page = await context.newPage();
+  for (const planet of [1, 2, 3]) {
+    await page.setContent(heatmapHtml(marks[planet] || [], planet));
+    await page.screenshot({ path: path.join(shotDir, "heatmap-p" + planet + ".png") });
+  }
+  await context.close();
+}
+
 async function main() {
+  if (process.argv.includes("--batch2")) {
+    await batch2();
+    return;
+  }
   await mkdir(shotDir, { recursive: true });
   const browser = await chromium.launch({
     channel: "chrome",

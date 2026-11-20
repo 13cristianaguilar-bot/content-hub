@@ -14,6 +14,8 @@ const cfg = resolveConfig({
   quick: params.has("quick"),
   auto: params.has("auto"),
   seed: Number(params.get("seed")) || (Date.now() % 100000),
+  feel: params.has("feel"),
+  low: params.has("low"),
 });
 
 const app = document.getElementById("app");
@@ -203,7 +205,9 @@ function begin() {
     race,
     cfg,
     get fps() { return fps; },
+    get feel() { return race.feel; },
     view: () => (world.view ? world.view() : null),
+    sees: (x, y, z) => (world.sees ? world.sees(x, y, z) : true),
     ground: (x, z) => groundAt(course, x, z),
     supports: (x, y, z) => {
       let under = null;
@@ -223,6 +227,7 @@ function begin() {
     campaign: () => ({ planet, roundIndex, plan: currentPlan(), paused }),
   };
   window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
+  if (cfg.low && world.setLow) world.setLow();
   applyRound();
   pauseBtn.hidden = false;
   muteBtn.hidden = false;
@@ -726,7 +731,11 @@ function handleEvents() {
 
 function frame(now) {
   requestAnimationFrame(frame);
-  const dt = Math.min(0.1, lastT ? (now - lastT) / 1000 : STEP);
+  const wall = lastT ? (now - lastT) / 1000 : STEP;
+  const dt = Math.min(0.1, wall);
+  const clock = window.__sbClock || (window.__sbClock = { maxWall: 0, big: 0, stepsMax: 0 });
+  if (wall > clock.maxWall) clock.maxWall = wall;
+  if (wall > 0.12) clock.big++;
   lastT = now;
   if (document.hidden || window.__sbBackground) return;
   frames++;
@@ -802,6 +811,7 @@ function frame(now) {
     acc -= STEP;
     steps++;
   }
+  if (steps > clock.stepsMax) clock.stepsMax = steps;
   crackMute = Math.max(0, crackMute - dt);
   if (race.phase === "race" && race.player.grounded && Math.hypot(race.player.vel.x, race.player.vel.z) > 2.2) {
     stepMute -= dt;

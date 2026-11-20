@@ -57,7 +57,7 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
       else if (hex) colors.push(0.85, 0.97, 1);
       else if (zone === "canyon") {
         const hot = Math.abs(Math.sin(a * 3 + r * 4 + cx * 0.1)) > 0.72;
-        colors.push(hot ? 0.95 : 0.11, hot ? 0.36 : 0.07, hot ? 0.05 : 0.08);
+        colors.push(hot ? 1 : 0.72, hot ? 0.42 : 0.28, hot ? 0.08 : 0.16);
       } else if (zone === "meadow") {
         const wx = cx + Math.cos(a) * rx * t;
         const wz = cz + Math.sin(a) * rz * t;
@@ -111,7 +111,7 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
       positions.push(x + px * o, lerp(y0, y1, t), z + pz * o);
       if (zone === "canyon") {
         const crack = Math.abs(Math.sin(t * 7 + side * 3)) > 0.9;
-        colors.push(crack ? 1 : 0.07, crack ? 0.32 : 0.035, crack ? 0.04 : 0.04);
+        colors.push(crack ? 1 : 0.78, crack ? 0.46 : 0.32, crack ? 0.08 : 0.16);
       } else if (zone === "meadow") {
         const n = 0.5 + 0.5 * Math.sin(x * 0.4 + z * 0.3);
         colors.push(0.45 + n * 0.08, 0.34 + n * 0.05, 0.16);

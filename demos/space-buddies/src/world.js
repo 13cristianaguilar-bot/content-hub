@@ -470,6 +470,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   lava.rotation.x = -Math.PI / 2;
   lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
   scene.add(lava);
+  if (course.crater) {
+    const glow = new THREE.Mesh(
+      new THREE.CircleGeometry(course.crater.r * 1.35, 20),
+      new THREE.MeshBasicMaterial({ color: 0xffb15a, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending })
+    );
+    glow.rotation.x = -Math.PI / 2;
+    glow.position.set(course.crater.x, course.crater.y + 0.2, course.crater.z);
+    scene.add(glow);
+  }
 
   const geyserMeshes = course.geysers.map((g) => {
     const group = cloneDrawn(gltfs.geyser);

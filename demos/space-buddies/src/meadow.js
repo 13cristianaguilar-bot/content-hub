@@ -124,7 +124,7 @@ function scatter(scene, gltf, gradientMap, spots, override) {
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
   }
-  if (spots.some((spot) => spot.s > 1.1)) return;
+  if (spots.length > 8 || spots.some((spot) => spot.s > 1.1)) return;
   const shadow = new THREE.InstancedMesh(
     new THREE.CircleGeometry(1, 12),
     new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.22, depthWrite: false }),
@@ -176,9 +176,25 @@ function ring(cx, cz, count, radius, scale, y, phase) {
 
 const CANYON_TINT = (name) => {
   const key = String(name || "").toLowerCase();
-  if (key.includes("sand") || key.includes("grass") || key.includes("leaf")) return 0x6a3020;
+  if (key.includes("sand") || key.includes("grass") || key.includes("leaf")) return 0xe07a32;
   if (key.includes("red")) return 0xff5a2a;
-  return 0x24181c;
+  if (key.includes("wood") || key.includes("dirt")) return 0xc45a38;
+  return 0x9a4030;
+};
+const SKY_TINT = (name) => {
+  const key = String(name || "").toLowerCase();
+  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0x7ee0c8;
+  return 0xf4f7ff;
+};
+const ICE_TINT = (name) => {
+  const key = String(name || "").toLowerCase();
+  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0xd7f6ff;
+  return 0x8ec8f0;
+};
+const CLIMB_TINT = (name) => {
+  const key = String(name || "").toLowerCase();
+  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0xffb15a;
+  return 0xd46a32;
 };
 
 const MEADOW_HILL = (name) => {
@@ -226,9 +242,9 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   scatter(scene, gltfs.fence, gradientMap, fences);
   scatter(scene, gltfs.log, gradientMap, [{ x: hub.x - 15.5, z: hub.z - 8, rot: 0.5, s: 0.7, y: 0 }]);
   scatter(scene, gltfs.platform, gradientMap, pads);
-  scatter(scene, gltfs.cliff, gradientMap, ring(hub.x, hub.z, 8, 22, 0.5, -1.1, 0.2), MEADOW_HILL);
-  scatter(scene, gltfs.formation, gradientMap, ring(hub.x, hub.z, 5, 36, 1.7, -2.2, 0.4), MEADOW_HILL);
-  scatter(scene, gltfs.formationLarge, gradientMap, ring(hub.x, hub.z, 4, 44, 2.05, -2.8, 1.1), MEADOW_HILL);
+  scatter(scene, gltfs.cliff, gradientMap, ring(hub.x, hub.z, 12, 21.2, 0.62, -1.2, 0.05), MEADOW_HILL);
+  scatter(scene, gltfs.cliffLarge, gradientMap, ring(hub.x, hub.z, 12, 23.4, 0.55, -1.5, 0.2), MEADOW_HILL);
+  scatter(scene, gltfs.cliffTop, gradientMap, ring(hub.x, hub.z, 8, 36, 1.15, -1.2, 0.4), MEADOW_HILL);
 
   if (gltfs.mushroom) {
     const hero = gltfs.mushroom.scene.clone(true);
@@ -265,9 +281,16 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
     const cz = crater ? crater.z : canyon.z;
     scatter(scene, gltfs.rockLarge, gradientMap, ring(cx, cz, 9, 11.5, 1.05, 0.1, 0.3), CANYON_TINT);
     scatter(scene, gltfs.rock, gradientMap, ring(cx, cz, 8, 9.2, 0.7, 0.05, 0.6), CANYON_TINT);
-    scatter(scene, gltfs.cliffLarge, gradientMap, ring(canyon.x, canyon.z, 7, 22, 0.62, -1.4, 0.15), CANYON_TINT);
-    scatter(scene, gltfs.formation, gradientMap, ring(canyon.x, canyon.z, 4, 34, 1.85, -2.4, 0.8), CANYON_TINT);
-    scatter(scene, gltfs.formationLarge, gradientMap, ring(canyon.x, canyon.z, 3, 42, 2.1, -3, 0.2), CANYON_TINT);
+    scatter(scene, gltfs.cliffLarge, gradientMap, ring(canyon.x, canyon.z, 10, 21, 0.7, -1.4, 0.05), CANYON_TINT);
+    scatter(scene, gltfs.cliff, gradientMap, ring(canyon.x, canyon.z, 10, 23.2, 0.62, -1.6, 0.18), CANYON_TINT);
+    scatter(scene, gltfs.cliffTop, gradientMap, ring(canyon.x, canyon.z, 7, 36, 1.25, -0.8, 0.3), CANYON_TINT);
+    const arch = [
+      { x: canyon.x - 16, z: canyon.z + 8, rot: 0.4, s: 0.7, y: 0 },
+      { x: canyon.x - 16, z: canyon.z + 14, rot: 0.4, s: 0.7, y: 0 },
+      { x: canyon.x - 16, z: canyon.z + 11, rot: Math.PI / 2, s: 0.55, y: 4.2 },
+    ];
+    scatter(scene, gltfs.cliff, gradientMap, arch.slice(0, 2), CANYON_TINT);
+    scatter(scene, gltfs.cliffTop, gradientMap, arch.slice(2), CANYON_TINT);
     const wallZ = course.doors && course.doors[0] ? course.doors[0].z : cz + 28;
     if (gltfs.block) {
       scatter(scene, gltfs.block, gradientMap, [
@@ -275,6 +298,24 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
         { x: 12.6, z: wallZ, rot: 0, s: 0.28, y: 0.15 },
       ], CANYON_TINT);
     }
+  }
+  const sky = (course.hubs || []).find((h) => h.zone === "sky");
+  const ice = (course.hubs || []).find((h) => h.zone === "ice");
+  const climb = (course.hubs || []).find((h) => h.zone === "climb");
+  if (sky) {
+    scatter(scene, gltfs.pine, gradientMap, ring(sky.x, sky.z, 6, 14, 0.42, 4.2, 0.2), SKY_TINT);
+    scatter(scene, gltfs.bush, gradientMap, ring(sky.x, sky.z, 8, 10, 0.45, 4.1, 0.6), SKY_TINT);
+    scatter(scene, gltfs.cliffTop, gradientMap, ring(sky.x, sky.z, 6, 28, 1, 2, 0.4), SKY_TINT);
+  }
+  if (ice) {
+    scatter(scene, gltfs.pine, gradientMap, ring(ice.x, ice.z, 7, 14, 0.4, 3.2, 0.3), ICE_TINT);
+    scatter(scene, gltfs.rockLarge, gradientMap, ring(ice.x, ice.z, 6, 16, 0.7, 3.1, 0.8), ICE_TINT);
+    scatter(scene, gltfs.cliff, gradientMap, ring(ice.x, ice.z, 12, 18, 0.5, 1.6, 0.1), ICE_TINT);
+  }
+  if (climb) {
+    scatter(scene, gltfs.tree, gradientMap, ring(climb.x, climb.z, 6, 13, 0.4, 3.2, 0.5), CLIMB_TINT);
+    scatter(scene, gltfs.rockLarge, gradientMap, ring(climb.x, climb.z, 5, 15, 0.75, 3, 1), CLIMB_TINT);
+    scatter(scene, gltfs.cliffLarge, gradientMap, ring(climb.x, climb.z, 10, 18, 0.55, 1.4, 0.2), CLIMB_TINT);
   }
 }
 

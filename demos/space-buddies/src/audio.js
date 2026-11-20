@@ -26,7 +26,8 @@ export function createAudio() {
   let rumbleGain;
   let bedSrc;
   let rumbleSrc;
-  let started = false;
+  let wantBeds = false;
+  let bedVol = 0;
   let muted = false;
 
   if (ctx) {
@@ -52,6 +53,7 @@ export function createAudio() {
       done++;
       if (onProgress) onProgress(done / keys.length);
     }));
+    if (wantBeds) startBeds(bedVol);
   }
 
   function unlock() {
@@ -62,26 +64,30 @@ export function createAudio() {
     src.buffer = buf;
     src.connect(ctx.destination);
     src.start(0);
+    if (wantBeds) startBeds(bedVol);
   }
 
   function startBeds(bedVolume) {
-    if (!ctx || started) return;
-    started = true;
-    if (buffers.bed) {
-      bedSrc = ctx.createBufferSource();
-      bedSrc.buffer = buffers.bed;
-      bedSrc.loop = true;
-      bedSrc.connect(bedGain);
-      bedSrc.start(0);
-      bedGain.gain.setTargetAtTime(bedVolume, ctx.currentTime, 0.4);
-    }
-    if (buffers.rumble) {
+    if (!ctx) return false;
+    wantBeds = true;
+    bedVol = bedVolume;
+    if (ctx.state === "suspended") ctx.resume();
+    if (bedSrc) return true;
+    if (!buffers.bed) return false;
+    bedSrc = ctx.createBufferSource();
+    bedSrc.buffer = buffers.bed;
+    bedSrc.loop = true;
+    bedSrc.connect(bedGain);
+    bedSrc.start(0);
+    bedGain.gain.setTargetAtTime(bedVolume, ctx.currentTime, 0.4);
+    if (buffers.rumble && !rumbleSrc) {
       rumbleSrc = ctx.createBufferSource();
       rumbleSrc.buffer = buffers.rumble;
       rumbleSrc.loop = true;
       rumbleSrc.connect(rumbleGain);
       rumbleSrc.start(0);
     }
+    return true;
   }
 
   function setRumble(value) {
@@ -133,5 +139,10 @@ export function createAudio() {
     src.start(0);
   }
 
-  return { load, unlock, startBeds, setRumble, setMuted, setZone, play, flourish, get ctx() { return ctx; }, get muted() { return muted; } };
+  return {
+    load, unlock, startBeds, setRumble, setMuted, setZone, play, flourish,
+    get ctx() { return ctx; },
+    get muted() { return muted; },
+    get playing() { return !!bedSrc; },
+  };
 }

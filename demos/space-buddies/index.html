@@ -226,6 +226,22 @@ button { font-family: inherit; touch-action: manipulation; }
   transition: opacity 0.18s linear;
 }
 #fade.on { opacity: 0.72; }
+#debug-error {
+  position: absolute;
+  left: calc(8px + env(safe-area-inset-left));
+  right: calc(8px + env(safe-area-inset-right));
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  z-index: 30;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #3a1020;
+  color: #ffe8ea;
+  font: 12px/1.35 ui-monospace, monospace;
+  max-height: 28vh;
+  overflow: auto;
+  white-space: pre-wrap;
+}
 #round-name, #pause-menu, #planet {
   position: absolute; inset: 0; z-index: 8; display: grid; place-items: center;
   background: rgba(30, 36, 64, 0.28);
@@ -426,6 +442,7 @@ button { font-family: inherit; touch-action: manipulation; }
     <button id="jump" type="button">JUMP</button>
     <button id="dive" type="button">DIVE</button>
   </div>
+  <pre id="debug-error" hidden></pre>
   <div id="title">
     <img id="keyart" src="assets/images/title.jpg" alt="Space Buddies">
     <div class="title-ui">
@@ -459,6 +476,6 @@ button { font-family: inherit; touch-action: manipulation; }
     </div>
   </div>
 </div>
-<script src="game.js?v=16"></script>
+<script src="game.js?v=17"></script>
 </body>
 </html>

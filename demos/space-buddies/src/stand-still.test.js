@@ -1,6 +1,6 @@
 import { resolveConfig } from "./config.js";
 import { createCourse } from "./course.js";
-import { createRace, step } from "./sim.js";
+import { cameraAboveFloor, createRace, step } from "./sim.js";
 
 const cfg = resolveConfig({ quick: true, seed: 2 });
 const course = createCourse(cfg);
@@ -249,5 +249,37 @@ assert(seatThieves.player.seated === false, "a far player took a seat the AIs fi
 assert(seatThieves.player.qualified === false, "a far player qualified because the AIs filled the ship");
 assert(seatThieves.result !== "escaped", "a far player escaped because the AIs filled the ship");
 assert(seatThieves.result === "out", "filling the ship without the player should eliminate, got " + seatThieves.result);
+
+assert(cameraAboveFloor(0, 5) === 6, "the camera was allowed below the floor");
+assert(cameraAboveFloor(-4, 2) === 3, "a camera under the course was not lifted");
+assert(cameraAboveFloor(12, 5) === 12, "a clear camera was pulled down");
+
+const stepper = fresh();
+stepper.phase = "race";
+stepper.player.useAI = false;
+stepper.player.grounded = false;
+stepper.player.pos.y = 0.4;
+stepper.player.fallFrom = 0.55;
+stepper.player.vel.y = -3;
+stepper.player.flail = 0;
+for (let i = 0; i < 40; i++) step(stepper, dt, idle);
+console.log("small-step", "flail", stepper.player.flail, "y", stepper.player.pos.y.toFixed(2));
+assert(stepper.player.flail === 0, "walking a small step started a tumble");
+
+const diver = fresh();
+diver.phase = "race";
+diver.player.useAI = false;
+diver.player.grounded = false;
+diver.player.pos.y = 8;
+diver.player.fallFrom = 8;
+diver.player.vel.y = -14;
+diver.player.flail = 0;
+let tumbled = false;
+for (let i = 0; i < 50; i++) {
+  step(diver, dt, idle);
+  if (diver.player.flail > 0.2) tumbled = true;
+}
+console.log("big-fall", "tumbled", tumbled, "y", diver.player.pos.y.toFixed(2));
+assert(tumbled, "a long fall did not tumble");
 
 console.log("stand-still tests passed");

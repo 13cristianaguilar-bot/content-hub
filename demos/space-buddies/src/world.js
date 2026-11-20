@@ -3,6 +3,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
+import { cameraAboveFloor } from "./sim.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
@@ -315,6 +316,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; void main(){ vec3 n=normalize(vP); float h=n.y; vec3 c=mix(bot, mid, smoothstep(-0.15, 0.0, h)); c=mix(c, top, smoothstep(-0.02, 0.16, h)); float sun=smoothstep(0.14, 0.0, length(n.xz-vec2(-0.32,0.12))); c+=vec3(1.0,0.86,0.48)*sun*smoothstep(0.0,0.2,h); gl_FragColor=vec4(c,1.0); }",
     })
   );
+  sky.userData.skipCam = true;
   scene.add(sky);
   const heavens = new THREE.Group();
   const starPositions = [];
@@ -390,6 +392,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.add(pole);
     flags.push(cloth);
   }
+  heavens.userData.skipCam = true;
   scene.add(heavens);
 
   const loader = new GLTFLoader();
@@ -846,6 +849,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const ang = (i / 22) * Math.PI * 2;
     const rad = 3 + (i % 5) * 2.2;
     mesh.position.set(Math.cos(ang) * rad, cfg.lavaStartY + 0.4, lavaMidZ + Math.sin(ang) * rad);
+    mesh.userData.decor = true;
     mesh.userData.base = mesh.position.clone();
     mesh.userData.speed = 0.6 + (i % 4) * 0.25;
     mesh.userData.phase = i * 0.7;
@@ -1258,6 +1262,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const buddyGltf = gltfs.buddy;
   const visuals = [];
   const buddyRoot = new THREE.Group();
+  buddyRoot.userData.buddy = true;
   scene.add(buddyRoot);
   const shadowGeo = new THREE.CircleGeometry(0.48, 14);
   const youTex = makeYouTexture();
@@ -1852,6 +1857,66 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const crateGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
   const crateMat = new THREE.MeshToonMaterial({ color: 0xe0a45c, gradientMap: TOON_MAP });
 
+  const camRay = new THREE.Raycaster();
+  const camHead = new THREE.Vector3();
+  const camDir = new THREE.Vector3();
+  let camBlockers = null;
+  function camSolids() {
+    if (camBlockers) return camBlockers;
+    scene.updateMatrixWorld(true);
+    const list = [];
+    const scale = new THREE.Vector3();
+    scene.traverse((obj) => {
+      if (!obj.isMesh || !obj.geometry || !obj.matrixWorld) return;
+      let node = obj;
+      while (node) {
+        if (node.userData && (node.userData.decor || node.userData.buddy || node.userData.skipCam)) return;
+        node = node.parent;
+      }
+      if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
+      obj.getWorldScale(scale);
+      if (obj.geometry.boundingSphere.radius * Math.abs(scale.x) < 1.15) return;
+      list.push(obj);
+    });
+    camBlockers = list;
+    return list;
+  }
+  function solveCamera(head, want) {
+    try {
+    camDir.copy(want).sub(head);
+    const dist = camDir.length();
+    if (dist < 0.25) return want;
+    camDir.multiplyScalar(1 / dist);
+    camRay.set(head, camDir);
+    camRay.far = dist;
+    const hits = camRay.intersectObjects(camSolids(), false);
+    let stop = dist;
+    for (const hit of hits) {
+      if (hit.distance > stop - 0.05) continue;
+      let skip = false;
+      let node = hit.object;
+      while (node) {
+        if (node.userData && (node.userData.decor || node.userData.buddy || node.userData.skipCam)) {
+          skip = true;
+          break;
+        }
+        node = node.parent;
+      }
+      if (skip) continue;
+      const mat = hit.object.material;
+      const seeThrough = mat && !Array.isArray(mat) && mat.transparent && mat.opacity < 0.4;
+      if (seeThrough) continue;
+      stop = hit.distance;
+    }
+    if (stop > dist - 0.2) return want;
+    camHead.copy(head).addScaledVector(camDir, Math.max(0.9, stop - 0.45));
+    return camHead.clone();
+    } catch (err) {
+      if (typeof window !== "undefined") window.__sbCamErr = String(err && err.stack || err);
+      return want;
+    }
+  }
+
   function updateCamera(race, dt, look) {
     const player = race.player;
     if (look && look.overview) {
@@ -1911,12 +1976,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       let ly;
       let lz;
       if (race.result === "escaped") {
-        tx = ship.position.x + 2;
-        ty = ship.position.y + 8;
-        tz = ship.position.z + 22;
+        tx = ship.position.x + 12;
+        ty = Math.max(ship.position.y + 7, (groundAtSafe(ship.position.x, ship.position.z) || ship.position.y) + 4);
+        tz = ship.position.z + 14;
         lx = ship.position.x;
-        ly = ship.position.y + 1.5;
-        lz = ship.position.z - 18;
+        ly = ship.position.y + 2.2;
+        lz = ship.position.z;
       } else {
         tx = player.pos.x - 6;
         ty = player.pos.y + 4.2;
@@ -1932,14 +1997,22 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       camera.lookAt(lx, ly, lz);
       return;
     }
-    if (player.seated) {
-      const tx = course.ship.x + 2;
-      const ty = race.shipY + 8;
-      const tz = course.ship.z + 22;
-      camera.position.x = damp(camera.position.x, tx, 3, dt);
-      camera.position.y = damp(camera.position.y, ty, 3, dt);
-      camera.position.z = damp(camera.position.z, tz, 3, dt);
-      camera.lookAt(course.ship.x, race.shipY + 2.2, course.ship.z - 36);
+    if (player.seated && race.phase === "race") {
+      let lead = null;
+      for (const r of race.racers) {
+        if (r.seated || r.eliminated) continue;
+        if (!lead || r.pos.z > lead.pos.z) lead = r;
+      }
+      const focus = lead || player;
+      const ang = (race.time || 0) * 0.4;
+      const floor = groundAtSafe(focus.pos.x, focus.pos.z);
+      const fy = Math.max((floor == null ? focus.pos.y : floor) + 3.2, focus.pos.y + 3.5);
+      const tx = focus.pos.x + Math.sin(ang) * 9;
+      const tz = focus.pos.z - Math.cos(ang) * 9;
+      camera.position.x = damp(camera.position.x, tx, 2.4, dt);
+      camera.position.y = damp(camera.position.y, fy, 2.4, dt);
+      camera.position.z = damp(camera.position.z, tz, 2.4, dt);
+      camera.lookAt(focus.pos.x, focus.pos.y + 1.2, focus.pos.z + 2);
       return;
     }
     if (dragging) {
@@ -1985,6 +2058,22 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const intro = race.phase === "countdown" ? 1 : 0;
     ty += intro * 2.2;
     tz -= intro * 2.4;
+    const floorY = groundAtSafe(player.pos.x, player.pos.z);
+    const floorBase = floorY == null ? player.pos.y : floorY;
+    const fallingOff = player.vel.y < -1.5 && player.pos.y < floorBase - 0.6;
+    if (fallingOff) {
+      tx = player.pos.x + Math.sin(state.yaw) * 7;
+      tz = player.pos.z - Math.cos(state.yaw) * 7;
+      ty = Math.max(state.fallCamY || floorBase + 4, cameraAboveFloor(-1e9, floorBase));
+      state.fallCamY = ty;
+    } else {
+      state.fallCamY = null;
+      ty = cameraAboveFloor(ty, floorBase);
+    }
+    const solved = solveCamera(new THREE.Vector3(headX, headY, headZ), new THREE.Vector3(tx, ty, tz));
+    tx = solved.x;
+    ty = cameraAboveFloor(solved.y, floorBase);
+    tz = solved.z;
     const sh = (race.shake || 0) * 0.18;
     if (sh > 0.01 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       tx += (Math.random() - 0.5) * sh;
@@ -1994,16 +2083,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     camera.position.x = damp(camera.position.x, tx, spring, dt);
     camera.position.y = damp(camera.position.y, ty, spring, dt);
     camera.position.z = damp(camera.position.z, tz, spring, dt);
-    const fdx = camera.position.x - player.pos.x;
-    const fdy = camera.position.y - (player.pos.y + 1.2);
-    const fdz = camera.position.z - player.pos.z;
-    const fd = Math.hypot(fdx, fdy, fdz) || 1;
-    if (fd < (cfg.camNear || 5)) {
-      const s = (cfg.camNear || 5) / fd;
-      camera.position.x = player.pos.x + fdx * s;
-      camera.position.y = player.pos.y + 1.2 + fdy * s;
-      camera.position.z = player.pos.z + fdz * s;
-    }
+    const camFloor = groundAtSafe(player.pos.x, player.pos.z);
+    camera.position.y = cameraAboveFloor(camera.position.y, camFloor == null ? player.pos.y : camFloor);
     camera.lookAt(player.pos.x, player.pos.y + 1.15, player.pos.z + Math.cos(state.yaw) * 1.4);
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }

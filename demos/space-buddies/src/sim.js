@@ -166,12 +166,15 @@ function walkable(tile) {
 }
 
 function canStep(y, nextY, top) {
-  const feet = Math.min(y, nextY);
-  const climb = top - feet;
-  // Lips and seams up to about 0.4 m. Taller than that is a wall, not a step.
+  const climb = top - y;
   if (climb > 0.42) return false;
-  if (feet > top + 1.6 && nextY > top + 0.5) return false;
+  if (y > top + 0.08 && nextY > top + 0.08) return false;
   return true;
+}
+
+export function cameraAboveFloor(camY, floorY) {
+  const min = floorY + 1;
+  return camY < min ? min : camY;
 }
 
 function platformSurface(p, x, z) {
@@ -646,8 +649,9 @@ function integrate(race, r, wish, dt) {
     if (r.isPlayer) race.events.push({ t: "checkpoint", name: cps[r.cp].name });
   }
 
-  const floor = r.lastSafe ? r.lastSafe.y - 10 : cfg.voidY;
-  if (r.pos.y < cfg.voidY || r.pos.y < floor) doRespawn(race, r);
+  const under = groundAt(race.course, r.pos.x, r.pos.z);
+  const courseY = under ? under.y : (r.lastSafe ? r.lastSafe.y : 0);
+  if (r.pos.y < cfg.voidY || r.pos.y < courseY - 15) doRespawn(race, r);
   const lava = race.course.lava;
   if (r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1 && r.pos.y < race.lavaY + 0.2 && !r.seated) {
     doRespawn(race, r);
@@ -656,7 +660,24 @@ function integrate(race, r, wish, dt) {
   const hsp = hypot(r.vel.x, r.vel.z);
   if (hsp > 0.7 && r.sliding <= 0) r.yaw = Math.atan2(r.vel.x, r.vel.z);
   else if (r.sliding > 0) r.yaw = Math.atan2(r.dashX, r.dashZ);
-  if (!r.grounded && r.vel.y < -2 && r.flail <= 0 && r.lockImmune <= 0) r.flail = 0.2;
+  if (wasGrounded && !r.grounded) r.fallFrom = r.pos.y;
+  if (r.grounded && r.fallFrom != null) {
+    const drop = r.fallFrom - r.pos.y;
+    if (drop > 4.5 && !(r.lockImmune > 0)) {
+      r.flail = 0.7;
+      r.controlLock = Math.max(r.controlLock, 0.35);
+    }
+    r.fallFrom = null;
+  }
+  if (r.flailWas > 0 && r.flail <= 0) {
+    const stand = groundAt(race.course, r.pos.x, r.pos.z);
+    if (stand && Math.abs(r.pos.y - stand.y) < 1.4) {
+      r.pos.y = stand.y;
+      r.vel.y = 0;
+      r.grounded = true;
+    }
+  }
+  r.flailWas = r.flail;
   const supported = r.grounded || supportNear(race, r.pos.x, r.pos.z, r.pos.y);
   if (supported) r.airStuck = 0;
   else r.airStuck = (r.airStuck || 0) + dt;
@@ -1456,7 +1477,9 @@ export function step(race, dt, input) {
       const zone = race.course.zones.find((z) => z.id === playerZone);
       if (zone) race.events.push({ t: "zone", name: zone.name });
     }
-    if (race.phase === "race" && race.shipRound && (race.seatsFilled >= cfg.seats || race.time >= cfg.raceSeconds)) {
+    if (race.phase === "race" && race.shipRound && race.forceLaunch && race.player.seated) {
+      beginLaunch(race);
+    } else if (race.phase === "race" && race.shipRound && (race.seatsFilled >= cfg.seats || race.time >= cfg.raceSeconds)) {
       if (race.player.seated) beginLaunch(race);
       else eliminate(race);
     } else if (race.phase === "race" && !race.shipRound && race.time >= cfg.raceSeconds) {

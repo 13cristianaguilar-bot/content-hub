@@ -160,37 +160,6 @@ export function groundAt(course, x, z) {
       };
     }
   }
-  if (!best) {
-    let nearest = null;
-    let nd = 1e9;
-    for (let i = 0; i < floors.length; i++) {
-      const pad = floors[i];
-      const chunk = course.chunks[pad.chunk];
-      if (!chunk || chunk.state === "falling" || chunk.state === "gone") continue;
-      const dx = x - pad.x;
-      const dz = z - pad.z;
-      const d = Math.hypot(dx, dz);
-      const reach = Math.max(pad.rx, pad.rz) + (pad.zone === "meadow" ? 8 : 3.6);
-      if (d < reach && d < nd) {
-        nd = d;
-        nearest = pad;
-      }
-    }
-    if (nearest) {
-      const chunk = course.chunks[nearest.chunk];
-      best = {
-        y: nearest.y,
-        x: nearest.x,
-        z,
-        ice: nearest.zone === "ice",
-        conveyX: nearest.conveyX || 0,
-        zone: nearest.zone,
-        chunk,
-        state: chunk.state,
-        fragile: !!chunk.fragile,
-      };
-    }
-  }
   if (!best && course.islands) {
     for (const isle of course.islands) {
       const dx = x - isle.x;

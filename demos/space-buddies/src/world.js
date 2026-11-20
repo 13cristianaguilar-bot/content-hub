@@ -2058,23 +2058,36 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   scene.add(stage);
 
   function showBuddy(dt) {
+    heavens.visible = false;
     stage.visible = true;
+    stage.position.set(80, 12, -40);
     for (let i = 1; i < visuals.length; i++) visuals[i].group.visible = false;
     const v = visuals[0];
     if (!v) return;
     v.group.visible = true;
-    v.group.position.set(0, 0.2, 0);
+    if (v.tag) v.tag.visible = false;
+    v.group.position.set(80, 12.15, -40);
+    v.group.rotation.x = 0;
+    v.group.rotation.z = 0;
+    v.group.scale.set(1, 1, 1);
     v.group.rotation.y += dt * 0.7;
     v.mixer.update(dt);
     setAnim(v, "Idle", 1);
     if (v.antennas) {
       for (let a = 0; a < v.antennas.length; a++) v.antennas[a].rotation.z = Math.sin(performance.now() * 0.003 + a) * 0.3;
     }
-    camera.position.set(1.7, 1.45, 3.1);
-    camera.lookAt(0, 1.05, 0);
+    if (v.lids) {
+      const blink = Math.sin(performance.now() * 0.002) > 0.97 ? 1 : 0.08;
+      for (const lid of v.lids) lid.scale.y = blink;
+    }
+    camera.fov = cfg.fovPortrait;
+    camera.updateProjectionMatrix();
+    camera.position.set(81.6, 13.05, -36.2);
+    camera.lookAt(80, 12.15, -40);
   }
 
   function hideBuddy() {
+    heavens.visible = true;
     stage.visible = false;
     for (const v of visuals) v.group.visible = true;
   }

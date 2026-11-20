@@ -246,6 +246,8 @@ function applyRound() {
   roundTitle.textContent = p.name;
   roundSub.textContent = p.sub;
   roundEl.hidden = false;
+  const roundBanner = roundEl.querySelector(".sb-banner");
+  if (window.SBUI && roundBanner) SBUI.slam(roundBanner);
   setTimeout(() => { roundEl.hidden = true; }, 1400);
 }
 
@@ -452,12 +454,8 @@ function fillPodium(race) {
     const r = rows[i];
     if (!el || !r) continue;
     el.textContent = r.isPlayer ? "YOU" : "BUDDY";
-    el.style.color = r.color || "#1e2440";
+    el.style.color = "#1e2440";
   }
-}
-
-function buzz(ms) {
-  try { if (navigator.vibrate) navigator.vibrate(ms); } catch (err) { /* unsupported */ }
 }
 
 document.getElementById("app").addEventListener("pointerdown", (e) => {
@@ -660,10 +658,7 @@ function handleEvents() {
     else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
     else if (e.t === "bump") {
       audio.play("bump", e.id === 0 ? 0.5 : 0.22, 0.06);
-      if (e.id === 0 && e.big) {
-        hitStop = 0.08;
-        if (navigator.vibrate) navigator.vibrate(24);
-      }
+      if (e.id === 0 && e.big) hitStop = 0.08;
     } else if (e.t === "dive" && e.id === 0) audio.play("jump", 0.28, 0.04);
     else if (e.t === "crack") cracked = true;
     else if (e.t === "seat") {
@@ -675,7 +670,6 @@ function handleEvents() {
       }
       if (e.id === 0) {
         showToast("SEAT " + (e.seat + 1) + " LOCKED");
-        if (navigator.vibrate) navigator.vibrate([16, 30, 16]);
       }
     } else if (e.t === "lastseat") audio.play("last", 0.7, 0.2);
     else if (e.t === "launch") audio.play("launch", 0.65, 0.2);

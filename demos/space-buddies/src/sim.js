@@ -911,6 +911,7 @@ function hazards(race, dt) {
       r.boost = 1.15;
       r.canGlide = 2.4;
       r.glided = false;
+      pad.pulse = 0.28;
       race.events.push({ t: "jump", id: r.id, pad: true });
     }
   }
@@ -953,7 +954,12 @@ function hazards(race, dt) {
   }
 
   for (const pdl of race.pendulums) {
-    const ang = Math.sin(race.time * pdl.speed + pdl.phase) * pdl.amp;
+    const cycle = (race.time * pdl.speed + pdl.phase) % (Math.PI * 2);
+    const hold = 0.72;
+    let swingN;
+    if (cycle < hold) swingN = 1;
+    else swingN = Math.cos(((cycle - hold) / (Math.PI * 2 - hold)) * Math.PI * 2);
+    const ang = swingN * pdl.amp;
     pdl.bobX = pdl.x + Math.sin(ang) * pdl.len;
     pdl.bobY = pdl.y - Math.cos(ang) * pdl.len;
     pdl.bobZ = pdl.z;

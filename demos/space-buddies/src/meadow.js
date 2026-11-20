@@ -67,7 +67,13 @@ function tintOf(name) {
   return 0xfff6e5;
 }
 
-function toonMat(src, gradientMap, override) {
+const windTime = { value: 0 };
+
+export function tickFoliage(time) {
+  windTime.value = time;
+}
+
+function toonMat(src, gradientMap, override, wind) {
   const name = (src && src.name) || "";
   const mat = new THREE.MeshToonMaterial({
     color: override ? override(name) : tintOf(name),
@@ -76,6 +82,13 @@ function toonMat(src, gradientMap, override) {
     name,
   });
   mat.onBeforeCompile = (shader) => {
+    if (wind) {
+      shader.uniforms.uWindTime = windTime;
+      shader.vertexShader = "uniform float uWindTime;\n" + shader.vertexShader.replace(
+        "#include <begin_vertex>",
+        "#include <begin_vertex>\nfloat sway = sin(uWindTime * 1.7 + position.x * 0.45 + position.z * 0.2) * 0.075 * smoothstep(0.3, 1.8, position.y);\ntransformed.x += sway;\ntransformed.z += sway * 0.35;"
+      );
+    }
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <opaque_fragment>",
       "float rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.6);\n\toutgoingLight += rim * vec3(1.0, 0.96, 0.82) * 0.22;\n\t#include <opaque_fragment>"
@@ -92,7 +105,7 @@ function recolor(root, gradientMap) {
   });
 }
 
-function partsOf(gltf, gradientMap, override) {
+function partsOf(gltf, gradientMap, override, wind) {
   gltf.scene.updateWorldMatrix(true, true);
   const parts = [];
   gltf.scene.traverse((obj) => {
@@ -100,15 +113,15 @@ function partsOf(gltf, gradientMap, override) {
     const geom = obj.geometry.clone();
     geom.applyMatrix4(obj.matrixWorld);
     const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-    parts.push({ geom, mat: toonMat(src, gradientMap, override) });
+    parts.push({ geom, mat: toonMat(src, gradientMap, override, wind) });
   });
   const box = new THREE.Box3().setFromObject(gltf.scene);
   return { parts, lift: -box.min.y };
 }
 
-function scatter(scene, gltf, gradientMap, spots, override) {
+function scatter(scene, gltf, gradientMap, spots, override, wind) {
   if (!gltf || !spots.length) return;
-  const { parts, lift } = partsOf(gltf, gradientMap, override);
+  const { parts, lift } = partsOf(gltf, gradientMap, override, wind);
   const dummy = new THREE.Object3D();
   for (const part of parts) {
     const mesh = new THREE.InstancedMesh(part.geom, part.mat, spots.length);
@@ -124,7 +137,6 @@ function scatter(scene, gltf, gradientMap, spots, override) {
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
   }
-  if (spots.length > 8 || spots.some((spot) => spot.s > 1.1)) return;
   const shadow = new THREE.InstancedMesh(
     new THREE.CircleGeometry(1, 12),
     new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.22, depthWrite: false }),
@@ -226,16 +238,16 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   const mounds = (course.floors || []).filter((p) => p.zone === "meadow" && p.rx > 5 && p.rx < 9);
   const pads = mounds.map((p, i) => ({ x: p.x, z: p.z, y: p.y, rot: i, s: 0.85 }));
 
-  scatter(scene, gltfs.tree, gradientMap, trees);
-  scatter(scene, gltfs.treeFat, gradientMap, fats);
-  scatter(scene, gltfs.pine, gradientMap, pines);
-  scatter(scene, gltfs.bushLarge, gradientMap, bushes);
-  scatter(scene, gltfs.bush, gradientMap, cluster(hub.x + 12, hub.z + 8, 4, 2, 0.7));
-  scatter(scene, gltfs.flowerRed, gradientMap, flowersA.filter((_, i) => i % 2 === 0));
-  scatter(scene, gltfs.flowerYellow, gradientMap, flowersA.filter((_, i) => i % 2 === 1));
-  scatter(scene, gltfs.flowerPurple, gradientMap, flowersB);
-  scatter(scene, gltfs.grass, gradientMap, tufts);
-  scatter(scene, gltfs.grassLarge, gradientMap, cluster(hub.x - 9, hub.z - 8, 4, 1.8, 0.48));
+  scatter(scene, gltfs.tree, gradientMap, trees, null, true);
+  scatter(scene, gltfs.treeFat, gradientMap, fats, null, true);
+  scatter(scene, gltfs.pine, gradientMap, pines, null, true);
+  scatter(scene, gltfs.bushLarge, gradientMap, bushes, null, true);
+  scatter(scene, gltfs.bush, gradientMap, cluster(hub.x + 12, hub.z + 8, 4, 2, 0.7), null, true);
+  scatter(scene, gltfs.flowerRed, gradientMap, flowersA.filter((_, i) => i % 2 === 0), null, true);
+  scatter(scene, gltfs.flowerYellow, gradientMap, flowersA.filter((_, i) => i % 2 === 1), null, true);
+  scatter(scene, gltfs.flowerPurple, gradientMap, flowersB, null, true);
+  scatter(scene, gltfs.grass, gradientMap, tufts, null, true);
+  scatter(scene, gltfs.grassLarge, gradientMap, cluster(hub.x - 9, hub.z - 8, 4, 1.8, 0.48), null, true);
   scatter(scene, gltfs.rockLarge, gradientMap, rocks);
   scatter(scene, gltfs.rock, gradientMap, cluster(hub.x + 15, hub.z - 1, 4, 1.6, 0.55));
   scatter(scene, gltfs.mushroomTall, gradientMap, shrooms);
@@ -303,17 +315,17 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   const ice = (course.hubs || []).find((h) => h.zone === "ice");
   const climb = (course.hubs || []).find((h) => h.zone === "climb");
   if (sky) {
-    scatter(scene, gltfs.pine, gradientMap, ring(sky.x, sky.z, 6, 14, 0.42, 4.2, 0.2), SKY_TINT);
-    scatter(scene, gltfs.bush, gradientMap, ring(sky.x, sky.z, 8, 10, 0.45, 4.1, 0.6), SKY_TINT);
+    scatter(scene, gltfs.pine, gradientMap, ring(sky.x, sky.z, 6, 14, 0.42, 4.2, 0.2), SKY_TINT, true);
+    scatter(scene, gltfs.bush, gradientMap, ring(sky.x, sky.z, 8, 10, 0.45, 4.1, 0.6), SKY_TINT, true);
     scatter(scene, gltfs.cliffTop, gradientMap, ring(sky.x, sky.z, 6, 28, 1, 2, 0.4), SKY_TINT);
   }
   if (ice) {
-    scatter(scene, gltfs.pine, gradientMap, ring(ice.x, ice.z, 7, 14, 0.4, 3.2, 0.3), ICE_TINT);
+    scatter(scene, gltfs.pine, gradientMap, ring(ice.x, ice.z, 7, 14, 0.4, 3.2, 0.3), ICE_TINT, true);
     scatter(scene, gltfs.rockLarge, gradientMap, ring(ice.x, ice.z, 6, 16, 0.7, 3.1, 0.8), ICE_TINT);
     scatter(scene, gltfs.cliff, gradientMap, ring(ice.x, ice.z, 12, 18, 0.5, 1.6, 0.1), ICE_TINT);
   }
   if (climb) {
-    scatter(scene, gltfs.tree, gradientMap, ring(climb.x, climb.z, 6, 13, 0.4, 3.2, 0.5), CLIMB_TINT);
+    scatter(scene, gltfs.tree, gradientMap, ring(climb.x, climb.z, 6, 13, 0.4, 3.2, 0.5), CLIMB_TINT, true);
     scatter(scene, gltfs.rockLarge, gradientMap, ring(climb.x, climb.z, 5, 15, 0.75, 3, 1), CLIMB_TINT);
     scatter(scene, gltfs.cliffLarge, gradientMap, ring(climb.x, climb.z, 10, 18, 0.55, 1.4, 0.2), CLIMB_TINT);
   }

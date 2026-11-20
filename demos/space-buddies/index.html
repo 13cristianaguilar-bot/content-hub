@@ -53,6 +53,13 @@ html, body {
   -webkit-user-select: none;
 }
 #app { position: fixed; inset: 0; }
+#vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background: radial-gradient(ellipse at center, transparent 56%, rgba(18, 22, 46, 0.32) 100%);
+}
 [hidden] { display: none !important; }
 #view { width: 100%; height: 100%; display: block; touch-action: none; }
 button { font-family: inherit; touch-action: manipulation; }
@@ -208,19 +215,24 @@ button { font-family: inherit; touch-action: manipulation; }
   font-size: 13px;
   box-shadow: 0 6px 0 #3aaa78;
 }
+.hud-tools {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  pointer-events: auto;
+}
 #pause, #mute {
-  position: absolute;
-  top: calc(12px + env(safe-area-inset-top));
+  position: static;
   z-index: 6;
   border: 0;
   border-radius: 999px;
   font-weight: 700;
   background: var(--cream);
   color: var(--ink);
-  padding: 8px 12px;
+  padding: 6px 12px;
+  font-size: 13px;
 }
-#pause { left: calc(12px + env(safe-area-inset-left)); top: calc(86px + env(safe-area-inset-top)); }
-#mute { left: calc(96px + env(safe-area-inset-left)); top: calc(86px + env(safe-area-inset-top)); }
 #fade {
   position: absolute; inset: 0; background: #1e2440; opacity: 0; pointer-events: none; z-index: 7;
   transition: opacity 0.18s linear;
@@ -408,10 +420,9 @@ button { font-family: inherit; touch-action: manipulation; }
 <body>
 <div id="app">
   <canvas id="view"></canvas>
+  <div id="vignette"></div>
   <div id="danger"></div>
   <div id="fade"></div>
-  <button id="pause" type="button" hidden>PAUSE</button>
-  <button id="mute" type="button" hidden>MUTE</button>
   <div id="hud" hidden>
     <div>
       <div id="timer" class="pill">3:00</div>
@@ -419,11 +430,15 @@ button { font-family: inherit; touch-action: manipulation; }
     </div>
     <div class="midpills">
       <div id="place" class="pill">1ST</div>
-      <div id="coins" class="pill">0 COINS</div>
     </div>
     <div class="seatbox">
       <div id="seats"></div>
       <div id="seats-label">SEATS 0/8</div>
+    </div>
+    <div id="coins" class="pill">0 COINS</div>
+    <div class="hud-tools">
+      <button id="mute" type="button">MUTE</button>
+      <button id="pause" type="button">PAUSE</button>
     </div>
     <div id="last-banner" hidden>LAST SEAT!</div>
   </div>

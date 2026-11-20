@@ -1,0 +1,973 @@
+import { COLORS } from "./config.js";
+import { tileAt } from "./course.js";
+
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function rand() {
+    a |= 0;
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function clamp(v, a, b) {
+  return Math.max(a, Math.min(b, v));
+}
+
+function hypot(x, z) {
+  return Math.hypot(x, z);
+}
+
+export function createRace(course, cfg, seed = 1) {
+  const rand = mulberry32(seed || 1);
+  const spots = course.spawns.slice();
+  const playerSpot = spots.find((s) => s.col === 0 && s.row === spots[0].row + 3) || spots[Math.min(8, spots.length - 1)];
+  const rest = spots.filter((s) => s !== playerSpot);
+  for (let i = rest.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    const tmp = rest[i];
+    rest[i] = rest[j];
+    rest[j] = tmp;
+  }
+
+  const racers = [];
+  for (let i = 0; i < cfg.racers; i++) {
+    const spot = i === 0 ? playerSpot : rest[i - 1] || playerSpot;
+    const speed = i === 0 ? cfg.playerSpeed : cfg.botSpeeds[Math.min(i - 1, cfg.botSpeeds.length - 1)];
+    racers.push({
+      id: i,
+      isPlayer: i === 0,
+      useAI: i !== 0,
+      color: COLORS[i % COLORS.length],
+      pos: { x: spot.x, y: spot.y, z: spot.z },
+      vel: { x: 0, y: 0, z: 0 },
+      yaw: 0,
+      grounded: true,
+      platformId: null,
+      coyote: cfg.coyoteTime,
+      buffer: 0,
+      ungroundT: 0,
+      flail: 0,
+      invuln: 0.4,
+      controlLock: 0,
+      sliding: 0,
+      squash: 0,
+      seated: false,
+      seatIndex: -1,
+      eliminated: false,
+      cp: 0,
+      padCd: 0,
+      bumpCd: 0,
+      spinCd: 0,
+      diveCd: 0,
+      knockCd: 0,
+      diving: false,
+      wasDiving: false,
+      dashX: 0,
+      dashZ: 1,
+      onIce: false,
+      emote: "idle",
+      attached: false,
+      profile: {
+        speed,
+        skill: speed > 0.96 ? 0.94 : speed > 0.86 ? 0.78 : 0.5,
+        mistake: i === 0 ? 0 : speed > 0.96 ? 0.012 : speed > 0.86 ? 0.035 : 0.07,
+        phase: rand() * 6,
+      },
+      wait: i === 0 ? 0 : 0.02 + rand() * (speed > 0.9 ? 0.12 : 0.28),
+      stumble: 0,
+      wp: 0,
+    });
+  }
+
+  const race = {
+    cfg,
+    course,
+    racers,
+    player: racers[0],
+    seed,
+    rand,
+    phase: "countdown",
+    countClock: 0,
+    countCue: -1,
+    time: 0,
+    collapseZ: course.zones[0].z0 - 16,
+    collapseSpeed: 1,
+    seats: Array(cfg.seats).fill(null),
+    seatsFilled: 0,
+    lastSeatEvent: false,
+    result: null,
+    launchT: 0,
+    launchV: 0,
+    launchY: 0,
+    shipY: course.ship.y,
+    events: [],
+    platforms: course.platforms.map((p) => ({ ...p })),
+    spinners: course.spinners.map((s) => ({ ...s })),
+    geysers: course.geysers.map((g) => ({ ...g })),
+    rollers: course.rollers.map((r) => ({ ...r })),
+    hoppers: course.hoppers.map((h) => ({ ...h })),
+    flyers: course.flyers.map((f) => ({ ...f })),
+    pendulums: course.pendulums.map((p) => ({ ...p, bobX: p.x, bobY: p.y - p.len, bobZ: p.z })),
+    sweepers: course.sweepers.map((s) => ({ ...s })),
+    lavaY: cfg.lavaStartY,
+    shake: 0,
+    activated: false,
+    zoneId: "meadow",
+  };
+  const span = Math.max(30, course.ship.z - course.zones[0].z0);
+  race.collapseSpeed = span / Math.max(8, cfg.collapseArrive - cfg.collapseDelay);
+  return race;
+}
+
+export function resetRace(race, seed) {
+  for (const tile of race.course.tiles) {
+    tile.state = "solid";
+    tile.crackT = 0;
+    tile.fallT = 0;
+    tile.stepped = false;
+    tile.dirty = true;
+    tile.tilt = 0;
+  }
+  const next = createRace(race.course, race.cfg, seed || ((race.seed + 17) >>> 0));
+  Object.assign(race, next);
+  return race;
+}
+
+function walkable(tile) {
+  return tile && (tile.state === "solid" || tile.state === "cracking");
+}
+
+function canStep(y, nextY, top, step) {
+  if (y < top - step) return false;
+  if (y > top + 1.35 && nextY > top + 0.4) return false;
+  return nextY <= top + 0.28 || y <= top + 0.2;
+}
+
+function sampleGround(race, x, z, y, nextY) {
+  const step = race.cfg.stepUp;
+  let best = null;
+  const plats = race.platforms;
+  for (let i = 0; i < plats.length; i++) {
+    const p = plats[i];
+    const dx = x - p.x;
+    const dz = z - p.z;
+    if (dx * dx + dz * dz > p.radius * p.radius) continue;
+    if (!canStep(y, nextY, p.y, step + 0.1)) continue;
+    if (!best || p.y >= best.y) best = { y: p.y, platformId: i, tile: null };
+  }
+  const tile = tileAt(race.course, x, z);
+  if (walkable(tile) && canStep(y, nextY, tile.y, step)) {
+    if (!best || tile.y >= best.y - 0.02) best = { y: tile.y, platformId: null, tile };
+  }
+  return best;
+}
+
+function supportNear(race, x, z, y) {
+  const tile = tileAt(race.course, x, z);
+  if (walkable(tile) && Math.abs(tile.y - y) < 1.4) return true;
+  for (const p of race.platforms) {
+    const dx = x - p.x;
+    const dz = z - p.z;
+    if (dx * dx + dz * dz <= p.radius * p.radius && Math.abs(p.y - y) < 1.6) return true;
+  }
+  return false;
+}
+
+function inWind(race, r) {
+  for (const w of race.course.winds) {
+    if (r.pos.z >= w.z0 && r.pos.z <= w.z1 && r.pos.x >= w.x0 && r.pos.x <= w.x1 && r.pos.y >= w.y0 && r.pos.y <= w.y1) {
+      return w;
+    }
+  }
+  return null;
+}
+
+function knock(race, r, ix, iz, iy) {
+  if (r.seated || r.eliminated || r.invuln > 0 || r.knockCd > 0) return;
+  r.vel.x += ix;
+  r.vel.z += iz;
+  r.vel.y = Math.max(r.vel.y, iy);
+  r.grounded = false;
+  r.platformId = null;
+  r.ungroundT = Math.max(r.ungroundT, 0.08);
+  r.flail = Math.max(r.flail, race.cfg.stunTime);
+  r.controlLock = Math.max(r.controlLock, race.cfg.stunTime);
+  r.knockCd = race.cfg.knockCooldown;
+  r.sliding = 0;
+  race.events.push({ t: "bump", id: r.id, big: true });
+  if (r.isPlayer) race.shake = Math.max(race.shake, 0.45);
+}
+
+function findRespawnTile(race, cp) {
+  const map = race.course.map;
+  const cols = [0, -1, 1, -2, 2, 3, -3];
+  for (let back = 0; back < 8; back++) {
+    for (const col of cols) {
+      const t = map.get(col + "," + (cp.row - back));
+      if (walkable(t) && !t.skirt) return t;
+    }
+  }
+  const lip = Math.max(0, Math.round(race.collapseZ / 3) + 2);
+  for (let fwd = 0; fwd < 16; fwd++) {
+    for (const col of cols) {
+      const t = map.get(col + "," + (lip + fwd));
+      if (walkable(t) && !t.skirt && t.zone !== "ship") return t;
+    }
+  }
+  for (const t of race.course.tiles) {
+    if (walkable(t) && !t.skirt) return t;
+  }
+  return null;
+}
+
+function doRespawn(race, r) {
+  const cp = race.course.checkpoints[r.cp] || race.course.checkpoints[0];
+  const tile = findRespawnTile(race, cp);
+  if (!tile) return;
+  r.pos.x = tile.x;
+  r.pos.y = tile.y + 1.25;
+  r.pos.z = tile.z;
+  r.vel.x = 0;
+  r.vel.y = 6.2;
+  r.vel.z = 1.2;
+  r.grounded = false;
+  r.platformId = null;
+  r.flail = 0.7;
+  r.invuln = 0.85;
+  r.controlLock = 0.25;
+  r.sliding = 0;
+  r.diving = false;
+  r.wasDiving = false;
+  race.events.push({ t: "respawn", id: r.id });
+  if (r.isPlayer) race.shake = Math.max(race.shake, 0.3);
+}
+
+function pound(race, r) {
+  const cfg = race.cfg;
+  for (const o of race.racers) {
+    if (o === r || o.seated || o.invuln > 0) continue;
+    const dx = o.pos.x - r.pos.x;
+    const dz = o.pos.z - r.pos.z;
+    const d = Math.hypot(dx, dz);
+    if (d < cfg.poundRadius && Math.abs(o.pos.y - r.pos.y) < 1.5) {
+      const nx = d > 0.05 ? dx / d : 1;
+      const nz = d > 0.05 ? dz / d : 0;
+      o.vel.x += nx * cfg.poundPush;
+      o.vel.z += nz * cfg.poundPush;
+      o.vel.y = Math.max(o.vel.y, cfg.poundUp);
+      o.grounded = false;
+      o.flail = 0.35;
+      o.ungroundT = 0.06;
+    }
+  }
+  race.events.push({ t: "bump", id: r.id, big: true });
+}
+
+function steer(r, wishX, wishZ, dt, rate, maxSp, windX) {
+  const mag = hypot(wishX, wishZ);
+  const speed = maxSp * Math.min(1, mag);
+  let dx = 0;
+  let dz = 0;
+  if (mag > 0.001) {
+    dx = wishX / mag;
+    dz = wishZ / mag;
+  }
+  const tx = dx * speed + (windX || 0);
+  const tz = dz * speed;
+  const dvx = tx - r.vel.x;
+  const dvz = tz - r.vel.z;
+  const dv = Math.hypot(dvx, dvz);
+  const step = Math.min(dv, rate * dt);
+  if (dv > 0.0001) {
+    r.vel.x += (dvx / dv) * step;
+    r.vel.z += (dvz / dv) * step;
+  }
+}
+
+function integrate(race, r, wish, dt) {
+  const cfg = race.cfg;
+  if (r.seated || r.eliminated) return;
+  if (r.controlLock > 0) {
+    r.controlLock -= dt;
+    wish = { x: 0, z: 0, jump: false, dive: false };
+  }
+  if (r.invuln > 0) r.invuln -= dt;
+  if (r.padCd > 0) r.padCd -= dt;
+  if (r.bumpCd > 0) r.bumpCd -= dt;
+  if (r.spinCd > 0) r.spinCd -= dt;
+  if (r.diveCd > 0) r.diveCd -= dt;
+  if (r.knockCd > 0) r.knockCd -= dt;
+  if (r.flail > 0) r.flail -= dt;
+  if (r.squash > 0) r.squash = Math.max(0, r.squash - dt * 3.2);
+
+  if (r.grounded && r.platformId != null) {
+    const p = race.platforms[r.platformId];
+    if (p) {
+      r.pos.x += p.x - p.prevX;
+      r.pos.z += p.z - p.prevZ;
+      if (p.axis === "spin") {
+        const dx = r.pos.x - p.x;
+        const dz = r.pos.z - p.z;
+        r.vel.x += -dz * p.speed * dt * 5.5;
+        r.vel.z += dx * p.speed * dt * 5.5;
+      }
+    }
+  }
+
+  if (r.grounded) r.coyote = cfg.coyoteTime;
+  else r.coyote = Math.max(0, r.coyote - dt);
+  if (wish.jump) r.buffer = cfg.jumpBuffer;
+  else r.buffer = Math.max(0, r.buffer - dt);
+
+  if (wish.dive && r.diveCd <= 0) {
+    const mag = hypot(wish.x, wish.z);
+    if (mag > 0.15) {
+      r.dashX = wish.x / mag;
+      r.dashZ = wish.z / mag;
+    } else {
+      r.dashX = Math.sin(r.yaw);
+      r.dashZ = Math.cos(r.yaw);
+    }
+    if (r.grounded) {
+      r.sliding = cfg.diveDashTime;
+      r.diveCd = cfg.diveCooldown;
+      race.events.push({ t: "dive", id: r.id });
+    } else {
+      r.vel.y = -cfg.diveFall;
+      r.diving = true;
+      r.wasDiving = true;
+      r.diveCd = cfg.diveCooldown;
+      r.grounded = false;
+      race.events.push({ t: "dive", id: r.id });
+    }
+  }
+
+  const wind = inWind(race, r);
+  const windX = wind ? wind.ax * cfg.windPush : 0;
+  const rate = r.controlLock > 0 ? 8 : r.onIce ? (hypot(wish.x, wish.z) > 0.1 ? cfg.iceAccel : cfg.iceFriction) : (hypot(wish.x, wish.z) > 0.08 ? cfg.accel : cfg.friction);
+  const maxSp = cfg.maxSpeed * (r.profile.speed || 1);
+
+  if (r.sliding > 0) {
+    r.sliding -= dt;
+    r.vel.x = r.dashX * cfg.diveDashSpeed;
+    r.vel.z = r.dashZ * cfg.diveDashSpeed;
+    // A little steering so the slide is not a blind commit.
+    r.vel.x += wish.x * 10 * dt;
+    r.vel.z += wish.z * 10 * dt;
+  } else if (r.grounded) {
+    steer(r, wish.x, wish.z, dt, rate, maxSp, windX);
+    if (r.groundTile && r.groundTile.conveyX) r.vel.x += r.groundTile.conveyX * dt;
+  } else {
+    r.vel.x += wish.x * cfg.airAccel * dt + windX * dt * 0.6;
+    r.vel.z += wish.z * cfg.airAccel * dt;
+    const cap = r.diving ? cfg.diveDashSpeed : maxSp * 1.18;
+    const h = hypot(r.vel.x, r.vel.z);
+    if (h > cap) {
+      r.vel.x *= cap / h;
+      r.vel.z *= cap / h;
+    }
+  }
+
+  let jumped = false;
+  if (r.buffer > 0 && r.ungroundT <= 0 && (r.grounded || r.coyote > 0) && r.sliding <= 0) {
+    r.vel.y = cfg.jumpVel;
+    r.grounded = false;
+    r.platformId = null;
+    r.coyote = 0;
+    r.buffer = 0;
+    r.ungroundT = cfg.ungroundTime;
+    jumped = true;
+    race.events.push({ t: "jump", id: r.id });
+  }
+
+  let g = cfg.gravity;
+  if (r.vel.y < 0) g *= cfg.fallGravityMul;
+  r.vel.y -= g * dt;
+  if (r.vel.y < -cfg.maxFallSpeed) r.vel.y = -cfg.maxFallSpeed;
+  r.vel.x = clamp(r.vel.x, -24, 24);
+  r.vel.z = clamp(r.vel.z, -24, 24);
+  if (r.ungroundT > 0) r.ungroundT -= dt;
+
+  r.pos.x += r.vel.x * dt;
+  r.pos.z += r.vel.z * dt;
+  const nextY = r.pos.y + r.vel.y * dt;
+
+  if (r.ungroundT > 0 || jumped) {
+    r.pos.y = nextY;
+    r.grounded = false;
+    r.platformId = null;
+  } else {
+    const gnd = sampleGround(race, r.pos.x, r.pos.z, r.pos.y, nextY);
+    if (gnd && r.vel.y <= 0.85) {
+      const impact = -r.vel.y;
+      const wasAir = !r.grounded;
+      r.pos.y = gnd.y;
+      r.vel.y = 0;
+      r.grounded = true;
+      r.platformId = gnd.platformId;
+      r.groundTile = gnd.tile;
+      r.onIce = !!(gnd.tile && gnd.tile.ice);
+      r.diving = false;
+      if (wasAir && impact > 2.4) {
+        r.squash = clamp(impact / 16, 0.12, 1);
+        race.events.push({ t: "land", id: r.id, impact });
+        if (r.wasDiving && impact > 8) pound(race, r);
+      }
+      r.wasDiving = false;
+      if (gnd.tile && gnd.tile.state === "solid" && !gnd.tile.skirt) {
+        if (gnd.tile.fragile && !gnd.tile.stepped) {
+          gnd.tile.stepped = true;
+          gnd.tile.state = "cracking";
+          gnd.tile.crackT = cfg.fragileCrack;
+          gnd.tile.dirty = true;
+          race.events.push({ t: "crack" });
+        }
+      }
+    } else {
+      r.pos.y = nextY;
+      r.grounded = false;
+      r.platformId = null;
+      r.groundTile = null;
+      r.onIce = false;
+    }
+  }
+
+  const cps = race.course.checkpoints;
+  while (r.grounded && r.cp < cps.length - 1 && r.pos.z > cps[r.cp + 1].z - 1.5) {
+    r.cp++;
+    if (r.isPlayer) race.events.push({ t: "checkpoint", name: cps[r.cp].name });
+  }
+
+  if (r.pos.y < cfg.voidY) doRespawn(race, r);
+  const lava = race.course.lava;
+  if (r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1 && r.pos.y < race.lavaY + 0.2 && !r.seated) {
+    doRespawn(race, r);
+  }
+
+  const hsp = hypot(r.vel.x, r.vel.z);
+  if (hsp > 0.7 && r.sliding <= 0) r.yaw = Math.atan2(r.vel.x, r.vel.z);
+  else if (r.sliding > 0) r.yaw = Math.atan2(r.dashX, r.dashZ);
+  if (!r.grounded && r.vel.y < -2) r.flail = Math.max(r.flail, 0.12);
+}
+
+function botWish(race, r, dt) {
+  const empty = { x: 0, z: 0, jump: false, dive: false };
+  if (r.wait > 0) {
+    r.wait -= dt;
+    return empty;
+  }
+  if (r.stumble > 0) {
+    r.stumble -= dt;
+    return empty;
+  }
+  const p = r.profile;
+  if (race.rand() < p.mistake * dt) r.stumble = 0.18 + race.rand() * 0.28;
+
+  const wps = race.course.waypoints;
+  while (r.wp < wps.length - 1 && r.pos.z > wps[r.wp].z - 0.4) r.wp++;
+  const target = wps[Math.min(r.wp, wps.length - 1)];
+  let tx = target.x;
+  let tz = target.z;
+  let ty = target.y;
+
+  if (target.z - r.pos.z > 6) {
+    let best = null;
+    let bd = 1e9;
+    for (const plat of race.platforms) {
+      if (plat.kind !== "ferry") continue;
+      if (plat.z < r.pos.z + 0.5 || plat.z > target.z + 1) continue;
+      const d = plat.z - r.pos.z;
+      if (d < bd) {
+        bd = d;
+        best = plat;
+      }
+    }
+    if (best) {
+      tx = best.x;
+      tz = best.z;
+      ty = best.y;
+    }
+  }
+
+  // Stay near the path center when something shoves you.
+  let dx = tx - r.pos.x;
+  let dz = tz - r.pos.z;
+  if (inWind(race, r)) dx -= 2.4 * p.skill;
+
+  for (const s of race.spinners) {
+    const dzs = s.z - r.pos.z;
+    if (dzs > -0.2 && dzs < 7 && Math.abs(s.x - r.pos.x) < 2.2) {
+      dx += (r.pos.x >= s.x ? 1 : -1) * 3.2 * p.skill;
+    }
+  }
+  for (const sw of race.sweepers) {
+    const dzs = sw.z - r.pos.z;
+    if (dzs > 0.3 && dzs < 6 && Math.abs(sw.x - r.pos.x) < 1.6) {
+      if (sw.full && p.skill > 0.4) {
+        // Jump the low bar.
+      } else {
+        dx += (r.pos.x >= sw.x ? 1 : -1) * 3 * p.skill;
+      }
+    }
+  }
+  for (const roller of race.rollers) {
+    if (Math.abs(roller.z - r.pos.z) < 3 && Math.abs(roller.x - r.pos.x) < 3) {
+      dz += 2.5;
+      dx += (r.pos.x >= roller.x ? 1 : -1) * 2;
+    }
+  }
+
+  const mag = Math.hypot(dx, dz) || 1;
+  dx /= mag;
+  dz /= mag;
+
+  let jump = false;
+  const ax = r.pos.x + dx * 1.05;
+  const az = r.pos.z + dz * 1.05;
+  const ahead = supportNear(race, ax, az, r.pos.y);
+  if (r.grounded && !ahead) {
+    const far = supportNear(race, r.pos.x + dx * 3.2, r.pos.z + dz * 4.2, r.pos.y) || ty > r.pos.y - 0.4;
+    if (far) jump = true;
+    else dz *= 0.15;
+  }
+  if (r.grounded && ty > r.pos.y + 0.65 && Math.hypot(tx - r.pos.x, tz - r.pos.z) < 3.2) jump = true;
+
+  let padNear = false;
+  for (const pad of race.course.pads) {
+    const dzp = pad.z - r.pos.z;
+    if (dzp > -0.2 && dzp < 2 && Math.abs(pad.x - r.pos.x) < 1.4) padNear = true;
+  }
+  if (padNear) jump = false;
+
+  for (const sw of race.sweepers) {
+    if (!sw.full) continue;
+    const dzs = sw.z - r.pos.z;
+    if (r.grounded && dzs > 0.6 && dzs < 2.8) jump = true;
+  }
+
+  return { x: dx, z: dz, jump, dive: false };
+}
+
+function separate(race) {
+  const cfg = race.cfg;
+  const list = race.racers;
+  const min = cfg.bodyRadius * 2.05;
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i];
+    if (a.seated || a.eliminated) continue;
+    for (let j = i + 1; j < list.length; j++) {
+      const b = list[j];
+      if (b.seated || b.eliminated) continue;
+      let dx = b.pos.x - a.pos.x;
+      let dz = b.pos.z - a.pos.z;
+      const dy = Math.abs(a.pos.y - b.pos.y);
+      if (dy > 1.3) continue;
+      let d = Math.hypot(dx, dz);
+      if (d < 0.0008) {
+        dx = 0.02;
+        d = 0.02;
+      }
+      if (d >= min) continue;
+      const nx = dx / d;
+      const nz = dz / d;
+      const push = (min - d) * 0.5;
+      if (a.invuln <= 0) {
+        a.pos.x -= nx * push;
+        a.pos.z -= nz * push;
+      }
+      if (b.invuln <= 0) {
+        b.pos.x += nx * push;
+        b.pos.z += nz * push;
+      }
+      const rel = (a.vel.x - b.vel.x) * nx + (a.vel.z - b.vel.z) * nz;
+      if (rel > 1.1 && a.bumpCd <= 0 && b.bumpCd <= 0 && a.invuln <= 0 && b.invuln <= 0) {
+        a.vel.x -= nx * cfg.bumpPush;
+        a.vel.z -= nz * cfg.bumpPush;
+        b.vel.x += nx * cfg.bumpPush;
+        b.vel.z += nz * cfg.bumpPush;
+        a.vel.y = Math.max(a.vel.y, cfg.bumpUp);
+        b.vel.y = Math.max(b.vel.y, cfg.bumpUp);
+        a.grounded = false;
+        b.grounded = false;
+        a.ungroundT = Math.max(a.ungroundT, 0.05);
+        b.ungroundT = Math.max(b.ungroundT, 0.05);
+        a.flail = Math.max(a.flail, 0.28);
+        b.flail = Math.max(b.flail, 0.28);
+        a.bumpCd = cfg.bumpCooldown;
+        b.bumpCd = cfg.bumpCooldown;
+        const who = a.isPlayer ? a.id : b.isPlayer ? b.id : a.id;
+        race.events.push({ t: "bump", id: who });
+        if (a.isPlayer || b.isPlayer) race.shake = Math.max(race.shake, 0.18);
+      }
+    }
+  }
+}
+
+function hazards(race, dt) {
+  const cfg = race.cfg;
+  for (const s of race.spinners) s.angle += s.spin * dt;
+
+  for (const b of race.course.bumpers) {
+    for (const r of race.racers) {
+      if (r.seated || r.bumpCd > 0 || r.invuln > 0) continue;
+      const dx = r.pos.x - b.x;
+      const dz = r.pos.z - b.z;
+      const d = Math.hypot(dx, dz);
+      if (d < cfg.bumperRadius + 0.2 && Math.abs(r.pos.y - b.y) < 1.4) {
+        const nx = d > 0.05 ? dx / d : 1;
+        const nz = d > 0.05 ? dz / d : 0;
+        r.vel.x = nx * cfg.bumperPush;
+        r.vel.z = nz * cfg.bumperPush;
+        r.vel.y = Math.max(r.vel.y, cfg.bumperUp);
+        r.grounded = false;
+        r.ungroundT = 0.08;
+        r.flail = 0.4;
+        r.bumpCd = cfg.bumperCooldown;
+        r.controlLock = Math.max(r.controlLock, 0.12);
+        race.events.push({ t: "bump", id: r.id, big: true });
+        if (r.isPlayer) race.shake = Math.max(race.shake, 0.28);
+      }
+    }
+  }
+
+  for (const s of race.spinners) {
+    const c = Math.cos(s.angle);
+    const sn = Math.sin(s.angle);
+    const hx = c * cfg.spinnerLength;
+    const hz = sn * cfg.spinnerLength;
+    const ax = s.x - hx;
+    const az = s.z - hz;
+    const bx = s.x + hx;
+    const bz = s.z + hz;
+    const sx = bx - ax;
+    const sz = bz - az;
+    const sl = sx * sx + sz * sz || 1;
+    for (const r of race.racers) {
+      if (r.seated || r.spinCd > 0 || r.invuln > 0 || r.sliding > 0) continue;
+      const feet = r.pos.y - s.y;
+      if (feet < cfg.spinnerMinY || feet > cfg.spinnerMaxY) continue;
+      let t = ((r.pos.x - ax) * sx + (r.pos.z - az) * sz) / sl;
+      t = clamp(t, 0, 1);
+      const px = ax + sx * t;
+      const pz = az + sz * t;
+      const dx = r.pos.x - px;
+      const dz = r.pos.z - pz;
+      if (dx * dx + dz * dz > cfg.spinnerHit * cfg.spinnerHit) continue;
+      const tx = -sn;
+      const tz = c;
+      const side = Math.sign((r.pos.x - s.x) * tx + (r.pos.z - s.z) * tz) || 1;
+      knock(race, r, tx * side * cfg.spinnerPush, tz * side * cfg.spinnerPush, cfg.spinnerUp);
+      r.spinCd = cfg.spinnerCooldown;
+    }
+  }
+
+  for (const pad of race.course.pads) {
+    for (const r of race.racers) {
+      if (r.seated || r.padCd > 0) continue;
+      const dx = r.pos.x - pad.x;
+      const dz = r.pos.z - pad.z;
+      if (dx * dx + dz * dz > cfg.padRadius * cfg.padRadius) continue;
+      if (Math.abs(r.pos.y - pad.y) > 1.1) continue;
+      const face = hypot(r.vel.x, r.vel.z) > 0.4 ? Math.atan2(r.vel.x, r.vel.z) : 0;
+      r.vel.y = cfg.padUp;
+      r.vel.x += Math.sin(face) * cfg.padForward * 0.35;
+      r.vel.z += Math.cos(face) * cfg.padForward;
+      if (r.vel.z < cfg.padForward * 0.65) r.vel.z = cfg.padForward * 0.65;
+      r.grounded = false;
+      r.platformId = null;
+      r.ungroundT = 0.12;
+      r.padCd = cfg.padCooldown;
+      race.events.push({ t: "jump", id: r.id, pad: true });
+    }
+  }
+
+  for (const g of race.geysers) {
+    g.t += dt;
+    const cycle = g.t % g.period;
+    g.warn = cycle > g.period - 0.7 && cycle < g.period - 0.18;
+    g.hot = cycle >= g.period - 0.18 || cycle < 0.28;
+    if (g.hot && !g.wasHot) {
+      for (const r of race.racers) {
+        if (r.seated) continue;
+        const d = Math.hypot(r.pos.x - g.x, r.pos.z - g.z);
+        if (d < g.radius + 0.3 && Math.abs(r.pos.y - g.y) < 1.3) {
+          r.vel.y = Math.max(r.vel.y, 13);
+          r.grounded = false;
+          r.ungroundT = 0.1;
+          r.flail = 0.3;
+          race.events.push({ t: "geyser", id: r.id });
+          if (r.isPlayer) race.shake = Math.max(race.shake, 0.2);
+        }
+      }
+    }
+    g.wasHot = g.hot;
+  }
+
+  for (const sw of race.sweepers) {
+    sw.x = sw.originX + Math.sin(race.time * sw.speed + sw.z) * sw.amp;
+    for (const r of race.racers) {
+      if (r.seated || r.invuln > 0 || r.knockCd > 0) continue;
+      if (Math.abs(r.pos.z - sw.z) > 1.15) continue;
+      if (Math.abs(r.pos.x - sw.x) > sw.radius + 0.45) continue;
+      const feet = r.pos.y - (sw.y - sw.height);
+      const top = r.sliding > 0 ? cfg.slideHeight : 1.35;
+      if (feet > top || r.pos.y + 0.2 < sw.y - 0.35) continue;
+      if (r.sliding > 0 && sw.height > 0.8) continue;
+      const dir = Math.cos(race.time * sw.speed + sw.z) >= 0 ? 1 : -1;
+      knock(race, r, dir * 8, 3.5, 3.2);
+    }
+  }
+
+  for (const pdl of race.pendulums) {
+    const ang = Math.sin(race.time * pdl.speed + pdl.phase) * pdl.amp;
+    pdl.bobX = pdl.x + Math.sin(ang) * pdl.len;
+    pdl.bobY = pdl.y - Math.cos(ang) * pdl.len;
+    pdl.bobZ = pdl.z;
+    const swing = Math.cos(race.time * pdl.speed + pdl.phase);
+    for (const r of race.racers) {
+      if (r.seated || r.invuln > 0) continue;
+      const d = Math.hypot(r.pos.x - pdl.bobX, r.pos.z - pdl.bobZ);
+      if (d < pdl.radius + 0.35 && Math.abs(r.pos.y + 0.7 - pdl.bobY) < 1) {
+        knock(race, r, swing * 9, 2, 3);
+      }
+    }
+  }
+}
+
+function enemies(race, dt) {
+  for (const roller of race.rollers) {
+    roller.x += roller.dir * roller.speed * dt;
+    roller.rot += dt * 2.4;
+    if (roller.x > roller.x1) roller.dir = -1;
+    if (roller.x < roller.x0) roller.dir = 1;
+    for (const r of race.racers) {
+      if (r.seated) continue;
+      const d = Math.hypot(r.pos.x - roller.x, r.pos.z - roller.z);
+      if (d < roller.radius + 0.35 && Math.abs(r.pos.y - roller.y) < 1.4) {
+        const nx = d > 0.05 ? (r.pos.x - roller.x) / d : roller.dir;
+        knock(race, r, nx * 10 + roller.dir * 4, 2, 4.5);
+      }
+    }
+  }
+
+  for (const h of race.hoppers) {
+    h.t += dt;
+    if (!h.hopping && h.t > h.period) {
+      h.t = 0;
+      h.hopping = true;
+      h.vy = 8;
+      let tx = h.homeX + Math.sin(race.time) * 2.5;
+      let tz = h.homeZ;
+      let best = 12;
+      for (const r of race.racers) {
+        if (r.seated) continue;
+        const d = Math.hypot(r.pos.x - h.x, r.pos.z - h.z);
+        if (d < best) {
+          best = d;
+          tx = r.pos.x;
+          tz = r.pos.z;
+        }
+      }
+      const dx = tx - h.x;
+      const dz = tz - h.z;
+      const mag = Math.hypot(dx, dz) || 1;
+      h.dirx = dx / mag;
+      h.dirz = dz / mag;
+    }
+    if (h.hopping) {
+      h.vy -= 18 * dt;
+      h.y += h.vy * dt;
+      h.x += h.dirx * 4.2 * dt;
+      h.z += h.dirz * 4.2 * dt;
+      if (h.y <= h.homeY) {
+        h.y = h.homeY;
+        h.hopping = false;
+        for (const r of race.racers) {
+          if (r.seated) continue;
+          const d = Math.hypot(r.pos.x - h.x, r.pos.z - h.z);
+          if (d < h.radius + 0.55 && Math.abs(r.pos.y - h.y) < 1.3) {
+            const nx = d > 0.05 ? (r.pos.x - h.x) / d : 1;
+            knock(race, r, nx * 9, 3, 5);
+          }
+        }
+      }
+    }
+  }
+
+  for (const f of race.flyers) {
+    f.ang += dt * 0.85;
+    f.x = f.cx + Math.sin(f.ang) * f.span;
+    f.z = f.cz + Math.cos(f.ang) * f.span * 0.45;
+    f.y = f.cy + Math.sin(f.ang * 2) * 0.7;
+    for (const r of race.racers) {
+      if (r.seated) continue;
+      const d = Math.hypot(r.pos.x - f.x, r.pos.z - f.z);
+      if (d < f.radius + 0.4 && Math.abs(r.pos.y + 0.8 - f.y) < 1.1) {
+        knock(race, r, Math.cos(f.ang) * 8, Math.sin(f.ang) * 6, 3.4);
+      }
+    }
+  }
+}
+
+function movePlatforms(race, dt) {
+  for (const p of race.platforms) {
+    p.prevX = p.x;
+    p.prevZ = p.z;
+    p.phase += dt * p.speed;
+    if (p.axis === "x") {
+      p.x = p.originX + Math.sin(p.phase) * p.amp;
+    }
+  }
+}
+
+function updateCollapse(race, dt) {
+  const cfg = race.cfg;
+  if (race.time < cfg.collapseDelay) return;
+  const stop = race.course.ship.z - 18;
+  race.collapseZ += race.collapseSpeed * dt;
+  if (race.collapseZ > stop) race.collapseZ = stop;
+  race.lavaY = cfg.lavaStartY + race.time * cfg.lavaRisePerSec;
+  for (const tile of race.course.tiles) {
+    if (tile.zone === "ship") continue;
+    if (tile.state === "solid") {
+      const lead = tile.skirt ? cfg.skirtLead : 0;
+      if (race.collapseZ + lead > tile.z) {
+        tile.state = "cracking";
+        tile.crackT = cfg.crackTime * (tile.skirt ? 0.65 : 1) + tile.jitter;
+        tile.dirty = true;
+        race.events.push({ t: "crack" });
+      }
+    } else if (tile.state === "cracking") {
+      tile.crackT -= dt;
+      if (tile.crackT <= 0) {
+        tile.state = "falling";
+        tile.fallT = cfg.fallTime;
+        tile.dirty = true;
+      }
+    } else if (tile.state === "falling") {
+      tile.fallT -= dt;
+      if (tile.fallT <= 0) {
+        tile.state = "gone";
+        tile.dirty = true;
+      }
+    }
+    if (tile.tiltAmp) tile.tilt = Math.sin(race.time * 1.45 + tile.tiltPhase) * tile.tiltAmp;
+  }
+}
+
+function board(race) {
+  if (race.seatsFilled >= race.cfg.seats) return;
+  const ship = race.course.ship;
+  const cfg = race.cfg;
+  const ready = [];
+  for (const r of race.racers) {
+    if (r.seated || r.eliminated || !r.grounded) continue;
+    const dx = r.pos.x - ship.x;
+    const dz = r.pos.z - ship.z;
+    if (Math.abs(dx) < cfg.boardHalfX && dz < cfg.boardZMax && dz > cfg.boardZMin && Math.abs(r.pos.y - ship.y) < 1.8) {
+      ready.push({ r, d: dx * dx + dz * dz });
+    }
+  }
+  ready.sort((a, b) => a.d - b.d || (a.r.isPlayer ? -1 : 1) - (b.r.isPlayer ? -1 : 1));
+  for (const item of ready) {
+    if (race.seatsFilled >= cfg.seats) break;
+    const r = item.r;
+    const seat = race.seatsFilled;
+    race.seats[seat] = r.id;
+    race.seatsFilled++;
+    r.seated = true;
+    r.seatIndex = seat;
+    r.vel.x = r.vel.y = r.vel.z = 0;
+    r.emote = "cheer";
+    race.events.push({ t: "seat", id: r.id, seat });
+    if (race.seatsFilled === cfg.seats - 1 && !race.lastSeatEvent) {
+      race.lastSeatEvent = true;
+      race.events.push({ t: "lastseat" });
+    }
+  }
+}
+
+function beginLaunch(race) {
+  race.phase = "launch";
+  race.launchT = 0;
+  race.launchV = 1.5;
+  race.result = race.player.seated ? "escaped" : "missed";
+  if (!race.player.seated) {
+    race.player.flail = 0.8;
+    race.player.emote = "wave";
+    race.player.waveT = 0;
+  }
+  race.events.push({ t: "launch" });
+  race.events.push({ t: race.result, time: race.time });
+  race.shake = 0.65;
+}
+
+export function step(race, dt, input) {
+  const cfg = race.cfg;
+  if (race.events.length > 80) race.events.splice(0, race.events.length - 80);
+
+  if (race.phase === "countdown") {
+    race.countClock += dt;
+    const cue = race.countClock < 1 ? 3 : race.countClock < 2 ? 2 : race.countClock < 3 ? 1 : 0;
+    if (cue !== race.countCue) {
+      race.countCue = cue;
+      race.events.push({ t: cue === 0 ? "go" : "tick", n: cue });
+    }
+    if (race.countClock >= cfg.countdownBeats + cfg.goHold) {
+      race.phase = "race";
+      race.activated = true;
+      race.time = 0;
+    }
+    return;
+  }
+
+  if (race.phase === "race") {
+    race.activated = true;
+    race.time += dt;
+    movePlatforms(race, dt);
+    updateCollapse(race, dt);
+    for (const r of race.racers) {
+      if (r.seated || r.eliminated) continue;
+      const wish = r.isPlayer && !r.useAI ? (input || { x: 0, z: 0, jump: false, dive: false }) : botWish(race, r, dt);
+      integrate(race, r, wish, dt);
+    }
+    separate(race);
+    hazards(race, dt);
+    enemies(race, dt);
+    board(race);
+    const playerZone = zoneAt(race, race.player.pos.z);
+    if (playerZone && playerZone !== race.zoneId) {
+      race.zoneId = playerZone;
+      const zone = race.course.zones.find((z) => z.id === playerZone);
+      if (zone) race.events.push({ t: "zone", name: zone.name });
+    }
+    if (race.seatsFilled >= cfg.seats || race.time >= cfg.raceSeconds) beginLaunch(race);
+    if (race.shake > 0) race.shake = Math.max(0, race.shake - dt * 1.5);
+    return;
+  }
+
+  if (race.phase === "launch" || race.phase === "results") {
+    race.launchT += dt;
+    race.launchV += 14 * dt;
+    race.launchY += race.launchV * dt;
+    race.shipY = race.course.ship.y + race.launchY;
+    if (race.player.emote === "wave") {
+      race.player.waveT = (race.player.waveT || 0) + dt;
+      if (race.player.waveT > 0.7 && race.player.waveT < 2.2) race.player.emote = "cheer";
+      if (race.player.waveT >= 2.2) race.player.emote = "idle";
+    }
+    if (race.phase === "launch" && race.launchT > 1.25) race.phase = "results";
+    if (race.shake > 0) race.shake = Math.max(0, race.shake - dt * 0.7);
+  }
+}
+
+function zoneAt(race, z) {
+  let id = race.course.zones[0].id;
+  for (const zone of race.course.zones) {
+    if (z >= zone.z0) id = zone.id;
+  }
+  return id;
+}

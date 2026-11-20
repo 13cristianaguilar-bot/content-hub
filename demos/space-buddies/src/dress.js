@@ -1,12 +1,12 @@
 import * as THREE from "three";
 
 const ZONE_SKY = {
-  meadow: { top: 0x5cc8ff, mid: 0xc8f4ff, fog: 0xb7ecff, near: 36, far: 118 },
-  canyon: { top: 0xff9a62, mid: 0xffd0a4, fog: 0xffc194, near: 26, far: 88 },
-  sky: { top: 0x7ecbff, mid: 0xeaf8ff, fog: 0xd4f2ff, near: 34, far: 120 },
-  ice: { top: 0xd9f3ff, mid: 0xf7fbff, fog: 0xd7eefe, near: 28, far: 100 },
-  climb: { top: 0xffc56a, mid: 0xffe6b0, fog: 0xffdf9e, near: 30, far: 96 },
-  ship: { top: 0x8fd4ff, mid: 0xfff3d4, fog: 0xd5eeff, near: 40, far: 140 },
+  meadow: { top: 0x5cc8ff, mid: 0xc8f4ff, fog: 0xb7ecff, bot: 0x8ed7b0, near: 36, far: 130 },
+  canyon: { top: 0xff9a62, mid: 0xffd0a4, fog: 0xffc194, bot: 0xff8a4a, near: 26, far: 100 },
+  sky: { top: 0x7ecbff, mid: 0xeaf8ff, fog: 0xd4f2ff, bot: 0xb7e4ff, near: 34, far: 140 },
+  ice: { top: 0xd9f3ff, mid: 0xf7fbff, fog: 0xd7eefe, bot: 0xc5e8ff, near: 28, far: 120 },
+  climb: { top: 0xffc56a, mid: 0xffe6b0, fog: 0xffdf9e, bot: 0xffb45a, near: 30, far: 110 },
+  ship: { top: 0x8fd4ff, mid: 0xfff3d4, fog: 0xd5eeff, bot: 0xb7dcff, near: 40, far: 150 },
 };
 
 export function zoneSky(id) {
@@ -73,7 +73,7 @@ export function buildDressing(scene, course, gradientMap) {
   for (const t of course.tiles) {
     if (!picks[t.zone]) continue;
     if (Math.abs(t.col) < 2) continue;
-    if ((Math.abs(t.col * 5 + t.row * 3) % 8) !== 0) continue;
+    if ((Math.abs(t.col * 5 + t.row * 3) % 3) !== 0) continue;
     picks[t.zone].push(t);
   }
 
@@ -134,6 +134,94 @@ export function buildDressing(scene, course, gradientMap) {
     d.position.set(t.x, t.y + 0.4, t.z);
     d.rotation.set(0.2, i, 0);
     d.scale.setScalar(0.7);
+  });
+
+  const grass = new THREE.ConeGeometry(0.22, 0.7, 5);
+  const trunk = new THREE.CylinderGeometry(0.12, 0.16, 1.3, 6);
+  const crown = new THREE.SphereGeometry(0.55, 8, 6);
+  const post = new THREE.BoxGeometry(0.12, 0.7, 0.12);
+  const column = new THREE.CylinderGeometry(0.28, 0.34, 2.4, 6);
+  const lavaBlob = new THREE.SphereGeometry(0.45, 8, 6);
+  const balloon = new THREE.SphereGeometry(0.42, 10, 8);
+  const floe = new THREE.CylinderGeometry(0.7, 0.7, 0.12, 7);
+  const scaffold = new THREE.BoxGeometry(0.16, 1.6, 0.16);
+  const light = new THREE.SphereGeometry(0.12, 6, 6);
+  const meadowExtra = meadow.filter((_, i) => i % 2 === 0);
+  inst(grass, makeToon(0x3ea84a, gradientMap), meadowExtra, (d, t, i) => {
+    d.position.set(t.x + (t.col > 0 ? 0.3 : -0.3), t.y + 0.35, t.z);
+    d.rotation.set(0.1, i, 0);
+    d.scale.set(1, 1, 1);
+  });
+  inst(puff, makeToon(0xff8fd1, gradientMap), meadow.filter((_, i) => i % 3 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 0.16, t.z + 0.4);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(0.45, 0.35, 0.45);
+  });
+  inst(trunk, makeToon(0xc47a55, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 0.7, t.z);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(1, 1, 1);
+  });
+  inst(crown, makeToon(0x7fd88a, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t, i) => {
+    d.position.set(t.x, t.y + 1.55, t.z);
+    d.rotation.set(0, i, 0);
+    d.scale.set(1.1, 0.8, 1.1);
+  });
+  inst(post, makeToon(0xfff6e5, gradientMap), meadow.filter((_, i) => i % 5 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 0.35, t.z + 0.8);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(1, 1, 1);
+  });
+
+  const lavaMat = new THREE.MeshToonMaterial({ color: 0xff7a1a, emissive: 0xff7a1a, emissiveIntensity: 0.45, gradientMap });
+  inst(column, makeToon(0x3a2438, gradientMap), picks.canyon.filter((_, i) => i % 2 === 0), (d, t, i) => {
+    d.position.set(t.x, t.y - 0.2, t.z);
+    d.rotation.set(0, i, 0);
+    d.scale.set(1, 0.8 + (i % 3) * 0.25, 1);
+  });
+  inst(lavaBlob, lavaMat, picks.canyon, (d, t, i) => {
+    d.position.set(t.x, t.y - 1.6, t.z);
+    d.rotation.set(0, i, 0);
+    d.scale.set(1.4, 0.45, 1.1);
+  });
+
+  inst(balloon, makeToon(0xff8fd1, gradientMap), picks.sky.filter((_, i) => i % 3 === 0), (d, t, i) => {
+    d.position.set(t.x, t.y + 3.2 + (i % 3), t.z);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(1, 1.15, 1);
+  });
+  inst(puff, makeToon(0xffffff, gradientMap), picks.sky, (d, t, i) => {
+    d.position.set(t.x + (t.col > 0 ? 2 : -2), t.y + 2.4, t.z);
+    d.rotation.set(0, i, 0);
+    d.scale.set(1.6, 0.7, 1.2);
+  });
+
+  inst(floe, makeToon(0xf4fbff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 0.08, t.z);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(1, 1, 1);
+  });
+  inst(crystal, makeToon(0x9b7bff, gradientMap), picks.ice.filter((_, i) => i % 2 === 1), (d, t, i) => {
+    d.position.set(t.x, t.y + 1.1, t.z + 0.4);
+    d.rotation.set(0.2, i, 0);
+    d.scale.setScalar(1.35);
+  });
+
+  inst(scaffold, makeToon(0xfff6e5, gradientMap), picks.climb.filter((_, i) => i % 2 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 0.8, t.z);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(1, 1, 1);
+  });
+  inst(rock, makeToon(0x8a5a3a, gradientMap), picks.climb.filter((_, i) => i % 3 === 0), (d, t, i) => {
+    d.position.set(t.x, t.y + 0.3, t.z + 0.6);
+    d.rotation.set(0.4, i, 0.2);
+    d.scale.setScalar(0.55);
+  });
+  const warnMat = new THREE.MeshToonMaterial({ color: 0xff6b6b, emissive: 0xff6b6b, emissiveIntensity: 0.7, gradientMap });
+  inst(light, warnMat, picks.climb.filter((_, i) => i % 2 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 1.7, t.z);
+    d.rotation.set(0, 0, 0);
+    d.scale.set(1, 1, 1);
   });
 
   const floats = [];

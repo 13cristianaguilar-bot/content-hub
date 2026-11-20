@@ -1,0 +1,15 @@
+{
+  "name": "space-buddies",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --format=iife --target=es2020 --minify --legal-comments=eof --outfile=game.js",
+    "sim": "node src/sim-cli.js"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.24.2"
+  }
+}

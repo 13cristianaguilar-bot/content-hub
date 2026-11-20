@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#5CC8FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Space Buddies">
+<title>Space Buddies</title>
+<meta name="description" content="A phone party race. 16 buddies, 8 seats, one crumbling planet.">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<style>
+@font-face {
+  font-family: Fredoka;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("assets/fonts/fredoka-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: Fredoka;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("assets/fonts/fredoka-700.woff2") format("woff2");
+}
+:root {
+  --ink: #1E2440;
+  --cream: #FFF6E5;
+  --coral: #FF6B6B;
+  --sun: #FFD23F;
+  --mint: #5FE3B0;
+  --sky: #5CC8FF;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  background: var(--sky);
+  color: var(--ink);
+  font-family: Fredoka, "Trebuchet MS", "Arial Rounded MT Bold", sans-serif;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#app { position: fixed; inset: 0; }
+[hidden] { display: none !important; }
+#view { width: 100%; height: 100%; display: block; touch-action: none; }
+button { font-family: inherit; touch-action: manipulation; }
+#hud {
+  position: absolute;
+  left: 0; right: 0; top: 0;
+  padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px 10px;
+  align-items: start;
+  pointer-events: none;
+  z-index: 3;
+}
+.pill {
+  background: var(--cream);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+  box-shadow: 0 8px 0 rgba(30, 36, 64, 0.12);
+}
+#timer.low { color: var(--coral); animation: pulse 0.6s ease-in-out infinite; }
+.track {
+  margin-top: 6px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 246, 229, 0.7);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 2px rgba(30, 36, 64, 0.15);
+}
+.track i {
+  display: block;
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, var(--mint), var(--sun));
+  transform: scaleX(0);
+  transform-origin: left center;
+}
+.track b {
+  position: absolute;
+  right: 0; top: -2px;
+  font-size: 10px;
+  color: var(--ink);
+}
+.seatbox {
+  text-align: right;
+  background: var(--cream);
+  border-radius: 18px;
+  padding: 8px 10px 6px;
+  box-shadow: 0 8px 0 rgba(30, 36, 64, 0.12);
+}
+#seats { display: flex; gap: 4px; justify-content: flex-end; }
+.seat {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: inset 0 0 0 2px rgba(30, 36, 64, 0.28);
+}
+.seat.open { animation: pulse 0.45s ease-in-out infinite; }
+#seats-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 3px; }
+#hud.last #seats-label, #hud.last .seat.open { color: var(--coral); }
+#last-banner {
+  grid-column: 1 / -1;
+  justify-self: center;
+  background: var(--coral);
+  color: white;
+  font-weight: 700;
+  font-size: 18px;
+  border-radius: 14px;
+  padding: 8px 16px;
+  box-shadow: 0 6px 0 #d45353;
+}
+#zone, #toast {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  pointer-events: none;
+  background: var(--cream);
+  color: var(--ink);
+  font-weight: 700;
+  border-radius: 16px;
+  box-shadow: 0 8px 0 rgba(30, 36, 64, 0.12);
+}
+#zone { top: calc(78px + env(safe-area-inset-top)); font-size: 22px; padding: 8px 16px; }
+#toast { top: calc(124px + env(safe-area-inset-top)); font-size: 16px; padding: 6px 12px; }
+#countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 4;
+  pointer-events: none;
+  text-align: center;
+}
+#count-num {
+  font-size: 128px;
+  line-height: 0.8;
+  font-weight: 700;
+  color: var(--coral);
+  text-shadow: 0 8px 0 rgba(30, 36, 64, 0.15);
+}
+#count-num.pop { animation: pop 0.35s cubic-bezier(.2, 1.4, .4, 1); }
+#count-label { font-size: 22px; letter-spacing: 0.14em; color: var(--ink); }
+#danger {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0;
+  background: radial-gradient(120% 80% at 50% 120%, rgba(255, 122, 26, 0.55), rgba(43, 27, 77, 0) 55%);
+}
+#controls { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+#stick {
+  position: absolute;
+  left: calc(16px + env(safe-area-inset-left));
+  bottom: calc(18px + env(safe-area-inset-bottom));
+  width: 128px; height: 128px;
+  border-radius: 50%;
+  background: rgba(255, 246, 229, 0.42);
+  box-shadow: inset 0 0 0 3px rgba(30, 36, 64, 0.18);
+  pointer-events: none;
+}
+#knob {
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 62px; height: 62px;
+  border-radius: 50%;
+  background: var(--cream);
+  box-shadow: 0 6px 0 rgba(30, 36, 64, 0.18);
+  transform: translate(-50%, -50%);
+}
+#jump, #dive {
+  position: absolute;
+  pointer-events: auto;
+  border: 0;
+  border-radius: 50%;
+  font-weight: 700;
+  color: var(--ink);
+}
+#jump {
+  right: calc(18px + env(safe-area-inset-right));
+  bottom: calc(22px + env(safe-area-inset-bottom));
+  width: 92px; height: 92px;
+  background: var(--sun);
+  font-size: 16px;
+  box-shadow: 0 8px 0 #e0b428;
+}
+#dive {
+  right: calc(30px + env(safe-area-inset-right));
+  bottom: calc(126px + env(safe-area-inset-bottom));
+  width: 68px; height: 68px;
+  background: var(--coral);
+  color: white;
+  font-size: 13px;
+  box-shadow: 0 6px 0 #d45353;
+}
+#jump:active, #dive:active { transform: translateY(3px); }
+#title {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  background: #7fd4ff;
+}
+#title.hide { opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
+#keyart { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
+.title-ui {
+  margin-top: auto;
+  position: relative;
+  z-index: 1;
+  padding: 96px 20px calc(22px + env(safe-area-inset-bottom));
+  background: linear-gradient(to top, rgba(16, 36, 64, 0.94) 0 46%, rgba(16, 36, 64, 0) 100%);
+  text-align: center;
+}
+#play {
+  min-width: min(280px, 86vw);
+  min-height: 64px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--coral);
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 8px 0 #d45353;
+}
+#play:active { transform: translateY(3px); box-shadow: 0 5px 0 #d45353; }
+#play:disabled { opacity: 0.8; }
+#play:not(:disabled) { animation: bob 1.5s ease-in-out infinite; }
+#lobby {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(92, 200, 255, 0.35);
+}
+#colors, #gear { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 10px 0 14px; }
+.swatch, .gear {
+  border: 3px solid transparent;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--cream);
+}
+.swatch { width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(30,36,64,0.25); }
+.swatch.on, .gear.on { border-color: var(--ink); transform: translateY(-2px); }
+#start {
+  width: 100%;
+  min-height: 58px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 6px 0 #3fbf90;
+}
+#place { justify-self: center; font-size: 16px; padding: 8px 12px; }
+#tutor {
+  position: absolute;
+  left: 50%;
+  bottom: calc(150px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 4;
+  background: var(--sun);
+  color: var(--ink);
+  font-weight: 700;
+  border-radius: 16px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 0 #e0b428;
+  pointer-events: none;
+  text-align: center;
+  max-width: 86vw;
+}
+.seat.pop { animation: pop 0.35s cubic-bezier(.2,1.4,.4,1); }
+@keyframes bob { 50% { transform: translateY(-5px); } }
+.blurb { color: white; font-size: 15px; margin: 12px 0 0; font-weight: 600; }
+.keys { color: rgba(255,255,255,0.9); font-size: 13px; margin: 6px 0 0; font-weight: 600; }
+#result {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(30, 36, 64, 0.28);
+}
+.card {
+  width: min(420px, 100%);
+  background: var(--cream);
+  border-radius: 24px;
+  padding: 22px 18px 18px;
+  text-align: center;
+  box-shadow: 0 18px 40px rgba(30, 36, 64, 0.25);
+}
+.kicker { font-size: 13px; letter-spacing: 0.14em; font-weight: 700; margin: 0 0 8px; }
+.banner {
+  margin: 0 auto 12px;
+  border-radius: 16px;
+  padding: 12px 10px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--sun);
+  box-shadow: 0 6px 0 #e0b428;
+}
+#result.miss .banner { background: var(--coral); color: white; box-shadow: 0 6px 0 #d45353; }
+.sub { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+.time { font-size: 14px; margin: 0 0 14px; font-weight: 600; }
+#again {
+  width: 100%;
+  min-height: 58px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 6px 0 #3fbf90;
+}
+#result.miss #again { background: var(--sun); box-shadow: 0 6px 0 #e0b428; }
+@keyframes pop { from { transform: scale(0.6); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+@keyframes pulse { 50% { transform: scale(1.08); } }
+@media (orientation: landscape) {
+  #jump { width: 76px; height: 76px; }
+  #dive { width: 58px; height: 58px; bottom: calc(108px + env(safe-area-inset-bottom)); }
+  #stick { width: 108px; height: 108px; }
+  #count-num { font-size: 96px; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="view"></canvas>
+  <div id="danger"></div>
+  <div id="hud" hidden>
+    <div>
+      <div id="timer" class="pill">3:00</div>
+      <div class="track" aria-hidden="true"><i id="progress"></i></div>
+    </div>
+    <div id="place" class="pill">1ST</div>
+    <div class="seatbox">
+      <div id="seats"></div>
+      <div id="seats-label">SEATS 0/8</div>
+    </div>
+    <div id="last-banner" hidden>LAST SEAT!</div>
+  </div>
+  <div id="tutor" hidden>DRAG THE LEFT SIDE TO RUN</div>
+  <div id="zone" hidden>MEADOW</div>
+  <div id="toast" hidden>CHECKPOINT</div>
+  <div id="countdown" hidden>
+    <div>
+      <div id="count-num">3</div>
+      <div id="count-label">GET READY</div>
+    </div>
+  </div>
+  <div id="controls" hidden>
+    <div id="stick" aria-hidden="true"><div id="knob"></div></div>
+    <button id="jump" type="button">JUMP</button>
+    <button id="dive" type="button">DIVE</button>
+  </div>
+  <div id="title">
+    <img id="keyart" src="assets/images/title.jpg" alt="Space Buddies">
+    <div class="title-ui">
+      <button id="play" type="button" disabled>LOADING</button>
+      <p class="blurb">16 buddies. 8 seats. The planet is falling apart.</p>
+      <p class="keys">Left side runs. Right side looks. Jump and dive with the right thumb.</p>
+      <p class="keys">Keyboard: WASD, drag to look, Space, Shift.</p>
+    </div>
+  </div>
+  <div id="lobby" hidden>
+    <div class="card">
+      <p class="kicker">CHOOSE YOUR BUDDY</p>
+      <div id="colors"></div>
+      <div id="gear"></div>
+      <button id="start" type="button">START RACE</button>
+    </div>
+  </div>
+  <div id="result" hidden>
+    <div class="card">
+      <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
+      <h1 id="result-title" class="banner">YOU ESCAPED!</h1>
+      <p id="result-sub" class="sub">SEAT 1 OF 8</p>
+      <p id="result-time" class="time">TIME 0:00</p>
+      <button id="again" type="button">PLAY AGAIN</button>
+    </div>
+  </div>
+</div>
+<script src="game.js?v=2"></script>
+</body>
+</html>

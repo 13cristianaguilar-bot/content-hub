@@ -1,0 +1,106 @@
+const FILES = {
+  ui_tap: "assets/audio/ui_tap.mp3",
+  ui_confirm: "assets/audio/ui_confirm.mp3",
+  jump: "assets/audio/sfx_jump.mp3",
+  land: "assets/audio/sfx_land.mp3",
+  bump: "assets/audio/sfx_bump_boing.mp3",
+  tick: "assets/audio/sfx_countdown_tick.mp3",
+  go: "assets/audio/sfx_countdown_go.mp3",
+  crack: "assets/audio/sfx_ground_crack.mp3",
+  seat: "assets/audio/sfx_seat_filled.mp3",
+  last: "assets/audio/sfx_last_seat_alert.mp3",
+  launch: "assets/audio/sfx_ship_launch.mp3",
+  escaped: "assets/audio/jingle_escaped.mp3",
+  missed: "assets/audio/jingle_missed.mp3",
+  bed: "assets/audio/amb_planet_bed_loop.mp3",
+  rumble: "assets/audio/amb_collapse_rumble_loop.mp3",
+};
+
+export function createAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  const ctx = Ctx ? new Ctx({ latencyHint: "interactive" }) : null;
+  const buffers = {};
+  const last = {};
+  let master;
+  let bedGain;
+  let rumbleGain;
+  let bedSrc;
+  let rumbleSrc;
+  let started = false;
+
+  if (ctx) {
+    master = ctx.createGain();
+    master.gain.value = 1;
+    master.connect(ctx.destination);
+    bedGain = ctx.createGain();
+    bedGain.gain.value = 0;
+    bedGain.connect(master);
+    rumbleGain = ctx.createGain();
+    rumbleGain.gain.value = 0;
+    rumbleGain.connect(master);
+  }
+
+  async function load(onProgress) {
+    if (!ctx) return;
+    const keys = Object.keys(FILES);
+    let done = 0;
+    await Promise.all(keys.map(async (key) => {
+      const res = await fetch(FILES[key]);
+      const arr = await res.arrayBuffer();
+      buffers[key] = await ctx.decodeAudioData(arr.slice(0));
+      done++;
+      if (onProgress) onProgress(done / keys.length);
+    }));
+  }
+
+  function unlock() {
+    if (!ctx) return;
+    if (ctx.state === "suspended") ctx.resume();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+  }
+
+  function startBeds(bedVolume) {
+    if (!ctx || started) return;
+    started = true;
+    if (buffers.bed) {
+      bedSrc = ctx.createBufferSource();
+      bedSrc.buffer = buffers.bed;
+      bedSrc.loop = true;
+      bedSrc.connect(bedGain);
+      bedSrc.start(0);
+      bedGain.gain.setTargetAtTime(bedVolume, ctx.currentTime, 0.4);
+    }
+    if (buffers.rumble) {
+      rumbleSrc = ctx.createBufferSource();
+      rumbleSrc.buffer = buffers.rumble;
+      rumbleSrc.loop = true;
+      rumbleSrc.connect(rumbleGain);
+      rumbleSrc.start(0);
+    }
+  }
+
+  function setRumble(value) {
+    if (!rumbleGain || !ctx) return;
+    rumbleGain.gain.setTargetAtTime(Math.max(0, Math.min(0.5, value)), ctx.currentTime, 0.2);
+  }
+
+  function play(name, volume = 0.5, gap = 0.07) {
+    if (!ctx || !buffers[name]) return;
+    const now = ctx.currentTime;
+    if (last[name] && now - last[name] < gap) return;
+    last[name] = now;
+    const src = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    gain.gain.value = volume;
+    src.buffer = buffers[name];
+    src.connect(gain);
+    gain.connect(master);
+    src.start(0);
+  }
+
+  return { load, unlock, startBeds, setRumble, play, get ctx() { return ctx; } };
+}

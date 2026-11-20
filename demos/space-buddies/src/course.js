@@ -135,9 +135,27 @@ function makeChunk(chunks, zone, z0, z1, geo) {
   return chunk.index;
 }
 
-export function groundAt(course, x, z) {
+function padHit(pad, chunk, z) {
+  return {
+    y: pad.y,
+    x: pad.x,
+    z,
+    px: pad.x,
+    pz: pad.z,
+    rx: pad.rx,
+    rz: pad.rz,
+    ice: pad.zone === "ice",
+    conveyX: pad.conveyX || 0,
+    zone: pad.zone,
+    chunk,
+    state: chunk.state,
+    fragile: !!chunk.fragile,
+  };
+}
+
+export function floorsAt(course, x, z) {
   const floors = course.floors || [];
-  let best = null;
+  const hits = [];
   for (let i = 0; i < floors.length; i++) {
     const pad = floors[i];
     const chunk = course.chunks[pad.chunk];
@@ -146,27 +164,24 @@ export function groundAt(course, x, z) {
     const nz = (z - pad.z) / pad.rz;
     const guard = pad.zone === "meadow" ? 1.08 : 1;
     if (nx * nx + nz * nz > guard) continue;
-    if (!best || pad.y >= best.y) {
-      best = {
-        y: pad.y,
-        x: pad.x,
-        z,
-        ice: pad.zone === "ice",
-        conveyX: pad.conveyX || 0,
-        zone: pad.zone,
-        chunk,
-        state: chunk.state,
-        fragile: !!chunk.fragile,
-      };
-    }
+    hits.push(padHit(pad, chunk, z));
   }
-  if (!best && course.islands) {
+  if (!hits.length && course.islands) {
     for (const isle of course.islands) {
       const dx = x - isle.x;
       const dz = z - isle.z;
       if (dx * dx + dz * dz > isle.r * isle.r) continue;
-      best = { y: isle.y, x: isle.x, z, ice: false, conveyX: 0, zone: isle.zone, chunk: null, state: "solid", fragile: false };
+      hits.push({ y: isle.y, x: isle.x, z, ice: false, conveyX: 0, zone: isle.zone, chunk: null, state: "solid", fragile: false });
     }
+  }
+  return hits;
+}
+
+export function groundAt(course, x, z) {
+  const hits = floorsAt(course, x, z);
+  let best = null;
+  for (let i = 0; i < hits.length; i++) {
+    if (!best || hits[i].y >= best.y) best = hits[i];
   }
   return best;
 }

@@ -4,6 +4,7 @@ import { createRace, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
 import { createInput } from "./input.js";
+import { cameraWish } from "./steer.js";
 
 const params = new URLSearchParams(location.search);
 const cfg = resolveConfig({
@@ -55,6 +56,7 @@ let pending = false;
 let toastTimer = 0;
 let introLeft = 0;
 let hitStop = 0;
+const steer = { x: 0, z: 0 };
 let qualityDropped = false;
 const GEAR = ["classic", "heli", "goggles", "stars", "flower", "scarf", "fish", "crown"];
 const GEAR_LABEL = ["Classic", "Sunny", "Goggles", "Stars", "Flower", "Scarf", "Fish", "Crown"];
@@ -191,6 +193,8 @@ againBtn.addEventListener("pointerdown", (e) => {
 function restart() {
   const seed = (race.seed + 1 + Math.floor(Math.random() * 50)) >>> 0;
   resetRace(race, seed);
+  steer.x = 0;
+  steer.z = 0;
   if (cfg.auto) race.player.useAI = true;
   race.player.color = pickColor;
   if (world.applyLook) world.applyLook(pickColor, pickGear);
@@ -396,14 +400,13 @@ function frame(now) {
     return;
   }
   const raw = input.read();
-  const yaw = world.yaw;
-  const fx = -Math.sin(yaw);
-  const fz = Math.cos(yaw);
-  const rx = Math.cos(yaw);
-  const rz = Math.sin(yaw);
+  const aim = cameraWish(world.yaw, raw.stickX, raw.stickY);
+  const follow = 1 - Math.exp(-16 * dt);
+  steer.x += (aim.x - steer.x) * follow;
+  steer.z += (aim.z - steer.z) * follow;
   let wish = {
-    x: rx * raw.stickX + fx * raw.stickY,
-    z: rz * raw.stickX + fz * raw.stickY,
+    x: steer.x,
+    z: steer.z,
     jump: raw.jump,
     dive: raw.dive,
   };

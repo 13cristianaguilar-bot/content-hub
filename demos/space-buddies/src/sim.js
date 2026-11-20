@@ -42,6 +42,7 @@ export function createRace(course, cfg, seed = 1) {
       useAI: i !== 0,
       color: COLORS[i % COLORS.length],
       pos: { x: spot.x, y: spot.y, z: spot.z },
+      lastSafe: { x: spot.x, y: spot.y, z: spot.z },
       vel: { x: 0, y: 0, z: 0 },
       yaw: 0,
       grounded: true,
@@ -232,13 +233,16 @@ function findRespawnTile(race, cp) {
 function doRespawn(race, r) {
   const cp = race.course.checkpoints[r.cp] || race.course.checkpoints[0];
   const tile = findRespawnTile(race, cp);
-  if (!tile) return;
-  r.pos.x = tile.x;
-  r.pos.y = tile.y + 1.25;
-  r.pos.z = tile.z;
+  const safe = r.lastSafe;
+  const useSafe = safe && groundAt(race.course, safe.x, safe.z);
+  const spot = useSafe ? safe : tile;
+  if (!spot) return;
+  r.pos.x = spot.x;
+  r.pos.y = spot.y + 1.1;
+  r.pos.z = spot.z;
   r.vel.x = 0;
-  r.vel.y = 6.2;
-  r.vel.z = 1.2;
+  r.vel.y = 4.2;
+  r.vel.z = 0;
   r.grounded = false;
   r.platformId = null;
   r.flail = 0.7;
@@ -270,6 +274,34 @@ function pound(race, r) {
     }
   }
   race.events.push({ t: "bump", id: r.id, big: true });
+}
+
+function resolveSolids(race, r) {
+  const list = race.course.blockers;
+  if (!list) return;
+  const ship = race.course.ship;
+  for (let i = 0; i < list.length; i++) {
+    const b = list[i];
+    if (Math.abs(r.pos.y - b.y) > 2.2) continue;
+    if (b.ship) {
+      const dz = r.pos.z - ship.z;
+      if (dz < -0.5 && dz > -9) continue;
+    }
+    let dx = r.pos.x - b.x;
+    let dz = r.pos.z - b.z;
+    const dist = Math.hypot(dx, dz);
+    if (dist >= b.r || dist < 0.0001) continue;
+    const nx = dx / dist;
+    const nz = dz / dist;
+    const push = b.r - dist;
+    r.pos.x += nx * push;
+    r.pos.z += nz * push;
+    const into = r.vel.x * nx + r.vel.z * nz;
+    if (into < 0) {
+      r.vel.x -= nx * into;
+      r.vel.z -= nz * into;
+    }
+  }
 }
 
 function steer(r, wishX, wishZ, dt, rate, maxSp, windX) {
@@ -398,8 +430,12 @@ function integrate(race, r, wish, dt) {
   r.vel.z = clamp(r.vel.z, -24, 24);
   if (r.ungroundT > 0) r.ungroundT -= dt;
 
+  const wasGrounded = r.grounded;
+  const prevX = r.pos.x;
+  const prevZ = r.pos.z;
   r.pos.x += r.vel.x * dt;
   r.pos.z += r.vel.z * dt;
+  resolveSolids(race, r);
   const nextY = r.pos.y + r.vel.y * dt;
 
   if (r.ungroundT > 0 || jumped) {
@@ -424,6 +460,7 @@ function integrate(race, r, wish, dt) {
         if (r.wasDiving && impact > 8) pound(race, r);
       }
       r.wasDiving = false;
+      if (gnd.tile) r.lastSafe = { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
       if (gnd.tile && gnd.tile.chunk && gnd.tile.state === "solid" && gnd.tile.fragile && !gnd.tile.chunk.stepped) {
         gnd.tile.chunk.stepped = true;
         gnd.tile.chunk.state = "cracking";
@@ -431,6 +468,12 @@ function integrate(race, r, wish, dt) {
         gnd.tile.chunk.dirty = true;
         race.events.push({ t: "crack" });
       }
+    } else if (wasGrounded && r.pos.z < 50 && r.vel.y <= 0.6) {
+      r.pos.x = prevX;
+      r.pos.z = prevZ;
+      r.vel.x *= 0.15;
+      r.vel.z *= 0.15;
+      r.grounded = true;
     } else {
       r.pos.y = nextY;
       r.grounded = false;

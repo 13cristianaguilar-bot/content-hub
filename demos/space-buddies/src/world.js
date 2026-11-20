@@ -4,6 +4,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
 import { cameraAboveFloor } from "./sim.js";
+import { spectateFrame } from "./spectate.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
@@ -1823,6 +1824,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       visuals[i].group.traverse((obj) => { if (obj.isMesh) obj.castShadow = near; });
     }
     updateCamera(race, dt, look);
+    peelCamera(race);
     sky.position.copy(camera.position);
     heavens.position.copy(camera.position);
     planet.rotation.y = (race.time || 0) * 0.08;
@@ -1925,6 +1927,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       camera.lookAt(o.lx, o.ly, o.lz);
       return;
     }
+    state.spectate = null;
     const dragging = !!(look && (look.looking || Math.abs(look.lookDx) + Math.abs(look.lookDy) > 0));
     const baseFov = state.portrait ? cfg.fovPortrait : cfg.fovLandscape;
     const kick = race.player && (race.player.diving || race.player.boost > 0) ? 7 : 0;
@@ -2004,15 +2007,45 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         if (!lead || r.pos.z > lead.pos.z) lead = r;
       }
       const focus = lead || player;
-      const ang = (race.time || 0) * 0.16;
       const floor = groundAtSafe(focus.pos.x, focus.pos.z);
-      const fy = Math.max((floor == null ? focus.pos.y : floor) + 5, focus.pos.y + 4.8);
-      const tx = focus.pos.x + Math.sin(ang) * 12;
-      const tz = focus.pos.z - Math.cos(ang) * 12;
-      camera.position.x = damp(camera.position.x, tx, 4.5, dt);
-      camera.position.y = damp(camera.position.y, fy, 4.5, dt);
-      camera.position.z = damp(camera.position.z, tz, 4.5, dt);
-      camera.lookAt(focus.pos.x, focus.pos.y + 1.1, focus.pos.z);
+      const crowd = [];
+      for (let i = 0; i < race.racers.length; i++) {
+        const r = race.racers[i];
+        crowd.push({ x: r.pos.x, y: r.pos.y, z: r.pos.z, eliminated: r.eliminated });
+      }
+      const frame = spectateFrame(
+        { x: focus.pos.x, y: focus.pos.y, z: focus.pos.z },
+        race.time || 0,
+        floor == null ? focus.pos.y : floor,
+        crowd
+      );
+      let aimX = frame.x;
+      let aimY = frame.y;
+      let aimZ = frame.z;
+      try {
+        camDir.set(aimX - frame.look.x, aimY - frame.look.y, aimZ - frame.look.z);
+        const span = camDir.length() || 1;
+        camDir.multiplyScalar(1 / span);
+        camRay.set(new THREE.Vector3(frame.look.x, frame.look.y, frame.look.z), camDir);
+        camRay.far = span;
+        const blocked = camRay.intersectObjects(camSolids(), false);
+        if (blocked.length) aimY += 8;
+      } catch (err) { /* keep the open frame */ }
+      camera.position.x = damp(camera.position.x, aimX, 4.5, dt);
+      camera.position.y = damp(camera.position.y, aimY, 4.5, dt);
+      camera.position.z = damp(camera.position.z, aimZ, 4.5, dt);
+      camera.lookAt(frame.look.x, frame.look.y, frame.look.z);
+      const floorY = floor == null ? focus.pos.y : floor;
+      state.spectate = {
+        back: Math.hypot(frame.x - focus.pos.x, frame.z - focus.pos.z),
+        height: frame.y - floorY,
+        lookZ: frame.look.z,
+        focusZ: focus.pos.z,
+      };
+      if (scene.fog) {
+        scene.fog.near = frame.fogNear;
+        scene.fog.far = frame.fogFar;
+      }
       return;
     }
     if (dragging) {
@@ -2087,6 +2120,29 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     camera.position.y = cameraAboveFloor(camera.position.y, camFloor == null ? player.pos.y : camFloor);
     camera.lookAt(player.pos.x, player.pos.y + 1.15, player.pos.z + Math.cos(state.yaw) * 1.4);
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
+  }
+
+  function peelCamera(race) {
+    try {
+      const dirs = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, 1, 0], [0, -1, 0]];
+      const solids = camSolids();
+      for (let n = 0; n < 3; n++) {
+        let closest = null;
+        for (let i = 0; i < dirs.length; i++) {
+          camDir.set(dirs[i][0], dirs[i][1], dirs[i][2]);
+          camRay.set(camera.position, camDir);
+          camRay.far = 0.9;
+          const hits = camRay.intersectObjects(solids, false);
+          if (hits.length && (!closest || hits[0].distance < closest.distance)) closest = hits[0];
+        }
+        if (!closest || closest.distance >= 0.75 || !closest.face) break;
+        camHead.copy(closest.face.normal).transformDirection(closest.object.matrixWorld);
+        camera.position.copy(closest.point).addScaledVector(camHead, 1.05);
+      }
+      void race;
+    } catch (err) { /* leave the solved camera */ }
+    const floor = groundAtSafe(camera.position.x, camera.position.z);
+    if (floor != null) camera.position.y = cameraAboveFloor(camera.position.y, floor);
   }
 
   function fadePlayer(dist) {
@@ -2242,11 +2298,38 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     hideBuddy,
     view() {
       const p = visuals[0] && visuals[0].group.position;
-      if (!p) return null;
+      const floor = groundAtSafe(camera.position.x, camera.position.z);
+      let minSolid = 99;
+      let solidName = "";
+      try {
+        const dirs = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1], [0, -1, 0]];
+        for (let i = 0; i < dirs.length; i++) {
+          camDir.set(dirs[i][0], dirs[i][1], dirs[i][2]);
+          camRay.set(camera.position, camDir);
+          camRay.far = 1.25;
+          const hits = camRay.intersectObjects(camSolids(), false);
+          if (hits.length && hits[0].distance < minSolid) {
+            minSolid = hits[0].distance;
+            const obj = hits[0].object;
+            solidName = (obj && (obj.name || (obj.parent && obj.parent.name))) || "mesh";
+          }
+        }
+      } catch (err) { /* probe only */ }
+      const px = p ? p.x : 0;
+      const py = p ? p.y : 0;
+      const pz = p ? p.z : 0;
       return {
-        dist: Math.hypot(camera.position.x - p.x, camera.position.y - p.y, camera.position.z - p.z),
-        back: Math.hypot(camera.position.x - p.x, camera.position.z - p.z),
+        dist: p ? Math.hypot(camera.position.x - px, camera.position.y - py, camera.position.z - pz) : 0,
+        back: p ? Math.hypot(camera.position.x - px, camera.position.z - pz) : 0,
         fov: camera.fov,
+        cx: camera.position.x,
+        cy: camera.position.y,
+        cz: camera.position.z,
+        floor: floor == null ? null : floor,
+        minSolid,
+        solidName,
+        fogNear: scene.fog ? scene.fog.near : 0,
+        spectate: state.spectate,
       };
     },
     applyLook,

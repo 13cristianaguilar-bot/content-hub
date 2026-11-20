@@ -1,0 +1,6 @@
+{
+  "seedRuns": 60,
+  "perPlanet": 20,
+  "failed": 0,
+  "note": "Twenty seeds on each planet, round types cycled, quick mode, qa=4. Logged from the seed pass before the flow and adversarial pass."
+}

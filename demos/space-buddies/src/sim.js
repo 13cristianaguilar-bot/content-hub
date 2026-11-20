@@ -1,5 +1,5 @@
 import { COLORS } from "./config.js";
-import { groundAt } from "./course.js";
+import { floorsAt, groundAt } from "./course.js";
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -196,16 +196,22 @@ function sampleGround(race, x, z, y, nextY) {
     if (!canStep(y, nextY, top)) continue;
     if (!best || top >= best.y) best = { y: top, platformId: i, tile: null };
   }
-  const tile = groundAt(race.course, x, z);
-  if (tile && walkable(tile) && canStep(y, nextY, tile.y)) {
-    if (!best || tile.y >= best.y - 0.02) best = { y: tile.y, platformId: null, tile };
+  const tiles = floorsAt(race.course, x, z);
+  for (let i = 0; i < tiles.length; i++) {
+    const tile = tiles[i];
+    if (tile && walkable(tile) && canStep(y, nextY, tile.y)) {
+      if (!best || tile.y >= best.y - 0.02) best = { y: tile.y, platformId: null, tile };
+    }
   }
   return best;
 }
 
 function supportNear(race, x, z, y) {
-  const tile = groundAt(race.course, x, z);
-  if (tile && walkable(tile) && Math.abs(tile.y - y) < 1.4) return true;
+  const tiles = floorsAt(race.course, x, z);
+  for (let i = 0; i < tiles.length; i++) {
+    const tile = tiles[i];
+    if (tile && walkable(tile) && Math.abs(tile.y - y) < 1.4) return true;
+  }
   for (const p of race.platforms) {
     const dx = x - p.x;
     const dz = z - p.z;
@@ -452,6 +458,7 @@ function integrate(race, r, wish, dt) {
   const cfg = race.cfg;
   r.prevZ = r.pos.z;
   r.prevX = r.pos.x;
+  r.prevY = r.pos.y;
   if (r.seated || r.eliminated) return;
   if (r.qualified) {
     r.pos.z += 2.4 * dt;
@@ -686,6 +693,23 @@ function integrate(race, r, wish, dt) {
     doRespawn(race, r);
   }
   shoveFree(race, r);
+  noteTunnel(race, r);
+}
+
+function noteTunnel(race, r) {
+  if (!r.isPlayer || r.prevY == null || r.tunneled) return;
+  const hits = floorsAt(race.course, r.pos.x, r.pos.z);
+  for (let i = 0; i < hits.length; i++) {
+    const tile = hits[i];
+    if (!tile.rx || !tile.rz) continue;
+    const nx = (r.pos.x - tile.px) / tile.rx;
+    const nz = (r.pos.z - tile.pz) / tile.rz;
+    if (nx * nx + nz * nz > 0.35) continue;
+    if (r.prevY >= tile.y - 0.05 && r.pos.y < tile.y - 0.75) {
+      r.tunneled = tile.y;
+      return;
+    }
+  }
 }
 
 function botWish(race, r, dt) {

@@ -6,6 +6,8 @@ import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
 import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
+import { hideControls, placeLabel } from "./place.js";
+import { botWish } from "./bot.js";
 
 const params = new URLSearchParams(location.search);
 const cfg = resolveConfig({
@@ -64,8 +66,8 @@ try { career = Object.assign(career, JSON.parse(localStorage.getItem(CAREER_KEY)
 function saveCareer() {
   try { localStorage.setItem(CAREER_KEY, JSON.stringify(career)); } catch (err) { /* ignore */ }
 }
-let planet = 1;
-let roundIndex = 0;
+let planet = Math.max(1, Math.min(3, Number(params.get("planet")) || 1));
+let roundIndex = Math.max(0, Math.min(2, Number(params.get("round")) || 0));
 let alive = null;
 let paused = false;
 let escWas = false;
@@ -193,11 +195,33 @@ function begin() {
   race.player.color = pickColor;
   saveLook();
   if (world.applyLook) world.applyLook(pickColor, pickGear);
-  introLeft = cfg.auto ? 0.2 : 3.3;
+  introLeft = cfg.auto || params.get("bot") ? 0.2 : 3.3;
   hud.hidden = false;
   controls.hidden = true;
   tutor.hidden = true;
-  window.__sb = { race, cfg, get fps() { return fps; }, view: () => (world.view ? world.view() : null), campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
+  window.__sb = {
+    race,
+    cfg,
+    get fps() { return fps; },
+    view: () => (world.view ? world.view() : null),
+    ground: (x, z) => groundAt(course, x, z),
+    supports: (x, y, z) => {
+      let under = null;
+      let through = null;
+      for (const pad of course.floors) {
+        const chunk = course.chunks[pad.chunk];
+        if (!chunk || chunk.state === "falling" || chunk.state === "gone") continue;
+        const nx = (x - pad.x) / pad.rx;
+        const nz = (z - pad.z) / pad.rz;
+        if (nx * nx + nz * nz > 1) continue;
+        const core = nx * nx + nz * nz < 0.45;
+        if (pad.y <= y + 0.45 && (!under || pad.y > under.y)) under = { y: pad.y, core };
+        if (core && pad.y > y + 0.8 && (!through || pad.y < through.y)) through = { y: pad.y };
+      }
+      return { under: under && under.y, through: !under && through ? through.y : null };
+    },
+    campaign: () => ({ planet, roundIndex, plan: currentPlan(), paused }),
+  };
   window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
   applyRound();
   pauseBtn.hidden = false;
@@ -511,13 +535,7 @@ function updateHud(dt) {
   if (timerNum && timerNum.textContent !== label) timerNum.textContent = label;
   timerEl.classList.toggle("is-low", race.phase === "race" && remain <= 15);
 
-  let ahead = 0;
-  for (const r of race.racers) {
-    if (r !== race.player && !r.seated && r.pos.z > race.player.pos.z + 0.4) ahead++;
-  }
-  const n = ahead + 1;
-  const suffix = n === 1 ? "ST" : n === 2 ? "ND" : n === 3 ? "RD" : "TH";
-  const placeText = n + suffix;
+  const placeText = placeLabel(race.player, race.racers);
   if (placeEl.textContent !== placeText) placeEl.textContent = placeText;
   const coinN = race.coins || 0;
   if (coinNum && coinNum.dataset.n !== String(coinN)) {
@@ -584,7 +602,7 @@ function updateHud(dt) {
   const showEnd = race.phase === "results";
   const aboard = document.getElementById("aboard");
   const waiting = started && race.player.seated && race.phase === "race";
-  controls.hidden = showEnd || !started || waiting;
+  controls.hidden = hideControls(race.phase, race.player.seated, started);
   if (aboard) {
     aboard.hidden = !waiting;
     const left = Math.max(0, cfg.seats - race.seatsFilled);
@@ -710,7 +728,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.1, lastT ? (now - lastT) / 1000 : STEP);
   lastT = now;
-  if (document.hidden) return;
+  if (document.hidden || window.__sbBackground) return;
   frames++;
   if (!frame.lastWall) frame.lastWall = now;
   if (now - frame.lastWall >= 500) {
@@ -764,13 +782,16 @@ function frame(now) {
     holdJump: raw.holdJump,
   };
   if (race.phase !== "race") wish = { x: 0, z: 0, jump: false, dive: false, grab: false, holdJump: false };
+  const botMode = params.get("bot");
+  if (botMode && race.phase === "race" && !race.player.seated && !race.player.eliminated) wish = botWish(race, botMode);
+  const qaRate = Math.max(1, Math.min(8, Number(params.get("qa")) || 1));
   if (hitStop > 0) {
     hitStop -= dt;
   } else {
-  acc += dt * simScale;
+  acc += dt * simScale * qaRate;
   }
   let steps = 0;
-  while (hitStop <= 0 && acc >= STEP && steps < 8) {
+  while (hitStop <= 0 && acc >= STEP && steps < Math.min(48, 8 * qaRate)) {
     try {
       step(race, STEP, steps === 0 ? wish : { x: wish.x, z: wish.z, jump: false, dive: false, grab: false, holdJump: wish.holdJump });
     } catch (err) {

@@ -55,7 +55,20 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
       if (crack) colors.push(1, 0.42, 0.06);
       else if (rim) colors.push(0.15, 0.35, 0.75);
       else if (hex) colors.push(0.85, 0.97, 1);
-      else if (zone === "canyon") colors.push(0.16, 0.1, 0.11);
+      else if (zone === "canyon") {
+        const hot = Math.abs(Math.sin(a * 3 + r * 4 + cx * 0.1)) > 0.72;
+        colors.push(hot ? 0.95 : 0.11, hot ? 0.36 : 0.07, hot ? 0.05 : 0.08);
+      } else if (zone === "meadow") {
+        const wx = cx + Math.cos(a) * rx * t;
+        const wz = cz + Math.sin(a) * rz * t;
+        const dx = wx - cx;
+        const dz = wz - cz;
+        const n = 0.5 + 0.5 * Math.sin(wx * 0.47 + wz * 0.29);
+        const dirt = (Math.abs(dx) < 5.4 && dz < 3) || (dx < -6 && dx > -18 && dz > -10 && dz < 16) || (dx > 5 && dx < 17 && dz > -8 && dz < 18);
+        if (t > 0.8) colors.push(0.42, 0.26, 0.14);
+        else if (dirt) colors.push(0.38 + n * 0.06, 0.26 + n * 0.04, 0.12);
+        else colors.push(0.1 + n * 0.1, 0.55 + n * 0.22, 0.12 + n * 0.05);
+      }
       else if (zone === "ice") colors.push(0.62, 0.9, 1);
       else {
         const shade = t > 0.78 ? 0.7 : 1 - t * 0.05;
@@ -96,7 +109,13 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
     for (let side = -1; side <= 1; side += 2) {
       const o = (width * 0.5 + wob) * side;
       positions.push(x + px * o, lerp(y0, y1, t), z + pz * o);
-      colors.push(col[0], col[1], col[2]);
+      if (zone === "canyon") {
+        const crack = Math.abs(Math.sin(t * 7 + side * 3)) > 0.9;
+        colors.push(crack ? 1 : 0.07, crack ? 0.32 : 0.035, crack ? 0.04 : 0.04);
+      } else if (zone === "meadow") {
+        const n = 0.5 + 0.5 * Math.sin(x * 0.4 + z * 0.3);
+        colors.push(0.45 + n * 0.08, 0.34 + n * 0.05, 0.16);
+      } else colors.push(col[0], col[1], col[2]);
     }
   }
   for (let i = 0; i < steps; i++) {
@@ -420,6 +439,7 @@ export function createCourse(cfg) {
     { id: 1, kind: "spin", originX: -16, originZ: zz(196), x: -16, z: zz(196), prevX: -16, prevZ: zz(196), y: 4.7, originY: 4.7, amp: 0, speed: 1.3, phase: 0, radius: 3.1, axis: "spin" },
     { id: 2, kind: "seesaw", originX: 0, originZ: zz(278), x: 0, z: zz(278), prevX: 0, prevZ: zz(278), y: 3.7, originY: 3.7, amp: 0, speed: 0, phase: 0, radius: 3.6, axis: "seesaw", tilt: 0, face: Math.PI / 2 },
     { id: 3, kind: "seesaw", originX: 0, originZ: zz(338), x: 0, z: zz(338), prevX: 0, prevZ: zz(338), y: 6.8, originY: 6.8, amp: 0, speed: 0, phase: 0, radius: 3.4, axis: "seesaw", tilt: 0, face: Math.PI / 2 },
+    { id: 4, kind: "seesaw", zone: "canyon", originX: 11, originZ: zz(156), x: 11, z: zz(156), prevX: 11, prevZ: zz(156), y: 0.85, originY: 0.85, amp: 0, speed: 0, phase: 0, radius: 3.3, axis: "seesaw", tilt: 0, face: 0 },
   ];
   const spinners = [
     { ...at(36, -8, 0.15), len: 3.6, angle: rnd() * 3, spin: 1.5 },

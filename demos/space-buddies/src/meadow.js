@@ -28,6 +28,17 @@ export const MEADOW_MODELS = {
   door: "assets/meadow/door.glb",
 };
 
+export const EXTRA_MODELS = {
+  cliff: "assets/kenney/cliff.glb",
+  cliffLarge: "assets/kenney/cliff_large.glb",
+  cliffTop: "assets/kenney/cliff_top.glb",
+  formation: "assets/kenney/formation.glb",
+  formationLarge: "assets/kenney/formation_large.glb",
+  plank: "assets/kenney/plank.glb",
+  block: "assets/kenney/block.glb",
+  doorOpen: "assets/kenney/door_open.glb",
+};
+
 const TINT = {
   woodbark: 0xc9844a,
   woodinner: 0xf0d2a4,
@@ -56,10 +67,10 @@ function tintOf(name) {
   return 0xfff6e5;
 }
 
-function toonMat(src, gradientMap) {
+function toonMat(src, gradientMap, override) {
   const name = (src && src.name) || "";
   const mat = new THREE.MeshToonMaterial({
-    color: tintOf(name),
+    color: override ? override(name) : tintOf(name),
     gradientMap,
     side: THREE.DoubleSide,
     name,
@@ -81,7 +92,7 @@ function recolor(root, gradientMap) {
   });
 }
 
-function partsOf(gltf, gradientMap) {
+function partsOf(gltf, gradientMap, override) {
   gltf.scene.updateWorldMatrix(true, true);
   const parts = [];
   gltf.scene.traverse((obj) => {
@@ -89,15 +100,15 @@ function partsOf(gltf, gradientMap) {
     const geom = obj.geometry.clone();
     geom.applyMatrix4(obj.matrixWorld);
     const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-    parts.push({ geom, mat: toonMat(src, gradientMap) });
+    parts.push({ geom, mat: toonMat(src, gradientMap, override) });
   });
   const box = new THREE.Box3().setFromObject(gltf.scene);
   return { parts, lift: -box.min.y };
 }
 
-function scatter(scene, gltf, gradientMap, spots) {
+function scatter(scene, gltf, gradientMap, spots, override) {
   if (!gltf || !spots.length) return;
-  const { parts, lift } = partsOf(gltf, gradientMap);
+  const { parts, lift } = partsOf(gltf, gradientMap, override);
   const dummy = new THREE.Object3D();
   for (const part of parts) {
     const mesh = new THREE.InstancedMesh(part.geom, part.mat, spots.length);
@@ -113,6 +124,7 @@ function scatter(scene, gltf, gradientMap, spots) {
     mesh.instanceMatrix.needsUpdate = true;
     scene.add(mesh);
   }
+  if (spots.some((spot) => spot.s > 1.1)) return;
   const shadow = new THREE.InstancedMesh(
     new THREE.CircleGeometry(1, 12),
     new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.22, depthWrite: false }),
@@ -131,86 +143,98 @@ function scatter(scene, gltf, gradientMap, spots) {
   scene.add(shadow);
 }
 
-function openSouth(a) {
-  const south = Math.abs(a + Math.PI / 2);
-  const north = Math.abs(a - Math.PI / 2);
-  return south < 0.62 || north < 0.42;
+function cluster(cx, cz, n, spread, scale) {
+  const spots = [];
+  for (let i = 0; i < n; i++) {
+    const a = i * 2.4 + cx * 0.1;
+    const rr = spread * (0.25 + (i % 4) * 0.22);
+    spots.push({
+      x: cx + Math.cos(a) * rr,
+      z: cz + Math.sin(a) * rr,
+      rot: a,
+      s: scale * (0.82 + (i % 3) * 0.14),
+      y: 0,
+    });
+  }
+  return spots;
 }
+
+function ring(cx, cz, count, radius, scale, y, phase) {
+  const spots = [];
+  for (let i = 0; i < count; i++) {
+    const a = phase + (i / count) * Math.PI * 2;
+    spots.push({
+      x: cx + Math.cos(a) * radius,
+      z: cz + Math.sin(a) * radius,
+      rot: a,
+      s: scale * (0.85 + (i % 3) * 0.12),
+      y,
+    });
+  }
+  return spots;
+}
+
+const CANYON_TINT = (name) => {
+  const key = String(name || "").toLowerCase();
+  if (key.includes("sand") || key.includes("grass") || key.includes("leaf")) return 0x6a3020;
+  if (key.includes("red")) return 0xff5a2a;
+  return 0x24181c;
+};
+
+const MEADOW_HILL = (name) => {
+  const key = String(name || "").toLowerCase();
+  if (key.includes("sand") || key.includes("grass") || key.includes("leaf")) return 0x3dce55;
+  if (key.includes("wood") || key.includes("dirt")) return 0x8d6844;
+  return 0x6d5840;
+};
 
 export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   const hub = (course.hubs || []).find((h) => h.zone === "meadow") || { x: 0, z: 40, r: 24 };
-  const at = (a, r, s, y) => ({
-    x: hub.x + Math.cos(a) * r,
-    z: hub.z + Math.sin(a) * r,
-    rot: a,
-    s,
-    y: y || 0,
-  });
-
-  const trees = [0.15, 0.7, 2.05, 2.45, 2.9, -2.9, -2.4, -1.85].map((a, i) => at(a, 12.5, i % 2 ? 0.32 : 0.36));
-  const fats = [1.15, 2.25, -2.6, -0.45].map((a) => at(a, 14.8, 0.4));
-  const pines = [0.95, 2.65, -2.05].map((a) => at(a, 16.4, 0.34));
-  const bushes = [];
-  for (let i = 0; i < 12; i++) {
-    const a = -2.8 + i * 0.48;
-    if (openSouth(a)) continue;
-    bushes.push(at(a, 8.4 + (i % 3) * 1.1, i % 2 ? 0.55 : 0.46));
-  }
-  const flowers = [];
-  for (let i = 0; i < 8; i++) {
-    const a = -2.4 + i * 0.7;
-    if (Math.abs(Math.cos(a)) < 0.45) continue;
-    flowers.push(at(a, 9.5 + (i % 2), 0.42));
-  }
-  const tufts = [];
-  for (let i = 0; i < 16; i++) {
-    const a = i * 0.9;
-    const r = 6.5 + (i % 4) * 2.1;
-    const spot = at(a, r, i % 2 ? 0.2 : 0.28);
-    if (Math.abs(spot.x - hub.x) < 4.2 && spot.z < hub.z + 1) continue;
-    tufts.push(spot);
-  }
-  const rocks = [0.2, 2.2, -2.2, -0.5].map((a, i) => at(a, 17 + (i % 2), i % 2 ? 0.42 : 0.32));
-  const shrooms = [1.2, 2.0, -2.1, -1.15].map((a) => at(a, 5.4, 0.7));
-  const fences = [-1.15, -0.55, 0.15, 0.7].map((t) => ({
-    x: hub.x - 19.2,
-    z: hub.z + t * 6.2,
-    rot: Math.PI / 2,
-    s: 0.3,
-    y: 0,
-  }));
-  const logs = [
-    { x: hub.x - 16.5, z: hub.z - 6, rot: 0.4, s: 0.55, y: 0 },
-    { x: hub.x + 15.5, z: hub.z + 4, rot: 1.2, s: 0.48, y: 0 },
+  const trees = cluster(hub.x - 10, hub.z - 1, 6, 3.2, 0.62);
+  const fats = cluster(hub.x + 9, hub.z + 13, 4, 2.8, 0.72);
+  const pines = cluster(hub.x - 8, hub.z + 12, 3, 2.2, 0.58);
+  const bushes = cluster(hub.x - 11, hub.z + 6, 5, 2.4, 0.85);
+  const flowersA = cluster(hub.x - 7, hub.z - 13, 8, 2.2, 0.78);
+  const flowersB = cluster(hub.x + 8, hub.z - 9, 7, 2, 0.72);
+  const tufts = cluster(hub.x + 6, hub.z - 14, 8, 2.6, 0.42).concat(cluster(hub.x - 6, hub.z + 8, 6, 2.2, 0.4));
+  const rocks = cluster(hub.x + 16, hub.z + 2, 5, 2.6, 0.95);
+  const shrooms = [
+    { x: hub.x + 7.2, z: hub.z - 5.5, rot: 0.4, s: 2.15, y: 0 },
+    { x: hub.x + 9.4, z: hub.z - 7.2, rot: 1.2, s: 1.55, y: 0 },
+    { x: hub.x + 6.1, z: hub.z - 7.6, rot: 2.1, s: 1.25, y: 0 },
   ];
+  const fences = [];
+  for (let i = 0; i < 6; i++) {
+    fences.push({ x: hub.x - 18.6, z: hub.z - 12 + i * 3.6, rot: Math.PI / 2, s: 0.52, y: 0 });
+  }
   const mounds = (course.floors || []).filter((p) => p.zone === "meadow" && p.rx > 5 && p.rx < 9);
-  const pads = mounds.map((p, i) => ({ x: p.x, z: p.z, y: p.y, rot: i, s: 0.62 }));
+  const pads = mounds.map((p, i) => ({ x: p.x, z: p.z, y: p.y, rot: i, s: 0.85 }));
 
   scatter(scene, gltfs.tree, gradientMap, trees);
   scatter(scene, gltfs.treeFat, gradientMap, fats);
   scatter(scene, gltfs.pine, gradientMap, pines);
-  scatter(scene, gltfs.bush, gradientMap, bushes.filter((_, i) => i % 3 === 0));
-  scatter(scene, gltfs.bushLarge, gradientMap, bushes.filter((_, i) => i % 3 === 1));
-  scatter(scene, gltfs.bushSmall, gradientMap, bushes.filter((_, i) => i % 3 === 2).map((s) => ({ ...s, s: s.s * 0.7 })));
-  scatter(scene, gltfs.flowerRed, gradientMap, flowers.filter((_, i) => i % 3 === 0));
-  scatter(scene, gltfs.flowerYellow, gradientMap, flowers.filter((_, i) => i % 3 === 1));
-  scatter(scene, gltfs.flowerPurple, gradientMap, flowers.filter((_, i) => i % 3 === 2));
-  scatter(scene, gltfs.grass, gradientMap, tufts.filter((_, i) => i % 2 === 0));
-  scatter(scene, gltfs.grassLarge, gradientMap, tufts.filter((_, i) => i % 2 === 1));
-  scatter(scene, gltfs.rock, gradientMap, rocks);
-  scatter(scene, gltfs.rockLarge, gradientMap, rocks.filter((_, i) => i % 2 === 0).map((s) => ({ ...s, s: 0.38 })));
+  scatter(scene, gltfs.bushLarge, gradientMap, bushes);
+  scatter(scene, gltfs.bush, gradientMap, cluster(hub.x + 12, hub.z + 8, 4, 2, 0.7));
+  scatter(scene, gltfs.flowerRed, gradientMap, flowersA.filter((_, i) => i % 2 === 0));
+  scatter(scene, gltfs.flowerYellow, gradientMap, flowersA.filter((_, i) => i % 2 === 1));
+  scatter(scene, gltfs.flowerPurple, gradientMap, flowersB);
+  scatter(scene, gltfs.grass, gradientMap, tufts);
+  scatter(scene, gltfs.grassLarge, gradientMap, cluster(hub.x - 9, hub.z - 8, 4, 1.8, 0.48));
+  scatter(scene, gltfs.rockLarge, gradientMap, rocks);
+  scatter(scene, gltfs.rock, gradientMap, cluster(hub.x + 15, hub.z - 1, 4, 1.6, 0.55));
   scatter(scene, gltfs.mushroomTall, gradientMap, shrooms);
   scatter(scene, gltfs.fence, gradientMap, fences);
-  scatter(scene, gltfs.fenceBroken, gradientMap, fences.slice(0, 2).map((s) => ({ ...s, x: s.x + 2.2, s: 0.26 })));
-  scatter(scene, gltfs.log, gradientMap, logs);
+  scatter(scene, gltfs.log, gradientMap, [{ x: hub.x - 15.5, z: hub.z - 8, rot: 0.5, s: 0.7, y: 0 }]);
   scatter(scene, gltfs.platform, gradientMap, pads);
-  scatter(scene, gltfs.door, gradientMap, [{ x: hub.x + 17.5, z: hub.z - 2, rot: -0.6, s: 0.28, y: 0 }]);
+  scatter(scene, gltfs.cliff, gradientMap, ring(hub.x, hub.z, 8, 22, 0.5, -1.1, 0.2), MEADOW_HILL);
+  scatter(scene, gltfs.formation, gradientMap, ring(hub.x, hub.z, 5, 36, 1.7, -2.2, 0.4), MEADOW_HILL);
+  scatter(scene, gltfs.formationLarge, gradientMap, ring(hub.x, hub.z, 4, 44, 2.05, -2.8, 1.1), MEADOW_HILL);
 
   if (gltfs.mushroom) {
     const hero = gltfs.mushroom.scene.clone(true);
     recolor(hero, gradientMap);
     const box = new THREE.Box3().setFromObject(gltfs.mushroom.scene);
-    const s = 4.15;
+    const s = 4.6;
     hero.scale.setScalar(s);
     hero.position.set(hub.x, -box.min.y * s, hub.z);
     const shells = [];
@@ -222,7 +246,35 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
       shell.scale.setScalar(1.045);
       obj.add(shell);
     }
+    const spots = [[0.22, 1.28, 0.05], [-0.18, 1.22, 0.2], [0.05, 1.32, -0.22], [0.28, 1.18, -0.12]];
+    spots.forEach((p, i) => {
+      const dot = gltfs.mushroomTall.scene.clone(true);
+      recolor(dot, gradientMap);
+      dot.scale.setScalar(0.16 + (i % 2) * 0.05);
+      dot.position.set(p[0], p[1], p[2]);
+      dot.rotation.y = i;
+      hero.add(dot);
+    });
     scene.add(hero);
+  }
+
+  const canyon = (course.hubs || []).find((h) => h.zone === "canyon");
+  const crater = course.crater;
+  if (canyon) {
+    const cx = crater ? crater.x : canyon.x;
+    const cz = crater ? crater.z : canyon.z;
+    scatter(scene, gltfs.rockLarge, gradientMap, ring(cx, cz, 9, 11.5, 1.05, 0.1, 0.3), CANYON_TINT);
+    scatter(scene, gltfs.rock, gradientMap, ring(cx, cz, 8, 9.2, 0.7, 0.05, 0.6), CANYON_TINT);
+    scatter(scene, gltfs.cliffLarge, gradientMap, ring(canyon.x, canyon.z, 7, 22, 0.62, -1.4, 0.15), CANYON_TINT);
+    scatter(scene, gltfs.formation, gradientMap, ring(canyon.x, canyon.z, 4, 34, 1.85, -2.4, 0.8), CANYON_TINT);
+    scatter(scene, gltfs.formationLarge, gradientMap, ring(canyon.x, canyon.z, 3, 42, 2.1, -3, 0.2), CANYON_TINT);
+    const wallZ = course.doors && course.doors[0] ? course.doors[0].z : cz + 28;
+    if (gltfs.block) {
+      scatter(scene, gltfs.block, gradientMap, [
+        { x: -12.6, z: wallZ, rot: 0, s: 0.28, y: 0.15 },
+        { x: 12.6, z: wallZ, rot: 0, s: 0.28, y: 0.15 },
+      ], CANYON_TINT);
+    }
   }
 }
 

@@ -2,7 +2,7 @@ import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
-import { MEADOW_MODELS, meadowProp, placeMeadowDressing } from "./meadow.js";
+import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing } from "./meadow.js";
 
 const MODELS = {
   buddy: "assets/models/space_buddy.glb",
@@ -131,7 +131,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const gltfs = {};
   const meadow = {};
   let loaded = 0;
-  const meadowKeys = Object.keys(MEADOW_MODELS);
+  const meadowKeys = Object.keys(MEADOW_MODELS).concat(Object.keys(EXTRA_MODELS));
   const totalLoads = keys.length + meadowKeys.length;
   await Promise.all([
     ...keys.map((key) => new Promise((resolve, reject) => {
@@ -144,7 +144,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }, undefined, reject);
     })),
     ...meadowKeys.map((key) => new Promise((resolve, reject) => {
-      loader.load(MEADOW_MODELS[key], (gltf) => {
+      loader.load(MEADOW_MODELS[key] || EXTRA_MODELS[key], (gltf) => {
         meadow[key] = gltf;
         loaded++;
         if (onProgress) onProgress(loaded / totalLoads);
@@ -297,21 +297,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.add(coinMesh, coinGlow);
   }
 
-  const wood = new THREE.MeshToonMaterial({ color: 0xc9854a, gradientMap: TOON_MAP });
-  const doorSlab = new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP });
   for (const door of course.doors || []) {
-    const postL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.1, 0.28), wood);
-    const postR = postL.clone();
-    const lintel = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.28, 0.28), wood);
-    postL.position.set(door.x - 1.05, door.y + 1.55, door.z);
-    postR.position.set(door.x + 1.05, door.y + 1.55, door.z);
-    lintel.position.set(door.x, door.y + 3.05, door.z);
-    scene.add(postL, postR, lintel);
+    const src = door.solid ? meadow.door : meadow.doorOpen;
+    if (!src) continue;
+    const obj = meadowProp(src, TOON_MAP, 0.4, false);
+    obj.position.x = door.x;
+    obj.position.z = door.z;
+    obj.position.y += door.y;
     if (door.solid) {
-      const slab = new THREE.Mesh(new THREE.BoxGeometry(1.9, 2.7, 0.22), doorSlab);
-      slab.position.set(door.x, door.y + 1.45, door.z);
-      scene.add(slab);
+      obj.traverse((node) => {
+        if (node.isMesh && node.material && node.material.color) node.material.color.set(0xc4453a);
+      });
     }
+    scene.add(obj);
   }
   const capMat = new THREE.MeshToonMaterial({ color: 0xe23b4a, gradientMap: TOON_MAP });
   const stemMat = new THREE.MeshToonMaterial({ color: 0xf4e2c4, gradientMap: TOON_MAP });
@@ -383,7 +381,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     lavaDecals.push(placeProp(gltfs.lava, course.crater.x, course.crater.y, course.crater.z, 0, course.crater.r / 3));
   }
   const spinnerObjs = course.spinners.map((s) => {
-    if (s.zone === "meadow" && meadow.saw) {
+    if ((s.zone === "meadow" || s.zone === "canyon") && meadow.saw) {
       const obj = meadowProp(meadow.saw, TOON_MAP, 0.34, true);
       obj.position.set(s.x, s.y + 0.9, s.z);
       scene.add(obj);
@@ -396,7 +394,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   });
   const platformObjs = [];
   course.platforms.forEach((p, i) => {
-    const obj = placeProp(gltfs.platform, p.x, p.y, p.z, 0, p.kind === "spin" ? 1.15 : 1.35);
+    let obj;
+    if (p.zone === "canyon" && meadow.plank) {
+      obj = meadowProp(meadow.plank, TOON_MAP, 0.24, true);
+      obj.position.set(p.x, p.y, p.z);
+      scene.add(obj);
+    } else {
+      obj = placeProp(gltfs.platform, p.x, p.y, p.z, 0, p.kind === "spin" ? 1.15 : 1.35);
+    }
     platformObjs[i] = obj;
   });
 
@@ -474,15 +479,26 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     return group;
   });
 
-  const pendMeshes = course.pendulums.map(() => {
-    const bob = cloneDrawn(gltfs.pendulum);
+  const pendMeshes = course.pendulums.map((p) => {
+    let bob;
+    if (p.zone === "canyon" && meadow.log && meadow.rockLarge) {
+      bob = new THREE.Group();
+      const handle = meadowProp(meadow.log, TOON_MAP, 0.48, true);
+      handle.rotation.z = Math.PI / 2;
+      const head = meadowProp(meadow.rockLarge, TOON_MAP, 0.72, true);
+      head.position.set(1.15, 0, 0);
+      head.traverse((node) => {
+        if (node.isMesh && node.material && node.material.color) node.material.color.set(0x2a2024);
+      });
+      bob.add(handle, head);
+    } else bob = cloneDrawn(gltfs.pendulum);
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 6), new THREE.MeshToonMaterial({ color: 0x1e2440, gradientMap: TOON_MAP }));
     scene.add(bob, rope);
     return { bob, rope };
   });
 
   const sweepMeshes = course.sweepers.map((s) => {
-    if (s.zone === "meadow" && meadow.saw) {
+    if ((s.zone === "meadow" || s.zone === "canyon") && meadow.saw) {
       const group = meadowProp(meadow.saw, TOON_MAP, 0.3, true);
       group.position.set(s.x, s.y + 0.85, s.z);
       scene.add(group);
@@ -968,8 +984,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     for (let i = 0; i < race.sweepers.length; i++) {
       const s = race.sweepers[i];
-      sweepMeshes[i].position.set(s.x, s.y + (s.zone === "meadow" ? 0.75 : 0), s.z);
-      if (s.zone === "meadow") sweepMeshes[i].rotation.z = race.time * 2.4;
+      const blade = s.zone === "meadow" || s.zone === "canyon";
+      sweepMeshes[i].position.set(s.x, s.y + (blade ? 0.75 : 0), s.z);
+      if (blade) sweepMeshes[i].rotation.z = race.time * 2.4;
     }
     for (let i = 0; i < race.rollers.length; i++) {
       const r = race.rollers[i];

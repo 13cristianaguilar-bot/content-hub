@@ -72,16 +72,16 @@ function markSrgb(map) {
   return map || null;
 }
 
-function buddyMat(src, hue) {
+function buddyMat(src, hex) {
+  const tint = new THREE.Color(hex);
   const map = markSrgb(src && src.map);
   const mat = new THREE.MeshStandardMaterial({
     map,
     color: 0xffffff,
-    roughness: 0.72,
+    roughness: 0.8,
     metalness: 0,
-    emissive: 0xffffff,
-    emissiveMap: map,
-    emissiveIntensity: 0.72,
+    emissive: tint,
+    emissiveIntensity: 0.16,
     name: "BuddyHue",
   });
   mat.transparent = false;
@@ -89,19 +89,13 @@ function buddyMat(src, hue) {
   mat.opacity = 1;
   mat.alphaTest = 0;
   mat.side = THREE.FrontSide;
-  mat.userData.hue = hue;
+  mat.userData.tint = tint;
   mat.onBeforeCompile = (shader) => {
-    shader.uniforms.uHue = { value: hue };
-    shader.uniforms.uTime = { value: 0 };
-    shader.uniforms.uWobble = { value: 0.006 };
+    shader.uniforms.uTint = { value: tint };
     mat.userData.shader = shader;
-    shader.vertexShader = "uniform float uTime;\nuniform float uWobble;\n" + shader.vertexShader.replace(
-      "#include <begin_vertex>",
-      "#include <begin_vertex>\nfloat h = clamp(position.y, 0.0, 1.8);\nfloat limb = smoothstep(0.35, 1.15, h);\nfloat wob = sin(uTime * 4.0 + h * 1.6) * uWobble * limb;\ntransformed.x += wob;\ntransformed.z += cos(uTime * 3.2 + h * 1.4) * uWobble * 0.45 * limb;"
-    );
-    shader.fragmentShader = "uniform float uHue;\n" + shader.fragmentShader.replace(
+    shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "float mx = max(diffuseColor.r, max(diffuseColor.g, diffuseColor.b));\nfloat mn = min(diffuseColor.r, min(diffuseColor.g, diffuseColor.b));\nfloat sat = mx - mn;\nif (sat > 0.045) {\n  vec3 gray = vec3(dot(diffuseColor.rgb, vec3(0.299, 0.587, 0.114)));\n  diffuseColor.rgb = mix(gray, diffuseColor.rgb, 2.05);\n  float ang = uHue * 1.15;\n  float c = cos(ang); float s = sin(ang);\n  mat3 huem = mat3(c + (1.0-c)/3.0, (1.0-c)/3.0 - s*0.57735, (1.0-c)/3.0 + s*0.57735, (1.0-c)/3.0 + s*0.57735, c + (1.0-c)/3.0, (1.0-c)/3.0 - s*0.57735, (1.0-c)/3.0 - s*0.57735, (1.0-c)/3.0 + s*0.57735, c + (1.0-c)/3.0);\n  diffuseColor.rgb = huem * diffuseColor.rgb;\n  outgoingLight = mix(outgoingLight, diffuseColor.rgb, 0.86);\n}\n#include <opaque_fragment>"
+      "vec3 albedo = diffuseColor.rgb;\nvec3 q = floor(albedo * 4.0 + 0.5) / 4.0;\nfloat luma = dot(q, vec3(0.299, 0.587, 0.114));\nfloat sat = max(q.r, max(q.g, q.b)) - min(q.r, min(q.g, q.b));\nfloat suit = smoothstep(0.1, 0.28, sat);\nvec3 tinted = uTint * clamp(luma * 1.15, 0.5, 1.0);\ndiffuseColor.rgb = mix(albedo, tinted, suit);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, 0.97);\n#include <opaque_fragment>"
     );
   };
   return mat;
@@ -121,13 +115,6 @@ function shipMat(src) {
   mat.opacity = 1;
   mat.side = THREE.FrontSide;
   return mat;
-}
-
-function hueFromHex(hex) {
-  const color = new THREE.Color(hex);
-  const hsl = { h: 0, s: 0, l: 0 };
-  color.getHSL(hsl);
-  return hsl.h * Math.PI * 2;
 }
 
 function convert(root) {
@@ -893,7 +880,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     model.traverse((obj) => {
       if (!obj.isMesh || !obj.material) return;
       const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-      obj.material = buddyMat(src, hueFromHex(colorHex));
+      obj.material = buddyMat(src, colorHex);
     });
     const mixer = new THREE.AnimationMixer(model);
     const actions = {};
@@ -1188,7 +1175,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       while (turn < -Math.PI) turn += Math.PI * 2;
       v.face += turn * Math.min(1, dt * 10);
       v.group.rotation.y = v.face;
-      const squash = r.squash || 0;
+      const squash = Math.min(1, r.squash || 0);
       const hspEarly = Math.hypot(r.vel.x, r.vel.z);
       let pose = "idle";
       if (r.flail > 0.05) pose = "tumble";
@@ -1196,29 +1183,34 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       else if (r.diving || r.sliding > 0) pose = "dive";
       else if (!r.grounded && r.vel.y > 0.5) pose = "jump";
       else if (hspEarly > 0.8) pose = "run";
-      const breathe = 1 + Math.sin(race.time * 2.6 + i) * (pose === "idle" ? 0.04 : 0.012);
+      const breathe = 1 + Math.sin(race.time * 2.6 + i) * (pose === "idle" ? 0.03 : 0.01);
       v.model.rotation.z = 0;
       v.model.position.y = 0;
+      let sx = 1;
+      let sy = breathe;
+      let sz = 1;
       if (pose === "jump") {
-        v.model.rotation.x = -0.35;
-        v.model.scale.set(0.78, 1.28 + squash * 0.1, 0.78);
+        v.model.rotation.x = -0.28;
+        sx = 0.94; sy = 1.08; sz = 0.94;
       } else if (pose === "dive") {
-        v.model.rotation.x = 1.2;
-        v.model.position.y = 0.2;
-        v.model.scale.set(1.28, 0.58, 1.08);
+        v.model.rotation.x = 0.7;
+        v.model.position.y = 0.12;
+        sx = 1.06; sy = 0.9; sz = 1.04;
       } else if (pose === "grab") {
-        v.model.rotation.x = 0.55;
-        v.model.scale.set(1.12, 0.86, 1);
+        v.model.rotation.x = 0.35;
+        sx = 1.04; sy = 0.94; sz = 1.02;
       } else if (pose === "tumble") {
-        v.model.rotation.x = race.time * 10;
-        v.model.scale.set(1.08, 0.88, 1.08);
+        v.model.rotation.x = Math.sin(race.time * 7) * 0.45;
+        v.model.rotation.z = Math.cos(race.time * 7) * 0.28;
       } else if (pose === "run") {
-        v.model.rotation.x = 0.18;
-        v.model.scale.set(1.06, 0.92 * breathe, 1);
+        v.model.rotation.x = 0.12;
       } else {
         v.model.rotation.x = 0;
-        v.model.scale.set(0.98 + squash * 0.2, breathe - squash * 0.22, 0.98);
+        sy = breathe - squash * 0.06;
+        sx = 1 + squash * 0.04;
+        sz = sx;
       }
+      v.model.scale.set(1.55 * sx, 0.88 * sy, 1.6 * sz);
       if (r.squash > 0.32 && !v.dusted) {
         v.dusted = true;
         for (let n = 0; n < 3; n++) burst(r.pos.x + (n - 1) * 0.2, r.pos.y + 0.1, r.pos.z, 0xd7c4a4);
@@ -1252,13 +1244,6 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       else if (r.flail > 0.05 || (!r.grounded && r.vel.y < -2)) anim = "Flail";
       else if (hsp > 0.8 || r.sliding > 0) anim = "Run";
       setAnim(v, anim, hsp / 7);
-      const wob = pose === "run" ? 0.04 : pose === "idle" ? 0.012 : pose === "tumble" ? 0.05 : 0.02;
-      v.model.traverse((obj) => {
-        const shader = obj.isMesh && obj.material && obj.material.userData.shader;
-        if (!shader) return;
-        shader.uniforms.uTime.value = race.time + i;
-        shader.uniforms.uWobble.value = Math.min(wob, 0.012);
-      });
       if (v.shadow) {
         v.shadow.visible = r.grounded;
         v.shadow.position.y = 0.04;
@@ -1538,9 +1523,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
       for (const m of mats) {
         if (!m) continue;
-        if (m.userData && m.userData.shader && m.userData.shader.uniforms.uHue) {
-          m.userData.shader.uniforms.uHue.value = hueFromHex(hex);
-        } else if (m.userData) m.userData.hue = hueFromHex(hex);
+        if (m.userData && m.userData.shader && m.userData.shader.uniforms.uTint) {
+          m.userData.shader.uniforms.uTint.value.set(hex);
+        }
+        if (m.name === "BuddyHue" && m.emissive) m.emissive.set(hex);
         if (m.name === "Buddy_Mint" && m.color) m.color.set(hex);
       }
     });

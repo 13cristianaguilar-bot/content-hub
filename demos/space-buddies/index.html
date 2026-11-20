@@ -498,6 +498,10 @@ button { font-family: inherit; touch-action: manipulation; }
       <div id="count-label">GET READY</div>
     </div>
   </div>
+  <div id="aboard" hidden>
+    <p id="aboard-copy">You're on board, waiting for 7 more</p>
+    <button id="aboard-skip" class="sb-btn sb-btn--primary" type="button" data-haptic="medium">END ROUND</button>
+  </div>
   <div id="controls" class="sb-controls" hidden>
     <div id="stick" class="sb-stick" aria-hidden="true"><div id="knob" class="sb-stick__knob"></div></div>
     <button id="grab" class="sb-action sb-action--grab" type="button" data-haptic="light" aria-label="Grab"></button>
@@ -553,7 +557,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=47"></script>
+<script src="game.js?v=49"></script>
 <style>
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
 .sb-hud__top { left: 12px; right: 12px; }
@@ -601,6 +605,9 @@ button { font-family: inherit; touch-action: manipulation; }
 #start.sb-btn--lg, #play.sb-btn--lg, #again.sb-btn--lg, #land.sb-btn--lg { min-height: 64px; font-size: 28px; }
 #result.miss #again.sb-btn { background: linear-gradient(180deg, var(--sb-sun-l) 0%, var(--sb-sun) 48%, var(--sb-sun) 84%, var(--sb-sun-d) 100%); box-shadow: inset 0 -3px 0 var(--sb-sun-dd), 0 var(--sb-depth) 0 calc(-1 * var(--sb-outline)) var(--sb-sun-d), 0 var(--sb-depth) 0 0 var(--sb-ink); }
 #count-num.sb-countdown { animation: pop 0.35s cubic-bezier(.34,1.56,.64,1); }
+#aboard { position: absolute; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 6; display: grid; gap: 10px; }
+#aboard[hidden] { display: none !important; }
+#aboard-copy { margin: 0; text-align: center; color: #fff; font: 400 22px/1.2 "Lilita One", sans-serif; text-shadow: 0 3px 0 #1e2440; }
 #round-name { background: transparent; pointer-events: none; }
 .round-banner { position: relative; width: min(92vw, 440px); }
 .round-banner .sb-banner { width: 100%; }

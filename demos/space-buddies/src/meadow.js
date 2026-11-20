@@ -318,8 +318,8 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   if (canyon) {
     const cx = crater ? crater.x : canyon.x;
     const cz = crater ? crater.z : canyon.z;
-    candyBlobs(scene, ring(cx, cz, 8, 12, 1.15, 0.15, 0.2), 0xff8a5a, gradientMap);
-    candyBlobs(scene, ring(cx, cz, 6, 8.5, 0.7, 0.1, 0.4), 0xffd23f, gradientMap);
+    candyBlobs(scene, ring(cx, cz, 5, 16, 1.05, 0.15, 0.2), 0xff8a5a, gradientMap);
+    candyBlobs(scene, ring(cx, cz, 4, 19, 0.7, 0.1, 0.4), 0xffd23f, gradientMap);
     scatter(scene, gltfs.cliffLarge, gradientMap, ring(canyon.x, canyon.z, 10, 21, 0.7, -1.4, 0.05), CANYON_TINT);
     scatter(scene, gltfs.cliff, gradientMap, ring(canyon.x, canyon.z, 10, 23.2, 0.62, -1.6, 0.18), CANYON_TINT);
     scatter(scene, gltfs.cliffTop, gradientMap, ring(canyon.x, canyon.z, 7, 36, 1.25, -0.8, 0.3), CANYON_TINT);
@@ -343,7 +343,7 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   const climb = (course.hubs || []).find((h) => h.zone === "climb");
   if (sky) {
     scatter(scene, gltfs.pine, gradientMap, ring(sky.x, sky.z, 6, 14, 0.42, 4.2, 0.2), SKY_TINT, true);
-    scatter(scene, gltfs.bush, gradientMap, ring(sky.x, sky.z, 8, 10, 0.45, 4.1, 0.6), SKY_TINT, true);
+    scatter(scene, gltfs.bush, gradientMap, ring(sky.x, sky.z, 5, 18, 0.45, 4.1, 0.6), SKY_TINT, true);
     scatter(scene, gltfs.cliffTop, gradientMap, ring(sky.x, sky.z, 6, 28, 1, 2, 0.4), SKY_TINT);
   }
   if (ice) {

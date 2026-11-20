@@ -286,6 +286,10 @@ playBtn.addEventListener("click", (e) => {
   audio.unlock();
   if (pending && ready) begin();
 });
+document.getElementById("aboard-skip").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (race && race.player.seated && race.phase === "race") race.forceLaunch = true;
+});
 startBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   audio.unlock();
@@ -578,7 +582,15 @@ function updateHud(dt) {
   }
 
   const showEnd = race.phase === "results";
-  controls.hidden = showEnd || !started;
+  const aboard = document.getElementById("aboard");
+  const waiting = started && race.player.seated && race.phase === "race";
+  controls.hidden = showEnd || !started || waiting;
+  if (aboard) {
+    aboard.hidden = !waiting;
+    const left = Math.max(0, cfg.seats - race.seatsFilled);
+    const copy = document.getElementById("aboard-copy");
+    if (copy) copy.textContent = left > 0 ? "You're on board, waiting for " + left + " more" : "You're on board";
+  }
   if (showEnd && !shownResult) {
     shownResult = true;
     const kind = race.result;

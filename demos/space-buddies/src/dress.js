@@ -67,6 +67,7 @@ export function buildDressing(scene, course, gradientMap) {
     });
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    mesh.userData.decor = true;
     scene.add(mesh);
     groups.push(mesh);
     return mesh;
@@ -78,6 +79,7 @@ export function buildDressing(scene, course, gradientMap) {
     if (Math.abs(t.col) < 2) continue;
     if ((Math.abs(t.col * 5 + t.row * 3) % 3) !== 0) continue;
     if ((t.row + t.col) % 2 !== 0) continue;
+    if ((t.zone === "canyon" || t.zone === "sky") && Math.abs(t.x) < 8) continue;
     picks[t.zone].push(t);
   }
 

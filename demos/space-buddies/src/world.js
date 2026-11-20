@@ -261,18 +261,55 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   crustGeo.computeVertexNormals();
   scene.add(new THREE.Mesh(crustGeo, terrainMat));
 
-  if (course.coins) {
-    const coinGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.08, 10);
-    const coinMat = new THREE.MeshToonMaterial({ color: 0xffd23f, emissive: 0xffd23f, emissiveIntensity: 0.25, gradientMap: TOON_MAP });
-    const coins = new THREE.InstancedMesh(coinGeo, coinMat, course.coins.length);
-    const coinDummy = new THREE.Object3D();
+  let coinMesh = null;
+  const coinDummy = new THREE.Object3D();
+  if (course.coins && course.coins.length) {
+    const coinGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.08, 12);
+    const coinMat = new THREE.MeshToonMaterial({ color: 0xffd23f, emissive: 0xffd23f, emissiveIntensity: 0.35, gradientMap: TOON_MAP });
+    coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, course.coins.length);
     course.coins.forEach((c, i) => {
       coinDummy.position.set(c.x, c.y, c.z);
       coinDummy.rotation.x = Math.PI / 2;
       coinDummy.updateMatrix();
-      coins.setMatrixAt(i, coinDummy.matrix);
+      coinMesh.setMatrixAt(i, coinDummy.matrix);
     });
-    scene.add(coins);
+    scene.add(coinMesh);
+  }
+
+  const wood = new THREE.MeshToonMaterial({ color: 0xc9854a, gradientMap: TOON_MAP });
+  const doorSlab = new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP });
+  for (const door of course.doors || []) {
+    const postL = new THREE.Mesh(new THREE.BoxGeometry(0.28, 3.1, 0.28), wood);
+    const postR = postL.clone();
+    const lintel = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.28, 0.28), wood);
+    postL.position.set(door.x - 1.05, door.y + 1.55, door.z);
+    postR.position.set(door.x + 1.05, door.y + 1.55, door.z);
+    lintel.position.set(door.x, door.y + 3.05, door.z);
+    scene.add(postL, postR, lintel);
+    if (door.solid) {
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(1.9, 2.7, 0.22), doorSlab);
+      slab.position.set(door.x, door.y + 1.45, door.z);
+      scene.add(slab);
+    }
+  }
+  const capMat = new THREE.MeshToonMaterial({ color: 0xe23b4a, gradientMap: TOON_MAP });
+  const stemMat = new THREE.MeshToonMaterial({ color: 0xf4e2c4, gradientMap: TOON_MAP });
+  const stoneMat = new THREE.MeshToonMaterial({ color: 0x6f7c9a, gradientMap: TOON_MAP });
+  for (const mark of course.landmarks || []) {
+    if (mark.kind === "mushroom") {
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.1, 3.2, 10), stemMat);
+      stem.position.set(mark.x, mark.y + 1.6, mark.z);
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(6.2, 16, 10), capMat);
+      cap.scale.y = 0.42;
+      cap.position.set(mark.x, mark.y + 4.2, mark.z);
+      scene.add(stem, cap);
+    } else if (mark.kind === "tower") {
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 2.4, 11, 8), stoneMat);
+      tower.position.set(mark.x, mark.y + 5.2, mark.z);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.6, 2.4, 8), capMat);
+      roof.position.set(mark.x, mark.y + 11.6, mark.z);
+      scene.add(tower, roof);
+    }
   }
 
   for (const isle of course.islands || []) {
@@ -316,12 +353,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const bumperMeshes = course.bumpers.map((b) => placeProp(gltfs.bumper, b.x, b.y, b.z));
   const padMeshes = course.pads.map((p) => placeProp(gltfs.pad, p.x, p.y, p.z));
   const lavaDecals = [];
-  for (let i = 0; i < 8; i++) {
-    const z = course.lava.z0 + ((course.lava.z1 - course.lava.z0) * (i + 0.5)) / 8;
-    lavaDecals.push(placeProp(gltfs.lava, 0, 0.2, z, 0, 1.8));
+  if (course.crater) {
+    lavaDecals.push(placeProp(gltfs.lava, course.crater.x, course.crater.y, course.crater.z, 0, course.crater.r / 3));
   }
   const spinnerObjs = course.spinners.map((s) => {
     const obj = placeProp(gltfs.spinner, s.x, s.y, s.z);
+    obj.scale.setScalar((s.len || 1.62) / 1.62);
     const bar = obj.getObjectByName("Spinner_Bar");
     return { obj, bar };
   });
@@ -414,7 +451,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   const sweepMeshes = course.sweepers.map((s) => {
     const group = cloneDrawn(gltfs.sweeper);
-    group.scale.set(s.full ? 1.15 : 1, 1, 1);
+    const sc = s.scale || (s.full ? 1.15 : 1);
+    group.scale.set(sc, sc, sc);
     const bar = group.getObjectByName("SweeperBar");
     if (bar && bar.material && bar.material.color) bar.material.color.set(s.full ? 0xff7a1a : 0xff6b6b);
     scene.add(group);
@@ -850,6 +888,24 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const obj = platformObjs[i];
       obj.position.set(p.x, p.y, p.z);
       if (p.axis === "spin") obj.rotation.y += dt * p.speed;
+      else if (p.axis === "seesaw") {
+        const face = p.face || 0;
+        obj.rotation.set(Math.abs(face) > 1 ? p.tilt || 0 : 0, 0, Math.abs(face) > 1 ? 0 : -(p.tilt || 0));
+      }
+    }
+    if (coinMesh) {
+      for (let i = 0; i < race.course.coins.length; i++) {
+        const c = race.course.coins[i];
+        if (c.got) coinDummy.scale.set(0, 0, 0);
+        else {
+          coinDummy.scale.set(1, 1, 1);
+          coinDummy.position.set(c.x, c.y + Math.sin(race.time * 3 + i) * 0.15, c.z);
+        }
+        coinDummy.rotation.set(Math.PI / 2, 0, race.time * 2.2);
+        coinDummy.updateMatrix();
+        coinMesh.setMatrixAt(i, coinDummy.matrix);
+      }
+      coinMesh.instanceMatrix.needsUpdate = true;
     }
     for (let i = 0; i < race.geysers.length; i++) {
       const g = race.geysers[i];

@@ -116,6 +116,7 @@ export function createRace(course, cfg, seed = 1) {
     pendulums: course.pendulums.map((p) => ({ ...p, bobX: p.x, bobY: p.y - p.len, bobZ: p.z })),
     sweepers: course.sweepers.map((s) => ({ ...s })),
     lavaY: cfg.lavaStartY,
+    coins: 0,
     shake: 0,
     activated: false,
     zoneId: "meadow",
@@ -160,6 +161,13 @@ function canStep(y, nextY, top, step) {
   return nextY <= top + 0.28 || y <= top + 0.2;
 }
 
+function platformSurface(p, x, z) {
+  if (p.axis !== "seesaw") return p.y;
+  const face = p.face || 0;
+  const along = (x - p.x) * Math.cos(face) + (z - p.z) * Math.sin(face);
+  return p.originY - along * Math.sin(p.tilt || 0);
+}
+
 function sampleGround(race, x, z, y, nextY) {
   const step = race.cfg.stepUp;
   let best = null;
@@ -169,8 +177,9 @@ function sampleGround(race, x, z, y, nextY) {
     const dx = x - p.x;
     const dz = z - p.z;
     if (dx * dx + dz * dz > p.radius * p.radius) continue;
-    if (!canStep(y, nextY, p.y, step + 0.1)) continue;
-    if (!best || p.y >= best.y) best = { y: p.y, platformId: i, tile: null };
+    const top = platformSurface(p, x, z);
+    if (!canStep(y, nextY, top, step + 0.1)) continue;
+    if (!best || top >= best.y) best = { y: top, platformId: i, tile: null };
   }
   const tile = groundAt(race.course, x, z);
   if (tile && walkable(tile) && canStep(y, nextY, tile.y, step)) {
@@ -352,6 +361,11 @@ function integrate(race, r, wish, dt) {
         const dz = r.pos.z - p.z;
         r.vel.x += -dz * p.speed * dt * 5.5;
         r.vel.z += dx * p.speed * dt * 5.5;
+      } else if (p.axis === "seesaw") {
+        const face = p.face || 0;
+        const slide = Math.sin(p.tilt || 0) * 9 * dt;
+        r.vel.x += Math.cos(face) * slide;
+        r.vel.z += Math.sin(face) * slide;
       }
     }
   }
@@ -461,7 +475,7 @@ function integrate(race, r, wish, dt) {
         if (r.wasDiving && impact > 8) pound(race, r);
       }
       r.wasDiving = false;
-      if (gnd.tile) r.lastSafe = { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
+      if (gnd.tile && !gnd.tile.fragile) r.lastSafe = { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
       if (gnd.tile && gnd.tile.chunk && gnd.tile.state === "solid" && gnd.tile.fragile && !gnd.tile.chunk.stepped) {
         gnd.tile.chunk.stepped = true;
         gnd.tile.chunk.state = "cracking";
@@ -529,8 +543,9 @@ function botWish(race, r, dt) {
   let tx = target.x + spread;
   if (target.gap) tx = target.x;
   for (const pad of race.course.pads) {
-    const dzp = pad.z - r.pos.z;
-    if (dzp > 0 && dzp < 9) tx = pad.x;
+    const nearTarget = (pad.x - target.x) ** 2 + (pad.z - target.z) ** 2 < 36;
+    const nearMe = (pad.x - r.pos.x) ** 2 + (pad.z - r.pos.z) ** 2 < 49;
+    if (nearTarget && nearMe) tx = pad.x;
   }
   let tz = target.z;
   let ty = target.y;
@@ -704,8 +719,9 @@ function hazards(race, dt) {
   for (const s of race.spinners) {
     const c = Math.cos(s.angle);
     const sn = Math.sin(s.angle);
-    const hx = c * cfg.spinnerLength;
-    const hz = sn * cfg.spinnerLength;
+    const arm = s.len || cfg.spinnerLength;
+    const hx = c * arm;
+    const hz = sn * arm;
     const ax = s.x - hx;
     const az = s.z - hz;
     const bx = s.x + hx;
@@ -739,11 +755,10 @@ function hazards(race, dt) {
       const dz = r.pos.z - pad.z;
       if (dx * dx + dz * dz > cfg.padRadius * cfg.padRadius) continue;
       if (Math.abs(r.pos.y - pad.y) > 1.1) continue;
-      const face = hypot(r.vel.x, r.vel.z) > 0.4 ? Math.atan2(r.vel.x, r.vel.z) : 0;
+      const face = pad.face != null ? pad.face : hypot(r.vel.x, r.vel.z) > 0.4 ? Math.atan2(r.vel.x, r.vel.z) : 0;
       r.vel.y = cfg.padUp;
-      r.vel.x += Math.sin(face) * cfg.padForward * 0.35;
-      r.vel.z += Math.cos(face) * cfg.padForward;
-      if (r.vel.z < cfg.padForward * 0.65) r.vel.z = cfg.padForward * 0.65;
+      r.vel.x = Math.sin(face) * cfg.padForward;
+      r.vel.z = Math.cos(face) * cfg.padForward;
       r.grounded = false;
       r.platformId = null;
       r.ungroundT = 0.12;
@@ -888,6 +903,25 @@ function movePlatforms(race, dt) {
     p.phase += dt * p.speed;
     if (p.axis === "x") p.x = p.originX + Math.sin(p.phase) * p.amp;
     else if (p.axis === "bob" || p.axis === "tilt") p.y = p.originY + Math.sin(p.phase) * p.amp;
+    else if (p.axis === "seesaw") {
+      let torque = 0;
+      let weight = 0;
+      const face = p.face || 0;
+      for (const r of race.racers) {
+        if (r.seated || r.eliminated || !r.grounded) continue;
+        const dx = r.pos.x - p.x;
+        const dz = r.pos.z - p.z;
+        if (dx * dx + dz * dz > p.radius * p.radius) continue;
+        if (Math.abs(r.pos.y - p.originY) > 1.8) continue;
+        const along = dx * Math.cos(face) + dz * Math.sin(face);
+        torque += Math.max(-1, Math.min(1, along / (p.radius * 0.65)));
+        weight++;
+      }
+      const target = weight ? (torque / weight) * 0.62 : 0;
+      p.tilt = (p.tilt || 0) + (target - (p.tilt || 0)) * Math.min(1, dt * 3.2);
+      p.tilt = Math.max(-0.5, Math.min(0.5, p.tilt));
+      p.y = p.originY;
+    }
   }
 }
 
@@ -1011,6 +1045,21 @@ export function step(race, dt, input) {
       integrate(race, r, wish, dt);
     }
     separate(race);
+    const coins = race.course.coins;
+    if (coins) {
+      const player = race.player;
+      for (let i = 0; i < coins.length; i++) {
+        const c = coins[i];
+        if (c.got || player.seated) continue;
+        const dx = player.pos.x - c.x;
+        const dz = player.pos.z - c.z;
+        if (dx * dx + dz * dz > 1.6) continue;
+        if (Math.abs(player.pos.y + 0.8 - c.y) > 1.5) continue;
+        c.got = true;
+        race.coins++;
+        race.events.push({ t: "coin", n: race.coins });
+      }
+    }
     hazards(race, dt);
     enemies(race, dt);
     board(race);

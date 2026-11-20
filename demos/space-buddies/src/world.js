@@ -45,12 +45,46 @@ function lambert(src) {
   return mat;
 }
 
+function dropStackedTriangles(geometry) {
+  const pos = geometry.getAttribute("position");
+  const index = geometry.getIndex();
+  if (!pos || !index) return;
+  const src = index.array;
+  const keep = [];
+  const buckets = new Map();
+  const cell = 0.012;
+  for (let i = 0; i < src.length; i += 3) {
+    const ia = src[i];
+    const ib = src[i + 1];
+    const ic = src[i + 2];
+    const cx = (pos.getX(ia) + pos.getX(ib) + pos.getX(ic)) / 3;
+    const cy = (pos.getY(ia) + pos.getY(ib) + pos.getY(ic)) / 3;
+    const cz = (pos.getZ(ia) + pos.getZ(ib) + pos.getZ(ic)) / 3;
+    const key = Math.round(cx / cell) + ":" + Math.round(cy / cell) + ":" + Math.round(cz / cell);
+    const list = buckets.get(key) || [];
+    let stacked = false;
+    for (let n = 0; n < list.length; n++) {
+      const prev = list[n];
+      if (Math.abs(prev[0] - cx) + Math.abs(prev[1] - cy) + Math.abs(prev[2] - cz) < 0.008) {
+        stacked = true;
+        break;
+      }
+    }
+    if (stacked) continue;
+    list.push([cx, cy, cz]);
+    buckets.set(key, list);
+    keep.push(ia, ib, ic);
+  }
+  if (keep.length < src.length) geometry.setIndex(keep);
+}
+
 function bakeFit(root, targetHeight) {
   root.updateWorldMatrix(true, true);
   root.traverse((obj) => {
     if (!obj.isMesh) return;
     obj.geometry = obj.geometry.clone();
     obj.geometry.applyMatrix4(obj.matrixWorld);
+    dropStackedTriangles(obj.geometry);
     obj.position.set(0, 0, 0);
     obj.quaternion.identity();
     obj.scale.set(1, 1, 1);
@@ -67,21 +101,29 @@ function bakeFit(root, targetHeight) {
   root.position.y -= grounded.min.y;
 }
 
-function markSrgb(map) {
-  if (map) map.colorSpace = THREE.SRGBColorSpace;
-  return map || null;
+let textureAniso = 4;
+
+function prepColorMap(map) {
+  if (!map) return null;
+  map.colorSpace = THREE.SRGBColorSpace;
+  map.generateMipmaps = true;
+  map.minFilter = THREE.LinearMipmapLinearFilter;
+  map.magFilter = THREE.LinearFilter;
+  map.anisotropy = textureAniso;
+  map.needsUpdate = true;
+  return map;
 }
 
 function buddyMat(src, hex) {
   const tint = new THREE.Color(hex);
-  const map = markSrgb(src && src.map);
+  const map = prepColorMap(src && src.map);
   const mat = new THREE.MeshStandardMaterial({
     map,
     color: 0xffffff,
-    roughness: 0.8,
+    roughness: 1,
     metalness: 0,
-    emissive: tint,
-    emissiveIntensity: 0.16,
+    emissive: 0x000000,
+    emissiveIntensity: 0,
     name: "BuddyHue",
   });
   mat.transparent = false;
@@ -89,20 +131,23 @@ function buddyMat(src, hex) {
   mat.opacity = 1;
   mat.alphaTest = 0;
   mat.side = THREE.FrontSide;
+  mat.polygonOffset = true;
+  mat.polygonOffsetFactor = 1;
+  mat.polygonOffsetUnits = 1;
   mat.userData.tint = tint;
   mat.onBeforeCompile = (shader) => {
     shader.uniforms.uTint = { value: tint };
     mat.userData.shader = shader;
     shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "vec3 albedo = diffuseColor.rgb;\nvec3 q = floor(albedo * 4.0 + 0.5) / 4.0;\nfloat luma = dot(q, vec3(0.299, 0.587, 0.114));\nfloat sat = max(q.r, max(q.g, q.b)) - min(q.r, min(q.g, q.b));\nfloat suit = smoothstep(0.1, 0.28, sat);\nvec3 tinted = uTint * clamp(luma * 1.15, 0.5, 1.0);\ndiffuseColor.rgb = mix(albedo, tinted, suit);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, 0.97);\n#include <opaque_fragment>"
+      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat suit = smoothstep(0.36, 0.62, sat);\nvec3 tinted = uTint * luma;\ndiffuseColor.rgb = mix(albedo, tinted, suit);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, suit * 0.35);\n#include <opaque_fragment>"
     );
   };
   return mat;
 }
 
 function shipMat(src) {
-  const map = markSrgb(src && src.map);
+  const map = prepColorMap(src && src.map);
   const mat = new THREE.MeshBasicMaterial({
     map,
     color: 0xffffff,
@@ -166,6 +211,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     powerPreference: "high-performance",
   });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
+  textureAniso = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
   let dpr = Math.min(window.devicePixelRatio || 1, cfg.dprCap);
@@ -1526,7 +1572,6 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         if (m.userData && m.userData.shader && m.userData.shader.uniforms.uTint) {
           m.userData.shader.uniforms.uTint.value.set(hex);
         }
-        if (m.name === "BuddyHue" && m.emissive) m.emissive.set(hex);
         if (m.name === "Buddy_Mint" && m.color) m.color.set(hex);
       }
     });

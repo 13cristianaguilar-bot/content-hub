@@ -226,6 +226,7 @@ function applyRound() {
   if (race.seats) race.seats = race.seats.map(() => null);
   if (world.setTheme) world.setTheme(planet);
   if (audio.setZone) audio.setZone(p.ship ? "ship" : (p.startZ > 250 ? "ice" : p.startZ > 150 ? "sky" : p.startZ > 80 ? "canyon" : "meadow"));
+  paintMap(planet);
   roundKicker.textContent = "PLANET " + planet;
   roundTitle.textContent = p.name;
   roundSub.textContent = p.sub;
@@ -361,6 +362,7 @@ nextPlanetBtn.addEventListener("pointerdown", (e) => {
   e.stopPropagation();
   resultEl.hidden = true;
   planetSub.textContent = "Planet " + (planet + 1) + ". The sky changes. The ship is waiting.";
+  paintMap(planet + 1);
   planetEl.hidden = false;
 });
 document.getElementById("land").addEventListener("pointerdown", (e) => {
@@ -420,6 +422,14 @@ function clock(seconds) {
   const m = Math.floor(s / 60);
   const r = s % 60;
   return m + ":" + String(r).padStart(2, "0");
+}
+
+function paintMap(current) {
+  document.querySelectorAll(".planet-dot").forEach((el) => {
+    const n = Number(el.dataset.planet);
+    el.classList.toggle("on", n === current);
+    el.classList.toggle("done", n < current);
+  });
 }
 
 function showToast(text) {
@@ -516,6 +526,7 @@ function updateHud(dt) {
     resultEl.hidden = false;
     resultEl.classList.add("show");
     resultEl.classList.toggle("miss", kind === "missed" || kind === "out");
+    resultEl.classList.toggle("win", kind === "qualified" || kind === "escaped");
     resultKicker.textContent = "PLANET " + planet;
     nextRoundBtn.hidden = kind !== "qualified";
     nextPlanetBtn.hidden = kind !== "escaped";

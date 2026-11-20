@@ -246,6 +246,58 @@ button { font-family: inherit; touch-action: manipulation; }
 }
 #play:active { transform: translateY(3px); box-shadow: 0 5px 0 #d45353; }
 #play:disabled { opacity: 0.8; }
+#play:not(:disabled) { animation: bob 1.5s ease-in-out infinite; }
+#lobby {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
+  background: rgba(92, 200, 255, 0.35);
+}
+#colors, #gear { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 10px 0 14px; }
+.swatch, .gear {
+  border: 3px solid transparent;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  background: var(--cream);
+}
+.swatch { width: 44px; height: 44px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(30,36,64,0.25); }
+.swatch.on, .gear.on { border-color: var(--ink); transform: translateY(-2px); }
+#start {
+  width: 100%;
+  min-height: 58px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--mint);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 700;
+  box-shadow: 0 6px 0 #3fbf90;
+}
+#place { justify-self: center; font-size: 16px; padding: 8px 12px; }
+#tutor {
+  position: absolute;
+  left: 50%;
+  bottom: calc(150px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 4;
+  background: var(--sun);
+  color: var(--ink);
+  font-weight: 700;
+  border-radius: 16px;
+  padding: 10px 14px;
+  box-shadow: 0 6px 0 #e0b428;
+  pointer-events: none;
+  text-align: center;
+  max-width: 86vw;
+}
+.seat.pop { animation: pop 0.35s cubic-bezier(.2,1.4,.4,1); }
+@keyframes bob { 50% { transform: translateY(-5px); } }
 .blurb { color: white; font-size: 15px; margin: 12px 0 0; font-weight: 600; }
 .keys { color: rgba(255,255,255,0.9); font-size: 13px; margin: 6px 0 0; font-weight: 600; }
 #result {
@@ -310,13 +362,14 @@ button { font-family: inherit; touch-action: manipulation; }
       <div id="timer" class="pill">3:00</div>
       <div class="track" aria-hidden="true"><i id="progress"></i></div>
     </div>
-    <div></div>
+    <div id="place" class="pill">1ST</div>
     <div class="seatbox">
       <div id="seats"></div>
       <div id="seats-label">SEATS 0/8</div>
     </div>
     <div id="last-banner" hidden>LAST SEAT!</div>
   </div>
+  <div id="tutor" hidden>DRAG THE LEFT SIDE TO RUN</div>
   <div id="zone" hidden>MEADOW</div>
   <div id="toast" hidden>CHECKPOINT</div>
   <div id="countdown" hidden>
@@ -339,6 +392,14 @@ button { font-family: inherit; touch-action: manipulation; }
       <p class="keys">Keyboard: WASD, drag to look, Space, Shift.</p>
     </div>
   </div>
+  <div id="lobby" hidden>
+    <div class="card">
+      <p class="kicker">CHOOSE YOUR BUDDY</p>
+      <div id="colors"></div>
+      <div id="gear"></div>
+      <button id="start" type="button">START RACE</button>
+    </div>
+  </div>
   <div id="result" hidden>
     <div class="card">
       <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
@@ -349,6 +410,6 @@ button { font-family: inherit; touch-action: manipulation; }
     </div>
   </div>
 </div>
-<script src="game.js?v=1"></script>
+<script src="game.js?v=2"></script>
 </body>
 </html>

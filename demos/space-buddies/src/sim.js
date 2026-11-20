@@ -469,9 +469,11 @@ function botWish(race, r, dt) {
   const wps = race.course.waypoints;
   while (r.wp < wps.length - 1 && r.pos.z > wps[r.wp].z - 0.4) r.wp++;
   const target = wps[Math.min(r.wp, wps.length - 1)];
-  let tx = target.x;
+  const spread = ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.55 : 1.2);
+  let tx = target.x + spread;
   let tz = target.z;
   let ty = target.y;
+  if (r.id % 7 === 0 && r.profile.skill > 0.9 && r.pos.z > 20 && r.pos.z < 90) tx -= 3.2;
 
   if (target.z - r.pos.z > 6) {
     let best = null;
@@ -511,6 +513,13 @@ function botWish(race, r, dt) {
       } else {
         dx += (r.pos.x >= sw.x ? 1 : -1) * 3 * p.skill;
       }
+    }
+  }
+  for (const g of race.geysers) {
+    if (!g.warn && !g.hot) continue;
+    const dzg = g.z - r.pos.z;
+    if (dzg > -0.5 && dzg < 7 && Math.abs(g.x - r.pos.x) < 2.4) {
+      dx += (r.pos.x >= g.x ? 1 : -1) * 4.2 * p.skill;
     }
   }
   for (const roller of race.rollers) {
@@ -554,7 +563,7 @@ function botWish(race, r, dt) {
 function separate(race) {
   const cfg = race.cfg;
   const list = race.racers;
-  const min = cfg.bodyRadius * 2.05;
+  const min = cfg.bodyRadius * 2.55;
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
     if (a.seated || a.eliminated) continue;
@@ -846,6 +855,9 @@ function updateCollapse(race, dt) {
         tile.state = "falling";
         tile.fallT = cfg.fallTime;
         tile.dirty = true;
+        const px = race.player.pos.x - tile.x;
+        const pz = race.player.pos.z - tile.z;
+        if (px * px + pz * pz < 196) race.shake = Math.max(race.shake, 0.42);
       }
     } else if (tile.state === "falling") {
       tile.fallT -= dt;
@@ -882,7 +894,8 @@ function board(race) {
     r.seatIndex = seat;
     r.vel.x = r.vel.y = r.vel.z = 0;
     r.emote = "cheer";
-    race.events.push({ t: "seat", id: r.id, seat });
+    if (r.isPlayer) race.seatCine = 1.85;
+    race.events.push({ t: "seat", id: r.id, seat, pop: true });
     if (race.seatsFilled === cfg.seats - 1 && !race.lastSeatEvent) {
       race.lastSeatEvent = true;
       race.events.push({ t: "lastseat" });
@@ -927,6 +940,7 @@ export function step(race, dt, input) {
   if (race.phase === "race") {
     race.activated = true;
     race.time += dt;
+    if (race.seatCine > 0) race.seatCine -= dt;
     movePlatforms(race, dt);
     updateCollapse(race, dt);
     for (const r of race.racers) {

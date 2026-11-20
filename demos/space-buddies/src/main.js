@@ -1,4 +1,4 @@
-import { resolveConfig } from "./config.js";
+import { COLORS, resolveConfig } from "./config.js";
 import { createCourse } from "./course.js";
 import { createRace, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
@@ -16,6 +16,12 @@ const app = document.getElementById("app");
 const canvas = document.getElementById("view");
 const title = document.getElementById("title");
 const playBtn = document.getElementById("play");
+const lobby = document.getElementById("lobby");
+const startBtn = document.getElementById("start");
+const colorBox = document.getElementById("colors");
+const gearBox = document.getElementById("gear");
+const tutor = document.getElementById("tutor");
+const placeEl = document.getElementById("place");
 const hud = document.getElementById("hud");
 const controls = document.getElementById("controls");
 const countdownEl = document.getElementById("countdown");
@@ -47,6 +53,13 @@ let ready = false;
 let started = false;
 let pending = false;
 let toastTimer = 0;
+let introLeft = 0;
+let hitStop = 0;
+let qualityDropped = false;
+const GEAR = ["classic", "heli", "goggles", "stars", "flower", "scarf", "fish", "crown"];
+const GEAR_LABEL = ["Classic", "Sunny", "Goggles", "Stars", "Flower", "Scarf", "Fish", "Crown"];
+let pickColor = COLORS[0];
+let pickGear = "classic";
 let zoneTimer = 0;
 let crackMute = 0;
 let frames = 0;
@@ -96,20 +109,76 @@ function begin() {
   audio.startBeds(cfg.bedGain);
   audio.play("ui_confirm", 0.55, 0);
   title.classList.add("hide");
+  lobby.hidden = true;
+  race.player.color = pickColor;
+  if (world.applyLook) world.applyLook(pickColor, pickGear);
+  introLeft = cfg.auto ? 0.2 : 3.3;
   hud.hidden = false;
-  controls.hidden = false;
+  controls.hidden = true;
+  tutor.hidden = true;
   window.__sb = { race, cfg, get fps() { return fps; } };
+}
+
+function openLobby() {
+  audio.unlock();
+  if (!ready) {
+    pending = true;
+    playBtn.textContent = "LOADING";
+    return;
+  }
+  if (cfg.auto) {
+    begin();
+    return;
+  }
+  title.classList.add("hide");
+  lobby.hidden = false;
+  audio.play("ui_tap", 0.4, 0);
 }
 
 playBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
-  audio.unlock();
-  begin();
+  openLobby();
 });
 playBtn.addEventListener("click", (e) => {
   e.preventDefault();
   audio.unlock();
+  if (pending && ready) begin();
+});
+startBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  audio.unlock();
   begin();
+});
+
+COLORS.forEach((hex, i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "swatch" + (i === 0 ? " on" : "");
+  b.style.background = hex;
+  b.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pickColor = hex;
+    colorBox.querySelectorAll("button").forEach((n) => n.classList.remove("on"));
+    b.classList.add("on");
+    audio.play("ui_tap", 0.35, 0.02);
+  });
+  colorBox.appendChild(b);
+});
+GEAR.forEach((name, i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "gear" + (i === 0 ? " on" : "");
+  b.textContent = GEAR_LABEL[i];
+  b.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pickGear = name;
+    gearBox.querySelectorAll("button").forEach((n) => n.classList.remove("on"));
+    b.classList.add("on");
+    audio.play("ui_tap", 0.35, 0.02);
+  });
+  gearBox.appendChild(b);
 });
 
 againBtn.addEventListener("pointerdown", (e) => {
@@ -123,6 +192,8 @@ function restart() {
   const seed = (race.seed + 1 + Math.floor(Math.random() * 50)) >>> 0;
   resetRace(race, seed);
   if (cfg.auto) race.player.useAI = true;
+  race.player.color = pickColor;
+  if (world.applyLook) world.applyLook(pickColor, pickGear);
   world.reset();
   resultEl.hidden = true;
   resultEl.classList.remove("show");
@@ -158,6 +229,21 @@ function updateHud(dt) {
   const label = clock(remain);
   if (timerEl.textContent !== label) timerEl.textContent = label;
   timerEl.classList.toggle("low", race.phase === "race" && remain <= 15);
+
+  let ahead = 0;
+  for (const r of race.racers) {
+    if (r !== race.player && !r.seated && r.pos.z > race.player.pos.z + 0.4) ahead++;
+  }
+  const n = ahead + 1;
+  const suffix = n === 1 ? "ST" : n === 2 ? "ND" : n === 3 ? "RD" : "TH";
+  const placeText = n + suffix;
+  if (placeEl.textContent !== placeText) placeEl.textContent = placeText;
+
+  const showTutor = race.phase === "race" && race.zoneId === "meadow" && race.time < 8 && !cfg.auto;
+  tutor.hidden = !showTutor;
+  if (showTutor) {
+    tutor.textContent = race.time < 2.6 ? "DRAG THE LEFT SIDE TO RUN" : race.time < 5.2 ? "DRAG THE RIGHT SIDE TO LOOK" : "JUMP AND DIVE";
+  }
 
   const prog = Math.max(0, Math.min(1, race.player.pos.z / course.ship.z));
   progressEl.style.transform = "scaleX(" + prog.toFixed(3) + ")";
@@ -250,12 +336,19 @@ function handleEvents() {
     else if (e.t === "go") audio.play("go", 0.6, 0.05);
     else if (e.t === "jump" && e.id === 0) audio.play("jump", 0.4, 0.05);
     else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
-    else if (e.t === "bump" && (e.id === 0 || e.big)) audio.play("bump", e.id === 0 ? 0.5 : 0.28, 0.09);
-    else if (e.t === "dive" && e.id === 0) audio.play("ui_tap", 0.35, 0.05);
+    else if (e.t === "bump" && (e.id === 0 || e.big)) {
+      audio.play("bump", e.id === 0 ? 0.5 : 0.28, 0.09);
+      if (e.id === 0 && e.big) hitStop = 0.07;
+    } else if (e.t === "dive" && e.id === 0) audio.play("ui_tap", 0.35, 0.05);
     else if (e.t === "crack") cracked = true;
     else if (e.t === "seat") {
       audio.play("seat", 0.5, 0.02);
-      if (e.id === 0) showToast("SEAT LOCKED");
+      const dot = seatsEl.children[e.seat];
+      if (dot) {
+        dot.classList.add("pop");
+        setTimeout(() => dot.classList.remove("pop"), 400);
+      }
+      if (e.id === 0) showToast("SEAT " + (e.seat + 1) + " LOCKED");
     } else if (e.t === "lastseat") audio.play("last", 0.7, 0.2);
     else if (e.t === "launch") audio.play("launch", 0.65, 0.2);
     else if (e.t === "escaped") audio.play("escaped", 0.6, 0.2);
@@ -288,6 +381,15 @@ function frame(now) {
     world.render();
     return;
   }
+  if (introLeft > 0) {
+    introLeft -= dt;
+    world.update(race, dt, { intro: introLeft, lookDx: 0, lookDy: 0, looking: false });
+    world.render();
+    tutor.hidden = true;
+    controls.hidden = true;
+    if (introLeft <= 0) controls.hidden = false;
+    return;
+  }
   const raw = input.read();
   const yaw = world.yaw;
   const fx = -Math.sin(yaw);
@@ -301,9 +403,13 @@ function frame(now) {
     dive: raw.dive,
   };
   if (race.phase !== "race") wish = { x: 0, z: 0, jump: false, dive: false };
+  if (hitStop > 0) {
+    hitStop -= dt;
+  } else {
   acc += dt;
+  }
   let steps = 0;
-  while (acc >= STEP && steps < 8) {
+  while (hitStop <= 0 && acc >= STEP && steps < 8) {
     try {
       step(race, STEP, steps === 0 ? wish : { x: wish.x, z: wish.z, jump: false, dive: false });
     } catch (err) {
@@ -319,6 +425,10 @@ function frame(now) {
   const dist = race.player.pos.z - race.collapseZ;
   const rumble = race.phase === "race" ? Math.max(0, Math.min(1, 1 - dist / 36)) : (race.phase === "launch" ? 0.4 : 0);
   audio.setRumble(rumble * cfg.rumbleMax);
+  if (!qualityDropped && !params.get("dpr") && fps > 0 && fps < 24 && race.time > 5 && world.setDpr) {
+    qualityDropped = true;
+    world.setDpr(1);
+  }
   world.update(race, dt, raw);
   world.render();
   updateHud(dt);

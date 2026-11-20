@@ -34,12 +34,12 @@ export function tileAt(course, x, z) {
 }
 
 const ZONE_COLORS = {
-  meadow: { top: "#7FD88A", side: "#E7B56A" },
-  canyon: { top: "#D4835A", side: "#8A4B3C" },
-  sky: { top: "#B7E4FF", side: "#8ECAE6" },
-  ice: { top: "#F4FBFF", side: "#B9DFF2" },
-  climb: { top: "#F6C98A", side: "#E0A15A" },
-  ship: { top: "#FFE8C2", side: "#F0C98A" },
+  meadow: { top: "#8EF0A4", side: "#E8B56A" },
+  canyon: { top: "#E87848", side: "#A34A38" },
+  sky: { top: "#D7F4FF", side: "#8EC8E6" },
+  ice: { top: "#F7FBFF", side: "#9FD4F0" },
+  climb: { top: "#FFD59A", side: "#E09048" },
+  ship: { top: "#FFF0D2", side: "#F0C07A" },
 };
 
 function zonesFor(quick) {
@@ -175,7 +175,7 @@ export function createCourse(cfg) {
   pads.push(marker("meadow", 0.4, -5, 0.4));
   pads.push(marker("meadow", 0.52, -5, 0.4));
 
-  const rollerRow = at("meadow", 0.84);
+  const rollerRow = at("meadow", 0.3);
   const rollerZ = offsetToWorld(0, rollerRow).z;
   rollers.push({
     x: offsetToWorld(-3, rollerRow).x,
@@ -225,7 +225,7 @@ export function createCourse(cfg) {
   geysers.push(geyser(at("canyon", 0.7), -2, 2.7, 3.1));
   geysers.push(geyser(at("canyon", 0.78), 2, 2.7, 2.4));
 
-  const hopRow = at("canyon", 0.88);
+  const hopRow = at("canyon", 0.42);
   hoppers.push({
     x: offsetToWorld(0, hopRow).x,
     z: offsetToWorld(0, hopRow).z,
@@ -341,7 +341,7 @@ export function createCourse(cfg) {
   const wind1 = at("sky", 0.98);
   fill(wind0, wind1, -3, 3, 6.45, "sky");
 
-  const flyRow = at("sky", 0.86);
+  const flyRow = at("sky", 0.2);
   const fly = offsetToWorld(0, flyRow);
   flyers.push({
     cx: fly.x,
@@ -492,6 +492,34 @@ export function createCourse(cfg) {
       if (t) spawns.push({ col, row, x: t.x, y: t.y, z: t.z });
     }
   }
+
+  for (const t of kept) {
+    if (t.zone === "meadow" && !t.skirt) {
+      t.y += Math.sin(t.x * 0.17) * 0.16 + Math.sin(t.z * 0.09) * 0.1;
+    }
+    if (t.zone === "canyon" && !t.skirt && t.y > 1) {
+      t.y += Math.sin(t.z * 0.21 + t.x) * 0.12;
+    }
+    if (t.skirt) t.y -= 1.15;
+  }
+
+  const climbRoll = at("climb", 0.52);
+  const climbRollY = (function () {
+    const sample = finalMap.get("0," + climbRoll);
+    return sample ? sample.y : 6;
+  })();
+  const climbRollPos = offsetToWorld(0, climbRoll);
+  rollers.push({
+    x: offsetToWorld(-2, climbRoll).x,
+    z: climbRollPos.z,
+    y: climbRollY + 0.7,
+    x0: offsetToWorld(-2, climbRoll).x,
+    x1: offsetToWorld(2, climbRoll).x,
+    dir: -1,
+    speed: 2.8,
+    radius: 1.05,
+    rot: 1,
+  });
 
   const waypoints = [];
   let maxRow = 0;

@@ -259,7 +259,27 @@ export function buildDressing(scene, course, gradientMap) {
   const hillTint = { meadow: 0x3c9a48, canyon: 0x4a2420, sky: 0x7ea6d0, ice: 0x3d8fd4, climb: 0xb86a28, ship: 0xe2b878 };
   const hillItems = [];
   const stations = course.stations || [];
-  for (let i = 0; i < stations.length; i += 14) {
+  if (course.hubs && course.hubs.length) {
+    course.hubs.forEach((hub, hi) => {
+      for (let k = 0; k < 8; k++) {
+        const a = (k / 8) * Math.PI * 2 + hi * 0.4;
+        const dist = hub.r + 6 + hash(hi * 19 + k) * 12;
+        const mound = 4.2 + hash(k + hi * 5) * 5.5;
+        hillItems.push({
+          x: hub.x + Math.cos(a) * dist,
+          y: -0.4,
+          z: hub.z + Math.sin(a) * dist,
+          s: mound,
+          ry: a,
+          rx: (hash(k + 2) - 0.5) * 0.25,
+          color: hillTint[hub.zone] || 0x7fd88a,
+          zone: hub.zone,
+          side: Math.cos(a) > 0 ? 1 : -1,
+        });
+      }
+    });
+  }
+  for (let i = 0; i < stations.length && !(course.hubs && course.hubs.length); i += 14) {
     const st = stations[i];
     if (!st || st.gap) continue;
     for (let layer = 0; layer < 2; layer++) {
@@ -328,8 +348,23 @@ export function buildDressing(scene, course, gradientMap) {
     scene.add(new THREE.Mesh(geo, mat));
     lavaMats.push(mat);
   }
-  lavaChannel(1);
-  lavaChannel(-1);
+  if (course.crater) {
+    const crater = course.crater;
+    const geo = new THREE.CircleGeometry(crater.r, 36);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+      fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ vec2 p=vUv-0.5; float r=length(p); float flow=fract(r*4.0-uTime*0.32); float ang=sin(atan(p.y,p.x)*5.0+uTime*0.8); float body=smoothstep(0.52,0.06,r); float streak=smoothstep(0.05,0.95,flow); vec3 col=mix(vec3(0.28,0.02,0.01), vec3(1.0,0.58,0.06), streak); col+=vec3(1.0,0.35,0.02)*ang*0.15*body; col+=vec3(1.0,0.85,0.3)*smoothstep(0.5,0.22,r); if(body<0.04) discard; gl_FragColor=vec4(col,1.0); }",
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(crater.x, crater.y, crater.z);
+    scene.add(mesh);
+    lavaMats.push(mat);
+  } else {
+    lavaChannel(1);
+    lavaChannel(-1);
+  }
 
   const falls = hillItems.filter((item, i) => (item.zone === "meadow" || item.zone === "sky") && i % 7 === 0).slice(0, 10);
   const fallMat = new THREE.ShaderMaterial({

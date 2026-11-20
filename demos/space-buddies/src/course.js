@@ -1,16 +1,13 @@
-// Continuous kingdom terrain. The path is a curved ribbon with a grass lip
-// and a rock cliff, split into chunks that can crack and fall.
-
-const STEP = 2;
-const ACROSS = 18;
+// Open kingdoms. Each zone is a wide plaza or a set of islands with
+// three routes, not a single race ribbon.
 
 const PALETTE = {
-  meadow: { top: [0.32, 0.78, 0.38], lip: [0.18, 0.55, 0.28], rock: [0.48, 0.36, 0.28] },
-  canyon: { top: [0.16, 0.12, 0.13], lip: [0.22, 0.14, 0.14], rock: [0.12, 0.08, 0.09] },
-  sky: { top: [0.55, 0.88, 0.68], lip: [0.75, 0.92, 1], rock: [0.42, 0.36, 0.62] },
-  ice: { top: [0.45, 0.88, 1], lip: [0.2, 0.62, 1], rock: [0.12, 0.4, 0.95] },
-  climb: { top: [1, 0.68, 0.2], lip: [0.82, 0.38, 0.12], rock: [0.5, 0.24, 0.16] },
-  ship: { top: [1, 0.9, 0.62], lip: [0.95, 0.7, 0.32], rock: [0.62, 0.4, 0.22] },
+  meadow: [0.34, 0.78, 0.4],
+  canyon: [0.18, 0.12, 0.13],
+  sky: [0.62, 0.88, 0.74],
+  ice: [0.55, 0.9, 1],
+  climb: [0.95, 0.62, 0.22],
+  ship: [0.95, 0.86, 0.62],
 };
 
 function lerp(a, b, t) {
@@ -21,230 +18,57 @@ function clamp(v, a, b) {
   return Math.max(a, Math.min(b, v));
 }
 
-function smooth(t) {
-  const x = clamp(t, 0, 1);
-  return x * x * (3 - 2 * x);
-}
-
 function zonesFor(len) {
   return [
     { id: "meadow", name: "MEADOW", z0: 0, z1: len * 0.16 },
     { id: "canyon", name: "LAVA CANYON", z0: len * 0.16, z1: len * 0.38 },
-    { id: "sky", name: "SKY ISLANDS", z0: len * 0.38, z1: len * 0.6 },
-    { id: "ice", name: "ICE SLIDE", z0: len * 0.6, z1: len * 0.76 },
-    { id: "climb", name: "THE CLIMB", z0: len * 0.76, z1: len * 0.93 },
-    { id: "ship", name: "ESCAPE SHIP", z0: len * 0.93, z1: len },
+    { id: "sky", name: "SKY ISLANDS", z0: len * 0.38, z1: len * 0.58 },
+    { id: "ice", name: "ICE SLIDE", z0: len * 0.58, z1: len * 0.74 },
+    { id: "climb", name: "THE CLIMB", z0: len * 0.74, z1: len * 0.9 },
+    { id: "ship", name: "ESCAPE SHIP", z0: len * 0.9, z1: len },
   ];
 }
 
-function zoneOf(zones, z) {
-  let zoned = zones[0];
-  for (const zone of zones) if (z >= zone.z0) zoned = zone;
-  return zoned;
+function zoneAt(zones, z) {
+  let id = zones[0].id;
+  for (const zone of zones) if (z >= zone.z0) id = zone.id;
+  return id;
 }
 
-function meadowY(z) {
-  return 0.7 + Math.sin(z * 0.055) * 1.35 + Math.sin(z * 0.018) * 0.65;
-}
-
-function nse(x, z) {
-  return Math.sin(x * 0.37 + z * 0.21) * 0.5 + Math.sin(z * 0.13 + x * 0.05) * 0.5;
-}
-
-function vary(col, x, z, edge) {
-  const n = 0.9 + nse(x, z) * 0.08;
-  let r = col[0] * n;
-  let g = col[1] * n;
-  let b = col[2] * n;
-  if (edge > 0.86 && edge < 1.08) {
-    r *= 0.58;
-    g *= 0.58;
-    b *= 0.58;
-  }
-  return [r, g, b];
-}
-
-function centerX(z) {
-  return Math.sin(z * 0.031) * 8.2 + Math.sin(z * 0.012) * 3.1;
-}
-
-function heightAt(z, zones) {
-  const meadow = zones[0];
-  const canyon = zones[1];
-  const sky = zones[2];
-  const ice = zones[3];
-  const climb = zones[4];
-  const meadowEnd = meadowY(meadow.z1);
-  const canyonEnd = 6.15;
-  const skyEnd = 7.7;
-  const iceEnd = 1.85;
-  const shipY = 11.2;
-  if (z <= meadow.z1) return meadowY(z);
-  if (z <= canyon.z1) {
-    const u = (z - canyon.z0) / (canyon.z1 - canyon.z0);
-    return lerp(meadowEnd, canyonEnd, smooth(u)) + Math.sin(z * 0.07) * 0.22 * Math.sin(u * Math.PI);
-  }
-  if (z <= sky.z1) {
-    const u = (z - sky.z0) / (sky.z1 - sky.z0);
-    return lerp(canyonEnd, skyEnd, u) + Math.sin(u * Math.PI * 2) * 0.85;
-  }
-  if (z <= ice.z1) {
-    const u = (z - ice.z0) / (ice.z1 - ice.z0);
-    return lerp(skyEnd, iceEnd, smooth(u));
-  }
-  if (z <= climb.z1) {
-    const u = (z - climb.z0) / (climb.z1 - climb.z0);
-    return lerp(iceEnd, shipY, smooth(u)) + Math.sin(z * 0.085) * 0.16 * Math.sin(u * Math.PI);
-  }
-  return shipY;
-}
-
-function routeAt(z, len, zones) {
-  const zone = zoneOf(zones, z);
-  const u = clamp((z - zone.z0) / Math.max(1, zone.z1 - zone.z0), 0, 1);
-  let x = centerX(z);
-  let half = 7.4;
-  let gap = false;
-  let ice = false;
-  let conveyX = 0;
-  if (zone.id === "meadow") half = 5.1;
-  else if (zone.id === "canyon") {
-    half = 4.7;
-    const pits = [
-      [zone.z0 + (zone.z1 - zone.z0) * 0.34, 4.0],
-      [zone.z0 + (zone.z1 - zone.z0) * 0.62, 3.6],
-    ];
-    for (const [cz, w] of pits) if (Math.abs(z - cz) < w * 0.5) gap = true;
-  } else if (zone.id === "sky") {
-    half = 4.5;
-    const gaps = [0.22, 0.48, 0.72];
-    for (const g of gaps) {
-      const cz = zone.z0 + (zone.z1 - zone.z0) * g;
-      if (Math.abs(z - cz) < 2.25) gap = true;
-    }
-  } else if (zone.id === "ice") {
-    half = 4.8;
-    ice = true;
-    conveyX = u > 0.28 && u < 0.4 ? 7 : u > 0.62 && u < 0.74 ? -7 : 0;
-  } else if (zone.id === "climb") half = 4.6;
-  else {
-    half = 6.2;
-    x *= 1 - smooth(u);
-  }
-  let shelf = 0;
-  let shelfH = 0;
-  let route = 0;
-  if (!gap && zone.id === "meadow" && u > 0.2 && u < 0.58) {
-    const fade = Math.min((u - 0.2) / 0.07, (0.58 - u) / 0.07, 1);
-    shelf = 1;
-    shelfH = 1.35 * smooth(fade);
-  } else if (!gap && zone.id === "sky" && ((u > 0.08 && u < 0.16) || (u > 0.56 && u < 0.66))) {
-    shelf = -1;
-    shelfH = 0.85;
-  } else if (!gap && zone.id === "climb" && u > 0.18 && u < 0.5) {
-    const fade = Math.min((u - 0.18) / 0.08, (0.5 - u) / 0.08, 1);
-    shelf = 1;
-    shelfH = 1.55 * smooth(fade);
-  }
-  if (!gap && zone.id === "meadow" && u > 0.32 && u < 0.8) {
-    const fade = Math.min((u - 0.32) / 0.08, (0.8 - u) / 0.08, 1);
-    route = -smooth(fade);
-  }
-  return {
-    z, x, y: heightAt(z, zones), zone: zone.id, half, gap, ice, conveyX, shelf, shelfH, route,
-    guard: zone.id === "meadow" && z < 50,
-  };
-}
-
-function pushStrip(positions, colors, indices, stations, sample) {
-  const rows = stations.length;
-  const across = sample.across;
-  const grid = [];
-  for (let r = 0; r < rows; r++) {
-    const row = [];
-    for (let c = 0; c < across; c++) {
-      const p = sample.at(stations[r], c, across, r, rows);
-      positions.push(p.x, p.y, p.z);
-      colors.push(p.r, p.g, p.b);
-      row.push(positions.length / 3 - 1);
-    }
-    grid.push(row);
-  }
-  for (let r = 0; r < rows - 1; r++) {
-    for (let c = 0; c < across - 1; c++) {
-      const a = grid[r][c];
-      const b = grid[r][c + 1];
-      const d = grid[r + 1][c];
-      const e = grid[r + 1][c + 1];
-      indices.push(a, d, b, b, d, e);
-    }
-  }
-}
-
-function buildChunkGeometry(stations) {
+function discGeometry(cx, y, cz, rx, rz, zone, hex) {
+  const col = PALETTE[zone] || PALETTE.meadow;
+  const rings = 3;
+  const seg = 18;
   const positions = [];
   const colors = [];
   const indices = [];
-  pushStrip(positions, colors, indices, stations, {
-    across: ACROSS,
-    at(st, c, across, r, rows) {
-      const next = stations[Math.min(rows - 1, r + 1)];
-      const prev = stations[Math.max(0, r - 1)];
-      const pal = PALETTE[st.zone] || PALETTE.meadow;
-      const latN = (c / (across - 1)) * 2 - 1;
-      const visual = st.half + 11;
-      const lat = latN * visual;
-      const edge = Math.abs(lat) / st.half;
-      const onShelf = st.shelf && Math.sign(lat) === Math.sign(st.shelf);
-      let dy = 0;
-      let col = pal.top;
-      if (onShelf && edge < 1.25) {
-        const ramp = smooth(clamp((edge - 0.4) / 0.28, 0, 1));
-        dy = st.shelfH * ramp;
-        col = edge > 0.72 ? pal.lip : pal.top;
+  const stride = seg + 1;
+  for (let r = 0; r <= rings; r++) {
+    const t = r / rings;
+    const drop = t > 0.78 ? (t - 0.78) * (t - 0.78) * 10 : 0;
+    for (let s = 0; s <= seg; s++) {
+      const a = (s / seg) * Math.PI * 2;
+      const wob = 1 + Math.sin(a * 3 + cx * 0.2 + cz * 0.05) * 0.07;
+      positions.push(cx + Math.cos(a) * rx * t * wob, y - drop, cz + Math.sin(a) * rz * t * wob);
+      const crack = zone === "canyon" && Math.abs(Math.sin(a * 5 + r * 2.2 + cx)) > 0.82;
+      const rim = hex && t > 0.72;
+      if (crack) colors.push(1, 0.42, 0.06);
+      else if (rim) colors.push(0.15, 0.35, 0.75);
+      else if (hex) colors.push(0.85, 0.97, 1);
+      else if (zone === "canyon") colors.push(0.16, 0.1, 0.11);
+      else if (zone === "ice") colors.push(0.62, 0.9, 1);
+      else {
+        const shade = t > 0.78 ? 0.7 : 1 - t * 0.05;
+        colors.push(col[0] * shade, col[1] * shade, col[2] * shade);
       }
-      if (edge > 1.08) {
-        const t = Math.min(1, (edge - 1.08) / 0.85);
-        dy = (onShelf ? st.shelfH * 0.25 : 0) - 0.55 - t * t * 8.2;
-        col = t > 0.4 ? (st.zone === "ice" ? [0.22, 0.5, 0.95] : [pal.rock[0] * 0.62, pal.rock[1] * 0.55, pal.rock[2] * 0.5]) : pal.rock;
-      } else if (edge > 0.7 && !(onShelf && edge < 1.05)) {
-        const t = (edge - 0.7) / 0.38;
-        dy -= t * t * 0.7;
-        col = t > 0.45 ? pal.rock : pal.lip;
-      }
-      if ((next.gap || prev.gap) && (r === 0 || r === rows - 1)) dy -= 0.35;
-      if (st.zone === "canyon" && edge < 0.72) {
-        const crack = Math.abs(Math.sin(st.z * 0.55 + lat * 0.4)) > 0.88 || Math.abs(Math.sin(st.x * 0.7 + st.z * 0.18)) > 0.9;
-        col = crack ? [1, 0.38, 0.04] : [0.09, 0.07, 0.08];
-      }
-      const tint = vary(col, st.x + lat, st.z, edge);
-      return { x: st.x + lat, y: st.y + dy, z: st.z, r: tint[0], g: tint[1], b: tint[2] };
-    },
-  });
-  if (stations.some((st) => Math.abs(st.route) > 0.08)) {
-    pushStrip(positions, colors, indices, stations, {
-      across: 7,
-      at(st, c, across) {
-        const pal = PALETTE[st.zone] || PALETTE.meadow;
-        const k = st.route || 0;
-        const latN = (c / (across - 1)) * 2 - 1;
-        const halfS = 2.2;
-        const lat = latN * (halfS + 1.4);
-        const edge = Math.abs(lat) / halfS;
-        let dy = -0.5 * Math.abs(k);
-        let col = pal.top;
-        if (edge > 1) {
-          const t = Math.min(1, (edge - 1) / 0.55);
-          dy -= 0.4 + t * t * 3.2;
-          col = pal.rock;
-        } else if (edge > 0.72) {
-          dy -= (edge - 0.72) * 0.8;
-          col = pal.lip;
-        }
-        const tint = vary(col, st.x, st.z, edge);
-        return { x: st.x + k * 8.6 + lat, y: st.y + dy, z: st.z, r: tint[0], g: tint[1], b: tint[2] };
-      },
-    });
+    }
+  }
+  for (let r = 0; r < rings; r++) {
+    for (let s = 0; s < seg; s++) {
+      const a = r * stride + s;
+      const b = a + stride;
+      indices.push(a, b, a + 1, a + 1, b, b + 1);
+    }
   }
   return {
     positions: new Float32Array(positions),
@@ -253,301 +77,409 @@ function buildChunkGeometry(stations) {
   };
 }
 
-function stationAt(course, z) {
-  const list = course.stations;
-  if (!list.length) return null;
-  const i = clamp(Math.round((z - list[0].z) / STEP), 0, list.length - 1);
-  return list[i];
+function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
+  const col = PALETTE[zone] || PALETTE.meadow;
+  const steps = 10;
+  const positions = [];
+  const colors = [];
+  const indices = [];
+  const dx = x1 - x0;
+  const dz = z1 - z0;
+  const len = Math.hypot(dx, dz) || 1;
+  const px = -dz / len;
+  const pz = dx / len;
+  for (let i = 0; i <= steps; i++) {
+    const t = i / steps;
+    const x = lerp(x0, x1, t);
+    const z = lerp(z0, z1, t);
+    const wob = Math.sin(t * Math.PI) * 0.4;
+    for (let side = -1; side <= 1; side += 2) {
+      const o = (width * 0.5 + wob) * side;
+      positions.push(x + px * o, lerp(y0, y1, t), z + pz * o);
+      colors.push(col[0], col[1], col[2]);
+    }
+  }
+  for (let i = 0; i < steps; i++) {
+    const a = i * 2;
+    indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+  }
+  return {
+    positions: new Float32Array(positions),
+    colors: new Float32Array(colors),
+    indices: new Uint16Array(indices),
+  };
+}
+
+function makeChunk(chunks, zone, z0, z1, geo) {
+  const chunk = {
+    index: chunks.length,
+    z0,
+    z1,
+    zone,
+    gap: !geo,
+    state: "solid",
+    crackT: 0,
+    fallT: 0,
+    fallY: 0,
+    dirty: true,
+    fragile: false,
+    ice: zone === "ice",
+    jitter: (chunks.length % 7) / 7,
+    tilt: 0,
+  };
+  if (geo) Object.assign(chunk, geo);
+  chunks.push(chunk);
+  return chunk.index;
 }
 
 export function groundAt(course, x, z) {
-  const list = course.stations;
-  if (!list.length || z < list[0].z - 3 || z > list[list.length - 1].z + 3) return null;
-  const i = clamp(Math.floor((z - list[0].z) / STEP), 0, list.length - 2);
-  const a = list[i];
-  const b = list[i + 1];
-  const span = b.z - a.z || STEP;
-  const t = clamp((z - a.z) / span, 0, 1);
-  const cx = lerp(a.x, b.x, t);
-  const cy = lerp(a.y, b.y, t);
-  const half = lerp(a.half, b.half, t);
-  const chunk = course.chunks[a.chunk];
-  const alive = chunk && chunk.state !== "gone" && chunk.state !== "falling";
+  const floors = course.floors || [];
   let best = null;
-  if (alive && !(a.gap && b.gap) && !(a.gap && t < 0.35) && !(b.gap && t > 0.65)) {
-    const lat = x - cx;
-    const shelf = a.shelf && b.shelf && Math.sign(a.shelf) === Math.sign(lat) ? lerp(a.shelfH, b.shelfH, t) : 0;
-    const guard = !!(a.guard || b.guard);
-    const reach = half + (shelf ? 2.8 : guard ? 3.1 : 1.45);
-    if (Math.abs(lat) <= reach) {
-      let y = cy;
-      if (shelf && Math.abs(lat) > half * 0.42 && Math.abs(lat) < half + 2.2) {
-        const ramp = smooth(clamp((Math.abs(lat) - half * 0.42) / 1.35, 0, 1));
-        y += shelf * ramp;
-      } else if (!guard && Math.abs(lat) > half + 0.35) {
-        y -= (Math.abs(lat) - half - 0.35) * 0.45;
-      }
-      if (chunk.tilt) y += chunk.tilt * lat * 0.08;
-      best = { y, x: cx, z, ice: a.ice, conveyX: a.conveyX || 0, zone: a.zone, chunk, state: chunk.state, fragile: !!chunk.fragile };
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    const chunk = course.chunks[pad.chunk];
+    if (!chunk || chunk.state === "falling" || chunk.state === "gone") continue;
+    const nx = (x - pad.x) / pad.rx;
+    const nz = (z - pad.z) / pad.rz;
+    const guard = pad.zone === "meadow" ? 1.08 : 1;
+    if (nx * nx + nz * nz > guard) continue;
+    if (!best || pad.y >= best.y) {
+      best = {
+        y: pad.y,
+        x: pad.x,
+        z,
+        ice: pad.zone === "ice",
+        conveyX: pad.conveyX || 0,
+        zone: pad.zone,
+        chunk,
+        state: chunk.state,
+        fragile: !!chunk.fragile,
+      };
     }
   }
-  const rk = lerp(a.route || 0, b.route || 0, t);
-  if (alive && Math.abs(rk) > 0.45) {
-    const sx = cx + rk * 8.6;
-    if (Math.abs(x - sx) < 2.35) {
-      const side = { y: cy - 0.5 * Math.abs(rk), x: sx, z, ice: a.ice, conveyX: a.conveyX || 0, zone: a.zone, chunk, state: chunk.state, fragile: false };
-      if (!best || Math.abs(x - sx) < Math.abs(x - best.x)) best = side;
+  if (!best) {
+    let nearest = null;
+    let nd = 1e9;
+    for (let i = 0; i < floors.length; i++) {
+      const pad = floors[i];
+      const chunk = course.chunks[pad.chunk];
+      if (!chunk || chunk.state === "falling" || chunk.state === "gone") continue;
+      const dx = x - pad.x;
+      const dz = z - pad.z;
+      const d = Math.hypot(dx, dz);
+      const reach = Math.max(pad.rx, pad.rz) + (pad.zone === "meadow" ? 8 : 2.4);
+      if (d < reach && d < nd) {
+        nd = d;
+        nearest = pad;
+      }
+    }
+    if (nearest) {
+      const chunk = course.chunks[nearest.chunk];
+      best = {
+        y: nearest.y,
+        x: nearest.x,
+        z,
+        ice: nearest.zone === "ice",
+        conveyX: nearest.conveyX || 0,
+        zone: nearest.zone,
+        chunk,
+        state: chunk.state,
+        fragile: !!chunk.fragile,
+      };
     }
   }
   if (!best && course.islands) {
     for (const isle of course.islands) {
       const dx = x - isle.x;
       const dz = z - isle.z;
-      if (dx * dx + dz * dz <= isle.r * isle.r) {
-        best = { y: isle.y, x: isle.x, z, ice: false, conveyX: 0, zone: isle.zone, chunk: null, state: "solid", fragile: false };
-        break;
-      }
+      if (dx * dx + dz * dz > isle.r * isle.r) continue;
+      best = { y: isle.y, x: isle.x, z, ice: false, conveyX: 0, zone: isle.zone, chunk: null, state: "solid", fragile: false };
     }
   }
   return best;
 }
 
 export function createCourse(cfg) {
-  const len = cfg.quick ? 230 : 760;
+  const quick = !!cfg.quick;
+  const S = quick ? 0.42 : 1;
+  const zz = (z) => z * S;
+  const len = zz(400);
   const zones = zonesFor(len);
-  const stations = [];
-  for (let z = 0; z <= len; z += STEP) stations.push(routeAt(z, len, zones));
-
   const chunks = [];
-  for (let i = 0; i < stations.length; i += 4) {
-    const slice = stations.slice(i, Math.min(stations.length, i + 5));
-    if (slice.length < 2) continue;
-    const gap = slice.every((s) => s.gap);
-    const chunk = {
-      index: chunks.length,
-      z0: slice[0].z,
-      z1: slice[slice.length - 1].z,
-      zone: slice[0].zone,
-      gap,
-      state: "solid",
-      crackT: 0,
-      fallT: 0,
-      fallY: 0,
-      dirty: true,
-      fragile: slice[0].zone === "canyon" && (chunks.length % 11 === 4),
-      ice: slice[0].ice,
-      jitter: (i % 7) / 7,
-      tilt: 0,
-    };
-    if (!gap) Object.assign(chunk, buildChunkGeometry(slice));
-    slice.forEach((s) => {
-      s.chunk = chunk.index;
-    });
-    chunks.push(chunk);
+  const floors = [];
+  const seed = cfg.seed || 1;
+  let rng = seed >>> 0;
+  const rnd = () => {
+    rng = (Math.imul(1664525, rng) + 1013904223) >>> 0;
+    return rng / 4294967296;
+  };
+  const openDoor = Math.floor(rnd() * 3);
+
+  function addDisc(x, y, z, rx, rz, zone, extra) {
+    const idx = makeChunk(chunks, zone, z - rz, z + rz, discGeometry(x, y, z, rx, rz, zone, extra && extra.hex));
+    const pad = { x, y, z, rx, rz, zone, chunk: idx, conveyX: extra && extra.conveyX };
+    floors.push(pad);
+    if (extra && extra.fragile) chunks[idx].fragile = true;
+    return pad;
   }
 
-  function atZone(id, frac) {
-    const zone = zones.find((z) => z.id === id);
-    const z = zone.z0 + (zone.z1 - zone.z0) * frac;
-    const st = stations[clamp(Math.round(z / STEP), 0, stations.length - 1)];
-    return { x: st.x, y: st.y, z: st.z, zone: st.zone };
-  }
-
-  const bumpers = [0.22, 0.48, 0.7].map((f, i) => {
-    const p = atZone("meadow", f);
-    p.x += i === 1 ? 0 : (i === 0 ? -2.2 : 2.2);
-    return p;
-  });
-  bumpers.push({ ...atZone("ice", 0.35), x: atZone("ice", 0.35).x - 1.4 });
-  bumpers.push({ ...atZone("climb", 0.3), x: atZone("climb", 0.3).x + 1.6 });
-
-  const pads = [];
-  for (const [zone, frac, side] of [
-    ["canyon", 0.322, 0],
-    ["canyon", 0.602, 0],
-    ["sky", 0.2, 0],
-    ["sky", 0.46, 0],
-    ["sky", 0.7, 0],
-    ["meadow", 0.62, -3.2],
-  ]) {
-    const p = atZone(zone, frac);
-    p.x += side;
-    pads.push(p);
-  }
-
-  const platforms = [];
-  for (const [frac, phase] of [[0.22, 0.4], [0.48, 1.6]]) {
-    const p = atZone("sky", frac);
-    platforms.push({
-      id: platforms.length,
-      kind: "ferry",
-      originX: p.x,
-      originZ: p.z,
-      x: p.x,
-      z: p.z,
-      prevX: p.x,
-      prevZ: p.z,
-      y: p.y + 0.35,
-      amp: 1.6,
-      speed: 0.8,
-      phase,
-      radius: 2.3,
-      axis: "x",
-    });
-  }
-  const spinSpot = atZone("sky", 0.55);
-  platforms.push({
-    id: platforms.length,
-    kind: "spin",
-    originX: spinSpot.x + 1.4,
-    originZ: spinSpot.z,
-    x: spinSpot.x + 1.4,
-    z: spinSpot.z,
-    prevX: spinSpot.x + 1.4,
-    prevZ: spinSpot.z,
-    y: spinSpot.y + 0.2,
-    amp: 0,
-    speed: 1.5,
-    phase: 0,
-    radius: 1.7,
-    axis: "spin",
-  });
-
-  const spinners = [
-    { ...atZone("sky", 0.34), angle: 0.4, spin: 1.6 },
-    { ...atZone("climb", 0.28), x: atZone("climb", 0.28).x - 1.5, angle: 1, spin: -1.5 },
-    { ...atZone("climb", 0.62), x: atZone("climb", 0.62).x + 1.5, angle: 0.2, spin: 1.8 },
-  ];
-
-  const geysers = [0.4, 0.72].map((f, i) => {
-    const p = atZone("canyon", f);
-    p.x += i === 0 ? -1.6 : 1.8;
-    return { ...p, period: 2.5 + i * 0.5, t: i * 0.8, hot: false, wasHot: false, warn: false, radius: 1.2 };
-  });
-
-  const sweepers = [
-    { ...atZone("canyon", 0.5), y: atZone("canyon", 0.5).y + 0.45, originX: atZone("canyon", 0.5).x, amp: 3.6, speed: 1.15, halfLen: 2.2, height: 0.45, full: true, radius: 0.7 },
-    { ...atZone("climb", 0.46), y: atZone("climb", 0.46).y + 1.15, originX: atZone("climb", 0.46).x, amp: 3.2, speed: 1.35, halfLen: 2, height: 1.15, full: false, radius: 0.62 },
-  ];
-
-  const pend = atZone("sky", 0.5);
-  const pendulums = [{
-    x: pend.x, z: pend.z, y: pend.y + 3.2, len: 2.4, amp: 0.8, speed: 1.3, phase: 0.2, radius: 0.75,
-  }];
-
-  const roll = atZone("meadow", 0.32);
-  const roll2 = atZone("climb", 0.5);
-  const snow = atZone("ice", 0.55);
-  const rollers = [
-    { x: roll.x - 2.2, z: roll.z, y: roll.y + 0.9, x0: roll.x - 2.4, x1: roll.x + 2.4, dir: 1, speed: 3.2, radius: 1.15, rot: 0 },
-    { x: roll2.x - 1.6, z: roll2.z, y: roll2.y + 0.9, x0: roll2.x - 1.8, x1: roll2.x + 1.8, dir: -1, speed: 2.6, radius: 1.05, rot: 1 },
-    { x: snow.x - 1.4, z: snow.z, y: snow.y + 0.7, x0: snow.x - 1.6, x1: snow.x + 1.6, dir: 1, speed: 2.4, radius: 0.85, rot: 0.4, snow: true },
-  ];
-
-  const hop = atZone("canyon", 0.46);
-  const hoppers = [{
-    x: hop.x, z: hop.z, y: hop.y, homeX: hop.x, homeZ: hop.z, homeY: hop.y,
-    vy: 0, hopping: false, t: 0.3, period: 1.7, dirx: 1, dirz: 0, radius: 0.9,
-  }];
-
-  const fly = atZone("sky", 0.24);
-  const flyers = [{
-    cx: fly.x, cz: fly.z, cy: fly.y + 2.4, x: fly.x, y: fly.y + 2.4, z: fly.z, ang: 0, span: 6.2, radius: 0.95,
-  }];
-
-  const windZone = zones.find((z) => z.id === "sky");
-  const winds = [{
-    z0: windZone.z0 + (windZone.z1 - windZone.z0) * 0.78,
-    z1: windZone.z1 - 4,
-    x0: -12,
-    x1: 12,
-    y0: 3,
-    y1: 16,
-    ax: 1,
-  }];
-  const canyon = zones.find((z) => z.id === "canyon");
-  const lava = { z0: canyon.z0, z1: canyon.z1, x0: -30, x1: 30 };
-
-  const checkpoints = ["meadow", "canyon", "sky", "ice", "climb"].map((id) => {
-    const p = atZone(id, 0.04);
-    return { ...p, name: zones.find((z) => z.id === id).name, row: Math.round(p.z / STEP) };
-  });
-
-  const spawns = [];
-  const startSt = stations[Math.round(7 / STEP)];
-  spawns.push({ x: startSt.x, y: startSt.y, z: startSt.z, row: 0, col: 0 });
-  for (let n = 1; n < 16; n++) {
-    const row = Math.floor((n - 1) / 4);
-    const col = (n - 1) % 4;
-    const z = 11 + row * 2.6;
-    const st = stations[Math.round(z / STEP)];
-    const x = st.x + (col - 1.5) * 1.45;
-    spawns.push({ x, y: st.y, z, row: row + 1, col });
-  }
-
-  const waypoints = [];
-  for (let i = 0; i < stations.length; i += 2) {
-    const st = stations[i];
-    if (st.gap) {
-      if (waypoints.length) waypoints[waypoints.length - 1].gap = true;
-      continue;
+  function addBridge(x0, z0, x1, z1, y0, y1, width, zone, opts) {
+    const gapT = opts && opts.gap;
+    const idx = makeChunk(chunks, zone, Math.min(z0, z1), Math.max(z0, z1), bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone));
+    const pads = [];
+    const span = Math.hypot(x1 - x0, z1 - z0);
+    const n = Math.max(4, Math.ceil(span / Math.max(2.2, width * 0.5)));
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      if (gapT && Math.abs(t - gapT) < 0.12) continue;
+      const pad = {
+        x: lerp(x0, x1, t),
+        z: lerp(z0, z1, t),
+        y: lerp(y0, y1, t),
+        rx: width * 0.78,
+        rz: width * 0.78,
+        zone,
+        chunk: idx,
+        conveyX: opts && opts.conveyX,
+      };
+      floors.push(pad);
+      pads.push(pad);
     }
-    if (st.zone === "ship" && st.z > len - 18) continue;
-    waypoints.push({ x: st.x, y: st.y, z: st.z, row: i, gap: false });
+    return pads;
   }
-  const shipSt = stations[Math.round((len - 16) / STEP)];
-  const ship = { x: shipSt.x, y: shipSt.y, z: shipSt.z - 6 };
-  waypoints.push({ x: ship.x, y: ship.y, z: ship.z - 5, row: stations.length - 1, gap: false, ship: true });
 
-  const islands = [];
-  for (const [id, frac, side] of [["sky", 0.22, 3.4], ["sky", 0.48, -3.2], ["sky", 0.72, 2.8], ["canyon", 0.34, 3.6]]) {
-    const p = atZone(id, frac);
-    islands.push({ x: p.x + side, y: p.y - 0.15, z: p.z, r: 1.85, zone: p.zone });
+  // Meadow plaza. A giant mushroom sits in the middle so you walk around it.
+  addDisc(0, 0, zz(40), 24, 24, "meadow");
+  addDisc(0, 2.6, zz(40), 4.2, 4.2, "meadow");
+  addDisc(-16, 0.2, zz(28), 7, 7, "meadow");
+  addDisc(16, 0.8, zz(52), 6, 6, "meadow");
+
+  // Canyon crater. Routes bend around the lava, they do not run as parallel lanes.
+  addDisc(0, 0.2, zz(92), 16, 14, "canyon");
+  addBridge(0, zz(78), -16, zz(100), 0.15, 0.3, 7, "canyon");
+  addBridge(-16, zz(100), -18, zz(118), 0.3, 0.35, 6.5, "canyon");
+  addBridge(-18, zz(118), -6, zz(136), 0.35, 0.3, 6.5, "canyon");
+  addBridge(2, zz(86), 14, zz(108), 0.2, 1.6, 5.5, "canyon");
+  addBridge(14, zz(108), 16, zz(126), 1.6, 2.6, 5.2, "canyon");
+  addBridge(0, zz(96), 6, zz(112), 0.3, 0.45, 4.2, "canyon");
+  addBridge(6, zz(114), -4, zz(128), 0.45, 0.35, 4.2, "canyon");
+  addBridge(16, zz(126), 2, zz(140), 2.6, 0.4, 5.5, "canyon", { gap: 0.48 });
+  addDisc(0, 0.25, zz(148), 16, 12, "canyon");
+
+  // Sky cluster around a tower. Short bridges cross instead of three long lanes.
+  addDisc(0, 4, zz(178), 12, 11, "sky");
+  addDisc(-16, 4.4, zz(196), 7, 6, "sky");
+  addDisc(14, 6.8, zz(194), 6, 6, "sky");
+  addDisc(0, 5.6, zz(210), 6, 5, "sky");
+  addBridge(0, zz(186), -14, zz(196), 4, 4.4, 5, "sky");
+  addBridge(-14, zz(200), 0, zz(214), 4.4, 5.6, 4.6, "sky");
+  addBridge(4, zz(184), 14, zz(194), 4.1, 6.8, 4.4, "sky");
+  addBridge(12, zz(200), 2, zz(214), 6.8, 5.6, 4.2, "sky");
+  addDisc(0, 5.2, zz(232), 13, 11, "sky");
+  addBridge(-2, zz(156), 6, zz(172), 0.35, 4, 6.6, "canyon");
+  addBridge(2, zz(62), 10, zz(80), 0.05, 0.2, 7.2, "meadow");
+  addBridge(0, zz(240), -10, zz(258), 5.2, 3.3, 6.2, "sky");
+  addBridge(4, zz(236), 12, zz(264), 5.2, 3.3, 6, "sky");
+  addBridge(0, zz(336), -3, zz(352), 6.2, 8, 5.8, "climb");
+  addBridge(0, zz(292), 6, zz(306), 3.1, 3, 6.2, "ice");
+  addBridge(6, zz(304), 4, zz(318), 3, 3.4, 5.4, "climb");
+
+  // Ice round. The middle is only falling hexes. The rim is the safe walk.
+  addDisc(-14, 3.2, zz(268), 8, 8, "ice", { conveyX: 5 });
+  addDisc(14, 3.3, zz(270), 8, 8, "ice", { conveyX: -5 });
+  addDisc(0, 3.1, zz(286), 10, 8, "ice");
+  for (let row = -2; row <= 2; row++) {
+    for (let col = -3; col <= 3; col++) {
+      if ((col + row) % 2 === 0 && rnd() < 0.15) continue;
+      addDisc(-7 + col * 2.5, 3.15, zz(268 + row * 2.4), 1.25, 1.25, "ice", { fragile: true, hex: true });
+    }
+  }
+
+  // Climb spirals around a tower, then the ship deck.
+  addDisc(0, 3, zz(312), 12, 10, "climb");
+  addDisc(-14, 4.4, zz(326), 6, 6, "climb");
+  addDisc(0, 6.2, zz(334), 6, 5, "climb");
+  addDisc(14, 7.6, zz(324), 6, 6, "climb");
+  addBridge(-2, zz(318), -14, zz(326), 3, 4.4, 5, "climb");
+  addBridge(-12, zz(330), 0, zz(336), 4.4, 6.2, 4.6, "climb");
+  addBridge(2, zz(316), 14, zz(324), 3.1, 7.6, 4.4, "climb");
+  addBridge(12, zz(330), 0, zz(348), 7.6, 8, 5, "climb");
+  addDisc(0, 8, zz(360), 14, 12, "ship");
+
+  const shipPad = floors[floors.length - 1];
+  const ship = { x: shipPad.x, y: shipPad.y, z: shipPad.z + zz(6) };
+
+  function route(xs) {
+    const pts = [];
+    for (const [z, x, y, gap] of xs) pts.push({ x, y: y || 0, z: zz(z), gap: !!gap });
+    pts.push({ x: ship.x, y: ship.y, z: ship.z - 4 });
+    return pts;
+  }
+  const doorXs = [-8, -4, 0, 4, 8];
+  const doorOrder = doorXs.map((_, i) => i);
+  for (let i = doorOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(rnd() * (i + 1));
+    const swap = doorOrder[i];
+    doorOrder[i] = doorOrder[j];
+    doorOrder[j] = swap;
+  }
+  const solidDoors = 2 + (seed % 2);
+  const solidSet = new Set(doorOrder.slice(0, solidDoors));
+  const doors = doorXs.map((x, i) => ({ x, y: 0.35, z: zz(146), solid: solidSet.has(i) }));
+  const openXs = doors.filter((d) => !d.solid).map((d) => d.x);
+  const doorX = (i) => openXs[i % openXs.length];
+  const routes = [
+    route([
+      [24, -6, 0], [34, -16, 0.2], [50, -14, 0], [64, 2, 0], [82, 8, 0.2],
+      [100, -14, 0.3], [118, -18, 0.35], [136, -8, 0.3], [146, doorX(0), 0.3, true], [156, -2, 0.25], [168, 4, 2.4],
+      [186, -6, 4], [198, -14, 4.4], [214, -2, 5.6], [232, 0, 5.2], [258, -10, 3.3],
+      [270, -14, 3.2], [286, -2, 3.1], [306, 4, 3], [318, -4, 3.2], [328, -12, 4.4], [334, 0, 6.2], [350, 0, 8], [360, 0, 8],
+    ]),
+    route([
+      [26, 4, 0], [42, 10, 0.2], [58, 12, 0.6], [80, 6, 0.2], [96, 2, 0.3],
+      [112, 4, 0.4], [128, -4, 0.35], [146, doorX(1), 0.3, true], [156, 2, 0.25], [168, 4, 2.4],
+      [186, 2, 4.1], [196, -12, 4.4], [210, -2, 5.6], [232, 2, 5.2], [250, -6, 4.2], [262, -10, 3.3],
+      [272, -12, 3.2], [286, -2, 3.1], [312, 0, 3], [326, -10, 4.4], [336, 0, 6.2], [348, -2, 7.6], [360, 0, 8],
+    ]),
+    route([
+      [28, 6, 0], [44, 12, 0.4], [52, 14, 0.8], [70, 12, 0.2], [90, 8, 0.4],
+      [108, 14, 1.6], [126, 16, 2.6], [141, 3, 0.5], [146, doorX(2), 0.3, true], [168, 5, 2.4],
+      [184, 8, 4.6], [194, 14, 6.8], [208, 6, 6.2], [232, 2, 5.2], [248, 8, 4.4], [264, 13, 3.3],
+      [274, 14, 3.3], [286, 4, 3.1], [304, 6, 3], [316, 8, 4.6], [324, 14, 7.6], [340, 6, 7.8], [352, 0, 8], [360, 0, 8],
+    ]),
+  ];
+
+  const stations = [];
+  for (let z = 0; z <= len; z += 8) {
+    const zone = zoneAt(zones, z);
+    stations.push({
+      x: 0,
+      y: 0,
+      z,
+      half: zone === "meadow" ? 16 : 12,
+      zone,
+      gap: false,
+      chunk: 0,
+      ice: zone === "ice",
+      conveyX: 0,
+      route: 0,
+      shelf: 0,
+      shelfH: 0,
+      guard: zone === "meadow" && z < 50 * S,
+    });
   }
 
   const tiles = [];
-  for (let i = 0; i < stations.length; i += 2) {
-    const st = stations[i];
-    if (st.gap) continue;
-    tiles.push({ x: st.x - st.half - 0.2, y: st.y, z: st.z, zone: st.zone, col: -3, row: i });
-    tiles.push({ x: st.x + st.half + 0.2, y: st.y, z: st.z, zone: st.zone, col: 3, row: i });
-    if (st.shelf) {
+  for (const pad of floors) {
+    if (pad.rx < 6) continue;
+    for (let k = 0; k < 6; k++) {
+      const a = rnd() * Math.PI * 2;
       tiles.push({
-        x: st.x + Math.sign(st.shelf) * (st.half + 1.4),
-        y: st.y + st.shelfH,
-        z: st.z,
-        zone: st.zone,
-        col: Math.sign(st.shelf) * 4,
-        row: i,
-      });
-    }
-    if (Math.abs(st.route) > 0.6) {
-      tiles.push({
-        x: st.x + st.route * 8.6,
-        y: st.y - 0.4,
-        z: st.z,
-        zone: st.zone,
-        col: Math.sign(st.route) * 5,
-        row: i,
+        x: pad.x + Math.cos(a) * pad.rx * 0.85,
+        y: pad.y,
+        z: pad.z + Math.sin(a) * pad.rz * 0.75,
+        zone: pad.zone,
+        col: Math.cos(a) > 0 ? 4 : -4,
+        row: Math.floor(pad.z),
       });
     }
   }
 
-  const blockers = [];
-  for (let i = 0; i < tiles.length; i += 5) {
-    const t = tiles[i];
-    if (Math.abs(t.col) < 3) continue;
-    blockers.push({ x: t.x, y: t.y, z: t.z, r: 0.72 });
+  const coins = [];
+  const coin = (z, x, y) => coins.push({ x, y: y + 1.15, z: zz(z), got: false });
+  const high = routes[2];
+  for (let i = 1; i < high.length - 1; i += 2) coin(high[i].z / S, high[i].x, high[i].y);
+  coin(52, 14, 0.8);
+  coin(108, 14, 1.6);
+  coin(194, 14, 6.8);
+  coin(324, 14, 7.6);
+  coin(40, -10, 0.2);
+
+  const blockers = [{ x: 0, y: 1.2, z: zz(40), r: 2.3 }];
+  for (const door of doors) {
+    if (!door.solid) continue;
+    blockers.push({ x: door.x, y: door.y + 1.2, z: door.z, r: 1.35 });
   }
-  blockers.push({ x: ship.x, y: ship.y, z: ship.z, r: 2.5, ship: true });
+  blockers.push({ x: -13.2, y: 1.4, z: zz(146), r: 2.6 });
+  blockers.push({ x: 13.2, y: 1.4, z: zz(146), r: 2.6 });
+  blockers.push({ x: ship.x, y: ship.y, z: ship.z, r: 2.4, ship: true });
+
+  const at = (z, x, y) => ({ x, y, z: zz(z), zone: zoneAt(zones, zz(z)) });
+  const faceTo = (x0, z0, x1, z1) => Math.atan2(x1 - x0, z1 - z0);
+
+  const bumpers = [at(30, 12, 0), at(48, -8, 0), at(178, 6, 4), at(312, -6, 3)];
+  const pads = [
+    { ...at(32, 0, 0), face: faceTo(0, 32, 0, 40) },
+    { ...at(40, 0, 2.6), face: faceTo(0, 40, 14, 52) },
+    { ...at(100, 8, 0.6), face: faceTo(8, 100, 14, 108) },
+    { ...at(126, 16, 2.6), face: faceTo(16, 126, 2, 140) },
+    { ...at(316, 6, 3.4), face: faceTo(6, 316, 14, 324) },
+  ];
+  const platforms = [
+    { id: 0, kind: "ferry", originX: 0, originZ: zz(204), x: 0, z: zz(204), prevX: 0, prevZ: zz(204), y: 6.4, originY: 6.4, amp: 8, speed: 0.7, phase: rnd() * 2, radius: 2.8, axis: "x" },
+    { id: 1, kind: "spin", originX: -16, originZ: zz(196), x: -16, z: zz(196), prevX: -16, prevZ: zz(196), y: 4.7, originY: 4.7, amp: 0, speed: 1.3, phase: 0, radius: 3.1, axis: "spin" },
+    { id: 2, kind: "seesaw", originX: 0, originZ: zz(278), x: 0, z: zz(278), prevX: 0, prevZ: zz(278), y: 3.7, originY: 3.7, amp: 0, speed: 0, phase: 0, radius: 3.6, axis: "seesaw", tilt: 0, face: Math.PI / 2 },
+    { id: 3, kind: "seesaw", originX: 0, originZ: zz(338), x: 0, z: zz(338), prevX: 0, prevZ: zz(338), y: 6.8, originY: 6.8, amp: 0, speed: 0, phase: 0, radius: 3.4, axis: "seesaw", tilt: 0, face: Math.PI / 2 },
+  ];
+  const spinners = [
+    { ...at(36, -8, 0.15), len: 3.6, angle: rnd() * 3, spin: 1.5 },
+    { ...at(148, -8, 0.4), len: 3.2, angle: rnd() * 2, spin: -1.35 },
+    { ...at(210, 0, 5.7), len: 2.8, angle: 0.4, spin: 1.6 },
+    { ...at(312, 4, 3.1), len: 3.1, angle: 1, spin: -1.4 },
+  ];
+  const geysers = [at(104, 3, 0.4), at(118, -2, 0.2)].map((p, i) => ({ ...p, period: 2.6 + i * 0.35, t: rnd() * 2, hot: false, wasHot: false, warn: false, radius: 1.35 }));
+  const sweepers = [
+    { ...at(44, 0, 1.15), originX: 0, amp: 6, speed: 0.85, halfLen: 3.2, height: 1.05, full: false, radius: 1.15, scale: 1.7 },
+    { ...at(108, -16, 1.15), originX: -16, amp: 4.5, speed: 1.05, halfLen: 2.6, height: 1.05, full: true, radius: 1.05, scale: 1.55 },
+    { ...at(268, -14, 4.15), originX: -14, amp: 4, speed: 1.1, halfLen: 2.4, height: 1, full: false, radius: 1, scale: 1.45 },
+  ];
+  const pendulums = [
+    { ...at(68, 8, 4.6), len: 3.2, amp: 1.05, speed: 1.15, phase: rnd(), radius: 0.95 },
+    { ...at(207, -7, 9.2), len: 3.4, amp: 1.1, speed: 1.25, phase: rnd(), radius: 1 },
+    { ...at(330, -6, 8.4), len: 3.1, amp: 1, speed: 1.2, phase: rnd() * 2, radius: 0.9 },
+  ];
+  const rollers = [
+    { ...at(116, 14, 2.5), x0: 10, x1: 18, dir: 1, speed: 3.1, radius: 1.15, rot: 0 },
+    { ...at(270, 14, 4.2), x0: 8, x1: 18, dir: -1, speed: 2.6, radius: 1.05, rot: 0, snow: true },
+    { ...at(324, 14, 8.5), x0: 8, x1: 18, dir: 1, speed: 2.8, radius: 1.1, rot: 0 },
+  ];
+  const hoppers = [{ ...at(152, 6, 0.4), homeX: 6, homeZ: zz(152), homeY: 0.4, vy: 0, hopping: false, t: rnd(), period: 1.7, dirx: 1, dirz: 0, radius: 0.95 }];
+  const flyers = [{ cx: 0, cz: zz(210), cy: 9.2, x: 0, y: 9.2, z: zz(210), ang: rnd() * 6, span: 7, radius: 0.95 }];
+  const winds = [{ z0: zz(198), z1: zz(216), x0: -10, x1: 12, y0: 4, y1: 12, ax: 1 }];
+  const lava = { z0: zz(108), z1: zz(128), x0: -7, x1: 7 };
+  const crater = { x: 0, y: 0.08, z: zz(118), r: 7.5 };
+  const hubs = [
+    { x: 0, z: zz(40), zone: "meadow", r: 26 },
+    { x: 0, z: zz(118), zone: "canyon", r: 24 },
+    { x: 0, z: zz(204), zone: "sky", r: 22 },
+    { x: 0, z: zz(274), zone: "ice", r: 20 },
+    { x: 0, z: zz(332), zone: "climb", r: 20 },
+  ];
+  const landmarks = [
+    { kind: "mushroom", x: 0, y: 0, z: zz(40) },
+    { kind: "tower", x: 0, y: 5.6, z: zz(210) },
+  ];
+  const checkpoints = ["meadow", "canyon", "sky", "ice", "climb"].map((id) => {
+    const zone = zones.find((z) => z.id === id);
+    return { x: 0, y: 0, z: zone.z0 + 8, name: zone.name, row: 0 };
+  });
+  const spawns = [{ x: 0, y: 0, z: zz(22), row: 0, col: 0 }];
+  for (let n = 1; n < 16; n++) {
+    const row = Math.floor((n - 1) / 5);
+    const col = (n - 1) % 5;
+    spawns.push({ x: (col - 2) * 2.1, y: 0, z: zz(26 + row * 2.2), row: row + 1, col });
+  }
+  const islands = [];
 
   return {
     len,
     stations,
     chunks,
+    floors,
     tiles,
     islands,
     blockers,
+    coins,
     zones,
     bumpers,
     spinners,
@@ -561,8 +493,14 @@ export function createCourse(cfg) {
     flyers,
     winds,
     lava,
+    crater,
+    hubs,
+    landmarks,
+    doors,
     checkpoints,
-    waypoints,
+    waypoints: routes[0],
+    routes,
+    openDoor,
     spawns,
     ship,
     endZ: ship.z,

@@ -117,6 +117,8 @@ button { font-family: inherit; touch-action: manipulation; }
 .seat.open { animation: pulse 0.45s ease-in-out infinite; }
 #seats-label { font-size: 13px; font-weight: 700; color: var(--ink); margin-top: 3px; }
 #hud.last #seats-label, #hud.last .seat.open { color: var(--coral); }
+.midpills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+#coins { color: #8a5a12; }
 #last-banner {
   grid-column: 1 / -1;
   justify-self: center;
@@ -363,7 +365,10 @@ button { font-family: inherit; touch-action: manipulation; }
       <div id="timer" class="pill">3:00</div>
       <div class="track" aria-hidden="true"><i id="progress"></i></div>
     </div>
-    <div id="place" class="pill">1ST</div>
+    <div class="midpills">
+      <div id="place" class="pill">1ST</div>
+      <div id="coins" class="pill">0 COINS</div>
+    </div>
     <div class="seatbox">
       <div id="seats"></div>
       <div id="seats-label">SEATS 0/8</div>
@@ -411,6 +416,6 @@ button { font-family: inherit; touch-action: manipulation; }
     </div>
   </div>
 </div>
-<script src="game.js?v=7"></script>
+<script src="game.js?v=10"></script>
 </body>
 </html>

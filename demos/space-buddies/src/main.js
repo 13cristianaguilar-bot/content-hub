@@ -23,6 +23,7 @@ const colorBox = document.getElementById("colors");
 const gearBox = document.getElementById("gear");
 const tutor = document.getElementById("tutor");
 const placeEl = document.getElementById("place");
+const coinsEl = document.getElementById("coins");
 const hud = document.getElementById("hud");
 const controls = document.getElementById("controls");
 const countdownEl = document.getElementById("countdown");
@@ -242,6 +243,8 @@ function updateHud(dt) {
   const suffix = n === 1 ? "ST" : n === 2 ? "ND" : n === 3 ? "RD" : "TH";
   const placeText = n + suffix;
   if (placeEl.textContent !== placeText) placeEl.textContent = placeText;
+  const coinText = (race.coins || 0) + " COINS";
+  if (coinsEl && coinsEl.textContent !== coinText) coinsEl.textContent = coinText;
 
   const showTutor = race.phase === "race" && race.zoneId === "meadow" && race.time < 8 && !cfg.auto;
   tutor.hidden = !showTutor;
@@ -320,14 +323,14 @@ function updateHud(dt) {
           best = true;
         }
         const stored = Number(localStorage.getItem(BEST_KEY) || ms);
-        resultTime.textContent = "TIME " + clock(race.time) + (best ? ". NEW BEST." : ". BEST " + clock(stored / 1000) + ".");
+        resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS" + (best ? ". NEW BEST." : ". BEST " + clock(stored / 1000) + ".");
       } catch (err) {
-        resultTime.textContent = "TIME " + clock(race.time);
+        resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS";
       }
     } else {
       resultSub.textContent = "SO CLOSE";
       againBtn.textContent = "TRY AGAIN";
-      resultTime.textContent = "TIME " + clock(race.time);
+      resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS";
     }
   }
   if (!showEnd) shownResult = false;
@@ -339,6 +342,7 @@ function handleEvents() {
     if (e.t === "tick") audio.play("tick", 0.55, 0.05);
     else if (e.t === "go") audio.play("go", 0.6, 0.05);
     else if (e.t === "jump" && e.id === 0) audio.play("jump", 0.4, 0.05);
+    else if (e.t === "coin") audio.play("jump", 0.32, 0.04);
     else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
     else if (e.t === "bump") {
       audio.play("bump", e.id === 0 ? 0.5 : 0.22, 0.06);
@@ -437,6 +441,7 @@ function frame(now) {
     qualityDropped = true;
     world.setDpr(1);
   }
+  if (window.__sbOverview) raw.overview = window.__sbOverview;
   world.update(race, dt, raw);
   world.render();
   updateHud(dt);

@@ -116,6 +116,15 @@ const GEAR = ["classic", "heli", "goggles", "stars", "flower", "scarf", "fish", 
 const GEAR_LABEL = ["Classic", "Sunny", "Goggles", "Stars", "Flower", "Scarf", "Fish", "Crown"];
 let pickColor = COLORS[0];
 let pickGear = "classic";
+const LOOK_KEY = "space-buddies-look";
+try {
+  const savedLook = JSON.parse(localStorage.getItem(LOOK_KEY) || "{}");
+  if (savedLook.color) pickColor = savedLook.color;
+  if (savedLook.gear && GEAR.includes(savedLook.gear)) pickGear = savedLook.gear;
+} catch (err) { /* private mode */ }
+function saveLook() {
+  try { localStorage.setItem(LOOK_KEY, JSON.stringify({ color: pickColor, gear: pickGear })); } catch (err) { /* ignore */ }
+}
 let zoneTimer = 0;
 let crackMute = 0;
 let frames = 0;
@@ -168,6 +177,7 @@ function begin() {
   title.classList.add("hide");
   lobby.hidden = true;
   race.player.color = pickColor;
+  saveLook();
   if (world.applyLook) world.applyLook(pickColor, pickGear);
   introLeft = cfg.auto ? 0.2 : 3.3;
   hud.hidden = false;
@@ -264,12 +274,13 @@ startBtn.addEventListener("pointerdown", (e) => {
 COLORS.forEach((hex, i) => {
   const b = document.createElement("button");
   b.type = "button";
-  b.className = "swatch" + (i === 0 ? " on" : "");
+  b.className = "swatch" + (hex === pickColor ? " on" : "");
   b.style.background = hex;
   b.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
     pickColor = hex;
+    saveLook();
     colorBox.querySelectorAll("button").forEach((n) => n.classList.remove("on"));
     b.classList.add("on");
     audio.play("ui_tap", 0.35, 0.02);
@@ -279,12 +290,13 @@ COLORS.forEach((hex, i) => {
 GEAR.forEach((name, i) => {
   const b = document.createElement("button");
   b.type = "button";
-  b.className = "gear" + (i === 0 ? " on" : "");
+  b.className = "gear" + (name === pickGear ? " on" : "");
   b.textContent = GEAR_LABEL[i];
   b.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     e.stopPropagation();
     pickGear = name;
+    saveLook();
     gearBox.querySelectorAll("button").forEach((n) => n.classList.remove("on"));
     b.classList.add("on");
     audio.play("ui_tap", 0.35, 0.02);

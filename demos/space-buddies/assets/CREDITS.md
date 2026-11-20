@@ -1,3 +1,7 @@
+# Asset credits
+
+Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated).
+
 # Meadow asset credits
 
 Every file added for the meadow pass is CC0 1.0 Universal. No account and no paid pack was used. Other zones still use the project's existing models.

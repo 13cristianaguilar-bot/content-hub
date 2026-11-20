@@ -47,7 +47,7 @@ export const CONFIG = {
   gravity: 29,
   fallGravityMul: 1.48,
   jumpVel: 10.15,
-  coyoteTime: 0.14,
+  coyoteTime: 0.16,
   jumpBuffer: 0.15,
   ungroundTime: 0.1,
   maxFallSpeed: 28,

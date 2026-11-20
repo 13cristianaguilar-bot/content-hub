@@ -150,7 +150,10 @@ function routeAt(z, len, zones) {
     const fade = Math.min((u - 0.32) / 0.08, (0.8 - u) / 0.08, 1);
     route = -smooth(fade);
   }
-  return { z, x, y: heightAt(z, zones), zone: zone.id, half, gap, ice, conveyX, shelf, shelfH, route };
+  return {
+    z, x, y: heightAt(z, zones), zone: zone.id, half, gap, ice, conveyX, shelf, shelfH, route,
+    guard: zone.id === "meadow" && z < 50,
+  };
 }
 
 function pushStrip(positions, colors, indices, stations, sample) {
@@ -260,7 +263,7 @@ function stationAt(course, z) {
 export function groundAt(course, x, z) {
   const list = course.stations;
   if (!list.length || z < list[0].z - 3 || z > list[list.length - 1].z + 3) return null;
-  const i = clamp(Math.round((z - list[0].z) / STEP), 0, list.length - 2);
+  const i = clamp(Math.floor((z - list[0].z) / STEP), 0, list.length - 2);
   const a = list[i];
   const b = list[i + 1];
   const span = b.z - a.z || STEP;
@@ -274,15 +277,15 @@ export function groundAt(course, x, z) {
   if (alive && !(a.gap && b.gap) && !(a.gap && t < 0.35) && !(b.gap && t > 0.65)) {
     const lat = x - cx;
     const shelf = a.shelf && b.shelf && Math.sign(a.shelf) === Math.sign(lat) ? lerp(a.shelfH, b.shelfH, t) : 0;
-    const reach = half + (shelf ? 2.5 : 0.35);
+    const guard = !!(a.guard || b.guard);
+    const reach = half + (shelf ? 2.8 : guard ? 3.1 : 1.45);
     if (Math.abs(lat) <= reach) {
       let y = cy;
-      if (shelf && Math.abs(lat) > half * 0.42) {
+      if (shelf && Math.abs(lat) > half * 0.42 && Math.abs(lat) < half + 2.2) {
         const ramp = smooth(clamp((Math.abs(lat) - half * 0.42) / 1.35, 0, 1));
         y += shelf * ramp;
-      } else {
-        const edge = Math.abs(lat) / half;
-        if (edge > 0.86) y -= (edge - 0.86) * 1.1;
+      } else if (!guard && Math.abs(lat) > half + 0.35) {
+        y -= (Math.abs(lat) - half - 0.35) * 0.45;
       }
       if (chunk.tilt) y += chunk.tilt * lat * 0.08;
       best = { y, x: cx, z, ice: a.ice, conveyX: a.conveyX || 0, zone: a.zone, chunk, state: chunk.state, fragile: !!chunk.fragile };
@@ -471,13 +474,15 @@ export function createCourse(cfg) {
   });
 
   const spawns = [];
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 4; col++) {
-      const z = 8 + row * 3.4;
-      const st = stations[Math.round(z / STEP)];
-      const x = st.x + (col - 1.5) * 2.5;
-      spawns.push({ x, y: st.y, z, row, col });
-    }
+  const startSt = stations[Math.round(7 / STEP)];
+  spawns.push({ x: startSt.x, y: startSt.y, z: startSt.z, row: 0, col: 0 });
+  for (let n = 1; n < 16; n++) {
+    const row = Math.floor((n - 1) / 4);
+    const col = (n - 1) % 4;
+    const z = 11 + row * 2.6;
+    const st = stations[Math.round(z / STEP)];
+    const x = st.x + (col - 1.5) * 1.45;
+    spawns.push({ x, y: st.y, z, row: row + 1, col });
   }
 
   const waypoints = [];
@@ -528,12 +533,21 @@ export function createCourse(cfg) {
     }
   }
 
+  const blockers = [];
+  for (let i = 0; i < tiles.length; i += 5) {
+    const t = tiles[i];
+    if (Math.abs(t.col) < 3) continue;
+    blockers.push({ x: t.x, y: t.y, z: t.z, r: 0.72 });
+  }
+  blockers.push({ x: ship.x, y: ship.y, z: ship.z, r: 2.5, ship: true });
+
   return {
     len,
     stations,
     chunks,
     tiles,
     islands,
+    blockers,
     zones,
     bumpers,
     spinners,

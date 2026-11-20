@@ -28,7 +28,7 @@ export function createInput(root) {
     const kind = zone(e);
     if (kind === "ui") return;
     e.preventDefault();
-    root.setPointerCapture?.(e.pointerId);
+    try { root.setPointerCapture?.(e.pointerId); } catch (err) { /* synthetic pointers have no capture */ }
     pointers.set(e.pointerId, { kind, x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY });
     if (kind === "jump") jumpEdge = true;
     if (kind === "dive") diveEdge = true;

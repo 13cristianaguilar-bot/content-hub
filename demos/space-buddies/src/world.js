@@ -1094,8 +1094,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     if (dragging) {
       const sens = look.mouse ? cfg.mouseSens : cfg.lookSens;
-      state.yaw -= look.lookDx * sens;
-      state.pitch = Math.max(cfg.minPitch, Math.min(cfg.maxPitch, state.pitch - look.lookDy * sens));
+      state.yaw += look.lookDx * sens;
+      state.pitch = Math.max(cfg.minPitch, Math.min(cfg.maxPitch, state.pitch + look.lookDy * sens));
       state.autoWait = cfg.autoFollowDelay;
     } else if (state.autoWait > 0) {
       state.autoWait -= dt;

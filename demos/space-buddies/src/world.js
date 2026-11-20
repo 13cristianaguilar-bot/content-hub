@@ -1,19 +1,20 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
-import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing } from "./meadow.js";
+import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
 
 const MODELS = {
-  buddy: "assets/models/space_buddy.glb",
+  buddy: "assets/space_buddy_web.glb",
   bumper: "assets/models/obstacle_bumper.glb",
   spinner: "assets/models/obstacle_spinner.glb",
   pad: "assets/models/obstacle_jump_pad.glb",
   platform: "assets/models/obstacle_moving_platform.glb",
   lava: "assets/models/obstacle_lava_pool.glb",
   chunk: "assets/models/obstacle_falling_chunk.glb",
-  ship: "assets/models/escape_ship.glb",
+  ship: "assets/escape_ship_web.glb",
   roller: "assets/models/enemy_roller.glb",
   hopper: "assets/models/enemy_hopper.glb",
   flyer: "assets/models/enemy_flyer.glb",
@@ -41,6 +42,78 @@ function lambert(src) {
     mat.emissive.copy(color);
     mat.emissiveIntensity = Math.max(mat.emissiveIntensity, 0.55);
   }
+  return mat;
+}
+
+function bakeFit(root, targetHeight) {
+  root.updateWorldMatrix(true, true);
+  root.traverse((obj) => {
+    if (!obj.isMesh) return;
+    obj.geometry = obj.geometry.clone();
+    obj.geometry.applyMatrix4(obj.matrixWorld);
+    obj.position.set(0, 0, 0);
+    obj.quaternion.identity();
+    obj.scale.set(1, 1, 1);
+  });
+  root.position.set(0, 0, 0);
+  root.quaternion.identity();
+  root.scale.set(1, 1, 1);
+  root.updateWorldMatrix(true, true);
+  const box = new THREE.Box3().setFromObject(root);
+  const height = Math.max(0.001, box.getSize(new THREE.Vector3()).y);
+  root.scale.setScalar(targetHeight / height);
+  root.updateWorldMatrix(true, true);
+  const grounded = new THREE.Box3().setFromObject(root);
+  root.position.y -= grounded.min.y;
+}
+
+function markSrgb(map) {
+  if (map) map.colorSpace = THREE.SRGBColorSpace;
+  return map || null;
+}
+
+function buddyMat(src, hex) {
+  const tint = new THREE.Color(hex);
+  const map = markSrgb(src && src.map);
+  const mat = new THREE.MeshStandardMaterial({
+    map,
+    color: 0xffffff,
+    roughness: 0.8,
+    metalness: 0,
+    emissive: tint,
+    emissiveIntensity: 0.16,
+    name: "BuddyHue",
+  });
+  mat.transparent = false;
+  mat.depthWrite = true;
+  mat.opacity = 1;
+  mat.alphaTest = 0;
+  mat.side = THREE.FrontSide;
+  mat.userData.tint = tint;
+  mat.onBeforeCompile = (shader) => {
+    shader.uniforms.uTint = { value: tint };
+    mat.userData.shader = shader;
+    shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      "vec3 albedo = diffuseColor.rgb;\nvec3 q = floor(albedo * 4.0 + 0.5) / 4.0;\nfloat luma = dot(q, vec3(0.299, 0.587, 0.114));\nfloat sat = max(q.r, max(q.g, q.b)) - min(q.r, min(q.g, q.b));\nfloat suit = smoothstep(0.1, 0.28, sat);\nvec3 tinted = uTint * clamp(luma * 1.15, 0.5, 1.0);\ndiffuseColor.rgb = mix(albedo, tinted, suit);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, 0.97);\n#include <opaque_fragment>"
+    );
+  };
+  return mat;
+}
+
+function shipMat(src) {
+  const map = markSrgb(src && src.map);
+  const mat = new THREE.MeshBasicMaterial({
+    map,
+    color: 0xffffff,
+    fog: false,
+    toneMapped: false,
+    name: "ShipPaint",
+  });
+  mat.transparent = false;
+  mat.depthWrite = true;
+  mat.opacity = 1;
+  mat.side = THREE.FrontSide;
   return mat;
 }
 
@@ -103,10 +176,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   scene.fog = new THREE.Fog(0x9fe8ff, cfg.fogNear, cfg.fogFar);
   const camera = new THREE.PerspectiveCamera(cfg.fovPortrait, 1, 0.15, 500);
 
-  const hemi = new THREE.HemisphereLight(0xc7f0ff, 0x7dcc62, 1.05);
-  const sun = new THREE.DirectionalLight(0xfff3c4, 1.35);
+  const hemi = new THREE.HemisphereLight(0xfff0d2, 0x7aa4e0, 0.95);
+  const sun = new THREE.DirectionalLight(0xffe0a8, 1.45);
   sun.position.set(-18, 42, 14);
-  const fill = new THREE.DirectionalLight(0x9fd8ff, 0.32);
+  const fill = new THREE.DirectionalLight(0xb9dcff, 0.55);
   fill.position.set(22, 14, -12);
   scene.add(hemi, sun, fill);
 
@@ -128,6 +201,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   scene.add(sky);
 
   const loader = new GLTFLoader();
+  loader.setMeshoptDecoder(MeshoptDecoder);
   const keys = Object.keys(MODELS);
   const gltfs = {};
   const meadow = {};
@@ -137,7 +211,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   await Promise.all([
     ...keys.map((key) => new Promise((resolve, reject) => {
       loader.load(MODELS[key], (gltf) => {
-        convert(gltf.scene);
+        if (key === "buddy") bakeFit(gltf.scene, 1.75);
+        else if (key === "ship") {
+          bakeFit(gltf.scene, 6.6);
+          gltf.scene.traverse((obj) => {
+            if (!obj.isMesh || !obj.material) return;
+            const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+            obj.material = shipMat(src);
+          });
+        } else convert(gltf.scene);
         gltfs[key] = gltf;
         loaded++;
         if (onProgress) onProgress(loaded / totalLoads);
@@ -298,6 +380,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.add(coinMesh, coinGlow);
   }
 
+  const doorMeshes = [];
   for (const door of course.doors || []) {
     const src = door.solid ? meadow.door : meadow.doorOpen;
     if (!src) continue;
@@ -311,6 +394,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       });
     }
     scene.add(obj);
+    doorMeshes.push(obj);
   }
   const capMat = new THREE.MeshToonMaterial({ color: 0xe23b4a, gradientMap: TOON_MAP });
   const stemMat = new THREE.MeshToonMaterial({ color: 0xf4e2c4, gradientMap: TOON_MAP });
@@ -377,6 +461,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     return placeProp(gltfs.pad, p.x, p.y, p.z);
   });
+  padMeshes.forEach((obj) => { obj.userData.base = obj.scale.x || 1; });
   const lavaDecals = [];
   if (course.crater) {
     lavaDecals.push(placeProp(gltfs.lava, course.crater.x, course.crater.y, course.crater.z, 0, course.crater.r / 3));
@@ -407,14 +492,24 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   });
 
   const ship = gltfs.ship.scene;
-  ship.scale.setScalar(cfg.shipScale);
   ship.position.set(course.ship.x, course.ship.y, course.ship.z);
   ship.rotation.y = Math.PI;
   scene.add(ship);
   const sockets = [];
   const seatMats = [];
+  const shipBox = new THREE.Box3().setFromObject(ship);
+  const shipSize = shipBox.getSize(new THREE.Vector3());
+  const shipMid = shipBox.getCenter(new THREE.Vector3());
   for (let i = 1; i <= 8; i++) {
-    sockets.push(ship.getObjectByName("SeatSocket_" + i));
+    let sock = ship.getObjectByName("SeatSocket_" + i);
+    if (!sock) {
+      sock = new THREE.Object3D();
+      const col = (i - 1) % 4;
+      const row = Math.floor((i - 1) / 4);
+      sock.position.set((col - 1.5) * 0.55, shipSize.y * 0.46, (row - 0.5) * 0.42);
+      ship.add(sock);
+    }
+    sockets.push(sock);
     const seat = ship.getObjectByName("Seat_" + i);
     const saved = [];
     if (seat) {
@@ -461,6 +556,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   flame2.material = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
   flame2.scale.setScalar(0.55);
   flame.add(flame2);
+  flame.position.set(0, 0.15, -1.4);
   ship.add(flame);
 
   const lava = new THREE.Mesh(
@@ -682,11 +778,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   speedLines.visible = false;
   scene.add(speedLines);
 
+  const clouds = [];
   for (let i = 0; i < 7; i++) {
     const cloud = new THREE.Mesh(new THREE.SphereGeometry(2.2 + (i % 3), 8, 6), new THREE.MeshLambertMaterial({ color: 0xfff6e5 }));
     cloud.position.set(-18 + i * 9, 16 + (i % 2) * 3, course.zones[2].z0 + 20 + i * 18);
     cloud.scale.y = 0.45;
+    cloud.userData.ox = cloud.position.x;
+    cloud.userData.oz = cloud.position.z;
     scene.add(cloud);
+    clouds.push(cloud);
   }
 
   const cpRings = course.checkpoints.map((cp) => {
@@ -775,20 +875,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     /* filled below */
   }
   for (let i = 0; i < cfg.racers; i++) {
-    const model = SkeletonUtils.clone(buddyGltf.scene);
+    const model = buddyGltf.scene.clone(true);
     const colorHex = ["#5FE3B0", "#FFD23F", "#FF8FD1", "#8C6BFF", "#5CC8FF", "#7FD88A", "#C9B6E8", "#FFC38A", "#4C6FFF", "#2EC4B6", "#FF5FA2", "#C6E05A", "#9BB6FF", "#F0B429", "#FF8A7A", "#7AD0FF"][i % 16];
     model.traverse((obj) => {
-      if (!obj.isMesh) return;
-      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
-      const next = mats.map((m) => {
-        if (m.name === "Buddy_Mint") {
-          const c = m.clone();
-          c.color.set(colorHex);
-          return c;
-        }
-        return m;
-      });
-      obj.material = Array.isArray(obj.material) ? next : next[0];
+      if (!obj.isMesh || !obj.material) return;
+      const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+      obj.material = buddyMat(src, colorHex);
     });
     const mixer = new THREE.AnimationMixer(model);
     const actions = {};
@@ -797,18 +889,6 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       action.play();
       action.setEffectiveWeight(clip.name === "Idle" ? 1 : 0);
       actions[clip.name] = action;
-    }
-    if (i === 0) {
-      model.traverse((obj) => {
-        if (!obj.isSkinnedMesh) return;
-        const outline = new THREE.SkinnedMesh(
-          obj.geometry,
-          new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide, transparent: true, opacity: 0.9 })
-        );
-        outline.bind(obj.skeleton, obj.bindMatrix);
-        outline.scale.setScalar(1.05);
-        obj.parent.add(outline);
-      });
     }
     const accessories = addBuddyGear(model);
     const gearNames = ["classic", "heli", "goggles", "stars", "flower", "scarf", "fish", "crown"];
@@ -869,8 +949,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
   resize();
 
+  const seatPop = Array(8).fill(0);
   function paintSeat(index, hex) {
     const saved = seatMats[index];
+    if (hex) seatPop[index] = 1;
     if (!saved) return;
     for (const entry of saved) {
       if (!entry.mat.color) return;
@@ -890,12 +972,13 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
   }
 
-  function burst(x, y, z) {
+  function burst(x, y, z, color) {
     for (const bit of confetti) {
       if (bit.alive) continue;
       bit.alive = true;
       bit.mesh.visible = true;
       bit.mesh.position.set(x, y, z);
+      if (color) bit.mesh.material.color.setHex(color);
       bit.v.set((Math.random() - 0.5) * 4, 2 + Math.random() * 3, (Math.random() - 0.5) * 4);
       break;
     }
@@ -938,8 +1021,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
           bit.life = 1.4;
           bit.vy = 0.6;
           bit.mesh.visible = true;
-          bit.mesh.position.set(0, chunk.positions[1] || 0, (chunk.z0 + chunk.z1) * 0.5);
+          const cz = (chunk.z0 + chunk.z1) * 0.5;
+          bit.mesh.position.set((Math.random() - 0.5) * 6, (chunk.positions && chunk.positions[1]) || 4, cz);
           bit.mesh.rotation.set(0, Math.random(), 0);
+          burst(bit.mesh.position.x, bit.mesh.position.y, cz, 0xd7c4a4);
+          burst(bit.mesh.position.x + 0.4, bit.mesh.position.y + 0.2, cz, 0xd7c4a4);
         }
       }
       chunk.dirty = false;
@@ -1083,20 +1169,63 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         continue;
       }
       v.group.position.set(r.pos.x, r.pos.y, r.pos.z);
-      v.group.rotation.y = r.yaw;
-      const squash = r.squash || 0;
-      const slide = r.sliding > 0 ? 0.38 : 0;
-      const air = !r.grounded && r.vel.y > 1.4 ? 0.16 : 0;
-      v.model.position.y = slide * -0.15;
-      v.model.scale.set(1 + squash * 0.16 + slide * 0.2 - air * 0.4, 1 - squash * 0.26 - slide + air, 1 + squash * 0.12);
+      if (v.face == null) v.face = r.yaw;
+      let turn = r.yaw - v.face;
+      while (turn > Math.PI) turn -= Math.PI * 2;
+      while (turn < -Math.PI) turn += Math.PI * 2;
+      v.face += turn * Math.min(1, dt * 10);
+      v.group.rotation.y = v.face;
+      const squash = Math.min(1, r.squash || 0);
+      const hspEarly = Math.hypot(r.vel.x, r.vel.z);
+      let pose = "idle";
+      if (r.flail > 0.05) pose = "tumble";
+      else if (r.grabT > 0) pose = "grab";
+      else if (r.diving || r.sliding > 0) pose = "dive";
+      else if (!r.grounded && r.vel.y > 0.5) pose = "jump";
+      else if (hspEarly > 0.8) pose = "run";
+      const breathe = 1 + Math.sin(race.time * 2.6 + i) * (pose === "idle" ? 0.03 : 0.01);
+      v.model.rotation.z = 0;
+      v.model.position.y = 0;
+      let sx = 1;
+      let sy = breathe;
+      let sz = 1;
+      if (pose === "jump") {
+        v.model.rotation.x = -0.28;
+        sx = 0.94; sy = 1.08; sz = 0.94;
+      } else if (pose === "dive") {
+        v.model.rotation.x = 0.7;
+        v.model.position.y = 0.12;
+        sx = 1.06; sy = 0.9; sz = 1.04;
+      } else if (pose === "grab") {
+        v.model.rotation.x = 0.35;
+        sx = 1.04; sy = 0.94; sz = 1.02;
+      } else if (pose === "tumble") {
+        v.model.rotation.x = Math.sin(race.time * 7) * 0.45;
+        v.model.rotation.z = Math.cos(race.time * 7) * 0.28;
+      } else if (pose === "run") {
+        v.model.rotation.x = 0.12;
+      } else {
+        v.model.rotation.x = 0;
+        sy = breathe - squash * 0.06;
+        sx = 1 + squash * 0.04;
+        sz = sx;
+      }
+      v.model.scale.set(1.55 * sx, 0.88 * sy, 1.6 * sz);
       if (r.squash > 0.32 && !v.dusted) {
         v.dusted = true;
-        for (let n = 0; n < 3; n++) burst(r.pos.x + (n - 1) * 0.2, r.pos.y + 0.1, r.pos.z);
+        for (let n = 0; n < 3; n++) burst(r.pos.x + (n - 1) * 0.2, r.pos.y + 0.1, r.pos.z, 0xd7c4a4);
       }
       if (r.squash < 0.05) v.dusted = false;
+      if (pose === "run" && r.grounded && i === 0) {
+        v.stepT = (v.stepT || 0) - dt;
+        if (v.stepT <= 0) {
+          v.stepT = 0.28;
+          burst(r.pos.x, r.pos.y + 0.08, r.pos.z, 0xd7c4a4);
+        }
+      }
       if (r.flail > 0.4 && !v.starred) {
         v.starred = true;
-        for (let n = 0; n < 5; n++) burst(r.pos.x, r.pos.y + 1.55, r.pos.z);
+        for (let n = 0; n < 5; n++) burst(r.pos.x, r.pos.y + 1.55, r.pos.z, 0xfff6c8);
       }
       if (r.flail < 0.05) v.starred = false;
       if (r.sliding > 0 && i === 0) burst(r.pos.x, r.pos.y + 0.15, r.pos.z);
@@ -1153,6 +1282,33 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     beacon.visible = race.phase !== "launch" && race.phase !== "results" && race.seatCine <= 0;
     dressing.update(race, dt);
+    tickFoliage(race.time || 0);
+    for (let i = 0; i < clouds.length; i++) {
+      const cloud = clouds[i];
+      cloud.position.x = cloud.userData.ox + Math.sin(race.time * 0.15 + i) * 6;
+      cloud.position.z = cloud.userData.oz + race.time * (1.2 + i * 0.15);
+    }
+    for (let i = 0; i < doorMeshes.length; i++) {
+      const door = doorMeshes[i];
+      const dz = door.position.z - race.player.pos.z;
+      door.rotation.z = dz > 0 && dz < 9 ? Math.sin(race.time * 26) * 0.045 : 0;
+    }
+    for (let i = 0; i < padMeshes.length; i++) {
+      const pad = course.pads[i];
+      const pulse = pad && pad.pulse ? pad.pulse : 0;
+      const base = padMeshes[i].userData.base || 1;
+      padMeshes[i].scale.set(base * (1 + pulse * 0.28), base * (1 - pulse * 0.42), base * (1 + pulse * 0.28));
+      if (pad && pad.pulse > 0) pad.pulse = Math.max(0, pad.pulse - dt * 1.5);
+    }
+    for (let i = 0; i < seatPop.length; i++) {
+      if (seatPop[i] <= 0) continue;
+      seatPop[i] = Math.max(0, seatPop[i] - dt * 1.4);
+      const saved = seatMats[i];
+      if (!saved) continue;
+      for (const entry of saved) {
+        if (entry.mat.emissive) entry.mat.emissiveIntensity = 0.35 + seatPop[i] * 1.4;
+      }
+    }
     const skyNow = zoneSky(race.zoneId || "meadow");
     sky.material.uniforms.top.value.setHex(skyNow.top);
     sky.material.uniforms.mid.value.setHex(skyNow.mid);
@@ -1198,6 +1354,26 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       return;
     }
     const dragging = !!(look && (look.looking || Math.abs(look.lookDx) + Math.abs(look.lookDy) > 0));
+    const baseFov = state.portrait ? cfg.fovPortrait : cfg.fovLandscape;
+    const kick = race.player && (race.player.diving || race.player.boost > 0) ? 7 : 0;
+    const nextFov = baseFov + kick;
+    if (Math.abs(camera.fov - nextFov) > 0.15) {
+      camera.fov += (nextFov - camera.fov) * Math.min(1, dt * 7);
+      camera.updateProjectionMatrix();
+    }
+    if (race.phase === "countdown") {
+      const span = cfg.countdownBeats + cfg.goHold;
+      const k = Math.max(0, Math.min(1, (race.countClock || 0) / span));
+      const ease = k * k * (3 - 2 * k);
+      const ahead = race.finishZ ? Math.min(40, Math.max(10, (race.finishZ - player.pos.z) * 0.35)) : 28;
+      camera.position.set(
+        player.pos.x + 12 - ease * 8,
+        player.pos.y + 16 - ease * 8,
+        player.pos.z - 18 + ease * 10
+      );
+      camera.lookAt(player.pos.x, player.pos.y + 1.2, player.pos.z + 8 + ahead * ease);
+      return;
+    }
     if (look && look.intro > 0) {
       const k = 1 - Math.max(0, Math.min(1, look.intro / 3.3));
       const ease = k * k * (3 - 2 * k);
@@ -1343,10 +1519,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const v = visuals[0];
     if (!v) return;
     v.model.traverse((obj) => {
-      if (!obj.isMesh) return;
+      if (!obj.isMesh || !obj.material) return;
       const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
       for (const m of mats) {
-        if (m && m.name === "Buddy_Mint" && m.color) m.color.set(hex);
+        if (!m) continue;
+        if (m.userData && m.userData.shader && m.userData.shader.uniforms.uTint) {
+          m.userData.shader.uniforms.uTint.value.set(hex);
+        }
+        if (m.name === "BuddyHue" && m.emissive) m.emissive.set(hex);
+        if (m.name === "Buddy_Mint" && m.color) m.color.set(hex);
       }
     });
     for (const key of Object.keys(v.accessories || {})) v.accessories[key].visible = key === name;

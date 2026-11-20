@@ -70,7 +70,7 @@ export const CONFIG = {
 
   padUp: 12.4,
   padForward: 6.5,
-  padRadius: 1.15,
+  padRadius: 1.65,
   padCooldown: 0.4,
 
   bumperPush: 11,

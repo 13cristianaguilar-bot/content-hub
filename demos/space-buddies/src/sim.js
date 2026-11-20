@@ -1,5 +1,5 @@
 import { COLORS } from "./config.js";
-import { tileAt } from "./course.js";
+import { groundAt } from "./course.js";
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -59,6 +59,7 @@ export function createRace(course, cfg, seed = 1) {
       eliminated: false,
       cp: 0,
       padCd: 0,
+      boost: 0,
       bumpCd: 0,
       spinCd: 0,
       diveCd: 0,
@@ -76,7 +77,7 @@ export function createRace(course, cfg, seed = 1) {
         mistake: i === 0 ? 0 : speed > 0.96 ? 0.012 : speed > 0.86 ? 0.035 : 0.07,
         phase: rand() * 6,
       },
-      wait: i === 0 ? 0 : 0.02 + rand() * (speed > 0.9 ? 0.12 : 0.28),
+      wait: i === 0 ? 0 : (spot.row || 0) * 0.42 + rand() * 0.55,
       stumble: 0,
       wp: 0,
     });
@@ -119,17 +120,28 @@ export function createRace(course, cfg, seed = 1) {
   };
   const span = Math.max(30, course.ship.z - course.zones[0].z0);
   race.collapseSpeed = span / Math.max(8, cfg.collapseArrive - cfg.collapseDelay);
+  for (const chunk of course.chunks) {
+    chunk.state = "solid";
+    chunk.crackT = 0;
+    chunk.fallT = 0;
+    chunk.fallY = 0;
+    chunk.dirty = true;
+    chunk.tilt = 0;
+    chunk.stepped = false;
+    chunk.spawned = false;
+  }
   return race;
 }
 
 export function resetRace(race, seed) {
-  for (const tile of race.course.tiles) {
-    tile.state = "solid";
-    tile.crackT = 0;
-    tile.fallT = 0;
-    tile.stepped = false;
-    tile.dirty = true;
-    tile.tilt = 0;
+  for (const chunk of race.course.chunks) {
+    chunk.state = "solid";
+    chunk.crackT = 0;
+    chunk.fallT = 0;
+    chunk.fallY = 0;
+    chunk.dirty = true;
+    chunk.tilt = 0;
+    chunk.stepped = false;
   }
   const next = createRace(race.course, race.cfg, seed || ((race.seed + 17) >>> 0));
   Object.assign(race, next);
@@ -158,16 +170,16 @@ function sampleGround(race, x, z, y, nextY) {
     if (!canStep(y, nextY, p.y, step + 0.1)) continue;
     if (!best || p.y >= best.y) best = { y: p.y, platformId: i, tile: null };
   }
-  const tile = tileAt(race.course, x, z);
-  if (walkable(tile) && canStep(y, nextY, tile.y, step)) {
+  const tile = groundAt(race.course, x, z);
+  if (tile && walkable(tile) && canStep(y, nextY, tile.y, step)) {
     if (!best || tile.y >= best.y - 0.02) best = { y: tile.y, platformId: null, tile };
   }
   return best;
 }
 
 function supportNear(race, x, z, y) {
-  const tile = tileAt(race.course, x, z);
-  if (walkable(tile) && Math.abs(tile.y - y) < 1.4) return true;
+  const tile = groundAt(race.course, x, z);
+  if (tile && walkable(tile) && Math.abs(tile.y - y) < 1.4) return true;
   for (const p of race.platforms) {
     const dx = x - p.x;
     const dz = z - p.z;
@@ -202,25 +214,19 @@ function knock(race, r, ix, iz, iy) {
 }
 
 function findRespawnTile(race, cp) {
-  const map = race.course.map;
-  const cols = [0, -1, 1, -2, 2, 3, -3];
-  for (let back = 0; back < 8; back++) {
-    for (const col of cols) {
-      const t = map.get(col + "," + (cp.row - back));
-      if (walkable(t) && !t.skirt) return t;
-    }
-  }
-  const lip = Math.max(0, Math.round(race.collapseZ / 3) + 2);
-  for (let fwd = 0; fwd < 16; fwd++) {
-    for (const col of cols) {
-      const t = map.get(col + "," + (lip + fwd));
-      if (walkable(t) && !t.skirt && t.zone !== "ship") return t;
-    }
-  }
-  for (const t of race.course.tiles) {
-    if (walkable(t) && !t.skirt) return t;
-  }
-  return null;
+  const stations = race.course.stations;
+  const chunks = race.course.chunks;
+  const alive = (s) => {
+    if (!s || s.gap || s.zone === "ship") return false;
+    const chunk = chunks[s.chunk];
+    return chunk && (chunk.state === "solid" || chunk.state === "cracking");
+  };
+  const start = Math.max(0, Math.min(stations.length - 1, cp.row || 0));
+  for (let i = start; i >= 0; i--) if (alive(stations[i])) return stations[i];
+  const lip = Math.max(0, Math.round(race.collapseZ / 2));
+  for (let i = lip; i < stations.length; i++) if (alive(stations[i])) return stations[i];
+  for (const s of stations) if (alive(s)) return s;
+  return stations[0] || null;
 }
 
 function doRespawn(race, r) {
@@ -363,7 +369,8 @@ function integrate(race, r, wish, dt) {
   } else {
     r.vel.x += wish.x * cfg.airAccel * dt + windX * dt * 0.6;
     r.vel.z += wish.z * cfg.airAccel * dt;
-    const cap = r.diving ? cfg.diveDashSpeed : maxSp * 1.18;
+    const cap = r.diving ? cfg.diveDashSpeed : r.boost > 0 ? cfg.padForward + maxSp : maxSp * 1.18;
+    if (r.boost > 0) r.boost -= dt;
     const h = hypot(r.vel.x, r.vel.z);
     if (h > cap) {
       r.vel.x *= cap / h;
@@ -417,14 +424,12 @@ function integrate(race, r, wish, dt) {
         if (r.wasDiving && impact > 8) pound(race, r);
       }
       r.wasDiving = false;
-      if (gnd.tile && gnd.tile.state === "solid" && !gnd.tile.skirt) {
-        if (gnd.tile.fragile && !gnd.tile.stepped) {
-          gnd.tile.stepped = true;
-          gnd.tile.state = "cracking";
-          gnd.tile.crackT = cfg.fragileCrack;
-          gnd.tile.dirty = true;
-          race.events.push({ t: "crack" });
-        }
+      if (gnd.tile && gnd.tile.chunk && gnd.tile.state === "solid" && gnd.tile.fragile && !gnd.tile.chunk.stepped) {
+        gnd.tile.chunk.stepped = true;
+        gnd.tile.chunk.state = "cracking";
+        gnd.tile.chunk.crackT = cfg.fragileCrack;
+        gnd.tile.chunk.dirty = true;
+        race.events.push({ t: "crack" });
       }
     } else {
       r.pos.y = nextY;
@@ -469,12 +474,15 @@ function botWish(race, r, dt) {
   const wps = race.course.waypoints;
   while (r.wp < wps.length - 1 && r.pos.z > wps[r.wp].z - 0.4) r.wp++;
   const target = wps[Math.min(r.wp, wps.length - 1)];
-  const spread = ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.55 : 1.2);
+  const spread = ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.4 : 0.85);
   let tx = target.x + spread;
+  if (target.gap) tx = target.x;
+  for (const pad of race.course.pads) {
+    const dzp = pad.z - r.pos.z;
+    if (dzp > 0 && dzp < 9) tx = pad.x;
+  }
   let tz = target.z;
   let ty = target.y;
-  if (r.id % 7 === 0 && r.profile.skill > 0.9 && r.pos.z > 20 && r.pos.z < 90) tx -= 3.2;
-
   if (target.z - r.pos.z > 6) {
     let best = null;
     let bd = 1e9;
@@ -547,7 +555,7 @@ function botWish(race, r, dt) {
   let padNear = false;
   for (const pad of race.course.pads) {
     const dzp = pad.z - r.pos.z;
-    if (dzp > -0.2 && dzp < 2 && Math.abs(pad.x - r.pos.x) < 1.4) padNear = true;
+    if (dzp > -0.4 && dzp < 8 && Math.abs(pad.x - r.pos.x) < 2.2) padNear = true;
   }
   if (padNear) jump = false;
 
@@ -689,6 +697,7 @@ function hazards(race, dt) {
       r.platformId = null;
       r.ungroundT = 0.12;
       r.padCd = cfg.padCooldown;
+      r.boost = 0.85;
       race.events.push({ t: "jump", id: r.id, pad: true });
     }
   }
@@ -839,35 +848,37 @@ function updateCollapse(race, dt) {
   race.collapseZ += race.collapseSpeed * dt;
   if (race.collapseZ > stop) race.collapseZ = stop;
   race.lavaY = cfg.lavaStartY + race.time * cfg.lavaRisePerSec;
-  for (const tile of race.course.tiles) {
-    if (tile.zone === "ship") continue;
-    if (tile.state === "solid") {
-      const lead = tile.skirt ? cfg.skirtLead : 0;
-      if (race.collapseZ + lead > tile.z) {
-        tile.state = "cracking";
-        tile.crackT = cfg.crackTime * (tile.skirt ? 0.65 : 1) + tile.jitter;
-        tile.dirty = true;
-        race.events.push({ t: "crack" });
+  let cracked = false;
+  for (const chunk of race.course.chunks) {
+    if (chunk.zone === "ship" || chunk.gap) continue;
+    if (chunk.state === "solid") {
+      if (race.collapseZ > chunk.z0) {
+        chunk.state = "cracking";
+        chunk.crackT = cfg.crackTime + chunk.jitter * 0.35;
+        chunk.dirty = true;
+        cracked = true;
       }
-    } else if (tile.state === "cracking") {
-      tile.crackT -= dt;
-      if (tile.crackT <= 0) {
-        tile.state = "falling";
-        tile.fallT = cfg.fallTime;
-        tile.dirty = true;
-        const px = race.player.pos.x - tile.x;
-        const pz = race.player.pos.z - tile.z;
-        if (px * px + pz * pz < 196) race.shake = Math.max(race.shake, 0.42);
+    } else if (chunk.state === "cracking") {
+      chunk.crackT -= dt;
+      chunk.dirty = true;
+      if (chunk.crackT <= 0) {
+        chunk.state = "falling";
+        chunk.fallT = cfg.fallTime;
+        const mid = (chunk.z0 + chunk.z1) * 0.5;
+        const pz = race.player.pos.z - mid;
+        if (pz * pz < 420) race.shake = Math.max(race.shake, 0.42);
       }
-    } else if (tile.state === "falling") {
-      tile.fallT -= dt;
-      if (tile.fallT <= 0) {
-        tile.state = "gone";
-        tile.dirty = true;
+    } else if (chunk.state === "falling") {
+      chunk.fallT -= dt;
+      chunk.fallY -= (7 + chunk.jitter * 6) * dt;
+      chunk.dirty = true;
+      if (chunk.fallT <= 0) {
+        chunk.state = "gone";
       }
     }
-    if (tile.tiltAmp) tile.tilt = Math.sin(race.time * 1.45 + tile.tiltPhase) * tile.tiltAmp;
+    if (chunk.ice) chunk.tilt = Math.sin(race.time * 1.35 + chunk.jitter * 8) * 0.22;
   }
+  if (cracked) race.events.push({ t: "crack" });
 }
 
 function board(race) {
@@ -907,6 +918,7 @@ function beginLaunch(race) {
   race.phase = "launch";
   race.launchT = 0;
   race.launchV = 1.5;
+  race.seatCine = 0;
   race.result = race.player.seated ? "escaped" : "missed";
   if (!race.player.seated) {
     race.player.flail = 0.8;
@@ -965,7 +977,7 @@ export function step(race, dt, input) {
 
   if (race.phase === "launch" || race.phase === "results") {
     race.launchT += dt;
-    race.launchV += 14 * dt;
+    race.launchV += 4.5 * dt;
     race.launchY += race.launchV * dt;
     race.shipY = race.course.ship.y + race.launchY;
     if (race.player.emote === "wave") {

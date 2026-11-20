@@ -107,8 +107,8 @@ export const CONFIG = {
 
   camDist: 9.2,
   camDistPortrait: 8.6,
-  camHeight: 3.7,
-  camHeightLand: 3.9,
+  camHeight: 5.1,
+  camHeightLand: 5.3,
   camNear: 5,
   camFar: 12,
   defaultPitch: 0.406,
@@ -135,7 +135,7 @@ export const CONFIG = {
 };
 
 export function resolveConfig(opts = {}) {
-  const cfg = { ...CONFIG, quick: !!opts.quick, auto: !!opts.auto, seed: opts.seed || 1 };
+  const cfg = { ...CONFIG, quick: !!opts.quick, auto: !!opts.auto, seed: opts.seed || 1, feel: !!opts.feel, low: !!opts.low };
   if (opts.quick) {
     cfg.raceSeconds = 46;
     cfg.collapseArrive = 42;

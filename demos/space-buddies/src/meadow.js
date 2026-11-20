@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { plasticShader } from "./plastic.js";
 
 // Meadow-only CC0 dressing. Other zones keep their existing props.
 // Files live in assets/meadow/ and are fetched on their own, not inside game.js.
@@ -82,17 +83,14 @@ function toonMat(src, gradientMap, override, wind) {
     name,
   });
   mat.onBeforeCompile = (shader) => {
+    plasticShader(shader, {});
     if (wind) {
       shader.uniforms.uWindTime = windTime;
       shader.vertexShader = "uniform float uWindTime;\n" + shader.vertexShader.replace(
-        "#include <begin_vertex>",
-        "#include <begin_vertex>\nfloat sway = sin(uWindTime * 1.7 + position.x * 0.45 + position.z * 0.2) * 0.075 * smoothstep(0.3, 1.8, position.y);\ntransformed.x += sway;\ntransformed.z += sway * 0.35;"
+        "vPlW = (modelMatrix * vec4(transformed, 1.0)).xyz;",
+        "float sway = sin(uWindTime * 1.7 + position.x * 0.45 + position.z * 0.2) * 0.075 * smoothstep(0.3, 1.8, position.y);\ntransformed.x += sway;\ntransformed.z += sway * 0.35;\nvPlW = (modelMatrix * vec4(transformed, 1.0)).xyz;"
       );
     }
-    shader.fragmentShader = shader.fragmentShader.replace(
-      "#include <opaque_fragment>",
-      "float ndl = clamp(dot(normalize(normal), normalize(vec3(-0.35, 0.86, 0.25))), 0.0, 1.0);\n\toutgoingLight *= mix(0.62, 1.18, ndl);\n\tfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.4);\n\toutgoingLight += rim * vec3(1.0, 0.96, 0.86) * 0.34;\n\t#include <opaque_fragment>"
-    );
   };
   return mat;
 }

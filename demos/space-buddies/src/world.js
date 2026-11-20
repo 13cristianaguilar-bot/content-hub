@@ -4,6 +4,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
+import { plasticShader } from "./plastic.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
 
 const MODELS = {
@@ -26,18 +27,7 @@ const MODELS = {
 const TOON_MAP = makeToonTexture();
 
 function candyHook(mat) {
-  const stripes = !!mat.userData.stripes;
-  mat.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vCandyW;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvCandyW = (modelMatrix * vec4(transformed, 1.0)).xyz;");
-    shader.fragmentShader = "varying vec3 vCandyW;\n" + shader.fragmentShader.replace(
-      "#include <opaque_fragment>",
-      "float ndl = clamp(dot(normalize(normal), normalize(vec3(-0.35, 0.86, 0.25))), 0.0, 1.0);\noutgoingLight *= mix(0.78, 1.08, ndl);\nfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2);\noutgoingLight += rim * vec3(1.0, 0.97, 0.9) * 0.28;\n" +
-      (stripes ? "float stripe = step(0.5, fract(vCandyW.y * 1.7));\noutgoingLight = mix(outgoingLight * 0.72, outgoingLight * vec3(1.12, 1.04, 0.92), stripe);\n" : "") +
-      "#include <opaque_fragment>"
-    );
-  };
+  mat.onBeforeCompile = (shader) => plasticShader(shader, { stripes: !!mat.userData.stripes });
 }
 
 function lambert(src, candy) {
@@ -272,6 +262,27 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x9fe8ff, cfg.fogNear, cfg.fogFar);
   const camera = new THREE.PerspectiveCamera(cfg.fovPortrait, 1, 0.15, 500);
+  camera.layers.enable(1);
+  const gl = renderer.getContext();
+  const gpuInfo = gl.getExtension("WEBGL_debug_renderer_info");
+  const gpuName = gpuInfo ? String(gl.getParameter(gpuInfo.UNMASKED_RENDERER_WEBGL) || "") : "";
+  const weakGpu = /SwiftShader|llvmpipe|Mali-4|PowerVR SGX|Adreno \(TM\) [34]/i.test(gpuName)
+    || (navigator.deviceMemory && navigator.deviceMemory <= 2);
+  let postOn = !weakGpu && new URLSearchParams(location.search).get("nopost") !== "1";
+  if (new URLSearchParams(location.search).get("post") === "1") postOn = true;
+  const sceneTarget = new THREE.WebGLRenderTarget(4, 4);
+  const bloomTarget = new THREE.WebGLRenderTarget(4, 4);
+  const gradeScene = new THREE.Scene();
+  const gradeCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const gradeMat = new THREE.ShaderMaterial({
+    depthTest: false,
+    depthWrite: false,
+    toneMapped: false,
+    uniforms: { tScene: { value: sceneTarget.texture }, tBloom: { value: bloomTarget.texture } },
+    vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
+    fragmentShader: "varying vec2 vUv; uniform sampler2D tScene; uniform sampler2D tBloom; void main(){ vec3 c = texture2D(tScene, vUv).rgb; vec2 o = vec2(0.022, 0.0); vec3 b = texture2D(tBloom, vUv + o).rgb + texture2D(tBloom, vUv - o).rgb + texture2D(tBloom, vUv + o.yx).rgb + texture2D(tBloom, vUv - o.yx).rgb; b += texture2D(tBloom, vUv + o * 2.0).rgb + texture2D(tBloom, vUv - o * 2.0).rgb; c += b * 0.22; float l = dot(c, vec3(0.2126, 0.7152, 0.0722)); c = clamp(l + (c - l) * 1.08, 0.0, 1.35); gl_FragColor = vec4(c, 1.0); }",
+  });
+  gradeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), gradeMat));
 
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -486,21 +497,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   const dressing = buildDressing(scene, course, TOON_MAP);
-  const terrainMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
-  terrainMat.onBeforeCompile = (shader) => {
-    shader.vertexShader = shader.vertexShader
-      .replace("#include <common>", "#include <common>\nvarying vec3 vFloorW;")
-      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvFloorW = (modelMatrix * vec4(transformed, 1.0)).xyz;");
-    shader.fragmentShader = "varying vec3 vFloorW;\n" + shader.fragmentShader
-      .replace(
-        "#include <color_fragment>",
-        "#include <color_fragment>\nvec3 candy = diffuseColor.rgb;\nvec3 alt = min(candy * vec3(1.14, 1.06, 0.94), vec3(1.0));\nfloat stripe = step(0.5, fract(vFloorW.x * 0.23 + vFloorW.z * 0.23));\nfloat check = step(1.0, fract(vFloorW.x * 0.16) + fract(vFloorW.z * 0.16));\ndiffuseColor.rgb = mix(candy, alt, max(stripe, check) * 0.62);"
-      )
-      .replace(
-        "#include <opaque_fragment>",
-        "float ndl = clamp(dot(normalize(normal), normalize(vec3(-0.3, 0.92, 0.22))), 0.0, 1.0);\noutgoingLight = diffuseColor.rgb * mix(0.78, 1.12, ndl);\nfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.4);\noutgoingLight += rim * vec3(1.0, 0.98, 0.94) * 0.1;\n#include <opaque_fragment>"
-      );
-  };
+  const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
+  terrainMat.onBeforeCompile = (shader) => plasticShader(shader, { floors: true });
   const crackMat = new THREE.MeshToonMaterial({
     vertexColors: true,
     color: 0xffd0b0,
@@ -605,6 +603,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       coinMesh.setMatrixAt(i, coinDummy.matrix);
       coinGlow.setMatrixAt(i, coinDummy.matrix);
     });
+    coinMesh.userData.bloom = true;
+    if (coinGlow) coinGlow.userData.bloom = true;
     scene.add(coinMesh, coinGlow);
   }
 
@@ -772,6 +772,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   );
   ring.rotation.x = -Math.PI / 2;
   ring.position.set(course.ship.x, course.ship.y + 0.08, course.ship.z - 4.2);
+  ring.userData.bloom = true;
   scene.add(ring);
   const flame = new THREE.Mesh(
     new THREE.ConeGeometry(0.85, 2.2, 8),
@@ -797,6 +798,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   );
   lava.rotation.x = -Math.PI / 2;
   lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
+  lava.userData.bloom = true;
   scene.add(lava);
   let trimTick = 0;
   const crownMesh = new THREE.Mesh(
@@ -878,7 +880,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   function toyMesh(geo, spots, kinds) {
     const list = spots.filter((s) => kinds.includes(s.kind));
     if (!list.length) return null;
-    const mesh = new THREE.InstancedMesh(geo, new THREE.MeshToonMaterial({ vertexColors: false, gradientMap: TOON_MAP }), list.length);
+    const toyMat = new THREE.MeshToonMaterial({ vertexColors: false, gradientMap: TOON_MAP });
+    toyMat.onBeforeCompile = (shader) => plasticShader(shader, {});
+    const mesh = new THREE.InstancedMesh(geo, toyMat, list.length);
     mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(list.length * 3), 3);
     const dummy = new THREE.Object3D();
     const color = new THREE.Color();
@@ -903,9 +907,45 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const arrowMesh = toyMesh(new THREE.ConeGeometry(0.38, 0.9, 5), trimSpots, [1]);
   const bumperMesh = toyMesh(new THREE.SphereGeometry(0.42, 8, 6), trimSpots, [2]);
   const starMesh = toyMesh(new THREE.OctahedronGeometry(0.38, 0), trimSpots, [3]);
+  if (starMesh) starMesh.userData.bloom = true;
   const balloonMesh = toyMesh(new THREE.SphereGeometry(0.36, 8, 6), trimSpots, [4]);
   const standMesh = toyMesh(new THREE.BoxGeometry(1.1, 0.7, 0.55), trimSpots, [5]);
   void pillarMesh; void arrowMesh; void bumperMesh; void standMesh;
+  if (trimSpots.length) {
+    const contacts = new THREE.InstancedMesh(
+      new THREE.CircleGeometry(0.55, 8),
+      new THREE.MeshBasicMaterial({ color: 0x1a1430, transparent: true, opacity: 0.28, depthWrite: false }),
+      trimSpots.length
+    );
+    const contactDummy = new THREE.Object3D();
+    trimSpots.forEach((s, i) => {
+      contactDummy.position.set(s.x, s.y + 0.04, s.z);
+      contactDummy.rotation.x = -Math.PI / 2;
+      contactDummy.scale.setScalar(s.kind === 5 ? 1.4 : 0.8);
+      contactDummy.updateMatrix();
+      contacts.setMatrixAt(i, contactDummy.matrix);
+    });
+    contacts.instanceMatrix.needsUpdate = true;
+    scene.add(contacts);
+  }
+  const liquids = [];
+  function addLiquid(color, x, y, z, radius) {
+    const mat = new THREE.ShaderMaterial({
+      transparent: true,
+      depthWrite: false,
+      uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(color) } },
+      vertexShader: "uniform float uTime; varying vec2 vUv; void main(){ vUv=uv; vec3 p=position; p.z += sin(position.x*0.55+uTime*1.4)*0.12; gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0); }",
+      fragmentShader: "uniform float uTime; uniform vec3 uColor; varying vec2 vUv; void main(){ vec2 uv=vUv+vec2(uTime*0.05,-uTime*0.03); float n=sin(uv.x*36.0+uTime)+sin(uv.y*30.0-uTime*0.8); float edge=smoothstep(0.02,0.16,min(min(vUv.x,1.0-vUv.x),min(vUv.y,1.0-vUv.y))); float foam=smoothstep(0.45,0.9,n*0.5+0.5)*(1.0-edge); vec3 c=mix(uColor, vec3(0.92,1.0,1.0), foam*0.7); gl_FragColor=vec4(c,0.78); }",
+    });
+    const mesh = new THREE.Mesh(new THREE.CircleGeometry(radius, 24), mat);
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(x, y, z);
+    scene.add(mesh);
+    liquids.push(mat);
+  }
+  const iceZone = (course.zones || []).find((z) => z.id === "ice");
+  if (iceZone) addLiquid(0x2ec8ff, 0, 2.55, (iceZone.z0 + iceZone.z1) * 0.5, 16);
+  addLiquid(0x3dce55, 10, 0.08, course.zones ? course.zones[0].z0 + 36 : 40, 5);
 
   const geyserMeshes = course.geysers.map((g) => {
     const group = cloneDrawn(gltfs.geyser);
@@ -1237,6 +1277,27 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       });
       for (const [obj, hull] of hulls) obj.parent.add(hull);
     }
+    let headBone = null;
+    model.traverse((obj) => { if (obj.isBone && obj.name === "head") headBone = obj; });
+    const antennas = [];
+    const lids = [];
+    if (headBone) {
+      const antMat = new THREE.MeshToonMaterial({ color: colorHex, gradientMap: TOON_MAP });
+      for (const side of [-1, 1]) {
+        const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.26, 5), antMat);
+        ant.position.set(side * 0.1, 0.18, 0.05);
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 5), new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP }));
+        tip.position.y = 0.15;
+        ant.add(tip);
+        headBone.add(ant);
+        antennas.push(ant);
+        const lid = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 5), new THREE.MeshBasicMaterial({ color: 0x1c1430 }));
+        lid.scale.set(1.1, 0.08, 0.45);
+        lid.position.set(side * 0.045, 0.05, 0.11);
+        headBone.add(lid);
+        lids.push(lid);
+      }
+    }
     const mixer = new THREE.AnimationMixer(model);
     const actions = {};
     const clipNames = ["Idle", "Run", "Jump", "Fall", "Land", "Dive", "Grab", "Tumble", "Celebrate", "Eliminated", "Emote"];
@@ -1284,7 +1345,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       obj.castShadow = true;
       obj.receiveShadow = true;
     });
-    visuals.push({ group, model, mixer, actions, hasClips, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false, mixAcc: 0, wasAir: false, landUntil: 0 });
+    visuals.push({ group, model, mixer, actions, hasClips, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false, mixAcc: 0, wasAir: false, landUntil: 0, antennas, lids, splashed: false });
   }
 
   const confetti = [];
@@ -1313,6 +1374,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     state.portrait = h >= w;
     renderer.setPixelRatio(dpr);
     renderer.setSize(w, h, false);
+    const pw = Math.max(2, Math.floor((w || 2) * dpr));
+    const ph = Math.max(2, Math.floor((h || 2) * dpr));
+    sceneTarget.setSize(pw, ph);
+    bloomTarget.setSize(Math.max(2, pw >> 1), Math.max(2, ph >> 1));
     camera.aspect = w / Math.max(1, h);
     camera.fov = state.portrait ? cfg.fovPortrait : cfg.fovLandscape;
     camera.updateProjectionMatrix();
@@ -1342,14 +1407,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
   }
 
-  function burst(x, y, z, color) {
+  function burst(x, y, z, color, gentle) {
     for (const bit of confetti) {
       if (bit.alive) continue;
       bit.alive = true;
       bit.mesh.visible = true;
       bit.mesh.position.set(x, y, z);
       if (color) bit.mesh.material.color.setHex(color);
-      bit.v.set((Math.random() - 0.5) * 4, 2 + Math.random() * 3, (Math.random() - 0.5) * 4);
+      bit.v.set((Math.random() - 0.5) * (gentle ? 1.2 : 4), (gentle ? 0.6 : 2) + Math.random() * (gentle ? 1.2 : 3), (Math.random() - 0.5) * (gentle ? 1.2 : 4));
       break;
     }
   }
@@ -1439,6 +1504,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         coinDummy.updateMatrix();
         coinMesh.setMatrixAt(i, coinDummy.matrix);
         if (coinGlow) coinGlow.setMatrixAt(i, coinDummy.matrix);
+        if (!c.got && (i + Math.floor((race.time || 0) * 6)) % 11 === 0) {
+          const dx = c.x - race.player.pos.x;
+          const dz = c.z - race.player.pos.z;
+          if (dx * dx + dz * dz < 220) burst(c.x, c.y, c.z, 0xfff1a8, true);
+        }
       }
       coinMesh.instanceMatrix.needsUpdate = true;
       if (coinGlow) coinGlow.instanceMatrix.needsUpdate = true;
@@ -1509,6 +1579,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
     lava.position.y = race.lavaY;
     if (lava.material.uniforms && lava.material.uniforms.uTime) lava.material.uniforms.uTime.value = race.time || 0;
+    for (const mat of liquids) mat.uniforms.uTime.value = race.time || 0;
+    if (Math.random() < 0.45) burst(lava.position.x + (Math.random() - 0.5) * 8, lava.position.y + 0.4, lava.position.z + (Math.random() - 0.5) * 8, 0xff8a2a, true);
+    if (race.kind === "survival" && Math.random() < 0.5) burst(race.player.pos.x + (Math.random() - 0.5) * 6, race.player.pos.y + 1.2, race.player.pos.z + 2, 0xe7f6ff, true);
     if (race.kind === "crown" && race.crown && race.phase === "race") {
       crownMesh.visible = true;
       crownMesh.position.set(race.crown.x, (race.crown.y || 0) + 2.2 + Math.sin((race.time || 0) * 3) * 0.12, race.crown.z);
@@ -1593,7 +1666,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       v.face += turn * Math.min(1, dt * 10);
       v.group.rotation.y = v.face;
       const squash = Math.min(1, r.squash || 0);
-      v.group.scale.set(1 + squash * 0.035, 1 - squash * 0.07, 1 + squash * 0.035);
+      let sx = 1 + squash * 0.1;
+      let sy = 1 - squash * 0.18;
+      if (!r.grounded && r.vel.y > 0.5) { sy = 1.14; sx = 0.9; }
+      else if (!r.grounded && r.vel.y < -2) { sy = 0.92; sx = 1.06; }
+      v.group.scale.set(sx, sy, sx);
+      if (v.antennas) {
+        for (let a = 0; a < v.antennas.length; a++) v.antennas[a].rotation.z = Math.sin((race.time || 0) * 3.2 + i + a) * 0.35;
+      }
+      if (v.lids) {
+        const blink = Math.sin((race.time || 0) * 1.3 + i * 2.1) > 0.92;
+        for (const lid of v.lids) lid.scale.y = blink ? 1 : 0.05;
+      }
       if (r.squash > 0.32 && !v.dusted) {
         v.dusted = true;
         for (let n = 0; n < 3; n++) burst(r.pos.x + (n - 1) * 0.2, r.pos.y + 0.1, r.pos.z, 0xd7c4a4);
@@ -1628,7 +1712,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       const blade = v.accessories && v.accessories.heli && v.accessories.heli.userData.blade;
       if (blade && v.accessories.heli.visible) blade.rotation.y += dt * 14;
-      if (v.wasAir && r.grounded) v.landUntil = (race.time || 0) + 0.2;
+      if (v.wasAir && r.grounded) {
+        v.landUntil = (race.time || 0) + 0.2;
+        for (let n = 0; n < 4; n++) burst(r.pos.x + (n - 1.5) * 0.2, r.pos.y + 0.1, r.pos.z, 0xe7d3b0, true);
+        if (r.pos.y < 0.35) for (let n = 0; n < 4; n++) burst(r.pos.x, r.pos.y + 0.2, r.pos.z, 0x7adfff, true);
+      }
+      if (r.diving && i === 0 && Math.random() < 0.35) burst(r.pos.x, r.pos.y + 0.2, r.pos.z, 0xf0e2c8, true);
       v.wasAir = !r.grounded;
       let anim = "Idle";
       if (r.eliminated) anim = "Eliminated";
@@ -1961,8 +2050,31 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   function render() {
+    if (!postOn) {
+      renderer.setRenderTarget(null);
+      renderer.render(scene, camera);
+      return;
+    }
+    renderer.setRenderTarget(sceneTarget);
     renderer.render(scene, camera);
+    const mask = camera.layers.mask;
+    camera.layers.set(1);
+    const shadows = renderer.shadowMap.enabled;
+    renderer.shadowMap.enabled = false;
+    renderer.setRenderTarget(bloomTarget);
+    renderer.setClearColor(0x000000, 1);
+    renderer.clear(true, true, true);
+    renderer.render(scene, camera);
+    renderer.shadowMap.enabled = shadows;
+    camera.layers.mask = mask;
+    renderer.setRenderTarget(null);
+    renderer.render(gradeScene, gradeCam);
   }
+
+  scene.traverse((obj) => {
+    if (obj.isMesh && obj.userData.bloom) obj.layers.enable(1);
+  });
+  for (const mat of liquids) mat.uniforms.uTime.value = 0;
 
   // Warm shaders once.
   camera.position.set(0, 8, -10);
@@ -2003,6 +2115,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       hemi.groundColor.set(t.ground);
       sun.color.set(t.sun);
     },
+    setPost(on) { postOn = !!on && !weakGpu; },
     setDpr(next) {
       dpr = next;
       resize();

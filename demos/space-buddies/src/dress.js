@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { plasticShader } from "./plastic.js";
 
 const ZONE_SKY = {
   meadow: { top: 0x5cc8ff, mid: 0x9fe0ff, fog: 0x8fd4f2, bot: 0x6fbf8a, near: 72, far: 230 },
@@ -38,11 +39,13 @@ function makeToonTexture() {
 }
 
 export function makeToon(color, gradientMap) {
-  return new THREE.MeshToonMaterial({
+  const mat = new THREE.MeshToonMaterial({
     color,
     gradientMap,
     side: THREE.DoubleSide,
   });
+  mat.onBeforeCompile = (shader) => plasticShader(shader, {});
+  return mat;
 }
 
 export function buildDressing(scene, course, gradientMap) {

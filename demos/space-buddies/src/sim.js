@@ -168,8 +168,8 @@ function walkable(tile) {
 function canStep(y, nextY, top) {
   const feet = Math.min(y, nextY);
   const climb = top - feet;
-  // About 35 degrees over a pad-length step. Taller than that is a wall.
-  if (climb > 1.2) return false;
+  // Lips and seams up to about 0.4 m. Taller than that is a wall, not a step.
+  if (climb > 0.42) return false;
   if (feet > top + 1.6 && nextY > top + 0.5) return false;
   return true;
 }
@@ -306,6 +306,7 @@ function findRespawnTile(race, r) {
     const pad = floors[i];
     const chunk = race.course.chunks[pad.chunk];
     if (!chunk || (chunk.state !== "solid" && chunk.state !== "cracking")) continue;
+    if (pad.zone === "ship") continue;
     if (pad.z < race.collapseZ + 4) continue;
     return { x: pad.x, y: pad.y, z: pad.z };
   }
@@ -446,6 +447,8 @@ function shoveFree(race, r) {
 
 function integrate(race, r, wish, dt) {
   const cfg = race.cfg;
+  r.prevZ = r.pos.z;
+  r.prevX = r.pos.x;
   if (r.seated || r.eliminated) return;
   if (r.qualified) {
     r.pos.z += 2.4 * dt;
@@ -817,16 +820,16 @@ function separate(race) {
         const other = player === a ? b : a;
         const side = player === a ? 1 : -1;
         const driving = Math.hypot(player.vel.x, player.vel.z) > 1.2;
-        other.pos.x += nx * side * push * 1.8;
-        other.pos.z += nz * side * push * 1.8;
+        other.pos.x += nx * side * push;
+        other.pos.z += nz * side * push;
         if (driving) {
-          player.pos.x -= nx * side * push * 0.15;
-          player.pos.z -= nz * side * push * 0.15;
+          player.pos.x -= nx * side * push * 0.08;
+          player.pos.z -= nz * side * push * 0.08;
         }
         const slip = -nz * side;
         const slipZ = nx * side;
-        other.vel.x += slip * 2.2;
-        other.vel.z += slipZ * 2.2;
+        other.vel.x += slip * 0.7;
+        other.vel.z += slipZ * 0.7;
         continue;
       }
       if (a.invuln <= 0) {
@@ -1224,12 +1227,15 @@ function eliminate(race) {
 function inFinishGate(race, r) {
   if (r.pos.y < -6) return false;
   const g = race.gate;
-  if (g) {
-    const dx = (r.pos.x - g.x) / (g.rx || 8);
-    const dz = (r.pos.z - g.z) / (g.rz || 6);
-    return dx * dx + dz * dz <= 1 && Math.abs(r.pos.y - (g.y == null ? r.pos.y : g.y)) < 2.6;
-  }
-  return race.finishZ != null && r.pos.z >= race.finishZ && Math.abs(r.pos.x) < 16;
+  if (!g) return false;
+  const halfW = g.rx || 4.5;
+  const halfD = g.rz || 1.4;
+  if (Math.abs(r.pos.x - g.x) > halfW) return false;
+  if (Math.abs(r.pos.y - (g.y == null ? 0 : g.y)) > 1.7) return false;
+  const prev = r.prevZ == null ? r.pos.z : r.prevZ;
+  const crossed = prev < g.z && r.pos.z >= g.z - 0.15;
+  const inSlab = r.pos.z >= g.z - halfD && r.pos.z <= g.z + halfD && prev < g.z;
+  return crossed || inSlab;
 }
 
 function finishRound(race) {

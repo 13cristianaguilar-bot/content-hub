@@ -77,6 +77,7 @@ export function buildDressing(scene, course, gradientMap) {
     if (!picks[t.zone]) continue;
     if (Math.abs(t.col) < 2) continue;
     if ((Math.abs(t.col * 5 + t.row * 3) % 3) !== 0) continue;
+    if ((t.row + t.col) % 2 !== 0) continue;
     picks[t.zone].push(t);
   }
 

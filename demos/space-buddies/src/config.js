@@ -105,9 +105,13 @@ export const CONFIG = {
 
   botSpeeds: [1.05, 1.02, 0.99, 0.97, 0.95, 0.93, 0.9, 0.88, 0.85, 0.82, 0.78, 0.74, 0.7, 0.66, 0.62],
 
-  camDist: 5.6,
-  camDistPortrait: 5.3,
-  defaultPitch: 0.46,
+  camDist: 9.2,
+  camDistPortrait: 8.6,
+  camHeight: 3.7,
+  camHeightLand: 3.9,
+  camNear: 5,
+  camFar: 12,
+  defaultPitch: 0.406,
   minPitch: 0.28,
   maxPitch: 1.12,
   lookSens: 0.0052,
@@ -116,15 +120,15 @@ export const CONFIG = {
   autoYaw: 2.6,
   autoPitch: 1.5,
   camLerp: 7.5,
-  fovPortrait: 60,
-  fovLandscape: 56,
+  fovPortrait: 65,
+  fovLandscape: 58,
 
   shipScale: 1.7,
   seatBuddyScale: 0.44,
 
   dprCap: 1.25,
-  fogNear: 42,
-  fogFar: 125,
+  fogNear: 55,
+  fogFar: 190,
 
   bedGain: 0.15,
   rumbleMax: 0.32,

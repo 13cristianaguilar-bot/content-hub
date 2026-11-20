@@ -10,4 +10,5 @@ Each phase is its own pull request and stays playable if merged on its own. Late
 - [x] Phase 5. Content: a storm planet with a survival round and a crown round, on top of the meadow and sky planets. Tail and team rounds are still open.
 - [x] Phase 6. Online and app: a service-worker cache of the shell, a local run list, and a Supabase post when `window.SPACE_BUDDIES_SUPABASE` is set. The pixel ratio stays capped and toy motion updates every other frame.
 - [x] Phase 7 graphics. Toy-plastic shading, contact darkening, optional bloom, particles, liquid, and Buddy squash. Merged.
-- [ ] Phase 7 UI. The kit in `ui/` drives the HUD, controls, locker, planet map, and podium. Thicker floor slabs are the next PR.
+- [x] Phase 7 UI. The kit drives the phone HUD, locker, map, and podium. Merged.
+- [ ] Playtest fixes. Qualify only by crossing the finish gate, a wider follow camera, and a more open course. The hammer, the finish-gate model, and thick floors are the next pull requests.

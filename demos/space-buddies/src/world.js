@@ -762,7 +762,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   const beacon = new THREE.Mesh(
     new THREE.CylinderGeometry(0.55, 1.3, 34, 10, 1, true),
-    new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })
+    new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false })
   );
   beacon.position.y = 20;
   ship.add(beacon);
@@ -774,6 +774,26 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   ring.position.set(course.ship.x, course.ship.y + 0.08, course.ship.z - 4.2);
   ring.userData.bloom = true;
   scene.add(ring);
+  const goalBeam = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.55, 0.9, 28, 10, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.55, side: THREE.DoubleSide, depthWrite: false })
+  );
+  goalBeam.userData.bloom = true;
+  scene.add(goalBeam);
+  const chevrons = new THREE.Group();
+  const chevGeo = new THREE.ConeGeometry(0.7, 1.5, 4);
+  const chevMat = new THREE.MeshBasicMaterial({ color: 0xfff1a8, transparent: true, opacity: 0.85, depthWrite: false });
+  const guide = (course.routes && course.routes[0]) || course.waypoints || [];
+  for (let i = 2; i < guide.length; i += 3) {
+    const wp = guide[i];
+    const next = guide[Math.min(guide.length - 1, i + 1)];
+    const mark = new THREE.Mesh(chevGeo, chevMat);
+    mark.position.set(wp.x, (wp.y || 0) + 1.3, wp.z);
+    mark.rotation.x = Math.PI / 2;
+    mark.rotation.z = Math.atan2(next.x - wp.x, next.z - wp.z);
+    chevrons.add(mark);
+  }
+  scene.add(chevrons);
   const flame = new THREE.Mesh(
     new THREE.ConeGeometry(0.85, 2.2, 8),
     new THREE.MeshBasicMaterial({ color: 0xffd23f })
@@ -1557,6 +1577,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
 
     lava.position.y = race.lavaY;
+    const goal = race.shipRound || !race.gate ? course.ship : race.gate;
+    if (goal) {
+      goalBeam.position.set(goal.x || 0, (goal.y || 0) + 16, goal.z || 0);
+      goalBeam.scale.y = 1 + Math.sin((race.time || 0) * 3) * 0.04;
+    }
+    chevrons.visible = race.phase === "race" || race.phase === "countdown";
     if (lava.material.uniforms && lava.material.uniforms.uTime) lava.material.uniforms.uTime.value = race.time || 0;
     for (const mat of liquids) mat.uniforms.uTime.value = race.time || 0;
     if (Math.random() < 0.45) burst(lava.position.x + (Math.random() - 0.5) * 8, lava.position.y + 0.4, lava.position.z + (Math.random() - 0.5) * 8, 0xff8a2a, true);
@@ -1637,7 +1663,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         setAnim(v, "Celebrate", 1);
         continue;
       }
-      v.group.position.set(r.pos.x, r.pos.y, r.pos.z);
+      const lead = race.interp || 0;
+      v.group.position.set(r.pos.x + r.vel.x * lead, r.pos.y, r.pos.z + r.vel.z * lead);
       if (v.face == null) v.face = r.yaw;
       let turn = r.yaw - v.face;
       while (turn > Math.PI) turn -= Math.PI * 2;
@@ -1927,11 +1954,16 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (h > 1.15) state.yaw = dampAngle(state.yaw, Math.atan2(player.vel.x, player.vel.z), cfg.autoYaw, dt);
       state.pitch = damp(state.pitch, cfg.defaultPitch, cfg.autoPitch, dt);
     }
-    const dist = state.portrait ? cfg.camDistPortrait : cfg.camDist;
-    let horiz = dist * Math.cos(state.pitch);
-    let height = dist * Math.sin(state.pitch);
-    if (horiz < 4.6) horiz = 4.6;
-    if (height < 2.3) height = 2.3;
+    const zoom = look && look.zoom ? look.zoom : 1;
+    const behind = Math.max(cfg.camNear || 5, Math.min(cfg.camFar || 12, (state.portrait ? cfg.camDistPortrait : cfg.camDist) * zoom));
+    const lifted = (state.portrait ? cfg.camHeight || 3.7 : cfg.camHeightLand || 3.9) * (behind / (state.portrait ? cfg.camDistPortrait : cfg.camDist));
+    let horiz = behind;
+    let height = lifted;
+    if (dragging || Math.abs(state.pitch - cfg.defaultPitch) > 0.08) {
+      const radius = Math.hypot(behind, lifted);
+      horiz = Math.max(cfg.camNear || 5, radius * Math.cos(state.pitch));
+      height = Math.max(2.8, radius * Math.sin(state.pitch));
+    }
     let tx = player.pos.x + Math.sin(state.yaw) * horiz;
     let ty = player.pos.y + height;
     let tz = player.pos.z - Math.cos(state.yaw) * horiz;
@@ -1944,8 +1976,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     let cdy = ty - headY;
     let cdz = tz - headZ;
     let clen = Math.hypot(cdx, cdy, cdz) || 1;
-    if (clen < 2.5) {
-      const s = 2.5 / clen;
+    if (clen < (cfg.camNear || 5)) {
+      const s = (cfg.camNear || 5) / clen;
       tx = headX + cdx * s;
       ty = headY + cdy * s;
       tz = headZ + cdz * s;
@@ -1966,8 +1998,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const fdy = camera.position.y - (player.pos.y + 1.2);
     const fdz = camera.position.z - player.pos.z;
     const fd = Math.hypot(fdx, fdy, fdz) || 1;
-    if (fd < 2.5) {
-      const s = 2.5 / fd;
+    if (fd < (cfg.camNear || 5)) {
+      const s = (cfg.camNear || 5) / fd;
       camera.position.x = player.pos.x + fdx * s;
       camera.position.y = player.pos.y + 1.2 + fdy * s;
       camera.position.z = player.pos.z + fdz * s;

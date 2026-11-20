@@ -69,9 +69,10 @@ if (p.pos.z <= spawn.z + 8) {
   failed++;
   console.log("FAIL did not move forward", p.pos.z);
 }
-if (Math.abs(p.pos.x - groundAt(course, p.pos.x, p.pos.z)?.x || 99) > 3) {
+const stand = groundAt(course, p.pos.x, p.pos.z);
+if (!stand || Math.abs(stand.y - p.pos.y) > 0.4) {
   failed++;
-  console.log("FAIL drifted off", p.pos.x, p.pos.z);
+  console.log("FAIL off the plaza", p.pos.x, p.pos.z, stand && stand.y);
 }
 if (falls > 0 || p.pos.y < 0) {
   failed++;

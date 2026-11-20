@@ -261,6 +261,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   crustGeo.computeVertexNormals();
   scene.add(new THREE.Mesh(crustGeo, terrainMat));
 
+  if (course.coins) {
+    const coinGeo = new THREE.CylinderGeometry(0.28, 0.28, 0.08, 10);
+    const coinMat = new THREE.MeshToonMaterial({ color: 0xffd23f, emissive: 0xffd23f, emissiveIntensity: 0.25, gradientMap: TOON_MAP });
+    const coins = new THREE.InstancedMesh(coinGeo, coinMat, course.coins.length);
+    const coinDummy = new THREE.Object3D();
+    course.coins.forEach((c, i) => {
+      coinDummy.position.set(c.x, c.y, c.z);
+      coinDummy.rotation.x = Math.PI / 2;
+      coinDummy.updateMatrix();
+      coins.setMatrixAt(i, coinDummy.matrix);
+    });
+    scene.add(coins);
+  }
+
   for (const isle of course.islands || []) {
     const mesh = new THREE.Mesh(
       new THREE.CylinderGeometry(isle.r, isle.r * 0.7, 0.85, 10),
@@ -1030,6 +1044,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   function updateCamera(race, dt, look) {
     const player = race.player;
+    if (look && look.overview) {
+      const o = look.overview;
+      camera.position.set(o.x, o.y, o.z);
+      camera.lookAt(o.lx, o.ly, o.lz);
+      return;
+    }
     const dragging = !!(look && (look.looking || Math.abs(look.lookDx) + Math.abs(look.lookDy) > 0));
     if (look && look.intro > 0) {
       const k = 1 - Math.max(0, Math.min(1, look.intro / 3.3));

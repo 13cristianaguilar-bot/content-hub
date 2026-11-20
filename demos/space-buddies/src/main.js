@@ -437,6 +437,7 @@ function frame(now) {
     qualityDropped = true;
     world.setDpr(1);
   }
+  if (window.__sbOverview) raw.overview = window.__sbOverview;
   world.update(race, dt, raw);
   world.render();
   updateHud(dt);

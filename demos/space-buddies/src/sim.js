@@ -81,6 +81,7 @@ export function createRace(course, cfg, seed = 1) {
       wait: i === 0 ? 0 : (spot.row || 0) * 0.42 + rand() * 0.55,
       stumble: 0,
       wp: 0,
+      routeId: i % 3,
     });
   }
 
@@ -514,8 +515,15 @@ function botWish(race, r, dt) {
   const p = r.profile;
   if (race.rand() < p.mistake * dt) r.stumble = 0.18 + race.rand() * 0.28;
 
-  const wps = race.course.waypoints;
-  while (r.wp < wps.length - 1 && r.pos.z > wps[r.wp].z - 0.4) r.wp++;
+  const routes = race.course.routes;
+  const wps = (routes && routes[r.routeId]) || race.course.waypoints;
+  while (r.wp < wps.length - 1) {
+    const w = wps[r.wp];
+    const ddx = r.pos.x - w.x;
+    const ddz = r.pos.z - w.z;
+    if (ddx * ddx + ddz * ddz > 9) break;
+    r.wp++;
+  }
   const target = wps[Math.min(r.wp, wps.length - 1)];
   const spread = ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.4 : 0.85);
   let tx = target.x + spread;
@@ -878,9 +886,8 @@ function movePlatforms(race, dt) {
     p.prevX = p.x;
     p.prevZ = p.z;
     p.phase += dt * p.speed;
-    if (p.axis === "x") {
-      p.x = p.originX + Math.sin(p.phase) * p.amp;
-    }
+    if (p.axis === "x") p.x = p.originX + Math.sin(p.phase) * p.amp;
+    else if (p.axis === "bob" || p.axis === "tilt") p.y = p.originY + Math.sin(p.phase) * p.amp;
   }
 }
 

@@ -2,7 +2,7 @@
 // three routes, not a single race ribbon.
 
 const PALETTE = {
-  meadow: [0.34, 0.78, 0.4],
+  meadow: [0.38, 0.8, 0.36],
   canyon: [0.18, 0.12, 0.13],
   sky: [0.62, 0.88, 0.74],
   ice: [0.55, 0.9, 1],
@@ -250,7 +250,7 @@ export function createCourse(cfg) {
 
   // Meadow plaza. A giant mushroom sits in the middle so you walk around it.
   addDisc(0, 0, zz(40), 24, 24, "meadow");
-  addDisc(0, 2.6, zz(40), 4.2, 4.2, "meadow");
+  addDisc(0, 2.6, zz(40), 1.8, 1.8, "meadow");
   addDisc(-16, 0.2, zz(28), 7, 7, "meadow");
   addDisc(16, 0.8, zz(52), 6, 6, "meadow");
 

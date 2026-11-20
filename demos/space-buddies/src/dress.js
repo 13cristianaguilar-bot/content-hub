@@ -77,33 +77,13 @@ export function buildDressing(scene, course, gradientMap) {
     picks[t.zone].push(t);
   }
 
-  const mushStem = new THREE.CylinderGeometry(0.12, 0.16, 0.45, 7);
-  const mushCap = new THREE.SphereGeometry(0.38, 10, 8);
   const crystal = new THREE.ConeGeometry(0.28, 1.15, 5);
   const rock = new THREE.IcosahedronGeometry(0.55, 0);
   const puff = new THREE.SphereGeometry(0.32, 8, 6);
   const pipe = new THREE.CylinderGeometry(0.18, 0.18, 1.4, 8);
   const chunk = new THREE.IcosahedronGeometry(0.9, 0);
 
-  const meadow = picks.meadow;
-  inst(mushStem, makeToon(0xfff6e5, gradientMap), meadow, (d, t, i) => {
-    const j = hash(i + t.z);
-    d.position.set(t.x + (t.col > 0 ? 0.5 : -0.5) + (j - 0.5) * 1.4, t.y + 0.22, t.z + (hash(i + 3) - 0.5) * 1.2);
-    d.rotation.set(0, j * 4, 0);
-    d.scale.setScalar(0.7 + j * 0.7);
-  });
-  inst(mushCap, makeToon(0xff5fa2, gradientMap), meadow, (d, t, i) => {
-    const j = hash(i + t.z);
-    d.position.set(t.x + (t.col > 0 ? 0.5 : -0.5) + (j - 0.5) * 1.4, t.y + 0.55, t.z + (hash(i + 3) - 0.5) * 1.2);
-    d.rotation.set(0, j * 5, 0);
-    const s = 0.65 + hash(i + 8) * 0.7;
-    d.scale.set(s, s * 0.62, s);
-  });
-  inst(puff, makeToon(0x7fd88a, gradientMap), meadow.filter((_, i) => i % 2 === 0), (d, t) => {
-    d.position.set(t.x, t.y + 0.28, t.z + 0.6);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(1, 0.7, 1);
-  });
+  // Meadow props are real CC0 models placed in meadow.js.
 
   inst(rock, makeToon(0xc47a55, gradientMap), picks.canyon, (d, t, i) => {
     d.position.set(t.x, t.y + 0.35, t.z);
@@ -139,45 +119,12 @@ export function buildDressing(scene, course, gradientMap) {
     d.scale.setScalar(0.7);
   });
 
-  const grass = new THREE.ConeGeometry(0.22, 0.7, 5);
-  const trunk = new THREE.CylinderGeometry(0.12, 0.16, 1.3, 6);
-  const crown = new THREE.SphereGeometry(0.55, 8, 6);
-  const post = new THREE.BoxGeometry(0.12, 0.7, 0.12);
   const column = new THREE.CylinderGeometry(0.28, 0.34, 2.4, 6);
   const lavaBlob = new THREE.SphereGeometry(0.45, 8, 6);
   const balloon = new THREE.SphereGeometry(0.42, 10, 8);
   const floe = new THREE.CylinderGeometry(0.7, 0.7, 0.12, 7);
   const scaffold = new THREE.BoxGeometry(0.16, 1.6, 0.16);
   const light = new THREE.SphereGeometry(0.12, 6, 6);
-  const meadowExtra = meadow.filter((_, i) => i % 2 === 0);
-  inst(grass, makeToon(0x3ea84a, gradientMap), meadowExtra, (d, t, i) => {
-    d.position.set(t.x + (t.col > 0 ? 0.3 : -0.3), t.y + 0.35, t.z);
-    d.rotation.set(0.1, i, 0);
-    d.scale.set(1, 1, 1);
-  });
-  inst(puff, makeToon(0xff8fd1, gradientMap), meadow.filter((_, i) => i % 3 === 0), (d, t) => {
-    d.position.set(t.x, t.y + 0.16, t.z + 0.4);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(0.45, 0.35, 0.45);
-  });
-  inst(trunk, makeToon(0xc47a55, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t, i) => {
-    const j = hash(i + 11);
-    d.position.set(t.x + (j - 0.5) * 1.6, t.y + 0.7, t.z + (hash(i + 4) - 0.5) * 1.4);
-    d.rotation.set(0, j * 3, (j - 0.5) * 0.15);
-    d.scale.set(0.8 + j * 0.5, 0.7 + hash(i + 2) * 0.8, 0.8 + j * 0.5);
-  });
-  inst(crown, makeToon(0x7fd88a, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t, i) => {
-    const j = hash(i + 11);
-    d.position.set(t.x + (j - 0.5) * 1.6, t.y + 1.55, t.z + (hash(i + 4) - 0.5) * 1.4);
-    d.rotation.set(0, i + j, 0);
-    const s = 0.85 + hash(i + 6) * 0.6;
-    d.scale.set(s, s * 0.75, s);
-  });
-  inst(post, makeToon(0xfff6e5, gradientMap), meadow.filter((_, i) => i % 5 === 0), (d, t) => {
-    d.position.set(t.x, t.y + 0.35, t.z + 0.8);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(1, 1, 1);
-  });
 
   const basalt = picks.canyon.filter((_, i) => hash(i + 4) > 0.62);
   inst(new THREE.IcosahedronGeometry(0.7, 1), makeToon(0x2a1c22, gradientMap), basalt, (d, t, i) => {

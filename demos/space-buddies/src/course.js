@@ -6,7 +6,7 @@ const ACROSS = 18;
 
 const PALETTE = {
   meadow: { top: [0.32, 0.78, 0.38], lip: [0.18, 0.55, 0.28], rock: [0.48, 0.36, 0.28] },
-  canyon: { top: [0.62, 0.24, 0.16], lip: [0.42, 0.14, 0.12], rock: [0.22, 0.1, 0.12] },
+  canyon: { top: [0.16, 0.12, 0.13], lip: [0.22, 0.14, 0.14], rock: [0.12, 0.08, 0.09] },
   sky: { top: [0.55, 0.88, 0.68], lip: [0.75, 0.92, 1], rock: [0.42, 0.36, 0.62] },
   ice: { top: [0.45, 0.88, 1], lip: [0.2, 0.62, 1], rock: [0.12, 0.4, 0.95] },
   climb: { top: [1, 0.68, 0.2], lip: [0.82, 0.38, 0.12], rock: [0.5, 0.24, 0.16] },
@@ -210,6 +210,10 @@ function buildChunkGeometry(stations) {
         col = t > 0.45 ? pal.rock : pal.lip;
       }
       if ((next.gap || prev.gap) && (r === 0 || r === rows - 1)) dy -= 0.35;
+      if (st.zone === "canyon" && edge < 0.72) {
+        const crack = Math.abs(Math.sin(st.z * 0.55 + lat * 0.4)) > 0.88 || Math.abs(Math.sin(st.x * 0.7 + st.z * 0.18)) > 0.9;
+        col = crack ? [1, 0.38, 0.04] : [0.09, 0.07, 0.08];
+      }
       const tint = vary(col, st.x + lat, st.z, edge);
       return { x: st.x + lat, y: st.y + dy, z: st.z, r: tint[0], g: tint[1], b: tint[2] };
     },

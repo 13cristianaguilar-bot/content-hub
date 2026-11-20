@@ -86,15 +86,18 @@ export function buildDressing(scene, course, gradientMap) {
   const chunk = new THREE.IcosahedronGeometry(0.9, 0);
 
   const meadow = picks.meadow;
-  inst(mushStem, makeToon(0xfff6e5, gradientMap), meadow, (d, t) => {
-    d.position.set(t.x + (t.col > 0 ? 0.4 : -0.4), t.y + 0.22, t.z);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(1, 1, 1);
+  inst(mushStem, makeToon(0xfff6e5, gradientMap), meadow, (d, t, i) => {
+    const j = hash(i + t.z);
+    d.position.set(t.x + (t.col > 0 ? 0.5 : -0.5) + (j - 0.5) * 1.4, t.y + 0.22, t.z + (hash(i + 3) - 0.5) * 1.2);
+    d.rotation.set(0, j * 4, 0);
+    d.scale.setScalar(0.7 + j * 0.7);
   });
   inst(mushCap, makeToon(0xff5fa2, gradientMap), meadow, (d, t, i) => {
-    d.position.set(t.x + (t.col > 0 ? 0.4 : -0.4), t.y + 0.55, t.z);
-    d.rotation.set(0, i, 0);
-    d.scale.set(1, 0.62, 1);
+    const j = hash(i + t.z);
+    d.position.set(t.x + (t.col > 0 ? 0.5 : -0.5) + (j - 0.5) * 1.4, t.y + 0.55, t.z + (hash(i + 3) - 0.5) * 1.2);
+    d.rotation.set(0, j * 5, 0);
+    const s = 0.65 + hash(i + 8) * 0.7;
+    d.scale.set(s, s * 0.62, s);
   });
   inst(puff, makeToon(0x7fd88a, gradientMap), meadow.filter((_, i) => i % 2 === 0), (d, t) => {
     d.position.set(t.x, t.y + 0.28, t.z + 0.6);
@@ -157,15 +160,18 @@ export function buildDressing(scene, course, gradientMap) {
     d.rotation.set(0, 0, 0);
     d.scale.set(0.45, 0.35, 0.45);
   });
-  inst(trunk, makeToon(0xc47a55, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t) => {
-    d.position.set(t.x, t.y + 0.7, t.z);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(1, 1, 1);
+  inst(trunk, makeToon(0xc47a55, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t, i) => {
+    const j = hash(i + 11);
+    d.position.set(t.x + (j - 0.5) * 1.6, t.y + 0.7, t.z + (hash(i + 4) - 0.5) * 1.4);
+    d.rotation.set(0, j * 3, (j - 0.5) * 0.15);
+    d.scale.set(0.8 + j * 0.5, 0.7 + hash(i + 2) * 0.8, 0.8 + j * 0.5);
   });
   inst(crown, makeToon(0x7fd88a, gradientMap), meadow.filter((_, i) => i % 4 === 0), (d, t, i) => {
-    d.position.set(t.x, t.y + 1.55, t.z);
-    d.rotation.set(0, i, 0);
-    d.scale.set(1.1, 0.8, 1.1);
+    const j = hash(i + 11);
+    d.position.set(t.x + (j - 0.5) * 1.6, t.y + 1.55, t.z + (hash(i + 4) - 0.5) * 1.4);
+    d.rotation.set(0, i + j, 0);
+    const s = 0.85 + hash(i + 6) * 0.6;
+    d.scale.set(s, s * 0.75, s);
   });
   inst(post, makeToon(0xfff6e5, gradientMap), meadow.filter((_, i) => i % 5 === 0), (d, t) => {
     d.position.set(t.x, t.y + 0.35, t.z + 0.8);
@@ -173,16 +179,12 @@ export function buildDressing(scene, course, gradientMap) {
     d.scale.set(1, 1, 1);
   });
 
-  const lavaMat = new THREE.MeshToonMaterial({ color: 0xff7a1a, emissive: 0xff7a1a, emissiveIntensity: 0.45, gradientMap });
-  inst(column, makeToon(0x3a2438, gradientMap), picks.canyon.filter((_, i) => i % 2 === 0), (d, t, i) => {
-    d.position.set(t.x, t.y - 0.2, t.z);
-    d.rotation.set(0, i, 0);
-    d.scale.set(1, 0.8 + (i % 3) * 0.25, 1);
-  });
-  inst(lavaBlob, lavaMat, picks.canyon, (d, t, i) => {
-    d.position.set(t.x + (t.col > 0 ? 0.8 : -0.8), t.y - 0.2, t.z);
-    d.rotation.set(0, i, 0);
-    d.scale.set(1.1, 0.55, 0.9);
+  const basalt = picks.canyon.filter((_, i) => hash(i + 4) > 0.62);
+  inst(new THREE.IcosahedronGeometry(0.7, 1), makeToon(0x2a1c22, gradientMap), basalt, (d, t, i) => {
+    const j = hash(i + t.z);
+    d.position.set(t.x + (j - 0.5) * 1.8, t.y + 0.15 + j * 0.4, t.z + (hash(i + 2) - 0.5) * 1.6);
+    d.rotation.set(j * 2, hash(i) * 4, hash(i + 9));
+    d.scale.set(0.45 + j * 1.3, 0.55 + hash(i + 3) * 1.6, 0.5 + hash(i + 6) * 1.1);
   });
 
   inst(balloon, makeToon(0xff8fd1, gradientMap), picks.sky.filter((_, i) => i % 3 === 0), (d, t, i) => {
@@ -224,57 +226,125 @@ export function buildDressing(scene, course, gradientMap) {
     d.scale.set(1, 1, 1);
   });
 
-  const hillTint = { meadow: 0x3c9a48, canyon: 0x5c2a24, sky: 0x7ea6d0, ice: 0x3d8fd4, climb: 0xb86a28, ship: 0xe2b878 };
+  function organicBlob() {
+    const geo = new THREE.IcosahedronGeometry(1, 1);
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const z = pos.getZ(i);
+      const n = 1 + Math.sin(x * 2.8 + y * 1.7) * 0.22 + Math.sin(z * 2.4 + 0.6) * 0.16;
+      const cap = y > 0.15 ? 0.62 : 1.05;
+      pos.setXYZ(i, x * n, (y * n * cap) + 0.2, z * n);
+    }
+    geo.computeVertexNormals();
+    return geo;
+  }
+  function terraceGeo() {
+    const geo = new THREE.CylinderGeometry(1, 1.25, 1.1, 7, 3);
+    const pos = geo.attributes.position;
+    const colors = new Float32Array(pos.count * 3);
+    for (let i = 0; i < pos.count; i++) {
+      const y = pos.getY(i);
+      const grass = y > 0.25;
+      colors[i * 3] = grass ? 0.35 : 0.45;
+      colors[i * 3 + 1] = grass ? 0.72 : 0.32;
+      colors[i * 3 + 2] = grass ? 0.32 : 0.24;
+      if (y > 0.35) pos.setY(i, y * 0.45 + 0.35);
+    }
+    geo.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+    return geo;
+  }
+  const hillTint = { meadow: 0x3c9a48, canyon: 0x4a2420, sky: 0x7ea6d0, ice: 0x3d8fd4, climb: 0xb86a28, ship: 0xe2b878 };
   const hillItems = [];
   const stations = course.stations || [];
-  for (let i = 0; i < stations.length; i += 12) {
+  for (let i = 0; i < stations.length; i += 14) {
     const st = stations[i];
     if (!st || st.gap) continue;
     for (let layer = 0; layer < 2; layer++) {
       for (const side of [-1, 1]) {
-        const dist = (layer === 0 ? 15 : 28) + hash(i + layer * 11 + side) * 7;
-        const h = (layer === 0 ? 5 : 10) + hash(i + 4 + layer) * 7;
+        const hsh = hash(i + layer * 17 + side * 3);
+        const dist = (layer === 0 ? 16 : 30) + hsh * 8;
+        const mound = 3.2 + hash(i + 4 + layer) * 4.2;
         hillItems.push({
           x: st.x + side * dist,
-          y: st.y - 1.5,
-          z: st.z + (hash(i + layer + 6) - 0.5) * 10,
-          sx: 3.4 + hash(i + layer) * 4.5,
-          sy: h,
-          sz: 3.2 + hash(i + 8) * 3.5,
+          y: st.y - 0.8,
+          z: st.z + (hash(i + layer + 6) - 0.5) * 12,
+          s: mound * (layer === 0 ? 1 : 1.35),
+          ry: hsh * 6.2,
+          rx: (hash(i + 2) - 0.5) * 0.4,
           color: hillTint[st.zone] || 0x7fd88a,
+          zone: st.zone,
+          side,
         });
       }
     }
   }
-  const hillMesh = inst(new THREE.ConeGeometry(1, 1.7, 6), makeToon(0xffffff, gradientMap), hillItems, (d, item) => {
-    d.position.set(item.x, item.y + item.sy * 0.55, item.z);
-    d.rotation.set(0, item.sx, 0);
-    d.scale.set(item.sx, item.sy, item.sz);
+  const hillMesh = inst(organicBlob(), makeToon(0xffffff, gradientMap), hillItems, (d, item) => {
+    d.position.set(item.x, item.y + item.s * 0.35, item.z);
+    d.rotation.set(item.rx, item.ry, item.rx * 0.5);
+    d.scale.set(item.s, item.s * 0.72, item.s * 0.9);
   });
-  const mesas = hillItems.filter((_, i) => i % 3 === 0);
-  inst(new THREE.CylinderGeometry(1, 1.2, 0.55, 6), makeToon(0xffffff, gradientMap), mesas, (d, item) => {
-    d.position.set(item.x, item.y + item.sy * 0.35, item.z);
-    d.rotation.set(0, item.sx, 0);
-    d.scale.set(item.sx * 1.25, 1.4, item.sz * 1.15);
+  const mesaMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap });
+  const mesas = hillItems.filter((_, i) => i % 3 === 0).map((item) => ({ ...item, color: 0 }));
+  inst(terraceGeo(), mesaMat, mesas, (d, item) => {
+    d.position.set(item.x, item.y + 0.4, item.z);
+    d.rotation.set(0, item.ry, 0);
+    d.scale.set(item.s * 0.85, item.s * 0.55, item.s * 0.8);
   });
 
-  const river = [];
-  for (let i = 0; i < stations.length; i += 3) {
-    const st = stations[i];
-    if (!st || st.zone !== "canyon" || st.gap) continue;
-    river.push({ x: st.x + st.half - 0.2, y: st.y - 0.05, z: st.z });
-    river.push({ x: st.x - st.half + 0.2, y: st.y - 0.05, z: st.z });
-  }
-  const riverMesh = inst(
-    new THREE.BoxGeometry(2.1, 0.35, 2.4),
-    new THREE.MeshBasicMaterial({ color: 0xff6a12 }),
-    river,
-    (d, item) => {
-      d.position.set(item.x, item.y, item.z);
-      d.rotation.set(0, 0, 0);
-      d.scale.set(1, 1, 1);
+  const lavaMats = [];
+  function lavaChannel(side) {
+    const pts = stations.filter((st) => st && st.zone === "canyon" && !st.gap);
+    if (pts.length < 4) return;
+    const step = 2;
+    const used = [];
+    for (let i = 0; i < pts.length; i += step) used.push(pts[i]);
+    const positions = [];
+    const uvs = [];
+    const indices = [];
+    used.forEach((st, i) => {
+      const wobble = Math.sin(st.z * 0.09) * 0.9 + Math.sin(st.z * 0.027) * 0.55;
+      const width = 1.15 + Math.sin(st.z * 0.06 + side) * 0.4;
+      const cx = st.x + side * (st.half + 1.15 + wobble * 0.35);
+      positions.push(cx - width * 0.65, st.y - 0.55, st.z, cx + width * 0.65, st.y - 0.42, st.z);
+      const v = i / Math.max(1, used.length - 1);
+      uvs.push(0, v * 8, 1, v * 8);
+    });
+    for (let i = 0; i < used.length - 1; i++) {
+      const a = i * 2;
+      indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
     }
-  );
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+    geo.setIndex(indices);
+    const mat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 } },
+      vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+      fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ float flow=fract(vUv.y-uTime*0.35); float lane=abs(vUv.x-0.5); float body=smoothstep(0.5,0.08,lane); float streak=smoothstep(0.12,0.9,flow); vec3 col=mix(vec3(0.42,0.04,0.01), vec3(1.0,0.55,0.05), streak*body); float rim=smoothstep(0.2,0.38,lane)*(1.0-smoothstep(0.38,0.5,lane)); col+=vec3(1.0,0.8,0.25)*rim; if(body<0.04) discard; gl_FragColor=vec4(col,1.0); }",
+    });
+    scene.add(new THREE.Mesh(geo, mat));
+    lavaMats.push(mat);
+  }
+  lavaChannel(1);
+  lavaChannel(-1);
+
+  const falls = hillItems.filter((item, i) => (item.zone === "meadow" || item.zone === "sky") && i % 7 === 0).slice(0, 10);
+  const fallMat = new THREE.ShaderMaterial({
+    transparent: true,
+    depthWrite: false,
+    uniforms: { uTime: { value: 0 } },
+    vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+    fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ float f=fract(vUv.y*3.0-uTime*0.8); float a=smoothstep(0.0,0.15,vUv.x)*smoothstep(1.0,0.85,vUv.x)*0.55; vec3 col=mix(vec3(0.75,0.92,1.0), vec3(1.0,1.0,1.0), f); gl_FragColor=vec4(col,a); }",
+  });
+  lavaMats.push(fallMat);
+  for (const item of falls) {
+    const sheet = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 4.2), fallMat);
+    sheet.position.set(item.x + item.side * 1.5, item.y + item.s * 0.2, item.z);
+    scene.add(sheet);
+  }
 
   const floats = [];
   const floatTint = { meadow: 0x7fd88a, canyon: 0xff7a1a, sky: 0xb7e4ff, ice: 0xd7f3ff, climb: 0xffc56a, ship: 0xfff6e5 };
@@ -337,17 +407,7 @@ export function buildDressing(scene, course, gradientMap) {
         });
         floatMesh.instanceMatrix.needsUpdate = true;
       }
-      if (riverMesh) {
-        river.forEach((item, i) => {
-          const bub = 1 + Math.sin(time * 4.5 + item.z * 0.35) * 0.18;
-          dummy.position.set(item.x, item.y + Math.sin(time * 3 + i) * 0.06, item.z);
-          dummy.rotation.set(0, 0, 0);
-          dummy.scale.set(bub, 0.7 + bub * 0.4, bub);
-          dummy.updateMatrix();
-          riverMesh.setMatrixAt(i, dummy.matrix);
-        });
-        riverMesh.instanceMatrix.needsUpdate = true;
-      }
+      for (const mat of lavaMats) mat.uniforms.uTime.value = time;
       void hillMesh;
       const p = race.player;
       const zone = race.zoneId || "meadow";

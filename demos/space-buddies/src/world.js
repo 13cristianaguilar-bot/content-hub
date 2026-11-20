@@ -441,7 +441,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     group.userData.ring = ring;
     const cap = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.42, 7), hatMat);
     cap.position.y = 1.05;
-    group.add(cap);
+    const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.1, 0.06), new THREE.MeshToonMaterial({ color: 0xfff6e5, gradientMap: TOON_MAP }));
+    tooth.position.set(-0.08, -0.08, 0.95);
+    const tooth2 = tooth.clone();
+    tooth2.position.x = 0.08;
+    group.add(cap, tooth, tooth2);
     outlineOf(group);
     scene.add(group);
     return group;
@@ -453,7 +457,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     g.userData.eyes = g.getObjectByName("HopperEye");
     const bow = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.08), bowMat);
     bow.position.set(0, 0.15, 0.62);
-    g.add(bow);
+    const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 6), bowMat);
+    cheek.position.set(0.28, 0.02, 0.48);
+    const cheek2 = cheek.clone();
+    cheek2.position.x = -0.28;
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 8), new THREE.MeshToonMaterial({ color: 0xffe8c2, gradientMap: TOON_MAP }));
+    belly.scale.set(1, 0.7, 0.45);
+    belly.position.set(0, -0.12, 0.42);
+    g.add(bow, cheek, cheek2, belly);
     outlineOf(g);
     scene.add(g);
     return g;
@@ -473,15 +484,64 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     return g;
   });
 
+  function slabGeometry(seed) {
+    const n = 6;
+    const positions = [];
+    const colors = [];
+    const indices = [];
+    const top = [];
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + seed;
+      const r = 0.75 + ((i * 3 + seed * 5) % 3) * 0.28;
+      top.push([Math.cos(a) * r, Math.sin(a) * r]);
+    }
+    positions.push(0, 0.18, 0);
+    colors.push(0.28, 0.16, 0.12);
+    top.forEach(([x, z]) => {
+      positions.push(x, 0.18, z);
+      colors.push(1, 0.45, 0.08);
+    });
+    positions.push(0, -0.18, 0);
+    colors.push(0.35, 0.18, 0.1);
+    top.forEach(([x, z]) => {
+      positions.push(x * 0.92, -0.22, z * 0.92);
+      colors.push(0.85, 0.22, 0.04);
+    });
+    for (let i = 0; i < n; i++) {
+      const a = 1 + i;
+      const b = 1 + ((i + 1) % n);
+      indices.push(0, b, a);
+      const c = 1 + n + 1 + i;
+      const d = 1 + n + 1 + ((i + 1) % n);
+      indices.push(1 + n, c, d);
+      indices.push(a, b, d, a, d, c);
+    }
+    const drip = n * 2 + 2;
+    positions.push(0.2, -0.85, 0.15);
+    colors.push(1, 0.4, 0.05);
+    positions.push(0.05, -0.2, 0.05);
+    colors.push(1, 0.55, 0.08);
+    positions.push(0.35, -0.2, 0.22);
+    colors.push(1, 0.35, 0.04);
+    indices.push(drip, drip + 1, drip + 2);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+    geo.setAttribute("color", new THREE.Float32BufferAttribute(colors, 3));
+    geo.setIndex(indices);
+    geo.computeVertexNormals();
+    return geo;
+  }
   const breakBits = [];
   const breakMat = new THREE.MeshToonMaterial({
-    color: 0xe7d3b0,
+    vertexColors: true,
     emissive: 0xff7a1a,
-    emissiveIntensity: 0.65,
+    emissiveIntensity: 0.35,
     gradientMap: TOON_MAP,
+    side: THREE.DoubleSide,
   });
-  for (let i = 0; i < 16; i++) {
-    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5 + (i % 4) * 0.7, 0), breakMat);
+  for (let i = 0; i < 12; i++) {
+    const mesh = new THREE.Mesh(slabGeometry(i * 0.7), breakMat);
+    mesh.scale.setScalar(2.6 + (i % 3) * 0.9);
     mesh.visible = false;
     scene.add(mesh);
     const side = i % 2 === 0 ? -1 : 1;
@@ -936,8 +996,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         course.ship.y + bit.oy - race.launchT * bit.fall * 1.6,
         course.ship.z + bit.oz
       );
-      bit.mesh.rotation.x += dt * bit.spin;
-      bit.mesh.rotation.y += dt * 0.6;
+      bit.mesh.rotation.x = -0.7;
+      bit.mesh.rotation.y = race.launchT * bit.spin;
     }
     beacon.visible = race.phase !== "launch" && race.phase !== "results" && race.seatCine <= 0;
     dressing.update(race, dt);

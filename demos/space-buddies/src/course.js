@@ -6,9 +6,9 @@ const ACROSS = 18;
 
 const PALETTE = {
   meadow: { top: [0.32, 0.78, 0.38], lip: [0.18, 0.55, 0.28], rock: [0.48, 0.36, 0.28] },
-  canyon: { top: [0.95, 0.36, 0.14], lip: [0.7, 0.18, 0.1], rock: [0.32, 0.14, 0.2] },
+  canyon: { top: [0.62, 0.24, 0.16], lip: [0.42, 0.14, 0.12], rock: [0.22, 0.1, 0.12] },
   sky: { top: [0.55, 0.88, 0.68], lip: [0.75, 0.92, 1], rock: [0.42, 0.36, 0.62] },
-  ice: { top: [0.62, 0.92, 1], lip: [0.35, 0.78, 1], rock: [0.28, 0.48, 0.86] },
+  ice: { top: [0.45, 0.88, 1], lip: [0.2, 0.62, 1], rock: [0.12, 0.4, 0.95] },
   climb: { top: [1, 0.68, 0.2], lip: [0.82, 0.38, 0.12], rock: [0.5, 0.24, 0.16] },
   ship: { top: [1, 0.9, 0.62], lip: [0.95, 0.7, 0.32], rock: [0.62, 0.4, 0.22] },
 };
@@ -203,7 +203,7 @@ function buildChunkGeometry(stations) {
       if (edge > 1.08) {
         const t = Math.min(1, (edge - 1.08) / 0.85);
         dy = (onShelf ? st.shelfH * 0.25 : 0) - 0.55 - t * t * 8.2;
-        col = t > 0.4 ? [pal.rock[0] * 0.62, pal.rock[1] * 0.55, pal.rock[2] * 0.5] : pal.rock;
+        col = t > 0.4 ? (st.zone === "ice" ? [0.22, 0.5, 0.95] : [pal.rock[0] * 0.62, pal.rock[1] * 0.55, pal.rock[2] * 0.5]) : pal.rock;
       } else if (edge > 0.7 && !(onShelf && edge < 1.05)) {
         const t = (edge - 0.7) / 0.38;
         dy -= t * t * 0.7;

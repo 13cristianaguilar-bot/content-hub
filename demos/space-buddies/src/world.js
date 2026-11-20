@@ -101,7 +101,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   scene.fog = new THREE.Fog(0x9fe8ff, cfg.fogNear, cfg.fogFar);
   const camera = new THREE.PerspectiveCamera(cfg.fovPortrait, 1, 0.15, 500);
 
-  const hemi = new THREE.HemisphereLight(0xeaf8ff, 0xf6c98a, 0.95);
+  const hemi = new THREE.HemisphereLight(0xeaf8ff, 0xc5d4ea, 0.95);
   const sun = new THREE.DirectionalLight(0xfff6e8, 1.2);
   sun.position.set(-18, 42, 14);
   scene.add(hemi, sun);
@@ -221,7 +221,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     meadow: [0.26, 0.52, 0.3],
     canyon: [0.5, 0.16, 0.1],
     sky: [0.42, 0.58, 0.75],
-    ice: [0.5, 0.75, 0.95],
+    ice: [0.25, 0.55, 0.95],
     climb: [0.58, 0.32, 0.14],
     ship: [0.68, 0.5, 0.28],
   };
@@ -407,6 +407,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     return group;
   });
 
+  function outlineOf(group) {
+    const meshes = [];
+    group.traverse((node) => {
+      if (node.isMesh) meshes.push(node);
+    });
+    for (const node of meshes) {
+      const shell = new THREE.Mesh(node.geometry, new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide }));
+      shell.scale.setScalar(1.08);
+      node.add(shell);
+    }
+  }
+  const hatMat = new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP });
+  const bowMat = new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP });
+
   const rollerMeshes = course.rollers.map((r) => {
     const group = cloneDrawn(gltfs.roller);
     group.scale.setScalar(r.radius);
@@ -425,6 +439,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     ring.position.y = -0.82;
     group.add(ring);
     group.userData.ring = ring;
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.42, 7), hatMat);
+    cap.position.y = 1.05;
+    group.add(cap);
+    outlineOf(group);
     scene.add(group);
     return group;
   });
@@ -432,6 +450,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const hopperMeshes = course.hoppers.map(() => {
     const g = cloneDrawn(gltfs.hopper);
     g.userData.body = g.getObjectByName("HopperBody");
+    g.userData.eyes = g.getObjectByName("HopperEye");
+    const bow = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.16, 0.08), bowMat);
+    bow.position.set(0, 0.15, 0.62);
+    g.add(bow);
+    outlineOf(g);
     scene.add(g);
     return g;
   });
@@ -439,9 +462,49 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const flyerMeshes = course.flyers.map(() => {
     const g = cloneDrawn(gltfs.flyer);
     g.userData.wing = g.getObjectByName("FlyerWings");
+    g.userData.eyes = g.getObjectByName("FlyerEye");
+    const goggle = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.04, 6, 10), hatMat);
+    goggle.position.set(0.16, 0.12, 0.34);
+    const goggle2 = goggle.clone();
+    goggle2.position.x = -0.16;
+    g.add(goggle, goggle2);
+    outlineOf(g);
     scene.add(g);
     return g;
   });
+
+  const breakBits = [];
+  const breakMat = new THREE.MeshToonMaterial({
+    color: 0xe7d3b0,
+    emissive: 0xff7a1a,
+    emissiveIntensity: 0.65,
+    gradientMap: TOON_MAP,
+  });
+  for (let i = 0; i < 16; i++) {
+    const mesh = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5 + (i % 4) * 0.7, 0), breakMat);
+    mesh.visible = false;
+    scene.add(mesh);
+    const side = i % 2 === 0 ? -1 : 1;
+    breakBits.push({
+      mesh,
+      ox: side * (7.5 + (i % 5) * 2.6),
+      oy: 7 + (i % 4) * 3.4,
+      oz: -1 - (i % 5) * 2.4,
+      spin: 0.7 + (i % 5) * 0.22,
+      fall: 0.18 + (i % 3) * 0.08,
+    });
+  }
+  const speedLines = new THREE.Group();
+  for (let i = 0; i < 10; i++) {
+    const line = new THREE.Mesh(
+      new THREE.BoxGeometry(0.05, 0.05, 1.6),
+      new THREE.MeshBasicMaterial({ color: 0xfff6e5, transparent: true, opacity: 0.75 })
+    );
+    line.position.set((i % 5) - 2, 0.4 + (i % 3) * 0.35, -0.4 - (i % 4) * 0.35);
+    speedLines.add(line);
+  }
+  speedLines.visible = false;
+  scene.add(speedLines);
 
   for (let i = 0; i < 7; i++) {
     const cloud = new THREE.Mesh(new THREE.SphereGeometry(2.2 + (i % 3), 8, 6), new THREE.MeshLambertMaterial({ color: 0xfff6e5 }));
@@ -751,16 +814,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         if (dx * dx + dz * dz < 5) bumped = true;
       }
       const squ = bumped ? 0.78 : 1;
-      rollerMeshes[i].scale.set(r.radius * (bumped ? 1.15 : 1), r.radius * squ, r.radius);
+      const idle = 1 + Math.sin(race.time * 2.2 + i) * 0.04;
+      rollerMeshes[i].scale.set(r.radius * (bumped ? 1.15 : idle), r.radius * squ, r.radius);
     }
     for (let i = 0; i < race.hoppers.length; i++) {
       const h = race.hoppers[i];
       hopperMeshes[i].position.set(h.x, h.y + 0.55, h.z);
       const body = hopperMeshes[i].userData.body;
       if (body) {
-        body.scale.y = h.hopping ? 1.18 : 0.62;
+        body.scale.y = h.hopping ? 1.18 : 0.62 + Math.sin(race.time * 3 + i) * 0.04;
         body.scale.x = h.hopping ? 0.86 : 1.12;
       }
+      const eyes = hopperMeshes[i].userData.eyes;
+      if (eyes) eyes.scale.y = Math.sin(race.time * 2.4 + i * 2) > 0.96 ? 0.12 : 1;
     }
     for (let i = 0; i < race.flyers.length; i++) {
       const f = race.flyers[i];
@@ -769,6 +835,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const wing = flyerMeshes[i].userData.wing;
       if (wing) wing.rotation.z = Math.sin(race.time * 14 + i) * 0.55;
       flyerMeshes[i].scale.y = 1 + Math.sin(race.time * 14 + i) * 0.08;
+      const flyerEyes = flyerMeshes[i].userData.eyes;
+      if (flyerEyes) flyerEyes.scale.y = Math.sin(race.time * 3 + i) > 0.97 ? 0.15 : 1;
     }
 
     lava.position.y = race.lavaY;
@@ -820,6 +888,13 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       if (r.flail < 0.05) v.starred = false;
       if (r.sliding > 0 && i === 0) burst(r.pos.x, r.pos.y + 0.15, r.pos.z);
+      if (i === 0) {
+        speedLines.visible = !!(r.diving || r.sliding > 0);
+        if (speedLines.visible) {
+          speedLines.position.set(r.pos.x, r.pos.y + 0.9, r.pos.z);
+          speedLines.rotation.y = r.yaw;
+        }
+      }
       const blade = v.accessories && v.accessories.heli && v.accessories.heli.userData.blade;
       if (blade && v.accessories.heli.visible) blade.rotation.y += dt * 14;
       const hsp = Math.hypot(r.vel.x, r.vel.z);
@@ -852,6 +927,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
     }
 
+    const breaking = race.phase === "launch" || race.phase === "results";
+    for (const bit of breakBits) {
+      bit.mesh.visible = breaking;
+      if (!breaking) continue;
+      bit.mesh.position.set(
+        course.ship.x + bit.ox,
+        course.ship.y + bit.oy - race.launchT * bit.fall * 1.6,
+        course.ship.z + bit.oz
+      );
+      bit.mesh.rotation.x += dt * bit.spin;
+      bit.mesh.rotation.y += dt * 0.6;
+    }
     beacon.visible = race.phase !== "launch" && race.phase !== "results" && race.seatCine <= 0;
     dressing.update(race, dt);
     const skyNow = zoneSky(race.zoneId || "meadow");

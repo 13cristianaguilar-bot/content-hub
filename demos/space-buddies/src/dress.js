@@ -1,12 +1,12 @@
 import * as THREE from "three";
 
 const ZONE_SKY = {
-  meadow: { top: 0x5cc8ff, mid: 0xc8f4ff, fog: 0xb7ecff, bot: 0x8ed7b0, near: 36, far: 130 },
-  canyon: { top: 0xff9a62, mid: 0xffd0a4, fog: 0xffc194, bot: 0xff8a4a, near: 26, far: 100 },
-  sky: { top: 0x7ecbff, mid: 0xeaf8ff, fog: 0xd4f2ff, bot: 0xb7e4ff, near: 34, far: 140 },
-  ice: { top: 0xd9f3ff, mid: 0xf7fbff, fog: 0xd7eefe, bot: 0xc5e8ff, near: 28, far: 120 },
-  climb: { top: 0xffc56a, mid: 0xffe6b0, fog: 0xffdf9e, bot: 0xffb45a, near: 30, far: 110 },
-  ship: { top: 0x8fd4ff, mid: 0xfff3d4, fog: 0xd5eeff, bot: 0xb7dcff, near: 40, far: 150 },
+  meadow: { top: 0x5cc8ff, mid: 0x9fe0ff, fog: 0x8fd4f2, bot: 0x6fbf8a, near: 72, far: 230 },
+  canyon: { top: 0xff7a3a, mid: 0xffb07a, fog: 0xff9a62, bot: 0xc44820, near: 64, far: 200 },
+  sky: { top: 0x7ecbff, mid: 0xc8eeff, fog: 0xb7e4ff, bot: 0x8ec8f0, near: 78, far: 250 },
+  ice: { top: 0xc5ecff, mid: 0xe7f6ff, fog: 0xb7ddf8, bot: 0x6eb6ef, near: 70, far: 230 },
+  climb: { top: 0xffc56a, mid: 0xffe0a0, fog: 0xffcf86, bot: 0xe09030, near: 68, far: 210 },
+  ship: { top: 0x8fd4ff, mid: 0xffe7b0, fog: 0xc8e4ff, bot: 0x8ec0f0, near: 80, far: 240 },
 };
 
 export function zoneSky(id) {
@@ -180,9 +180,9 @@ export function buildDressing(scene, course, gradientMap) {
     d.scale.set(1, 0.8 + (i % 3) * 0.25, 1);
   });
   inst(lavaBlob, lavaMat, picks.canyon, (d, t, i) => {
-    d.position.set(t.x, t.y - 1.6, t.z);
+    d.position.set(t.x + (t.col > 0 ? 0.8 : -0.8), t.y - 0.2, t.z);
     d.rotation.set(0, i, 0);
-    d.scale.set(1.4, 0.45, 1.1);
+    d.scale.set(1.1, 0.55, 0.9);
   });
 
   inst(balloon, makeToon(0xff8fd1, gradientMap), picks.sky.filter((_, i) => i % 3 === 0), (d, t, i) => {
@@ -223,6 +223,58 @@ export function buildDressing(scene, course, gradientMap) {
     d.rotation.set(0, 0, 0);
     d.scale.set(1, 1, 1);
   });
+
+  const hillTint = { meadow: 0x3c9a48, canyon: 0x5c2a24, sky: 0x7ea6d0, ice: 0x3d8fd4, climb: 0xb86a28, ship: 0xe2b878 };
+  const hillItems = [];
+  const stations = course.stations || [];
+  for (let i = 0; i < stations.length; i += 12) {
+    const st = stations[i];
+    if (!st || st.gap) continue;
+    for (let layer = 0; layer < 2; layer++) {
+      for (const side of [-1, 1]) {
+        const dist = (layer === 0 ? 15 : 28) + hash(i + layer * 11 + side) * 7;
+        const h = (layer === 0 ? 5 : 10) + hash(i + 4 + layer) * 7;
+        hillItems.push({
+          x: st.x + side * dist,
+          y: st.y - 1.5,
+          z: st.z + (hash(i + layer + 6) - 0.5) * 10,
+          sx: 3.4 + hash(i + layer) * 4.5,
+          sy: h,
+          sz: 3.2 + hash(i + 8) * 3.5,
+          color: hillTint[st.zone] || 0x7fd88a,
+        });
+      }
+    }
+  }
+  const hillMesh = inst(new THREE.ConeGeometry(1, 1.7, 6), makeToon(0xffffff, gradientMap), hillItems, (d, item) => {
+    d.position.set(item.x, item.y + item.sy * 0.55, item.z);
+    d.rotation.set(0, item.sx, 0);
+    d.scale.set(item.sx, item.sy, item.sz);
+  });
+  const mesas = hillItems.filter((_, i) => i % 3 === 0);
+  inst(new THREE.CylinderGeometry(1, 1.2, 0.55, 6), makeToon(0xffffff, gradientMap), mesas, (d, item) => {
+    d.position.set(item.x, item.y + item.sy * 0.35, item.z);
+    d.rotation.set(0, item.sx, 0);
+    d.scale.set(item.sx * 1.25, 1.4, item.sz * 1.15);
+  });
+
+  const river = [];
+  for (let i = 0; i < stations.length; i += 3) {
+    const st = stations[i];
+    if (!st || st.zone !== "canyon" || st.gap) continue;
+    river.push({ x: st.x + st.half - 0.2, y: st.y - 0.05, z: st.z });
+    river.push({ x: st.x - st.half + 0.2, y: st.y - 0.05, z: st.z });
+  }
+  const riverMesh = inst(
+    new THREE.BoxGeometry(2.1, 0.35, 2.4),
+    new THREE.MeshBasicMaterial({ color: 0xff6a12 }),
+    river,
+    (d, item) => {
+      d.position.set(item.x, item.y, item.z);
+      d.rotation.set(0, 0, 0);
+      d.scale.set(1, 1, 1);
+    }
+  );
 
   const floats = [];
   const floatTint = { meadow: 0x7fd88a, canyon: 0xff7a1a, sky: 0xb7e4ff, ice: 0xd7f3ff, climb: 0xffc56a, ship: 0xfff6e5 };
@@ -285,10 +337,24 @@ export function buildDressing(scene, course, gradientMap) {
         });
         floatMesh.instanceMatrix.needsUpdate = true;
       }
+      if (riverMesh) {
+        river.forEach((item, i) => {
+          const bub = 1 + Math.sin(time * 4.5 + item.z * 0.35) * 0.18;
+          dummy.position.set(item.x, item.y + Math.sin(time * 3 + i) * 0.06, item.z);
+          dummy.rotation.set(0, 0, 0);
+          dummy.scale.set(bub, 0.7 + bub * 0.4, bub);
+          dummy.updateMatrix();
+          riverMesh.setMatrixAt(i, dummy.matrix);
+        });
+        riverMesh.instanceMatrix.needsUpdate = true;
+      }
+      void hillMesh;
       const p = race.player;
       const zone = race.zoneId || "meadow";
       const tint = zone === "canyon" ? 0xff7a1a : zone === "ice" ? 0xf4fbff : zone === "sky" ? 0xffffff : zone === "climb" ? 0xffd23f : 0xfff6c8;
       points.material.color.setHex(tint);
+      points.material.size = zone === "ice" ? 0.28 : zone === "canyon" ? 0.22 : 0.16;
+      points.material.opacity = zone === "ice" ? 0.55 + Math.abs(Math.sin(time * 7)) * 0.4 : 0.85;
       const wind = zone === "sky" ? 4 : zone === "canyon" ? 0.4 : 0.8;
       for (let i = 0; i < N; i++) {
         const s = seeds[i];

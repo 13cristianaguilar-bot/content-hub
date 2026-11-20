@@ -210,7 +210,7 @@ function knock(race, r, ix, iz, iy) {
   r.knockCd = race.cfg.knockCooldown;
   r.sliding = 0;
   race.events.push({ t: "bump", id: r.id, big: true });
-  if (r.isPlayer) race.shake = Math.max(race.shake, 0.45);
+  if (r.isPlayer) race.shake = Math.max(race.shake, 0.72);
 }
 
 function findRespawnTile(race, cp) {

@@ -336,10 +336,10 @@ function handleEvents() {
     else if (e.t === "go") audio.play("go", 0.6, 0.05);
     else if (e.t === "jump" && e.id === 0) audio.play("jump", 0.4, 0.05);
     else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
-    else if (e.t === "bump" && (e.id === 0 || e.big)) {
-      audio.play("bump", e.id === 0 ? 0.5 : 0.28, 0.09);
-      if (e.id === 0 && e.big) hitStop = 0.07;
-    } else if (e.t === "dive" && e.id === 0) audio.play("ui_tap", 0.35, 0.05);
+    else if (e.t === "bump") {
+      audio.play("bump", e.id === 0 ? 0.5 : 0.22, 0.06);
+      if (e.id === 0 && e.big) hitStop = 0.08;
+    } else if (e.t === "dive" && e.id === 0) audio.play("jump", 0.28, 0.04);
     else if (e.t === "crack") cracked = true;
     else if (e.t === "seat") {
       audio.play("seat", 0.5, 0.02);
@@ -351,11 +351,16 @@ function handleEvents() {
       if (e.id === 0) showToast("SEAT " + (e.seat + 1) + " LOCKED");
     } else if (e.t === "lastseat") audio.play("last", 0.7, 0.2);
     else if (e.t === "launch") audio.play("launch", 0.65, 0.2);
-    else if (e.t === "escaped") audio.play("escaped", 0.6, 0.2);
-    else if (e.t === "missed") audio.play("missed", 0.55, 0.2);
+    else if (e.t === "escaped") {
+      audio.play("escaped", 0.7, 0.2);
+      if (audio.flourish) audio.flourish("win");
+    } else if (e.t === "missed") {
+      audio.play("missed", 0.65, 0.2);
+      if (audio.flourish) audio.flourish("miss");
+    }
     else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
     else if (e.t === "zone") showZone(e.name);
-    else if (e.t === "geyser" && e.id === 0) audio.play("bump", 0.35, 0.1);
+    else if (e.t === "geyser") audio.play("bump", e.id === 0 ? 0.4 : 0.18, 0.08);
   }
   if (cracked && crackMute <= 0) {
     audio.play("crack", 0.32, 0.12);

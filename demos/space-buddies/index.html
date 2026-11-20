@@ -507,6 +507,7 @@ button { font-family: inherit; touch-action: manipulation; }
       <div class="planet-map" id="title-map">
         <span class="planet-dot on" data-planet="1"><b>1</b><small>MEADOW</small></span>
         <span class="planet-dot" data-planet="2"><b>2</b><small>SKY</small></span>
+        <span class="planet-dot" data-planet="3"><b>3</b><small>STORM</small></span>
       </div>
       <button id="play" type="button" disabled>LOADING</button>
       <p class="blurb">16 buddies. 8 seats. The planet is falling apart.</p>
@@ -524,7 +525,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
   <div id="round-name" hidden><div class="card"><p class="kicker" id="round-kicker">PLANET 1</p><h1 class="banner" id="round-title">ROUND 1</h1><p class="sub" id="round-sub">Qualify</p></div></div>
   <div id="pause-menu" hidden><div class="card"><p class="kicker">PAUSED</p><button id="resume" type="button">RESUME</button><button id="restart" type="button">RESTART</button><button id="pause-menu-btn" type="button">MAIN MENU</button></div></div>
-  <div id="planet" hidden><div class="card"><p class="kicker">ESCAPE SHIP</p><h1 class="banner">NEXT PLANET</h1><div class="planet-map" id="planet-map"><span class="planet-dot done" data-planet="1"><b>1</b><small>MEADOW</small></span><span class="planet-dot on" data-planet="2"><b>2</b><small>SKY</small></span></div><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" type="button">LAND</button></div></div>
+  <div id="planet" hidden><div class="card"><p class="kicker">ESCAPE SHIP</p><h1 class="banner">NEXT PLANET</h1><div class="planet-map" id="planet-map"><span class="planet-dot done" data-planet="1"><b>1</b><small>MEADOW</small></span><span class="planet-dot on" data-planet="2"><b>2</b><small>SKY</small></span><span class="planet-dot" data-planet="3"><b>3</b><small>STORM</small></span></div><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" type="button">LAND</button></div></div>
   <div id="result" hidden>
     <div class="card">
       <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
@@ -538,6 +539,6 @@ button { font-family: inherit; touch-action: manipulation; }
     </div>
   </div>
 </div>
-<script src="game.js?v=36"></script>
+<script src="game.js?v=37"></script>
 </body>
 </html>

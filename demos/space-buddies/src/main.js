@@ -78,6 +78,11 @@ const PLANS = [
     { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: 300, finishZ: 350, gate: { x: 0, z: 350, rx: 10, rz: 8, y: 8 } },
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 250, ship: true },
   ],
+  [
+    { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, startZ: 22, kind: "survival" },
+    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, startZ: 176, kind: "crown", crown: { x: 0, z: 210, y: 5.6, r: 3.4 } },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 22, ship: true },
+  ],
 ];
 function currentPlan() {
   return PLANS[(planet - 1) % PLANS.length][roundIndex];
@@ -193,8 +198,10 @@ function begin() {
 function applyRound() {
   const p = currentPlan();
   race.shipRound = !!p.ship;
-  race.finishZ = p.ship ? null : p.finishZ;
-  race.gate = p.ship ? null : (p.gate || null);
+  race.kind = p.kind || (p.ship ? "ship" : "gate");
+  race.crown = p.crown ? { ...p.crown } : null;
+  race.finishZ = p.ship || p.kind === "survival" || p.kind === "crown" ? null : p.finishZ;
+  race.gate = p.ship || p.kind === "survival" || p.kind === "crown" ? null : (p.gate || null);
   race.qualifyN = p.ship ? 0 : p.qualify;
   race.qualCount = 0;
   race.phase = "countdown";

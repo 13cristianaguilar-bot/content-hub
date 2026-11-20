@@ -798,6 +798,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   lava.rotation.x = -Math.PI / 2;
   lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
   scene.add(lava);
+  const crownMesh = new THREE.Mesh(
+    new THREE.ConeGeometry(0.28, 0.36, 5),
+    new THREE.MeshBasicMaterial({ color: 0xffd23f })
+  );
+  crownMesh.visible = false;
+  scene.add(crownMesh);
   if (course.crater) {
     const glow = new THREE.Mesh(
       new THREE.CircleGeometry(course.crater.r * 1.35, 20),
@@ -1502,6 +1508,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
     lava.position.y = race.lavaY;
     if (lava.material.uniforms && lava.material.uniforms.uTime) lava.material.uniforms.uTime.value = race.time || 0;
+    if (race.kind === "crown" && race.crown && race.phase === "race") {
+      crownMesh.visible = true;
+      crownMesh.position.set(race.crown.x, (race.crown.y || 0) + 2.2 + Math.sin((race.time || 0) * 3) * 0.12, race.crown.z);
+      crownMesh.rotation.y = race.time || 0;
+    } else crownMesh.visible = false;
     for (let i = 0; i < bubbles.length; i++) {
       const b = bubbles[i];
       const rise = ((race.time * b.userData.speed + b.userData.phase) % 2.4);

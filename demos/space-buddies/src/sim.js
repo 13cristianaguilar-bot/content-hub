@@ -123,6 +123,8 @@ export function createRace(course, cfg, seed = 1) {
     crates: (course.crateSpawns || []).map((c) => ({ x: c.x, y: c.y, z: c.z, vx: 0, vz: 0 })),
     finishZ: null,
     shipRound: false,
+    kind: "gate",
+    crown: null,
     qualifyN: 0,
     qualCount: 0,
     shake: 0,
@@ -1230,8 +1232,57 @@ function inFinishGate(race, r) {
   return race.finishZ != null && r.pos.z >= race.finishZ && Math.abs(r.pos.x) < 16;
 }
 
+function finishRound(race) {
+  race.phase = "results";
+  race.result = race.player.qualified ? "qualified" : "out";
+  if (!race.player.qualified) race.player.seated = false;
+  race.events.push({ t: race.player.qualified ? "roundwin" : "eliminated" });
+}
+
+function checkSurvival(race) {
+  if (race.kind !== "survival" || race.phase !== "race") return;
+  const alive = race.racers.filter((r) => !r.eliminated && !r.qualified);
+  if (alive.length > race.qualifyN || alive.length === 0) return;
+  for (const r of alive) {
+    r.qualified = true;
+    race.qualCount++;
+    race.events.push({ t: "qualify", id: r.id });
+  }
+  finishRound(race);
+}
+
+function checkCrown(race, dt) {
+  if (race.kind !== "crown" || race.phase !== "race" || !race.crown) return;
+  const c = race.crown;
+  let holder = null;
+  let best = c.r * c.r;
+  for (const r of race.racers) {
+    if (r.eliminated || r.qualified) continue;
+    const dx = r.pos.x - c.x;
+    const dz = r.pos.z - c.z;
+    const d = dx * dx + dz * dz;
+    if (d <= best && Math.abs(r.pos.y - (c.y || 0)) < 3.2) {
+      best = d;
+      holder = r;
+    }
+  }
+  race.crownHolder = holder ? holder.id : -1;
+  for (const r of race.racers) {
+    if (r === holder) r.crownT = (r.crownT || 0) + dt;
+    else r.crownT = Math.max(0, (r.crownT || 0) - dt * 0.35);
+    if ((r.crownT || 0) >= 5 && !r.qualified && !r.eliminated) {
+      r.qualified = true;
+      r.crownT = 0;
+      race.qualCount++;
+      race.events.push({ t: "qualify", id: r.id });
+    }
+  }
+  if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) finishRound(race);
+}
+
 function checkQualify(race) {
   if (race.shipRound || race.phase !== "race") return;
+  if (race.kind === "survival" || race.kind === "crown") return;
   if (!race.gate && race.finishZ == null) return;
   for (const r of race.racers) {
     if (r.qualified || r.eliminated || r.seated) continue;
@@ -1240,12 +1291,7 @@ function checkQualify(race) {
     race.qualCount++;
     race.events.push({ t: "qualify", id: r.id });
   }
-  if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) {
-    race.phase = "results";
-    race.result = race.player.qualified ? "qualified" : "out";
-    if (!race.player.qualified) race.player.seated = false;
-    race.events.push({ t: race.player.qualified ? "roundwin" : "eliminated" });
-  }
+  if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) finishRound(race);
 }
 
 function board(race) {
@@ -1389,7 +1435,15 @@ export function step(race, dt, input) {
     enemies(race, dt);
     board(race);
     shoveCrates(race);
+    if (race.kind === "survival" && race.phase === "race") {
+      const gust = Math.sin(race.time * 0.7) * 6;
+      for (const r of race.racers) {
+        if (!r.eliminated && !r.seated) r.vel.x += gust * dt;
+      }
+    }
     checkQualify(race);
+    checkSurvival(race);
+    checkCrown(race, dt);
     const playerZone = zoneAt(race, race.player.pos.z);
     if (playerZone && playerZone !== race.zoneId) {
       race.zoneId = playerZone;

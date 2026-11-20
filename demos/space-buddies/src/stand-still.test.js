@@ -151,4 +151,39 @@ assert(moved >= 8, "holding forward for 5s on the crowded ramp only moved " + mo
 assert(rampPush.player.qualified === false, "pushing through the ramp crowd counted as the finish");
 void beforeZ;
 
+const survival = fresh();
+survival.phase = "race";
+survival.kind = "survival";
+survival.qualifyN = 8;
+survival.gate = null;
+survival.finishZ = null;
+let marked = 0;
+for (const r of survival.racers) {
+  if (!r.isPlayer && marked < 8) {
+    r.eliminated = true;
+    marked++;
+  }
+}
+step(survival, dt, idle);
+console.log("survival", survival.result, "qual", survival.player.qualified, "count", survival.qualCount);
+assert(survival.player.qualified === true, "a survivor was not qualified when eight remained");
+assert(survival.phase === "results", "survival did not end when the quota was the field");
+
+const crown = fresh();
+crown.phase = "race";
+crown.kind = "crown";
+crown.qualifyN = 1;
+crown.gate = null;
+crown.finishZ = null;
+crown.crown = { x: crown.player.pos.x, y: crown.player.pos.y, z: crown.player.pos.z, r: 2.5 };
+for (const r of crown.racers) {
+  if (!r.isPlayer) {
+    r.pos.x = 90;
+    r.pos.z = -40;
+  }
+}
+for (let i = 0; i < 6 * 60; i++) step(crown, dt, idle);
+console.log("crown", crown.result, "qual", crown.player.qualified, "hold", (crown.player.crownT || 0).toFixed(2));
+assert(crown.player.qualified === true, "holding the crown for 5s did not qualify");
+
 console.log("stand-still tests passed");

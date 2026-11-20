@@ -1,5 +1,5 @@
 import { COLORS, resolveConfig } from "./config.js";
-import { createCourse, groundAt } from "./course.js";
+import { createCourse, groundAt, courseScale } from "./course.js";
 import { recordRun } from "./board.js";
 import { createRace, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
@@ -70,21 +70,23 @@ let alive = null;
 let paused = false;
 let escWas = false;
 let stepMute = 0;
+const Z = (z) => z * courseScale(cfg.quick);
+const gate = (z, y, rx) => ({ x: 0, z: Z(z), rx: rx || 5, rz: 1.5, y });
 const PLANS = [
   [
-    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, startZ: 22, finishZ: 148, gate: { x: 0, z: 148, rx: 12, rz: 8, y: 0.25 } },
-    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, startZ: 156, finishZ: 232, gate: { x: 0, z: 232, rx: 12, rz: 8, y: 5.2 } },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 22, ship: true },
+    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, startZ: Z(22), finishZ: Z(158), gate: gate(158, 0.25, 5) },
+    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, startZ: Z(168), finishZ: Z(236), gate: gate(236, 5.2, 5) },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: Z(22), ship: true },
   ],
   [
-    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, startZ: 176, finishZ: 250, gate: { x: 0, z: 250, rx: 14, rz: 8, y: 3.3 } },
-    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: 300, finishZ: 350, gate: { x: 0, z: 350, rx: 10, rz: 8, y: 8 } },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 250, ship: true },
+    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, startZ: Z(176), finishZ: Z(258), gate: gate(258, 3.3, 5.5) },
+    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: Z(300), finishZ: Z(356), gate: gate(356, 8, 4.5) },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: Z(250), ship: true },
   ],
   [
-    { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, startZ: 22, kind: "survival" },
-    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, startZ: 176, kind: "crown", crown: { x: 0, z: 210, y: 5.6, r: 3.4 } },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 22, ship: true },
+    { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, startZ: Z(22), kind: "survival" },
+    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, startZ: Z(176), kind: "crown", crown: { x: 0, z: Z(210), y: 5.6, r: 3.4 } },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: Z(22), ship: true },
   ],
 ];
 function currentPlan() {
@@ -785,6 +787,7 @@ function frame(now) {
     if (world.setPost && params.get("post") !== "1") world.setPost(false);
   }
   if (window.__sbOverview) raw.overview = window.__sbOverview;
+  race.interp = acc;
   try {
     world.update(race, dt, raw);
     world.render();

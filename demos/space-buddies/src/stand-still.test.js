@@ -62,8 +62,12 @@ finisher.finishZ = 400;
 finisher.qualifyN = 12;
 finisher.phase = "race";
 finisher.qualCount = 11;
-finisher.player.pos.z = 401;
+finisher.gate = { x: 0, z: 400, rx: 5, rz: 1.5, y: 1 };
+finisher.player.pos.z = 399.2;
 finisher.player.pos.y = 1;
+finisher.player.vel.z = 40;
+finisher.player.grounded = false;
+finisher.player.ungroundT = 0.2;
 finisher.player.grounded = true;
 step(finisher, dt, idle);
 console.log("finish-cross", finisher.result, "qual", finisher.player.qualified);
@@ -125,7 +129,7 @@ function clumpOnCanyonRamp() {
     r.flail = 0;
     r.grabT = 0;
     r.pos.x = 8 + (col - 1.5) * 0.55;
-    r.pos.z = 97 + row * 0.55;
+    r.pos.z = 160 + row * 0.55;
     r.pos.y = 0.9;
     r.vel.x = r.vel.y = r.vel.z = 0;
     r.grounded = true;
@@ -185,5 +189,65 @@ for (const r of crown.racers) {
 for (let i = 0; i < 6 * 60; i++) step(crown, dt, idle);
 console.log("crown", crown.result, "qual", crown.player.qualified, "hold", (crown.player.crownT || 0).toFixed(2));
 assert(crown.player.qualified === true, "holding the crown for 5s did not qualify");
+
+function applyPlan(race, plan) {
+  race.shipRound = !!plan.ship;
+  race.kind = plan.kind || (plan.ship ? "ship" : "gate");
+  race.crown = plan.crown ? { ...plan.crown } : null;
+  race.finishZ = plan.ship || plan.kind === "survival" || plan.kind === "crown" ? null : plan.finishZ;
+  race.gate = plan.ship || plan.kind === "survival" || plan.kind === "crown" ? null : plan.gate;
+  race.qualifyN = plan.ship ? 0 : plan.qualify;
+  race.phase = "countdown";
+  race.time = 0;
+  race.racers.forEach((r, i) => {
+    r.qualified = false;
+    r.seated = false;
+    r.eliminated = false;
+    r.useAI = !r.isPlayer;
+    r.pos.x = ((i % 5) - 2) * 1.7;
+    r.pos.z = plan.startZ + Math.floor(i / 5) * 1.2;
+    r.pos.y = 1;
+    r.vel.x = r.vel.y = r.vel.z = 0;
+    r.grounded = true;
+    r.lastSafe = { x: r.pos.x, y: 1, z: r.pos.z };
+    r.wp = 0;
+  });
+}
+
+const roundTypes = [
+  { name: "round-gate", qualify: 12, startZ: 22, finishZ: 158, gate: { x: 0, z: 158, rx: 5, rz: 1.5, y: 0.25 } },
+  { name: "round-ship", qualify: 8, startZ: 22, ship: true },
+  { name: "round-survival", qualify: 8, startZ: 22, kind: "survival" },
+  { name: "round-crown", qualify: 8, startZ: 176, kind: "crown", crown: { x: 0, z: 210, y: 5.6, r: 3.4 } },
+];
+for (const plan of roundTypes) {
+  standStill(plan.name, (race) => applyPlan(race, plan));
+}
+
+const seatThieves = fresh();
+applyPlan(seatThieves, { startZ: 22, ship: true });
+seatThieves.phase = "race";
+seatThieves.racers.forEach((r) => {
+  if (r.isPlayer) {
+    r.pos.x = 0;
+    r.pos.y = 0;
+    r.pos.z = 22;
+    r.useAI = false;
+    r.grounded = true;
+  } else {
+    r.pos.x = ship.x;
+    r.pos.y = ship.y;
+    r.pos.z = ship.z + (cfg.boardZMin + cfg.boardZMax) / 2;
+    r.grounded = true;
+    r.useAI = false;
+  }
+});
+for (let i = 0; i < 20; i++) step(seatThieves, dt, idle);
+console.log("ai-seats", seatThieves.result, "seats", seatThieves.seatsFilled, "player", seatThieves.player.seated, seatThieves.player.qualified);
+assert(seatThieves.seatsFilled === 8, "the AIs did not fill the ship");
+assert(seatThieves.player.seated === false, "a far player took a seat the AIs filled");
+assert(seatThieves.player.qualified === false, "a far player qualified because the AIs filled the ship");
+assert(seatThieves.result !== "escaped", "a far player escaped because the AIs filled the ship");
+assert(seatThieves.result === "out", "filling the ship without the player should eliminate, got " + seatThieves.result);
 
 console.log("stand-still tests passed");

@@ -202,9 +202,15 @@ export function groundAt(course, x, z) {
   return best;
 }
 
+export const COURSE_STRETCH = 1.65;
+
+export function courseScale(quick) {
+  return (quick ? 0.42 : 1) * COURSE_STRETCH;
+}
+
 export function createCourse(cfg) {
   const quick = !!cfg.quick;
-  const S = quick ? 0.42 : 1;
+  const S = courseScale(quick);
   const zz = (z) => z * S;
   const len = zz(400);
   const zones = zonesFor(len);
@@ -375,12 +381,15 @@ export function createCourse(cfg) {
   const tiles = [];
   for (const pad of floors) {
     if (pad.rx < 6) continue;
-    for (let k = 0; k < 6; k++) {
+    for (let k = 0; k < 3; k++) {
       const a = rnd() * Math.PI * 2;
+      const ox = Math.cos(a) * 0.9;
+      const oz = Math.sin(a) * 0.82;
+      if (ox * ox + oz * oz < 0.62) continue;
       tiles.push({
-        x: pad.x + Math.cos(a) * pad.rx * 0.85,
+        x: pad.x + ox * pad.rx,
         y: pad.y,
-        z: pad.z + Math.sin(a) * pad.rz * 0.75,
+        z: pad.z + oz * pad.rz,
         zone: pad.zone,
         col: Math.cos(a) > 0 ? 4 : -4,
         row: Math.floor(pad.z),

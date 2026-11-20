@@ -13,6 +13,10 @@ export function createInput(root) {
   let stickY = 0;
   let looking = false;
   const radius = 54;
+  const ZOOM_KEY = "space-buddies-zoom";
+  let zoom = 1;
+  try { zoom = Math.min(12 / 8.6, Math.max(5 / 8.6, Number(localStorage.getItem(ZOOM_KEY)) || 1)); } catch (err) { /* private mode */ }
+  let pinchDist = 0;
 
   function zone(e) {
     const t = e.target;
@@ -61,6 +65,17 @@ export function createInput(root) {
     if (p.kind === "move") placeStick(p.ox, p.oy, e.clientX, e.clientY);
     p.x = e.clientX;
     p.y = e.clientY;
+    const hands = [...pointers.values()];
+    if (hands.length >= 2) {
+      const d = Math.hypot(hands[0].x - hands[1].x, hands[0].y - hands[1].y);
+      if (pinchDist > 8) {
+        zoom = Math.min(12 / 8.6, Math.max(5 / 8.6, zoom * (d / pinchDist)));
+        try { localStorage.setItem(ZOOM_KEY, String(zoom)); } catch (err) { /* ignore */ }
+      }
+      pinchDist = d;
+      lookDx = 0;
+      lookDy = 0;
+    } else pinchDist = 0;
   }
 
   function onUp(e) {
@@ -143,6 +158,7 @@ export function createInput(root) {
       dive: diveEdge,
       grab: grabEdge,
       pause: keys.has("Escape"),
+      zoom,
     };
     lookDx = 0;
     lookDy = 0;

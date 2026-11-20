@@ -88,6 +88,25 @@ export function createAudio() {
     rumbleGain.gain.setTargetAtTime(Math.max(0, Math.min(0.5, value)), ctx.currentTime, 0.2);
   }
 
+  function flourish(kind) {
+    if (!ctx || !master) return;
+    const notes = kind === "win" ? [523, 659, 784, 1046] : [440, 349, 262];
+    notes.forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = kind === "win" ? "triangle" : "sawtooth";
+      osc.frequency.value = freq;
+      const start = ctx.currentTime + i * 0.09;
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.exponentialRampToValueAtTime(kind === "win" ? 0.07 : 0.05, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.32);
+      osc.connect(gain);
+      gain.connect(master);
+      osc.start(start);
+      osc.stop(start + 0.34);
+    });
+  }
+
   function play(name, volume = 0.5, gap = 0.07) {
     if (!ctx || !buffers[name]) return;
     const now = ctx.currentTime;
@@ -102,5 +121,5 @@ export function createAudio() {
     src.start(0);
   }
 
-  return { load, unlock, startBeds, setRumble, play, get ctx() { return ctx; } };
+  return { load, unlock, startBeds, setRumble, play, flourish, get ctx() { return ctx; } };
 }

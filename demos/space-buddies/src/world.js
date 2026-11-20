@@ -2004,15 +2004,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         if (!lead || r.pos.z > lead.pos.z) lead = r;
       }
       const focus = lead || player;
-      const ang = (race.time || 0) * 0.4;
+      const ang = (race.time || 0) * 0.16;
       const floor = groundAtSafe(focus.pos.x, focus.pos.z);
-      const fy = Math.max((floor == null ? focus.pos.y : floor) + 3.2, focus.pos.y + 3.5);
-      const tx = focus.pos.x + Math.sin(ang) * 9;
-      const tz = focus.pos.z - Math.cos(ang) * 9;
-      camera.position.x = damp(camera.position.x, tx, 2.4, dt);
-      camera.position.y = damp(camera.position.y, fy, 2.4, dt);
-      camera.position.z = damp(camera.position.z, tz, 2.4, dt);
-      camera.lookAt(focus.pos.x, focus.pos.y + 1.2, focus.pos.z + 2);
+      const fy = Math.max((floor == null ? focus.pos.y : floor) + 5, focus.pos.y + 4.8);
+      const tx = focus.pos.x + Math.sin(ang) * 12;
+      const tz = focus.pos.z - Math.cos(ang) * 12;
+      camera.position.x = damp(camera.position.x, tx, 4.5, dt);
+      camera.position.y = damp(camera.position.y, fy, 4.5, dt);
+      camera.position.z = damp(camera.position.z, tz, 4.5, dt);
+      camera.lookAt(focus.pos.x, focus.pos.y + 1.1, focus.pos.z);
       return;
     }
     if (dragging) {

@@ -526,7 +526,7 @@ function updateHud(dt) {
     else coinNum.textContent = String(coinN);
   }
 
-  const showTutor = race.phase === "race" && race.zoneId === "meadow" && race.time < 8 && !cfg.auto;
+  const showTutor = !race.player.seated && race.phase === "race" && race.zoneId === "meadow" && race.time < 8 && !cfg.auto;
   tutor.hidden = !showTutor;
   if (showTutor) {
     tutor.textContent = race.time < 2.6 ? "DRAG THE LEFT SIDE TO RUN" : race.time < 5.2 ? "DRAG THE RIGHT SIDE TO LOOK" : "JUMP AND DIVE";

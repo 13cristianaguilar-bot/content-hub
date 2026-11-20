@@ -85,6 +85,19 @@ function currentPlan() {
 const dangerEl = document.getElementById("danger");
 
 const audio = createAudio();
+const debugOn = params.get("debug") === "1";
+function reportError(err) {
+  const message = (err && err.stack) || (err && err.message) || String(err);
+  console.error(err);
+  if (!debugOn) return;
+  const box = document.getElementById("debug-error");
+  if (!box) return;
+  box.hidden = false;
+  box.textContent = String(message).slice(0, 700);
+}
+window.addEventListener("error", (event) => reportError(event.error || event.message));
+window.addEventListener("unhandledrejection", (event) => reportError(event.reason));
+window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
 const input = createInput(app);
 const BEST_KEY = "space-buddies-best";
 
@@ -149,6 +162,7 @@ function begin() {
     return;
   }
   started = true;
+  audio.unlock();
   audio.startBeds(cfg.bedGain);
   audio.play("ui_confirm", 0.55, 0);
   title.classList.add("hide");
@@ -160,6 +174,7 @@ function begin() {
   controls.hidden = true;
   tutor.hidden = true;
   window.__sb = { race, cfg, get fps() { return fps; }, campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
+  window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
   applyRound();
   pauseBtn.hidden = false;
   muteBtn.hidden = false;
@@ -167,6 +182,7 @@ function begin() {
 
 function applyRound() {
   const p = currentPlan();
+  race.shipRound = !!p.ship;
   race.finishZ = p.ship ? null : p.finishZ;
   race.qualifyN = p.ship ? 0 : p.qualify;
   race.qualCount = 0;
@@ -189,7 +205,7 @@ function applyRound() {
     r.eliminated = false;
     r.pos.x = ((i % 5) - 2) * 1.7;
     r.pos.z = p.startZ + Math.floor(i / 5) * 1.2;
-    r.pos.y = y + 0.35;
+    r.pos.y = y;
     r.vel.x = 0;
     r.vel.y = 0;
     r.vel.z = 0;
@@ -207,8 +223,13 @@ function applyRound() {
   setTimeout(() => { roundEl.hidden = true; }, 1400);
 }
 
-function openLobby() {
+function armAudio() {
   audio.unlock();
+  audio.startBeds(cfg.bedGain);
+}
+
+function openLobby() {
+  armAudio();
   if (!ready) {
     pending = true;
     playBtn.textContent = "LOADING";
@@ -223,6 +244,8 @@ function openLobby() {
   audio.play("ui_tap", 0.4, 0);
 }
 
+title.addEventListener("pointerdown", armAudio);
+title.addEventListener("touchstart", armAudio, { passive: true });
 playBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   openLobby();
@@ -557,6 +580,7 @@ function handleEvents() {
     else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
     else if (e.t === "zone") showZone(e.name);
     else if (e.t === "geyser") audio.play("bump", e.id === 0 ? 0.4 : 0.18, 0.08);
+    else if (e.t === "error") reportError(e.message);
   }
   if (cracked && crackMute <= 0) {
     audio.play("crack", 0.32, 0.12);
@@ -584,8 +608,12 @@ function frame(now) {
   }
   if (introLeft > 0) {
     introLeft -= dt;
-    world.update(race, dt, { intro: introLeft, lookDx: 0, lookDy: 0, looking: false });
-    world.render();
+    try {
+      world.update(race, dt, { intro: introLeft, lookDx: 0, lookDy: 0, looking: false });
+      world.render();
+    } catch (err) {
+      reportError(err);
+    }
     tutor.hidden = true;
     controls.hidden = true;
     if (introLeft <= 0) controls.hidden = false;
@@ -599,8 +627,12 @@ function frame(now) {
   if (raw.pause && !escWas) togglePause();
   escWas = !!raw.pause;
   if (paused) {
-    world.update(race, 0, raw);
-    world.render();
+    try {
+      world.update(race, 0, raw);
+      world.render();
+    } catch (err) {
+      reportError(err);
+    }
     return;
   }
   let wish = {
@@ -622,7 +654,7 @@ function frame(now) {
     try {
       step(race, STEP, steps === 0 ? wish : { x: wish.x, z: wish.z, jump: false, dive: false, grab: false, holdJump: wish.holdJump });
     } catch (err) {
-      console.error(err);
+      reportError(err);
       acc = 0;
       break;
     }
@@ -646,9 +678,13 @@ function frame(now) {
     world.setDpr(1);
   }
   if (window.__sbOverview) raw.overview = window.__sbOverview;
-  world.update(race, dt, raw);
-  world.render();
-  updateHud(dt);
+  try {
+    world.update(race, dt, raw);
+    world.render();
+    updateHud(dt);
+  } catch (err) {
+    reportError(err);
+  }
 }
 
 window.addEventListener("resize", () => world && world.resize());

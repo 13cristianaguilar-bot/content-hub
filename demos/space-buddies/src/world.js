@@ -280,7 +280,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     toneMapped: false,
     uniforms: { tScene: { value: sceneTarget.texture }, tBloom: { value: bloomTarget.texture } },
     vertexShader: "varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }",
-    fragmentShader: "varying vec2 vUv; uniform sampler2D tScene; uniform sampler2D tBloom; void main(){ vec3 c = texture2D(tScene, vUv).rgb; vec2 o = vec2(0.012, 0.0); vec3 b = texture2D(tBloom, vUv).rgb; b += texture2D(tBloom, vUv + o).rgb; b += texture2D(tBloom, vUv - o).rgb; b += texture2D(tBloom, vUv + o.yx).rgb; b += texture2D(tBloom, vUv - o.yx).rgb; b *= 0.16; c += b; c = c * vec3(1.05, 1.01, 0.96) + vec3(0.015, 0.008, 0.0); float vig = smoothstep(0.92, 0.28, length(vUv - 0.5)); c *= mix(0.78, 1.0, vig); gl_FragColor = vec4(c, 1.0); }",
+    fragmentShader: "varying vec2 vUv; uniform sampler2D tScene; uniform sampler2D tBloom; void main(){ vec3 c = texture2D(tScene, vUv).rgb; vec2 o = vec2(0.022, 0.0); vec3 b = texture2D(tBloom, vUv + o).rgb + texture2D(tBloom, vUv - o).rgb + texture2D(tBloom, vUv + o.yx).rgb + texture2D(tBloom, vUv - o.yx).rgb; b += texture2D(tBloom, vUv + o * 2.0).rgb + texture2D(tBloom, vUv - o * 2.0).rgb; c += b * 0.22; float l = dot(c, vec3(0.2126, 0.7152, 0.0722)); c = clamp(l + (c - l) * 1.08, 0.0, 1.35); gl_FragColor = vec4(c, 1.0); }",
   });
   gradeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), gradeMat));
 
@@ -2072,10 +2072,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   scene.traverse((obj) => {
-    if (!obj.isMesh) return;
-    if (obj.userData.bloom) obj.layers.enable(1);
-    const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-    if (mat && (mat.emissiveIntensity || 0) > 0.3) obj.layers.enable(1);
+    if (obj.isMesh && obj.userData.bloom) obj.layers.enable(1);
   });
   for (const mat of liquids) mat.uniforms.uTime.value = 0;
 

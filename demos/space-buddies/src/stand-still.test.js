@@ -99,4 +99,55 @@ console.log("seat-miss", missed.result, "seated", missed.player.seated);
 assert(missed.player.seated === false, "a miss beside the ship seated the player");
 assert(missed.result === "out", "missing the seat trigger should eliminate, got " + missed.result);
 
+const touchForward = { x: 0, z: 1, jump: false, dive: false, grab: false, holdJump: false };
+const fullCfg = resolveConfig({ seed: 2 });
+const fullCourse = createCourse(fullCfg);
+
+function clumpOnCanyonRamp() {
+  const race = createRace(fullCourse, fullCfg, 2);
+  race.player.useAI = false;
+  race.phase = "race";
+  race.time = 0;
+  race.shipRound = false;
+  race.finishZ = 148;
+  race.qualifyN = 12;
+  race.qualCount = 0;
+  race.gate = { x: 0, z: 148, rx: 12, rz: 8, y: 0.25 };
+  race.racers.forEach((r, i) => {
+    const col = i % 4;
+    const row = Math.floor(i / 4);
+    r.qualified = false;
+    r.eliminated = false;
+    r.seated = false;
+    r.useAI = !r.isPlayer;
+    r.controlLock = 0;
+    r.flail = 0;
+    r.grabT = 0;
+    r.pos.x = 8 + (col - 1.5) * 0.55;
+    r.pos.z = 97 + row * 0.55;
+    r.pos.y = 0.9;
+    r.vel.x = r.vel.y = r.vel.z = 0;
+    r.grounded = true;
+    r.lastSafe = { x: r.pos.x, y: 0.9, z: r.pos.z };
+  });
+  return race;
+}
+
+const canyonStuck = clumpOnCanyonRamp();
+canyonStuck.racers.forEach((r) => { r.useAI = false; });
+const beforeZ = canyonStuck.player.pos.z;
+for (let i = 0; i < 8 * 60; i++) step(canyonStuck, dt, idle);
+console.log("canyon-stuck", canyonStuck.result, "qual", canyonStuck.player.qualified, "z", canyonStuck.player.pos.z.toFixed(1));
+assert(canyonStuck.player.qualified === false, "a player jammed on the canyon ramp was marked qualified");
+assert(canyonStuck.result !== "qualified", "the canyon jam ended the round as a qualify");
+
+const rampPush = clumpOnCanyonRamp();
+const start = { x: rampPush.player.pos.x, z: rampPush.player.pos.z };
+for (let i = 0; i < 5 * 60; i++) step(rampPush, dt, touchForward);
+const moved = Math.hypot(rampPush.player.pos.x - start.x, rampPush.player.pos.z - start.z);
+console.log("ramp-push", "moved", moved.toFixed(2), "z", rampPush.player.pos.z.toFixed(1), "qual", rampPush.player.qualified);
+assert(moved >= 8, "holding forward for 5s on the crowded ramp only moved " + moved.toFixed(2) + "m");
+assert(rampPush.player.qualified === false, "pushing through the ramp crowd counted as the finish");
+void beforeZ;
+
 console.log("stand-still tests passed");

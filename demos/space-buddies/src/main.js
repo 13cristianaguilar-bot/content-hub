@@ -69,13 +69,13 @@ let escWas = false;
 let stepMute = 0;
 const PLANS = [
   [
-    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, startZ: 22, finishZ: 82 },
-    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, startZ: 92, finishZ: 176 },
+    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, startZ: 22, finishZ: 148, gate: { x: 0, z: 148, rx: 12, rz: 8, y: 0.25 } },
+    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, startZ: 156, finishZ: 232, gate: { x: 0, z: 232, rx: 12, rz: 8, y: 5.2 } },
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 22, ship: true },
   ],
   [
-    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, startZ: 176, finishZ: 250 },
-    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: 300, finishZ: 350 },
+    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, startZ: 176, finishZ: 250, gate: { x: 0, z: 250, rx: 14, rz: 8, y: 3.3 } },
+    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: 300, finishZ: 350, gate: { x: 0, z: 350, rx: 10, rz: 8, y: 8 } },
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 250, ship: true },
   ],
 ];
@@ -194,6 +194,7 @@ function applyRound() {
   const p = currentPlan();
   race.shipRound = !!p.ship;
   race.finishZ = p.ship ? null : p.finishZ;
+  race.gate = p.ship ? null : (p.gate || null);
   race.qualifyN = p.ship ? 0 : p.qualify;
   race.qualCount = 0;
   race.phase = "countdown";

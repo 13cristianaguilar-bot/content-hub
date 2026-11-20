@@ -163,10 +163,13 @@ function walkable(tile) {
   return tile && (tile.state === "solid" || tile.state === "cracking");
 }
 
-function canStep(y, nextY, top, step) {
-  if (y < top - step) return false;
-  if (y > top + 1.35 && nextY > top + 0.4) return false;
-  return nextY <= top + 0.28 || y <= top + 0.2;
+function canStep(y, nextY, top) {
+  const feet = Math.min(y, nextY);
+  const climb = top - feet;
+  // About 35 degrees over a pad-length step. Taller than that is a wall.
+  if (climb > 1.2) return false;
+  if (feet > top + 1.6 && nextY > top + 0.5) return false;
+  return true;
 }
 
 function platformSurface(p, x, z) {
@@ -177,7 +180,6 @@ function platformSurface(p, x, z) {
 }
 
 function sampleGround(race, x, z, y, nextY) {
-  const step = race.cfg.stepUp;
   let best = null;
   const plats = race.platforms;
   for (let i = 0; i < plats.length; i++) {
@@ -186,11 +188,11 @@ function sampleGround(race, x, z, y, nextY) {
     const dz = z - p.z;
     if (dx * dx + dz * dz > p.radius * p.radius) continue;
     const top = platformSurface(p, x, z);
-    if (!canStep(y, nextY, top, step + 0.1)) continue;
+    if (!canStep(y, nextY, top)) continue;
     if (!best || top >= best.y) best = { y: top, platformId: i, tile: null };
   }
   const tile = groundAt(race.course, x, z);
-  if (tile && walkable(tile) && canStep(y, nextY, tile.y, step)) {
+  if (tile && walkable(tile) && canStep(y, nextY, tile.y)) {
     if (!best || tile.y >= best.y - 0.02) best = { y: tile.y, platformId: null, tile };
   }
   return best;
@@ -442,7 +444,13 @@ function shoveFree(race, r) {
 
 function integrate(race, r, wish, dt) {
   const cfg = race.cfg;
-  if (r.seated || r.eliminated || r.qualified) return;
+  if (r.seated || r.eliminated) return;
+  if (r.qualified) {
+    r.pos.z += 2.4 * dt;
+    r.vel.x *= 0.8;
+    r.vel.z = 2.4;
+    return;
+  }
   ageLocks(r, dt);
   if (r.controlLock > 0) {
     r.controlLock -= dt;
@@ -781,26 +789,41 @@ function botWish(race, r, dt) {
 function separate(race) {
   const cfg = race.cfg;
   const list = race.racers;
-  const min = cfg.bodyRadius * 2.55;
+  const min = cfg.bodyRadius * 1.7;
   for (let i = 0; i < list.length; i++) {
     const a = list[i];
-    if (a.seated || a.eliminated) continue;
+    if (a.seated || a.eliminated || a.qualified) continue;
     for (let j = i + 1; j < list.length; j++) {
       const b = list[j];
-      if (b.seated || b.eliminated) continue;
+      if (b.seated || b.eliminated || b.qualified) continue;
       let dx = b.pos.x - a.pos.x;
       let dz = b.pos.z - a.pos.z;
       const dy = Math.abs(a.pos.y - b.pos.y);
       if (dy > 1.3) continue;
       let d = Math.hypot(dx, dz);
       if (d < 0.0008) {
-        dx = 0.02;
-        d = 0.02;
+        dx = (i % 2 ? 1 : -1);
+        dz = 0.35;
+        d = Math.hypot(dx, dz);
       }
       if (d >= min) continue;
       const nx = dx / d;
       const nz = dz / d;
-      const push = (min - d) * 0.5;
+      const push = (min - d) * 0.35;
+      const player = a.isPlayer ? a : b.isPlayer ? b : null;
+      if (player) {
+        const other = player === a ? b : a;
+        const side = player === a ? 1 : -1;
+        other.pos.x += nx * side * push * 1.8;
+        other.pos.z += nz * side * push * 1.8;
+        player.pos.x -= nx * side * push * 0.15;
+        player.pos.z -= nz * side * push * 0.15;
+        const slip = -nz * side;
+        const slipZ = nx * side;
+        other.vel.x += slip * 2.2;
+        other.vel.z += slipZ * 2.2;
+        continue;
+      }
       if (a.invuln <= 0) {
         a.pos.x -= nx * push;
         a.pos.z -= nz * push;
@@ -810,24 +833,15 @@ function separate(race) {
         b.pos.z += nz * push;
       }
       const rel = (a.vel.x - b.vel.x) * nx + (a.vel.z - b.vel.z) * nz;
-      if (rel > 1.1 && a.bumpCd <= 0 && b.bumpCd <= 0 && a.invuln <= 0 && b.invuln <= 0) {
-        a.vel.x -= nx * cfg.bumpPush;
-        a.vel.z -= nz * cfg.bumpPush;
-        b.vel.x += nx * cfg.bumpPush;
-        b.vel.z += nz * cfg.bumpPush;
-        a.vel.y = Math.max(a.vel.y, cfg.bumpUp);
-        b.vel.y = Math.max(b.vel.y, cfg.bumpUp);
-        a.grounded = false;
-        b.grounded = false;
-        a.ungroundT = Math.max(a.ungroundT, 0.05);
-        b.ungroundT = Math.max(b.ungroundT, 0.05);
-        a.flail = Math.max(a.flail, 0.28);
-        b.flail = Math.max(b.flail, 0.28);
+      if (rel > 6 && a.bumpCd <= 0 && b.bumpCd <= 0 && a.invuln <= 0 && b.invuln <= 0) {
+        a.vel.x -= nx * cfg.bumpPush * 0.45;
+        a.vel.z -= nz * cfg.bumpPush * 0.45;
+        b.vel.x += nx * cfg.bumpPush * 0.45;
+        b.vel.z += nz * cfg.bumpPush * 0.45;
         a.bumpCd = cfg.bumpCooldown;
         b.bumpCd = cfg.bumpCooldown;
         const who = a.isPlayer ? a.id : b.isPlayer ? b.id : a.id;
         race.events.push({ t: "bump", id: who });
-        if (a.isPlayer || b.isPlayer) race.shake = Math.max(race.shake, 0.18);
       }
     }
   }
@@ -1130,11 +1144,16 @@ function tryGrab(race, r) {
     }
   }
   if (best) {
-    best.vel.x *= 0.15;
-    best.vel.z *= 0.15;
-    if (best.lockImmune <= 0) {
-      best.controlLock = Math.min(1.2, Math.max(best.controlLock, 0.4));
-      best.flail = Math.min(1.2, Math.max(best.flail, 0.45));
+    let nearby = 0;
+    for (const o of race.racers) {
+      if (o !== r && Math.hypot(o.pos.x - r.pos.x, o.pos.z - r.pos.z) < 2.4) nearby++;
+    }
+    const crowd = nearby >= 4;
+    best.vel.x *= crowd ? 0.85 : 0.35;
+    best.vel.z *= crowd ? 0.85 : 0.35;
+    if (!crowd && best.lockImmune <= 0 && !best.isPlayer) {
+      best.controlLock = Math.min(0.6, Math.max(best.controlLock, 0.25));
+      best.flail = Math.min(0.6, Math.max(best.flail, 0.3));
     }
     best.pos.x += (r.pos.x - best.pos.x) * 0.2;
     best.pos.z += (r.pos.z - best.pos.z) * 0.2;
@@ -1196,15 +1215,26 @@ function eliminate(race) {
   race.events.push({ t: "eliminated" });
 }
 
+function inFinishGate(race, r) {
+  if (r.pos.y < -6) return false;
+  const g = race.gate;
+  if (g) {
+    const dx = (r.pos.x - g.x) / (g.rx || 8);
+    const dz = (r.pos.z - g.z) / (g.rz || 6);
+    return dx * dx + dz * dz <= 1 && Math.abs(r.pos.y - (g.y == null ? r.pos.y : g.y)) < 2.6;
+  }
+  return race.finishZ != null && r.pos.z >= race.finishZ && Math.abs(r.pos.x) < 16;
+}
+
 function checkQualify(race) {
-  if (race.shipRound || !race.finishZ || race.phase !== "race") return;
+  if (race.shipRound || race.phase !== "race") return;
+  if (!race.gate && race.finishZ == null) return;
   for (const r of race.racers) {
     if (r.qualified || r.eliminated || r.seated) continue;
-    if (r.pos.z >= race.finishZ && r.pos.y > -6) {
-      r.qualified = true;
-      race.qualCount++;
-      race.events.push({ t: "qualify", id: r.id });
-    }
+    if (!inFinishGate(race, r)) continue;
+    r.qualified = true;
+    race.qualCount++;
+    race.events.push({ t: "qualify", id: r.id });
   }
   if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) {
     race.phase = "results";

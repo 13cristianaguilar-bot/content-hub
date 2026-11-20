@@ -798,6 +798,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   lava.rotation.x = -Math.PI / 2;
   lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
   scene.add(lava);
+  let trimTick = 0;
   const crownMesh = new THREE.Mesh(
     new THREE.ConeGeometry(0.28, 0.36, 5),
     new THREE.MeshBasicMaterial({ color: 0xffd23f })
@@ -1525,7 +1526,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       shimmers[i].rotation.z = Math.sin(race.time + i) * 0.15;
       shimmers[i].lookAt(camera.position);
     }
-    if (starMesh) {
+    trimTick = (trimTick + 1) % 2;
+    if (starMesh && trimTick === 0) {
       const spots = starMesh.userData.spots || [];
       const dummy = new THREE.Object3D();
       for (let i = 0; i < spots.length; i++) {
@@ -1537,7 +1539,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       starMesh.instanceMatrix.needsUpdate = true;
     }
-    if (balloonMesh) {
+    if (balloonMesh && trimTick === 0) {
       const spots = balloonMesh.userData.spots || [];
       const dummy = new THREE.Object3D();
       for (let i = 0; i < spots.length; i++) {

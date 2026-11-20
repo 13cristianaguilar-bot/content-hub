@@ -1,5 +1,6 @@
 import { COLORS, resolveConfig } from "./config.js";
 import { createCourse, groundAt } from "./course.js";
+import { recordRun } from "./board.js";
 import { createRace, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
@@ -558,6 +559,13 @@ function updateHud(dt) {
       resultSub.textContent = "SO CLOSE";
       againBtn.textContent = "TRY AGAIN";
     }
+    recordRun({
+      planet,
+      result: kind,
+      time: Math.round((race.time || 0) * 10) / 10,
+      coins: race.coins || 0,
+      at: new Date().toISOString(),
+    });
     resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS · PLANETS " + career.planets;
   }
   if (!showEnd) shownResult = false;
@@ -724,6 +732,7 @@ function frame(now) {
   }
 }
 
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 window.addEventListener("resize", () => world && world.resize());
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && audio.ctx) audio.ctx.suspend();

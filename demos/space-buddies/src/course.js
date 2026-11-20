@@ -1,14 +1,21 @@
 // Open kingdoms. Each zone is a wide plaza or a set of islands with
 // three routes, not a single race ribbon.
 
-const PALETTE = {
-  meadow: [0.38, 0.8, 0.36],
-  canyon: [0.18, 0.12, 0.13],
-  sky: [0.35, 0.78, 1],
-  ice: [0.72, 0.94, 1],
-  climb: [1, 0.55, 0.18],
-  ship: [0.95, 0.86, 0.62],
+const CANDY = {
+  meadow: { a: [0.4, 0.96, 0.58], b: [0.7, 0.98, 0.32], rim: [0.08, 0.4, 0.22] },
+  canyon: { a: [1, 0.46, 0.36], b: [1, 0.88, 0.62], rim: [0.5, 0.14, 0.12] },
+  sky: { a: [1, 0.5, 0.76], b: [0.72, 0.5, 1], rim: [0.4, 0.16, 0.58] },
+  ice: { a: [0.2, 0.82, 1], b: [0.55, 0.95, 1], rim: [0.08, 0.28, 0.85] },
+  climb: { a: [1, 0.84, 0.2], b: [1, 0.46, 0.14], rim: [0.62, 0.16, 0.04] },
+  ship: { a: [1, 0.76, 0.34], b: [1, 0.52, 0.26], rim: [0.48, 0.2, 0.05] },
 };
+
+function floorColor(zone, t, x, z) {
+  const c = CANDY[zone] || CANDY.meadow;
+  if (t > 0.58) return c.rim;
+  const alt = Math.sin(x * 0.31 + z * 0.23) > 0;
+  return alt ? c.b : c.a;
+}
 
 function lerp(a, b, t) {
   return a + (b - a) * t;
@@ -36,8 +43,7 @@ function zoneAt(zones, z) {
 }
 
 function discGeometry(cx, y, cz, rx, rz, zone, hex) {
-  const col = PALETTE[zone] || PALETTE.meadow;
-  const rings = 3;
+  const rings = 4;
   const seg = 18;
   const positions = [];
   const colors = [];
@@ -45,36 +51,15 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
   const stride = seg + 1;
   for (let r = 0; r <= rings; r++) {
     const t = r / rings;
-    const drop = t > 0.78 ? (t - 0.78) * (t - 0.78) * 10 : 0;
+    const drop = t > 0.58 ? (t - 0.58) * 1.35 : 0;
     for (let s = 0; s <= seg; s++) {
       const a = (s / seg) * Math.PI * 2;
-      const wob = 1 + Math.sin(a * 3 + cx * 0.2 + cz * 0.05) * 0.07;
-      positions.push(cx + Math.cos(a) * rx * t * wob, y - drop, cz + Math.sin(a) * rz * t * wob);
-      const crack = zone === "canyon" && Math.abs(Math.sin(a * 5 + r * 2.2 + cx)) > 0.82;
-      const rim = hex && t > 0.72;
-      if (crack) colors.push(1, 0.42, 0.06);
-      else if (rim) colors.push(0.15, 0.35, 0.75);
-      else if (hex) colors.push(0.85, 0.97, 1);
-      else if (zone === "canyon") {
-        const curb = t > 0.62;
-        if (curb) colors.push(0.42, 0.16, 0.09);
-        else colors.push(0.98, 0.91, 0.72);
-      } else if (zone === "meadow") {
-        const wx = cx + Math.cos(a) * rx * t;
-        const wz = cz + Math.sin(a) * rz * t;
-        const dx = wx - cx;
-        const dz = wz - cz;
-        const n = 0.5 + 0.5 * Math.sin(wx * 0.47 + wz * 0.29);
-        const dirt = (Math.abs(dx) < 5.4 && dz < 3) || (dx < -6 && dx > -18 && dz > -10 && dz < 16) || (dx > 5 && dx < 17 && dz > -8 && dz < 18);
-        if (t > 0.8) colors.push(0.42, 0.26, 0.14);
-        else if (dirt) colors.push(0.38 + n * 0.06, 0.26 + n * 0.04, 0.12);
-        else colors.push(0.1 + n * 0.1, 0.55 + n * 0.22, 0.12 + n * 0.05);
-      }
-      else if (zone === "ice") colors.push(0.62, 0.9, 1);
-      else {
-        const shade = t > 0.7 ? 0.42 : 1 - t * 0.08;
-        colors.push(col[0] * shade, col[1] * shade, col[2] * shade);
-      }
+      const wob = 1 + Math.sin(a * 3 + cx * 0.2 + cz * 0.05) * 0.05;
+      const wx = cx + Math.cos(a) * rx * t * wob;
+      const wz = cz + Math.sin(a) * rz * t * wob;
+      positions.push(wx, y - drop, wz);
+      const paint = floorColor(zone, hex ? Math.max(t, t > 0.45 ? 0.7 : t) : t, wx, wz);
+      colors.push(paint[0], paint[1], paint[2]);
     }
   }
   for (let r = 0; r < rings; r++) {
@@ -92,7 +77,7 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
 }
 
 function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
-  const col = PALETTE[zone] || PALETTE.meadow;
+  const candy = CANDY[zone] || CANDY.meadow;
   const steps = 10;
   const positions = [];
   const colors = [];
@@ -106,22 +91,20 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
     const t = i / steps;
     const x = lerp(x0, x1, t);
     const z = lerp(z0, z1, t);
-    const wob = Math.sin(t * Math.PI) * 0.4;
-    for (let side = -1; side <= 1; side += 2) {
-      const o = (width * 0.5 + wob) * side;
-      positions.push(x + px * o, lerp(y0, y1, t), z + pz * o);
-      if (zone === "canyon") {
-        const crack = Math.abs(Math.sin(t * 7 + side * 3)) > 0.92;
-        colors.push(crack ? 0.55 : 0.98, crack ? 0.22 : 0.9, crack ? 0.1 : 0.7);
-      } else if (zone === "meadow") {
-        const n = 0.5 + 0.5 * Math.sin(x * 0.4 + z * 0.3);
-        colors.push(0.45 + n * 0.08, 0.34 + n * 0.05, 0.16);
-      } else colors.push(col[0], col[1], col[2]);
+    const y = lerp(y0, y1, t);
+    const alt = i % 2 === 0 ? candy.a : candy.b;
+    for (let side = -1; side <= 1; side++) {
+      const edge = side !== 0;
+      const o = edge ? width * 0.5 * side : 0;
+      positions.push(x + px * o, y - (edge ? 0.22 : 0), z + pz * o);
+      const paint = edge ? candy.rim : alt;
+      colors.push(paint[0], paint[1], paint[2]);
     }
   }
   for (let i = 0; i < steps; i++) {
-    const a = i * 2;
-    indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+    const a = i * 3;
+    indices.push(a, a + 3, a + 1, a + 1, a + 3, a + 4);
+    indices.push(a + 1, a + 4, a + 2, a + 2, a + 4, a + 5);
   }
   return {
     positions: new Float32Array(positions),

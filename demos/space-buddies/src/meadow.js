@@ -225,17 +225,17 @@ function candyBlobs(scene, spots, color, gradientMap) {
 const SKY_TINT = (name) => {
   const key = String(name || "").toLowerCase();
   if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0x7ee0c8;
-  return 0xf4f7ff;
+  return 0xd58bff;
 };
 const ICE_TINT = (name) => {
   const key = String(name || "").toLowerCase();
-  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0xd7f6ff;
-  return 0x8ec8f0;
+  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0x7ee8ff;
+  return 0x2f9dff;
 };
 const CLIMB_TINT = (name) => {
   const key = String(name || "").toLowerCase();
-  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0xffb15a;
-  return 0xd46a32;
+  if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0xffc23a;
+  return 0xff7a1a;
 };
 
 const MEADOW_HILL = (name) => {
@@ -350,12 +350,12 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   }
   if (ice) {
     scatter(scene, gltfs.pine, gradientMap, ring(ice.x, ice.z, 7, 14, 0.4, 3.2, 0.3), ICE_TINT, true);
-    scatter(scene, gltfs.rockLarge, gradientMap, ring(ice.x, ice.z, 6, 16, 0.7, 3.1, 0.8), ICE_TINT);
+    candyBlobs(scene, ring(ice.x, ice.z, 6, 16, 0.7, 3.1, 0.8), 0x3ec8ff, gradientMap);
     scatter(scene, gltfs.cliff, gradientMap, ring(ice.x, ice.z, 12, 18, 0.5, 1.6, 0.1), ICE_TINT);
   }
   if (climb) {
     scatter(scene, gltfs.tree, gradientMap, ring(climb.x, climb.z, 6, 13, 0.4, 3.2, 0.5), CLIMB_TINT, true);
-    scatter(scene, gltfs.rockLarge, gradientMap, ring(climb.x, climb.z, 5, 15, 0.75, 3, 1), CLIMB_TINT);
+    candyBlobs(scene, ring(climb.x, climb.z, 5, 15, 0.75, 3, 1), 0xff9a2a, gradientMap);
     scatter(scene, gltfs.cliffLarge, gradientMap, ring(climb.x, climb.z, 10, 18, 0.55, 1.4, 0.2), CLIMB_TINT);
   }
 }

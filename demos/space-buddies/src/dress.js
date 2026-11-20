@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 const ZONE_SKY = {
   meadow: { top: 0x5cc8ff, mid: 0x9fe0ff, fog: 0x8fd4f2, bot: 0x6fbf8a, near: 72, far: 230 },
-  canyon: { top: 0x3d7cf0, mid: 0x8ec4ff, fog: 0xf2c8aa, bot: 0xff7a3c, near: 180, far: 380 },
+  canyon: { top: 0x3d7cf0, mid: 0xffb07a, fog: 0xf6d2b4, bot: 0x2448b0, near: 160, far: 360 },
   sky: { top: 0x7ecbff, mid: 0xc8eeff, fog: 0xb7e4ff, bot: 0x8ec8f0, near: 78, far: 250 },
   ice: { top: 0xc5ecff, mid: 0xe7f6ff, fog: 0xb7ddf8, bot: 0x6eb6ef, near: 70, far: 230 },
   climb: { top: 0xffc56a, mid: 0xffe0a0, fog: 0xffcf86, bot: 0xe09030, near: 68, far: 210 },
@@ -107,7 +107,7 @@ export function buildDressing(scene, course, gradientMap) {
     d.rotation.set(0, i, 0.15);
     d.scale.setScalar(1 + (i % 3) * 0.2);
   });
-  inst(puff, makeToon(0xf4fbff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
+  inst(puff, makeToon(0x5ad4ff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
     d.position.set(t.x, t.y + 0.28, t.z);
     d.rotation.set(0, 0, 0);
     d.scale.set(1.15, 0.7, 1.15);
@@ -139,13 +139,13 @@ export function buildDressing(scene, course, gradientMap) {
     d.rotation.set(0, 0, 0);
     d.scale.set(1, 1.15, 1);
   });
-  inst(puff, makeToon(0xffffff, gradientMap), picks.sky, (d, t, i) => {
+  inst(puff, makeToon(0xff9ad4, gradientMap), picks.sky, (d, t, i) => {
     d.position.set(t.x + (t.col > 0 ? 2 : -2), t.y + 2.4, t.z);
     d.rotation.set(0, i, 0);
     d.scale.set(1.6, 0.7, 1.2);
   });
 
-  inst(floe, makeToon(0xf4fbff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
+  inst(floe, makeToon(0x3ec8ff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
     d.position.set(t.x, t.y + 0.08, t.z);
     d.rotation.set(0, 0, 0);
     d.scale.set(1, 1, 1);

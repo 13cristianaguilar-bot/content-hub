@@ -67,19 +67,45 @@ export function createAudio() {
     if (wantBeds) startBeds(bedVol);
   }
 
+  function partyBuffer() {
+    const rate = 44100;
+    const seconds = 2;
+    const count = rate * seconds;
+    const buffer = ctx.createBuffer(1, count, rate);
+    const data = buffer.getChannelData(0);
+    const kick = [0, 0.5, 1, 1.5];
+    const bass = [55, 55, 73, 65];
+    for (let i = 0; i < count; i++) {
+      const t = i / rate;
+      const beat = Math.floor(t * 2);
+      let sample = 0;
+      for (const hit of kick) {
+        const dt = t - hit;
+        if (dt >= 0 && dt < 0.12) sample += Math.sin(dt * 180) * Math.exp(-dt * 28) * 0.7;
+      }
+      const note = bass[beat % bass.length];
+      sample += Math.sin(t * note * Math.PI * 2) * 0.18 * (0.6 + 0.4 * Math.sin(t * 8));
+      if ((beat % 2) === 0) {
+        const hat = (t * 8) % 1;
+        sample += (Math.random() * 2 - 1) * Math.exp(-hat * 40) * 0.08;
+      }
+      data[i] = Math.max(-1, Math.min(1, sample));
+    }
+    return buffer;
+  }
+
   function startBeds(bedVolume) {
     if (!ctx) return false;
     wantBeds = true;
     bedVol = bedVolume;
     if (ctx.state === "suspended") ctx.resume();
     if (bedSrc) return true;
-    if (!buffers.bed) return false;
     bedSrc = ctx.createBufferSource();
-    bedSrc.buffer = buffers.bed;
+    bedSrc.buffer = partyBuffer();
     bedSrc.loop = true;
     bedSrc.connect(bedGain);
     bedSrc.start(0);
-    bedGain.gain.setTargetAtTime(bedVolume, ctx.currentTime, 0.4);
+    bedGain.gain.setTargetAtTime(bedVolume * 1.35, ctx.currentTime, 0.4);
     if (buffers.rumble && !rumbleSrc) {
       rumbleSrc = ctx.createBufferSource();
       rumbleSrc.buffer = buffers.rumble;
@@ -126,6 +152,11 @@ export function createAudio() {
   }
 
   function play(name, volume = 0.5, gap = 0.07) {
+    if (bedGain && ctx && !muted) {
+      bedGain.gain.cancelScheduledValues(ctx.currentTime);
+      bedGain.gain.setTargetAtTime(bedVol * 0.28, ctx.currentTime, 0.02);
+      bedGain.gain.setTargetAtTime(bedVol * 1.35, ctx.currentTime + 0.35, 0.18);
+    }
     if (!ctx || !buffers[name] || muted) return;
     const now = ctx.currentTime;
     if (last[name] && now - last[name] < gap) return;

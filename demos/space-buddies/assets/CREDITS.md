@@ -2,6 +2,8 @@
 
 Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated).
 
+The zone music bed is an original procedural party loop written for this demo. Countdown, qualify, eliminated, and escape stingers are the existing files in `assets/audio/`.
+
 # Meadow asset credits
 
 Every file added for the meadow pass is CC0 1.0 Universal. No account and no paid pack was used. Other zones still use the project's existing models.

@@ -78,6 +78,39 @@ function dropStackedTriangles(geometry) {
   if (keep.length < src.length) geometry.setIndex(keep);
 }
 
+function dropSkinnyTriangles(geometry) {
+  const pos = geometry.getAttribute("position");
+  const index = geometry.getIndex();
+  if (!pos || !index) return;
+  const src = index.array;
+  const keep = [];
+  const ax = (i) => pos.getX(i);
+  const ay = (i) => pos.getY(i);
+  const az = (i) => pos.getZ(i);
+  let minY = Infinity;
+  let maxY = -Infinity;
+  for (let i = 0; i < pos.count; i++) {
+    const y = ay(i);
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+  const height = Math.max(0.001, maxY - minY);
+  for (let i = 0; i < src.length; i += 3) {
+    const a = src[i];
+    const b = src[i + 1];
+    const c = src[i + 2];
+    const ab = Math.hypot(ax(a) - ax(b), ay(a) - ay(b), az(a) - az(b));
+    const bc = Math.hypot(ax(b) - ax(c), ay(b) - ay(c), az(b) - az(c));
+    const ca = Math.hypot(ax(c) - ax(a), ay(c) - ay(a), az(c) - az(a));
+    const longest = Math.max(ab, bc, ca);
+    const shortest = Math.min(ab, bc, ca);
+    if (shortest < 0.0008 || longest / Math.max(shortest, 1e-6) > 18) continue;
+    if (longest > height * 0.42) continue;
+    keep.push(a, b, c);
+  }
+  if (keep.length < src.length) geometry.setIndex(keep);
+}
+
 function bakeFit(root, targetHeight) {
   root.updateWorldMatrix(true, true);
   root.traverse((obj) => {
@@ -85,6 +118,7 @@ function bakeFit(root, targetHeight) {
     obj.geometry = obj.geometry.clone();
     obj.geometry.applyMatrix4(obj.matrixWorld);
     dropStackedTriangles(obj.geometry);
+    dropSkinnyTriangles(obj.geometry);
     obj.position.set(0, 0, 0);
     obj.quaternion.identity();
     obj.scale.set(1, 1, 1);
@@ -140,7 +174,7 @@ function buddyMat(src, hex) {
     mat.userData.shader = shader;
     shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat suit = smoothstep(0.36, 0.62, sat);\nvec3 tinted = uTint * luma;\ndiffuseColor.rgb = mix(albedo, tinted, suit);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, suit * 0.35);\n#include <opaque_fragment>"
+      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat suit = smoothstep(0.36, 0.62, sat);\nfloat face = (1.0 - suit) * smoothstep(0.08, 0.28, luma);\nvec3 tinted = uTint * luma;\ndiffuseColor.rgb = mix(albedo, tinted, suit);\ndiffuseColor.rgb = mix(diffuseColor.rgb, max(diffuseColor.rgb, albedo * 1.65 + vec3(0.08)), face);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, suit * 0.35 + face * 0.72);\n#include <opaque_fragment>"
     );
   };
   return mat;
@@ -245,6 +279,54 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     })
   );
   scene.add(sky);
+  const heavens = new THREE.Group();
+  const starPositions = [];
+  for (let i = 0; i < 180; i++) {
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(Math.random() * 0.65 + 0.15);
+    const radius = 260;
+    starPositions.push(
+      Math.sin(phi) * Math.cos(theta) * radius,
+      Math.cos(phi) * radius * 0.65 + 40,
+      Math.sin(phi) * Math.sin(theta) * radius
+    );
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starPositions, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfff6e0, size: 2.2, sizeAttenuation: false, depthWrite: false }));
+  const planet = new THREE.Mesh(
+    new THREE.SphereGeometry(28, 18, 14),
+    new THREE.MeshBasicMaterial({ color: 0x6ec8ff, fog: false })
+  );
+  planet.position.set(-90, 55, -160);
+  const moon = new THREE.Mesh(
+    new THREE.SphereGeometry(8, 12, 10),
+    new THREE.MeshBasicMaterial({ color: 0xfff1c9, fog: false })
+  );
+  moon.position.set(70, 42, -150);
+  heavens.add(stars, planet, moon);
+  const spectatorShips = [];
+  for (let i = 0; i < 4; i++) {
+    const shiplet = new THREE.Mesh(
+      new THREE.ConeGeometry(2.2, 7, 6),
+      new THREE.MeshBasicMaterial({ color: i % 2 ? 0xff8fd1 : 0xffd23f, fog: false })
+    );
+    shiplet.rotation.x = Math.PI / 2;
+    shiplet.position.set(-40 + i * 28, 36 + (i % 2) * 8, -90 - i * 12);
+    heavens.add(shiplet);
+    spectatorShips.push(shiplet);
+  }
+  const flags = [];
+  for (let i = 0; i < 6; i++) {
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.2, 5), new THREE.MeshBasicMaterial({ color: 0xfff6e5 }));
+    const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.55), new THREE.MeshBasicMaterial({ color: i % 2 ? 0xff6b6b : 0x5fe3b0, side: THREE.DoubleSide }));
+    cloth.position.set(0.55, 0.85, 0);
+    pole.add(cloth);
+    pole.position.set(-10 + i * 4.5, 0.2, 16 + (i % 3));
+    scene.add(pole);
+    flags.push(cloth);
+  }
+  scene.add(heavens);
 
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
@@ -954,13 +1036,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       ringM.rotation.x = -Math.PI / 2;
       ringM.position.y = 0.05;
       group.add(ringM);
-      tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: youTex, depthTest: true }));
-      tag.scale.set(0.95, 0.42, 1);
-      tag.position.y = 2.05;
+      tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: youTex, depthTest: false, transparent: true, opacity: 1 }));
+      tag.scale.set(0.34, 0.14, 1);
+      tag.position.set(0.22, 2.22, 0);
+      tag.center.set(0.5, 0);
       group.add(tag);
     }
     buddyRoot.add(group);
-    visuals.push({ group, model, mixer, actions, shadow, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false });
+    visuals.push({ group, model, mixer, actions, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false });
   }
 
   const confetti = [];
@@ -1275,6 +1358,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       if (r.flail < 0.05) v.starred = false;
       if (r.sliding > 0 && i === 0) burst(r.pos.x, r.pos.y + 0.15, r.pos.z);
+      if (v.tag) {
+        const show = race.phase === "countdown";
+        const next = show ? 1 : Math.max(0, v.tag.material.opacity - dt * 1.6);
+        v.tag.material.opacity = next;
+        v.tag.visible = next > 0.04;
+      }
       if (i === 0) {
         speedLines.visible = !!(r.diving || r.sliding > 0);
         if (speedLines.visible) {
@@ -1364,6 +1453,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.fog.far = skyNow.far;
     updateCamera(race, dt, look);
     sky.position.copy(camera.position);
+    heavens.position.copy(camera.position);
+    planet.rotation.y = (race.time || 0) * 0.08;
+    for (let i = 0; i < flags.length; i++) flags[i].rotation.y = Math.sin((race.time || 0) * 2.2 + i) * 0.45;
+    for (let i = 0; i < spectatorShips.length; i++) spectatorShips[i].position.x += Math.sin((race.time || 0) * 0.3 + i) * 0.02;
     for (const cp of cpRings) cp.rotation.z = race.time * 0.4;
     void bumperMeshes;
   }

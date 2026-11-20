@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 const ZONE_SKY = {
   meadow: { top: 0x5cc8ff, mid: 0x9fe0ff, fog: 0x8fd4f2, bot: 0x6fbf8a, near: 72, far: 230 },
-  canyon: { top: 0xff7a3a, mid: 0xffb07a, fog: 0xff9a62, bot: 0xc44820, near: 64, far: 200 },
+  canyon: { top: 0xffd27a, mid: 0xff8a3a, fog: 0xc45a28, bot: 0x6a2418, near: 48, far: 170 },
   sky: { top: 0x7ecbff, mid: 0xc8eeff, fog: 0xb7e4ff, bot: 0x8ec8f0, near: 78, far: 250 },
   ice: { top: 0xc5ecff, mid: 0xe7f6ff, fog: 0xb7ddf8, bot: 0x6eb6ef, near: 70, far: 230 },
   climb: { top: 0xffc56a, mid: 0xffe0a0, fog: 0xffcf86, bot: 0xe09030, near: 68, far: 210 },

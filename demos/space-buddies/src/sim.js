@@ -60,6 +60,9 @@ export function createRace(course, cfg, seed = 1) {
       eliminated: false,
       cp: 0,
       padCd: 0,
+      canGlide: 0,
+      qualified: false,
+      grabT: 0,
       boost: 0,
       bumpCd: 0,
       spinCd: 0,
@@ -117,6 +120,10 @@ export function createRace(course, cfg, seed = 1) {
     sweepers: course.sweepers.map((s) => ({ ...s })),
     lavaY: cfg.lavaStartY,
     coins: 0,
+    crates: (course.crateSpawns || []).map((c) => ({ x: c.x, y: c.y, z: c.z, vx: 0, vz: 0 })),
+    finishZ: null,
+    qualifyN: 0,
+    qualCount: 0,
     shake: 0,
     activated: false,
     zoneId: "meadow",
@@ -261,7 +268,7 @@ function doRespawn(race, r) {
   r.sliding = 0;
   r.diving = false;
   r.wasDiving = false;
-  race.events.push({ t: "respawn", id: r.id });
+  race.events.push({ t: "respawn", id: r.id, fade: r.isPlayer });
   if (r.isPlayer) race.shake = Math.max(race.shake, 0.3);
 }
 
@@ -337,7 +344,7 @@ function steer(r, wishX, wishZ, dt, rate, maxSp, windX) {
 
 function integrate(race, r, wish, dt) {
   const cfg = race.cfg;
-  if (r.seated || r.eliminated) return;
+  if (r.seated || r.eliminated || r.qualified) return;
   if (r.controlLock > 0) {
     r.controlLock -= dt;
     wish = { x: 0, z: 0, jump: false, dive: false };
@@ -445,12 +452,35 @@ function integrate(race, r, wish, dt) {
   r.vel.z = clamp(r.vel.z, -24, 24);
   if (r.ungroundT > 0) r.ungroundT -= dt;
 
+  if (r.canGlide > 0) {
+    r.canGlide -= dt;
+    if (!r.grounded && wish.holdJump && r.vel.y < 2) {
+      r.vel.y = Math.max(r.vel.y, -3.2);
+      r.vel.y += 11 * dt;
+      if (!r.glided) {
+        r.glided = true;
+        race.events.push({ t: "glide", id: r.id });
+      }
+    }
+  }
+  if (r.grounded) r.glided = false;
+  if (r.grabT > 0) r.grabT -= dt;
+  if (wish.grab && r.grabT <= 0) {
+    tryGrab(race, r);
+    r.grabT = 0.4;
+  }
+
   const wasGrounded = r.grounded;
   const prevX = r.pos.x;
   const prevZ = r.pos.z;
-  r.pos.x += r.vel.x * dt;
-  r.pos.z += r.vel.z * dt;
-  resolveSolids(race, r);
+  const travel = Math.hypot(r.vel.x, r.vel.z) * dt;
+  const slices = Math.max(1, Math.min(4, Math.ceil(travel / 0.42)));
+  const hdt = dt / slices;
+  for (let slice = 0; slice < slices; slice++) {
+    r.pos.x += r.vel.x * hdt;
+    r.pos.z += r.vel.z * hdt;
+    resolveSolids(race, r);
+  }
   const nextY = r.pos.y + r.vel.y * dt;
 
   if (r.ungroundT > 0 || jumped) {
@@ -504,7 +534,8 @@ function integrate(race, r, wish, dt) {
     if (r.isPlayer) race.events.push({ t: "checkpoint", name: cps[r.cp].name });
   }
 
-  if (r.pos.y < cfg.voidY) doRespawn(race, r);
+  const floor = r.lastSafe ? r.lastSafe.y - 10 : cfg.voidY;
+  if (r.pos.y < cfg.voidY || r.pos.y < floor) doRespawn(race, r);
   const lava = race.course.lava;
   if (r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1 && r.pos.y < race.lavaY + 0.2 && !r.seated) {
     doRespawn(race, r);
@@ -631,7 +662,13 @@ function botWish(race, r, dt) {
     if (r.grounded && dzs > 0.6 && dzs < 2.8) jump = true;
   }
 
-  return { x: dx, z: dz, jump, dive: false };
+  let grab = false;
+  if (race.rand() < 0.08) {
+    for (const o of race.racers) {
+      if (o !== r && !o.seated && Math.hypot(o.pos.x - r.pos.x, o.pos.z - r.pos.z) < 1.6) grab = true;
+    }
+  }
+  return { x: dx, z: dz, jump, dive: false, grab };
 }
 
 function separate(race) {
@@ -754,7 +791,8 @@ function hazards(race, dt) {
       const dx = r.pos.x - pad.x;
       const dz = r.pos.z - pad.z;
       if (dx * dx + dz * dz > cfg.padRadius * cfg.padRadius) continue;
-      if (Math.abs(r.pos.y - pad.y) > 1.1) continue;
+      const dy = r.pos.y - pad.y;
+      if (dy > 1.35 || dy < -3.4) continue;
       const face = pad.face != null ? pad.face : hypot(r.vel.x, r.vel.z) > 0.4 ? Math.atan2(r.vel.x, r.vel.z) : 0;
       r.vel.y = cfg.padUp;
       r.vel.x = Math.sin(face) * cfg.padForward;
@@ -763,7 +801,9 @@ function hazards(race, dt) {
       r.platformId = null;
       r.ungroundT = 0.12;
       r.padCd = cfg.padCooldown;
-      r.boost = 0.85;
+      r.boost = 1.15;
+      r.canGlide = 2.4;
+      r.glided = false;
       race.events.push({ t: "jump", id: r.id, pad: true });
     }
   }
@@ -794,8 +834,8 @@ function hazards(race, dt) {
     sw.x = sw.originX + Math.sin(race.time * sw.speed + sw.z) * sw.amp;
     for (const r of race.racers) {
       if (r.seated || r.invuln > 0 || r.knockCd > 0) continue;
-      if (Math.abs(r.pos.z - sw.z) > 1.15) continue;
-      if (Math.abs(r.pos.x - sw.x) > sw.radius + 0.45) continue;
+      if (Math.abs(r.pos.z - sw.z) > 1.7) continue;
+      if (Math.abs(r.pos.x - sw.x) > sw.radius + 0.85) continue;
       const feet = r.pos.y - (sw.y - sw.height);
       const top = r.sliding > 0 ? cfg.slideHeight : 1.35;
       if (feet > top || r.pos.y + 0.2 < sw.y - 0.35) continue;
@@ -965,6 +1005,92 @@ function updateCollapse(race, dt) {
   if (cracked) race.events.push({ t: "crack" });
 }
 
+function tryGrab(race, r) {
+  let best = null;
+  let bd = 2.1;
+  for (const o of race.racers) {
+    if (o === r || o.seated || o.eliminated || o.qualified) continue;
+    const d = Math.hypot(o.pos.x - r.pos.x, o.pos.z - r.pos.z);
+    if (d < bd && Math.abs(o.pos.y - r.pos.y) < 1.6) {
+      bd = d;
+      best = o;
+    }
+  }
+  if (best) {
+    best.vel.x *= 0.15;
+    best.vel.z *= 0.15;
+    best.controlLock = Math.max(best.controlLock, 0.4);
+    best.flail = Math.max(best.flail, 0.45);
+    best.pos.x += (r.pos.x - best.pos.x) * 0.2;
+    best.pos.z += (r.pos.z - best.pos.z) * 0.2;
+    race.events.push({ t: "grab", id: r.id });
+    return;
+  }
+  const ax = r.pos.x + Math.sin(r.yaw) * 1.2;
+  const az = r.pos.z + Math.cos(r.yaw) * 1.2;
+  const ahead = groundAt(race.course, ax, az);
+  if (ahead && ahead.y > r.pos.y + 0.45 && ahead.y < r.pos.y + 1.9) {
+    r.pos.x = ax;
+    r.pos.z = az;
+    r.pos.y = ahead.y;
+    r.vel.y = 3.2;
+    r.grounded = true;
+    race.events.push({ t: "grab", id: r.id, ledge: true });
+    return;
+  }
+  for (const c of race.crates || []) {
+    if (Math.hypot(c.x - r.pos.x, c.z - r.pos.z) < 1.8 && Math.abs(c.y - r.pos.y) < 2) {
+      c.x += Math.sin(r.yaw) * 1.1;
+      c.z += Math.cos(r.yaw) * 1.1;
+      c.vx += Math.sin(r.yaw) * 4;
+      c.vz += Math.cos(r.yaw) * 4;
+      race.events.push({ t: "grab", id: r.id, prop: true });
+      return;
+    }
+  }
+}
+
+function shoveCrates(race) {
+  for (const c of race.crates || []) {
+    c.vx *= 0.9;
+    c.vz *= 0.9;
+    c.x += c.vx * 0.016;
+    c.z += c.vz * 0.016;
+    const g = groundAt(race.course, c.x, c.z);
+    if (g) c.y = g.y + 0.45;
+    for (const r of race.racers) {
+      if (r.seated || r.eliminated) continue;
+      const dx = c.x - r.pos.x;
+      const dz = c.z - r.pos.z;
+      const d = Math.hypot(dx, dz);
+      if (d > 1.15 || d < 0.001 || Math.abs((c.y || 0) - r.pos.y) > 1.8) continue;
+      const nx = dx / d;
+      const nz = dz / d;
+      c.vx += r.vel.x * 0.4 + nx * 1.5;
+      c.vz += r.vel.z * 0.4 + nz * 1.5;
+      c.x += nx * (1.15 - d);
+      c.z += nz * (1.15 - d);
+    }
+  }
+}
+
+function checkQualify(race) {
+  if (!race.finishZ || race.phase !== "race") return;
+  for (const r of race.racers) {
+    if (r.qualified || r.eliminated || r.seated) continue;
+    if (r.pos.z >= race.finishZ && r.pos.y > -6) {
+      r.qualified = true;
+      race.qualCount++;
+      race.events.push({ t: "qualify", id: r.id });
+    }
+  }
+  if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) {
+    race.phase = "results";
+    race.result = race.player.qualified ? "qualified" : "out";
+    race.events.push({ t: race.player.qualified ? "roundwin" : "eliminated" });
+  }
+}
+
 function board(race) {
   if (race.seatsFilled >= race.cfg.seats) return;
   const ship = race.course.ship;
@@ -1063,6 +1189,8 @@ export function step(race, dt, input) {
     hazards(race, dt);
     enemies(race, dt);
     board(race);
+    shoveCrates(race);
+    checkQualify(race);
     const playerZone = zoneAt(race, race.player.pos.z);
     if (playerZone && playerZone !== race.zoneId) {
       race.zoneId = playerZone;

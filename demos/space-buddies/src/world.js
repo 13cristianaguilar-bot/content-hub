@@ -181,7 +181,7 @@ function buddyMat(src, hex) {
     mat.userData.shader = shader;
     shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat suit = smoothstep(0.36, 0.62, sat);\nfloat face = (1.0 - suit) * smoothstep(0.08, 0.28, luma);\nvec3 tinted = mix(uTint, vec3(1.0), 0.22) * max(luma, 0.62);\ndiffuseColor.rgb = mix(albedo, tinted, suit);\ndiffuseColor.rgb = mix(diffuseColor.rgb, max(diffuseColor.rgb, albedo * 1.65 + vec3(0.08)), face);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, suit * 0.35 + face * 0.72);\nfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.5);\noutgoingLight += rim * vec3(1.0, 0.97, 0.9) * 0.22 * (0.25 + suit);\n#include <opaque_fragment>"
+      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat warm = smoothstep(0.02, 0.14, albedo.r - max(albedo.g, albedo.b));\nfloat suit = smoothstep(0.12, 0.26, sat) * (1.0 - warm);\nvec3 tinted = uTint * mix(0.82, 1.22, clamp(luma, 0.0, 1.0));\nvec3 color = mix(albedo, tinted, suit);\noutgoingLight = color;\n#include <opaque_fragment>"
     );
   };
   return mat;
@@ -1256,27 +1256,6 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       obj.castShadow = true;
       obj.receiveShadow = true;
     });
-    if (i === 0) {
-      const hulls = [];
-      model.traverse((obj) => {
-        if (!obj.isSkinnedMesh || obj.userData.hull) return;
-        const hull = obj.clone();
-        hull.userData.hull = true;
-        hull.material = new THREE.MeshBasicMaterial({ color: 0x1a1230, side: THREE.BackSide, fog: false });
-        hull.material.onBeforeCompile = (shader) => {
-          shader.vertexShader = shader.vertexShader.replace(
-            "#include <begin_vertex>",
-            "#include <begin_vertex>\ntransformed += normalize(objectNormal) * 0.045;"
-          );
-        };
-        hull.castShadow = false;
-        hull.receiveShadow = false;
-        hull.frustumCulled = false;
-        hull.skeleton = obj.skeleton;
-        hulls.push([obj, hull]);
-      });
-      for (const [obj, hull] of hulls) obj.parent.add(hull);
-    }
     let headBone = null;
     model.traverse((obj) => { if (obj.isBone && obj.name === "head") headBone = obj; });
     const antennas = [];
@@ -2049,6 +2028,49 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     state.pitch = cfg.defaultPitch;
   }
 
+  const stage = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.35, 1.5, 0.24, 24),
+    new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP })
+  );
+  stage.position.y = 0.02;
+  stage.visible = false;
+  scene.add(stage);
+
+  function showBuddy(dt) {
+    heavens.visible = false;
+    stage.visible = true;
+    stage.position.set(80, 12, -40);
+    for (let i = 1; i < visuals.length; i++) visuals[i].group.visible = false;
+    const v = visuals[0];
+    if (!v) return;
+    v.group.visible = true;
+    if (v.tag) v.tag.visible = false;
+    v.group.position.set(80, 12.15, -40);
+    v.group.rotation.x = 0;
+    v.group.rotation.z = 0;
+    v.group.scale.set(1, 1, 1);
+    v.group.rotation.y += dt * 0.7;
+    v.mixer.update(dt);
+    setAnim(v, "Idle", 1);
+    if (v.antennas) {
+      for (let a = 0; a < v.antennas.length; a++) v.antennas[a].rotation.z = Math.sin(performance.now() * 0.003 + a) * 0.3;
+    }
+    if (v.lids) {
+      const blink = Math.sin(performance.now() * 0.002) > 0.97 ? 1 : 0.08;
+      for (const lid of v.lids) lid.scale.y = blink;
+    }
+    camera.fov = cfg.fovPortrait;
+    camera.updateProjectionMatrix();
+    camera.position.set(81.6, 13.05, -36.2);
+    camera.lookAt(80, 12.15, -40);
+  }
+
+  function hideBuddy() {
+    heavens.visible = true;
+    stage.visible = false;
+    for (const v of visuals) v.group.visible = true;
+  }
+
   function render() {
     if (!postOn) {
       renderer.setRenderTarget(null);
@@ -2103,6 +2125,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     update,
     reset,
     render,
+    showBuddy,
+    hideBuddy,
+    view() {
+      const p = visuals[0] && visuals[0].group.position;
+      if (!p) return null;
+      return {
+        dist: Math.hypot(camera.position.x - p.x, camera.position.y - p.y, camera.position.z - p.z),
+        back: Math.hypot(camera.position.x - p.x, camera.position.z - p.z),
+        fov: camera.fov,
+      };
+    },
     applyLook,
     setTheme(planet) {
       const themes = [

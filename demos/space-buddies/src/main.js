@@ -31,6 +31,8 @@ const countdownEl = document.getElementById("countdown");
 const countNum = document.getElementById("count-num");
 const countLabel = document.getElementById("count-label");
 const timerEl = document.getElementById("timer");
+const timerNum = document.getElementById("timer-num");
+const coinNum = document.getElementById("coin-num");
 const progressEl = document.getElementById("progress");
 const seatsEl = document.getElementById("seats");
 const seatsLabel = document.getElementById("seats-label");
@@ -140,9 +142,12 @@ const STEP = 1 / 60;
 let acc = 0;
 let lastT = 0;
 
+const SEAT_ART = ["mint", "sun", "coral", "sky", "grape", "cream", "bubble", "lava"];
 for (let i = 0; i < 8; i++) {
-  const dot = document.createElement("i");
+  const dot = document.createElement("img");
   dot.className = "seat";
+  dot.alt = "";
+  dot.src = "ui/svg/seat_empty.svg";
   seatsEl.appendChild(dot);
 }
 
@@ -177,6 +182,7 @@ function begin() {
     return;
   }
   started = true;
+  if (world.hideBuddy) world.hideBuddy();
   audio.unlock();
   audio.startBeds(cfg.bedGain);
   audio.play("ui_confirm", 0.55, 0);
@@ -189,7 +195,7 @@ function begin() {
   hud.hidden = false;
   controls.hidden = true;
   tutor.hidden = true;
-  window.__sb = { race, cfg, get fps() { return fps; }, campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
+  window.__sb = { race, cfg, get fps() { return fps; }, view: () => (world.view ? world.view() : null), campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
   window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
   applyRound();
   pauseBtn.hidden = false;
@@ -240,6 +246,8 @@ function applyRound() {
   roundTitle.textContent = p.name;
   roundSub.textContent = p.sub;
   roundEl.hidden = false;
+  const roundBanner = roundEl.querySelector(".sb-banner");
+  if (window.SBUI && roundBanner) SBUI.slam(roundBanner);
   setTimeout(() => { roundEl.hidden = true; }, 1400);
 }
 
@@ -261,7 +269,8 @@ function openLobby() {
   }
   title.classList.add("hide");
   lobby.hidden = false;
-  audio.play("ui_tap", 0.4, 0);
+  lobby.classList.add("ui-screen");
+  if (world.applyLook) world.applyLook(pickColor, pickGear);
 }
 
 title.addEventListener("pointerdown", armAudio);
@@ -293,7 +302,7 @@ COLORS.forEach((hex, i) => {
     saveLook();
     colorBox.querySelectorAll("button").forEach((n) => n.classList.remove("on"));
     b.classList.add("on");
-    audio.play("ui_tap", 0.35, 0.02);
+    if (world && world.applyLook) world.applyLook(pickColor, pickGear);
   });
   colorBox.appendChild(b);
 });
@@ -309,7 +318,7 @@ GEAR.forEach((name, i) => {
     saveLook();
     gearBox.querySelectorAll("button").forEach((n) => n.classList.remove("on"));
     b.classList.add("on");
-    audio.play("ui_tap", 0.35, 0.02);
+    if (world && world.applyLook) world.applyLook(pickColor, pickGear);
   });
   gearBox.appendChild(b);
 });
@@ -329,7 +338,9 @@ muteBtn.addEventListener("pointerdown", (e) => {
   e.stopPropagation();
   const on = !audio.muted;
   audio.setMuted(on);
-  muteBtn.textContent = on ? "SOUND" : "MUTE";
+  const icon = muteBtn.querySelector("img");
+  if (icon) icon.src = on ? "ui/svg/icon_unmute.svg" : "ui/svg/icon_mute.svg";
+  muteBtn.setAttribute("aria-label", on ? "Unmute" : "Mute");
 });
 document.getElementById("resume").addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -433,11 +444,44 @@ function clock(seconds) {
   return m + ":" + String(r).padStart(2, "0");
 }
 
+function fillPodium(race) {
+  const rows = race.racers.slice().sort((a, b) => {
+    const score = (r) => (r.seated ? 4000 : 0) + (r.qualified ? 2000 : 0) + (r.eliminated ? -1000 : 0) + r.pos.z;
+    return score(b) - score(a);
+  });
+  for (let i = 0; i < 3; i++) {
+    const el = document.getElementById("pod-" + (i + 1));
+    const r = rows[i];
+    if (!el || !r) continue;
+    el.textContent = r.isPlayer ? "YOU" : "BUDDY";
+    el.style.color = "#1e2440";
+  }
+}
+
+document.getElementById("app").addEventListener("pointerdown", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.disabled) return;
+  audio.play("ui_tap", 0.3, 0.01);
+}, true);
+if (window.SBUI) SBUI.bindPress(document.getElementById("app"));
+
+window.SPACE_BUDDIES_UI = {
+  stylesheet: "ui.css",
+  font: "Fredoka",
+  tokens: ["--ui-font", "--ui-bg", "--ui-ink", "--ui-coral", "--ui-sun", "--ui-mint", "--ui-sky"],
+  buttons: "ui-btn",
+  banners: "ui-banner",
+};
+
 function paintMap(current) {
   document.querySelectorAll(".planet-dot").forEach((el) => {
     const n = Number(el.dataset.planet);
     el.classList.toggle("on", n === current);
     el.classList.toggle("done", n < current);
+    const img = el.querySelector("img");
+    if (img) img.src = "ui/svg/" + (n < current ? "map_node_cleared" : n === current ? "map_node_current" : "map_node_locked") + ".svg";
+    if (img) img.classList.toggle("is-current", n === current);
+    if (n === current && el.scrollIntoView) el.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   });
 }
 
@@ -458,8 +502,8 @@ let shownResult = false;
 function updateHud(dt) {
   const remain = race.phase === "countdown" ? cfg.raceSeconds : Math.max(0, cfg.raceSeconds - race.time);
   const label = clock(remain);
-  if (timerEl.textContent !== label) timerEl.textContent = label;
-  timerEl.classList.toggle("low", race.phase === "race" && remain <= 15);
+  if (timerNum && timerNum.textContent !== label) timerNum.textContent = label;
+  timerEl.classList.toggle("is-low", race.phase === "race" && remain <= 15);
 
   let ahead = 0;
   for (const r of race.racers) {
@@ -469,8 +513,12 @@ function updateHud(dt) {
   const suffix = n === 1 ? "ST" : n === 2 ? "ND" : n === 3 ? "RD" : "TH";
   const placeText = n + suffix;
   if (placeEl.textContent !== placeText) placeEl.textContent = placeText;
-  const coinText = (race.coins || 0) + " COINS";
-  if (coinsEl && coinsEl.textContent !== coinText) coinsEl.textContent = coinText;
+  const coinN = race.coins || 0;
+  if (coinNum && coinNum.dataset.n !== String(coinN)) {
+    coinNum.dataset.n = String(coinN);
+    if (window.SBUI) SBUI.countUp(coinNum, coinN, 700);
+    else coinNum.textContent = String(coinN);
+  }
 
   const showTutor = race.phase === "race" && race.zoneId === "meadow" && race.time < 8 && !cfg.auto;
   tutor.hidden = !showTutor;
@@ -479,25 +527,25 @@ function updateHud(dt) {
   }
 
   const prog = Math.max(0, Math.min(1, race.player.pos.z / course.ship.z));
-  progressEl.style.transform = "scaleX(" + prog.toFixed(3) + ")";
+  progressEl.parentElement.style.setProperty("--p", Math.round(prog * 100) + "%");
 
   const dots = seatsEl.children;
   for (let i = 0; i < 8; i++) {
     const id = race.seats[i];
     const dot = dots[i];
-    if (id == null) {
-      dot.style.background = "#FFF6E5";
-      dot.classList.toggle("open", race.seatsFilled === 7);
-    } else {
-      dot.style.background = race.racers[id].color;
-      dot.classList.remove("open");
+    const next = id == null ? "ui/svg/seat_empty.svg" : "ui/svg/seat_filled_" + SEAT_ART[i] + ".svg";
+    if (dot.getAttribute("src") !== next) {
+      dot.src = next;
+      if (id != null) dot.classList.add("is-new");
     }
   }
   const seatText = "SEATS " + race.seatsFilled + "/8";
   if (seatsLabel.textContent !== seatText) seatsLabel.textContent = seatText;
   const last = race.seatsFilled === 7 && race.phase === "race";
-  lastBanner.hidden = !last;
+  if (last && lastBanner.hidden && window.SBUI) SBUI.slam(lastBanner);
+  else lastBanner.hidden = !last;
   hud.classList.toggle("last", last);
+  seatsEl.parentElement.classList.toggle("is-last", last);
 
   const showCount = race.phase === "countdown" || (race.phase === "race" && race.time < 0.45);
   countdownEl.hidden = !showCount;
@@ -506,9 +554,9 @@ function updateHud(dt) {
     const text = n > 0 ? String(n) : "GO";
     if (countNum.textContent !== text) {
       countNum.textContent = text;
-      countNum.classList.remove("pop");
+      countNum.classList.remove("sb-countdown");
       void countNum.offsetWidth;
-      countNum.classList.add("pop");
+      countNum.classList.add("sb-countdown");
     }
     countLabel.textContent = n > 0 ? "GET READY" : "GO";
     countNum.style.color = n > 0 ? "#FF6B6B" : "#FFD23F";
@@ -540,12 +588,17 @@ function updateHud(dt) {
     nextRoundBtn.hidden = kind !== "qualified";
     nextPlanetBtn.hidden = kind !== "escaped";
     againBtn.hidden = kind === "qualified" || kind === "escaped";
+    const banner = document.getElementById("result-banner");
     if (kind === "qualified") {
       resultTitle.textContent = "YOU QUALIFIED!";
       resultSub.textContent = currentPlan().name + " CLEARED";
+      if (banner) banner.src = "ui/svg/banner_qualified.svg";
+      if (window.SBUI) SBUI.confetti(48);
     } else if (kind === "escaped") {
       resultTitle.textContent = "YOU ESCAPED!";
       resultSub.textContent = "SEAT " + (race.player.seatIndex + 1) + " OF 8";
+      if (banner) banner.src = "ui/svg/banner_escaped.svg";
+      if (window.SBUI) SBUI.confetti(60);
       career.planets = Math.max(career.planets, planet);
       career.coins += race.coins || 0;
       career.best = "PLANET " + planet;
@@ -554,6 +607,7 @@ function updateHud(dt) {
       resultTitle.textContent = "ELIMINATED";
       resultSub.textContent = "YOU DIDN'T QUALIFY";
       againBtn.textContent = "TRY AGAIN";
+      if (banner) banner.src = "ui/svg/banner_eliminated.svg";
     } else {
       resultTitle.textContent = "MISSED THE SHIP!";
       resultSub.textContent = "SO CLOSE";
@@ -566,7 +620,17 @@ function updateHud(dt) {
       coins: race.coins || 0,
       at: new Date().toISOString(),
     });
-    resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS · PLANETS " + career.planets;
+    fillPodium(race);
+    const clockTarget = race.time || 0;
+    let clockShown = 0;
+    const clockStep = Math.max(0.08, clockTarget / 18);
+    const countClock = () => {
+      if (!shownResult) return;
+      clockShown = Math.min(clockTarget, clockShown + clockStep);
+      resultTime.textContent = "TIME " + clock(clockShown) + " · " + (race.coins || 0) + " COINS · PLANETS " + career.planets;
+      if (clockShown < clockTarget) requestAnimationFrame(countClock);
+    };
+    countClock();
   }
   if (!showEnd) shownResult = false;
 }
@@ -594,10 +658,7 @@ function handleEvents() {
     else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
     else if (e.t === "bump") {
       audio.play("bump", e.id === 0 ? 0.5 : 0.22, 0.06);
-      if (e.id === 0 && e.big) {
-        hitStop = 0.08;
-        if (navigator.vibrate) navigator.vibrate(24);
-      }
+      if (e.id === 0 && e.big) hitStop = 0.08;
     } else if (e.t === "dive" && e.id === 0) audio.play("jump", 0.28, 0.04);
     else if (e.t === "crack") cracked = true;
     else if (e.t === "seat") {
@@ -609,7 +670,6 @@ function handleEvents() {
       }
       if (e.id === 0) {
         showToast("SEAT " + (e.seat + 1) + " LOCKED");
-        if (navigator.vibrate) navigator.vibrate([16, 30, 16]);
       }
     } else if (e.t === "lastseat") audio.play("last", 0.7, 0.2);
     else if (e.t === "launch") audio.play("launch", 0.65, 0.2);
@@ -646,6 +706,7 @@ function frame(now) {
   }
   if (!world) return;
   if (!started) {
+    if (!lobby.hidden && world.showBuddy) world.showBuddy(dt);
     world.render();
     return;
   }

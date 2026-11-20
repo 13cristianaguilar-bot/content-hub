@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 const ZONE_SKY = {
   meadow: { top: 0x5cc8ff, mid: 0x9fe0ff, fog: 0x8fd4f2, bot: 0x6fbf8a, near: 72, far: 230 },
-  canyon: { top: 0xffd27a, mid: 0xff8a3a, fog: 0xc45a28, bot: 0x6a2418, near: 48, far: 170 },
+  canyon: { top: 0x3d7cf0, mid: 0x8ec4ff, fog: 0xf2c8aa, bot: 0xff7a3c, near: 180, far: 380 },
   sky: { top: 0x7ecbff, mid: 0xc8eeff, fog: 0xb7e4ff, bot: 0x8ec8f0, near: 78, far: 250 },
   ice: { top: 0xc5ecff, mid: 0xe7f6ff, fog: 0xb7ddf8, bot: 0x6eb6ef, near: 70, far: 230 },
   climb: { top: 0xffc56a, mid: 0xffe0a0, fog: 0xffcf86, bot: 0xe09030, near: 68, far: 210 },
@@ -23,9 +23,9 @@ function makeToonTexture() {
   c.width = 4;
   c.height = 1;
   const g = c.getContext("2d");
-  g.fillStyle = "#b7c3dc";
+  g.fillStyle = "#c5d0e4";
   g.fillRect(0, 0, 1, 1);
-  g.fillStyle = "#e7eef8";
+  g.fillStyle = "#ffe7c8";
   g.fillRect(1, 0, 1, 1);
   g.fillStyle = "#ffffff";
   g.fillRect(2, 0, 2, 1);
@@ -302,7 +302,7 @@ export function buildDressing(scene, course, gradientMap) {
     const mat = new THREE.ShaderMaterial({
       uniforms: { uTime: { value: 0 } },
       vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ vec2 p=vUv-0.5; float r=length(p); float flow=fract(r*4.0-uTime*0.32); float ang=sin(atan(p.y,p.x)*5.0+uTime*0.8); float body=smoothstep(0.52,0.06,r); float streak=smoothstep(0.05,0.95,flow); vec3 col=mix(vec3(0.28,0.02,0.01), vec3(1.0,0.58,0.06), streak); col+=vec3(1.0,0.35,0.02)*ang*0.15*body; col+=vec3(1.0,0.85,0.3)*smoothstep(0.5,0.22,r); if(body<0.04) discard; gl_FragColor=vec4(col,1.0); }",
+      fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ vec2 p=vUv-0.5; float r=length(p); float flow=fract(r*4.0-uTime*0.32); float ang=sin(atan(p.y,p.x)*5.0+uTime*0.8); float body=smoothstep(0.48,0.08,r); float streak=smoothstep(0.05,0.95,flow); vec3 col=mix(vec3(0.45,0.08,0.02), vec3(1.0,0.42,0.05), streak*0.65); col+=vec3(1.0,0.28,0.02)*ang*0.08*body; if(body<0.04) discard; gl_FragColor=vec4(col,1.0); }",
     });
     const mesh = new THREE.Mesh(geo, mat);
     mesh.rotation.x = -Math.PI / 2;

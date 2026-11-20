@@ -4,9 +4,9 @@
 const PALETTE = {
   meadow: [0.38, 0.8, 0.36],
   canyon: [0.18, 0.12, 0.13],
-  sky: [0.62, 0.88, 0.74],
-  ice: [0.55, 0.9, 1],
-  climb: [0.95, 0.62, 0.22],
+  sky: [0.35, 0.78, 1],
+  ice: [0.72, 0.94, 1],
+  climb: [1, 0.55, 0.18],
   ship: [0.95, 0.86, 0.62],
 };
 
@@ -56,10 +56,9 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
       else if (rim) colors.push(0.15, 0.35, 0.75);
       else if (hex) colors.push(0.85, 0.97, 1);
       else if (zone === "canyon") {
-        const hot = Math.abs(Math.sin(a * 3 + r * 4 + cx * 0.1)) > 0.72;
-        const rim = t > 0.72;
-        if (rim) colors.push(0.42, 0.16, 0.1);
-        else colors.push(hot ? 1 : 0.95, hot ? 0.55 : 0.58, hot ? 0.1 : 0.18);
+        const curb = t > 0.62;
+        if (curb) colors.push(0.42, 0.16, 0.09);
+        else colors.push(0.98, 0.91, 0.72);
       } else if (zone === "meadow") {
         const wx = cx + Math.cos(a) * rx * t;
         const wz = cz + Math.sin(a) * rz * t;
@@ -73,7 +72,7 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
       }
       else if (zone === "ice") colors.push(0.62, 0.9, 1);
       else {
-        const shade = t > 0.78 ? 0.7 : 1 - t * 0.05;
+        const shade = t > 0.7 ? 0.42 : 1 - t * 0.08;
         colors.push(col[0] * shade, col[1] * shade, col[2] * shade);
       }
     }
@@ -112,8 +111,8 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
       const o = (width * 0.5 + wob) * side;
       positions.push(x + px * o, lerp(y0, y1, t), z + pz * o);
       if (zone === "canyon") {
-        const crack = Math.abs(Math.sin(t * 7 + side * 3)) > 0.9;
-        colors.push(crack ? 1 : 0.98, crack ? 0.55 : 0.62, crack ? 0.12 : 0.16);
+        const crack = Math.abs(Math.sin(t * 7 + side * 3)) > 0.92;
+        colors.push(crack ? 0.55 : 0.98, crack ? 0.22 : 0.9, crack ? 0.1 : 0.7);
       } else if (zone === "meadow") {
         const n = 0.5 + 0.5 * Math.sin(x * 0.4 + z * 0.3);
         colors.push(0.45 + n * 0.08, 0.34 + n * 0.05, 0.16);

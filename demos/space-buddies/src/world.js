@@ -7,7 +7,7 @@ import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
 
 const MODELS = {
-  buddy: "assets/space_buddy_web.glb",
+  buddy: "assets/space_buddy_rigged.glb",
   bumper: "assets/models/obstacle_bumper.glb",
   spinner: "assets/models/obstacle_spinner.glb",
   pad: "assets/models/obstacle_jump_pad.glb",
@@ -25,8 +25,23 @@ const MODELS = {
 
 const TOON_MAP = makeToonTexture();
 
-function lambert(src) {
-  const color = src && src.color && src.color.isColor ? src.color.clone() : new THREE.Color(0xffffff);
+function candyHook(mat) {
+  const stripes = !!mat.userData.stripes;
+  mat.onBeforeCompile = (shader) => {
+    shader.vertexShader = shader.vertexShader
+      .replace("#include <common>", "#include <common>\nvarying vec3 vCandyW;")
+      .replace("#include <begin_vertex>", "#include <begin_vertex>\nvCandyW = (modelMatrix * vec4(transformed, 1.0)).xyz;");
+    shader.fragmentShader = "varying vec3 vCandyW;\n" + shader.fragmentShader.replace(
+      "#include <opaque_fragment>",
+      "float ndl = clamp(dot(normalize(normal), normalize(vec3(-0.35, 0.86, 0.25))), 0.0, 1.0);\noutgoingLight *= mix(0.78, 1.08, ndl);\nfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.2);\noutgoingLight += rim * vec3(1.0, 0.97, 0.9) * 0.28;\n" +
+      (stripes ? "float stripe = step(0.5, fract(vCandyW.y * 1.7));\noutgoingLight = mix(outgoingLight * 0.72, outgoingLight * vec3(1.12, 1.04, 0.92), stripe);\n" : "") +
+      "#include <opaque_fragment>"
+    );
+  };
+}
+
+function lambert(src, candy) {
+  const color = candy ? new THREE.Color(candy) : (src && src.color && src.color.isColor ? src.color.clone() : new THREE.Color(0xffffff));
   const emissive = src && src.emissive && src.emissive.isColor ? src.emissive.clone() : new THREE.Color(0);
   const mat = new THREE.MeshToonMaterial({
     color,
@@ -38,10 +53,12 @@ function lambert(src) {
     side: THREE.DoubleSide,
     name: (src && src.name) || "",
   });
+  if (candy) mat.userData.stripes = true;
   if (/Lava|Glow|Antenna|Thruster|Pad|Crack|Star|Hot/.test(mat.name)) {
     mat.emissive.copy(color);
-    mat.emissiveIntensity = Math.max(mat.emissiveIntensity, 0.55);
+    mat.emissiveIntensity = Math.max(mat.emissiveIntensity, 0.35);
   }
+  candyHook(mat);
   return mat;
 }
 
@@ -174,7 +191,7 @@ function buddyMat(src, hex) {
     mat.userData.shader = shader;
     shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat suit = smoothstep(0.36, 0.62, sat);\nfloat face = (1.0 - suit) * smoothstep(0.08, 0.28, luma);\nvec3 tinted = uTint * luma;\ndiffuseColor.rgb = mix(albedo, tinted, suit);\ndiffuseColor.rgb = mix(diffuseColor.rgb, max(diffuseColor.rgb, albedo * 1.65 + vec3(0.08)), face);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, suit * 0.35 + face * 0.72);\n#include <opaque_fragment>"
+      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat suit = smoothstep(0.36, 0.62, sat);\nfloat face = (1.0 - suit) * smoothstep(0.08, 0.28, luma);\nvec3 tinted = uTint * luma;\ndiffuseColor.rgb = mix(albedo, tinted, suit);\ndiffuseColor.rgb = mix(diffuseColor.rgb, max(diffuseColor.rgb, albedo * 1.65 + vec3(0.08)), face);\noutgoingLight = mix(outgoingLight, diffuseColor.rgb, suit * 0.35 + face * 0.72);\nfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.5);\noutgoingLight += rim * vec3(1.0, 0.97, 0.9) * 0.22 * (0.25 + suit);\n#include <opaque_fragment>"
     );
   };
   return mat;
@@ -196,15 +213,15 @@ function shipMat(src) {
   return mat;
 }
 
-function convert(root) {
+function convert(root, candy) {
   const cache = new Map();
   root.traverse((obj) => {
     if (!obj.isMesh) return;
     const mapMat = (src) => {
-      if (!src) return new THREE.MeshLambertMaterial({ color: 0xffffff });
-      if (cache.has(src.uuid)) return cache.get(src.uuid);
-      const next = lambert(src);
-      cache.set(src.uuid, next);
+      if (!src) return lambert(null, candy);
+      if (!candy && cache.has(src.uuid)) return cache.get(src.uuid);
+      const next = lambert(src, candy);
+      if (!candy) cache.set(src.uuid, next);
       return next;
     };
     if (Array.isArray(obj.material)) obj.material = obj.material.map(mapMat);
@@ -256,12 +273,21 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   scene.fog = new THREE.Fog(0x9fe8ff, cfg.fogNear, cfg.fogFar);
   const camera = new THREE.PerspectiveCamera(cfg.fovPortrait, 1, 0.15, 500);
 
-  const hemi = new THREE.HemisphereLight(0xfff0d2, 0x7aa4e0, 0.95);
-  const sun = new THREE.DirectionalLight(0xffe0a8, 1.45);
-  sun.position.set(-18, 42, 14);
-  const fill = new THREE.DirectionalLight(0xb9dcff, 0.55);
-  fill.position.set(22, 14, -12);
-  scene.add(hemi, sun, fill);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const hemi = new THREE.HemisphereLight(0x9fd4ff, 0xffc48a, 0.9);
+  const sun = new THREE.DirectionalLight(0xfff0c2, 1.5);
+  sun.position.set(-18, 28, 10);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.near = 2;
+  sun.shadow.camera.far = 38;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -12;
+  sun.shadow.camera.right = sun.shadow.camera.top = 12;
+  sun.shadow.bias = -0.0006;
+  const fill = new THREE.DirectionalLight(0xb9dcff, 0.28);
+  fill.position.set(16, 10, -18);
+  scene.add(hemi, sun, sun.target, fill);
 
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(380, 18, 12),
@@ -275,7 +301,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         bot: { value: new THREE.Color(0x8ed7b0) },
       },
       vertexShader: "varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; void main(){ vec3 n=normalize(vP); float h=n.y; vec3 c=mix(mid, top, smoothstep(0.0, 0.55, h)); c=mix(bot, c, smoothstep(-0.35, 0.08, h)); float sun=smoothstep(0.16, 0.0, length(n.xz-vec2(-0.32,0.12))); c+=vec3(1.0,0.84,0.42)*sun*smoothstep(-0.05,0.25,h); gl_FragColor=vec4(c,1.0); }",
+      fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; void main(){ vec3 n=normalize(vP); float h=n.y; vec3 c=mix(bot, mid, smoothstep(-0.15, 0.0, h)); c=mix(c, top, smoothstep(-0.02, 0.16, h)); float sun=smoothstep(0.14, 0.0, length(n.xz-vec2(-0.32,0.12))); c+=vec3(1.0,0.86,0.48)*sun*smoothstep(0.0,0.2,h); gl_FragColor=vec4(c,1.0); }",
     })
   );
   scene.add(sky);
@@ -296,15 +322,42 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xfff6e0, size: 2.2, sizeAttenuation: false, depthWrite: false }));
   const planet = new THREE.Mesh(
     new THREE.SphereGeometry(28, 18, 14),
-    new THREE.MeshBasicMaterial({ color: 0x6ec8ff, fog: false })
+    new THREE.ShaderMaterial({
+      fog: false,
+      vertexShader: "varying vec3 vN; void main(){ vN=normalize(normal); gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+      fragmentShader: "varying vec3 vN; void main(){ float b=sin(vN.y*9.0)*0.5+0.5; vec3 c=mix(vec3(1.0,0.42,0.62), vec3(0.28,0.62,1.0), b); c=mix(c, vec3(1.0,0.86,0.35), smoothstep(0.72,0.9,b)); gl_FragColor=vec4(c,1.0); }",
+    })
   );
   planet.position.set(-90, 55, -160);
+  const planetRing = new THREE.Mesh(
+    new THREE.TorusGeometry(40, 3.2, 8, 28),
+    new THREE.MeshBasicMaterial({ color: 0xffe1a8, fog: false })
+  );
+  planetRing.rotation.x = 1.1;
+  planetRing.position.copy(planet.position);
+  heavens.add(planetRing);
   const moon = new THREE.Mesh(
     new THREE.SphereGeometry(8, 12, 10),
     new THREE.MeshBasicMaterial({ color: 0xfff1c9, fog: false })
   );
   moon.position.set(70, 42, -150);
   heavens.add(stars, planet, moon);
+  stars.material.transparent = true;
+  const cloudPuffs = [];
+  const puffMat = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false, transparent: true, opacity: 0.94 });
+  for (let i = 0; i < 8; i++) {
+    const puff = new THREE.Group();
+    for (let k = 0; k < 4; k++) {
+      const ball = new THREE.Mesh(new THREE.SphereGeometry(5.5, 8, 6), puffMat);
+      ball.position.set((k - 1.5) * 4.6, Math.sin(k * 1.4) * 1.6, (k % 2) * 1.4);
+      ball.scale.set(1, 0.55, 0.85);
+      puff.add(ball);
+    }
+    const ang = (i / 8) * Math.PI * 2;
+    puff.position.set(Math.cos(ang) * 110, 48 + (i % 3) * 14, Math.sin(ang) * 110);
+    heavens.add(puff);
+    cloudPuffs.push(puff);
+  }
   const spectatorShips = [];
   for (let i = 0; i < 4; i++) {
     const shiplet = new THREE.Mesh(
@@ -339,15 +392,30 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   await Promise.all([
     ...keys.map((key) => new Promise((resolve, reject) => {
       loader.load(MODELS[key], (gltf) => {
-        if (key === "buddy") bakeFit(gltf.scene, 1.75);
-        else if (key === "ship") {
+        if (key === "ship") {
           bakeFit(gltf.scene, 6.6);
           gltf.scene.traverse((obj) => {
             if (!obj.isMesh || !obj.material) return;
             const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
             obj.material = shipMat(src);
           });
-        } else convert(gltf.scene);
+        } else if (key !== "buddy") {
+          const candy = {
+            bumper: 0xff5fa2,
+            spinner: 0xffd23f,
+            pad: 0x5ce1ff,
+            platform: 0xc98bff,
+            lava: 0xff6a2a,
+            chunk: 0xffb15a,
+            roller: 0xff8a3a,
+            hopper: 0x7ae0a0,
+            flyer: 0x8cb6ff,
+            geyser: 0xffd23f,
+            sweeper: 0xff7ad1,
+            pendulum: 0xc9b6ff,
+          }[key];
+          convert(gltf.scene, candy);
+        }
         gltfs[key] = gltf;
         loaded++;
         if (onProgress) onProgress(loaded / totalLoads);
@@ -418,7 +486,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   const dressing = buildDressing(scene, course, TOON_MAP);
-  const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
+  const terrainMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
+  terrainMat.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <color_fragment>",
+        "#include <color_fragment>\ndiffuseColor.rgb = pow(max(diffuseColor.rgb, vec3(0.0)), vec3(0.84));"
+      )
+      .replace(
+        "#include <opaque_fragment>",
+        "float rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.4);\noutgoingLight += rim * vec3(1.0, 0.96, 0.88) * 0.18;\n#include <opaque_fragment>"
+      );
+  };
   const crackMat = new THREE.MeshToonMaterial({
     vertexColors: true,
     color: 0xffd0b0,
@@ -440,6 +519,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, terrainMat);
     mesh.frustumCulled = true;
+    mesh.receiveShadow = true;
     scene.add(mesh);
     chunk.mesh = mesh;
     chunkMeshes.push(mesh);
@@ -488,6 +568,23 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   crustGeo.setIndex(crustIdx);
   crustGeo.computeVertexNormals();
   scene.add(new THREE.Mesh(crustGeo, terrainMat));
+  if (course.floors && course.floors.length) {
+    const blob = new THREE.InstancedMesh(
+      new THREE.CircleGeometry(1, 10),
+      new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.16, depthWrite: false }),
+      course.floors.length
+    );
+    const blobDummy = new THREE.Object3D();
+    course.floors.forEach((pad, i) => {
+      blobDummy.position.set(pad.x, pad.y + 0.05, pad.z);
+      blobDummy.rotation.set(-Math.PI / 2, 0, 0);
+      blobDummy.scale.set(Math.max(0.8, pad.rx * 0.55), Math.max(0.8, pad.rz * 0.55), 1);
+      blobDummy.updateMatrix();
+      blob.setMatrixAt(i, blobDummy.matrix);
+    });
+    blob.instanceMatrix.needsUpdate = true;
+    scene.add(blob);
+  }
 
   let coinMesh = null;
   let coinGlow = null;
@@ -689,7 +786,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   const lava = new THREE.Mesh(
     new THREE.CircleGeometry(26, 28),
-    new THREE.MeshBasicMaterial({ color: 0xff7a1a })
+    new THREE.ShaderMaterial({
+      vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
+      fragmentShader: "varying vec2 vUv; void main(){ float d=length(vUv-0.5)*2.0; vec3 hot=vec3(1.0,0.46,0.08); vec3 crust=vec3(0.42,0.1,0.05); vec3 c=mix(hot, crust, smoothstep(0.28,0.82,d)); c*=0.85+0.15*sin(d*18.0); gl_FragColor=vec4(c,1.0); }",
+    })
   );
   lava.rotation.x = -Math.PI / 2;
   lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
@@ -697,9 +797,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   if (course.crater) {
     const glow = new THREE.Mesh(
       new THREE.CircleGeometry(course.crater.r * 1.35, 20),
-      new THREE.MeshBasicMaterial({ color: 0xffb15a, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending })
+      new THREE.MeshBasicMaterial({ color: 0xffb15a, transparent: true, opacity: 0.12, depthWrite: false, blending: THREE.AdditiveBlending })
     );
     glow.rotation.x = -Math.PI / 2;
+    glow.scale.setScalar(0.72);
     glow.position.set(course.crater.x, course.crater.y + 0.2, course.crater.z);
     scene.add(glow);
   }
@@ -1003,21 +1104,33 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     /* filled below */
   }
   for (let i = 0; i < cfg.racers; i++) {
-    const model = buddyGltf.scene.clone(true);
+    const model = SkeletonUtils.clone(buddyGltf.scene);
     const colorHex = ["#5FE3B0", "#FFD23F", "#FF8FD1", "#8C6BFF", "#5CC8FF", "#7FD88A", "#C9B6E8", "#FFC38A", "#4C6FFF", "#2EC4B6", "#FF5FA2", "#C6E05A", "#9BB6FF", "#F0B429", "#FF8A7A", "#7AD0FF"][i % 16];
     model.traverse((obj) => {
       if (!obj.isMesh || !obj.material) return;
       const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
       obj.material = buddyMat(src, colorHex);
+      obj.frustumCulled = false;
+      obj.castShadow = true;
+      obj.receiveShadow = true;
     });
     const mixer = new THREE.AnimationMixer(model);
     const actions = {};
+    const clipNames = ["Idle", "Run", "Jump", "Fall", "Land", "Dive", "Grab", "Tumble", "Celebrate", "Eliminated", "Emote"];
+    const looping = new Set(["Idle", "Run", "Fall", "Grab", "Tumble", "Celebrate"]);
     for (const clip of buddyGltf.animations) {
+      if (!clipNames.includes(clip.name)) continue;
       const action = mixer.clipAction(clip);
+      if (looping.has(clip.name)) action.setLoop(THREE.LoopRepeat, Infinity);
+      else {
+        action.setLoop(THREE.LoopOnce, 1);
+        action.clampWhenFinished = true;
+      }
       action.play();
       action.setEffectiveWeight(clip.name === "Idle" ? 1 : 0);
       actions[clip.name] = action;
     }
+    const hasClips = clipNames.some((name) => actions[name]);
     const accessories = addBuddyGear(model);
     const gearNames = ["classic", "heli", "goggles", "stars", "flower", "scarf", "fish", "crown"];
     const pick = gearNames[i % gearNames.length];
@@ -1043,7 +1156,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       group.add(tag);
     }
     buddyRoot.add(group);
-    visuals.push({ group, model, mixer, actions, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false });
+    group.traverse((obj) => {
+      if (!obj.isMesh) return;
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+    });
+    visuals.push({ group, model, mixer, actions, hasClips, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false, mixAcc: 0, wasAir: false, landUntil: 0 });
   }
 
   const confetti = [];
@@ -1268,7 +1386,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
     lava.position.y = race.lavaY;
     const pulse = 0.85 + Math.sin(race.time * 3) * 0.15;
-    lava.material.color.setRGB(1 * pulse, 0.35 * pulse, 0.08);
+    if (lava.material.color) lava.material.color.setRGB(1 * pulse, 0.35 * pulse, 0.08);
+    if (lava.material.uniforms && lava.material.uniforms.pulse) lava.material.uniforms.pulse.value = pulse;
 
     ship.position.y = race.shipY;
     const active = race.phase !== "countdown";
@@ -1283,7 +1402,13 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     for (let i = 0; i < race.racers.length; i++) {
       const r = race.racers[i];
       const v = visuals[i];
-      v.mixer.update(dt);
+      const dist = i === 0 ? 0 : Math.hypot(r.pos.x - race.player.pos.x, r.pos.z - race.player.pos.z);
+      v.mixAcc += dt;
+      const budget = dist < 16 ? 0 : dist < 36 ? 0.1 : 0.2;
+      if (v.mixAcc >= budget) {
+        v.mixer.update(v.mixAcc);
+        v.mixAcc = 0;
+      }
       if (r.seated) {
         if (!v.docked && sockets[r.seatIndex]) {
           sockets[r.seatIndex].add(v.group);
@@ -1294,7 +1419,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
           v.docked = true;
           paintSeat(r.seatIndex, r.color);
         }
-        setAnim(v, "Cheer", 1);
+        setAnim(v, "Celebrate", 1);
         continue;
       }
       v.group.position.set(r.pos.x, r.pos.y, r.pos.z);
@@ -1305,47 +1430,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       v.face += turn * Math.min(1, dt * 10);
       v.group.rotation.y = v.face;
       const squash = Math.min(1, r.squash || 0);
-      const hspEarly = Math.hypot(r.vel.x, r.vel.z);
-      let pose = "idle";
-      if (r.flail > 0.05) pose = "tumble";
-      else if (r.grabT > 0) pose = "grab";
-      else if (r.diving || r.sliding > 0) pose = "dive";
-      else if (!r.grounded && r.vel.y > 0.5) pose = "jump";
-      else if (hspEarly > 0.8) pose = "run";
-      const breathe = 1 + Math.sin(race.time * 2.6 + i) * (pose === "idle" ? 0.03 : 0.01);
-      v.model.rotation.z = 0;
-      v.model.position.y = 0;
-      let sx = 1;
-      let sy = breathe;
-      let sz = 1;
-      if (pose === "jump") {
-        v.model.rotation.x = -0.28;
-        sx = 0.94; sy = 1.08; sz = 0.94;
-      } else if (pose === "dive") {
-        v.model.rotation.x = 0.7;
-        v.model.position.y = 0.12;
-        sx = 1.06; sy = 0.9; sz = 1.04;
-      } else if (pose === "grab") {
-        v.model.rotation.x = 0.35;
-        sx = 1.04; sy = 0.94; sz = 1.02;
-      } else if (pose === "tumble") {
-        v.model.rotation.x = Math.sin(race.time * 7) * 0.45;
-        v.model.rotation.z = Math.cos(race.time * 7) * 0.28;
-      } else if (pose === "run") {
-        v.model.rotation.x = 0.12;
-      } else {
-        v.model.rotation.x = 0;
-        sy = breathe - squash * 0.06;
-        sx = 1 + squash * 0.04;
-        sz = sx;
-      }
-      v.model.scale.set(1.55 * sx, 0.88 * sy, 1.6 * sz);
+      v.group.scale.set(1 + squash * 0.035, 1 - squash * 0.07, 1 + squash * 0.035);
       if (r.squash > 0.32 && !v.dusted) {
         v.dusted = true;
         for (let n = 0; n < 3; n++) burst(r.pos.x + (n - 1) * 0.2, r.pos.y + 0.1, r.pos.z, 0xd7c4a4);
       }
       if (r.squash < 0.05) v.dusted = false;
-      if (pose === "run" && r.grounded && i === 0) {
+      const hsp = Math.hypot(r.vel.x, r.vel.z);
+      if (r.grounded && hsp > 0.8 && i === 0) {
         v.stepT = (v.stepT || 0) - dt;
         if (v.stepT <= 0) {
           v.stepT = 0.28;
@@ -1373,20 +1465,29 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       const blade = v.accessories && v.accessories.heli && v.accessories.heli.userData.blade;
       if (blade && v.accessories.heli.visible) blade.rotation.y += dt * 14;
-      const hsp = Math.hypot(r.vel.x, r.vel.z);
+      if (v.wasAir && r.grounded) v.landUntil = (race.time || 0) + 0.2;
+      v.wasAir = !r.grounded;
       let anim = "Idle";
-      if (r.emote === "cheer" || r.emote === "wave" && r.flail <= 0) anim = "Cheer";
-      else if (r.flail > 0.05 || (!r.grounded && r.vel.y < -2)) anim = "Flail";
-      else if (hsp > 0.8 || r.sliding > 0) anim = "Run";
-      setAnim(v, anim, hsp / 7);
+      if (r.eliminated) anim = "Eliminated";
+      else if (r.seated || r.qualified || r.emote === "cheer") anim = "Celebrate";
+      else if (r.flail > 0.2) anim = "Tumble";
+      else if (r.grabT > 0) anim = "Grab";
+      else if (r.diving || r.sliding > 0) anim = "Dive";
+      else if (r.grounded && (race.time || 0) < v.landUntil) anim = "Land";
+      else if (!r.grounded && r.vel.y > 0.35) anim = "Jump";
+      else if (!r.grounded) anim = "Fall";
+      else if (race.phase === "countdown" && i !== 0) anim = "Emote";
+      else if (hsp > 0.8) anim = "Run";
+      setAnim(v, anim, hsp / 6.5);
       if (v.shadow) {
         v.shadow.visible = r.grounded;
         v.shadow.position.y = 0.04;
       }
     }
 
-    if (race.phase === "results" && race.result === "escaped" && !confettiOn) {
+    if ((race.popConfetti || (race.phase === "results" && race.result === "escaped")) && !confettiOn) {
       confettiOn = true;
+      race.popConfetti = 0;
       const p = visuals[0].group;
       const wp = new THREE.Vector3();
       p.getWorldPosition(wp);
@@ -1451,10 +1552,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.fog.color.setHex(skyNow.fog);
     scene.fog.near = skyNow.near;
     scene.fog.far = skyNow.far;
+    sun.position.set(race.player.pos.x - 10, race.player.pos.y + 18, race.player.pos.z + 6);
+    sun.target.position.set(race.player.pos.x, race.player.pos.y + 1, race.player.pos.z);
+    sun.target.updateMatrixWorld();
+    for (let i = 0; i < race.racers.length; i++) {
+      const near = Math.hypot(race.racers[i].pos.x - race.player.pos.x, race.racers[i].pos.z - race.player.pos.z) < 14;
+      visuals[i].group.traverse((obj) => { if (obj.isMesh) obj.castShadow = near; });
+    }
     updateCamera(race, dt, look);
     sky.position.copy(camera.position);
     heavens.position.copy(camera.position);
     planet.rotation.y = (race.time || 0) * 0.08;
+    const night = race.zoneId === "canyon" || race.zoneId === "climb";
+    stars.material.opacity = night ? 0.35 + Math.sin((race.time || 0) * 5) * 0.2 : 0.08;
+    for (let i = 0; i < cloudPuffs.length; i++) cloudPuffs[i].position.x += Math.sin((race.time || 0) * 0.2 + i) * 0.03;
     for (let i = 0; i < flags.length; i++) flags[i].rotation.y = Math.sin((race.time || 0) * 2.2 + i) * 0.45;
     for (let i = 0; i < spectatorShips.length; i++) spectatorShips[i].position.x += Math.sin((race.time || 0) * 0.3 + i) * 0.02;
     for (const cp of cpRings) cp.rotation.z = race.time * 0.4;
@@ -1462,17 +1573,16 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   function setAnim(v, name, scale) {
-    if (v.current === name) {
-      if (v.actions.Run && name === "Run") v.actions.Run.setEffectiveTimeScale(Math.max(0.65, Math.min(1.45, scale || 1)));
-      return;
-    }
-    for (const key of Object.keys(v.actions)) {
-      const on = key === name;
-      v.actions[key].enabled = true;
-      v.actions[key].setEffectiveWeight(on ? 1 : 0);
-    }
-    if (!v.actions[name] && v.actions.Idle) v.actions.Idle.setEffectiveWeight(1);
-    v.current = name;
+    if (!v.hasClips) return;
+    const clipName = v.actions[name] ? name : (v.actions.Idle ? "Idle" : "");
+    const next = clipName && v.actions[clipName];
+    if (!next) return;
+    if (clipName === "Run") next.setEffectiveTimeScale(Math.max(0.65, Math.min(1.65, (scale || 1) * 1.15)));
+    if (v.current === clipName) return;
+    const prev = v.current && v.actions[v.current];
+    if (prev && prev !== next) prev.fadeOut(0.16);
+    next.reset().setEffectiveWeight(1).fadeIn(0.16).play();
+    v.current = clipName;
   }
 
   function groundAtSafe(x, z) {
@@ -1586,14 +1696,29 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (h > 1.15) state.yaw = dampAngle(state.yaw, Math.atan2(player.vel.x, player.vel.z), cfg.autoYaw, dt);
       state.pitch = damp(state.pitch, cfg.defaultPitch, cfg.autoPitch, dt);
     }
-    const dist = state.portrait ? cfg.camDistPortrait : cfg.camDist;
-    const horiz = dist * Math.cos(state.pitch);
-    const height = dist * Math.sin(state.pitch);
+    const dist = Math.max(state.portrait ? cfg.camDistPortrait : cfg.camDist, 6.4);
+    let horiz = dist * Math.cos(state.pitch);
+    let height = dist * Math.sin(state.pitch);
+    if (horiz < 4) horiz = 4;
+    if (height < 2) height = 2;
     let tx = player.pos.x + Math.sin(state.yaw) * horiz;
-    let ty = player.pos.y + height + 0.35;
+    let ty = player.pos.y + height;
     let tz = player.pos.z - Math.cos(state.yaw) * horiz;
     const under = groundAtSafe(tx, tz);
-    if (under && ty < under + 1.35) ty = under + 1.55;
+    if (under != null && ty < under + 1.2) ty = under + 1.6;
+    const headX = player.pos.x;
+    const headY = player.pos.y + 1.2;
+    const headZ = player.pos.z;
+    let cdx = tx - headX;
+    let cdy = ty - headY;
+    let cdz = tz - headZ;
+    let clen = Math.hypot(cdx, cdy, cdz) || 1;
+    if (clen < 2.5) {
+      const s = 2.5 / clen;
+      tx = headX + cdx * s;
+      ty = headY + cdy * s;
+      tz = headZ + cdz * s;
+    }
     const intro = race.phase === "countdown" ? 1 : 0;
     ty += intro * 2.2;
     tz -= intro * 2.4;
@@ -1602,10 +1727,37 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       tx += (Math.random() - 0.5) * sh;
       ty += (Math.random() - 0.5) * sh * 0.5;
     }
-    camera.position.x = damp(camera.position.x, tx, cfg.camLerp, dt);
-    camera.position.y = damp(camera.position.y, ty, cfg.camLerp, dt);
-    camera.position.z = damp(camera.position.z, tz, cfg.camLerp, dt);
+    const spring = 5.5;
+    camera.position.x = damp(camera.position.x, tx, spring, dt);
+    camera.position.y = damp(camera.position.y, ty, spring, dt);
+    camera.position.z = damp(camera.position.z, tz, spring, dt);
+    const fdx = camera.position.x - player.pos.x;
+    const fdy = camera.position.y - (player.pos.y + 1.2);
+    const fdz = camera.position.z - player.pos.z;
+    const fd = Math.hypot(fdx, fdy, fdz) || 1;
+    if (fd < 2.5) {
+      const s = 2.5 / fd;
+      camera.position.x = player.pos.x + fdx * s;
+      camera.position.y = player.pos.y + 1.2 + fdy * s;
+      camera.position.z = player.pos.z + fdz * s;
+    }
     camera.lookAt(player.pos.x, player.pos.y + 1.15, player.pos.z + Math.cos(state.yaw) * 1.4);
+    fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
+  }
+
+  function fadePlayer(dist) {
+    const v = visuals[0];
+    if (!v) return;
+    const opacity = dist >= 3.4 ? 1 : Math.max(0.15, (dist - 2.2) / 1.2);
+    v.model.traverse((obj) => {
+      if (!obj.isMesh || !obj.material || obj.material.name !== "BuddyHue") return;
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      for (const m of mats) {
+        m.opacity = opacity;
+        m.transparent = opacity < 0.98;
+        m.depthWrite = opacity > 0.45;
+      }
+    });
   }
 
   function reset() {

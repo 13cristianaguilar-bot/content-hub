@@ -91,7 +91,7 @@ function toonMat(src, gradientMap, override, wind) {
     }
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "float rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.6);\n\toutgoingLight += rim * vec3(1.0, 0.96, 0.82) * 0.22;\n\t#include <opaque_fragment>"
+      "float ndl = clamp(dot(normalize(normal), normalize(vec3(-0.35, 0.86, 0.25))), 0.0, 1.0);\n\toutgoingLight *= mix(0.62, 1.18, ndl);\n\tfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.4);\n\toutgoingLight += rim * vec3(1.0, 0.96, 0.86) * 0.34;\n\t#include <opaque_fragment>"
     );
   };
   return mat;
@@ -189,10 +189,39 @@ function ring(cx, cz, count, radius, scale, y, phase) {
 const CANYON_TINT = (name) => {
   const key = String(name || "").toLowerCase();
   if (key.includes("sand") || key.includes("grass") || key.includes("leaf")) return 0xe07a32;
-  if (key.includes("red")) return 0xff5a2a;
-  if (key.includes("wood") || key.includes("dirt")) return 0xc45a38;
-  return 0x9a4030;
+  if (key.includes("red")) return 0xc44838;
+  if (key.includes("wood") || key.includes("dirt")) return 0x8a3a28;
+  return 0x6e2e22;
 };
+
+function candyBlobs(scene, spots, color, gradientMap) {
+  if (!spots.length) return;
+  const geo = new THREE.SphereGeometry(0.85, 12, 9);
+  const mat = new THREE.MeshToonMaterial({ color, gradientMap });
+  const mesh = new THREE.InstancedMesh(geo, mat, spots.length);
+  const dummy = new THREE.Object3D();
+  const shadow = new THREE.InstancedMesh(
+    new THREE.CircleGeometry(1, 12),
+    new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.22, depthWrite: false }),
+    spots.length
+  );
+  const dummyS = new THREE.Object3D();
+  spots.forEach((spot, i) => {
+    dummy.position.set(spot.x, (spot.y || 0) + 0.7 * spot.s, spot.z);
+    dummy.scale.set(spot.s, spot.s * 0.82, spot.s);
+    dummy.rotation.set(0, spot.rot || 0, 0);
+    dummy.updateMatrix();
+    mesh.setMatrixAt(i, dummy.matrix);
+    dummyS.position.set(spot.x, (spot.y || 0) + 0.06, spot.z);
+    dummyS.rotation.set(-Math.PI / 2, 0, 0);
+    dummyS.scale.setScalar(Math.max(0.5, spot.s * 1.4));
+    dummyS.updateMatrix();
+    shadow.setMatrixAt(i, dummyS.matrix);
+  });
+  mesh.instanceMatrix.needsUpdate = true;
+  shadow.instanceMatrix.needsUpdate = true;
+  scene.add(mesh, shadow);
+}
 const SKY_TINT = (name) => {
   const key = String(name || "").toLowerCase();
   if (key.includes("leaf") || key.includes("grass") || key.includes("sand")) return 0x7ee0c8;
@@ -291,8 +320,8 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
   if (canyon) {
     const cx = crater ? crater.x : canyon.x;
     const cz = crater ? crater.z : canyon.z;
-    scatter(scene, gltfs.rockLarge, gradientMap, ring(cx, cz, 9, 11.5, 1.05, 0.1, 0.3), CANYON_TINT);
-    scatter(scene, gltfs.rock, gradientMap, ring(cx, cz, 8, 9.2, 0.7, 0.05, 0.6), CANYON_TINT);
+    candyBlobs(scene, ring(cx, cz, 8, 12, 1.15, 0.15, 0.2), 0xff8a5a, gradientMap);
+    candyBlobs(scene, ring(cx, cz, 6, 8.5, 0.7, 0.1, 0.4), 0xffd23f, gradientMap);
     scatter(scene, gltfs.cliffLarge, gradientMap, ring(canyon.x, canyon.z, 10, 21, 0.7, -1.4, 0.05), CANYON_TINT);
     scatter(scene, gltfs.cliff, gradientMap, ring(canyon.x, canyon.z, 10, 23.2, 0.62, -1.6, 0.18), CANYON_TINT);
     scatter(scene, gltfs.cliffTop, gradientMap, ring(canyon.x, canyon.z, 7, 36, 1.25, -0.8, 0.3), CANYON_TINT);

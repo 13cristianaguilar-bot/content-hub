@@ -27,6 +27,7 @@ export function createAudio() {
   let bedSrc;
   let rumbleSrc;
   let started = false;
+  let muted = false;
 
   if (ctx) {
     master = ctx.createGain();
@@ -107,8 +108,19 @@ export function createAudio() {
     });
   }
 
+  function setMuted(on) {
+    muted = !!on;
+    if (master) master.gain.setTargetAtTime(muted ? 0 : 1, ctx.currentTime, 0.05);
+  }
+
+  function setZone(id) {
+    if (!bedSrc) return;
+    const rate = { meadow: 1, canyon: 0.9, sky: 1.08, ice: 0.84, climb: 1.02, ship: 1.12 }[id] || 1;
+    bedSrc.playbackRate.value = rate;
+  }
+
   function play(name, volume = 0.5, gap = 0.07) {
-    if (!ctx || !buffers[name]) return;
+    if (!ctx || !buffers[name] || muted) return;
     const now = ctx.currentTime;
     if (last[name] && now - last[name] < gap) return;
     last[name] = now;
@@ -121,5 +133,5 @@ export function createAudio() {
     src.start(0);
   }
 
-  return { load, unlock, startBeds, setRumble, play, flourish, get ctx() { return ctx; } };
+  return { load, unlock, startBeds, setRumble, setMuted, setZone, play, flourish, get ctx() { return ctx; }, get muted() { return muted; } };
 }

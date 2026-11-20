@@ -1,5 +1,5 @@
 import { COLORS, resolveConfig } from "./config.js";
-import { createCourse } from "./course.js";
+import { createCourse, groundAt } from "./course.js";
 import { createRace, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
@@ -42,6 +42,46 @@ const resultTitle = document.getElementById("result-title");
 const resultSub = document.getElementById("result-sub");
 const resultTime = document.getElementById("result-time");
 const againBtn = document.getElementById("again");
+const menuBtn = document.getElementById("menu");
+const nextRoundBtn = document.getElementById("next-round");
+const nextPlanetBtn = document.getElementById("next-planet");
+const pauseBtn = document.getElementById("pause");
+const muteBtn = document.getElementById("mute");
+const pauseMenu = document.getElementById("pause-menu");
+const roundEl = document.getElementById("round-name");
+const roundKicker = document.getElementById("round-kicker");
+const roundTitle = document.getElementById("round-title");
+const roundSub = document.getElementById("round-sub");
+const planetEl = document.getElementById("planet");
+const planetSub = document.getElementById("planet-sub");
+const fadeEl = document.getElementById("fade");
+const CAREER_KEY = "space-buddies-career";
+let career = { planets: 0, coins: 0, best: "" };
+try { career = Object.assign(career, JSON.parse(localStorage.getItem(CAREER_KEY) || "{}")); } catch (err) { /* private mode */ }
+function saveCareer() {
+  try { localStorage.setItem(CAREER_KEY, JSON.stringify(career)); } catch (err) { /* ignore */ }
+}
+let planet = 1;
+let roundIndex = 0;
+let alive = null;
+let paused = false;
+let escWas = false;
+let stepMute = 0;
+const PLANS = [
+  [
+    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, startZ: 22, finishZ: 82 },
+    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, startZ: 92, finishZ: 176 },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 22, ship: true },
+  ],
+  [
+    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, startZ: 176, finishZ: 250 },
+    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: 300, finishZ: 350 },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: 250, ship: true },
+  ],
+];
+function currentPlan() {
+  return PLANS[(planet - 1) % PLANS.length][roundIndex];
+}
 const dangerEl = document.getElementById("danger");
 
 const audio = createAudio();
@@ -119,7 +159,52 @@ function begin() {
   hud.hidden = false;
   controls.hidden = true;
   tutor.hidden = true;
-  window.__sb = { race, cfg, get fps() { return fps; } };
+  window.__sb = { race, cfg, get fps() { return fps; }, campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
+  applyRound();
+  pauseBtn.hidden = false;
+  muteBtn.hidden = false;
+}
+
+function applyRound() {
+  const p = currentPlan();
+  race.finishZ = p.ship ? null : p.finishZ;
+  race.qualifyN = p.ship ? 0 : p.qualify;
+  race.qualCount = 0;
+  race.phase = "countdown";
+  race.countClock = 0;
+  race.countCue = -1;
+  race.result = null;
+  race.time = 0;
+  const g = groundAt(course, 0, p.startZ);
+  const y = g ? g.y : 0;
+  race.racers.forEach((r, i) => {
+    const keep = !alive || alive.has(r.id);
+    r.qualified = false;
+    r.seated = false;
+    r.seatIndex = -1;
+    if (!keep) {
+      r.eliminated = true;
+      return;
+    }
+    r.eliminated = false;
+    r.pos.x = ((i % 5) - 2) * 1.7;
+    r.pos.z = p.startZ + Math.floor(i / 5) * 1.2;
+    r.pos.y = y + 0.35;
+    r.vel.x = 0;
+    r.vel.y = 0;
+    r.vel.z = 0;
+    r.lastSafe = { x: r.pos.x, y, z: r.pos.z };
+    r.wp = 0;
+  });
+  race.seatsFilled = 0;
+  if (race.seats) race.seats = race.seats.map(() => null);
+  if (world.setTheme) world.setTheme(planet);
+  if (audio.setZone) audio.setZone(p.ship ? "ship" : (p.startZ > 250 ? "ice" : p.startZ > 150 ? "sky" : p.startZ > 80 ? "canyon" : "meadow"));
+  roundKicker.textContent = "PLANET " + planet;
+  roundTitle.textContent = p.name;
+  roundSub.textContent = p.sub;
+  roundEl.hidden = false;
+  setTimeout(() => { roundEl.hidden = true; }, 1400);
 }
 
 function openLobby() {
@@ -183,6 +268,93 @@ GEAR.forEach((name, i) => {
   });
   gearBox.appendChild(b);
 });
+
+function togglePause() {
+  if (!started || !race || race.phase === "results") return;
+  paused = !paused;
+  pauseMenu.hidden = !paused;
+}
+pauseBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  togglePause();
+});
+muteBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const on = !audio.muted;
+  audio.setMuted(on);
+  muteBtn.textContent = on ? "SOUND" : "MUTE";
+});
+document.getElementById("resume").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  paused = false;
+  pauseMenu.hidden = true;
+});
+document.getElementById("restart").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  paused = false;
+  pauseMenu.hidden = true;
+  alive = null;
+  roundIndex = 0;
+  restart();
+  applyRound();
+});
+document.getElementById("pause-menu-btn").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  goMenu();
+});
+menuBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  goMenu();
+});
+nextRoundBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const ids = new Set(race.racers.filter((r) => r.qualified).map((r) => r.id));
+  alive = ids;
+  roundIndex += 1;
+  resultEl.hidden = true;
+  shownResult = false;
+  resetRace(race, (race.seed + 11) >>> 0);
+  if (cfg.auto) race.player.useAI = true;
+  applyRound();
+  controls.hidden = false;
+});
+nextPlanetBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  resultEl.hidden = true;
+  planetSub.textContent = "Planet " + (planet + 1) + ". The sky changes. The ship is waiting.";
+  planetEl.hidden = false;
+});
+document.getElementById("land").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  planet += 1;
+  roundIndex = 0;
+  alive = null;
+  planetEl.hidden = true;
+  shownResult = false;
+  resetRace(race, (race.seed + 21) >>> 0);
+  if (cfg.auto) race.player.useAI = true;
+  applyRound();
+  controls.hidden = false;
+});
+function goMenu() {
+  paused = false;
+  pauseMenu.hidden = true;
+  planetEl.hidden = true;
+  started = false;
+  resultEl.hidden = true;
+  resultEl.classList.remove("show");
+  title.classList.remove("hide");
+  hud.hidden = true;
+  controls.hidden = true;
+  pauseBtn.hidden = true;
+  muteBtn.hidden = true;
+  roundIndex = 0;
+  alive = null;
+}
 
 againBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -305,33 +477,34 @@ function updateHud(dt) {
   controls.hidden = showEnd || !started;
   if (showEnd && !shownResult) {
     shownResult = true;
-    const escaped = race.result === "escaped";
+    const kind = race.result;
     resultEl.hidden = false;
     resultEl.classList.add("show");
-    resultEl.classList.toggle("miss", !escaped);
-    resultKicker.textContent = "SPACE BUDDIES";
-    resultTitle.textContent = escaped ? "YOU ESCAPED!" : "MISSED THE SHIP!";
-    if (escaped) {
+    resultEl.classList.toggle("miss", kind === "missed" || kind === "out");
+    resultKicker.textContent = "PLANET " + planet;
+    nextRoundBtn.hidden = kind !== "qualified";
+    nextPlanetBtn.hidden = kind !== "escaped";
+    againBtn.hidden = kind === "qualified" || kind === "escaped";
+    if (kind === "qualified") {
+      resultTitle.textContent = "YOU QUALIFIED!";
+      resultSub.textContent = currentPlan().name + " CLEARED";
+    } else if (kind === "escaped") {
+      resultTitle.textContent = "YOU ESCAPED!";
       resultSub.textContent = "SEAT " + (race.player.seatIndex + 1) + " OF 8";
-      againBtn.textContent = "PLAY AGAIN";
-      const ms = race.time * 1000;
-      let best = false;
-      try {
-        const prev = Number(localStorage.getItem(BEST_KEY) || 0);
-        if (!prev || ms < prev) {
-          localStorage.setItem(BEST_KEY, String(Math.round(ms)));
-          best = true;
-        }
-        const stored = Number(localStorage.getItem(BEST_KEY) || ms);
-        resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS" + (best ? ". NEW BEST." : ". BEST " + clock(stored / 1000) + ".");
-      } catch (err) {
-        resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS";
-      }
+      career.planets = Math.max(career.planets, planet);
+      career.coins += race.coins || 0;
+      career.best = "PLANET " + planet;
+      saveCareer();
+    } else if (kind === "out") {
+      resultTitle.textContent = "ELIMINATED";
+      resultSub.textContent = "YOU DIDN'T QUALIFY";
+      againBtn.textContent = "TRY AGAIN";
     } else {
+      resultTitle.textContent = "MISSED THE SHIP!";
       resultSub.textContent = "SO CLOSE";
       againBtn.textContent = "TRY AGAIN";
-      resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS";
     }
+    resultTime.textContent = "TIME " + clock(race.time) + " · " + (race.coins || 0) + " COINS · PLANETS " + career.planets;
   }
   if (!showEnd) shownResult = false;
 }
@@ -342,11 +515,23 @@ function handleEvents() {
     if (e.t === "tick") audio.play("tick", 0.55, 0.05);
     else if (e.t === "go") audio.play("go", 0.6, 0.05);
     else if (e.t === "jump" && e.id === 0) audio.play("jump", 0.4, 0.05);
-    else if (e.t === "coin") audio.play("jump", 0.32, 0.04);
+    else if (e.t === "coin") audio.play("ui_tap", 0.45, 0.03);
+    else if (e.t === "glide" && e.id === 0) audio.play("jump", 0.22, 0.08);
+    else if (e.t === "grab" && e.id === 0) audio.play("bump", 0.35, 0.05);
+    else if (e.t === "qualify" && e.id === 0) audio.play("seat", 0.45, 0.05);
+    else if (e.t === "roundwin") audio.play("escaped", 0.55, 0.1);
+    else if (e.t === "eliminated") audio.play("missed", 0.6, 0.1);
+    else if (e.t === "respawn" && e.fade && fadeEl) {
+      fadeEl.classList.add("on");
+      setTimeout(() => fadeEl.classList.remove("on"), 200);
+    }
     else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
     else if (e.t === "bump") {
       audio.play("bump", e.id === 0 ? 0.5 : 0.22, 0.06);
-      if (e.id === 0 && e.big) hitStop = 0.08;
+      if (e.id === 0 && e.big) {
+        hitStop = 0.08;
+        if (navigator.vibrate) navigator.vibrate(24);
+      }
     } else if (e.t === "dive" && e.id === 0) audio.play("jump", 0.28, 0.04);
     else if (e.t === "crack") cracked = true;
     else if (e.t === "seat") {
@@ -356,7 +541,10 @@ function handleEvents() {
         dot.classList.add("pop");
         setTimeout(() => dot.classList.remove("pop"), 400);
       }
-      if (e.id === 0) showToast("SEAT " + (e.seat + 1) + " LOCKED");
+      if (e.id === 0) {
+        showToast("SEAT " + (e.seat + 1) + " LOCKED");
+        if (navigator.vibrate) navigator.vibrate([16, 30, 16]);
+      }
     } else if (e.t === "lastseat") audio.play("last", 0.7, 0.2);
     else if (e.t === "launch") audio.play("launch", 0.65, 0.2);
     else if (e.t === "escaped") {
@@ -408,13 +596,22 @@ function frame(now) {
   const follow = 1 - Math.exp(-16 * dt);
   steer.x += (aim.x - steer.x) * follow;
   steer.z += (aim.z - steer.z) * follow;
+  if (raw.pause && !escWas) togglePause();
+  escWas = !!raw.pause;
+  if (paused) {
+    world.update(race, 0, raw);
+    world.render();
+    return;
+  }
   let wish = {
     x: steer.x,
     z: steer.z,
     jump: raw.jump,
     dive: raw.dive,
+    grab: raw.grab,
+    holdJump: raw.holdJump,
   };
-  if (race.phase !== "race") wish = { x: 0, z: 0, jump: false, dive: false };
+  if (race.phase !== "race") wish = { x: 0, z: 0, jump: false, dive: false, grab: false, holdJump: false };
   if (hitStop > 0) {
     hitStop -= dt;
   } else {
@@ -423,7 +620,7 @@ function frame(now) {
   let steps = 0;
   while (hitStop <= 0 && acc >= STEP && steps < 8) {
     try {
-      step(race, STEP, steps === 0 ? wish : { x: wish.x, z: wish.z, jump: false, dive: false });
+      step(race, STEP, steps === 0 ? wish : { x: wish.x, z: wish.z, jump: false, dive: false, grab: false, holdJump: wish.holdJump });
     } catch (err) {
       console.error(err);
       acc = 0;
@@ -433,6 +630,13 @@ function frame(now) {
     steps++;
   }
   crackMute = Math.max(0, crackMute - dt);
+  if (race.phase === "race" && race.player.grounded && Math.hypot(race.player.vel.x, race.player.vel.z) > 2.2) {
+    stepMute -= dt;
+    if (stepMute <= 0) {
+      audio.play("land", 0.1, 0.02);
+      stepMute = 0.32;
+    }
+  }
   handleEvents();
   const dist = race.player.pos.z - race.collapseZ;
   const rumble = race.phase === "race" ? Math.max(0, Math.min(1, 1 - dist / 36)) : (race.phase === "launch" ? 0.4 : 0);

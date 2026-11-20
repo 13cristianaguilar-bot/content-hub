@@ -186,7 +186,7 @@ export function groundAt(course, x, z) {
       const dx = x - pad.x;
       const dz = z - pad.z;
       const d = Math.hypot(dx, dz);
-      const reach = Math.max(pad.rx, pad.rz) + (pad.zone === "meadow" ? 8 : 2.4);
+      const reach = Math.max(pad.rx, pad.rz) + (pad.zone === "meadow" ? 8 : 3.6);
       if (d < reach && d < nd) {
         nd = d;
         nearest = pad;
@@ -522,6 +522,11 @@ export function createCourse(cfg) {
     routes,
     openDoor,
     spawns,
+    crateSpawns: [
+      { x: -6, y: 0.4, z: zz(34) },
+      { x: 7, y: 0.4, z: zz(46) },
+      { x: -12, y: 0.5, z: zz(108) },
+    ],
     ship,
     endZ: ship.z,
   };

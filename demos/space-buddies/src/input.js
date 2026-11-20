@@ -7,6 +7,8 @@ export function createInput(root) {
   let lookDy = 0;
   let jumpEdge = false;
   let diveEdge = false;
+  let grabEdge = false;
+  let jumpHeld = false;
   let stickX = 0;
   let stickY = 0;
   let looking = false;
@@ -16,6 +18,8 @@ export function createInput(root) {
     const t = e.target;
     if (t.closest && t.closest("#jump")) return "jump";
     if (t.closest && t.closest("#dive")) return "dive";
+    if (t.closest && t.closest("#grab")) return "grab";
+    if (t.closest && t.closest("#pause, #mute")) return "ui";
     if (t.closest && t.closest("button, a")) return "ui";
     const w = window.innerWidth || 1;
     if (e.pointerType === "mouse") return "look";
@@ -30,9 +34,19 @@ export function createInput(root) {
     e.preventDefault();
     try { root.setPointerCapture?.(e.pointerId); } catch (err) { /* synthetic pointers have no capture */ }
     pointers.set(e.pointerId, { kind, x: e.clientX, y: e.clientY, ox: e.clientX, oy: e.clientY });
-    if (kind === "jump") jumpEdge = true;
+    if (kind === "jump") {
+      jumpEdge = true;
+      jumpHeld = true;
+    }
     if (kind === "dive") diveEdge = true;
-    if (kind === "move") placeStick(e.clientX, e.clientY, e.clientX, e.clientY);
+    if (kind === "grab") grabEdge = true;
+    if (kind === "move") {
+      stick.style.left = e.clientX + "px";
+      stick.style.top = e.clientY + "px";
+      stick.style.bottom = "auto";
+      stick.classList.add("float");
+      placeStick(e.clientX, e.clientY, e.clientX, e.clientY);
+    }
   }
 
   function onMove(e) {
@@ -58,9 +72,11 @@ export function createInput(root) {
         stickX = 0;
         stickY = 0;
         knob.style.transform = "translate(-50%, -50%)";
+        stick.classList.remove("float");
       }
     }
     if (p && p.kind === "look" && ![...pointers.values()].some((q) => q.kind === "look")) looking = false;
+    if (p && p.kind === "jump" && ![...pointers.values()].some((q) => q.kind === "jump")) jumpHeld = false;
   }
 
   function placeStick(ox, oy, x, y) {
@@ -81,14 +97,21 @@ export function createInput(root) {
   root.addEventListener("pointercancel", onUp);
 
   window.addEventListener("keydown", (e) => {
-    const map = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1, Space: 1, ShiftLeft: 1, ShiftRight: 1 };
+    const map = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1, Space: 1, ShiftLeft: 1, ShiftRight: 1, KeyE: 1, Escape: 1 };
     if (map[e.code]) e.preventDefault();
     if (e.repeat) return;
     keys.add(e.code);
-    if (e.code === "Space") jumpEdge = true;
+    if (e.code === "Space") {
+      jumpEdge = true;
+      jumpHeld = true;
+    }
     if (e.code === "ShiftLeft" || e.code === "ShiftRight") diveEdge = true;
+    if (e.code === "KeyE") grabEdge = true;
   });
-  window.addEventListener("keyup", (e) => keys.delete(e.code));
+  window.addEventListener("keyup", (e) => {
+    keys.delete(e.code);
+    if (e.code === "Space") jumpHeld = false;
+  });
   window.addEventListener("blur", () => keys.clear());
 
   function read() {
@@ -114,12 +137,16 @@ export function createInput(root) {
       looking,
       mouse: [...pointers.values()].some((p) => p.kind === "look"),
       jump: jumpEdge,
+      holdJump: jumpHeld || keys.has("Space"),
       dive: diveEdge,
+      grab: grabEdge,
+      pause: keys.has("Escape"),
     };
     lookDx = 0;
     lookDy = 0;
     jumpEdge = false;
     diveEdge = false;
+    grabEdge = false;
     return out;
   }
 

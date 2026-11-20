@@ -37,8 +37,8 @@ export const CONFIG = {
   fragileCrack: 0.62,
 
   // Snappy, arcade movement. High accel, short stop, forgiving jump.
-  accel: 78,
-  airAccel: 46,
+  accel: 62,
+  airAccel: 58,
   maxSpeed: 8.4,
   playerSpeed: 1,
   friction: 36,
@@ -47,8 +47,8 @@ export const CONFIG = {
   gravity: 29,
   fallGravityMul: 1.48,
   jumpVel: 10.15,
-  coyoteTime: 0.16,
-  jumpBuffer: 0.15,
+  coyoteTime: 0.22,
+  jumpBuffer: 0.2,
   ungroundTime: 0.1,
   maxFallSpeed: 28,
   bodyRadius: 0.44,
@@ -68,10 +68,10 @@ export const CONFIG = {
   poundPush: 7.5,
   poundUp: 4.6,
 
-  padUp: 12.4,
-  padForward: 6.5,
-  padRadius: 1.65,
-  padCooldown: 0.4,
+  padUp: 13.2,
+  padForward: 7.2,
+  padRadius: 2.35,
+  padCooldown: 0.28,
 
   bumperPush: 11,
   bumperUp: 5.2,
@@ -94,7 +94,7 @@ export const CONFIG = {
   platformRadius: 2.15,
   platformTop: 0.28,
 
-  stunTime: 0.48,
+  stunTime: 0.72,
   knockCooldown: 0.55,
 
   windPush: 3.6,

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
+import { groundAt } from "./course.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing } from "./meadow.js";
 
@@ -894,6 +895,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   let confettiOn = false;
 
   function update(race, dt, look) {
+    if (race.crates && crateMeshes.length !== race.crates.length) {
+      for (const mesh of crateMeshes) scene.remove(mesh);
+      crateMeshes.length = 0;
+      for (const c of race.crates) {
+        const mesh = new THREE.Mesh(crateGeo, crateMat);
+        mesh.position.set(c.x, c.y, c.z);
+        scene.add(mesh);
+        crateMeshes.push(mesh);
+      }
+    }
+    for (let i = 0; i < crateMeshes.length; i++) {
+      const c = race.crates[i];
+      crateMeshes[i].position.set(c.x, c.y, c.z);
+    }
     for (const chunk of course.chunks) {
       const mesh = chunk.mesh;
       if (!mesh) continue;
@@ -1156,6 +1171,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     v.current = name;
   }
 
+  function groundAtSafe(x, z) {
+    const g = groundAt(course, x, z);
+    return g ? g.y : null;
+  }
+
+  const crateMeshes = [];
+  const crateGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+  const crateMat = new THREE.MeshToonMaterial({ color: 0xe0a45c, gradientMap: TOON_MAP });
+
   function updateCamera(race, dt, look) {
     const player = race.player;
     if (look && look.overview) {
@@ -1244,6 +1268,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     let tx = player.pos.x + Math.sin(state.yaw) * horiz;
     let ty = player.pos.y + height + 0.35;
     let tz = player.pos.z - Math.cos(state.yaw) * horiz;
+    const under = groundAtSafe(tx, tz);
+    if (under && ty < under + 1.35) ty = under + 1.55;
     const intro = race.phase === "countdown" ? 1 : 0;
     ty += intro * 2.2;
     tz -= intro * 2.4;
@@ -1323,6 +1349,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     reset,
     render,
     applyLook,
+    setTheme(planet) {
+      const themes = [
+        { sky: 0xc7f0ff, ground: 0x7dcc62, sun: 0xfff3c4 },
+        { sky: 0xffc2a1, ground: 0xc45a32, sun: 0xffe0b0 },
+        { sky: 0xb7d6ff, ground: 0x6aa0d8, sun: 0xf4f7ff },
+      ];
+      const t = themes[(Math.max(1, planet) - 1) % themes.length];
+      hemi.color.set(t.sky);
+      hemi.groundColor.set(t.ground);
+      sun.color.set(t.sun);
+    },
     setDpr(next) {
       dpr = next;
       resize();

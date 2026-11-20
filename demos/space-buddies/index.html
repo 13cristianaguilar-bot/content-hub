@@ -175,7 +175,7 @@ button { font-family: inherit; touch-action: manipulation; }
   position: absolute;
   left: calc(16px + env(safe-area-inset-left));
   bottom: calc(18px + env(safe-area-inset-bottom));
-  width: 128px; height: 128px;
+  width: 156px; height: 156px;
   border-radius: 50%;
   background: rgba(255, 246, 229, 0.42);
   box-shadow: inset 0 0 0 3px rgba(30, 36, 64, 0.18);
@@ -198,10 +198,43 @@ button { font-family: inherit; touch-action: manipulation; }
   font-weight: 700;
   color: var(--ink);
 }
+#stick.float { bottom: auto; width: 168px; height: 168px; transform: translate(-50%, -50%); }
+#grab {
+  position: absolute;
+  right: calc(124px + env(safe-area-inset-right));
+  bottom: calc(36px + env(safe-area-inset-bottom));
+  width: 74px; height: 74px;
+  background: var(--mint);
+  font-size: 13px;
+  box-shadow: 0 6px 0 #3aaa78;
+}
+#pause, #mute {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  z-index: 6;
+  border: 0;
+  border-radius: 999px;
+  font-weight: 700;
+  background: var(--cream);
+  color: var(--ink);
+  padding: 8px 12px;
+}
+#pause { left: calc(12px + env(safe-area-inset-left)); top: calc(86px + env(safe-area-inset-top)); }
+#mute { left: calc(96px + env(safe-area-inset-left)); top: calc(86px + env(safe-area-inset-top)); }
+#fade {
+  position: absolute; inset: 0; background: #1e2440; opacity: 0; pointer-events: none; z-index: 7;
+  transition: opacity 0.18s linear;
+}
+#fade.on { opacity: 0.72; }
+#round-name, #pause-menu, #planet {
+  position: absolute; inset: 0; z-index: 8; display: grid; place-items: center;
+  background: rgba(30, 36, 64, 0.28);
+}
+#round-name .card, #pause-menu .card, #planet .card { text-align: center; }
 #jump {
   right: calc(18px + env(safe-area-inset-right));
   bottom: calc(22px + env(safe-area-inset-bottom));
-  width: 92px; height: 92px;
+  width: 108px; height: 108px;
   background: var(--sun);
   font-size: 16px;
   box-shadow: 0 8px 0 #e0b428;
@@ -360,6 +393,9 @@ button { font-family: inherit; touch-action: manipulation; }
 <div id="app">
   <canvas id="view"></canvas>
   <div id="danger"></div>
+  <div id="fade"></div>
+  <button id="pause" type="button" hidden>PAUSE</button>
+  <button id="mute" type="button" hidden>MUTE</button>
   <div id="hud" hidden>
     <div>
       <div id="timer" class="pill">3:00</div>
@@ -386,6 +422,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
   <div id="controls" hidden>
     <div id="stick" aria-hidden="true"><div id="knob"></div></div>
+    <button id="grab" type="button">GRAB</button>
     <button id="jump" type="button">JUMP</button>
     <button id="dive" type="button">DIVE</button>
   </div>
@@ -406,6 +443,9 @@ button { font-family: inherit; touch-action: manipulation; }
       <button id="start" type="button">START RACE</button>
     </div>
   </div>
+  <div id="round-name" hidden><div class="card"><p class="kicker" id="round-kicker">PLANET 1</p><h1 class="banner" id="round-title">ROUND 1</h1><p class="sub" id="round-sub">Qualify</p></div></div>
+  <div id="pause-menu" hidden><div class="card"><p class="kicker">PAUSED</p><button id="resume" type="button">RESUME</button><button id="restart" type="button">RESTART</button><button id="pause-menu-btn" type="button">MAIN MENU</button></div></div>
+  <div id="planet" hidden><div class="card"><p class="kicker">ESCAPE SHIP</p><h1 class="banner">NEXT PLANET</h1><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" type="button">LAND</button></div></div>
   <div id="result" hidden>
     <div class="card">
       <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
@@ -413,9 +453,12 @@ button { font-family: inherit; touch-action: manipulation; }
       <p id="result-sub" class="sub">SEAT 1 OF 8</p>
       <p id="result-time" class="time">TIME 0:00</p>
       <button id="again" type="button">PLAY AGAIN</button>
+      <button id="menu" type="button">MAIN MENU</button>
+      <button id="next-round" type="button" hidden>NEXT ROUND</button>
+      <button id="next-planet" type="button" hidden>NEXT PLANET</button>
     </div>
   </div>
 </div>
-<script src="game.js?v=14"></script>
+<script src="game.js?v=15"></script>
 </body>
 </html>

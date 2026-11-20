@@ -721,6 +721,7 @@ function frame(now) {
   if (!qualityDropped && !params.get("dpr") && fps > 0 && fps < 24 && race.time > 5 && world.setDpr) {
     qualityDropped = true;
     world.setDpr(1);
+    if (world.setPost) world.setPost(false);
   }
   if (window.__sbOverview) raw.overview = window.__sbOverview;
   try {

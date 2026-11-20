@@ -208,6 +208,7 @@ export function buildDressing(scene, course, gradientMap) {
   const stations = course.stations || [];
   if (course.hubs && course.hubs.length) {
     course.hubs.forEach((hub, hi) => {
+      if (hub.zone === "meadow" || hub.zone === "canyon") return;
       for (let k = 0; k < 8; k++) {
         const a = (k / 8) * Math.PI * 2 + hi * 0.4;
         const dist = hub.r + 6 + hash(hi * 19 + k) * 12;

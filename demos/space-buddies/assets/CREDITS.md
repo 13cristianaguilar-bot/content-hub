@@ -22,6 +22,22 @@ The GLBs in `assets/meadow/` were converted from the authors' FBX exports with a
 - Used models: `saw` (meadow sweeper and spinner), `buttonRound` (meadow bounce pads), `doorClosed` (a decorative ruin on the plaza rim, not a gameplay door), `fenceBroken`
 - Shipped as: `saw.glb`, `button.glb`, `door.glb`, `fence_broken.glb`
 
+## Kenney — Nature Kit cliffs, and Pirate Kit rock formations
+
+- Sources: https://kenney.nl/assets/nature-kit and https://kenney.nl/assets/pirate-kit
+- License: CC0 1.0
+- Author: Kenney (www.kenney.nl)
+- Used for meadow and canyon rims and the far hills: `cliff_rock`, `cliff_large_rock`, `cliff_top_rock`, `formation_rock`, `formationLarge_rock`
+- Shipped as: `assets/kenney/cliff.glb`, `cliff_large.glb`, `cliff_top.glb`, `formation.glb`, `formation_large.glb`
+
+## Kenney — Platformer Kit, canyon pieces
+
+- Source: https://kenney.nl/assets/platformer-kit
+- License: CC0 1.0
+- Used for the canyon door wall, the side blocks, and the canyon see-saw plank: `doorOpen`, `block`, `blockLong`
+- Shipped as: `assets/kenney/door_open.glb`, `block.glb`, `plank.glb`
+- The canyon hammer is built from the Nature Kit log and large rock already credited above. Kenney's packs here do not include a hammer or a see-saw as a single model.
+
 ## Not used, on purpose
 
 - Quaternius and KayKit packs are also CC0, but their downloads from this environment only resolved to a Google Drive folder or an account wall. Kenney's packs already covered trees, bushes, flowers, rocks, grass, fences, the mushroom, platforms, a saw, and a button.

@@ -13,6 +13,8 @@
 <link rel="icon" href="favicon-32.png" sizes="32x32">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.json">
+<link rel="preload" href="ui/fonts/LilitaOne-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="ui/ui.css">
 <style>
 @font-face {
   font-family: Fredoka;
@@ -461,29 +463,31 @@ button { font-family: inherit; touch-action: manipulation; }
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app" class="sb-ui">
   <canvas id="view"></canvas>
   <div id="vignette"></div>
   <div id="danger"></div>
   <div id="fade"></div>
-  <div id="hud" hidden>
-    <div>
-      <div id="timer" class="pill">3:00</div>
-      <div class="track" aria-hidden="true"><i id="progress"></i></div>
+  <div id="hud" class="sb-hud" hidden>
+    <div class="sb-hud__top">
+      <div class="sb-hud__left">
+        <div id="timer" class="sb-pill sb-pill--timer" data-ui="timer"><img src="ui/svg/icon_clock.svg" alt=""><b id="timer-num">3:00</b></div>
+        <div class="sb-track" aria-hidden="true"><i id="progress"></i></div>
+        <div class="sb-rank" data-ui="place"><b id="place">1ST</b></div>
+        <div id="coins" class="sb-pill" data-ui="coins"><img src="ui/svg/icon_coin.svg" alt=""><b id="coin-num">0</b></div>
+      </div>
+      <div class="sb-hud__right">
+        <div class="sb-panel sb-seats" data-ui="seats">
+          <div id="seats" class="sb-seats__row"></div>
+          <div id="seats-label" class="sb-seats__label">SEATS 0/8</div>
+        </div>
+        <div class="sb-hud__tools">
+          <button id="mute" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="mute" data-haptic="light" aria-label="Mute"><img src="ui/svg/icon_mute.svg" alt=""></button>
+          <button id="pause" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="pause" data-haptic="light" aria-label="Pause"><img src="ui/svg/icon_pause.svg" alt=""></button>
+        </div>
+      </div>
     </div>
-    <div class="midpills">
-      <div id="place" class="pill">1ST</div>
-    </div>
-    <div class="seatbox">
-      <div id="seats"></div>
-      <div id="seats-label">SEATS 0/8</div>
-    </div>
-    <div id="coins" class="pill">0 COINS</div>
-    <div class="hud-tools">
-      <button id="mute" type="button">MUTE</button>
-      <button id="pause" type="button">PAUSE</button>
-    </div>
-    <div id="last-banner" hidden>LAST SEAT!</div>
+    <img id="last-banner" class="sb-banner" alt="Last seat" src="ui/svg/banner_last_seat.svg" hidden>
   </div>
   <div id="tutor" hidden>DRAG THE LEFT SIDE TO RUN</div>
   <div id="zone" hidden>MEADOW</div>
@@ -494,51 +498,78 @@ button { font-family: inherit; touch-action: manipulation; }
       <div id="count-label">GET READY</div>
     </div>
   </div>
-  <div id="controls" hidden>
-    <div id="stick" aria-hidden="true"><div id="knob"></div></div>
-    <button id="grab" type="button">GRAB</button>
-    <button id="jump" type="button">JUMP</button>
-    <button id="dive" type="button">DIVE</button>
+  <div id="controls" class="sb-controls" hidden>
+    <div id="stick" class="sb-stick" aria-hidden="true"><div id="knob" class="sb-stick__knob"></div></div>
+    <button id="grab" class="sb-action sb-action--grab" type="button" data-haptic="light" aria-label="Grab"></button>
+    <button id="jump" class="sb-action sb-action--jump" type="button" data-haptic="medium" aria-label="Jump"></button>
+    <button id="dive" class="sb-action sb-action--dive" type="button" data-haptic="light" aria-label="Dive"></button>
   </div>
   <pre id="debug-error" hidden></pre>
   <div id="title">
     <img id="keyart" src="assets/images/title.jpg" alt="Space Buddies">
     <div class="title-ui">
-      <div class="planet-map" id="title-map">
-        <span class="planet-dot on" data-planet="1"><b>1</b><small>MEADOW</small></span>
-        <span class="planet-dot" data-planet="2"><b>2</b><small>SKY</small></span>
-        <span class="planet-dot" data-planet="3"><b>3</b><small>STORM</small></span>
+      <div class="sb-map" id="title-map" data-ui="map">
+        <button class="planet-dot" type="button" data-planet="1" data-haptic="light"><img class="node" alt="Meadow" src="ui/svg/map_node_current.svg"></button>
+        <img class="dots" alt="" src="ui/svg/map_path_dots.svg">
+        <button class="planet-dot" type="button" data-planet="2" data-haptic="light"><img class="node" alt="Sky" src="ui/svg/map_node_locked.svg"></button>
+        <img class="dots" alt="" src="ui/svg/map_path_dots.svg">
+        <button class="planet-dot" type="button" data-planet="3" data-haptic="light"><img class="node" alt="Storm" src="ui/svg/map_node_locked.svg"></button>
       </div>
-      <button id="play" type="button" disabled>LOADING</button>
+      <button id="play" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-ui="play" data-haptic="medium" disabled>LOADING</button>
       <p class="blurb">16 buddies. 8 seats. The planet is falling apart.</p>
       <p class="keys">Left side runs. Right side looks. Jump and dive with the right thumb.</p>
       <p class="keys">Keyboard: WASD, drag to look, Space, Shift.</p>
     </div>
   </div>
   <div id="lobby" hidden>
-    <div class="card">
-      <p class="kicker">CHOOSE YOUR BUDDY</p>
-      <div id="colors"></div>
-      <div id="gear"></div>
-      <button id="start" type="button">START RACE</button>
+    <div class="sb-panel sb-card sb-stagger">
+      <p class="sb-kicker">LOCKER</p>
+      <p class="sub">Spin your Buddy. Color and hat stay on this phone.</p>
+      <div id="colors" data-ui="colors"></div>
+      <div id="gear" data-ui="hats"></div>
+      <button id="start" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-ui="start" data-haptic="medium">START RACE</button>
     </div>
   </div>
   <div id="round-name" hidden><div class="card"><p class="kicker" id="round-kicker">PLANET 1</p><h1 class="banner" id="round-title">ROUND 1</h1><p class="sub" id="round-sub">Qualify</p></div></div>
   <div id="pause-menu" hidden><div class="card"><p class="kicker">PAUSED</p><button id="resume" type="button">RESUME</button><button id="restart" type="button">RESTART</button><button id="pause-menu-btn" type="button">MAIN MENU</button></div></div>
-  <div id="planet" hidden><div class="card"><p class="kicker">ESCAPE SHIP</p><h1 class="banner">NEXT PLANET</h1><div class="planet-map" id="planet-map"><span class="planet-dot done" data-planet="1"><b>1</b><small>MEADOW</small></span><span class="planet-dot on" data-planet="2"><b>2</b><small>SKY</small></span><span class="planet-dot" data-planet="3"><b>3</b><small>STORM</small></span></div><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" type="button">LAND</button></div></div>
+  <div id="planet" hidden><div class="sb-panel sb-card"><p class="sb-kicker">ESCAPE SHIP</p><img class="sb-banner" alt="Next planet" src="ui/svg/banner_next_planet.svg"><div class="sb-map" id="planet-map" data-ui="map"><button class="planet-dot" type="button" data-planet="1"><img class="node" alt="Meadow" src="ui/svg/map_node_cleared.svg"></button><img class="dots" alt="" src="ui/svg/map_path_dots.svg"><button class="planet-dot" type="button" data-planet="2"><img class="node" alt="Sky" src="ui/svg/map_node_current.svg"></button><img class="dots" alt="" src="ui/svg/map_path_dots.svg"><button class="planet-dot" type="button" data-planet="3"><img class="node" alt="Storm" src="ui/svg/map_node_locked.svg"></button></div><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-haptic="medium">LAND</button></div></div>
   <div id="result" hidden>
     <div class="card">
       <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
-      <h1 id="result-title" class="banner">YOU ESCAPED!</h1>
+      <img id="result-banner" class="sb-banner" alt="" src="ui/svg/banner_qualified.svg">
+      <h1 id="result-title" class="banner" hidden>YOU ESCAPED!</h1>
+      <div class="podium" data-ui="podium">
+        <div class="pod p2"><b>2</b><span id="pod-2">—</span></div>
+        <div class="pod p1"><b>1</b><span id="pod-1">—</span></div>
+        <div class="pod p3"><b>3</b><span id="pod-3">—</span></div>
+      </div>
       <p id="result-sub" class="sub">SEAT 1 OF 8</p>
       <p id="result-time" class="time">TIME 0:00</p>
-      <button id="again" type="button">PLAY AGAIN</button>
-      <button id="menu" type="button">MAIN MENU</button>
-      <button id="next-round" type="button" hidden>NEXT ROUND</button>
-      <button id="next-planet" type="button" hidden>NEXT PLANET</button>
+      <button id="again" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-ui="again" data-haptic="medium">PLAY AGAIN</button>
+      <button id="menu" class="sb-btn sb-btn--secondary sb-btn--block" type="button" data-haptic="light">MAIN MENU</button>
+      <button id="next-round" class="sb-btn sb-btn--success sb-btn--block" type="button" data-haptic="medium" hidden>NEXT ROUND</button>
+      <button id="next-planet" class="sb-btn sb-btn--primary sb-btn--block" type="button" data-haptic="medium" hidden>NEXT PLANET</button>
     </div>
   </div>
 </div>
-<script src="game.js?v=42"></script>
+<script src="ui/sb-ui.js"></script>
+<script src="game.js?v=44"></script>
+<style>
+#hud.sb-hud { display: block; padding: 0; pointer-events: none; }
+#jump.sb-action, #dive.sb-action, #grab.sb-action { background-color: transparent; box-shadow: none; color: transparent; background-repeat: no-repeat; background-position: center; background-size: contain; }
+#jump.sb-action { background-image: url("ui/svg/action_jump.svg"); }
+#dive.sb-action { background-image: url("ui/svg/action_dive.svg"); }
+#grab.sb-action { background-image: url("ui/svg/action_grab.svg"); }
+#stick.sb-stick { background: url("ui/svg/joystick_base.svg") center/contain no-repeat; box-shadow: none; }
+#knob.sb-stick__knob { background: url("ui/svg/joystick_knob.svg") center/contain no-repeat; box-shadow: none; }
+#hud.sb-hud[hidden] { display: none !important; }
+.podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; }
+.pod { width: 78px; border: 4px solid #1e2440; border-radius: 16px 16px 8px 8px; background: #fff6e5; padding: 8px 4px; text-align: center; }
+.pod.p1 { height: 108px; background: #ffd23f; order: 2; }
+.pod.p2 { height: 78px; order: 1; background: #cfd8f0; }
+.pod.p3 { height: 64px; order: 3; background: #ff9a5c; }
+#lobby { background: linear-gradient(180deg, transparent 0 42%, rgba(30,36,64,.28) 42% 100%); align-items: end; padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+#count-num.sb-countdown { animation: pop 0.35s cubic-bezier(.34,1.56,.64,1); }
+</style>
 </body>
 </html>

@@ -2049,6 +2049,36 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     state.pitch = cfg.defaultPitch;
   }
 
+  const stage = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.35, 1.5, 0.24, 24),
+    new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP })
+  );
+  stage.position.y = 0.02;
+  stage.visible = false;
+  scene.add(stage);
+
+  function showBuddy(dt) {
+    stage.visible = true;
+    for (let i = 1; i < visuals.length; i++) visuals[i].group.visible = false;
+    const v = visuals[0];
+    if (!v) return;
+    v.group.visible = true;
+    v.group.position.set(0, 0.2, 0);
+    v.group.rotation.y += dt * 0.7;
+    v.mixer.update(dt);
+    setAnim(v, "Idle", 1);
+    if (v.antennas) {
+      for (let a = 0; a < v.antennas.length; a++) v.antennas[a].rotation.z = Math.sin(performance.now() * 0.003 + a) * 0.3;
+    }
+    camera.position.set(1.7, 1.45, 3.1);
+    camera.lookAt(0, 1.05, 0);
+  }
+
+  function hideBuddy() {
+    stage.visible = false;
+    for (const v of visuals) v.group.visible = true;
+  }
+
   function render() {
     if (!postOn) {
       renderer.setRenderTarget(null);
@@ -2103,6 +2133,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     update,
     reset,
     render,
+    showBuddy,
+    hideBuddy,
     applyLook,
     setTheme(planet) {
       const themes = [

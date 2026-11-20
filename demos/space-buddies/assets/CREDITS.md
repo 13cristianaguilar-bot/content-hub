@@ -4,6 +4,8 @@ Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated). 
 
 The zone music bed is an original procedural party loop written for this demo. Countdown, qualify, eliminated, and escape stingers are the existing files in `assets/audio/`.
 
+UI display type is Lilita One by Juan Montoreano, and body type is Fredoka by the Indian Type Foundry. Both are used under the SIL Open Font License 1.1. The license texts are `ui/fonts/LilitaOne-OFL.txt` and `ui/fonts/Fredoka-OFL.txt`.
+
 # Meadow asset credits
 
 Every file added for the meadow pass is CC0 1.0 Universal. No account and no paid pack was used. Other zones still use the project's existing models.

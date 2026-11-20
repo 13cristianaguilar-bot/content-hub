@@ -71,7 +71,8 @@ export function createInput(root) {
       if (!still) {
         stickX = 0;
         stickY = 0;
-        knob.style.transform = "translate(-50%, -50%)";
+        knob.style.setProperty("--kx", "0px");
+        knob.style.setProperty("--ky", "0px");
         stick.classList.remove("float");
       }
     }
@@ -88,7 +89,8 @@ export function createInput(root) {
     dy = (dy / mag) * clamped;
     stickX = dx / radius;
     stickY = -dy / radius;
-    knob.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+    knob.style.setProperty("--kx", dx + "px");
+    knob.style.setProperty("--ky", dy + "px");
   }
 
   root.addEventListener("pointerdown", onDown);

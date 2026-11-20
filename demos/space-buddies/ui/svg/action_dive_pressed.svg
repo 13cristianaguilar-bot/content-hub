@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="116" height="120" viewBox="0 0 116 120">
+  <defs>
+    <radialGradient id="diveFaceP" cx="0.42" cy="0.32" r="0.7">
+      <stop offset="0" stop-color="#FFA8A0"/>
+      <stop offset="0.6" stop-color="#E04848"/>
+      <stop offset="1" stop-color="#B03238"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="58" cy="74" rx="44" ry="40" fill="#1E2440" opacity="0.22"/>
+  <circle cx="58" cy="64" r="46" fill="#B03238" stroke="#1E2440" stroke-width="6"/>
+  <circle cx="58" cy="60" r="45" fill="url(#diveFaceP)" stroke="#1E2440" stroke-width="6"/>
+  <g fill="#fff" stroke="#1E2440" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="34" cy="48" r="7"/>
+    <path d="M40 52 L78 70" stroke-width="8"/>
+    <path d="M64 58 L82 74 L62 78 Z" fill="#fff"/>
+  </g>
+  <text x="58" y="98" text-anchor="middle" font-family="Lilita One, Arial Black, sans-serif" font-size="18" fill="#fff" stroke="#1E2440" stroke-width="4" paint-order="stroke">DIVE</text>
+</svg>

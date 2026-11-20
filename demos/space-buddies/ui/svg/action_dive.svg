@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="116" height="120" viewBox="0 0 116 120">
+  <defs>
+    <radialGradient id="diveFace" cx="0.42" cy="0.32" r="0.7">
+      <stop offset="0" stop-color="#FFA8A0"/>
+      <stop offset="0.55" stop-color="#FF6B6B"/>
+      <stop offset="1" stop-color="#E04848"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="58" cy="70" rx="44" ry="44" fill="#1E2440" opacity="0.28"/>
+  <circle cx="58" cy="62" r="46" fill="#E04848" stroke="#1E2440" stroke-width="6"/>
+  <circle cx="58" cy="52" r="46" fill="#B03238" stroke="#1E2440" stroke-width="6"/>
+  <circle cx="58" cy="51" r="45" fill="url(#diveFace)" stroke="#1E2440" stroke-width="6"/>
+  <ellipse cx="58" cy="30" rx="28" ry="14" fill="#fff" opacity="0.55"/>
+  <g fill="#fff" stroke="#1E2440" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <circle cx="34" cy="40" r="7"/>
+    <path d="M40 44 L78 62" stroke-width="8"/>
+    <path d="M64 50 L82 66 L62 70 Z" fill="#fff"/>
+  </g>
+  <path d="M22 34 L32 40 M18 46 L28 50" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+  <text x="58" y="92" text-anchor="middle" font-family="Lilita One, Arial Black, sans-serif" font-size="18" fill="#fff" stroke="#1E2440" stroke-width="4" paint-order="stroke">DIVE</text>
+</svg>

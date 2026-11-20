@@ -2725,6 +2725,9 @@ assert.ok(ctx.prepReadBodyHtml({
   reference_clip: 'https://www.instagram.com/reel/De7Kwg_hCLn/',
 }).includes('Stop pitching the funder first.'));
 assert.ok(script.includes('class="client-jump"'));
+assert.ok(script.includes('class="cc-tools"'));
+assert.ok(script.includes('window.toggleCcMenu'));
+assert.ok(!script.includes('class="hub-top"'));
 assert.ok(script.includes('window.exitToClients'));
 assert.ok(script.includes('window.openClientResources'));
 assert.ok(script.includes('>Clients</button>'));

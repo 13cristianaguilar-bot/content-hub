@@ -23,9 +23,9 @@ function makeToonTexture() {
   c.width = 4;
   c.height = 1;
   const g = c.getContext("2d");
-  g.fillStyle = "#7d7d8c";
+  g.fillStyle = "#b7c3dc";
   g.fillRect(0, 0, 1, 1);
-  g.fillStyle = "#c5c5d2";
+  g.fillStyle = "#e7eef8";
   g.fillRect(1, 0, 1, 1);
   g.fillStyle = "#ffffff";
   g.fillRect(2, 0, 2, 1);
@@ -124,10 +124,10 @@ export function buildDressing(scene, course, gradientMap) {
     d.rotation.set(0, i, 0.15);
     d.scale.setScalar(1 + (i % 3) * 0.2);
   });
-  inst(puff, makeToon(0xffffff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
-    d.position.set(t.x * 0.3 + 8, t.y + 3.2, t.z);
+  inst(puff, makeToon(0xf4fbff, gradientMap), picks.ice.filter((_, i) => i % 2 === 0), (d, t) => {
+    d.position.set(t.x, t.y + 0.28, t.z);
     d.rotation.set(0, 0, 0);
-    d.scale.set(1.4, 1.4, 1.4);
+    d.scale.set(1.15, 0.7, 1.15);
   });
 
   inst(rock, makeToon(0xe0a15a, gradientMap), picks.climb, (d, t, i) => {
@@ -137,18 +137,22 @@ export function buildDressing(scene, course, gradientMap) {
   });
 
   const floats = [];
+  const floatTint = { meadow: 0x7fd88a, canyon: 0xff7a1a, sky: 0xb7e4ff, ice: 0xd7f3ff, climb: 0xffc56a, ship: 0xfff6e5 };
   for (let i = 0; i < 36; i++) {
     const z = (course.ship.z * (i + 0.5)) / 36;
     const side = i % 2 === 0 ? -1 : 1;
+    let zone = course.zones[0].id;
+    for (const item of course.zones) if (z >= item.z0) zone = item.id;
     floats.push({
-      x: side * (11 + hash(i) * 6),
-      y: 3 + hash(i + 3) * 6,
+      x: side * (14 + hash(i) * 8),
+      y: 6 + hash(i + 3) * 8,
       z,
       s: 0.6 + hash(i + 9) * 0.9,
       phase: hash(i + 2) * 6,
+      color: floatTint[zone] || 0xfff6e5,
     });
   }
-  const floatMesh = inst(chunk, makeToon(0xcbb6a2, gradientMap), floats, (d, item) => {
+  const floatMesh = inst(chunk, makeToon(0xffffff, gradientMap), floats, (d, item) => {
     d.position.set(item.x, item.y, item.z);
     d.rotation.set(item.phase, item.phase * 0.3, 0);
     d.scale.setScalar(item.s);

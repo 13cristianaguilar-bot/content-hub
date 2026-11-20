@@ -5,8 +5,6 @@ import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 
 const MODELS = {
   buddy: "assets/models/space_buddy.glb",
-  tile: "assets/models/terrain_hex_tile.glb",
-  cracked: "assets/models/terrain_hex_tile_cracked.glb",
   bumper: "assets/models/obstacle_bumper.glb",
   spinner: "assets/models/obstacle_spinner.glb",
   pad: "assets/models/obstacle_jump_pad.glb",
@@ -14,6 +12,12 @@ const MODELS = {
   lava: "assets/models/obstacle_lava_pool.glb",
   chunk: "assets/models/obstacle_falling_chunk.glb",
   ship: "assets/models/escape_ship.glb",
+  roller: "assets/models/enemy_roller.glb",
+  hopper: "assets/models/enemy_hopper.glb",
+  flyer: "assets/models/enemy_flyer.glb",
+  geyser: "assets/models/hazard_geyser.glb",
+  sweeper: "assets/models/hazard_sweeper.glb",
+  pendulum: "assets/models/hazard_pendulum.glb",
 };
 
 const TOON_MAP = makeToonTexture();
@@ -186,23 +190,31 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   const dressing = buildDressing(scene, course, TOON_MAP);
-  const solidMeshes = tileMeshes(gltfs.tile, course.tiles, "solid");
-  const crackedMeshes = tileMeshes(gltfs.cracked, course.tiles, "crack");
-
-  function writeTile(meshes, index, tile, hidden) {
-    if (hidden) {
-      dummy.position.set(0, -80, 0);
-      dummy.scale.set(0, 0, 0);
-      dummy.rotation.set(0, 0, 0);
-    } else {
-      dummy.position.set(tile.x, tile.y, tile.z);
-      const tilt = tile.tilt || 0;
-      if (tile.tiltAxis === "x") dummy.rotation.set(tilt, 0, 0);
-      else dummy.rotation.set(0, 0, tilt);
-      dummy.scale.set(1, 1, 1);
+  const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
+  const crackMat = new THREE.MeshToonMaterial({
+    vertexColors: true,
+    color: 0xffd0b0,
+    emissive: 0xff7a1a,
+    emissiveIntensity: 0.28,
+    gradientMap: TOON_MAP,
+    side: THREE.DoubleSide,
+  });
+  const chunkMeshes = [];
+  for (const chunk of course.chunks) {
+    if (chunk.gap || !chunk.positions) {
+      chunkMeshes.push(null);
+      continue;
     }
-    dummy.updateMatrix();
-    for (const mesh of meshes) mesh.setMatrixAt(index, dummy.matrix);
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(chunk.positions, 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(chunk.colors, 3));
+    geo.setIndex(new THREE.BufferAttribute(chunk.indices, 1));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, terrainMat);
+    mesh.frustumCulled = true;
+    scene.add(mesh);
+    chunk.mesh = mesh;
+    chunkMeshes.push(mesh);
   }
 
   const debrisGeo = partsOf(gltfs.chunk.scene)[0].geom;
@@ -214,6 +226,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     mesh.scale.setScalar(0.85);
     scene.add(mesh);
     debris.push({ mesh, active: false, vy: 0, life: 0 });
+  }
+
+  function cloneDrawn(gltf) {
+    const obj = gltf.scene.clone(true);
+    obj.traverse((node) => {
+      if (!node.isMesh || !node.material) return;
+      node.material = Array.isArray(node.material) ? node.material.map((m) => m.clone()) : node.material.clone();
+    });
+    return obj;
   }
 
   function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
@@ -308,101 +329,48 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
   scene.add(lava);
 
-  const ink = new THREE.MeshToonMaterial({ color: 0x1e2440, gradientMap: TOON_MAP });
   const geyserMeshes = course.geysers.map((g) => {
-    const group = new THREE.Group();
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.15, 0.28, 12), new THREE.MeshToonMaterial({ color: 0x2e3a6b, gradientMap: TOON_MAP }));
-    const jet = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.62, 1, 10), new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.9 }));
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.08, 6, 16), new THREE.MeshBasicMaterial({ color: 0xff7a1a }));
-    ring.rotation.x = Math.PI / 2;
-    ring.position.y = 0.2;
-    jet.position.y = 0.5;
-    group.add(base, jet, ring);
+    const group = cloneDrawn(gltfs.geyser);
     group.position.set(g.x, g.y, g.z);
-    group.userData.jet = jet;
-    group.userData.ring = ring;
+    group.userData.jet = group.getObjectByName("GeyserJet");
+    group.userData.ring = group.getObjectByName("GeyserRing");
     scene.add(group);
     return group;
   });
 
   const pendMeshes = course.pendulums.map(() => {
-    const bob = new THREE.Group();
-    const head = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.7, 0.7), new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP }));
-    const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.42, 0.35, 8), new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP }));
-    cap.position.y = 0.45;
-    bob.add(head, cap);
+    const bob = cloneDrawn(gltfs.pendulum);
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 6), new THREE.MeshToonMaterial({ color: 0x1e2440, gradientMap: TOON_MAP }));
     scene.add(bob, rope);
     return { bob, rope };
   });
 
   const sweepMeshes = course.sweepers.map((s) => {
-    const group = new THREE.Group();
-    const bar = new THREE.Mesh(
-      new THREE.BoxGeometry(s.radius * 2.4, 0.32, 2.4),
-      new THREE.MeshToonMaterial({ color: s.full ? 0xff7a1a : 0xff6b6b, gradientMap: TOON_MAP })
-    );
-    const end = new THREE.Mesh(new THREE.SphereGeometry(0.38, 10, 8), new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP }));
-    end.position.z = 1.15;
-    const end2 = end.clone();
-    end2.position.z = -1.15;
-    group.add(bar, end, end2);
+    const group = cloneDrawn(gltfs.sweeper);
+    group.scale.set(s.full ? 1.15 : 1, 1, 1);
+    const bar = group.getObjectByName("SweeperBar");
+    if (bar && bar.material && bar.material.color) bar.material.color.set(s.full ? 0xff7a1a : 0xff6b6b);
     scene.add(group);
     return group;
   });
 
   const rollerMeshes = course.rollers.map((r) => {
-    const group = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.IcosahedronGeometry(r.radius, 1), new THREE.MeshToonMaterial({ color: 0xb9a3d9, gradientMap: TOON_MAP }));
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(r.radius * 0.22, 8, 8), ink);
-    eye.position.set(r.radius * 0.28, r.radius * 0.15, r.radius * 0.72);
-    const eye2 = eye.clone();
-    eye2.position.x = -r.radius * 0.28;
-    const mouth = new THREE.Mesh(new THREE.TorusGeometry(r.radius * 0.22, 0.05, 6, 10, Math.PI), new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP }));
-    mouth.position.set(0, -r.radius * 0.15, r.radius * 0.75);
-    group.add(body, eye, eye2, mouth);
+    const group = cloneDrawn(gltfs.roller);
+    group.scale.setScalar(r.radius);
     scene.add(group);
     return group;
   });
 
   const hopperMeshes = course.hoppers.map(() => {
-    const g = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.68, 16, 12), new THREE.MeshToonMaterial({ color: 0x8c6bff, gradientMap: TOON_MAP }));
-    body.scale.set(1.05, 0.82, 0.95);
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), ink);
-    eye.position.set(0.2, 0.18, 0.48);
-    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffffff }));
-    shine.position.set(0.24, 0.24, 0.6);
-    const eye2 = eye.clone();
-    eye2.position.x = -0.2;
-    const shine2 = shine.clone();
-    shine2.position.x = -0.16;
-    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.45, 5), new THREE.MeshToonMaterial({ color: 0xfff6e5, gradientMap: TOON_MAP }));
-    ant.position.set(-0.18, 0.7, 0);
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), new THREE.MeshToonMaterial({ color: 0xffd23f, emissive: 0xffd23f, emissiveIntensity: 0.4, gradientMap: TOON_MAP }));
-    bulb.position.set(-0.18, 0.95, 0);
-    const ant2 = ant.clone();
-    ant2.position.x = 0.18;
-    const bulb2 = bulb.clone();
-    bulb2.position.x = 0.18;
-    g.add(body, eye, eye2, shine, shine2, ant, ant2, bulb, bulb2);
-    g.userData.body = body;
+    const g = cloneDrawn(gltfs.hopper);
+    g.userData.body = g.getObjectByName("HopperBody");
     scene.add(g);
     return g;
   });
 
   const flyerMeshes = course.flyers.map(() => {
-    const g = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.46, 12, 10), new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP }));
-    body.scale.set(1.35, 0.55, 0.8);
-    const wing = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.08, 0.55), new THREE.MeshToonMaterial({ color: 0xffd23f, gradientMap: TOON_MAP }));
-    wing.position.x = 0.15;
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), ink);
-    eye.position.set(0.16, 0.12, 0.38);
-    const eye2 = eye.clone();
-    eye2.position.x = -0.16;
-    g.add(body, wing, eye, eye2);
-    g.userData.wing = wing;
+    const g = cloneDrawn(gltfs.flyer);
+    g.userData.wing = g.getObjectByName("FlyerWings");
     scene.add(g);
     return g;
   });
@@ -629,33 +597,32 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   let confettiOn = false;
 
   function update(race, dt, look) {
-    const tiles = course.tiles;
-    let solidDirty = false;
-    let crackDirty = false;
-    for (let i = 0; i < tiles.length; i++) {
-      const tile = tiles[i];
-      if (tile.tiltAmp) tile.dirty = true;
-      if (!tile.dirty && tile.state !== "falling") continue;
-      writeTile(solidMeshes, i, tile, tile.state !== "solid");
-      writeTile(crackedMeshes, i, tile, tile.state !== "cracking");
-      solidDirty = true;
-      crackDirty = true;
-      if (tile.state === "falling" && !tile.spawned) {
-        tile.spawned = true;
+    for (const chunk of course.chunks) {
+      const mesh = chunk.mesh;
+      if (!mesh) continue;
+      if (chunk.state === "gone") {
+        mesh.visible = false;
+        chunk.dirty = false;
+        continue;
+      }
+      mesh.visible = true;
+      mesh.material = chunk.state === "cracking" ? crackMat : terrainMat;
+      const wobble = chunk.state === "cracking" ? Math.sin(race.time * 18 + chunk.jitter * 9) * 0.045 : 0;
+      mesh.position.y = (chunk.fallY || 0) + wobble;
+      if (chunk.state === "falling" && chunk.dirty && !chunk.spawned) {
+        chunk.spawned = true;
         const bit = debris.find((d) => !d.active);
         if (bit) {
           bit.active = true;
-          bit.life = 1.25;
-          bit.vy = 0.4;
+          bit.life = 1.4;
+          bit.vy = 0.6;
           bit.mesh.visible = true;
-          bit.mesh.position.set(tile.x, tile.y, tile.z);
+          bit.mesh.position.set(0, chunk.positions[1] || 0, (chunk.z0 + chunk.z1) * 0.5);
           bit.mesh.rotation.set(0, Math.random(), 0);
         }
       }
-      tile.dirty = false;
+      chunk.dirty = false;
     }
-    if (solidDirty) for (const m of solidMeshes) m.instanceMatrix.needsUpdate = true;
-    if (crackDirty) for (const m of crackedMeshes) m.instanceMatrix.needsUpdate = true;
 
     for (const bit of debris) {
       if (!bit.active) continue;
@@ -730,7 +697,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     beacon.material.opacity = active ? 0.16 + Math.sin(race.time * 4) * 0.05 : 0.04;
     flame.visible = race.phase === "launch" || race.phase === "results";
     if (flame.visible) {
-      const s = 0.8 + Math.sin(race.launchT * 30) * 0.15 + Math.min(2.2, race.launchV * 0.08);
+      const s = 0.85 + Math.sin(race.launchT * 30) * 0.12;
       flame.scale.set(s, s, s);
     }
     ring.material.opacity = race.phase === "race" ? 0.55 + Math.sin(race.time * 5) * 0.25 : 0.2;
@@ -802,6 +769,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
     }
 
+    beacon.visible = race.phase !== "launch" && race.phase !== "results" && race.seatCine <= 0;
     dressing.update(race, dt);
     const skyNow = zoneSky(race.zoneId || "meadow");
     sky.material.uniforms.top.value.setHex(skyNow.top);
@@ -848,10 +816,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     if (race.seatCine > 0 && race.player.seated) {
       const wp = new THREE.Vector3();
       visuals[0].group.getWorldPosition(wp);
-      camera.position.x = damp(camera.position.x, wp.x + 0.4, 5, dt);
-      camera.position.y = damp(camera.position.y, wp.y + 1.3, 5, dt);
-      camera.position.z = damp(camera.position.z, wp.z - 4.6, 5, dt);
-      camera.lookAt(wp.x, wp.y + 0.55, wp.z + 0.4);
+      camera.position.x = damp(camera.position.x, ship.position.x + 6.5, 4.2, dt);
+      camera.position.y = damp(camera.position.y, ship.position.y + 4.2, 4.2, dt);
+      camera.position.z = damp(camera.position.z, ship.position.z - 22, 4.2, dt);
+      camera.lookAt(wp.x, wp.y + 0.45, wp.z);
       return;
     }
     if (race.phase === "results" || race.phase === "launch") {
@@ -862,20 +830,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       let ly;
       let lz;
       if (race.result === "escaped") {
-        tx = ship.position.x + 5.5;
-        ty = ship.position.y + 6.5;
-        tz = ship.position.z - 14;
+        tx = ship.position.x + 2;
+        ty = ship.position.y + 8;
+        tz = ship.position.z + 22;
         lx = ship.position.x;
-        ly = ship.position.y + 3.2;
-        lz = ship.position.z;
+        ly = ship.position.y + 1.5;
+        lz = ship.position.z - 18;
       } else {
-        tx = player.pos.x + 0.4;
-        ty = player.pos.y + 1.85;
-        tz = player.pos.z - 3.4;
+        tx = player.pos.x - 6;
+        ty = player.pos.y + 4.2;
+        tz = player.pos.z - 8;
         const ahead = Math.max(0, ship.position.z - player.pos.z);
-        lx = player.pos.x;
-        ly = player.pos.y + 1.35 + Math.min(6, ahead * 0.03);
-        lz = player.pos.z + Math.min(16, 5 + ahead * 0.08);
+        lx = ship.position.x;
+        ly = ship.position.y + 3 + Math.min(8, ahead * 0.02);
+        lz = ship.position.z - 6;
       }
       camera.position.x = damp(camera.position.x, tx, 3.2, dt);
       camera.position.y = damp(camera.position.y, ty, 3.2, dt);
@@ -884,13 +852,13 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       return;
     }
     if (player.seated) {
-      const tx = course.ship.x + 7;
-      const ty = race.shipY + 5.5;
-      const tz = course.ship.z - 11;
+      const tx = course.ship.x + 2;
+      const ty = race.shipY + 8;
+      const tz = course.ship.z + 22;
       camera.position.x = damp(camera.position.x, tx, 3, dt);
       camera.position.y = damp(camera.position.y, ty, 3, dt);
       camera.position.z = damp(camera.position.z, tz, 3, dt);
-      camera.lookAt(course.ship.x, race.shipY + 2.4, course.ship.z);
+      camera.lookAt(course.ship.x, race.shipY + 2.2, course.ship.z - 36);
       return;
     }
     if (dragging) {
@@ -927,9 +895,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   function reset() {
     confettiOn = false;
-    for (const tile of course.tiles) {
-      tile.spawned = false;
-      tile.dirty = true;
+    for (const chunk of course.chunks) {
+      chunk.spawned = false;
+      chunk.dirty = true;
+      chunk.fallY = 0;
+      if (chunk.mesh) {
+        chunk.mesh.visible = !chunk.gap;
+        chunk.mesh.position.y = 0;
+        chunk.mesh.material = terrainMat;
+      }
     }
     for (const bit of debris) {
       bit.active = false;

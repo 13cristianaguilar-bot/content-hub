@@ -195,7 +195,7 @@ function begin() {
   hud.hidden = false;
   controls.hidden = true;
   tutor.hidden = true;
-  window.__sb = { race, cfg, get fps() { return fps; }, campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
+  window.__sb = { race, cfg, get fps() { return fps; }, view: () => (world.view ? world.view() : null), campaign: () => ({ planet, roundIndex, plan: currentPlan() }) };
   window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
   applyRound();
   pauseBtn.hidden = false;

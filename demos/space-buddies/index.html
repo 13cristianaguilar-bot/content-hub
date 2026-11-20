@@ -553,10 +553,24 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=45"></script>
+<script src="game.js?v=46"></script>
 <style>
-#hud.sb-hud { display: block; padding: 0; pointer-events: none; }
-#jump.sb-action, #dive.sb-action, #grab.sb-action { background-color: transparent; box-shadow: none; color: transparent; background-repeat: no-repeat; background-position: center; background-size: contain; }
+#hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
+.sb-hud__top { left: 12px; right: 12px; }
+.sb-hud__right { max-width: 168px; min-width: 0; }
+.sb-seats { padding: 4px 6px 5px; }
+#seats.sb-seats__row { gap: 1px; }
+#seats.sb-seats__row img { width: 18px; height: 18px; }
+#hud .sb-hud__tools { gap: 6px; }
+#hud .sb-hud__tools .sb-btn--round { width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: 0; }
+#controls.sb-controls { position: fixed; left: 0; right: 0; top: 0; bottom: 0; width: auto; height: auto; }
+#stick.sb-stick { left: calc(var(--sb-safe-l) + 8px); right: auto; top: auto; bottom: calc(var(--sb-safe-b) + 18px); width: 136px; height: 136px; transform: none; background-color: transparent; box-shadow: none; }
+#stick.sb-stick.float { bottom: auto; transform: translate(-50%, -50%); }
+#knob.sb-stick__knob { width: 68px; height: 68px; margin: -34px 0 0 -34px; transform: translate(var(--kx, 0px), var(--ky, 0px)); box-shadow: none; }
+#jump.sb-action, #dive.sb-action, #grab.sb-action { left: auto; top: auto; border-radius: 0; background-color: transparent; box-shadow: none; color: transparent; background-repeat: no-repeat; background-position: center; background-size: contain; }
+#jump.sb-action { width: 118px; height: 122px; right: calc(var(--sb-safe-r) + 8px); bottom: calc(var(--sb-safe-b) + 16px); }
+#dive.sb-action { width: 86px; height: 90px; right: calc(var(--sb-safe-r) + 118px); bottom: calc(var(--sb-safe-b) + 8px); }
+#grab.sb-action { width: 86px; height: 90px; right: calc(var(--sb-safe-r) + 22px); bottom: calc(var(--sb-safe-b) + 132px); }
 #jump.sb-action { background-image: url("ui/svg/action_jump.svg"); }
 #dive.sb-action { background-image: url("ui/svg/action_dive.svg"); }
 #grab.sb-action { background-image: url("ui/svg/action_grab.svg"); }

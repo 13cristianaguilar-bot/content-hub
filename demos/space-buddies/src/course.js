@@ -1,7 +1,7 @@
 // Open kingdoms. Each zone is a wide plaza or a set of islands with
 // three routes, not a single race ribbon.
 
-const CREAM = [1, 0.965, 0.898];
+const CREAM = [1, 0.995, 0.94];
 const GROUND = {
   meadow: { top: [0.306, 0.788, 0.416], side: [0.220, 0.557, 0.286] },
   canyon: { top: [1, 0.604, 0.290], side: [0.780, 0.373, 0.196] },
@@ -49,16 +49,17 @@ function zoneAt(zones, z) {
 }
 
 function discGeometry(cx, y, cz, rx, rz, zone) {
-  const bevel = Math.min(0.09, Math.min(rx, rz) * 0.16);
-  const lip = 0.08;
-  const skirt = 0.26;
+  const bevel = Math.min(0.22, Math.min(rx, rz) * 0.2);
+  const lip = 0.28;
+  const skirt = 0.22;
   const seg = rx < 3 ? 14 : 28;
   const rings = [
     { frac: 0, dy: 0, key: "top" },
     { frac: 0.34, dy: 0, key: "top" },
     { frac: 0.68, dy: 0, key: "top" },
-    { inset: bevel, dy: 0, key: "top" },
-    { inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
+    { inset: bevel + 0.16, dy: 0, key: "top" },
+    { inset: bevel, dy: 0, key: "cream" },
+    { inset: bevel * 0.45, dy: -bevel * 0.45, key: "cream" },
     { inset: 0, dy: -bevel, key: "cream" },
     { inset: 0, dy: -bevel - lip, key: "cream" },
     { inset: 0, dy: -bevel - lip - skirt, key: "side" },
@@ -101,18 +102,18 @@ function discGeometry(cx, y, cz, rx, rz, zone) {
 }
 
 function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
-  const bevel = Math.min(0.08, width * 0.14);
-  const lip = 0.08;
-  const skirt = 0.26;
+  const bevel = Math.min(0.2, width * 0.16);
+  const lip = 0.26;
+  const skirt = 0.2;
   const steps = 8;
   const across = [
     { side: -1, inset: 0, dy: -(bevel + lip + skirt), key: "side" },
     { side: -1, inset: 0, dy: -(bevel + lip), key: "side" },
     { side: -1, inset: 0, dy: -bevel, key: "cream" },
     { side: -1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
-    { side: -1, inset: bevel, dy: 0, key: "top" },
+    { side: -1, inset: bevel, dy: 0, key: "cream" },
     { side: 0, inset: 0, dy: 0, key: "top" },
-    { side: 1, inset: bevel, dy: 0, key: "top" },
+    { side: 1, inset: bevel, dy: 0, key: "cream" },
     { side: 1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
     { side: 1, inset: 0, dy: -bevel, key: "cream" },
     { side: 1, inset: 0, dy: -(bevel + lip), key: "side" },

@@ -153,6 +153,8 @@ The meadow, canyon, and sky floors were thin discs. Downward normals and a two-c
 
 Fix: each pad is a slab with a 2-segment bevel (about 9 cm) and a cream lip on the top 8 cm of the side. The top uses the zone ground color with a soft speckle, and the side uses the ground side color. The walk height is unchanged. No extra shadow map.
 
+The first lip was hard to see from the follow camera, so the cream band is now about 28 cm tall and also rings the top edge. A prop that blocks the Buddy pulls the camera in or fades, instead of filling the lens.
+
 ## SB-17 Mute icon, music, and settings
 
 - Severity: P1

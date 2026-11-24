@@ -4,6 +4,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
 import { cameraAboveFloor, cameraFloor } from "./sim.js";
+import { backOffView, clearSpheres } from "./occlude.js";
 import { spectateFrame } from "./spectate.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
@@ -401,6 +402,64 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
   heavens.userData.skipCam = true;
   scene.add(heavens);
+  const planetSky = [
+    { top: new THREE.Color(0x5cc8ff), mid: new THREE.Color(0xb8f0ff), bot: new THREE.Color(0x7fd88a) },
+    { top: new THREE.Color(0x6678f2), mid: new THREE.Color(0xffc4ea), bot: new THREE.Color(0xd9d4ff) },
+    { top: new THREE.Color(0x241536), mid: new THREE.Color(0x6d52c8), bot: new THREE.Color(0x3a2458) },
+  ];
+  const skyScratch = { top: new THREE.Color(), mid: new THREE.Color(), bot: new THREE.Color() };
+  const distantGroups = [new THREE.Group(), new THREE.Group(), new THREE.Group()];
+  const scenic = new THREE.Group();
+  scenic.userData.skipCam = true;
+  const hillGeo = new THREE.SphereGeometry(1, 10, 8);
+  const spireGeo = new THREE.ConeGeometry(1, 3.4, 6);
+  const shipGeo = new THREE.ConeGeometry(1, 4.4, 7);
+  function farMesh(geo, color, x, y, z, sx, sy, sz) {
+    const mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, fog: false }));
+    mesh.position.set(x, y, z);
+    mesh.scale.set(sx, sy, sz);
+    mesh.userData.skipCam = true;
+    return mesh;
+  }
+  function skyBeacon(color, x, y, z) {
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(shipGeo, new THREE.MeshBasicMaterial({ color, fog: false }));
+    body.rotation.x = Math.PI / 2;
+    const wing = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.16, 0.9), new THREE.MeshBasicMaterial({ color: 0xfff6e5, fog: false }));
+    group.add(body, wing);
+    group.position.set(x, y, z);
+    group.scale.setScalar(8);
+    group.traverse((obj) => { obj.userData.skipCam = true; });
+    return group;
+  }
+  const shipX = course.ship.x;
+  const shipY = course.ship.y + 46;
+  const shipZ = course.ship.z;
+  distantGroups[0].add(
+    farMesh(hillGeo, 0x3ecf6a, -86, 2, 28, 36, 16, 28),
+    farMesh(hillGeo, 0x2f9a45, 90, 0, 64, 42, 18, 32),
+    farMesh(hillGeo, 0x7fd88a, -24, 8, shipZ * 0.42, 28, 12, 22),
+    farMesh(spireGeo, 0x3ecf6a, -78, 18, 36, 7, 10, 7),
+    skyBeacon(0xff6b6b, shipX, shipY, shipZ)
+  );
+  distantGroups[1].add(
+    farMesh(hillGeo, 0xd7d0ff, -64, 32, 18, 24, 7, 16),
+    farMesh(hillGeo, 0xffd6f2, 74, 38, 52, 18, 5, 14),
+    farMesh(hillGeo, 0x9aa6ff, 6, 44, shipZ * 0.36, 16, 4, 12),
+    skyBeacon(0x8c6bff, shipX + 6, shipY + 6, shipZ)
+  );
+  distantGroups[2].add(
+    farMesh(spireGeo, 0x3a2458, -58, 6, 24, 12, 16, 12),
+    farMesh(spireGeo, 0x2b1b4d, 66, 4, 46, 9, 20, 9),
+    farMesh(spireGeo, 0x6a4ec4, 4, 12, shipZ * 0.38, 8, 14, 8),
+    skyBeacon(0xffd23f, shipX, shipY + 4, shipZ)
+  );
+  distantGroups.forEach((group, i) => {
+    group.visible = i === 0;
+    group.userData.skipCam = true;
+    scenic.add(group);
+  });
+  scene.add(scenic);
 
   const loader = new GLTFLoader();
   loader.setMeshoptDecoder(MeshoptDecoder);
@@ -533,6 +592,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     geo.setIndex(new THREE.BufferAttribute(chunk.indices, 1));
     geo.computeVertexNormals();
     const mesh = new THREE.Mesh(geo, floorMat);
+    mesh.userData.floor = true;
     mesh.frustumCulled = true;
     mesh.receiveShadow = true;
     scene.add(mesh);
@@ -1410,6 +1470,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     autoWait: 0,
     portrait: true,
     shake: 0,
+    planet: 1,
   };
 
   function resize() {
@@ -1902,12 +1963,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
     }
     const skyNow = zoneSky(race.zoneId || "meadow");
-    sky.material.uniforms.top.value.setHex(skyNow.top);
-    sky.material.uniforms.mid.value.setHex(skyNow.mid);
-    if (skyNow.bot) sky.material.uniforms.bot.value.setHex(skyNow.bot);
+    const pal = planetSky[(state.planet - 1) % planetSky.length];
+    skyScratch.top.setHex(skyNow.top).lerp(pal.top, 0.62);
+    skyScratch.mid.setHex(skyNow.mid).lerp(pal.mid, 0.62);
+    skyScratch.bot.setHex(skyNow.bot || skyNow.mid).lerp(pal.bot, 0.62);
+    sky.material.uniforms.top.value.copy(skyScratch.top);
+    sky.material.uniforms.mid.value.copy(skyScratch.mid);
+    sky.material.uniforms.bot.value.copy(skyScratch.bot);
     scene.fog.color.setHex(skyNow.fog);
-    scene.fog.near = skyNow.near;
+    scene.fog.near = Math.max(58, skyNow.near);
     scene.fog.far = skyNow.far;
+    scenic.position.x = -camera.position.x * 0.05;
+    scenic.position.z = -camera.position.z * 0.05;
     const focusX = race.player.pos.x;
     const focusY = race.player.pos.y;
     const focusZ = race.player.pos.z;
@@ -1930,8 +1997,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     sky.position.copy(camera.position);
     heavens.position.copy(camera.position);
     planet.rotation.y = (race.time || 0) * 0.08;
-    const night = race.zoneId === "canyon" || race.zoneId === "climb";
-    stars.material.opacity = night ? 0.35 + Math.sin((race.time || 0) * 5) * 0.2 : 0.08;
+    const night = state.planet === 3 || race.zoneId === "canyon" || race.zoneId === "climb";
+    stars.material.opacity = state.planet === 3 ? 0.9 : night ? 0.4 : 0.14;
+    puffMat.color.setHex(state.planet === 3 ? 0x6a588c : state.planet === 2 ? 0xffe4f6 : 0xffffff);
+    puffMat.opacity = state.planet === 3 ? 0.45 : 0.92;
     for (let i = 0; i < cloudPuffs.length; i++) cloudPuffs[i].position.x += Math.sin((race.time || 0) * 0.2 + i) * 0.03;
     for (let i = 0; i < flags.length; i++) flags[i].rotation.y = Math.sin((race.time || 0) * 2.2 + i) * 0.45;
     for (let i = 0; i < spectatorShips.length; i++) spectatorShips[i].position.x += Math.sin((race.time || 0) * 0.3 + i) * 0.02;
@@ -1979,11 +2048,84 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
       obj.getWorldScale(scale);
-      if (obj.geometry.boundingSphere.radius * Math.abs(scale.x) < 1.15) return;
+      if (obj.userData.floor) return;
+      const reach = obj.geometry.boundingSphere.radius * Math.max(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
+      if (reach < 0.4 || reach > 14) return;
       list.push(obj);
     });
     camBlockers = list;
     return list;
+  }
+  const fadedProps = [];
+  let propSpheres = null;
+  const propDummy = new THREE.Object3D();
+  function propBounds() {
+    if (propSpheres) return propSpheres;
+    propSpheres = [];
+    scene.updateMatrixWorld(true);
+    scene.traverse((obj) => {
+      if (!obj.isMesh || !obj.geometry) return;
+      if (obj.userData.floor || obj.userData.skipCam || obj.userData.blobShadow) return;
+      let node = obj;
+      while (node) {
+        if (node.userData && (node.userData.buddy || node.userData.skipCam)) return;
+        node = node.parent;
+      }
+      if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
+      const bs = obj.geometry.boundingSphere;
+      if (obj.isInstancedMesh) {
+        for (let i = 0; i < obj.count; i++) {
+          obj.getMatrixAt(i, propDummy.matrix);
+          propDummy.matrix.decompose(propDummy.position, propDummy.quaternion, propDummy.scale);
+          const r = bs.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
+          if (r < 0.4 || r > 7) continue;
+          propSpheres.push({ x: propDummy.position.x, y: propDummy.position.y, z: propDummy.position.z, r });
+        }
+        return;
+      }
+      obj.updateWorldMatrix(true, false);
+      const center = bs.center.clone().applyMatrix4(obj.matrixWorld);
+      obj.getWorldScale(propDummy.scale);
+      const r = bs.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
+      if (r < 0.4 || r > 7) return;
+      propSpheres.push({ x: center.x, y: center.y, z: center.z, r });
+    });
+    return propSpheres;
+  }
+  function fadeBlockers(head) {
+    for (let i = 0; i < fadedProps.length; i++) {
+      const entry = fadedProps[i];
+      entry.mat.opacity = entry.opacity;
+      entry.mat.transparent = entry.transparent;
+      entry.mat.depthWrite = entry.depthWrite;
+    }
+    fadedProps.length = 0;
+    camDir.copy(head).sub(camera.position);
+    const dist = camDir.length();
+    if (dist < 0.35) return;
+    camDir.multiplyScalar(1 / dist);
+    camRay.set(camera.position, camDir);
+    camRay.far = Math.min(dist - 0.2, 5);
+    let hits = [];
+    try { hits = camRay.intersectObjects(camSolids(), false); } catch (err) { return; }
+    const seen = new Set();
+    for (const hit of hits) {
+      if (hit.distance > 2.2) break;
+      const obj = hit.object;
+      if (!obj || obj.isInstancedMesh || obj.userData.floor) continue;
+      const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+      if (!mat || seen.has(mat)) continue;
+      seen.add(mat);
+      fadedProps.push({
+        mat,
+        opacity: mat.opacity,
+        transparent: mat.transparent,
+        depthWrite: mat.depthWrite,
+      });
+      mat.transparent = true;
+      mat.opacity = 0.2;
+      mat.depthWrite = false;
+    }
   }
   function solveCamera(head, want) {
     try {
@@ -2026,8 +2168,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const player = race.player;
     if (look && look.overview) {
       const o = look.overview;
-      camera.position.set(o.x, o.y, o.z);
+      const head = new THREE.Vector3(o.lx, o.ly + 1.2, o.lz);
+      const cleared = backOffView(clearSpheres({ x: o.x, y: o.y, z: o.z }, propBounds(), head), { x: o.lx, y: o.ly, z: o.lz }, propBounds());
+      camera.position.set(cleared.x, cleared.y, cleared.z);
       camera.lookAt(o.lx, o.ly, o.lz);
+      fadeBlockers(head);
       return;
     }
     state.spectate = null;
@@ -2223,7 +2368,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     camera.position.z = damp(camera.position.z, tz, spring, dt);
     const camFloor = groundAtSafe(camera.position.x, camera.position.z);
     camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(camFloor, state.lastFloor, 0));
+    const aim = { x: player.pos.x, y: player.pos.y + 1.7, z: player.pos.z + Math.cos(state.yaw) * 5 };
+    const freed = backOffView(clearSpheres(camera.position, propBounds(), new THREE.Vector3(headX, headY, headZ)), aim, propBounds());
+    camera.position.set(freed.x, freed.y, freed.z);
+    camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(camFloor, state.lastFloor, 0));
     camera.lookAt(player.pos.x, player.pos.y + 1.7, player.pos.z + Math.cos(state.yaw) * 5);
+    fadeBlockers(new THREE.Vector3(headX, headY, headZ));
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }
 
@@ -2274,7 +2424,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (chunk.mesh) {
         chunk.mesh.visible = !chunk.gap;
         chunk.mesh.position.y = 0;
-        chunk.mesh.material = terrainMat;
+        chunk.mesh.material = floorMat;
       }
     }
     for (const bit of debris) {
@@ -2440,6 +2590,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     },
     applyLook,
     setTheme(planet) {
+      state.planet = Math.max(1, Math.min(3, planet || 1));
+      distantGroups.forEach((group, i) => { group.visible = i === state.planet - 1; });
       const themes = [
         { sky: 0xc7f0ff, ground: 0x7dcc62, sun: 0xfff3c4 },
         { sky: 0xffc2a1, ground: 0xc45a32, sun: 0xffe0b0 },

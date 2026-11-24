@@ -201,6 +201,8 @@ Repro: every planet dropped the Buddy into the countdown with the same short cam
 
 Fix: each planet opens with a flyover that ends behind the Buddy. The ship launch shows the qualified Buddies running aboard, then lifts off. The next round and the next planet play a short collapse of the course you just left. Each shot is under 4 seconds and a tap skips it. Auto, bot, and harness runs skip the shots so the race clock stays put.
 
+`npm run test:qa2` after this pass: 20 of 20 runs passed. Unfair hits 0, missed landings 0, stuck bots 0.
+
 ## Batch 2
 
 `npm run test:qa2` adds feel totals, a per-planet heatmap, a 4x CPU throttle with the low-GPU profile, touch edges (multi-touch, a stick dragged off screen, jump during dive, pinch while moving, address bar show and hide), a 10-round session, and the eliminated path through the podium on every planet.

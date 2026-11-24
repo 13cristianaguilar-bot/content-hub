@@ -91,6 +91,16 @@ Repro: on a 390-wide screen the follow camera looked at the Buddy's shoulders, s
 
 Fix: the follow camera sits higher (5.1 m portrait, 5.3 m landscape) and looks 5 m down the line. The same runs then counted 14.
 
+## SB-9 Obstacles hit with under half a second of warning
+
+- Severity: P2
+- Status: fixed
+- Seed: batch 2 feel seeds, previously 6 unfair hits
+
+Repro: a bumper, spinner, sweeper, pendulum, roller, or hopper could connect in the same moment it entered range. The feel harness counted that as an unfair hit.
+
+Fix: each of those hazards shows a ground ring and holds the hit until it has been armed for 0.55 s. Buddy-to-buddy bumps are not scored as obstacle hits. The batch 2 harness then reported 0 unfair hits.
+
 ## Batch 2
 
 `npm run test:qa2` adds feel totals, a per-planet heatmap, a 4x CPU throttle with the low-GPU profile, touch edges (multi-touch, a stick dragged off screen, jump during dive, pinch while moving, address bar show and hide), a 10-round session, and the eliminated path through the podium on every planet.

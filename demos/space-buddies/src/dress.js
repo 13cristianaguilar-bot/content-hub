@@ -2,12 +2,12 @@ import * as THREE from "three";
 import { plasticShader } from "./plastic.js";
 
 const ZONE_SKY = {
-  meadow: { top: 0x5cc8ff, mid: 0x9fe0ff, fog: 0x8fd4f2, bot: 0x6fbf8a, near: 72, far: 230 },
-  canyon: { top: 0x3d7cf0, mid: 0xffb07a, fog: 0xf6d2b4, bot: 0x2448b0, near: 160, far: 360 },
-  sky: { top: 0x7ecbff, mid: 0xc8eeff, fog: 0xb7e4ff, bot: 0x8ec8f0, near: 78, far: 250 },
-  ice: { top: 0xc5ecff, mid: 0xe7f6ff, fog: 0xb7ddf8, bot: 0x6eb6ef, near: 70, far: 230 },
-  climb: { top: 0xffc56a, mid: 0xffe0a0, fog: 0xffcf86, bot: 0xe09030, near: 68, far: 210 },
-  ship: { top: 0x8fd4ff, mid: 0xffe7b0, fog: 0xc8e4ff, bot: 0x8ec0f0, near: 80, far: 240 },
+  meadow: { top: 0x5cc8ff, mid: 0xb8f0ff, fog: 0xcff4ff, bot: 0x7fd88a, near: 40, far: 140 },
+  canyon: { top: 0xff9ec4, mid: 0xffe3b8, fog: 0xffd9c0, bot: 0xffb877, near: 40, far: 140 },
+  sky: { top: 0x7a8cff, mid: 0xffd6f2, fog: 0xeadcff, bot: 0xc9d6ff, near: 40, far: 140 },
+  ice: { top: 0x6fd0ff, mid: 0xe8fbff, fog: 0xf2fcff, bot: 0xe6f8ff, near: 40, far: 140 },
+  climb: { top: 0x3a3f8f, mid: 0xff9ecf, fog: 0x5a4c9e, bot: 0xb9a3d9, near: 40, far: 140 },
+  ship: { top: 0x2b1b4d, mid: 0x8c6bff, fog: 0x4a3a7a, bot: 0x5b5f9e, near: 40, far: 140 },
 };
 
 export function zoneSky(id) {
@@ -21,15 +21,15 @@ function hash(n) {
 
 function makeToonTexture() {
   const c = document.createElement("canvas");
-  c.width = 4;
+  c.width = 3;
   c.height = 1;
   const g = c.getContext("2d");
-  g.fillStyle = "#c5d0e4";
+  g.fillStyle = "#6F5C93";
   g.fillRect(0, 0, 1, 1);
-  g.fillStyle = "#ffe7c8";
+  g.fillStyle = "#D4C6EA";
   g.fillRect(1, 0, 1, 1);
   g.fillStyle = "#ffffff";
-  g.fillRect(2, 0, 2, 1);
+  g.fillRect(2, 0, 1, 1);
   const tex = new THREE.CanvasTexture(c);
   tex.magFilter = THREE.NearestFilter;
   tex.minFilter = THREE.NearestFilter;

@@ -183,7 +183,7 @@ function buddyMat(src, hex) {
     mat.userData.shader = shader;
     shader.fragmentShader = "uniform vec3 uTint;\n" + shader.fragmentShader.replace(
       "#include <opaque_fragment>",
-      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat warm = smoothstep(0.02, 0.14, albedo.r - max(albedo.g, albedo.b));\nfloat suit = smoothstep(0.12, 0.26, sat) * (1.0 - warm);\nvec3 tinted = uTint * mix(0.82, 1.22, clamp(luma, 0.0, 1.0));\nvec3 color = mix(albedo, tinted, suit);\noutgoingLight = color;\n#include <opaque_fragment>"
+      "vec3 albedo = diffuseColor.rgb;\nfloat luma = dot(albedo, vec3(0.299, 0.587, 0.114));\nfloat mx = max(albedo.r, max(albedo.g, albedo.b));\nfloat mn = min(albedo.r, min(albedo.g, albedo.b));\nfloat sat = mx - mn;\nfloat warm = smoothstep(0.02, 0.14, albedo.r - max(albedo.g, albedo.b));\nfloat suit = smoothstep(0.12, 0.26, sat) * (1.0 - warm);\nvec3 tinted = uTint * mix(0.82, 1.22, clamp(luma, 0.0, 1.0));\nvec3 color = mix(albedo, tinted, suit);\nfloat rim = pow(1.0 - clamp(dot(normalize(normal), normalize(vViewPosition)), 0.0, 1.0), 2.5);\ncolor += vec3(1.0) * rim * 0.5;\nvec3 L = normalize(vec3(-0.35, 0.86, 0.28));\nvec3 V = normalize(vViewPosition);\nfloat spec = pow(clamp(dot(normalize(normal), normalize(L + V)), 0.0, 1.0), 72.0);\ncolor += vec3(1.0) * spec * 0.4;\noutgoingLight = color;\n#include <opaque_fragment>"
     );
   };
   return mat;
@@ -256,7 +256,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   textureAniso = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.12;
+  renderer.toneMappingExposure = 1.05;
   let dpr = Math.min(window.devicePixelRatio || 1, cfg.dprCap);
   const forced = new URLSearchParams(location.search).get("dpr");
   if (forced) dpr = Math.max(0.75, Math.min(2, Number(forced) || dpr));
@@ -286,21 +286,27 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   });
   gradeScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), gradeMat));
 
-  renderer.shadowMap.enabled = true;
+  const params = new URLSearchParams(location.search);
+  const phoneTier = window.matchMedia("(pointer: coarse)").matches || window.innerWidth < 900 || params.has("low");
+  const highTier = params.get("tier") === "high" || (!weakGpu && !phoneTier && params.get("tier") !== "mid");
+  renderer.shadowMap.enabled = highTier;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-  const hemi = new THREE.HemisphereLight(0x9fd4ff, 0xffc48a, 0.9);
-  const sun = new THREE.DirectionalLight(0xfff0c2, 1.5);
-  sun.position.set(-18, 28, 10);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
-  sun.shadow.camera.near = 2;
-  sun.shadow.camera.far = 38;
-  sun.shadow.camera.left = sun.shadow.camera.bottom = -12;
-  sun.shadow.camera.right = sun.shadow.camera.top = 12;
-  sun.shadow.bias = -0.0006;
-  const fill = new THREE.DirectionalLight(0xb9dcff, 0.28);
-  fill.position.set(16, 10, -18);
-  scene.add(hemi, sun, sun.target, fill);
+  const hemi = new THREE.HemisphereLight(0x9fd4ff, 0xffc48a, 0.6);
+  const sun = new THREE.DirectionalLight(0xfff0c2, 1.15);
+  sun.position.set(-14, 26, 8);
+  sun.castShadow = highTier;
+  const shadowSize = 1024;
+  sun.shadow.mapSize.set(shadowSize, shadowSize);
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 46;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -14;
+  sun.shadow.camera.right = sun.shadow.camera.top = 14;
+  sun.shadow.bias = -0.00035;
+  sun.shadow.normalBias = 0.035;
+  sun.shadow.radius = weakGpu ? 1 : 2.5;
+  scene.add(hemi, sun, sun.target);
+  let lightTier = highTier ? 2 : 0;
+  let lowFps = 0;
 
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(380, 18, 12),
@@ -588,6 +594,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       blob.setMatrixAt(i, blobDummy.matrix);
     });
     blob.instanceMatrix.needsUpdate = true;
+    blob.userData.blobShadow = true;
     scene.add(blob);
   }
 
@@ -682,6 +689,24 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   const bumperMeshes = course.bumpers.map((b) => placeProp(gltfs.bumper, b.x, b.y, b.z));
+  const telGeo = new THREE.RingGeometry(0.85, 1.15, 28);
+  function telRing(x, y, z, scale) {
+    const mesh = new THREE.Mesh(telGeo, new THREE.MeshBasicMaterial({
+      color: 0xfff3a0,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+    }));
+    mesh.rotation.x = -Math.PI / 2;
+    mesh.position.set(x, y + 0.14, z);
+    mesh.scale.setScalar(scale || 1);
+    mesh.userData.decor = true;
+    mesh.visible = false;
+    scene.add(mesh);
+    return mesh;
+  }
+  const bumperRings = course.bumpers.map((b) => telRing(b.x, b.y, b.z, 1.35));
   const padMeshes = course.pads.map((p) => {
     if (p.zone === "meadow" && meadow.button) {
       const obj = meadowProp(meadow.button, TOON_MAP, 0.42, false);
@@ -726,6 +751,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   const ship = gltfs.ship.scene;
   ship.position.set(course.ship.x, course.ship.y, course.ship.z);
   ship.rotation.y = Math.PI;
+  outlineOf(ship, 0.05);
   scene.add(ship);
   const sockets = [];
   const seatMats = [];
@@ -1014,15 +1040,21 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.add(group);
     return group;
   });
+  const spinnerRings = course.spinners.map((s) => telRing(s.x, s.y, s.z, (s.len || 1.6) * 0.7));
+  const sweepRings = course.sweepers.map((s) => telRing(s.x, s.y, s.z, 1.5));
+  const pendRings = course.pendulums.map((p) => telRing(p.x, p.y - p.len, p.z, 1.2));
+  const rollerRings = course.rollers.map((r) => telRing(r.x, r.y, r.z, 1.3));
 
-  function outlineOf(group) {
+  function outlineOf(group, amount) {
     const meshes = [];
     group.traverse((node) => {
       if (node.isMesh) meshes.push(node);
     });
     for (const node of meshes) {
       const shell = new THREE.Mesh(node.geometry, new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide }));
-      shell.scale.setScalar(1.08);
+      shell.userData.hull = true;
+      shell.castShadow = false;
+      shell.scale.setScalar(1 + (amount || 0.04));
       node.add(shell);
     }
   }
@@ -1266,6 +1298,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   buddyRoot.userData.buddy = true;
   scene.add(buddyRoot);
   const shadowGeo = new THREE.CircleGeometry(0.48, 14);
+  const blobMat = new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.3, depthWrite: false });
   const youTex = makeYouTexture();
 
   for (const racer of course.spawns.length ? Array.from({ length: cfg.racers }) : []) {
@@ -1282,6 +1315,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       obj.castShadow = true;
       obj.receiveShadow = true;
     });
+    outlineOf(model, 0.025);
     let headBone = null;
     model.traverse((obj) => { if (obj.isBone && obj.name === "head") headBone = obj; });
     const antennas = [];
@@ -1326,7 +1360,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     if (accessories[pick]) accessories[pick].visible = true;
     const group = new THREE.Group();
     group.add(model);
-    const shadow = new THREE.Mesh(shadowGeo, new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.28, depthWrite: false }));
+    const shadow = new THREE.Mesh(shadowGeo, blobMat);
+    shadow.userData.blobShadow = true;
     shadow.rotation.x = -Math.PI / 2;
     group.add(shadow);
     let tag = null;
@@ -1347,7 +1382,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     buddyRoot.add(group);
     group.traverse((obj) => {
       if (!obj.isMesh || obj.userData.hull) return;
-      obj.castShadow = true;
+      obj.castShadow = lightTier > 0;
       obj.receiveShadow = true;
     });
     visuals.push({ group, model, mixer, actions, hasClips, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false, mixAcc: 0, wasAir: false, landUntil: 0, antennas, lids, splashed: false });
@@ -1425,6 +1460,59 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   let confettiOn = false;
+
+  function showRing(ring, glow, x, y, z) {
+    if (!ring) return;
+    ring.visible = glow > 0.04;
+    ring.material.opacity = glow * 0.85;
+    ring.scale.setScalar(1 + glow * 0.35);
+    if (x != null) ring.position.set(x, y + 0.14, z);
+  }
+
+  function paintTelegraphs(race) {
+    const bumps = race.course.bumpers || [];
+    for (let i = 0; i < bumperRings.length; i++) showRing(bumperRings[i], bumps[i] && bumps[i].glow || 0);
+    for (let i = 0; i < spinnerRings.length; i++) showRing(spinnerRings[i], race.spinners[i] && race.spinners[i].glow || 0);
+    for (let i = 0; i < sweepRings.length; i++) {
+      const s = race.sweepers[i];
+      showRing(sweepRings[i], s && s.glow || 0, s && s.x, s && s.y, s && s.z);
+    }
+    for (let i = 0; i < pendRings.length; i++) {
+      const p = race.pendulums[i];
+      showRing(pendRings[i], p && p.glow || 0, p && p.bobX, p && (p.bobY - 0.4), p && p.bobZ);
+    }
+    for (let i = 0; i < rollerRings.length; i++) {
+      const r = race.rollers[i];
+      showRing(rollerRings[i], r && r.glow || 0, r && r.x, r && r.y, r && r.z);
+    }
+  }
+
+  let blobShadows = null;
+  function applyLightTier(tier) {
+    lightTier = tier;
+    const on = tier > 0;
+    sun.castShadow = on;
+    renderer.shadowMap.enabled = on;
+    if (on) {
+      const size = tier >= 2 ? 1024 : 512;
+      if (sun.shadow.mapSize.x !== size) {
+        sun.shadow.mapSize.set(size, size);
+        if (sun.shadow.map) {
+          sun.shadow.map.dispose();
+          sun.shadow.map = null;
+        }
+      }
+      sun.shadow.radius = tier >= 2 ? 2.5 : 1;
+    }
+    if (!blobShadows) {
+      blobShadows = [];
+      scene.traverse((obj) => {
+        if (obj.userData && obj.userData.blobShadow) blobShadows.push(obj);
+      });
+    }
+    for (let i = 0; i < blobShadows.length; i++) blobShadows[i].visible = !on;
+  }
+  applyLightTier(lightTier);
 
   function update(race, dt, look) {
     if (race.crates && crateMeshes.length !== race.crates.length) {
@@ -1744,7 +1832,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       else if (hsp > 0.8) anim = "Run";
       setAnim(v, anim, hsp / 6.5);
       if (v.shadow) {
-        v.shadow.visible = r.grounded;
+        v.shadow.visible = r.grounded && !sun.castShadow;
         v.shadow.position.y = 0.04;
       }
     }
@@ -1816,9 +1904,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.fog.color.setHex(skyNow.fog);
     scene.fog.near = skyNow.near;
     scene.fog.far = skyNow.far;
-    sun.position.set(race.player.pos.x - 10, race.player.pos.y + 18, race.player.pos.z + 6);
-    sun.target.position.set(race.player.pos.x, race.player.pos.y + 1, race.player.pos.z);
+    const focusX = race.player.pos.x;
+    const focusY = race.player.pos.y;
+    const focusZ = race.player.pos.z;
+    sun.position.set(focusX - 12, focusY + 22, focusZ + 8);
+    sun.target.position.set(focusX, focusY + 0.6, focusZ + 2);
     sun.target.updateMatrixWorld();
+    if (sun.castShadow) {
+      const span = lightTier >= 2 ? 14 : 10;
+      sun.shadow.camera.left = sun.shadow.camera.bottom = -span;
+      sun.shadow.camera.right = sun.shadow.camera.top = span;
+      sun.shadow.camera.updateProjectionMatrix();
+    }
+    paintTelegraphs(race);
     for (let i = 0; i < race.racers.length; i++) {
       const near = Math.hypot(race.racers[i].pos.x - race.player.pos.x, race.racers[i].pos.z - race.player.pos.z) < 14;
       visuals[i].group.traverse((obj) => { if (obj.isMesh) obj.castShadow = near; });
@@ -2188,7 +2286,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         buddyRoot.add(v.group);
         v.group.scale.setScalar(1);
         v.group.rotation.set(0, 0, 0);
-        v.shadow.visible = true;
+        v.shadow.visible = !sun.castShadow;
         v.docked = false;
       }
     }
@@ -2353,10 +2451,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       resize();
     },
     setLow() {
-      renderer.shadowMap.enabled = false;
-      if (sun.shadow) sun.shadow.mapSize.set(256, 256);
+      applyLightTier(0);
       setPost(false);
       setDpr(0.75);
+    },
+    noteFps(fps) {
+      if (!(fps > 0)) return window.__sbLight;
+      if (fps < 55) lowFps++;
+      else lowFps = Math.max(0, lowFps - 1);
+      if (lowFps > 90 && lightTier > 0) {
+        lowFps = 0;
+        applyLightTier(lightTier - 1);
+      }
+      window.__sbLight = { tier: lightTier, shadows: sun.castShadow, map: sun.shadow.mapSize.x, fps };
+      return window.__sbLight;
     },
     sees(x, y, z) {
       try {

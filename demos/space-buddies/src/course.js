@@ -468,7 +468,7 @@ export function createCourse(cfg) {
   }
   const islands = [];
 
-  return {
+  const built = {
     len,
     stations,
     chunks,
@@ -507,4 +507,38 @@ export function createCourse(cfg) {
     ship,
     endZ: ship.z,
   };
+  bakeContactAO(built);
+  return built;
+}
+
+function bakeContactAO(course) {
+  const blockers = course.blockers || [];
+  for (const chunk of course.chunks) {
+    const pos = chunk.positions;
+    const col = chunk.colors;
+    if (!pos || !col) continue;
+    for (let i = 0; i < pos.length; i += 3) {
+      const x = pos[i];
+      const y = pos[i + 1];
+      const z = pos[i + 2];
+      let ao = 1;
+      for (let b = 0; b < blockers.length; b++) {
+        const block = blockers[b];
+        const d = Math.hypot(x - block.x, z - block.z);
+        const reach = (block.r || 1) + 1.4;
+        if (d >= reach) continue;
+        const shade = 0.62 + 0.38 * (d / reach);
+        if (shade < ao) ao = shade;
+      }
+      let lower = 0;
+      const n = Math.min(pos.length, i + 48);
+      for (let k = Math.max(0, i - 45); k < n; k += 3) {
+        if (pos[k + 1] > y + 0.12 && Math.hypot(pos[k] - x, pos[k + 2] - z) < 1.8) lower++;
+      }
+      if (lower > 2) ao *= 0.78;
+      col[i] *= ao;
+      col[i + 1] *= ao;
+      col[i + 2] *= ao;
+    }
+  }
 }

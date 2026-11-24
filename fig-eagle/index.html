@@ -3,214 +3,188 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#080808">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#2c7b7a">
+<meta name="color-scheme" content="light">
 <title>Fig & Eagle Command Center</title>
-<meta name="description" content="Fig & Eagle Command Center. A live setter game for dials, talk, sets, pace, and the team. Read only from GHL.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23080808' width='32' height='32' rx='7'/%3E%3Cpath fill='%23ed3039' d='M6 22h3V14H6zm5 0h3V9h-3zm5 0h3V6h-3zm5 0h3V11h-3z'/%3E%3C/svg%3E">
+<meta name="description" content="Fig and Eagle Command Center. The setter game scored in bonus dollars. Read only from GHL.">
+<link rel="icon" href="mark.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@500;600&family=Geist:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,650&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#080808;--ink:#f6f5f3;--muted:#a3a3a3;--dim:#737373;
-  --line:rgba(255,255,255,.08);--glass:rgba(255,255,255,.04);
-  --red:#ed3039;--red-deep:#b71a23;--red-soft:#ff8a8e;
-  --good:#3DDC97;--gray:#8a8f98;
-  --serif:"Instrument Serif",Georgia,"Times New Roman",serif;
-  --sans:Geist,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
-  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --bg:#f7f6f3;--card:#ffffff;--ink:#000000;--muted:#242424;
+  --teal:#2c7b7a;--good:#37ca37;--bad:#e93d3d;--track:#f0f0f0;
+  --line:rgba(44,123,122,.28);
+  --serif:Fraunces,Georgia,"Times New Roman",serif;
+  --sans:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink)}
-body{font-family:var(--sans);font-size:15px;line-height:1.4;overflow:hidden;-webkit-font-smoothing:antialiased}
-body[data-ready]{background:radial-gradient(880px 420px at 80% -10%,rgba(237,48,57,.26),transparent 58%),radial-gradient(480px 280px at 0% 0%,rgba(237,48,57,.1),transparent 50%),var(--bg)}
-body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:56px 56px;-webkit-mask-image:radial-gradient(circle at 50% 0%,#000 10%,transparent 72%);mask-image:radial-gradient(circle at 50% 0%,#000 10%,transparent 72%)}
-button,a{font-family:inherit;color:inherit}
+body{font-family:var(--sans);font-size:15px;line-height:1.35;overflow:hidden;-webkit-font-smoothing:antialiased}
+button,a,input{font-family:inherit;color:inherit}
 button{cursor:pointer}
 h1,h2,h3,p{margin:0}
-a{color:var(--red-soft);text-decoration:none}
-:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+a{color:var(--teal);text-decoration:none}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column}
-.top{flex:none;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;min-height:40px;padding:6px 12px;border-bottom:1px solid var(--line);background:rgba(8,8,8,.92)}
-.brand{display:flex;align-items:center;gap:8px}
-.brand .mark{width:22px;height:22px;border-radius:6px;border:1px solid #333;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;padding:4px 3px;align-items:end}
-.brand .mark span{display:block;background:var(--red);border-radius:1px}
-.brand .mark span:nth-child(1){height:35%}.brand .mark span:nth-child(2){height:60%}.brand .mark span:nth-child(3){height:100%}.brand .mark span:nth-child(4){height:55%}.brand .mark span:nth-child(5){height:40%}
-.brand strong{font-size:12px;letter-spacing:.12em;text-transform:uppercase}
-.livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 8px;background:rgba(61,220,151,.12);color:var(--good);border:1px solid rgba(61,220,151,.35);font-size:10px;font-weight:800;letter-spacing:.12em}
-.livepill.wait,.livepill.stale,.livepill.down{background:rgba(237,48,57,.12);color:#ffb4b4;border-color:rgba(237,48,57,.45)}
-.gdot{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;display:inline-block}
+.app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;border-top:4px solid var(--teal)}
+.top{flex:none;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;min-height:44px;padding:6px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.logo{height:40px;width:auto;display:block}
+.livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 8px;background:rgba(55,202,55,.16);color:#146814;border:1px solid var(--good);font-size:10px;font-weight:800;letter-spacing:.12em}
+.livepill.wait,.livepill.stale,.livepill.down{background:rgba(233,61,61,.12);color:var(--bad);border-color:var(--bad)}
+.gdot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
 .sysline{font-size:13px;font-weight:700}
 .asof,.next,.clock{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
-.clock{margin-left:auto;font-family:var(--mono)}
-.nav{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;border-bottom:1px solid var(--line);background:rgba(8,8,8,.88)}
-.nav button{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;min-height:36px;padding:0 14px;font-weight:800;font-size:13px}
-.nav button.on{color:#fff;background:var(--red-deep);border-color:transparent;box-shadow:0 0 16px rgba(237,48,57,.35)}
-.helpbtn{margin-left:auto;width:36px;min-height:36px;padding:0;border-radius:999px}
-.stage{flex:1;min-height:0}
+.clock{margin-left:auto;font-variant-numeric:tabular-nums}
+.nav{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border-bottom:1px solid var(--line)}
+.nav button{border:1px solid var(--teal);background:#fff;color:var(--teal);border-radius:999px;min-height:34px;padding:0 14px;font-weight:700;font-size:13px}
+.nav button.on{color:#fff;background:#000;border-color:#000}
+.helpbtn{margin-left:auto;width:34px;padding:0}
+.stage{flex:1;min-height:0;position:relative}
 .stage.scroll{overflow:auto}
 .stage.lock{overflow:hidden}
-.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.82fr);gap:10px;padding:10px 12px;box-sizing:border-box}
+.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(300px,.9fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
 .col{min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
-.ident{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
-.badge{position:relative;width:58px;height:64px;filter:drop-shadow(0 0 8px rgba(237,48,57,.45))}
-.badge svg{width:100%;height:100%;display:block}
-.badge b{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:20px;padding-top:4px}
-.badge b.na{font-family:var(--sans);font-size:10px;color:var(--muted);padding:6px}
-.who h2{font-family:var(--serif);font-weight:400;font-size:clamp(26px,4vh,40px);line-height:.95}
-.meta{color:var(--muted);font-size:12px;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.streak{display:flex;align-items:center;gap:6px}
-.flame{width:18px;height:26px;filter:drop-shadow(0 0 6px rgba(237,48,57,.65))}
-.flame.off{opacity:.35;filter:none}
-.streak b{font-family:var(--mono);font-size:26px;line-height:1}
-.streak b.na{font-family:var(--sans);font-size:12px;color:var(--muted)}
-.streak span{display:block;color:var(--muted);font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
-.xpbar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden}
-.xpbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#b71a23,#ed3039);box-shadow:0 0 12px rgba(237,48,57,.5);transform:scaleX(0);transform-origin:left center;transition:transform .7s cubic-bezier(.22,.8,.3,1)}
-.xpbar.hit i{background:var(--good);box-shadow:0 0 12px rgba(61,220,151,.45)}
-.xpline{display:flex;justify-content:space-between;gap:8px;margin-top:3px;font-size:12px;font-weight:700;color:var(--muted)}
-.xpline b{color:var(--ink)}
-.gk{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--red-soft);font-weight:800}
-.quests{min-height:0;flex:1 1 auto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-.qcard{min-width:0;border:1px solid var(--line);background:var(--glass);border-radius:14px;padding:10px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
-.qcard .l{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:800}
-.ringbox{position:relative;width:min(176px,100%);margin:4px auto;aspect-ratio:1}
-.ringbox svg{width:100%;height:100%;display:block}
-.ringbox .ctr{position:absolute;inset:0;display:grid;place-items:center;align-content:center;padding:20%;text-align:center}
-.ringbox .ctr b{font-family:var(--mono);font-size:clamp(14px,2.2vh,22px);line-height:1}
-.ringbox .ctr b.na{font-family:var(--sans);font-size:12px;color:var(--muted)}
-.ringbox .ctr span{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:700}
-.togo{font-weight:800;font-size:13px;line-height:1.15}
-.qmark{color:var(--dim);font-size:11px;margin-top:2px;line-height:1.25}
-.tone-low .togo{color:var(--gray)}
-.tone-mid .togo{color:var(--red-soft)}
-.tone-hit .togo{color:var(--good)}
-.tone-hit{box-shadow:0 0 16px rgba(61,220,151,.28)}
-.arc{transition:stroke-dashoffset .7s cubic-bezier(.22,.8,.3,1)}
-.tone-mid .arc{filter:drop-shadow(0 0 4px rgba(237,48,57,.7))}
-.tone-hit .arc{filter:drop-shadow(0 0 6px rgba(61,220,151,.8))}
-.move,.challenge,.rival,.preview{border-radius:14px;border:1px solid rgba(237,48,57,.4);background:linear-gradient(180deg,rgba(237,48,57,.16),rgba(255,255,255,.03));padding:10px 12px;min-width:0}
-.move{flex:0 0 auto;display:flex;flex-direction:column;justify-content:flex-start}
-.move h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3.4vh,34px);line-height:1.08;margin-top:4px}
-.move p,.challenge p,.rival p{color:var(--muted);font-size:12px;margin-top:4px}
-.meter{height:8px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:8px}
-.meter i{display:block;height:100%;width:0;background:var(--red);transition:width .7s cubic-bezier(.22,.8,.3,1)}
-.meter.ahead i{background:var(--good)}
-.meter.even i{background:#f6f5f3}
-.sidepair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.rival b,.challenge b.big{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-.03em}
-.gaptext{font-family:var(--serif);font-weight:400;font-size:clamp(18px,2.6vh,26px);line-height:1.1;color:var(--ink);margin-top:2px}
-.preview h2{font-family:var(--serif);font-weight:400;font-size:clamp(22px,3vh,30px);line-height:1;margin-top:2px}
-.sheet{padding:12px;display:grid;gap:12px}
-.panel{background:var(--glass);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0}
-.panel h2{font-family:var(--serif);font-weight:400;font-size:28px;letter-spacing:-.02em}
-.sub,.quiet{color:var(--muted);font-size:13px;line-height:1.45}
-.src{display:block;margin-top:6px;font-size:12px;color:var(--dim)}
-.caption{font-size:16px;font-weight:700;margin:6px 0}
-.pacefig{display:flex;align-items:baseline;gap:8px}
-.pacefig b{font-family:var(--mono);font-size:48px;letter-spacing:-.04em;line-height:.9}
-.pacefig b.words{font-family:var(--sans);font-size:32px}
-.pacefig b.na{font-family:var(--sans);font-size:28px;color:var(--muted)}
-.tone-behind b,.tone-behind span{color:var(--red-soft)}
-.tone-ahead b,.tone-ahead span{color:var(--good)}
-.legend{display:flex;flex-wrap:wrap;gap:8px 14px;list-style:none;margin:8px 0 0;padding:0;color:var(--muted);font-size:12px}
-.legend i{display:inline-block;width:18px;height:0;border-top:2px solid var(--red);margin-right:6px;vertical-align:middle}
-.legend i.dash{border-top:1.5px dashed rgba(255,255,255,.7)}
-.legend i.shade{width:14px;height:10px;border:0;background:rgba(237,48,57,.28)}
-.chart,.trend{width:100%;height:auto;display:block}
-.chart text,.trend text{font-family:var(--sans);fill:#a3a3a3}
-.split{display:grid;grid-template-columns:1.05fr .95fr;gap:12px}
-.krow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
-.kpi{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
-.kpi .l{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:750}
-.kpi .v{font-family:var(--mono);font-size:22px;margin-top:2px}
-.big{font-family:var(--mono);font-size:40px;letter-spacing:-.04em;margin:4px 0}
-.big span{font-size:16px;color:var(--muted)}
-.wtrack{position:relative;height:12px;border-radius:99px;background:rgba(255,255,255,.08);margin:18px 8px 32px}
-.wfill{display:block;height:100%;width:0;border-radius:99px;background:var(--red);transition:width .7s cubic-bezier(.22,.8,.3,1)}
+.play:has(.banner){gap:6px;padding:6px 10px}
+.play:has(.banner) .col{gap:6px}
+.play:has(.banner) .card{padding:8px 10px}
+.play:has(.banner) .wtrack{margin-bottom:16px}
+.money{grid-column:1;grid-row:1}
+.long{grid-column:1;grid-row:2}
+.race{grid-column:2;grid-row:1 / span 2}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
+.kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
+.who{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.who h2{font-family:var(--serif);font-weight:560;font-size:28px;line-height:1}
+.streak{display:flex;align-items:center;gap:6px;font-weight:800}
+.streak svg{width:14px;height:20px}
+.dollars{font-family:var(--serif);font-weight:650;font-size:clamp(46px,8vh,68px);line-height:.88;letter-spacing:-.03em;margin:2px 0}
+.good{color:var(--good)}
+.bad{color:var(--bad)}
+.sub{color:var(--muted);font-size:12px}
+.meter{height:14px;border-radius:99px;background:var(--track);overflow:hidden;margin-top:6px;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:0;background:var(--good);transition:width .6s ease}
+.meter.bad{background:rgba(233,61,61,.16)}
+.meter.full{background:var(--good)}
+.mrow{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:12px;font-weight:700}
+.chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.chip{background:#fff;border:1px solid var(--line);border-radius:12px;padding:6px 8px;min-width:0}
+.chip b{display:block;font-family:var(--serif);font-size:22px;font-weight:650;line-height:1;margin-top:2px}
+.chip span{display:block;color:var(--muted);font-size:11px;line-height:1.25;margin-top:2px}
+.line-in{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.line-in label{font-size:12px;font-weight:700;color:var(--muted)}
+.line-in input{width:96px;border:1px solid var(--teal);border-radius:8px;background:#fff;padding:6px 8px;font-size:16px}
+.assume{font-size:12px;font-weight:700;margin-top:4px}
+.bars{display:grid;gap:8px}
+.wtrack{position:relative;height:12px;border-radius:99px;background:var(--track);margin:8px 4px 22px;overflow:visible}
+.wfill{display:block;height:100%;width:0;border-radius:99px;background:var(--bad);transition:width .6s ease}
 .wtrack.hit .wfill{background:var(--good)}
-.wtick{position:absolute;top:-5px;width:2px;height:22px;background:#fff}
-.wtick span{position:absolute;top:24px;white-space:nowrap;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.wtick{position:absolute;top:-4px;width:2px;height:20px;background:#000}
+.wtick span{position:absolute;top:20px;font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;text-transform:uppercase}
 .wtick.promise span{left:50%;transform:translateX(-50%)}
 .wtick.goal span{right:0}
-.days{list-style:none;margin:8px 0 0;padding:0}
-.days li{display:flex;flex-wrap:wrap;gap:8px 12px;justify-content:space-between;padding:6px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13px}
-.hours{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:4px 12px}
-.hours li{font-size:13px;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);padding:4px 0}
+.race{display:flex;flex-direction:column;min-height:0;height:100%}
+.pass{font-family:var(--serif);font-weight:560;font-size:clamp(22px,3.2vh,32px);line-height:1.05;margin-top:2px}
+.shead,.srow{display:grid;grid-template-columns:28px minmax(0,1.4fr) auto auto;gap:8px;align-items:center}
+.shead{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:0 8px}
+.slist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.srow{padding:6px 8px;border-radius:10px}
+.srow.you{background:rgba(233,61,61,.1);box-shadow:inset 3px 0 0 var(--bad)}
+.srow.you.ahead{background:rgba(55,202,55,.14);box-shadow:inset 3px 0 0 var(--good)}
+.rk{font-variant-numeric:tabular-nums;font-weight:800;display:flex;align-items:center;gap:2px}
+.arr{width:10px;height:10px}
+.nm{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.you-tag{margin-left:6px;font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#000;border-radius:999px;padding:1px 5px}
+.sets,.dials{font-variant-numeric:tabular-nums;font-weight:800;text-align:right}
+.sheet{padding:12px;display:grid;gap:12px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+.panel h2{font-family:var(--serif);font-weight:560;font-size:28px}
+.caption{font-size:16px;font-weight:750;margin:6px 0}
+.src{display:block;margin-top:6px;font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 14px;list-style:none;margin:8px 0 0;padding:0;color:var(--muted);font-size:12px}
+.legend i{display:inline-block;width:18px;height:0;border-top:2px solid var(--bad);margin-right:6px;vertical-align:middle}
+.legend i.good{border-top-color:var(--good)}
+.legend i.dash{border-top:1.5px dashed var(--teal)}
+.legend i.shade{width:14px;height:10px;border:0;background:rgba(44,123,122,.2)}
+.chart,.trend{width:100%;height:auto;display:block}
+.chart text,.trend text{font-family:var(--sans);fill:#242424}
+.pacefig b{font-family:var(--serif);font-size:48px;line-height:.9}
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:12px}
+.krow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.kpi .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:750}
+.kpi .v{font-size:22px;font-weight:800;margin-top:2px}
+.days,.hours{list-style:none;margin:8px 0 0;padding:0}
+.days li,.hours li{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid rgba(44,123,122,.15);font-size:13px}
 .score{height:100%;min-height:0;display:flex;flex-direction:column;padding:10px 12px;gap:8px}
 .scoretop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .tabs{display:flex;gap:4px}
-.tab{border:1px solid var(--line);background:transparent;color:var(--muted);border-radius:999px;min-height:36px;padding:0 12px;font-weight:800;font-size:13px}
-.tab.on{color:#fff;background:var(--red-deep);border-color:transparent}
-.gapline{border:1px solid rgba(237,48,57,.4);border-radius:12px;padding:8px 12px;background:rgba(237,48,57,.1)}
-.gapline strong{font-family:var(--serif);font-weight:400;font-size:26px}
-.shead,.srow{display:grid;grid-template-columns:28px minmax(0,1.3fr) minmax(0,.8fr) auto;column-gap:8px;align-items:center}
-.shead{color:var(--dim);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:0 8px}
-.slist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px}
-.srow{position:relative;padding:6px 8px 8px;border-radius:8px}
-.srow.you{background:rgba(237,48,57,.16);box-shadow:inset 3px 0 0 #ed3039}
-.srow.above{box-shadow:inset 0 0 0 1px rgba(255,255,255,.16)}
-.rk{font-family:var(--mono);color:var(--muted)}
-.rk.top{color:var(--red-soft)}
-.nm{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.you-tag{margin-left:6px;font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:var(--red);border-radius:999px;padding:1px 5px}
-.lv{color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.xp{font-family:var(--mono);text-align:right}
-.mbar{grid-column:2 / -1;height:3px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:4px}
-.mbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#b71a23,#ed3039);transition:width .7s cubic-bezier(.22,.8,.3,1)}
-.dchip{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px;border:1px solid var(--line);color:var(--muted);margin:2px 4px 0 0}
-.dchip.act{color:#ffd0d0;border-color:rgba(237,48,57,.45);background:rgba(237,48,57,.14)}
-.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
-.banner{padding:8px 10px;border-radius:10px;border:1px solid rgba(237,48,57,.5);background:rgba(237,48,57,.14);font-weight:700;font-size:13px}
-.levelup{border-color:rgba(61,220,151,.5);background:rgba(61,220,151,.12);color:var(--good)}
-.behind{margin:0 12px 12px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.03)}
-.behind summary{cursor:pointer;padding:12px 14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--red-soft);list-style:none}
+.tab{border:1px solid var(--teal);background:#fff;color:var(--teal);border-radius:999px;min-height:34px;padding:0 12px;font-weight:800;font-size:13px}
+.tab.on{color:#fff;background:#000;border-color:#000}
+.behind{margin:0 12px 12px;border:1px solid var(--line);border-radius:16px;background:#fff}
+.behind summary{cursor:pointer;padding:12px 14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--teal);list-style:none}
 .behind .inn{padding:0 14px 14px}
 .src-list{list-style:none;margin:8px 0 0;padding:0}
-.src-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13px}
-.src-list span{color:var(--muted)}
+.src-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid rgba(44,123,122,.15);font-size:13px}
 .fail{max-width:520px;margin:8vh auto;text-align:center}
-.fail h2{font-family:var(--serif);font-weight:400;font-size:32px}
-.err{color:#ffb4b4}
-.btn{border:0;border-radius:999px;min-height:40px;padding:0 16px;font-weight:800;background:var(--red);color:#fff}
-.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
-.emptyviz{min-height:80px;display:grid;place-items:center;color:var(--muted);border:1px dashed rgba(255,255,255,.16);border-radius:12px}
-.stage{position:relative}
-.guide{position:fixed;inset:0;z-index:30;background:rgba(8,8,8,.82);display:grid;place-items:center;padding:16px}
-.guide article{width:min(520px,100%);border:1px solid rgba(237,48,57,.5);border-radius:18px;background:#0e0e0e;padding:18px 18px 14px;box-shadow:0 0 32px rgba(237,48,57,.2)}
-.guide h2{font-family:var(--serif);font-weight:400;font-size:32px;margin:6px 0}
-.guide p{color:var(--muted);margin-top:6px}
-.guide .row{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
-.mini summary{cursor:pointer;color:var(--muted);padding:8px 0}
-footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
-@keyframes hitglow{0%{box-shadow:0 0 0 rgba(61,220,151,0)}40%{box-shadow:0 0 22px rgba(61,220,151,.55)}100%{box-shadow:0 0 12px rgba(61,220,151,.25)}}
-@media (prefers-reduced-motion:no-preference){.qcard.tone-hit{animation:hitglow .7s ease-out 1}}
+.fail h2{font-family:var(--serif);font-weight:560;font-size:32px}
+.btn{border:0;border-radius:999px;min-height:40px;padding:0 16px;font-weight:800;background:#000;color:#fff}
+.banner{padding:8px 10px;border-radius:10px;background:rgba(55,202,55,.16);color:#146814;border:1px solid var(--good);font-weight:800}
+.guide{position:fixed;inset:0;z-index:30;background:rgba(247,246,243,.9);display:grid;place-items:center;padding:16px}
+.guide article{width:min(560px,100%);background:#fff;border:2px solid var(--teal);border-radius:18px;padding:18px}
+.guide h2{font-family:var(--serif);font-weight:560;font-size:34px;margin:4px 0}
+.guide p{margin-top:8px;color:var(--muted)}
+.guide .row{display:flex;justify-content:flex-end;margin-top:14px}
+footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
+.emptyviz{min-height:80px;display:grid;place-items:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
 @media (max-width:820px){
   .top{padding:calc(6px + env(safe-area-inset-top)) 10px 6px}
+  .logo{height:32px}
   .clock{margin-left:0}
-  .play{grid-template-columns:1fr;grid-template-rows:auto auto minmax(0,1fr) auto auto;gap:6px;padding:6px 8px}
-  .quests{flex:none}
-  .ringbox{width:64px}
-  .scoretop{flex-direction:column}
-  .tabs{width:100%}
-  .badge{width:44px;height:50px}
-  .who h2{font-size:24px}
-  .move h2{font-size:20px}
-  .sidepair{grid-template-columns:1fr 1fr}
+  .play{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;gap:6px;padding:6px}
+  .money,.long,.race{grid-column:1}
+  .money{grid-row:1}
+  .race{grid-row:2;height:auto}
+  .long{grid-row:3}
+  .play .extra,.play .fine,.play .wtrack{display:none}
+  .play .card{padding:6px 8px}
+  .play .sub,.play .assume,#goal-line{font-size:11px;margin-top:2px}
+  .who h2{font-size:22px}
+  .dollars{font-size:34px}
+  .meter{height:8px}
+  .chip{padding:4px 6px}
+  .chip b{font-size:18px}
+  .line-in{flex-wrap:nowrap}
+  .line-in input{width:72px;padding:4px 6px}
+  .pass{font-size:18px;margin:0}
+  .srow{padding:2px 6px}
+  .slist{gap:2px;margin-top:2px}
   .split{grid-template-columns:1fr}
   .shead{display:none}
   .score{height:auto}
   .slist{overflow:visible}
 }
 @media (max-height:720px){
-  .ringbox{width:56px}
-  .badge{width:40px;height:46px}
-  .move{padding:6px 8px}
-  .move h2{font-size:18px}
-  .sidepair .challenge,.sidepair .rival{padding:6px 8px}
+  .dollars{font-size:36px}
+  .card{padding:6px 8px}
+  .chips{gap:4px}
+  .chip{padding:4px 6px}
+  .who h2{font-size:22px}
+}
+@media (max-width:820px) and (max-height:740px){
+  .top{padding:4px 8px;gap:2px 8px;min-height:0}
+  .nav{padding:4px 8px}
+  .nav button,.helpbtn{min-height:28px}
+  .play{gap:4px;padding:4px}
+  .play .meter{display:none}
+  .play .card{padding:4px 6px}
+  .who h2{font-size:18px}
+  .dollars{font-size:28px}
+  .chip span{font-size:10px;line-height:1.15}
+  .caption{margin:0}
+  .pass{font-size:16px}
 }
 @media (prefers-reduced-motion:reduce){*,*:before,*:after{animation:none !important;transition:none !important}}
 </style>
@@ -220,7 +194,7 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
 <p class="sr" id="livesum" aria-live="polite"></p>
 <div class="app">
   <header class="top">
-    <div class="brand"><div class="mark" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div><strong>Fig &amp; Eagle</strong></div>
+    <img class="logo" src="mark.svg" alt="Fig and Eagle">
     <span class="livepill wait" id="livepill"><i class="gdot"></i> <span id="pillt">WAIT</span></span>
     <span class="sysline" id="sysline">Checking the feed</span>
     <span class="asof" id="asof">As of no data</span>
@@ -232,10 +206,10 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     <button type="button" data-view="play" class="on">Play</button>
     <button type="button" data-view="board">Scoreboard</button>
     <button type="button" data-view="stats">Stats</button>
-    <button type="button" class="helpbtn" data-help aria-label="How to play">?</button>
+    <button type="button" class="helpbtn" data-help aria-label="The incentive">?</button>
   </nav>
   <main class="stage lock" id="stage">
-    <p class="quiet" style="padding:16px">Reading the live feed from GHL. This page stays blank until that read lands. It will not fill missing numbers with zero.</p>
+    <p class="sub" style="padding:16px">Reading the live feed from GHL. Missing numbers stay blank. Nothing here is filled in as zero.</p>
   </main>
 </div>
 <script>
@@ -245,14 +219,14 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
   var REFRESH_MS = 5 * 60 * 1000;
   var BLOCKS = [[11, 13], [15, 18]];
   var PACE_RATE = 30;
-  var GUIDE_KEY = 'fe-guide';
+  var BONUS = 50;
+  var OUTBOUND_CUT = 0.05;
+  var GUIDE_KEY = 'fe-guide-money';
   var LEVEL_KEY = 'fe-level';
+  var AVG_KEY = 'fe-avg-deal';
+  var GOAL_KEY = 'fe-income-goal';
   var sb = null;
-  var state = {
-    row: null, fetchedAt: null, error: '', stale: false,
-    period: 'today', view: 'play', nextAt: 0, booted: false, inflight: false,
-    rendered: false, fineOpen: false, guide: false, guideStep: 0, animated: false
-  };
+  var state = { row: null, fetchedAt: null, error: '', stale: false, period: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, rendered: false, fineOpen: false, guide: false, animated: false };
   try {
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'stats' || hash === 'pace' || hash === 'trend') state.view = 'stats';
@@ -281,6 +255,12 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     if (Math.abs(r - Math.round(r)) < 1e-6) return Math.round(r).toLocaleString('en-US');
     return r.toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
   }
+  function fmtMoney(v) {
+    var n = num(v);
+    if (n == null) return 'no data';
+    var r = Math.round(n);
+    return (r < 0 ? '-' : '') + '$' + Math.abs(r).toLocaleString('en-US');
+  }
   function fmtTalk(v) {
     var n = num(v);
     if (n == null) return 'no data';
@@ -292,33 +272,18 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
       var h = Math.floor(r / 60);
       var m = Math.round((r - h * 60) * 10) / 10;
       if (m >= 60) { h += 1; m = 0; }
-      var ms = Math.abs(m - Math.round(m)) < 1e-6 ? String(Math.round(m)) : m.toFixed(1);
-      body = m === 0 ? (h + 'h') : (h + 'h ' + ms + 'm');
+      body = m === 0 ? (h + 'h') : (h + 'h ' + (Math.abs(m - Math.round(m)) < 1e-6 ? String(Math.round(m)) : m.toFixed(1)) + 'm');
     }
     return (neg ? '-' : '') + body;
   }
-  function fmtTalkTarget(v) {
-    var n = num(v);
-    if (n == null) return 'no data';
-    if (Math.abs(n - 120) < 0.05) return '2h';
-    return fmtTalk(n);
-  }
-  function pluralNum(v, one, many) {
-    var n = num(v);
-    if (n == null) return 'no data';
-    return fmtCount(n) + ' ' + (Math.abs(n) === 1 ? one : many);
-  }
-  function progressFraction(v) {
-    var n = num(v);
-    if (n == null || n < 0) return null;
-    if (n > 1 && n <= 100) return n / 100;
-    if (n > 1) return 1;
-    return n;
-  }
-  function fmtProgress(frac) {
-    if (frac == null) return 'no data';
-    var r = Math.round(frac * 1000) / 10;
-    return (Math.abs(r - Math.round(r)) < 1e-6 ? String(Math.round(r)) : r.toFixed(1)) + '% through this level';
+  function setting(key) {
+    try {
+      var s = localStorage.getItem(key);
+      if (s == null || String(s).trim() === '') return null;
+      var n = Number(s);
+      if (!isFinite(n) || n < 0) return null;
+      return n;
+    } catch (e) { return null; }
   }
   function sameName(a, b) {
     return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
@@ -352,40 +317,16 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     }
     return p;
   }
-  function blockHoursLeft(now) {
-    var n = num(now);
-    if (n == null) return null;
-    var left = 0;
-    for (var i = 0; i < BLOCKS.length; i++) {
-      var start = Math.max(n, BLOCKS[i][0]);
-      if (BLOCKS[i][1] > start) left += BLOCKS[i][1] - start;
-    }
-    return left;
-  }
-  function hourSum(hours, now) {
-    if (!Array.isArray(hours) || now == null) return null;
-    var last = Math.floor(now);
-    if (last < 0 || last >= hours.length) return null;
-    var sum = 0;
-    for (var h = 0; h <= last; h++) {
-      var n = num(hours[h]);
-      if (n == null) return null;
-      sum += n;
-    }
-    return sum;
-  }
   function ctClock(date) {
-    try {
-      return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }).format(date) + ' CT';
-    } catch (e) { return 'CT'; }
+    try { return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true }).format(date) + ' CT'; }
+    catch (e) { return 'CT'; }
   }
   function fmtStamp(iso) {
     if (!iso) return null;
     var d = new Date(iso);
     if (isNaN(d.getTime())) return null;
-    try {
-      return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).format(d) + ' CT';
-    } catch (e) { return null; }
+    try { return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }).format(d) + ' CT'; }
+    catch (e) { return null; }
   }
   function asOfText(row) {
     var data = (row && row.data) || {};
@@ -420,9 +361,27 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || ''));
     if (!m) return textOr(iso);
     var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    var mi = Number(m[2]) - 1;
-    if (mi < 0 || mi > 11) return textOr(iso);
-    return months[mi] + ' ' + Number(m[3]);
+    return months[Number(m[2]) - 1] + ' ' + Number(m[3]);
+  }
+  function ctYMD(iso) {
+    var d = iso ? new Date(iso) : null;
+    if (!d || isNaN(d.getTime())) return null;
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(d);
+      var o = {};
+      parts.forEach(function (p) { o[p.type] = p.value; });
+      if (!o.year || !o.month || !o.day) return null;
+      return { y: Number(o.year), m: Number(o.month), d: Number(o.day), key: o.year + '-' + o.month + '-' + o.day };
+    } catch (e) { return null; }
+  }
+  function weekdaysInMonth(y, m) {
+    var n = 0;
+    var last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    for (var day = 1; day <= last; day++) {
+      var wd = new Date(Date.UTC(y, m - 1, day)).getUTCDay();
+      if (wd !== 0 && wd !== 6) n++;
+    }
+    return n;
   }
   function errText(err) {
     var s = 'The read failed.';
@@ -432,23 +391,9 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     if (/^TypeError\b/.test(s) || /Failed to fetch/i.test(s)) s = 'The scoreboard request did not complete.';
     return s.slice(0, 240);
   }
-  function rateText(n) {
-    if (n == null || !isFinite(n)) return 'no data';
-    var r = Math.round(n * 10) / 10;
-    return Math.abs(r - Math.round(r)) < 0.05 ? String(Math.round(r)) : r.toFixed(1);
-  }
-  function countEl(n, kind) {
-    var v = num(n);
-    if (v == null) return '<b class="na">no data</b>';
-    var talk = kind === 'talk';
-    var finalText = talk ? fmtTalk(v) : fmtCount(v);
-    return '<b class="count" data-n="' + v + '" data-kind="' + (talk ? 'talk' : 'count') + '" data-final="' + esc(finalText) + '">' + esc(finalText) + '</b>';
-  }
   function ensureClient() {
     if (!window.supabase || !window.supabase.createClient) return null;
-    if (!sb) {
-      sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'sb-fig-eagle-scoreboard', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
-    }
+    if (!sb) sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { storageKey: 'sb-fig-eagle-scoreboard', persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } });
     return sb;
   }
   function withTimeout(promise, ms) {
@@ -493,155 +438,227 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     if (!row.data || typeof row.data !== 'object' || Array.isArray(row.data)) throw new Error('The scoreboard payload is empty.');
     return row;
   }
-  function ringSvg(pct, tone) {
-    var size = 168, sw = 12, r = (size / 2) - sw - 2, c = 2 * Math.PI * r, cx = size / 2;
-    var color = tone === 'hit' ? '#3DDC97' : tone === 'mid' ? '#ed3039' : tone === 'low' ? '#8a8f98' : 'transparent';
-    var ghost = '<circle cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="' + sw + '" stroke-dasharray="2.4 5"/>';
-    var arc = '';
-    if (pct != null && pct > 0 && tone !== 'none') {
-      var p = Math.max(0, Math.min(100, pct));
-      var off = c * (1 - p / 100);
-      arc = '<circle class="arc" cx="' + cx + '" cy="' + cx + '" r="' + r.toFixed(2) + '" fill="none" stroke="' + color + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-dasharray="' + c.toFixed(2) + '" stroke-dashoffset="' + c.toFixed(2) + '" data-off="' + off.toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cx + ')"/>';
-    }
-    return '<svg viewBox="0 0 ' + size + ' ' + size + '" aria-hidden="true">' + ghost + arc + '</svg>';
+  function kpiOf(data) { return num(data && data.targets && data.targets.sets); }
+  function dayOpen(now) { return now != null && now < 18; }
+  function moneyEl(n) {
+    var v = num(n);
+    if (v == null) return '<b class="na">no data</b>';
+    var cls = v > 0.5 ? 'good' : 'bad';
+    var finalText = fmtMoney(v);
+    return '<b class="count ' + cls + '" data-n="' + v + '" data-kind="money" data-final="' + esc(finalText) + '">' + esc(finalText) + '</b>';
   }
-  function questTone(value, target) {
-    var v = num(value), t = num(target);
-    if (v == null || t == null || !(t > 0)) return { p: null, tone: 'none', left: null };
-    var p = (v / t) * 100;
-    return { p: p, tone: p >= 100 ? 'hit' : (p >= 50 ? 'mid' : 'low'), left: t - v };
-  }
-  function goText(left, kind) {
-    if (left == null) return '<b class="na">no data</b>';
-    var unit = kind === 'talk' ? 'talk' : 'count';
-    if (Math.abs(left) < 0.05) return 'Clear';
-    if (left > 0) return countEl(left, unit) + ' to go';
-    return countEl(-left, unit) + ' over';
-  }
-  function questCard(label, value, target, kind, mark) {
-    var q = questTone(value, target);
-    var v = num(value);
-    var main = v == null ? '<b class="na">no data</b>' : countEl(v, kind === 'talk' ? 'talk' : 'count');
-    var of = kind === 'talk' ? fmtTalkTarget(target) : (num(target) == null ? 'no data' : fmtCount(target));
-    var pct = q.p == null ? 'no data' : (Math.round(q.p) + '%');
-    return '<article class="qcard tone-' + q.tone + '"><p class="l">' + esc(label) + '</p><div class="ringbox">' + ringSvg(q.p, q.tone) + '<div class="ctr">' + main + '<span>/ ' + esc(of) + '</span></div></div><p class="togo">' + goText(q.left, kind) + '</p><p class="qmark">' + esc(pct) + (mark ? (' · Next mark: ' + mark) : '') + '</p></article>';
-  }
-  function flameSvg(off) {
-    return '<svg class="flame' + (off ? ' off' : '') + '" viewBox="0 0 24 32" aria-hidden="true"><path fill="#ed3039" d="M12 1.2c.6 4.6 3.4 6.6 4.8 10.2 1.5 3.8 1.8 6.6.2 10.1C15.4 25.2 13.6 28 12 28s-3.4-2.8-5-6.5c-1.6-3.5-1.3-6.3.2-10.1C8.6 7.8 11.4 5.8 12 1.2z"/><path fill="#ff8a8e" d="M12 12.2c.4 2.6 2 3.6 2.5 6 .5 2.2-.4 4.2-1.8 5.2-.2-2.2-1.4-3.4-2.2-5.1.2 1.6.8 2.6 1.6 3.2-1.4-.2-2.8-1.4-3.4-3.2-.5-1.8.1-3.6 1.2-5 .6 1.2 1.4 1.5 1.8.6.1-1.6-.2-2.8-.3-4.1z"/></svg>';
-  }
-  function badgeSvg() {
-    return '<svg viewBox="0 0 68 76" aria-hidden="true"><polygon points="34,2 64,18 64,52 34,74 4,52 4,18" fill="#14080a" stroke="#ed3039" stroke-width="2.5"/></svg>';
-  }
-  function nextMove(data, row) {
-    var c = (data && data.computed) || {};
-    var targets = (data && data.targets) || {};
-    var dials = row ? num(row.dials) : null;
-    var talk = row ? num(row.talk_min) : null;
-    var sets = row ? num(row.sets) : null;
-    var td = num(targets.dials), tt = num(targets.talk_min), ts = num(targets.sets);
-    var now = num(data && data.now_hour);
-    if (dials != null && td != null && dials + 0.05 < td) {
-      var left = td - dials;
-      var hours = blockHoursLeft(now);
-      if (hours == null) return { line: 'Next dial rate: no data', detail: 'The feed has no current hour, so the rate stays off.' };
-      if (hours < 0.02) return { line: fmtCount(left) + ' dials still short of ' + fmtCount(td), detail: 'The dial blocks ended at 6 PM CT. Computed from today\'s dials and the Dials target.' };
-      var shownHours = Math.round(hours * 10) / 10;
-      if (shownHours < 0.1) shownHours = hours;
-      var when = 'during the remaining dial blocks until 6 PM CT';
-      if (now >= 15 && now < 18) when = 'until 6 PM CT';
-      else if (now >= 13 && now < 15) when = 'from 3 PM to 6 PM CT';
-      else if (now >= 11 && now < 13) when = 'through 1 PM CT, then from 3 PM to 6 PM CT';
-      return {
-        line: 'Dial ' + rateText(left / shownHours) + ' an hour ' + when + ' to clear the Dials quest',
-        detail: 'Computed from ' + fmtCount(left) + ' dials left and ' + rateText(shownHours) + ' hours left in the 11 AM to 1 PM and 3 PM to 6 PM CT blocks. Not a logged count.'
-      };
-    }
-    if (talk != null && tt != null && talk + 0.05 < tt) {
-      return { line: fmtTalk(tt - talk) + ' of talk to clear the Talk quest', detail: 'Next talk mark from the feed: ' + textOr(c.next_milestone_talk) + '.' };
-    }
-    if (sets != null && ts != null && sets + 0.05 < ts) {
-      return { line: fmtCount(ts - sets) + ' sets to clear the Sets quest', detail: 'Next sets mark from the feed: ' + textOr(c.next_milestone_sets) + '.' };
-    }
-    if (dials == null && talk == null && sets == null) return { line: 'Next move: no data', detail: 'Today\'s dials, talk, and sets are missing.' };
-    return { line: 'Daily quests are clear', detail: 'Dials, talk, and sets are at or past today\'s targets.' };
-  }
-  function ranked(rows) {
-    return rows.slice().sort(function (a, b) {
-      var ax = num(a && a.xp), bx = num(b && b.xp);
-      if (ax == null && bx == null) return String((a && a.name) || '').localeCompare(String((b && b.name) || ''));
-      if (ax == null) return 1;
-      if (bx == null) return -1;
-      if (bx !== ax) return bx - ax;
-      return String((a && a.name) || '').localeCompare(String((b && b.name) || ''));
+  function lostInfo(data) {
+    var kpi = kpiOf(data);
+    var days = data && data.my_daily;
+    var today = ctYMD(data && data.generated_iso);
+    if (kpi == null || !Array.isArray(days) || !today) return { dollars: null, note: 'Opportunity lost: no data' };
+    var bits = [], dollars = 0, seen = 0;
+    days.forEach(function (d) {
+      var key = String(d && d.day || '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || key >= today.key) return;
+      var sets = num(d && d.sets);
+      if (sets == null) { bits.push(shortDay(key) + ' no data'); return; }
+      seen++;
+      var short = Math.max(0, kpi - sets);
+      dollars += short * BONUS;
+      if (short > 0) bits.push(shortDay(key) + ' ' + fmtCount(short) + ' short');
     });
-  }
-  function gapInfo(rows, me) {
-    if (!Array.isArray(rows)) return { text: 'Rank: no data', rank: null, above: -1 };
-    var list = ranked(rows);
-    var idx = -1;
-    for (var i = 0; i < list.length; i++) if (list[i] && sameName(list[i].name, me)) idx = i;
-    if (idx < 0) return { text: 'Your row is not on this board.', rank: null, above: -1 };
-    var rank = idx + 1;
-    if (idx === 0) {
-      var mine = num(list[0] && list[0].xp);
-      var below = list[1] ? num(list[1].xp) : null;
-      if (mine == null) return { text: 'You are 1st. XP: no data.', rank: rank, above: -1 };
-      if (below == null) return { text: 'You are 1st with ' + fmtCount(mine) + ' XP.', rank: rank, above: -1 };
-      return { text: 'You are 1st, ' + fmtCount(mine - below) + ' XP ahead of ' + textOr(list[1].name) + '.', rank: rank, above: -1 };
+    if (!seen && !bits.length) return { dollars: null, note: 'No past days in the feed.' };
+    var now = num(data.now_hour);
+    if (now != null && !dayOpen(now)) {
+      var row = findMe(data, 'today');
+      var todaySets = row ? num(row.sets) : null;
+      if (todaySets == null) bits.push('Today no data');
+      else {
+        var shortToday = Math.max(0, kpi - todaySets);
+        dollars += shortToday * BONUS;
+        if (shortToday > 0) bits.push('today ' + fmtCount(shortToday) + ' short, blocks over');
+      }
     }
-    var above = list[idx - 1];
-    var ax = num(above && above.xp), mx = num(list[idx] && list[idx].xp);
-    if (ax == null || mx == null) return { text: 'You are ' + rank + '. XP gap: no data.', rank: rank, above: idx - 1 };
-    if (Math.abs(ax - mx) < 0.05) return { text: 'Tied with ' + textOr(above.name) + ' on XP.', rank: rank, above: idx - 1 };
-    return { text: fmtCount(ax - mx) + ' XP to pass ' + textOr(above.name) + '.', rank: rank, above: idx - 1 };
+    return { dollars: dollars, note: bits.length ? bits.join(', ') : 'Nothing missed on the days in the feed.' };
+  }
+  function onTable(data, row) {
+    var kpi = kpiOf(data);
+    var sets = row ? num(row.sets) : null;
+    var now = num(data && data.now_hour);
+    if (kpi == null || sets == null || now == null) return { dollars: null, note: 'no data' };
+    if (!dayOpen(now)) return { dollars: 0, note: sets + 0.05 >= kpi ? 'KPI is met' : 'Blocks are over', open: false, met: sets + 0.05 >= kpi };
+    var left = Math.max(0, kpi - sets);
+    return { dollars: left * BONUS, note: left < 0.05 ? 'KPI is met' : (fmtCount(left) + ' sets still pay before 6 PM CT'), open: true, met: left < 0.05 };
+  }
+  function monthMoney(data) {
+    var kpi = kpiOf(data);
+    var p = periodOf(data, 'month');
+    var row = findMe(data, 'month');
+    var sets = row ? num(row.sets) : null;
+    var elapsed = p ? num(p.workdays) : null;
+    var today = ctYMD(data && data.generated_iso);
+    if (kpi == null || sets == null || elapsed == null || !(elapsed > 0) || !today) return null;
+    var total = weekdaysInMonth(today.y, today.m);
+    if (!(total >= elapsed)) return null;
+    var pace = (sets / elapsed) * total * BONUS;
+    var kpiPay = kpi * total * BONUS;
+    return { pace: pace, kpiPay: kpiPay, gap: kpiPay - pace, sets: sets, elapsed: elapsed, total: total, month: today.m, year: today.y };
+  }
+  function commissionText(sets) {
+    var avg = setting(AVG_KEY);
+    if (avg == null) return 'Set your avg deal size to see commission.';
+    if (sets == null) return 'Commission upside: no data. Average deal ' + fmtMoney(avg) + ' is an assumption, not cash collected.';
+    var upside = sets * avg * OUTBOUND_CUT;
+    return fmtMoney(upside) + ' outbound commission upside on ' + fmtCount(sets) + ' set' + (Math.abs(sets) === 1 ? '' : 's') + ' at ' + fmtMoney(avg) + ' average. 5% assumption, not cash collected.';
+  }
+  function flame(on) {
+    var fill = on ? '#37ca37' : '#e93d3d';
+    return '<svg viewBox="0 0 24 32" aria-hidden="true"><path fill="' + fill + '" d="M12 1.2c.6 4.6 3.4 6.6 4.8 10.2 1.5 3.8 1.8 6.6.2 10.1C15.4 25.2 13.6 28 12 28s-3.4-2.8-5-6.5c-1.6-3.5-1.3-6.3.2-10.1C8.6 7.8 11.4 5.8 12 1.2z"/></svg>';
   }
   function levelBanner(level, name) {
     if (level == null) return '';
     var prev = null;
     try { prev = localStorage.getItem(LEVEL_KEY); localStorage.setItem(LEVEL_KEY, String(level)); } catch (e) {}
     if (prev == null || prev === '' || !(num(prev) < level)) return '';
-    return '<div class="banner levelup">Level ' + esc(fmtCount(level)) + (name && name !== 'no data' ? (' · ' + esc(name)) : '') + '</div>';
+    return '<div class="banner">Level ' + esc(fmtCount(level)) + (name && name !== 'no data' ? (' ' + esc(name)) : '') + '</div>';
+  }
+  function ranked(rows) {
+    return (rows || []).slice().sort(function (a, b) {
+      var as = num(a && a.sets), bs = num(b && b.sets);
+      if (as == null && bs == null) return String((a && a.name) || '').localeCompare(String((b && b.name) || ''));
+      if (as == null) return 1;
+      if (bs == null) return -1;
+      if (bs !== as) return bs - as;
+      var ad = num(a && a.dials), bd = num(b && b.dials);
+      if (ad == null && bd == null) return String(a.name || '').localeCompare(String(b.name || ''));
+      if (ad == null) return 1;
+      if (bd == null) return -1;
+      if (bd !== ad) return bd - ad;
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+  }
+  function gapLine(list, me) {
+    var idx = -1;
+    for (var i = 0; i < list.length; i++) if (list[i] && sameName(list[i].name, me)) idx = i;
+    if (idx < 0) return { text: 'Your row is not on this board.', ahead: false, rank: null };
+    if (idx === 0) {
+      var mine = num(list[0].sets), below = list[1] ? num(list[1].sets) : null;
+      if (mine == null) return { text: 'You are 1st. Sets: no data.', ahead: true, rank: 1 };
+      if (below == null) return { text: 'You lead this board.', ahead: true, rank: 1 };
+      return { text: 'You lead by ' + fmtCount(mine - below) + ' sets.', ahead: true, rank: 1 };
+    }
+    var above = list[idx - 1];
+    var as = num(above.sets), ms = num(list[idx].sets);
+    if (as == null || ms == null) return { text: 'Sets to pass ' + textOr(above.name) + ': no data.', ahead: false, rank: idx + 1 };
+    if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' sets to pass ' + textOr(above.name) + '.', ahead: false, rank: idx + 1 };
+    var ad = num(above.dials), md = num(list[idx].dials);
+    if (ad == null || md == null) return { text: 'Tied on sets with ' + textOr(above.name) + '. Dials: no data.', ahead: false, rank: idx + 1 };
+    if (ad - md > 0.05) return { text: 'Tied on sets. ' + fmtCount(ad - md) + ' dials to pass ' + textOr(above.name) + '.', ahead: false, rank: idx + 1 };
+    return { text: 'Tied with ' + textOr(above.name) + ' on sets and dials.', ahead: false, rank: idx + 1 };
+  }
+  function arrowsFor(period, list) {
+    var key = 'fe-ranks-' + period;
+    var prev = null;
+    try { prev = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+    var map = {};
+    list.forEach(function (row, i) { if (row && row.name) map[String(row.name).trim().toLowerCase()] = i + 1; });
+    try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
+    return (prev && typeof prev === 'object' && !Array.isArray(prev)) ? prev : null;
+  }
+  function arrowSvg(prev, name, rank) {
+    if (!prev) return '';
+    var old = num(prev[String(name || '').trim().toLowerCase()]);
+    if (old == null || old === rank) return '';
+    if (old > rank) return '<svg class="arr" viewBox="0 0 12 12" aria-label="Rank up"><path d="M6 1.5 L11 9 H1 Z" fill="#37ca37"/></svg>';
+    return '<svg class="arr" viewBox="0 0 12 12" aria-label="Rank down"><path d="M6 10.5 L1 3 H11 Z" fill="#e93d3d"/></svg>';
+  }
+  function toneSets(sets, target) {
+    var s = num(sets), t = num(target);
+    if (s == null || t == null) return '';
+    return s + 0.05 >= t ? 'good' : 'bad';
   }
   function playHtml(data, row) {
     var c = (data && data.computed) || {};
-    var targets = (data && data.targets) || {};
-    var lvl = num(c.level);
-    var frac = progressFraction(c.level_progress);
-    var levelName = textOr(c.level_name);
-    var nextName = textOr(c.next_level_name);
-    var badges = Array.isArray(c.badges_today) ? c.badges_today : (row && Array.isArray(row.badges) ? row.badges : null);
-    var meta = (lvl == null ? 'Level no data' : ('Level ' + fmtCount(lvl))) + (levelName !== 'no data' ? (' · ' + levelName) : '');
-    if (badges == null) meta += ' · badges no data';
-    else if (badges.length) meta += ' · ' + badges.join(' · ');
+    var kpi = kpiOf(data);
+    var sets = row ? num(row.sets) : null;
+    var earned = (sets == null) ? null : sets * BONUS;
+    var pot = (kpi == null) ? null : kpi * BONUS;
+    var table = onTable(data, row);
+    var lost = lostInfo(data);
     var streak = num(c.streak);
     if (streak == null && row) streak = num(row.streak);
-    var move = nextMove(data, row);
-    var today = periodOf(data, 'today');
-    var gap = gapInfo(today && today.rows, meName(data));
-    var logged = row ? num(row.dials) : null;
-    var fedPace = num(c.pace_target_dials);
+    var lvl = num(c.level);
+    var tableClass = table.dollars == null ? '' : ((table.met || (table.open && table.dollars > 0)) ? 'good' : 'bad');
+    var lostClass = lost.dollars == null ? '' : (lost.dollars > 0.5 ? 'bad' : 'good');
+    var earnedClass = earned == null ? '' : (earned > 0.5 ? 'good' : 'bad');
+    var fill = (earned != null && pot != null && pot > 0) ? Math.max(0, Math.min(100, (earned / pot) * 100)) : null;
+    var meterClass = fill == null ? '' : (fill >= 99.5 ? 'full' : (earned > 0.5 ? 'good' : 'bad'));
     var delta = num(c.dials_vs_pace);
-    var paceLabel = delta == null ? 'Pace: no data' : (Math.abs(delta) < 0.05 ? 'On pace' : (delta < 0 ? (fmtCount(Math.abs(delta)) + ' behind') : (fmtCount(delta) + ' ahead')));
-    var paceDetail = (logged == null ? 'Dials logged: no data' : (fmtCount(logged) + ' logged')) + ' · pace target ' + (fedPace == null ? 'no data' : fmtCount(fedPace));
-    var fill = (logged != null && fedPace != null && fedPace > 0) ? Math.max(0, Math.min(100, (logged / fedPace) * 100)) : null;
-    var tone = delta == null ? 'even' : (Math.abs(delta) < 0.05 ? 'even' : (delta < 0 ? 'behind' : 'ahead'));
-    var bar = frac == null ? '<p class="quiet">Level progress: no data</p>' : '<div class="xpbar' + (frac >= 0.999 ? ' hit' : '') + '" role="img" aria-label="' + esc(fmtProgress(frac)) + '"><i data-fill="' + (frac * 100).toFixed(2) + '" data-scale="1"></i></div>';
-    var clear = questTone(row && row.dials, targets.dials).tone === 'hit' && questTone(row && row.talk_min, targets.talk_min).tone === 'hit' && questTone(row && row.sets, targets.sets).tone === 'hit';
-    return '<section class="play">' +
-      '<div class="col">' + levelBanner(lvl, levelName) + (clear ? '<div class="banner">Daily quests clear</div>' : '') +
-        '<div class="ident"><div class="badge">' + badgeSvg() + (lvl == null ? '<b class="na">no data</b>' : countEl(lvl, 'count')) + '</div><div class="who"><h2>' + esc(meName(data)) + '</h2><p class="meta">' + esc(meta) + '</p></div><div class="streak">' + flameSvg(streak == null || streak <= 0) + '<div>' + (streak == null ? '<b class="na">no data</b>' : countEl(streak, 'count')) + '<span>' + (streak == null ? '' : (Math.abs(streak) === 1 ? 'day' : 'days')) + '</span></div></div></div>' +
-        '<div>' + bar + '<p class="xpline"><span>' + countEl(c.xp, 'count') + ' XP · ' + countEl(c.xp_today, 'count') + ' today</span><span>' + countEl(c.xp_to_next, 'count') + ' XP to ' + esc(nextName) + '</span></p></div>' +
-        '<p class="gk">Daily quests' + (clear ? ' · clear' : '') + '</p>' +
-        '<div class="quests">' +
-          questCard('Dials', row && row.dials, targets.dials, 'dials', textOr(c.next_milestone)) +
-          questCard('Talk', row && row.talk_min, targets.talk_min, 'talk', textOr(c.next_milestone_talk)) +
-          questCard('Sets', row && row.sets, targets.sets, 'sets', textOr(c.next_milestone_sets)) +
-        '</div></div>' +
-      '<div class="col"><section class="move"><p class="gk">Next move</p><h2>' + esc(move.line) + '</h2><p>' + esc(move.detail) + '</p></section>' +
-        '<div class="sidepair"><section class="challenge"><p class="gk">Pace challenge</p><b class="big">' + esc(paceLabel) + '</b><p>' + esc(paceDetail) + '</p>' +
-          (fill == null ? '' : '<div class="meter ' + tone + '" role="img" aria-label="' + esc(paceDetail) + '"><i data-fill="' + fill.toFixed(2) + '"></i></div>') +
-        '</section><section class="rival"><p class="gk">Pass line' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="gaptext">' + esc(gap.text) + '</p><p class="src">Today · ranked by XP · GHL</p></section></div>' +
-        '<section class="preview"><p class="gk">Next level</p><h2>' + esc(nextName) + '</h2><p>' + esc(fmtCount(c.xp_to_next)) + ' XP to go · ' + esc(fmtProgress(frac)) + '</p></section></div></section>';
+    var paceClass = delta == null ? '' : (delta < -0.05 ? 'bad' : 'good');
+    var paceText = delta == null ? 'Pace: no data' : (Math.abs(delta) < 0.05 ? 'On pace' : (delta < 0 ? (fmtCount(Math.abs(delta)) + ' dials behind') : (fmtCount(delta) + ' dials ahead')));
+    var week = findMe(data, 'week');
+    var weekSets = week ? num(week.sets) : num(data.my_week_sets);
+    var promise = num(data.promise), goal = num(data.goal);
+    var weekPay = weekSets == null ? null : weekSets * BONUS;
+    var promisePay = promise == null ? null : promise * BONUS;
+    var goalPay = goal == null ? null : goal * BONUS;
+    var scale = 0;
+    [weekPay, promisePay, goalPay].forEach(function (n) { if (n != null && n > scale) scale = n; });
+    var weekHit = weekSets != null && promise != null && weekSets + 0.05 >= promise;
+    function tick(cls, value, label) {
+      if (value == null || !(scale > 0)) return '';
+      return '<i class="wtick ' + cls + '" style="left:' + Math.max(0, Math.min(100, (value / scale) * 100)).toFixed(2) + '%"><span>' + esc(label) + ' ' + esc(fmtMoney(value)) + '</span></i>';
+    }
+    var weekBar = scale > 0 && weekPay != null ? '<div class="wtrack' + (weekHit ? ' hit' : '') + '"><i class="wfill" data-fill="' + Math.max(0, Math.min(100, (weekPay / scale) * 100)).toFixed(2) + '"></i>' + tick('promise', promisePay, 'Promise') + tick('goal', goalPay, 'Goal') + '</div>' : '<p class="sub">Week bonus: no data</p>';
+    var month = monthMoney(data);
+    var monthHtml = !month ? '<p class="sub">Month projection: no data</p>' : '<p class="sub"><b class="' + (month.gap > 0.5 ? 'bad' : 'good') + '">' + esc(fmtMoney(month.pace)) + '</b> at this pace. <b class="good">' + esc(fmtMoney(month.kpiPay)) + '</b> at ' + esc(fmtCount(kpi)) + ' sets a day. <b class="bad">' + esc(fmtMoney(month.gap)) + '</b> opportunity cost.</p><p class="src fine">' + esc(fmtCount(month.sets)) + ' sets over ' + esc(fmtCount(month.elapsed)) + ' workdays, projected across ' + month.total + ' Mon-Fri days. Rounded to the dollar. Holidays are not in the feed.</p>';
+    var avg = setting(AVG_KEY);
+    var goalSet = setting(GOAL_KEY);
+    var monthBonus = month && month.sets != null ? month.sets * BONUS : null;
+    var goalLine = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
+    var list = ranked((periodOf(data, 'today') || {}).rows || []);
+    var gap = gapLine(list, meName(data));
+    var prev = arrowsFor('today', list);
+    var move = table.note;
+    return '<section class="play"><div class="col">' + levelBanner(lvl, textOr(c.level_name)) +
+      '<section class="card"><p class="kicker">The incentive</p><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div>' +
+      '<p class="kicker">Earned today</p><p class="dollars ' + earnedClass + '">' + (earned == null ? 'no data' : moneyEl(earned)) + '</p>' +
+      '<p class="sub">Bonus earned, commission paid when deals close.</p><p class="sub extra">' + (lvl == null ? 'Money is the score.' : ('Level ' + fmtCount(lvl) + ' ' + textOr(c.level_name) + '. Money is the score.')) + '</p>' +
+      (fill == null ? '' : '<div class="meter ' + meterClass + '" role="img" aria-label="Bonus earned against today\'s KPI"><i data-fill="' + fill.toFixed(2) + '"></i></div>') +
+      '<p class="mrow extra"><span class="' + earnedClass + '">' + (earned == null ? 'no data' : fmtMoney(earned)) + ' earned</span><span>' + (pot == null ? 'KPI no data' : (fmtMoney(pot) + ' at ' + fmtCount(kpi) + ' sets')) + '</span></p>' +
+      '<p class="sub extra ' + (table.dollars > 0 ? 'good' : '') + '">' + esc(move) + '</p></section>' +
+      '<div class="chips"><article class="chip"><p class="kicker">On the table</p><b class="' + tableClass + '">' + (table.dollars == null ? 'no data' : fmtMoney(table.dollars)) + '</b><span>' + esc(table.note) + '</span></article>' +
+      '<article class="chip"><p class="kicker">Opportunity lost</p><b class="' + lostClass + '">' + (lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '</b><span>' + esc(lost.note) + '</span></article>' +
+      '<article class="chip"><p class="kicker">Dial pace</p><b class="' + paceClass + '">' + esc(delta == null ? 'no data' : (Math.abs(delta) < 0.05 ? 'On pace' : fmtCount(Math.abs(delta)))) + '</b><span class="' + paceClass + '">' + esc(paceText) + '</span></article></div>' +
+      '<section class="card"><div class="line-in"><label for="avg-deal">Avg deal cash</label><input id="avg-deal" inputmode="decimal" placeholder="Blank" value="' + (avg == null ? '' : esc(String(avg))) + '" aria-label="Average deal cash collected, an assumption">' +
+      '<label for="month-goal">Month goal</label><input id="month-goal" inputmode="decimal" placeholder="Blank" value="' + (goalSet == null ? '' : esc(String(goalSet))) + '" aria-label="Personal monthly income goal"></div>' +
+      '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section></div>' +
+      '<section class="card race"><p class="kicker">Competition' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Today, ranked by sets, then dials. Dollars show on your row only.</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, kpi, true) + '</div></section>' +
+      '<section class="card bars long"><p class="kicker">Week bonus</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + '. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + '.</span></p>' + weekBar +
+      '<p class="kicker">Month</p>' + monthHtml + '<p class="src fine">$50 bonus per outbound set. 5% of outbound cash and 3% of intercept cash are commission, not included here. Source GHL. ' + esc(asOfText(state.row)) + '</p></section></section>';
+  }
+  function boardRows(data, list, prev, target, dollars) {
+    var me = meName(data);
+    if (!list.length) return '<p class="sub">No setters in this period.</p>';
+    return list.map(function (row, i) {
+      var you = sameName(row && row.name, me);
+      var sets = num(row && row.sets);
+      var cls = toneSets(sets, target);
+      var pay = (you && dollars && sets != null) ? (' ' + fmtMoney(sets * BONUS)) : '';
+      return '<div class="srow' + (you ? ' you' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + (pay ? (' <b class="' + (sets > 0.5 ? 'good' : 'bad') + '">' + esc(pay) + '</b>') : '') + '</span><span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
+    }).join('');
+  }
+  function boardHtml(data) {
+    var p = periodOf(data, state.period);
+    var list = ranked(p && p.rows);
+    var gap = gapLine(list, meName(data));
+    var prev = arrowsFor(state.period, list);
+    var kpi = kpiOf(data);
+    var target = state.period === 'week' ? num(data.promise) : (state.period === 'month' ? (kpi != null && p && num(p.workdays) != null ? kpi * num(p.workdays) : null) : kpi);
+    function tab(key, name) {
+      var on = state.period === key;
+      return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-period="' + key + '">' + name + '</button>';
+    }
+    return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(p && p.label ? p.label : 'no data') + '</p></div><div class="tabs">' + tab('today', 'Today') + tab('week', 'Week') + tab('month', 'Month') + '</div></div>' +
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">Ranked by sets, then dials. Green sets are at the ' + (state.period === 'week' ? 'promise' : (state.period === 'month' ? 'KPI pace for the workdays so far' : 'daily KPI')) + '. Your bonus is sets times $50. Other rows have no dollar figure.</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, target, true) + '</div></section>';
   }
   function actualSeries(hours, now, x0) {
     if (!Array.isArray(hours) || now == null) return null;
@@ -654,24 +671,12 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
       cum += num(hours[i]);
       var y1 = cum;
       if (end < x0) continue;
-      if (start < x0 && end > x0) {
-        pts.push({ t: x0, y: y0 + (y1 - y0) * ((x0 - start) / (end - start)) });
-        pts.push({ t: end, y: y1 });
-      } else if (end >= x0) {
-        if (!pts.length) pts.push({ t: Math.max(start, x0), y: y0 });
-        pts.push({ t: Math.max(end, x0), y: y1 });
-      }
+      if (start < x0 && end > x0) { pts.push({ t: x0, y: y0 + (y1 - y0) * ((x0 - start) / (end - start)) }); pts.push({ t: end, y: y1 }); }
+      else { if (!pts.length) pts.push({ t: Math.max(start, x0), y: y0 }); pts.push({ t: Math.max(end, x0), y: y1 }); }
     }
     return pts.length ? pts : null;
   }
-  function pacePhrase(delta) {
-    var n = num(delta);
-    if (n == null) return { text: '', tone: 'none', big: 'no data' };
-    if (Math.abs(n) < 0.05) return { text: '', tone: 'even', big: 'On pace', words: true };
-    if (n < 0) return { text: 'behind pace', tone: 'behind', big: fmtCount(Math.abs(n)) };
-    return { text: 'ahead of pace', tone: 'ahead', big: fmtCount(n) };
-  }
-  function paceSvg(hours, now, logged) {
+  function paceSvg(hours, now, behind) {
     var x0 = 8, x1 = 19;
     if (now != null) { if (now < x0) x0 = Math.max(0, Math.floor(now)); if (now > x1) x1 = Math.min(24, Math.ceil(now)); }
     if (x1 <= x0) x1 = x0 + 1;
@@ -680,109 +685,73 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     if (endPace != null && endPace > yMax) yMax = endPace;
     if (pts) pts.forEach(function (p) { if (p.y > yMax) yMax = p.y; });
     yMax = Math.ceil(yMax / 30) * 30;
-    var W = 720, H = 268, padL = 52, padR = 16, padT = 18, padB = 40;
-    var innerW = W - padL - padR, innerH = H - padT - padB;
+    var W = 720, H = 250, padL = 44, padR = 12, padT = 16, padB = 36, innerW = W - padL - padR, innerH = H - padT - padB;
     function xOf(t) { return padL + ((t - x0) / (x1 - x0)) * innerW; }
     function yOf(v) { return padT + innerH - (v / yMax) * innerH; }
-    var shades = '';
+    var shades = '', grid = '', ticks = '';
     BLOCKS.forEach(function (b) {
       var a = Math.max(b[0], x0), c = Math.min(b[1], x1);
-      if (c > a) shades += '<rect x="' + xOf(a).toFixed(1) + '" y="' + padT + '" width="' + (xOf(c) - xOf(a)).toFixed(1) + '" height="' + innerH + '" fill="rgba(237,48,57,.13)"/>';
+      if (c > a) shades += '<rect x="' + xOf(a).toFixed(1) + '" y="' + padT + '" width="' + (xOf(c) - xOf(a)).toFixed(1) + '" height="' + innerH + '" fill="rgba(44,123,122,.12)"/>';
     });
-    var grid = '';
     for (var g = 0; g <= yMax; g += 30) {
       var gy = yOf(g);
-      grid += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="rgba(255,255,255,.08)"/>';
-      grid += '<text x="' + (padL - 8) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" font-size="12">' + g + '</text>';
+      grid += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" stroke="rgba(0,0,0,.08)"/>';
+      grid += '<text x="' + (padL - 6) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" font-size="12">' + g + '</text>';
     }
-    var ticks = '';
-    for (var h = Math.ceil(x0); h <= x1; h++) {
-      if (h === 8 || h === 11 || h === 12 || h === 13 || h === 15 || h === 18 || h === x1 || h === x0) ticks += '<text x="' + xOf(h).toFixed(1) + '" y="' + (H - 16) + '" text-anchor="middle" font-size="12">' + esc(hourLabel(h)) + '</text>';
-    }
+    for (var h = Math.ceil(x0); h <= x1; h++) if (h === 8 || h === 11 || h === 13 || h === 15 || h === 18 || h === x1) ticks += '<text x="' + xOf(h).toFixed(1) + '" y="' + (H - 14) + '" text-anchor="middle" font-size="12">' + hourLabel(h) + '</text>';
     var samples = [], seen = {};
-    function addSample(t) { var key = t.toFixed(2); if (seen[key] || t < x0 - 0.001 || t > x1 + 0.001) return; seen[key] = 1; samples.push(t); }
-    for (var t = x0; t <= x1 + 0.001; t += 0.25) addSample(Math.min(t, x1));
-    BLOCKS.forEach(function (b) { addSample(b[0]); addSample(b[1]); });
+    function add(t) { var k = t.toFixed(2); if (seen[k] || t < x0 - 0.001 || t > x1 + 0.001) return; seen[k] = 1; samples.push(t); }
+    for (var t = x0; t <= x1 + 0.001; t += 0.25) add(Math.min(t, x1));
+    BLOCKS.forEach(function (b) { add(b[0]); add(b[1]); });
     samples.sort(function (a, b) { return a - b; });
     var target = samples.map(function (tt) { return xOf(tt).toFixed(1) + ',' + yOf(paceAt(tt)).toFixed(1); }).join(' ');
+    var color = behind ? '#e93d3d' : '#37ca37';
     var actual = '', dot = '';
     if (pts && pts.length) {
-      actual = '<polyline fill="none" stroke="#ed3039" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round" points="' + pts.map(function (p) { return xOf(p.t).toFixed(1) + ',' + yOf(p.y).toFixed(1); }).join(' ') + '"/>';
-      var last = pts[pts.length - 1], lx = xOf(last.t), ly = yOf(last.y);
-      dot = '<circle cx="' + lx.toFixed(1) + '" cy="' + ly.toFixed(1) + '" r="4.5" fill="#ed3039"/><text x="' + (lx > W - 80 ? lx - 8 : lx + 8).toFixed(1) + '" y="' + (ly - 8).toFixed(1) + '" text-anchor="' + (lx > W - 80 ? 'end' : 'start') + '" fill="#f6f5f3" font-size="13">' + esc(fmtCount(last.y)) + '</text>';
+      actual = '<polyline fill="none" stroke="' + color + '" stroke-width="2.6" points="' + pts.map(function (p) { return xOf(p.t).toFixed(1) + ',' + yOf(p.y).toFixed(1); }).join(' ') + '"/>';
+      var last = pts[pts.length - 1];
+      dot = '<circle cx="' + xOf(last.t).toFixed(1) + '" cy="' + yOf(last.y).toFixed(1) + '" r="4.5" fill="' + color + '"/>';
     }
-    var nowLine = '';
-    if (now != null && now >= x0 && now <= x1) {
-      var nx = xOf(now);
-      nowLine = '<line x1="' + nx.toFixed(1) + '" y1="' + padT + '" x2="' + nx.toFixed(1) + '" y2="' + (padT + innerH) + '" stroke="rgba(255,255,255,.45)" stroke-dasharray="3 4"/>';
-    }
-    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative dials by hour. Vertical axis is dials. Horizontal axis is hour CT.">' + shades + grid + '<polyline fill="none" stroke="rgba(255,255,255,.72)" stroke-width="1.6" stroke-dasharray="5 5" points="' + target + '"/>' + actual + nowLine + dot + ticks + '<text x="' + (W / 2) + '" y="' + (H - 2) + '" text-anchor="middle" font-size="11">Hour, CT</text></svg>';
-  }
-  function hourList(hours, now) {
-    if (!Array.isArray(hours)) return '<p class="quiet">Hourly dials: no data</p>';
-    if (now == null) return '<p class="quiet">Current hour: no data.</p>';
-    var last = Math.floor(now), start = last < 8 ? Math.max(0, last) : 8, items = [], cum = 0, broken = false;
-    for (var h = 0; h <= last && h < hours.length; h++) {
-      var n = num(hours[h]);
-      if (n == null) { broken = true; if (h >= start) items.push('<li>' + esc(hourName(h)) + ': no data</li>'); continue; }
-      if (!broken) cum += n;
-      if (h >= start || n !== 0) items.push('<li>' + esc(hourName(h)) + ': ' + esc(fmtCount(n)) + (h === last && now < h + 1 ? ' so far' : '') + ', ' + esc(broken ? 'total no data' : (fmtCount(cum) + ' total')) + '</li>');
-    }
-    return '<ul class="hours">' + items.join('') + '<li>Later hours are not in yet.</li></ul>';
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Cumulative dials by hour. The line is green when you are on pace or ahead, red when you are behind.">' + shades + grid + '<polyline fill="none" stroke="#2c7b7a" stroke-width="1.6" stroke-dasharray="5 5" points="' + target + '"/>' + actual + dot + ticks + '<text x="' + (W / 2) + '" y="' + (H - 2) + '" text-anchor="middle" font-size="11">Hour, CT</text></svg>';
   }
   function paceBlock(data, row) {
     var c = (data && data.computed) || {};
-    var hours = data && data.my_hourly_today;
     var now = num(data && data.now_hour);
     var logged = row ? num(row.dials) : null;
-    var fedDelta = num(c.dials_vs_pace);
-    var fedPace = num(c.pace_target_dials);
+    var fed = num(c.dials_vs_pace);
     var chartPace = paceAt(now);
-    var delta = fedDelta != null ? fedDelta : ((logged != null && chartPace != null) ? (logged - chartPace) : null);
-    var phrase = pacePhrase(delta);
+    var delta = fed != null ? fed : ((logged != null && chartPace != null) ? logged - chartPace : null);
+    var behind = delta != null && delta < -0.05;
     var when = now == null ? '' : (' at ' + fmtHour(now) + ' CT');
-    var caption = delta == null ? 'Pace: no data.' : (Math.abs(delta) < 0.05 ? ('You are on the pace target' + when + '.') : (delta < 0 ? ('You are ' + fmtCount(Math.abs(delta)) + ' dials behind where you need to be' + when + '.') : ('You are ' + fmtCount(delta) + ' dials ahead of the pace target' + when + '.')));
-    var notes = [];
-    if (fedPace != null && chartPace != null && Math.abs(fedPace - chartPace) > 1) notes.push('Feed pace target ' + fmtCount(fedPace) + ' and the 30 per hour chart differ by more than a dial. The sentence uses the feed.');
-    var big = phrase.big === 'no data' ? '<b class="na">no data</b>' : '<b' + (phrase.words ? ' class="words"' : '') + '>' + esc(phrase.big) + '</b>';
-    return '<section class="panel" id="pace"><p class="gk">Dial pace</p><h2>Where you should be by this hour</h2><p class="caption">' + esc(caption) + '</p><div class="pacefig tone-' + phrase.tone + '">' + big + (phrase.text ? '<span>' + esc(phrase.text) + '</span>' : '') + '</div><p class="sub">' + esc((logged == null ? 'Dials logged: no data' : fmtCount(logged) + ' dials logged') + ' · pace target ' + (fedPace == null ? 'no data' : fmtCount(fedPace)) + ' · ' + (now == null ? 'time no data' : fmtHour(now) + ' CT')) + '</p>' + (notes.length ? '<p class="quiet">' + esc(notes.join(' ')) + '</p>' : '') + paceSvg(hours, now, logged) + '<ul class="legend"><li><i></i>Dials logged</li><li><i class="dash"></i>30 per hour target</li><li><i class="shade"></i>Dial block, 11 AM to 1 PM and 3 PM to 6 PM CT</li></ul><p class="src">Vertical axis: dials. Horizontal axis: hour CT. GHL hourly dials. ' + esc(asOfText(state.row)) + '</p><details class="mini"><summary>Hour by hour</summary>' + hourList(hours, now) + '</details></section>';
+    var caption = delta == null ? 'Pace: no data.' : (Math.abs(delta) < 0.05 ? ('You are on the pace target' + when + '.') : (behind ? ('You are ' + fmtCount(Math.abs(delta)) + ' dials behind where you need to be' + when + '.') : ('You are ' + fmtCount(delta) + ' dials ahead of the pace target' + when + '.')));
+    var big = delta == null ? 'no data' : (Math.abs(delta) < 0.05 ? 'On pace' : fmtCount(Math.abs(delta)));
+    return '<section class="panel" id="pace"><p class="kicker">Dial pace</p><h2>Where you should be by this hour</h2><p class="caption ' + (behind ? 'bad' : 'good') + '">' + esc(caption) + '</p><p class="pacefig"><b class="' + (behind ? 'bad' : 'good') + '">' + esc(big) + '</b></p><p class="sub">' + esc((logged == null ? 'Dials logged: no data' : fmtCount(logged) + ' dials logged') + ' · pace target ' + (num(c.pace_target_dials) == null ? 'no data' : fmtCount(c.pace_target_dials))) + '</p>' + paceSvg(data && data.my_hourly_today, now, behind) + '<ul class="legend"><li><i class="' + (behind ? '' : 'good') + '"></i>Dials logged, ' + (behind ? 'behind' : 'on pace or ahead') + '</li><li><i class="dash"></i>30 per hour target</li><li><i class="shade"></i>Dial block</li></ul><p class="src">Vertical axis: dials. Horizontal axis: hour CT. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
   }
   function weekBlock(data) {
-    var p = periodOf(data, 'week');
     var row = findMe(data, 'week');
     var sets = row ? num(row.sets) : num(data && data.my_week_sets);
     var promise = num(data && data.promise), goal = num(data && data.goal);
-    var scale = 0;
-    [sets, promise, goal].forEach(function (n) { if (n != null && n > scale) scale = n; });
-    var hit = sets != null && goal != null && sets >= goal;
-    var fill = (sets == null || !(scale > 0)) ? '' : '<i class="wfill" data-fill="' + Math.max(0, Math.min(100, (sets / scale) * 100)).toFixed(2) + '"></i>';
-    function tick(cls, value, label) {
-      if (value == null || !(scale > 0)) return '';
-      return '<i class="wtick ' + cls + '" style="left:' + Math.max(0, Math.min(100, (value / scale) * 100)).toFixed(2) + '%"><span>' + esc(label) + ' ' + esc(fmtCount(value)) + '</span></i>';
-    }
-    var bar = scale > 0 ? '<div class="wtrack' + (hit ? ' hit' : '') + '">' + fill + tick('promise', promise, 'Promise') + tick('goal', goal, 'Goal') + '</div>' : '';
+    var hit = sets != null && promise != null && sets + 0.05 >= promise;
     var days = data && data.my_daily;
-    var dayHtml = !Array.isArray(days) ? '<p class="quiet">Your days: no data</p>' : (!days.length ? '<p class="quiet">Your days: none in the feed.</p>' : '<ul class="days">' + days.map(function (d) { return '<li><b>' + esc(shortDay(d && d.day)) + '</b><span>' + esc(fmtCount(d && d.dials)) + ' dials</span><span>' + esc(fmtTalk(d && d.talk_min)) + '</span><span>' + esc(pluralNum(d && d.sets, 'set', 'sets')) + '</span></li>'; }).join('') + '</ul>');
-    return '<section class="panel" id="week-panel"><p class="gk">Week</p><h2>Sets against Promise and Goal</h2><p class="caption">' + esc((sets == null ? 'Sets: no data' : fmtCount(sets) + ' sets') + '. Promise ' + (promise == null ? 'no data' : fmtCount(promise)) + '. Goal ' + (goal == null ? 'no data' : fmtCount(goal)) + '.') + '</p><p class="sub">' + esc(p && p.label ? p.label : 'no data') + ' · ' + esc(p ? pluralNum(p.workdays, 'workday', 'workdays') : 'no data') + '</p><p class="big">' + esc(sets == null ? 'no data' : fmtCount(sets)) + ' <span>/ ' + esc(goal == null ? 'no data' : fmtCount(goal)) + '</span></p>' + bar + '<div class="krow"><article class="kpi"><p class="l">Dials</p><p class="v">' + esc(row ? fmtCount(row.dials) : 'no data') + '</p></article><article class="kpi"><p class="l">Talk</p><p class="v">' + esc(row ? fmtTalk(row.talk_min) : 'no data') + '</p></article><article class="kpi"><p class="l">Convos</p><p class="v">' + esc(row ? fmtCount(row.connects) : 'no data') + '</p></article></div><p class="src">Convos are connects. GHL. ' + esc(asOfText(state.row)) + '</p>' + dayHtml + '</section>';
+    var kpi = kpiOf(data);
+    var dayHtml = !Array.isArray(days) ? '<p class="sub">Your days: no data</p>' : '<ul class="days">' + days.map(function (d) {
+      var s = num(d && d.sets);
+      var cls = toneSets(s, kpi);
+      return '<li><b>' + esc(shortDay(d && d.day)) + '</b><span class="' + cls + '">' + esc(fmtCount(s)) + ' sets</span><span>' + esc(fmtCount(d && d.dials)) + ' dials</span><span>' + esc(s == null || kpi == null ? '' : fmtMoney(Math.max(0, kpi - s) * BONUS) + ' short') + '</span></li>';
+    }).join('') + '</ul>';
+    return '<section class="panel"><p class="kicker">Week</p><h2>Sets against Promise and Goal</h2><p class="caption ' + (hit ? 'good' : 'bad') + '">' + esc((sets == null ? 'Sets: no data' : fmtCount(sets) + ' sets, ' + fmtMoney(sets == null ? null : sets * BONUS)) + '. Promise ' + (promise == null ? 'no data' : fmtCount(promise)) + '. Goal ' + (goal == null ? 'no data' : fmtCount(goal)) + '.') + '</p>' + dayHtml + '<p class="src">A day is green at the daily KPI and red under it. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
   }
   function trendBlock(data) {
     var series = data && data.team_series;
-    if (!Array.isArray(series) || !series.length) return '<section class="panel"><p class="gk">Team trend</p><div class="emptyviz">Team trend: ' + (Array.isArray(series) ? 'none in the feed.' : 'no data') + '</div></section>';
+    if (!Array.isArray(series) || !series.length) return '<section class="panel"><p class="kicker">Team trend</p><div class="emptyviz">Team trend: no data</div></section>';
     var last = series[series.length - 1] || {};
-    var read = shortDay(last.day) + ': ' + fmtCount(last.dials) + ' dials, ' + fmtCount(last.sets) + ' sets, ' + fmtCount(last.active) + ' active.';
-    return '<section class="panel" id="trend"><p class="gk">Team trend</p><h2>The desk by day</h2><p class="caption">' + esc(read) + ' Dials and sets use separate scales.</p>' + trendSvg(series) + '<p class="src">team_series · GHL · ' + esc(asOfText(state.row)) + '</p></section>';
-  }
-  function trendSvg(series) {
+    var W = 640, H = 180, padL = 36, padR = 12, padT = 16, padB = 28, n = series.length;
     function runs(key) {
       var out = [], cur = [];
-      series.forEach(function (row, i) {
-        var v = num(row && row[key]);
-        if (v == null) { if (cur.length) out.push(cur); cur = []; } else cur.push({ i: i, v: v });
-      });
+      series.forEach(function (row, i) { var v = num(row && row[key]); if (v == null) { if (cur.length) out.push(cur); cur = []; } else cur.push({ i: i, v: v }); });
       if (cur.length) out.push(cur);
       return out;
     }
-    var n = series.length, dRuns = runs('dials'), sRuns = runs('sets');
     function domain(rs) {
       var lo = Infinity, hi = -Infinity;
       rs.forEach(function (run) { run.forEach(function (p) { if (p.v < lo) lo = p.v; if (p.v > hi) hi = p.v; }); });
@@ -791,132 +760,55 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
       var pad = (hi - lo) * 0.12;
       return { lo: lo - pad, hi: hi + pad };
     }
-    var dDom = domain(dRuns), sDom = domain(sRuns);
-    var W = 640, H = 190, padL = 36, padR = 16, padT = 16, padB = 28, innerW = W - padL - padR, innerH = H - padT - padB;
+    var dRuns = runs('dials'), sRuns = runs('sets'), dDom = domain(dRuns), sDom = domain(sRuns);
+    var innerW = W - padL - padR, innerH = H - padT - padB;
     function xOf(i) { return padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW); }
     function yOf(v, dom) { return padT + innerH - ((v - dom.lo) / (dom.hi - dom.lo)) * innerH; }
     function poly(rs, dom, color) {
       if (!dom) return '';
-      return rs.map(function (run) {
-        if (run.length === 1) return '<circle cx="' + xOf(run[0].i).toFixed(1) + '" cy="' + yOf(run[0].v, dom).toFixed(1) + '" r="3.5" fill="' + color + '"/>';
-        return '<polyline fill="none" stroke="' + color + '" stroke-width="2.2" points="' + run.map(function (p) { return xOf(p.i).toFixed(1) + ',' + yOf(p.v, dom).toFixed(1); }).join(' ') + '"/>';
-      }).join('');
+      return rs.map(function (run) { return '<polyline fill="none" stroke="' + color + '" stroke-width="2.2" points="' + run.map(function (p) { return xOf(p.i).toFixed(1) + ',' + yOf(p.v, dom).toFixed(1); }).join(' ') + '"/>'; }).join('');
     }
-    var labels = '';
-    [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i, idx, arr) {
-      if (arr.indexOf(i) === idx) labels += '<text x="' + xOf(i).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="12">' + esc(shortDay(series[i] && series[i].day)) + '</text>';
-    });
-    return '<svg class="trend" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Team dials in red and sets in white, by day.">' + poly(dRuns, dDom, '#ed3039') + poly(sRuns, sDom, '#f6f5f3') + labels + '<text x="8" y="14" font-size="11" fill="#ff8a8e">Dials</text><text x="' + (W - 8) + '" y="14" text-anchor="end" font-size="11" fill="#f6f5f3">Sets</text></svg>';
-  }
-  function topXp(rows) {
-    var max = null;
-    rows.forEach(function (row) { var n = num(row && row.xp); if (n != null && (max == null || n > max)) max = n; });
-    return max;
-  }
-  function levelCell(row, you, computed) {
-    var n = num(row && row.level), name = '';
-    if (row && row.level_name != null && String(row.level_name).trim()) name = String(row.level_name).trim();
-    if (n == null && you) {
-      n = num(computed && computed.level);
-      if (computed && computed.level_name != null && String(computed.level_name).trim()) name = String(computed.level_name).trim();
-    }
-    if (n == null) return '<span class="lv">no data</span>';
-    return '<span class="lv">' + esc(fmtCount(n) + (name ? (' · ' + name) : '')) + '</span>';
-  }
-  function boardRows(data, p) {
-    if (!p || !Array.isArray(p.rows)) return '<p class="quiet">no data</p>';
-    if (!p.rows.length) return '<p class="quiet">No setters in this period.</p>';
-    var me = meName(data), computed = (data && data.computed) || {}, maxXp = topXp(p.rows);
-    var list = ranked(p.rows);
-    var gap = gapInfo(p.rows, me);
-    return list.map(function (row, i) {
-      var you = sameName(row && row.name, me);
-      var xp = num(row && row.xp);
-      var pct = (xp != null && maxXp != null && maxXp > 0) ? Math.max(0, Math.min(100, (xp / maxXp) * 100)) : null;
-      return '<div class="srow' + (you ? ' you' : '') + (gap.above === i ? ' above' : '') + '"><span class="rk' + (i === 0 ? ' top' : '') + '">' + (i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + levelCell(row, you, computed) + '<span class="xp">' + (xp == null ? '<b class="na">no data</b>' : countEl(xp, 'count')) + '</span>' + (pct == null ? '' : '<span class="mbar"><i data-fill="' + pct.toFixed(2) + '"></i></span>') + '</div>';
-    }).join('');
-  }
-  function boardHtml(data) {
-    var p = periodOf(data, state.period);
-    var gap = gapInfo(p && p.rows, meName(data));
-    var label = p && p.label ? esc(p.label) : 'no data';
-    function tab(key, name) {
-      var on = state.period === key;
-      return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-period="' + key + '" aria-selected="' + on + '">' + name + '</button>';
-    }
-    return '<section class="score" id="board"><div class="scoretop"><div><p class="gk">League</p><p class="sub" id="board-sub">' + label + (p && num(p.workdays) != null ? (' · ' + esc(pluralNum(p.workdays, 'workday', 'workdays'))) : '') + '</p></div><div class="tabs" role="tablist">' + tab('today', 'Today') + tab('week', 'Week') + tab('month', 'Month') + '</div></div><div class="gapline"><strong>' + esc(gap.text) + '</strong><p class="src">Gap is the XP difference after ranking by XP. Level is published for you only. Other levels say no data. The bar is XP against the top XP in this period.</p></div><div class="shead"><span>#</span><span>Name</span><span>Level</span><span>XP</span></div><div class="slist" id="board-body">' + boardRows(data, p) + '</div></section>';
+    var svg = '<svg class="trend" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Team dials and sets by day. No team target is in the feed, so these lines are not green or red.">' + poly(dRuns, dDom, '#2c7b7a') + poly(sRuns, sDom, '#000000') + '</svg>';
+    return '<section class="panel" id="trend"><p class="kicker">Team trend</p><h2>The desk by day</h2><p class="caption">' + esc(shortDay(last.day) + ': ' + fmtCount(last.dials) + ' dials, ' + fmtCount(last.sets) + ' sets, ' + fmtCount(last.active) + ' active.') + '</p>' + svg + '<p class="src">No team target is in the feed, so this chart stays teal and black instead of green and red. team_series. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
   }
   function statsHtml(data, row) {
-    var c = (data && data.computed) || {};
-    var today = Array.isArray(c.badges_today) ? c.badges_today : null;
-    var book = Array.isArray(c.badges_available) ? c.badges_available : null;
-    var badges = '<section class="panel"><p class="gk">Badges</p><p class="caption">Earned names from the feed. Per-quest XP is not in the feed, so it is not shown.</p>' +
-      (today == null ? '<p class="quiet">Today: no data</p>' : (today.length ? '<div class="tags">' + today.map(function (n) { return '<span class="dchip act">' + esc(n) + '</span>'; }).join('') + '</div>' : '<p class="quiet">No badge yet today</p>')) +
-      (book == null ? '<p class="quiet">Badge book: no data</p>' : '<div class="tags">' + book.map(function (n) { return '<span class="dchip">' + esc(n) + '</span>'; }).join('') + '</div>') +
-      '</section>';
-    return '<div class="sheet">' + paceBlock(data, row) + '<div class="split">' + weekBlock(data) + trendBlock(data) + '</div>' + badges + '</div>';
+    return '<div class="sheet">' + paceBlock(data, row) + '<div class="split">' + weekBlock(data) + trendBlock(data) + '</div></div>' + fineHtml(data);
   }
-  function fineHtml(data, row) {
-    function line(k, v) {
-      var show = (typeof v === 'number' || (typeof v === 'string' && v.trim() !== '' && isFinite(Number(v)))) ? fmtCount(v) : textOr(v);
-      return '<li><span>' + esc(k) + '</span><b>' + esc(show) + '</b></li>';
-    }
+  function fineHtml(data) {
+    function line(k, v) { return '<li><span>' + esc(k) + '</span><b>' + esc(textOr(v)) + '</b></li>'; }
     var counts = data && data.counts;
-    var countHtml = (!counts || typeof counts !== 'object') ? '<p class="quiet">Feed counts: no data</p>' : '<ul class="src-list">' + line('Calls read', counts.calls_fetched) + line('Sets attributed', counts.sets_attributed) + line('Appointments in window', counts.appointments_in_window) + '</ul>';
-    var open = state.fineOpen ? ' open' : '';
-    return '<details class="behind" id="fine"' + open + '><summary>How this board counts</summary><div class="inn"><p>Sets are inferred from bookings after a setter\'s call. Talk time includes voicemails. Source GHL, refreshed hourly during dial blocks.</p><p class="quiet">The Next move rate is computed from dials left and hours left in the dial blocks. The pass line is the XP gap to the person above. This board does not invent a promotion cutoff or an XP reward per quest.</p>' + (meMissing(data) ? '<p class="quiet">Feed name: no data. This board is Cristian\'s.</p>' : '') + '<ul class="src-list">' + line('Display time', data && data.generated) + line('This page read', state.fetchedAt) + '</ul>' + countHtml + '</div></details>';
+    var countHtml = (!counts || typeof counts !== 'object') ? '' : '<ul class="src-list">' + line('Calls read', counts.calls_fetched) + line('Sets attributed', counts.sets_attributed) + line('Appointments in window', counts.appointments_in_window) + '</ul>';
+    return '<details class="behind" id="fine"' + (state.fineOpen ? ' open' : '') + '><summary>How this board counts</summary><div class="inn"><p>Sets are inferred from bookings after a setter\'s call. Talk time includes voicemails. Source GHL, refreshed hourly during dial blocks.</p><p class="sub">Bonus math is $50 times outbound sets. Opportunity lost is $50 for each set short of the daily KPI on past days in the feed. Commission percents are the pay plan. They are not added unless you type an average deal size, and then only the 5% outbound figure, labeled as an assumption.</p>' + (meMissing(data) ? '<p class="sub">Feed name: no data. This board is Cristian\'s.</p>' : '') + countHtml + '</div></details><footer class="site">Fig &amp; Eagle Command Center. Read only. <a href="../command-center/">Command Center</a></footer>';
   }
-  var GUIDE = [
-    { k: 'Quests', t: 'Close three rings', d: 'Dials, Talk, and Sets are today\'s quests. The ring is your count against the target. Gray under 50%. Red from 50%. Green when you hit it. The line under the ring is what is left, then the next mark from the feed.' },
-    { k: 'Level', t: 'XP, streak, badges', d: 'The bar fills toward the next level name. The flame is the day streak from the feed. Badges are names the feed already awarded. Today\'s XP is one number. This board does not split it across the three quests.' },
-    { k: 'Rank', t: 'Pass the setter above you', d: 'The scoreboard ranks by XP for today, this week, or this month. The pass line is the XP difference to the person above. Stats, in the tab bar, holds the pace chart, the week against Promise and Goal, and the team trend.' }
-  ];
   function guideHtml() {
-    var step = GUIDE[state.guideStep] || GUIDE[0];
-    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="gk">How to play · ' + (state.guideStep + 1) + ' of 3</p><h2 id="guide-title">' + esc(step.t) + '</h2><p>' + esc(step.d) + '</p><div class="row"><button type="button" class="btn ghost" data-guide="back"' + (state.guideStep === 0 ? ' disabled' : '') + '>Back</button><button type="button" class="btn" data-guide="next">' + (state.guideStep === 2 ? 'Play' : 'Next') + '</button></div></article></div>';
+    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 bonus. The daily KPI is the sets target in the feed. Three sets is $150. Green means the money is earned, still on the table, or you are ahead. Red means it is behind, missed, or already lost.</p><p>Commission is separate: 5% of cash collected on outbound, and 3% on intercept. This board does not know cash collected. Type an average deal size to see the 5% outbound upside. That number is an assumption. Intercept sets are not in the feed, so the 3% is not estimated.</p><p>The board ranks the team by sets, then dials. Your dollar figure is yours alone. The pass line is the sets between you and the person above. Opportunity lost adds $50 for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
   }
   function failHtml() {
-    return '<section class="panel fail"><p class="gk">Feed</p><h2>The scoreboard did not load</h2><p class="quiet">No numbers on this page until the read succeeds. Nothing here is filled in as zero.</p><p class="err">' + esc(state.error || 'The read failed.') + '</p><button type="button" class="btn" data-retry>Try again</button></section>';
+    return '<section class="card fail"><p class="kicker">Feed</p><h2>The scoreboard did not load</h2><p class="sub">No numbers on this page until the read succeeds. Nothing here is filled in as zero.</p><p class="bad">' + esc(state.error || 'The read failed.') + '</p><button type="button" class="btn" data-retry>Try again</button></section>';
   }
   function stageHtml() {
     if (!state.row) return failHtml();
     var data = state.row.data;
     var row = findMe(data, 'today');
-    var body = state.view === 'board' ? boardHtml(data) : (state.view === 'stats' ? (statsHtml(data, row) + fineHtml(data, state.row) + '<footer class="site">Fig &amp; Eagle Command Center. Read only. Source GHL. <a href="../command-center/">Command Center</a></footer>') : playHtml(data, row));
+    var body = state.view === 'board' ? boardHtml(data) : (state.view === 'stats' ? statsHtml(data, row) : playHtml(data, row));
     return body + (state.guide ? guideHtml() : '');
   }
   function paintNav() {
-    document.querySelectorAll('[data-view]').forEach(function (btn) {
-      btn.classList.toggle('on', btn.getAttribute('data-view') === state.view);
-    });
+    document.querySelectorAll('[data-view]').forEach(function (btn) { btn.classList.toggle('on', btn.getAttribute('data-view') === state.view); });
     var stage = document.getElementById('stage');
     if (stage) stage.className = 'stage ' + (state.view === 'play' ? 'lock' : 'scroll');
   }
-  function paintBoard() {
-    var data = state.row && state.row.data;
-    if (!data || state.view !== 'board') return;
-    var stage = document.getElementById('stage');
-    if (!stage) return;
-    var guide = document.getElementById('guide');
-    stage.innerHTML = boardHtml(data) + (guide ? guide.outerHTML : '');
-    kick(stage);
-  }
   function kick(root) {
     if (!root) return;
-    root.querySelectorAll('.arc').forEach(function (arc) { arc.style.strokeDashoffset = arc.getAttribute('data-off') || '0'; });
     root.querySelectorAll('[data-fill]').forEach(function (bar) {
       var fill = parseFloat(bar.getAttribute('data-fill') || '');
-      if (!isFinite(fill)) return;
-      var pct = Math.max(0, Math.min(100, fill));
-      if (bar.hasAttribute('data-scale')) bar.style.transform = 'scaleX(' + (pct / 100) + ')';
-      else bar.style.width = pct + '%';
+      if (isFinite(fill)) bar.style.width = Math.max(0, Math.min(100, fill)) + '%';
     });
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduce || state.animated) return;
     var nodes = root.querySelectorAll('.count');
     if (!nodes.length) return;
     state.animated = true;
-    nodes.forEach(function (el) { el.textContent = el.getAttribute('data-kind') === 'talk' ? '0m' : '0'; });
     var t0 = performance.now();
     function frame(now) {
       var p = Math.min(1, (now - t0) / 640);
@@ -925,7 +817,7 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
         if (p >= 1) { el.textContent = el.getAttribute('data-final') || ''; return; }
         var n = parseFloat(el.getAttribute('data-n') || '');
         if (!isFinite(n)) return;
-        el.textContent = el.getAttribute('data-kind') === 'talk' ? fmtTalk(n * e) : fmtCount(Math.round(n * e));
+        el.textContent = el.getAttribute('data-kind') === 'money' ? fmtMoney(n * e) : fmtCount(n * e);
       });
       if (p < 1) requestAnimationFrame(frame);
     }
@@ -936,11 +828,7 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     if (clock) clock.textContent = ctClock(new Date());
     var mode = !state.booted ? 'wait' : (state.row && state.stale ? 'stale' : (state.row ? 'live' : 'down'));
     var pill = document.getElementById('livepill');
-    if (pill) {
-      pill.className = 'livepill ' + mode;
-      var label = mode === 'live' ? 'LIVE' : mode === 'stale' ? 'STALE' : mode === 'down' ? 'DOWN' : 'WAIT';
-      var t = document.getElementById('pillt'); if (t) t.textContent = label;
-    }
+    if (pill) { pill.className = 'livepill ' + mode; var t = document.getElementById('pillt'); if (t) t.textContent = mode === 'live' ? 'LIVE' : mode === 'stale' ? 'STALE' : mode === 'down' ? 'DOWN' : 'WAIT'; }
     var line = document.getElementById('sysline');
     if (line) line.textContent = mode === 'live' ? 'Source GHL' : mode === 'stale' ? 'Refresh failed' : mode === 'down' ? 'Feed unavailable' : 'Checking the feed';
     var asof = document.getElementById('asof');
@@ -955,11 +843,12 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     if (!state.rendered) { state.rendered = true; document.body.setAttribute('data-ready', ''); }
     var sum = document.getElementById('livesum');
     if (sum && state.row) {
-      var data = state.row.data, row = findMe(data, 'today'), move = nextMove(data, row);
-      sum.textContent = meName(data) + '. ' + move.line + '. As of ' + asOfText(state.row) + '.';
+      var row = findMe(state.row.data, 'today');
+      var sets = row ? num(row.sets) : null;
+      sum.textContent = meName(state.row.data) + '. Earned today ' + (sets == null ? 'no data' : fmtMoney(sets * BONUS)) + '. As of ' + asOfText(state.row) + '.';
     }
     paintChrome();
-    requestAnimationFrame(function () { requestAnimationFrame(function () { kick(stage); }); });
+    requestAnimationFrame(function () { kick(stage); });
   }
   function setView(view) {
     if (view !== 'play' && view !== 'board' && view !== 'stats') return;
@@ -968,6 +857,20 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     render();
     var stage = document.getElementById('stage');
     if (stage) stage.scrollTop = 0;
+  }
+  function refreshMoneyCopy() {
+    if (!state.row) return;
+    var row = findMe(state.row.data, 'today');
+    var sets = row ? num(row.sets) : null;
+    var line = document.getElementById('commission-line');
+    if (line) line.textContent = commissionText(sets);
+    var goal = document.getElementById('goal-line');
+    if (goal) {
+      var goalSet = setting(GOAL_KEY);
+      var month = monthMoney(state.row.data);
+      var monthBonus = month && month.sets != null ? month.sets * BONUS : null;
+      goal.textContent = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
+    }
   }
   async function load() {
     if (state.inflight) return;
@@ -990,11 +893,8 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
   }
   window.addEventListener('hashchange', function () {
     var h = (location.hash || '').replace('#', '');
-    if (h === 'play' || h === 'board' || h === 'stats') {
-      if (h !== state.view) { state.view = h; render(); var stage = document.getElementById('stage'); if (stage) stage.scrollTop = 0; }
-    } else if (h === 'today' || h === 'week' || h === 'month') {
-      state.view = 'board'; state.period = h; render();
-    }
+    if (h === 'play' || h === 'board' || h === 'stats') { if (h !== state.view) setView(h); }
+    else if (h === 'today' || h === 'week' || h === 'month') { state.view = 'board'; state.period = h; render(); }
   });
   document.body.addEventListener('click', function (e) {
     var view = e.target.closest && e.target.closest('[data-view]');
@@ -1002,30 +902,31 @@ footer.site{padding:0 14px 16px;color:var(--dim);font-size:12px}
     var tab = e.target.closest && e.target.closest('[data-period]');
     if (tab) {
       var next = tab.getAttribute('data-period');
-      if (next && next !== state.period) { state.period = next; paintBoard(); }
+      if (next && next !== state.period) { state.period = next; state.view = 'board'; render(); }
       return;
     }
     if (e.target.closest && e.target.closest('[data-help]')) {
-      state.guide = true; state.guideStep = 0;
-      var host = document.getElementById('stage');
-      if (host && !document.getElementById('guide')) host.insertAdjacentHTML('beforeend', guideHtml());
+      state.guide = true;
+      if (!document.getElementById('guide')) document.getElementById('stage').insertAdjacentHTML('beforeend', guideHtml());
       return;
     }
-    var g = e.target.closest && e.target.closest('[data-guide]');
-    if (g) {
-      var act = g.getAttribute('data-guide');
-      if (act === 'back') state.guideStep = Math.max(0, state.guideStep - 1);
-      else if (state.guideStep >= 2) {
-        state.guide = false;
-        try { localStorage.setItem(GUIDE_KEY, '1'); } catch (err) {}
-        var node = document.getElementById('guide'); if (node) node.remove();
-        return;
-      } else state.guideStep += 1;
-      var old = document.getElementById('guide');
-      if (old) old.outerHTML = guideHtml();
+    if (e.target.closest && e.target.closest('[data-guide]')) {
+      state.guide = false;
+      try { localStorage.setItem(GUIDE_KEY, '1'); } catch (err) {}
+      var node = document.getElementById('guide'); if (node) node.remove();
       return;
     }
     if (e.target.closest && e.target.closest('[data-retry]')) load();
+  });
+  document.body.addEventListener('input', function (e) {
+    if (!e.target || (e.target.id !== 'avg-deal' && e.target.id !== 'month-goal')) return;
+    var key = e.target.id === 'avg-deal' ? AVG_KEY : GOAL_KEY;
+    var v = String(e.target.value || '').trim();
+    try {
+      if (v === '') localStorage.removeItem(key);
+      else if (isFinite(Number(v)) && Number(v) >= 0) localStorage.setItem(key, String(Number(v)));
+    } catch (err) {}
+    refreshMoneyCopy();
   });
   document.body.addEventListener('toggle', function (e) {
     if (e.target && e.target.id === 'fine') state.fineOpen = !!e.target.open;

@@ -6,7 +6,7 @@ import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
 import { audioAudible, cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
 import { createInput } from "./input.js";
-import { cameraWish } from "./steer.js";
+import { cameraWish, yawFromCamera } from "./steer.js";
 import { hideControls, hudStatus, placeLabel, resultBoard, resultReason, showCoach } from "./place.js";
 import { detailOn, loadAccess, saveAccess } from "./look.js";
 import { botWish } from "./bot.js";
@@ -332,8 +332,15 @@ function applyRound() {
     r.vel.x = 0;
     r.vel.y = 0;
     r.vel.z = 0;
-    r.lastSafe = { x: r.pos.x, y, z: r.pos.z };
+    r.lastSafe = { x: r.pos.x, y: r.pos.y, z: r.pos.z };
+    r.firmSafe = { x: r.pos.x, y: r.pos.y, z: r.pos.z };
+    r.cp = 0;
+    r.voidTries = 0;
+    r.respawnAt = null;
+    r.rescue = 0;
     r.wp = 0;
+    const route = (course.routes && course.routes[r.routeId]) || course.waypoints || [];
+    while (r.wp < route.length - 1 && route[r.wp].z < r.pos.z - 4) r.wp++;
   });
   race.seatsFilled = 0;
   if (race.seats) race.seats = race.seats.map(() => null);
@@ -942,7 +949,11 @@ function updateHud(dt) {
     fillPodium(race);
     const board = resultBoard(race);
     const placeLine = document.getElementById("result-place");
-    if (placeLine) placeLine.textContent = "YOU PLACED " + board.place;
+    if (placeLine) {
+      const earned = kind === "qualified" || kind === "escaped";
+      placeLine.hidden = !earned;
+      placeLine.textContent = earned ? "YOU PLACED " + board.place : "";
+    }
     const names = document.getElementById("result-names");
     if (names) {
       names.replaceChildren();
@@ -968,6 +979,23 @@ function updateHud(dt) {
   }
   if (!showEnd) shownResult = false;
   if (hud) hud.hidden = !started || !!showEnd;
+  const arrow = document.getElementById("ship-arrow");
+  if (arrow && world && course && course.ship && race && race.player) {
+    const ship = course.ship;
+    const yaw = world.yaw || 0;
+    const dx = ship.x - race.player.pos.x;
+    const dz = ship.z - race.player.pos.z;
+    const seen = world.project ? world.project(ship.x, ship.y + 2, ship.z) : null;
+    const onScreen = !!(seen && seen.w > 0 && Math.abs(seen.x) < 0.92 && Math.abs(seen.y) < 0.92);
+    const show = started && race.phase === "race" && !paused && !onScreen && dx * dx + dz * dz > 64;
+    arrow.hidden = !show;
+    if (show) {
+      const fwd = dx * -Math.sin(yaw) + dz * Math.cos(yaw);
+      const right = dx * -Math.cos(yaw) + dz * -Math.sin(yaw);
+      const ang = Math.atan2(right, fwd);
+      arrow.style.transform = "rotate(" + ang.toFixed(3) + "rad)";
+    }
+  }
 }
 
 function handleEvents() {
@@ -1015,7 +1043,21 @@ function frame(now) {
   if (wall > clock.maxWall) clock.maxWall = wall;
   if (wall > 0.12) clock.big++;
   lastT = now;
-  if (document.hidden || window.__sbBackground) return;
+  if (document.hidden) {
+    if (!hiddenAt) hiddenAt = now;
+    if (now - hiddenAt > 450) pauseForRealHide();
+    if (paused && world) {
+      try {
+        world.update(race, 0, { stickX: 0, stickY: 0, lookDx: 0, lookDy: 0 });
+        world.render();
+      } catch (err) {
+        reportError(err);
+      }
+    }
+    return;
+  }
+  hiddenAt = 0;
+  if (window.__sbBackground) return;
   frames++;
   if (!frame.lastWall) frame.lastWall = now;
   if (now - frame.lastWall >= 500) {
@@ -1067,7 +1109,13 @@ function frame(now) {
     return;
   }
   const raw = input.read();
-  const aim = cameraWish(world.yaw, raw.stickX, raw.stickY);
+  if (window.__sbStick) {
+    raw.stickX = window.__sbStick.x;
+    raw.stickY = window.__sbStick.y;
+  }
+  const view = world.view ? world.view() : null;
+  const liveYaw = view ? yawFromCamera(view.cx, view.cz, race.player.pos.x, race.player.pos.z) : null;
+  const aim = cameraWish(liveYaw == null ? world.yaw : liveYaw, raw.stickX, raw.stickY);
   const follow = 1 - Math.exp(-16 * dt);
   steer.x += (aim.x - steer.x) * follow;
   steer.z += (aim.z - steer.z) * follow;
@@ -1140,11 +1188,27 @@ function frame(now) {
 
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 window.addEventListener("resize", () => world && world.resize());
+let hiddenAt = 0;
+function pauseForRealHide() {
+  if (!started || !race || paused) return;
+  if (race.phase !== "race" && race.phase !== "countdown") return;
+  if (!document.hidden) return;
+  togglePause();
+}
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
+    hiddenAt = performance.now();
     if (audio.ctx) audio.ctx.suspend();
-    if (started && race && (race.phase === "race" || race.phase === "countdown") && !paused) togglePause();
-  } else if (audio.ctx) audio.ctx.resume();
+  } else {
+    hiddenAt = 0;
+    if (audio.ctx) audio.ctx.resume();
+  }
+});
+window.addEventListener("pagehide", () => {
+  hiddenAt = performance.now();
+});
+window.addEventListener("pageshow", () => {
+  hiddenAt = 0;
 });
 
 requestAnimationFrame(frame);

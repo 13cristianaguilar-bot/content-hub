@@ -336,8 +336,10 @@ export function createCourse(cfg) {
   addBridge(-14, zz(200), 0, zz(214), 4.4, 5.6, 4.6, "sky");
   addBridge(4, zz(184), 14, zz(194), 4.1, 6.8, 4.4, "sky");
   addBridge(12, zz(200), 2, zz(214), 6.8, 5.6, 4.2, "sky");
+  addBridge(0, zz(214), 0, zz(226), 5.6, 5.2, 6.2, "sky");
   addDisc(0, 5.2, zz(232), 13, 11, "sky");
   addBridge(-2, zz(156), 6, zz(172), 0.35, 4, 6.6, "canyon");
+  addBridge(0, zz(50), 2, zz(64), 0, 0.15, 7, "meadow");
   addBridge(2, zz(62), 10, zz(80), 0.05, 0.2, 7.2, "meadow");
   addBridge(0, zz(240), -10, zz(258), 5.2, 3.3, 6.2, "sky");
   addBridge(4, zz(236), 12, zz(264), 5.2, 3.3, 6, "sky");
@@ -350,6 +352,8 @@ export function createCourse(cfg) {
   addDisc(-14, 3.2, zz(268), 8, 8, "ice", { conveyX: 5 });
   addDisc(14, 3.3, zz(270), 8, 8, "ice", { conveyX: -5 });
   addDisc(0, 3.1, zz(286), 10, 8, "ice");
+  addBridge(-14, zz(270), 0, zz(286), 3.2, 3.1, 5.5, "ice");
+  addBridge(14, zz(270), 0, zz(286), 3.3, 3.1, 5.5, "ice");
   for (let row = -2; row <= 2; row++) {
     for (let col = -3; col <= 3; col++) {
       if ((col + row) % 2 === 0 && rnd() < 0.15) continue;
@@ -576,6 +580,29 @@ export function createCourse(cfg) {
     ship,
     endZ: ship.z,
   };
+  for (const cp of checkpoints) {
+    let hit = groundAt(built, cp.x, cp.z);
+    if (!hit) {
+      for (let dz = 1; dz <= 90 && !hit; dz++) {
+        hit = groundAt(built, 0, cp.z + dz) || groundAt(built, 0, cp.z - dz);
+        if (hit) {
+          cp.x = 0;
+          cp.z = hit.z;
+        }
+      }
+    }
+    if (hit) cp.y = hit.y;
+  }
+  for (const spawn of spawns) {
+    let hit = groundAt(built, spawn.x, spawn.z);
+    if (!hit) {
+      for (let dz = 1; dz <= 90 && !hit; dz++) {
+        hit = groundAt(built, spawn.x, spawn.z + dz) || groundAt(built, spawn.x, spawn.z - dz);
+        if (hit) spawn.z = hit.z;
+      }
+    }
+    if (hit) spawn.y = hit.y;
+  }
   bakeContactAO(built);
   return built;
 }

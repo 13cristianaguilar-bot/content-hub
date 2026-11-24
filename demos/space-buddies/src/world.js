@@ -1585,6 +1585,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   const state = {
     yaw: 0,
+    push: null,
     reduceShake: false,
     pitch: cfg.defaultPitch,
     autoWait: 0,
@@ -2596,8 +2597,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const mag = Math.hypot(look.lookDx || 0, look.lookDy || 0);
       const small = mag < 6 ? 0.28 : mag < 14 ? 0.55 : 1;
       const sens = (look.mouse ? cfg.mouseSens : cfg.lookSens) * small;
-      state.yaw += look.lookDx * sens;
-      state.pitch = Math.max(cfg.minPitch, Math.min(cfg.maxPitch, state.pitch + look.lookDy * sens));
+      const yawStep = Math.max(-0.42, Math.min(0.42, look.lookDx * sens));
+      const pitchStep = Math.max(-0.28, Math.min(0.28, look.lookDy * sens));
+      state.yaw += yawStep;
+      state.pitch = Math.max(cfg.minPitch, Math.min(cfg.maxPitch, state.pitch + pitchStep));
       state.autoWait = cfg.autoFollowDelay;
     } else if (state.autoWait > 0) {
       state.autoWait -= dt;
@@ -2673,7 +2676,29 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     const crowd = bodies.concat(propBounds());
     const beforePush = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
-    const freed = backOffView(clearSpheres(camera.position, crowd, new THREE.Vector3(headX, headY, headZ)), aim, crowd);
+    let freed = backOffView(clearSpheres(camera.position, crowd, new THREE.Vector3(headX, headY, headZ)), aim, crowd);
+    const push = { x: freed.x - beforePush.x, y: freed.y - beforePush.y, z: freed.z - beforePush.z };
+    if (state.push) {
+      const dot = push.x * state.push.x + push.y * state.push.y + push.z * state.push.z;
+      if (dot < 0) {
+        freed = {
+          x: beforePush.x + state.push.x * 0.82,
+          y: beforePush.y + state.push.y * 0.82,
+          z: beforePush.z + state.push.z * 0.82,
+        };
+      } else {
+        freed = {
+          x: beforePush.x + state.push.x * 0.45 + push.x * 0.55,
+          y: beforePush.y + state.push.y * 0.45 + push.y * 0.55,
+          z: beforePush.z + state.push.z * 0.45 + push.z * 0.55,
+        };
+      }
+    }
+    state.push = {
+      x: freed.x - beforePush.x,
+      y: freed.y - beforePush.y,
+      z: freed.z - beforePush.z,
+    };
     const buried = cameraBuried(freed, course.floors, []);
     if (buried === "terrain") {
       camera.position.set(beforePush.x, liftAboveCourse(beforePush), beforePush.z);
@@ -2689,9 +2714,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const selfX = selfClip.x / (selfClip.w || 1);
     const selfY = selfClip.y / (selfClip.w || 1);
     if (!(selfClip.w > 0.5 && Math.abs(selfX) < 1.02 && Math.abs(selfY) < 1.02)) {
-      const snap = { x: player.pos.x, y: player.pos.y + 5.2, z: player.pos.z - 8 };
+      const back = 8;
+      const snap = {
+        x: player.pos.x + Math.sin(state.yaw) * back,
+        y: player.pos.y + 5.2,
+        z: player.pos.z - Math.cos(state.yaw) * back,
+      };
       camera.position.set(snap.x, liftAboveCourse(snap), snap.z);
-      camera.lookAt(player.pos.x, player.pos.y + 1.3, player.pos.z + 4);
+      camera.lookAt(player.pos.x, player.pos.y + 1.3, player.pos.z + Math.cos(state.yaw) * 4);
       camera.updateMatrixWorld(true);
     }
     fadeBlockers(new THREE.Vector3(headX, headY, headZ));

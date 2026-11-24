@@ -2,6 +2,13 @@
 // Screen-up follows the camera look. Screen-right follows the camera's right,
 // which is the opposite of (cos yaw, sin yaw).
 
+export function yawFromCamera(camX, camZ, px, pz) {
+  const dx = camX - px;
+  const dz = pz - camZ;
+  if (dx * dx + dz * dz < 0.36) return null;
+  return Math.atan2(dx, dz);
+}
+
 export function cameraWish(yaw, stickX, stickY) {
   const forwardX = -Math.sin(yaw);
   const forwardZ = Math.cos(yaw);

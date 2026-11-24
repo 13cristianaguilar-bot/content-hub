@@ -78,6 +78,22 @@ export function createInput(root) {
     } else pinchDist = 0;
   }
 
+  function releaseAll() {
+    pointers.clear();
+    stickX = 0;
+    stickY = 0;
+    looking = false;
+    jumpHeld = false;
+    lookDx = 0;
+    lookDy = 0;
+    pinchDist = 0;
+    if (knob) {
+      knob.style.setProperty("--kx", "0px");
+      knob.style.setProperty("--ky", "0px");
+    }
+    if (stick) stick.classList.remove("float");
+  }
+
   function onUp(e) {
     const p = pointers.get(e.pointerId);
     pointers.delete(e.pointerId);
@@ -112,6 +128,14 @@ export function createInput(root) {
   root.addEventListener("pointermove", onMove);
   root.addEventListener("pointerup", onUp);
   root.addEventListener("pointercancel", onUp);
+  root.addEventListener("lostpointercapture", onUp);
+  window.addEventListener("pointerup", onUp);
+  window.addEventListener("pointercancel", onUp);
+  const endTouch = (e) => {
+    if (!e.touches || e.touches.length === 0) releaseAll();
+  };
+  window.addEventListener("touchend", endTouch);
+  window.addEventListener("touchcancel", endTouch);
 
   window.addEventListener("keydown", (e) => {
     const map = { KeyW: 1, KeyA: 1, KeyS: 1, KeyD: 1, ArrowUp: 1, ArrowDown: 1, ArrowLeft: 1, ArrowRight: 1, Space: 1, ShiftLeft: 1, ShiftRight: 1, KeyE: 1, Escape: 1 };
@@ -129,7 +153,10 @@ export function createInput(root) {
     keys.delete(e.code);
     if (e.code === "Space") jumpHeld = false;
   });
-  window.addEventListener("blur", () => keys.clear());
+  window.addEventListener("blur", () => {
+    keys.clear();
+    releaseAll();
+  });
 
   function read() {
     let kx = 0;
@@ -168,5 +195,5 @@ export function createInput(root) {
     return out;
   }
 
-  return { read };
+  return { read, release: releaseAll };
 }

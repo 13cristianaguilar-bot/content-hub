@@ -66,15 +66,41 @@ a{color:var(--teal);text-decoration:none}
 .stage{flex:1;min-height:0;position:relative}
 .stage.scroll{overflow:auto}
 .stage.lock{overflow:hidden}
-.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(260px,.78fr) minmax(340px,1.22fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
+.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
+.hero{grid-column:1 / -1;grid-row:1;display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px 14px;align-items:center;padding:8px 12px 8px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;position:relative;overflow:hidden}
+.hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--teal)}
+.hero.bad:before{background:var(--bad)}
+.hero.good:before{background:var(--good)}
+.hero.calm:before{background:var(--calm)}
+.ringwrap{position:relative;width:104px;height:104px;color:var(--teal)}
+.ringwrap.bad{color:var(--bad)}
+.ringwrap.good{color:var(--good)}
+.ringwrap.calm{color:var(--calm)}
+.ring{width:104px;height:104px;display:block}
+.ring-arc{transition:stroke-dashoffset .9s linear}
+.ring-mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none}
+.ring-mid b{font-family:var(--serif);font-weight:650;font-size:17px;line-height:1;font-variant-numeric:tabular-nums;color:#000}
+.ring-mid span{margin-top:3px;font-size:8px;font-weight:800;letter-spacing:.1em;color:var(--muted)}
+.hero-title{font-family:var(--serif);font-weight:560;font-size:clamp(20px,3.1vh,30px);line-height:1;margin:1px 0}
+.hero-commit,.hero-pace{margin:2px 0 0;font-size:13px;font-weight:700}
+.hero-money{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:6px}
+.hero-money span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--teal)}
+.hero-money b{display:block;font-family:var(--serif);font-weight:650;font-size:clamp(26px,4.4vh,40px);line-height:.9;font-variant-numeric:tabular-nums}
+.hero-money b.urgent{animation:urgent 1.35s ease-in-out infinite}
+@keyframes urgent{50%{opacity:.45}}
+.cline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
+.cline b{min-width:52px;font-size:12px}
+.cline label{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cline input{width:64px;border:1px solid #000;border-radius:8px;padding:4px 6px;font-size:16px;font-weight:700}
+.cline.on{background:rgba(44,123,122,.08);border-radius:10px;padding:4px 6px}
 .col{min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
 .play:has(.banner){gap:6px;padding:6px 10px}
 .play:has(.banner) .col{gap:6px}
 .play:has(.banner) .card{padding:8px 10px}
 .play:has(.banner) .wtrack{margin-bottom:16px}
-.money{grid-column:1;grid-row:1}
+.money{grid-column:1;grid-row:2;min-height:0;overflow:hidden}
 .long{grid-column:1;grid-row:2}
-.race{grid-column:2;grid-row:1 / span 2}
+.race{grid-column:2;grid-row:2}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
 .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
 .who{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -110,7 +136,8 @@ a{color:var(--teal);text-decoration:none}
 .wtick.goal span{right:0}
 .race{display:flex;flex-direction:column;min-height:0;height:100%}
 .pass{font-family:var(--serif);font-weight:560;font-size:clamp(26px,4vh,40px);line-height:1.02;margin-top:2px}
-.shead,.srow{display:grid;grid-template-columns:28px minmax(0,1.4fr) auto auto;gap:8px;align-items:center}
+.shead,.srow{display:grid;grid-template-columns:26px minmax(0,1.3fr) auto auto auto;gap:6px;align-items:center}
+.est{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:12px}
 .shead{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:0 8px}
 .slist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .srow{padding:6px 8px;border-radius:10px;opacity:.62}
@@ -184,16 +211,24 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pads{margin-left:0}
   .pad,.tab{min-height:36px;padding:0 8px;font-size:11px}
   .status{padding:5px 10px;font-size:13px}
-  .play{grid-template-columns:1fr;grid-template-rows:minmax(188px,1.25fr) auto auto;gap:6px;padding:6px}
-  .money,.long,.race{grid-column:1}
-  .race{grid-row:1;height:auto;overflow:hidden}
-  .money{grid-row:2}
-  .long{grid-row:3}
+  .play{grid-template-columns:1fr;grid-template-rows:auto minmax(248px,1fr) auto;gap:6px;padding:6px}
+  .hero,.money,.long,.race{grid-column:1}
+  .hero{grid-row:1;grid-template-columns:84px minmax(0,1fr);padding:6px 8px}
+  .ringwrap,.ring{width:80px;height:80px}
+  .ring-mid b{font-size:14px}
+  .hero-title{font-size:18px}
+  .hero-commit,.hero-pace{font-size:11px}
+  .hero-money b{font-size:22px}
+  .race{grid-row:2;height:auto;overflow:hidden}
+  .money{grid-row:3}
+  .long{display:none}
   .pass{font-size:18px;margin:0}
-  .play .extra,.play .fine,.play .wtrack{display:none}
+  .play .extra,.play .fine,.play .wtrack,.play .commit-note,.play .line-in,.play .assume,#goal-line,.play .weekbox .src,.play .phone-hide,.play .monthline{display:none}
+  .cline{flex-wrap:nowrap}
+  .cline input{width:46px;padding:2px 4px;font-size:14px}
+  .who h2{font-size:18px}
   .play .card{padding:6px 8px}
   .play .sub,.play .assume,#goal-line{font-size:11px;margin-top:2px}
-  .who h2{font-size:22px}
   .dollars{font-size:34px}
   .meter{height:8px}
   .chip{padding:4px 6px}
@@ -212,11 +247,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .dollars{font-size:48px}
   .who h2{font-size:24px}
   .play{gap:6px;padding:6px 8px}
-  .play .card{padding:8px 10px}
+  .play .card{padding:6px 8px}
+  .wtrack{margin-bottom:8px}
+  .play .weekbox .src{margin-top:2px}
   .chip{padding:4px 6px}
   .chip b{font-size:20px}
   .meter{height:10px;margin-top:4px}
-  .wtrack{margin-bottom:16px}
 }
 @media (max-height:720px){
   .dollars{font-size:36px}
@@ -230,8 +266,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .nav{padding:4px 8px}
   .pad,.tab{min-height:32px;box-shadow:0 2px 0 #000}
   .play{gap:4px;padding:4px}
-  .play .meter,.play .long{display:none}
-  .play{grid-template-rows:minmax(176px,1.35fr) auto}
+  .play .meter,.play .long,.play .weekbox,.play .commit-note{display:none}
+  .play{grid-template-rows:auto minmax(150px,1fr)}
+  .money{display:none}
   .play .card{padding:4px 6px}
   .who h2{font-size:18px}
   .dollars{font-size:28px}
@@ -528,29 +565,132 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
     return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
   }
-  function schedule(parts) {
-    if (!parts) return { phase: 'unknown', label: 'no data', sub: 'Clock unavailable', remain: null, toClose: null, block: '' };
+  var BLOCK_META = [
+    { n: 1, start: 11 * 3600, end: 13 * 3600, share: 2 / 5, clock: '11:00 AM-1:00 PM CT', name: '11 AM to 1 PM' },
+    { n: 2, start: 15 * 3600, end: 18 * 3600, share: 3 / 5, clock: '3:00-6:00 PM CT', name: '3 PM to 6 PM' }
+  ];
+  var COMMIT_KEY = 'fe-block-commit';
+  function ctDow(date) {
+    try {
+      var w = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short' }).format(date);
+      return { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 }[w];
+    } catch (e) { return null; }
+  }
+  function loadCommitMap() {
+    try {
+      var o = JSON.parse(storeGet(COMMIT_KEY) || 'null');
+      return (o && typeof o === 'object' && !Array.isArray(o)) ? o : {};
+    } catch (e) { return {}; }
+  }
+  function dailyPlan(data) {
+    var sets = data ? kpiOf(data) : null;
+    var dials = data ? num(data.targets && data.targets.dials) : null;
+    var talk = data ? num(data.targets && data.targets.talk_min) : null;
+    return { sets: sets == null ? 3 : sets, dials: dials == null ? 150 : dials, talk: talk == null ? 120 : talk, setsFeed: sets != null, dialsFeed: dials != null, talkFeed: talk != null };
+  }
+  function commitments(data) {
+    var saved = loadCommitMap();
+    var plan = dailyPlan(data);
+    return BLOCK_META.map(function (b) {
+      function pick(prefix, fallback) {
+        var v = num(saved[prefix + b.n]);
+        return v == null ? fallback : v;
+      }
+      return { n: b.n, start: b.start, end: b.end, share: b.share, clock: b.clock, name: b.name, sets: pick('s', plan.sets * b.share), dials: pick('d', plan.dials * b.share), talk: pick('t', plan.talk * b.share), plan: plan };
+    });
+  }
+  function expectedSets(commits, sec) {
+    var e = 0;
+    commits.forEach(function (b) {
+      if (b.sets == null) return;
+      if (sec >= b.end) e += b.sets;
+      else if (sec > b.start) e += b.sets * ((sec - b.start) / (b.end - b.start));
+    });
+    return e;
+  }
+  function dialsLogged(hours, startH, endH, nowH) {
+    if (!Array.isArray(hours) || nowH == null) return null;
+    var last = Math.min(endH - 1, Math.floor(nowH));
+    if (last < startH) return 0;
+    var sum = 0;
+    for (var h = startH; h <= last && h < hours.length; h++) {
+      var v = num(hours[h]);
+      if (v == null) return null;
+      sum += v;
+    }
+    return sum;
+  }
+  function potential(commits, sec, row) {
+    var sets = row ? num(row.sets) : null;
+    if (sets == null) return { dollars: null, behind: false, note: 'Potentially lost needs today\'s sets.' };
+    var exp = expectedSets(commits, sec);
+    var gap = Math.max(0, exp - sets);
+    if (gap < 0.05) return { dollars: 0, behind: false, note: 'On the set commitment. Nothing is burning.' };
+    return { dollars: gap * BONUS, behind: true, note: fmtCount(gap) + ' sets behind the clock. ' + fmtMoney(gap * BONUS) + ' potentially lost, from today\'s sets against the commitment so far.' };
+  }
+  function commitLine(b) {
+    return 'You committed: ' + fmtCount(b.sets) + ' sets, ' + fmtCount(b.dials) + ' dials, ' + fmtCount(b.talk) + ' min this block.';
+  }
+  function blockView(date, data, row) {
+    var when = date || new Date();
+    var parts = ctParts(when);
+    var dow = ctDow(when);
+    var commits = commitments(data);
+    var base = { phase: 'unknown', label: 'no data', sub: 'Clock unavailable', remain: null, toClose: null, block: '', progress: 0, tone: 'calm', kicker: 'Calendar commitment', title: 'no data', commit: '', pace: '', pot: null, potNote: 'no data', heroTime: 'no data', heroUnit: 'CLOCK', focus: 1, commits: commits };
+    if (!parts || dow == null) return base;
+    function pack(extra) { var o = {}; var k; for (k in base) o[k] = base[k]; for (k in extra) o[k] = extra[k]; return o; }
     var t = parts.sec;
     var close = 18 * 3600;
-    var blocks = [{ start: 11 * 3600, end: 13 * 3600, name: '11 AM to 1 PM' }, { start: 15 * 3600, end: 18 * 3600, name: '3 PM to 6 PM' }];
-    if (t >= close) return { phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '' };
-    var i;
-    for (i = 0; i < blocks.length; i++) {
-      if (t >= blocks[i].start && t < blocks[i].end) {
-        return { phase: 'in', label: fmtDur(close - t), sub: 'Until 6 PM. Now ' + blocks[i].name, remain: close - t, toClose: close - t, block: blocks[i].name };
+    if (dow === 0 || dow === 6) {
+      var toMon = ((dow === 6 ? 2 : 1) * 86400) - t + 11 * 3600;
+      return pack({ phase: 'off', label: fmtDur(toMon), sub: 'Next block Monday ' + commits[0].name, remain: toMon, toClose: null, block: commits[0].name, progress: 0, tone: 'calm', kicker: 'No block today', title: 'Monday ' + commits[0].clock, commit: commitLine(commits[0]), pace: 'Saturday and Sunday have no dial block.', pot: 0, potNote: 'Nothing is burning until Monday.', heroTime: fmtDur(toMon), heroUnit: 'UNTIL MON', focus: 1 });
+    }
+    var i, b;
+    for (i = 0; i < commits.length; i++) {
+      b = commits[i];
+      if (t >= b.start && t < b.end) {
+        var dur = b.end - b.start;
+        var left = b.end - t;
+        var pot = potential(commits, t, row);
+        var exp = expectedSets(commits, t);
+        var sets = row ? num(row.sets) : null;
+        var logged = dialsLogged(data && data.my_hourly_today, Math.floor(b.start / 3600), Math.floor(b.end / 3600), data ? num(data.now_hour) : null);
+        var due = b.dials * ((t - b.start) / dur);
+        var bits = [];
+        if (sets == null) bits.push('Sets: no data.');
+        else if (exp - sets > 0.05) bits.push('Sets behind by ' + fmtCount(exp - sets) + ' so far today.');
+        else if (sets - exp > 0.05) bits.push('Sets ahead by ' + fmtCount(sets - exp) + ' so far today.');
+        else bits.push('Sets are on the commitment.');
+        if (logged == null) bits.push('Dials this block: no data.');
+        else if (due - logged > 0.5) bits.push(fmtCount(due - logged) + ' dials behind this block.');
+        else bits.push(fmtCount(Math.max(0, logged - due)) + ' dials ahead this block.');
+        var behind = pot.behind || (logged != null && due - logged > 0.5);
+        return pack({ phase: 'in', label: fmtDur(close - t), sub: 'Until 6 PM. Now ' + b.name, remain: close - t, toClose: close - t, block: b.name, progress: left / dur, tone: behind ? 'bad' : 'good', kicker: 'Block ' + b.n + ' of 2 · Calendar commitment', title: b.clock, commit: commitLine(b), pace: bits.join(' '), pot: pot.dollars, potNote: pot.note, heroTime: fmtDur(left), heroUnit: 'LEFT', focus: b.n });
       }
     }
+    if (t >= close) {
+      var done = potential(commits, t, row);
+      var setsNow = row ? num(row.sets) : null;
+      var goalSets = commits[0].sets + commits[1].sets;
+      return pack({ phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '', progress: 0, tone: done.behind ? 'bad' : 'good', kicker: 'Block results', title: 'Both blocks are closed', commit: 'Committed today: ' + fmtCount(goalSets) + ' sets. Logged: ' + (setsNow == null ? 'no data' : fmtCount(setsNow) + ' sets') + '.', pace: done.note, pot: done.dollars, potNote: done.note, heroTime: '00:00', heroUnit: 'CLOSED', focus: 2 });
+    }
     var next = null;
-    for (i = 0; i < blocks.length; i++) if (t < blocks[i].start) { next = blocks[i]; break; }
-    if (!next) return { phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '' };
-    return { phase: 'wait', label: fmtDur(next.start - t), sub: 'Next block ' + next.name, remain: next.start - t, toClose: close - t, block: next.name };
+    for (i = 0; i < commits.length; i++) if (t < commits[i].start) { next = commits[i]; break; }
+    if (!next) return pack({ phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, heroTime: '00:00', heroUnit: 'CLOSED' });
+    var gapStart = next.n === 1 ? 0 : commits[0].end;
+    var gapDur = Math.max(1, next.start - gapStart);
+    var potW = potential(commits, t, row);
+    return pack({ phase: 'wait', label: fmtDur(next.start - t), sub: 'Next block ' + next.name, remain: next.start - t, toClose: close - t, block: next.name, progress: Math.max(0, Math.min(1, (next.start - t) / gapDur)), tone: 'calm', kicker: 'Next block · Block ' + next.n + ' of 2', title: next.clock, commit: commitLine(next), pace: (next.n === 2 ? ('Block 1 is closed. ' + potW.note) : 'Be at the dialer when this block opens.'), pot: potW.dollars, potNote: potW.note, heroTime: fmtDur(next.start - t), heroUnit: 'OPENS IN', focus: next.n });
+  }
+  function schedule() {
+    return blockView(new Date(), state.row && state.row.data, state.row ? findMe(state.row.data, 'today') : null);
   }
   function modeOf(data, row, sched) {
     if (!data) return 'wait';
     var kpi = kpiOf(data);
     var sets = row ? num(row.sets) : null;
     if (kpi != null && sets != null && sets + 0.05 >= kpi) return 'win';
-    if (sched && sched.phase === 'over') return 'calm';
+    if (sched && (sched.phase === 'over' || sched.phase === 'off')) return 'calm';
     var delta = num(data.computed && data.computed.dials_vs_pace);
     var behind = delta != null && delta < -0.05;
     var table = onTable(data, row);
@@ -574,6 +714,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       bits.push('Dial now.');
       return bits.join(' ');
     }
+    if (sched && sched.phase === 'off') return 'No dial block today. Next commitment is Monday, 11:00 AM CT.';
     if (sched && sched.phase === 'over') return 'Blocks are over. Read the debrief, then set tomorrow.';
     if (sched && sched.phase === 'wait') return 'Next block is ' + (sched.block || 'no data') + '. Be at the dialer when it opens.';
     if (delta == null) return 'Pace: no data. ' + (table && table.note ? table.note : '');
@@ -745,13 +886,13 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (idx === 0) {
       var mine = num(list[0].sets), below = list[1] ? num(list[1].sets) : null;
       if (mine == null) return { text: 'You are 1st. Sets: no data.', ahead: true, rank: 1 };
-      if (below == null) return { text: 'You lead this board.', ahead: true, rank: 1 };
-      return { text: 'You lead by ' + fmtCount(mine - below) + ' sets.', ahead: true, rank: 1 };
+      if (below == null || mine - below < 0.05) return { text: 'You lead this board.', ahead: true, rank: 1 };
+      return { text: 'You lead by ' + fmtCount(mine - below) + ' sets. ' + fmtMoney((mine - below) * BONUS) + ' estimated.', ahead: true, rank: 1 };
     }
     var above = list[idx - 1];
     var as = num(above.sets), ms = num(list[idx].sets);
     if (as == null || ms == null) return { text: 'Sets to pass ' + textOr(above.name) + ': no data.', ahead: false, rank: idx + 1 };
-    if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' sets to pass ' + textOr(above.name) + '.', ahead: false, rank: idx + 1 };
+    if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' sets to pass ' + textOr(above.name) + '. ' + fmtMoney((as - ms) * BONUS) + ' estimated.', ahead: false, rank: idx + 1 };
     var ad = num(above.dials), md = num(list[idx].dials);
     if (ad == null || md == null) return { text: 'Tied on sets with ' + textOr(above.name) + '. Dials: no data.', ahead: false, rank: idx + 1 };
     if (ad - md > 0.05) return { text: 'Tied on sets. ' + fmtCount(ad - md) + ' dials to pass ' + textOr(above.name) + '.', ahead: false, rank: idx + 1 };
@@ -821,24 +962,28 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var list = ranked((periodOf(data, 'today') || {}).rows || []);
     var gap = gapLine(list, meName(data));
     var prev = arrowsFor('today', list);
-    var move = table.note;
-    return '<section class="play"><div class="col money">' + levelBanner(lvl, textOr(c.level_name)) +
-      '<section class="card" data-spot="earned"><p class="kicker">The incentive</p><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div>' +
-      '<p class="kicker">Earned today</p><p class="dollars ' + earnedClass + '">' + (earned == null ? 'no data' : moneyEl(earned)) + '</p>' +
-      '<p class="sub">Bonus earned, commission paid when deals close.</p><p class="sub extra">' + (lvl == null ? 'Money is the score.' : ('Level ' + fmtCount(lvl) + ' ' + textOr(c.level_name) + '. Money is the score.')) + '</p>' +
-      (fill == null ? '' : '<div class="meter ' + meterClass + '" role="img" aria-label="Bonus earned against today\'s KPI"><i data-fill="' + fill.toFixed(2) + '"></i></div>') +
-      '<p class="mrow extra"><span class="' + earnedClass + '">' + (earned == null ? 'no data' : fmtMoney(earned)) + ' earned</span><span>' + (pot == null ? 'KPI no data' : (fmtMoney(pot) + ' at ' + fmtCount(kpi) + ' sets')) + '</span></p>' +
-      '<p class="sub extra ' + (table.dollars > 0 ? 'good' : '') + '">' + esc(move) + '</p></section>' +
-      '<div class="chips"><article class="chip"><p class="kicker">On the table</p><b class="' + tableClass + '">' + (table.dollars == null ? 'no data' : fmtMoney(table.dollars)) + '</b><span>' + esc(table.note) + '</span></article>' +
-      '<article class="chip"><p class="kicker">Opportunity lost</p><b class="' + lostClass + '">' + (lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '</b><span>' + esc(lost.note) + '</span></article>' +
-      '<article class="chip"><p class="kicker">Dial pace</p><b class="' + paceClass + '">' + esc(delta == null ? 'no data' : (Math.abs(delta) < 0.05 ? 'On pace' : fmtCount(Math.abs(delta)))) + '</b><span class="' + paceClass + '">' + esc(paceText) + '</span></article></div>' +
-      '<section class="card"><div class="line-in"><label for="avg-deal">Avg deal cash</label><input id="avg-deal" inputmode="decimal" placeholder="Blank" value="' + (avg == null ? '' : esc(String(avg))) + '" aria-label="Average deal cash collected, an assumption">' +
-      '<label for="month-goal">Month goal</label><input id="month-goal" inputmode="decimal" placeholder="Blank" value="' + (goalSet == null ? '' : esc(String(goalSet))) + '" aria-label="Personal monthly income goal"></div>' +
-      '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section></div>' +
-      '<section class="card race" data-spot="race"><p class="kicker">The race' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Neighborhood view. The name above you is the next win. Today, ranked by sets, then dials. Dollars show on your row only.</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, kpi, true) + '</div></section>' +
-      '<section class="card bars long"><p class="kicker">Week bonus</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + '. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + '.</span></p>' + weekBar +
-      '<p class="kicker">Month</p>' + monthHtml + '<p class="src fine">$50 bonus per outbound set. 5% of outbound cash and 3% of intercept cash are commission, not included here. Source GHL. ' + esc(asOfText(state.row)) + '</p></section></section>';
+    var view = blockView(new Date(), data, row);
+    var ymd = ctYMD(data && data.generated_iso);
+    var thanks = ymd && ymd.y === 2026 && ymd.m === 11 && ymd.d >= 23 && ymd.d <= 27;
+    var potClass = view.pot == null ? '' : (view.pot > 0.5 ? 'bad' : 'good');
+    var planNote = (view.commits[0].plan.setsFeed && view.commits[0].plan.dialsFeed && view.commits[0].plan.talkFeed) ? 'Split of today\'s KPI by block length, 2 hours then 3. Edit a block if the calendar promise is different.' : 'A target was missing in the feed, so that piece starts from the daily default (3 sets, 150 dials, 2 hours) until you edit it.';
+    function field(block, prefix, label, value) {
+      return '<label>' + label + ' <input id="c-' + prefix + block.n + '" data-commit="' + prefix + block.n + '" inputmode="decimal" value="' + esc(String(Math.round(value * 10) / 10)) + '" aria-label="Block ' + block.n + ' ' + label + '"></label>';
+    }
+    var editors = view.commits.map(function (b) {
+      return '<div class="cline' + (view.focus === b.n ? ' on' : '') + '"><b>Block ' + b.n + '</b>' + field(b, 's', 'Sets', b.sets) + field(b, 'd', 'Dials', b.dials) + field(b, 't', 'Min', b.talk) + '</div>';
+    }).join('');
+    var hero = '<section class="hero ' + view.tone + '" data-spot="block"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="#f0f0f0" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money"><div><span>Earned today</span><b class="' + earnedClass + (earned != null && earned < 0.5 ? ' urgent' : '') + '" id="earned-now">' + esc(earned == null ? 'no data' : fmtMoney(earned)) + '</b></div><div><span>On the table</span><b class="' + tableClass + '">' + esc(table.dollars == null ? 'no data' : fmtMoney(table.dollars)) + '</b></div><div><span>Potentially lost</span><b class="' + potClass + '" id="pot-lost">' + esc(view.pot == null ? 'no data' : fmtMoney(view.pot)) + '</b></div></div></div></section>';
+    return '<section class="play">' + hero + '<div class="col money">' + levelBanner(lvl, textOr(c.level_name)) +
+      '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div><p class="kicker">Calendar promise</p><p class="sub commit-note">' + esc(planNote) + '</p>' + editors +
+      '<p class="sub phone-hide">Opportunity lost <b class="' + lostClass + '">' + esc(lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '</b>. ' + esc(lost.note) + '</p>' +
+      '<p class="sub phone-hide">Dial pace <b class="' + paceClass + '">' + esc(paceText) + '</b>. ' + esc(table.note) + '</p>' +
+      '<div class="line-in"><label for="avg-deal">Avg deal cash</label><input id="avg-deal" inputmode="decimal" placeholder="Blank" value="' + (avg == null ? '' : esc(String(avg))) + '" aria-label="Average deal cash collected, an assumption"><label for="month-goal">Month goal</label><input id="month-goal" inputmode="decimal" placeholder="Blank" value="' + (goalSet == null ? '' : esc(String(goalSet))) + '" aria-label="Personal monthly income goal"></div>' +
+      '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section>' +
+      '<section class="card bars weekbox"><p class="kicker">' + (thanks ? 'Thanksgiving week' : 'Week bonus') + '</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + ' at ' + (promise == null ? 'no data' : fmtCount(promise)) + ' sets. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + ' at ' + (goal == null ? 'no data' : fmtCount(goal)) + ' sets.</span></p>' + weekBar +
+      '<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div></section></div>' +
+      '<section class="card race" data-spot="race"><p class="kicker">The race' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, kpi, true) + '</div></section></section>';
   }
   function boardRows(data, list, prev, target, dollars) {
     var me = meName(data);
@@ -849,11 +994,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var you = sameName(row && row.name, me);
       var sets = num(row && row.sets);
       var cls = toneSets(sets, target);
-      var pay = (you && dollars && sets != null) ? (' ' + fmtMoney(sets * BONUS)) : '';
+      var est = !dollars ? '' : (sets == null ? 'no data' : fmtMoney(sets * BONUS));
+      var estCls = sets == null ? '' : (sets > 0.5 ? 'good' : 'bad');
       var old = prev ? num(prev[String(row && row.name || '').trim().toLowerCase()]) : null;
       var moved = old != null && old !== i + 1;
       var near = meIdx >= 0 && Math.abs(i - meIdx) <= 1;
-      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + (pay ? (' <b class="' + (sets > 0.5 ? 'good' : 'bad') + '">' + esc(pay) + '</b>') : '') + '</span><span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
+      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + esc(est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
     }).join('');
   }
   function boardHtml(data) {
@@ -868,8 +1014,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-period="' + key + '">' + name + '</button>';
     }
     return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(p && p.label ? p.label : 'no data') + '</p></div><div class="tabs">' + tab('today', 'Today') + tab('week', 'Week') + tab('month', 'Month') + '</div></div>' +
-      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">Ranked by sets, then dials. Green sets are at the ' + (state.period === 'week' ? 'promise' : (state.period === 'month' ? 'KPI pace for the workdays so far' : 'daily KPI')) + '. Your bonus is sets times $50. Other rows have no dollar figure.</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, target, true) + '</div></section>';
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">Ranked by sets, then dials. Green sets are at the ' + (state.period === 'week' ? 'promise' : (state.period === 'month' ? 'KPI pace for the workdays so far' : 'daily KPI')) + '. Est. is sets times $50, not cash collected.</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, target, true) + '</div></section>';
   }
   function actualSeries(hours, now, x0) {
     if (!Array.isArray(hours) || now == null) return null;
@@ -997,7 +1143,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     return '<details class="behind" id="fine"' + (state.fineOpen ? ' open' : '') + '><summary>How this board counts</summary><div class="inn"><p>Sets are inferred from bookings after a setter\'s call. Talk time includes voicemails. Source GHL, refreshed hourly during dial blocks.</p><p class="sub">Bonus math is $50 times outbound sets. Opportunity lost is $50 for each set short of the daily KPI on past days in the feed. Commission percents are the pay plan. They are not added unless you type an average deal size, and then only the 5% outbound figure, labeled as an assumption.</p>' + (meMissing(data) ? '<p class="sub">Feed name: no data. This board is Cristian\'s.</p>' : '') + countHtml + '</div></details><footer class="site">Fig &amp; Eagle Command Center. Read only. <a href="../command-center/">Command Center</a></footer>';
   }
   function guideHtml() {
-    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 bonus. The daily KPI is the sets target in the feed. Three sets is $150. Green means the money is earned, still on the table, or you are ahead. Red means it is behind, missed, or already lost.</p><p>Commission is separate: 5% of cash collected on outbound, and 3% on intercept. This board does not know cash collected. Type an average deal size to see the 5% outbound upside. That number is an assumption. Intercept sets are not in the feed, so the 3% is not estimated.</p><p>The board ranks the team by sets, then dials. Your dollar figure is yours alone. The pass line is the sets between you and the person above. The highlighted rows are that neighborhood. Opportunity lost adds $50 for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open. Sound stays off until you tap SOUND ON.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
+    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 bonus. The daily KPI is the sets target in the feed. Three sets is $150. Green means the money is earned, still on the table, or you are ahead. Red means it is behind, missed, or already lost.</p><p>Commission is separate: 5% of cash collected on outbound, and 3% on intercept. This board does not know cash collected. Type an average deal size to see the 5% outbound upside. That number is an assumption. Intercept sets are not in the feed, so the 3% is not estimated.</p><p>The board ranks the team by sets, then dials. Every Est. figure is that row\'s sets times $50. It is not cash collected. The pass line is the sets, and the estimated dollars, between you and the person above. The ring is the block you committed on the calendar. Potentially lost is today\'s sets against that commitment as the clock burns. Opportunity lost adds $50 for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open. Sound stays off until you tap SOUND ON.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
   }
   function failHtml() {
     return '<section class="card fail"><p class="kicker">Feed</p><h2>The scoreboard did not load</h2><p class="sub">No numbers on this page until the read succeeds. Nothing here is filled in as zero.</p><p class="bad">' + esc(state.error || 'The read failed.') + '</p><button type="button" class="btn" data-retry>Try again</button></section>';
@@ -1040,9 +1186,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   }
   function coachHtml(gap) {
     var steps = [
-      'The race. ' + gap.text + ' That gap is the win. The highlighted rows are the neighborhood: the name above you, you, and the name below.',
-      'The score. Green is money earned or still on the table. Red is money missed or a pace you are behind. Dollars stay on your row only.',
-      'The order. The banner is the one next action. The clock is the time left in today\'s blocks, or the time until the next block.'
+      'The block. The ring is the commitment on your calendar. ' + gap.text + ' The highlighted rows are the neighborhood.',
+      'The score. $0 earned stays on screen in red. Green is money still on the table. Potentially lost grows as block time burns while sets sit behind that commitment. Est. on every row is sets times $50, not cash collected.',
+      'The order. The banner is the one next action. The ring is the time left in this block, or the time until the next one.'
     ];
     var i = Math.max(0, Math.min(steps.length - 1, state.coachStep || 0));
     var last = i === steps.length - 1;
@@ -1121,6 +1267,27 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (shift) shift.textContent = state.paused ? 'RESUME' : (shiftOn() ? 'PAUSE' : 'START SHIFT');
     var sound = document.getElementById('soundbtn');
     if (sound) { var on = soundOn(); sound.textContent = on ? 'SOUND ON' : 'SOUND OFF'; sound.setAttribute('aria-pressed', on ? 'true' : 'false'); sound.classList.toggle('on', on); }
+    var arc = document.getElementById('ring-arc');
+    if (arc && sched.progress != null) {
+      var circ = 2 * Math.PI * 40;
+      arc.setAttribute('stroke-dasharray', circ.toFixed(3));
+      arc.setAttribute('stroke-dashoffset', (circ * (1 - sched.progress)).toFixed(3));
+    }
+    function putText(id, text) { var node = document.getElementById(id); if (node) node.textContent = text; }
+    putText('hero-time', sched.heroTime || sched.label);
+    putText('hero-unit', sched.heroUnit || '');
+    putText('hero-kicker', sched.kicker || '');
+    putText('hero-title', sched.title || '');
+    putText('hero-commit', sched.commit || '');
+    putText('hero-pace', sched.pace || '');
+    var potNode = document.getElementById('pot-lost');
+    if (potNode) { potNode.textContent = sched.pot == null ? 'no data' : fmtMoney(sched.pot); potNode.className = sched.pot == null ? '' : (sched.pot > 0.5 ? 'bad' : 'good'); }
+    var hero = document.querySelector('.hero');
+    if (hero) hero.className = 'hero ' + (sched.tone || 'calm');
+    var wrap = document.querySelector('.ringwrap');
+    if (wrap) wrap.className = 'ringwrap ' + (sched.tone || 'calm');
+    var paceNode = document.getElementById('hero-pace');
+    if (paceNode) paceNode.className = 'hero-pace ' + (sched.tone || '');
     if (soundOn() && !state.paused && sched.toClose > 0 && sched.toClose <= 600 && sched.phase === 'in' && parts && parts.sec !== state.lastTick) {
       state.lastTick = parts.sec;
       playTick();
@@ -1253,6 +1420,16 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (e.target.closest && e.target.closest('[data-retry]')) load();
   });
   document.body.addEventListener('input', function (e) {
+    if (e.target && e.target.getAttribute && e.target.getAttribute('data-commit')) {
+      var ck = e.target.getAttribute('data-commit');
+      var map = loadCommitMap();
+      var raw = String(e.target.value || '').trim();
+      if (raw === '' || !isFinite(Number(raw)) || Number(raw) < 0) delete map[ck];
+      else map[ck] = Number(raw);
+      storeSet(COMMIT_KEY, JSON.stringify(map));
+      paintLive();
+      return;
+    }
     if (!e.target || (e.target.id !== 'avg-deal' && e.target.id !== 'month-goal')) return;
     var key = e.target.id === 'avg-deal' ? AVG_KEY : GOAL_KEY;
     var v = String(e.target.value || '').trim();
@@ -1261,6 +1438,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       else if (isFinite(Number(v)) && Number(v) >= 0) localStorage.setItem(key, String(Number(v)));
     } catch (err) {}
     refreshMoneyCopy();
+  });
+  document.body.addEventListener('change', function (e) {
+    if (!e.target || !e.target.getAttribute || !e.target.getAttribute('data-commit')) return;
+    var raw = String(e.target.value || '').trim();
+    if (raw !== '' && isFinite(Number(raw)) && Number(raw) >= 0) return;
+    var map = loadCommitMap();
+    delete map[e.target.getAttribute('data-commit')];
+    storeSet(COMMIT_KEY, JSON.stringify(map));
+    render();
   });
   document.body.addEventListener('toggle', function (e) {
     if (e.target && e.target.id === 'fine') state.fineOpen = !!e.target.open;

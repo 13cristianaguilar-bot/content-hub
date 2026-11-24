@@ -192,6 +192,15 @@ Repro: every heat used the full-course 180 second clock, so a short gate never f
 
 Fix: each plan entry has its own seconds, and the collapse front starts just behind that start and arrives at the gate near the end of the clock. Trailing bots speed up a little and leaders ease off, never above the top bot cap. Bots steer to the crown, the ship, or a nearby gate, sidestep pendulums, and dive on flat runs. Bumpers and sweepers stay on planet 1, with a dark outline. Planet 2 pushes the wind, ferries, and rollers. Planet 3 speeds the collapse and the ice cracks, and swings the pendulums wider. Course trim sits outside the pad and stays muted.
 
+## SB-21 Planet 3 reads as dusk, and the results card hides the field
+
+- Severity: P2
+- Status: fixed
+
+Repro: planet 3's sky stayed a blue dusk with a purple cloud and a warm horizon. The qualify card showed a podium and a small Next button, without your place or the rest of the field.
+
+Fix: planet 3 uses a deep navy sky, a full star field, and no sun glow. The card lists who qualified, your place, and a large Next button. SOUND can force low detail (also on by itself on a weak GPU), a yellow hazard outline, and reduced camera shake.
+
 ## SB-20 Rounds open on the same camera
 
 - Severity: P2

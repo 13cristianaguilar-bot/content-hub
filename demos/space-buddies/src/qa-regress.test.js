@@ -2,7 +2,8 @@ import { resolveConfig } from "./config.js";
 import { createCourse, floorsAt } from "./course.js";
 import { bandSpeed, botWish as racerWish, cameraAboveFloor, cameraFloor, createRace, paceCollapse, step } from "./sim.js";
 import { isSnag, isUnfair } from "./feel.js";
-import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
+import { hideControls, hudStatus, placeLabel, resultBoard, showCoach } from "./place.js";
+import { detailOn, nightRead, outlineHex, planetLook, shakeMul } from "./look.js";
 import { audioAudible, cueFor, muteIcon, muteLabel, normalizePrefs } from "./audio-prefs.js";
 import { spectateFrame } from "./spectate.js";
 import { backOffView, clearSpheres, pullOutOfSphere } from "./occlude.js";
@@ -280,6 +281,19 @@ const cracked = collapseShot(cineDuration("collapse"), cineDuration("collapse"),
 assert(cracked.drop > 12 && cracked.y > buddy.y + 10, "the planet collapse should rise off the course");
 const skipped = skipCine({ kind: "flyover", t: 0.2, dur: 3.6 });
 assert(skipped.t === 3.6 && skipped.skipped, "a tap should skip the cinematic");
+assert(nightRead(planetLook(3)) && !nightRead(planetLook(1)), "planet 3 should be a deep night sky");
+const board = resultBoard({
+  player: { isPlayer: true, pos: { z: 10 }, qualified: true },
+  racers: [
+    { isPlayer: true, pos: { z: 10 }, qualified: true },
+    { pos: { z: 40 }, qualified: true },
+    { pos: { z: 4 }, qualified: false },
+  ],
+});
+assert(board.place === "2ND", "the card should show your place");
+assert(board.count === 2 && board.names[0] === "BUDDY" && board.names.includes("YOU"), "the card should list who qualified");
+assert(detailOn({ detail: "auto" }, true) && !detailOn({ detail: "full" }, true), "low detail follows the GPU until the player chooses");
+assert(shakeMul({ reduceShake: true }) < 0.2 && outlineHex({ safeOutline: true }) === 0xffe14a, "the access toggles should soften shake and switch the outline");
 const stride = 29;
 const ia = stride;
 const ib = ia + 1;

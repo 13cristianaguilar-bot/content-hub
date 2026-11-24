@@ -10,6 +10,7 @@ import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
 import { BUDDY_CLIPS, ROOT_LOCK, isRootPositionTrack, lockRootPosition } from "./clips.js";
+import { collapseShot, flyoverShot, launchShot } from "./cine.js";
 
 const MODELS = {
   buddy: "assets/space_buddy_lowpoly.glb",
@@ -1666,9 +1667,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const c = race.crates[i];
       crateMeshes[i].position.set(c.x, c.y, c.z);
     }
+    const collapsing = look && look.cine && look.cine.kind === "collapse";
+    const collapseDrop = collapsing ? collapseShot(look.cine.t, look.cine.dur, race.player.pos).drop : 0;
     for (const chunk of course.chunks) {
       const mesh = chunk.mesh;
       if (!mesh) continue;
+      if (collapsing) chunk.fallY = -collapseDrop * (chunk.z1 < race.player.pos.z - 6 ? 1 : 0.55);
       if (chunk.state === "gone") {
         mesh.visible = false;
         if (chunk.tile) chunk.tile.visible = false;
@@ -1920,6 +1924,21 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (v.mixAcc >= budget) {
         v.mixer.update(v.mixAcc);
         v.mixAcc = 0;
+      }
+      const boarding = r.seated && race.phase === "launch" && race.holdLaunch > 1.3 && race.launchT < 1.5;
+      if (boarding) {
+        if (v.docked) {
+          scene.add(v.group);
+          v.docked = false;
+          v.shadow.visible = false;
+        }
+        const k = Math.max(0, Math.min(1, race.launchT / 1.5));
+        const lane = ((r.seatIndex || 0) % 4) - 1.5;
+        v.group.scale.setScalar(1);
+        v.group.position.set(course.ship.x + lane * 1.15, course.ship.y, course.ship.z - 9 + k * 7.2);
+        v.group.rotation.set(0, 0, 0);
+        setAnim(v, k > 0.08 ? "Run" : "Idle", 1);
+        continue;
       }
       if (r.seated) {
         if (!v.docked && sockets[r.seatIndex]) {
@@ -2278,6 +2297,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   function updateCamera(race, dt, look) {
     const player = race.player;
+    if (look && look.cine) {
+      const cine = look.cine;
+      const player = race.player;
+      let shot = null;
+      if (cine.kind === "flyover") shot = flyoverShot(cine.t, cine.dur, cine.focus || player.pos, player.pos);
+      else if (cine.kind === "launch") shot = launchShot(cine.t, cine.dur, ship.position);
+      else if (cine.kind === "collapse") shot = collapseShot(cine.t, cine.dur, player.pos);
+      if (shot) {
+        camera.position.set(shot.x, shot.y, shot.z);
+        camera.lookAt(shot.lx, shot.ly, shot.lz);
+        return;
+      }
+    }
     if (look && look.overview) {
       const o = look.overview;
       const head = new THREE.Vector3(o.lx, o.ly + 1.2, o.lz);
@@ -2297,7 +2329,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       camera.fov += (nextFov - camera.fov) * Math.min(1, dt * 7);
       camera.updateProjectionMatrix();
     }
-    if (race.phase === "countdown") {
+    if (race.phase === "countdown" && !race.opened) {
       const span = cfg.countdownBeats + cfg.goHold;
       const k = Math.max(0, Math.min(1, (race.countClock || 0) / span));
       const ease = k * k * (3 - 2 * k);

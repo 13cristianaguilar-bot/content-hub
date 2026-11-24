@@ -192,6 +192,17 @@ Repro: every heat used the full-course 180 second clock, so a short gate never f
 
 Fix: each plan entry has its own seconds, and the collapse front starts just behind that start and arrives at the gate near the end of the clock. Trailing bots speed up a little and leaders ease off, never above the top bot cap. Bots steer to the crown, the ship, or a nearby gate, sidestep pendulums, and dive on flat runs. Bumpers and sweepers stay on planet 1, with a dark outline. Planet 2 pushes the wind, ferries, and rollers. Planet 3 speeds the collapse and the ice cracks, and swings the pendulums wider. Course trim sits outside the pad and stays muted.
 
+## SB-20 Rounds open on the same camera
+
+- Severity: P2
+- Status: fixed
+
+Repro: every planet dropped the Buddy into the countdown with the same short camera settle. The ship launch was a 1 second rise, and the next round cut straight to the start line.
+
+Fix: each planet opens with a flyover that ends behind the Buddy. The ship launch shows the qualified Buddies running aboard, then lifts off. The next round and the next planet play a short collapse of the course you just left. Each shot is under 4 seconds and a tap skips it. Auto, bot, and harness runs skip the shots so the race clock stays put.
+
+`npm run test:qa2` after this pass: 20 of 20 runs passed. Unfair hits 0, missed landings 0, stuck bots 0.
+
 ## Batch 2
 
 `npm run test:qa2` adds feel totals, a per-planet heatmap, a 4x CPU throttle with the low-GPU profile, touch edges (multi-touch, a stick dragged off screen, jump during dive, pinch while moving, address bar show and hide), a 10-round session, and the eliminated path through the podium on every planet.

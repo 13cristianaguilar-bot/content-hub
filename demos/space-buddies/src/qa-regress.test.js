@@ -7,6 +7,7 @@ import { audioAudible, cueFor, muteIcon, muteLabel, normalizePrefs } from "./aud
 import { spectateFrame } from "./spectate.js";
 import { backOffView, clearSpheres, pullOutOfSphere } from "./occlude.js";
 import { BUDDY_CLIPS, lockRootPosition } from "./clips.js";
+import { CINE_DUR, behindBuddy, cineDuration, collapseShot, flyoverShot, launchShot, skipCine } from "./cine.js";
 
 function assert(cond, message) {
   if (!cond) {
@@ -264,6 +265,21 @@ chase.player.bumpCd = 0;
 bumper.armedAt = 0;
 step(chase, 1 / 60, { x: 0, z: 0, jump: false, dive: false });
 assert(chase.player.flail > 0.15, "planet 1 bumpers should still hit");
+for (const kind of Object.keys(CINE_DUR)) assert(cineDuration(kind) <= 4, kind + " cinematic should stay under 4 seconds");
+const buddy = { x: 1, y: 2, z: 30 };
+const far = { x: 0, y: 4, z: 90 };
+const openingShot = flyoverShot(0, cineDuration("flyover"), far, buddy);
+const closingShot = flyoverShot(cineDuration("flyover"), cineDuration("flyover"), far, buddy);
+const parked = behindBuddy(buddy);
+assert(openingShot.z > buddy.z + 20, "the flyover should start down the course");
+assert(Math.abs(closingShot.z - parked.z) < 0.01 && closingShot.z < buddy.z, "the flyover should end behind the buddy");
+const ramp = launchShot(0.2, cineDuration("launch"), { x: 0, y: 6, z: 40 });
+const liftoff = launchShot(cineDuration("launch"), cineDuration("launch"), { x: 0, y: 6, z: 40 });
+assert(ramp.boarding && !liftoff.boarding && liftoff.y > ramp.y + 4, "the launch should board, then lift off");
+const cracked = collapseShot(cineDuration("collapse"), cineDuration("collapse"), buddy);
+assert(cracked.drop > 12 && cracked.y > buddy.y + 10, "the planet collapse should rise off the course");
+const skipped = skipCine({ kind: "flyover", t: 0.2, dur: 3.6 });
+assert(skipped.t === 3.6 && skipped.skipped, "a tap should skip the cinematic");
 const stride = 29;
 const ia = stride;
 const ib = ia + 1;

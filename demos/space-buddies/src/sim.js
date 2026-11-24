@@ -243,7 +243,7 @@ function knock(race, r, ix, iz, iy) {
   r.controlLock = Math.min(1.4, Math.max(r.controlLock, race.cfg.stunTime));
   r.knockCd = race.cfg.knockCooldown;
   r.sliding = 0;
-  race.events.push({ t: "bump", id: r.id, big: true });
+  race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
   if (r.isPlayer) race.shake = Math.max(race.shake, 0.72);
 }
 
@@ -952,17 +952,37 @@ function separate(race) {
   }
 }
 
+const TELEGRAPH = 0.55;
+
+function armHazard(race, r, hazard) {
+  if (hazard.armedAt == null) hazard.armedAt = race.time;
+  const age = race.time - hazard.armedAt;
+  hazard.glow = Math.max(hazard.glow || 0, Math.min(1, age / TELEGRAPH));
+  if (r.isPlayer && (race.player.warnT == null || hazard.armedAt < race.player.warnT)) race.player.warnT = hazard.armedAt;
+  return age >= TELEGRAPH;
+}
+
 function hazards(race, dt) {
   const cfg = race.cfg;
   for (const s of race.spinners) s.angle += s.spin * dt;
 
   for (const b of race.course.bumpers) {
+    b.glow = 0;
+    let crowded = false;
+    for (const r of race.racers) {
+      if (r.seated || r.eliminated) continue;
+      const dx = r.pos.x - b.x;
+      const dz = r.pos.z - b.z;
+      if (Math.hypot(dx, dz) < cfg.bumperRadius + 4.2 && Math.abs(r.pos.y - b.y) < 2.2) crowded = true;
+    }
+    if (!crowded) b.armedAt = null;
     for (const r of race.racers) {
       if (r.seated || r.bumpCd > 0 || r.invuln > 0) continue;
       const dx = r.pos.x - b.x;
       const dz = r.pos.z - b.z;
       const d = Math.hypot(dx, dz);
-      if (d < cfg.bumperRadius + 0.2 && Math.abs(r.pos.y - b.y) < 1.4) {
+      if (d < cfg.bumperRadius + 4.2 && Math.abs(r.pos.y - b.y) < 2.2) armHazard(race, r, b);
+      if (d < cfg.bumperRadius + 0.2 && Math.abs(r.pos.y - b.y) < 1.4 && (b.armedAt == null || race.time - b.armedAt >= TELEGRAPH)) {
         const nx = d > 0.05 ? dx / d : 1;
         const nz = d > 0.05 ? dz / d : 0;
         r.vel.x = nx * cfg.bumperPush;
@@ -973,13 +993,23 @@ function hazards(race, dt) {
         r.flail = 0.4;
         r.bumpCd = cfg.bumperCooldown;
         r.controlLock = Math.max(r.controlLock, 0.12);
-        race.events.push({ t: "bump", id: r.id, big: true });
+        race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
         if (r.isPlayer) race.shake = Math.max(race.shake, 0.28);
       }
     }
   }
 
   for (const s of race.spinners) {
+    s.glow = 0;
+    let close = false;
+    for (const r of race.racers) {
+      if (r.seated || r.eliminated) continue;
+      if (Math.hypot(r.pos.x - s.x, r.pos.z - s.z) < (s.len || cfg.spinnerLength) + 2.4 && Math.abs(r.pos.y - s.y) < 2.2) {
+        close = true;
+        armHazard(race, r, s);
+      }
+    }
+    if (!close) s.armedAt = null;
     const c = Math.cos(s.angle);
     const sn = Math.sin(s.angle);
     const arm = s.len || cfg.spinnerLength;
@@ -1003,6 +1033,10 @@ function hazards(race, dt) {
       const dx = r.pos.x - px;
       const dz = r.pos.z - pz;
       if (dx * dx + dz * dz > cfg.spinnerHit * cfg.spinnerHit) continue;
+      if (s.armedAt == null || race.time - s.armedAt < TELEGRAPH) {
+        armHazard(race, r, s);
+        continue;
+      }
       const tx = -sn;
       const tz = c;
       const side = Math.sign((r.pos.x - s.x) * tx + (r.pos.z - s.z) * tz) || 1;
@@ -1058,9 +1092,28 @@ function hazards(race, dt) {
   }
 
   for (const sw of race.sweepers) {
-    sw.x = sw.originX + Math.sin(race.time * sw.speed + sw.z) * sw.amp;
+    const nextX = sw.originX + Math.sin(race.time * sw.speed + sw.z) * sw.amp;
+    let threaten = false;
+    for (const r of race.racers) {
+      if (r.seated || r.eliminated) continue;
+      if (Math.abs(r.pos.z - sw.z) < 3.2 && Math.abs(r.pos.x - nextX) < sw.amp + 2) threaten = true;
+    }
+    if (threaten) {
+      if (sw.armedAt == null) sw.armedAt = race.time;
+      sw.glow = Math.min(1, (race.time - sw.armedAt) / TELEGRAPH);
+      if (race.time - sw.armedAt < TELEGRAPH) {
+        if (race.player && Math.abs(race.player.pos.z - sw.z) < 3.2) {
+          if (race.player.warnT == null || sw.armedAt < race.player.warnT) race.player.warnT = sw.armedAt;
+        }
+      } else sw.x = nextX;
+    } else {
+      sw.armedAt = null;
+      sw.glow = 0;
+      sw.x = nextX;
+    }
     for (const r of race.racers) {
       if (r.seated || r.invuln > 0 || r.knockCd > 0) continue;
+      if (sw.armedAt != null && race.time - sw.armedAt < TELEGRAPH) continue;
       if (Math.abs(r.pos.z - sw.z) > 1.7) continue;
       if (Math.abs(r.pos.x - sw.x) > sw.radius + 0.85) continue;
       const feet = r.pos.y - (sw.y - sw.height);
@@ -1086,7 +1139,10 @@ function hazards(race, dt) {
     for (const r of race.racers) {
       if (r.seated || r.invuln > 0) continue;
       const d = Math.hypot(r.pos.x - pdl.bobX, r.pos.z - pdl.bobZ);
+      if (d < pdl.radius + 2.4 && Math.abs(r.pos.y + 0.7 - pdl.bobY) < 2.2) armHazard(race, r, pdl);
+      else if (pdl.armedAt != null && d > pdl.radius + 3) pdl.armedAt = null;
       if (d < pdl.radius + 0.35 && Math.abs(r.pos.y + 0.7 - pdl.bobY) < 1) {
+        if (pdl.armedAt == null || race.time - pdl.armedAt < TELEGRAPH) continue;
         knock(race, r, swing * 9, 2, 3);
       }
     }
@@ -1102,7 +1158,9 @@ function enemies(race, dt) {
     for (const r of race.racers) {
       if (r.seated) continue;
       const d = Math.hypot(r.pos.x - roller.x, r.pos.z - roller.z);
+      if (d < roller.radius + 3.2 && Math.abs(r.pos.y - roller.y) < 2) armHazard(race, r, roller);
       if (d < roller.radius + 0.35 && Math.abs(r.pos.y - roller.y) < 1.4) {
+        if (roller.armedAt == null || race.time - roller.armedAt < TELEGRAPH) continue;
         const nx = d > 0.05 ? (r.pos.x - roller.x) / d : roller.dir;
         knock(race, r, nx * 10 + roller.dir * 4, 2, 4.5);
       }
@@ -1112,8 +1170,15 @@ function enemies(race, dt) {
   for (const h of race.hoppers) {
     h.t += dt;
     if (!h.hopping && h.t > h.period) {
+      if (h.armedAt == null) h.armedAt = race.time;
+      h.glow = Math.min(1, (race.time - h.armedAt) / TELEGRAPH);
+      if (race.player && race.player.warnT == null) race.player.warnT = h.armedAt;
+      if (race.time - h.armedAt < TELEGRAPH) {
+        h.glow = (race.time - h.armedAt) / TELEGRAPH;
+      } else {
       h.t = 0;
       h.hopping = true;
+      h.armedAt = race.time - TELEGRAPH;
       h.vy = 8;
       let tx = h.homeX + Math.sin(race.time) * 2.5;
       let tz = h.homeZ;
@@ -1132,6 +1197,7 @@ function enemies(race, dt) {
       const mag = Math.hypot(dx, dz) || 1;
       h.dirx = dx / mag;
       h.dirz = dz / mag;
+      }
     }
     if (h.hopping) {
       h.vy -= 18 * dt;
@@ -1144,7 +1210,9 @@ function enemies(race, dt) {
         for (const r of race.racers) {
           if (r.seated) continue;
           const d = Math.hypot(r.pos.x - h.x, r.pos.z - h.z);
+          if (d < h.radius + 2.8) armHazard(race, r, h);
           if (d < h.radius + 0.55 && Math.abs(r.pos.y - h.y) < 1.3) {
+            if (h.armedAt == null || race.time - h.armedAt < TELEGRAPH) continue;
             const nx = d > 0.05 ? (r.pos.x - h.x) / d : 1;
             knock(race, r, nx * 9, 3, 5);
           }
@@ -1316,7 +1384,7 @@ function shoveCrates(race) {
 
 function hazardAhead(race, r) {
   let best = null;
-  const groups = [race.course.bumpers, race.spinners, race.sweepers, race.pendulums];
+  const groups = [race.course.bumpers, race.spinners, race.sweepers, race.pendulums, race.rollers, race.hoppers];
   for (let g = 0; g < groups.length; g++) {
     const list = groups[g];
     if (!list) continue;
@@ -1335,7 +1403,7 @@ function notePlayerHits(race, from) {
   if (!race.feel) return;
   for (let i = from; i < race.events.length; i++) {
     const e = race.events[i];
-    if (e.t !== "bump" || e.id !== race.player.id) continue;
+    if (e.t !== "bump" || e.id !== race.player.id || !e.obstacle) continue;
     race.player.hitAt = race.time;
     const age = race.player.warnT == null ? null : race.time - race.player.warnT;
     if (isUnfair(age)) {

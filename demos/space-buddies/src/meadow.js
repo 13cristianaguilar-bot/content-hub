@@ -137,7 +137,7 @@ function scatter(scene, gltf, gradientMap, spots, override, wind) {
   }
   const shadow = new THREE.InstancedMesh(
     new THREE.CircleGeometry(1, 12),
-    new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.22, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.3, depthWrite: false }),
     spots.length
   );
   const dummyS = new THREE.Object3D();
@@ -150,6 +150,7 @@ function scatter(scene, gltf, gradientMap, spots, override, wind) {
   });
   shadow.instanceMatrix.needsUpdate = true;
   shadow.frustumCulled = false;
+  shadow.userData.blobShadow = true;
   scene.add(shadow);
 }
 
@@ -200,7 +201,7 @@ function candyBlobs(scene, spots, color, gradientMap) {
   const dummy = new THREE.Object3D();
   const shadow = new THREE.InstancedMesh(
     new THREE.CircleGeometry(1, 12),
-    new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.22, depthWrite: false }),
+    new THREE.MeshBasicMaterial({ color: 0x1e2440, transparent: true, opacity: 0.3, depthWrite: false }),
     spots.length
   );
   const dummyS = new THREE.Object3D();
@@ -218,6 +219,7 @@ function candyBlobs(scene, spots, color, gradientMap) {
   });
   mesh.instanceMatrix.needsUpdate = true;
   shadow.instanceMatrix.needsUpdate = true;
+  shadow.userData.blobShadow = true;
   scene.add(mesh, shadow);
 }
 const SKY_TINT = (name) => {

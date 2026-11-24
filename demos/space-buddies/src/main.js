@@ -742,6 +742,7 @@ function frame(now) {
   if (!frame.lastWall) frame.lastWall = now;
   if (now - frame.lastWall >= 500) {
     fps = frames / ((now - frame.lastWall) / 1000);
+    if (world.noteFps) world.noteFps(fps);
     frames = 0;
     frame.lastWall = now;
   }

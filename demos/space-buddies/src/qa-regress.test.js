@@ -111,4 +111,28 @@ const idle = { x: 0, z: 0, jump: false, dive: false, grab: false, holdJump: fals
 for (let i = 0; i < 40; i++) step(overlap, 1 / 60, idle);
 assert(overlap.player.pos.y > spot.low - 0.35, "fell through the lower pad under a higher overlap at y " + overlap.player.pos.y.toFixed(2));
 
+const bump = course.bumpers[0];
+const tel = createRace(course, resolveConfig({ quick: true, seed: 4, feel: true }), 4);
+tel.phase = "race";
+tel.player.useAI = false;
+tel.player.pos.x = bump.x;
+tel.player.pos.y = bump.y;
+tel.player.pos.z = bump.z;
+tel.player.grounded = true;
+tel.player.vel.x = 0;
+tel.player.vel.y = 0;
+tel.player.vel.z = 0;
+let earlyHit = false;
+for (let i = 0; i < 20; i++) {
+  step(tel, 1 / 60, idle);
+  if (tel.events.some((e) => e.t === "bump" && e.id === tel.player.id)) earlyHit = true;
+  tel.events.length = 0;
+}
+assert(!earlyHit, "a bumper hit before its telegraph");
+for (let i = 0; i < 50; i++) {
+  step(tel, 1 / 60, idle);
+  tel.events.length = 0;
+}
+assert(tel.feel.unfair === 0, "a telegraphed hit still counted as unfair, " + tel.feel.unfair);
+
 console.log("qa regression tests passed", "back", back.toFixed(2), "height", open.y.toFixed(2), "overlap y", overlap.player.pos.y.toFixed(2));

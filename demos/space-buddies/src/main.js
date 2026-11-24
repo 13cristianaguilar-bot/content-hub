@@ -6,7 +6,7 @@ import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
 import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
-import { hideControls, placeLabel } from "./place.js";
+import { hideControls, hudStatus, placeLabel } from "./place.js";
 import { botWish } from "./bot.js";
 
 const params = new URLSearchParams(location.search);
@@ -541,7 +541,12 @@ function updateHud(dt) {
   timerEl.classList.toggle("is-low", race.phase === "race" && remain <= 15);
 
   const placeText = placeLabel(race.player, race.racers);
-  if (placeEl.textContent !== placeText) placeEl.textContent = placeText;
+  if (placeText !== race.placeHold) {
+    race.placeHold = placeText;
+    race.placeHoldT = 0;
+  } else race.placeHoldT = (race.placeHoldT || 0) + dt;
+  if (!race.placeShown || race.placeHoldT > 0.4) race.placeShown = race.placeHold;
+  if (placeEl.textContent !== race.placeShown) placeEl.textContent = race.placeShown;
   const coinN = race.coins || 0;
   if (coinNum && coinNum.dataset.n !== String(coinN)) {
     coinNum.dataset.n = String(coinN);
@@ -568,7 +573,7 @@ function updateHud(dt) {
       if (id != null) dot.classList.add("is-new");
     }
   }
-  const seatText = "SEATS " + race.seatsFilled + "/8";
+  const seatText = hudStatus(race);
   if (seatsLabel.textContent !== seatText) seatsLabel.textContent = seatText;
   const last = race.seatsFilled === 7 && race.phase === "race";
   if (last && lastBanner.hidden && window.SBUI) SBUI.slam(lastBanner);
@@ -607,7 +612,7 @@ function updateHud(dt) {
   const showEnd = race.phase === "results";
   const aboard = document.getElementById("aboard");
   const waiting = started && race.player.seated && race.phase === "race";
-  controls.hidden = hideControls(race.phase, race.player.seated, started);
+  controls.hidden = hideControls(race.phase, race.player.seated, started, race.player.eliminated);
   if (aboard) {
     aboard.hidden = !waiting;
     const left = Math.max(0, cfg.seats - race.seatsFilled);
@@ -621,7 +626,7 @@ function updateHud(dt) {
     resultEl.classList.add("show");
     resultEl.classList.toggle("miss", kind === "missed" || kind === "out");
     resultEl.classList.toggle("win", kind === "qualified" || kind === "escaped");
-    resultKicker.textContent = "PLANET " + planet;
+    resultKicker.textContent = "PLANET " + planet + " · " + currentPlan().name;
     nextRoundBtn.hidden = kind !== "qualified";
     nextPlanetBtn.hidden = kind !== "escaped";
     againBtn.hidden = kind === "qualified" || kind === "escaped";
@@ -658,16 +663,11 @@ function updateHud(dt) {
       at: new Date().toISOString(),
     });
     fillPodium(race);
-    const clockTarget = race.time || 0;
-    let clockShown = 0;
-    const clockStep = Math.max(0.08, clockTarget / 18);
-    const countClock = () => {
-      if (!shownResult) return;
-      clockShown = Math.min(clockTarget, clockShown + clockStep);
-      resultTime.textContent = "TIME " + clock(clockShown) + " · " + (race.coins || 0) + " COINS · PLANETS " + career.planets;
-      if (clockShown < clockTarget) requestAnimationFrame(countClock);
-    };
-    countClock();
+    const ran = clock(race.time || 0);
+    const left = clock(Math.max(0, cfg.raceSeconds - (race.time || 0)));
+    const fell = (race.fallers || []).slice(-3).join(", ");
+    resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + (race.coins || 0) + " COINS · PLANET " + planet;
+    if (fell && kind === "out") resultSub.textContent = fell + " FELL";
   }
   if (!showEnd) shownResult = false;
 }

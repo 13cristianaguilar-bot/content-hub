@@ -1,8 +1,8 @@
 import { resolveConfig } from "./config.js";
 import { createCourse, floorsAt } from "./course.js";
-import { createRace, step } from "./sim.js";
+import { cameraAboveFloor, cameraFloor, createRace, step } from "./sim.js";
 import { isSnag, isUnfair } from "./feel.js";
-import { hideControls, placeLabel } from "./place.js";
+import { hideControls, hudStatus, placeLabel } from "./place.js";
 import { spectateFrame } from "./spectate.js";
 
 function assert(cond, message) {
@@ -34,6 +34,11 @@ assert(hideControls("race", true, true) === true, "seated race should hide contr
 assert(hideControls("launch", true, true) === true, "launch should hide controls");
 assert(hideControls("results", false, true) === true, "results should hide controls");
 assert(hideControls("race", false, true) === false, "a racing player should see controls");
+assert(hideControls("race", false, true, true) === true, "an eliminated racer should not see controls");
+assert(cameraFloor(null, 0, -11) === 0, "a long fall must keep the last floor, not the body");
+assert(cameraAboveFloor(-6, cameraFloor(null, 0, -11)) >= 1, "the fall camera dipped under the course");
+assert(hudStatus({ shipRound: false, kind: "gate", qualCount: 3, qualifyN: 12 }) === "QUAL 3/12", "gate rounds should not say SEATS 0/8");
+assert(hudStatus({ shipRound: true, seatsFilled: 2, cfg: { seats: 8 } }) === "SEATS 2/8", "ship rounds should count seats");
 assert(isSnag(8, 3, 0.8, false) === true, "a steered speed cut with no hit is a snag");
 assert(isSnag(8, 3, 0.8, true) === false, "a real hit is not a snag");
 assert(isSnag(8, 6, 0.8, false) === false, "a small slowdown is not a snag");
@@ -134,5 +139,29 @@ for (let i = 0; i < 50; i++) {
   tel.events.length = 0;
 }
 assert(tel.feel.unfair === 0, "a telegraphed hit still counted as unfair, " + tel.feel.unfair);
+
+const survival = createRace(course, resolveConfig({ quick: true, seed: 4 }), 4);
+survival.phase = "race";
+survival.kind = "survival";
+survival.qualifyN = 8;
+survival.player.pos.y = -40;
+survival.player.vel.y = -8;
+survival.player.grounded = false;
+step(survival, 1 / 60, idle);
+const alive = survival.racers.filter((r) => !r.eliminated).length;
+assert(survival.player.eliminated === true, "a 20 m survival drop respawned the player");
+assert(alive === 15, "survival still had " + alive + " racers after the drop");
+let extra = 0;
+for (const r of survival.racers) {
+  if (!r.isPlayer && !r.eliminated && extra < 7) {
+    r.eliminated = true;
+    extra++;
+  }
+}
+step(survival, 1 / 60, idle);
+const left = survival.racers.filter((r) => !r.eliminated).length;
+assert(left === 8, "survival did not shrink the field, alive " + left);
+assert(survival.phase === "results", "survival did not end when 8 remained");
+assert(survival.player.qualified === false, "the fallen player was marked qualified");
 
 console.log("qa regression tests passed", "back", back.toFixed(2), "height", open.y.toFixed(2), "overlap y", overlap.player.pos.y.toFixed(2));

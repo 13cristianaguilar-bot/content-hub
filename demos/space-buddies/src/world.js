@@ -3,7 +3,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
-import { cameraAboveFloor } from "./sim.js";
+import { cameraAboveFloor, cameraFloor } from "./sim.js";
 import { spectateFrame } from "./spectate.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
@@ -2100,7 +2100,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       camera.lookAt(lx, ly, lz);
       return;
     }
-    if (player.seated && race.phase === "race") {
+    if ((player.seated || player.eliminated) && race.phase === "race") {
       let lead = null;
       for (const r of race.racers) {
         if (r.seated || r.eliminated) continue;
@@ -2191,8 +2191,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const intro = race.phase === "countdown" ? 1 : 0;
     ty += intro * 2.2;
     tz -= intro * 2.4;
-    const floorY = groundAtSafe(player.pos.x, player.pos.z);
-    const floorBase = floorY == null ? player.pos.y : floorY;
+    const sampledFloor = groundAtSafe(player.pos.x, player.pos.z);
+    state.lastFloor = cameraFloor(sampledFloor, state.lastFloor, player.pos.y);
+    const floorBase = state.lastFloor;
     const fallingOff = player.vel.y < -1.5 && player.pos.y < floorBase - 0.6;
     if (fallingOff) {
       tx = player.pos.x + Math.sin(state.yaw) * 7;
@@ -2216,8 +2217,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     camera.position.x = damp(camera.position.x, tx, spring, dt);
     camera.position.y = damp(camera.position.y, ty, spring, dt);
     camera.position.z = damp(camera.position.z, tz, spring, dt);
-    const camFloor = groundAtSafe(player.pos.x, player.pos.z);
-    camera.position.y = cameraAboveFloor(camera.position.y, camFloor == null ? player.pos.y : camFloor);
+    const camFloor = groundAtSafe(camera.position.x, camera.position.z);
+    camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(camFloor, state.lastFloor, 0));
     camera.lookAt(player.pos.x, player.pos.y + 1.7, player.pos.z + Math.cos(state.yaw) * 5);
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }
@@ -2242,7 +2243,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       void race;
     } catch (err) { /* leave the solved camera */ }
     const floor = groundAtSafe(camera.position.x, camera.position.z);
-    if (floor != null) camera.position.y = cameraAboveFloor(camera.position.y, floor);
+    camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(floor, state.lastFloor, 0));
   }
 
   function fadePlayer(dist) {

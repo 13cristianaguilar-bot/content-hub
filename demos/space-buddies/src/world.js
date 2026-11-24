@@ -14,6 +14,7 @@ import { BUDDY_CLIPS, ROOT_LOCK, isRootPositionTrack, lockRootPosition } from ".
 const MODELS = {
   buddy: "assets/space_buddy_lowpoly.glb",
   bumper: "assets/models/obstacle_bumper.glb",
+  crumble: "assets/models/obstacle_crumble_tile.glb",
   spinner: "assets/models/obstacle_spinner.glb",
   pad: "assets/models/obstacle_jump_pad.glb",
   platform: "assets/models/obstacle_moving_platform.glb",
@@ -24,8 +25,8 @@ const MODELS = {
   hopper: "assets/models/enemy_hopper.glb",
   flyer: "assets/models/enemy_flyer.glb",
   geyser: "assets/models/hazard_geyser.glb",
-  sweeper: "assets/models/hazard_sweeper.glb",
-  pendulum: "assets/models/hazard_pendulum.glb",
+  sweeper: "assets/models/obstacle_sweeper.glb",
+  pendulum: "assets/models/obstacle_pendulum_hammer.glb",
 };
 
 const TOON_MAP = makeToonTexture();
@@ -207,6 +208,43 @@ function shipMat(src) {
   mat.opacity = 1;
   mat.side = THREE.FrontSide;
   return mat;
+}
+
+const AUTHORED = new Set(["bumper", "pad", "sweeper", "pendulum", "crumble"]);
+
+function dressAuthored(root) {
+  root.traverse((obj) => {
+    if (!obj.isMesh || !obj.material) return;
+    const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+    const glow = /Crack|Glow|Core/.test(obj.name || "");
+    const mat = new THREE.MeshToonMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      gradientMap: TOON_MAP,
+      emissive: glow ? new THREE.Color(0xff7a1a) : new THREE.Color(0x000000),
+      emissiveIntensity: glow ? 0.65 : 0,
+    });
+    obj.material = mat;
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+  });
+}
+
+function playClip(root, gltf, name, loop) {
+  const clip = (gltf.animations || []).find((item) => item.name === name);
+  if (!clip) return null;
+  const mixer = new THREE.AnimationMixer(root);
+  const action = mixer.clipAction(clip);
+  if (loop) action.setLoop(THREE.LoopRepeat, Infinity);
+  else {
+    action.setLoop(THREE.LoopOnce, 1);
+    action.clampWhenFinished = true;
+  }
+  action.play();
+  if (!loop) action.paused = true;
+  root.userData.mixer = mixer;
+  root.userData.action = action;
+  return action;
 }
 
 function convert(root, candy) {
@@ -482,6 +520,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
             const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
             obj.material = shipMat(src);
           });
+        } else if (AUTHORED.has(key)) {
+          dressAuthored(gltf.scene);
         } else if (key !== "buddy") {
           const candy = {
             bumper: 0xff5fa2,
@@ -755,7 +795,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     return obj;
   }
 
-  const bumperMeshes = course.bumpers.map((b) => placeProp(gltfs.bumper, b.x, b.y, b.z));
+  const bumperMeshes = course.bumpers.map((b) => {
+    const obj = placeProp(gltfs.bumper, b.x, b.y, b.z, 0, 1.1);
+    playClip(obj, gltfs.bumper, "pulse", false);
+    return obj;
+  });
   const telGeo = new THREE.RingGeometry(0.85, 1.15, 28);
   function telRing(x, y, z, scale) {
     const mesh = new THREE.Mesh(telGeo, new THREE.MeshBasicMaterial({
@@ -775,15 +819,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
   const bumperRings = course.bumpers.map((b) => telRing(b.x, b.y, b.z, 1.35));
   const padMeshes = course.pads.map((p) => {
-    if (p.zone === "meadow" && meadow.button) {
-      const obj = meadowProp(meadow.button, TOON_MAP, 0.42, false);
-      obj.position.x = p.x;
-      obj.position.z = p.z;
-      obj.position.y += p.y;
-      scene.add(obj);
-      return obj;
-    }
-    return placeProp(gltfs.pad, p.x, p.y, p.z);
+    const obj = placeProp(gltfs.pad, p.x, p.y, p.z, p.face || 0, 1);
+    playClip(obj, gltfs.pad, "boing", false);
+    return obj;
   });
   padMeshes.forEach((obj) => { obj.userData.base = obj.scale.x || 1; });
   const lavaDecals = [];
@@ -1075,38 +1113,37 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   });
 
   const pendMeshes = course.pendulums.map((p) => {
-    let bob;
-    if (p.zone === "canyon" && meadow.log && meadow.rockLarge) {
-      bob = new THREE.Group();
-      const handle = meadowProp(meadow.log, TOON_MAP, 0.48, true);
-      handle.rotation.z = Math.PI / 2;
-      const head = meadowProp(meadow.rockLarge, TOON_MAP, 0.72, true);
-      head.position.set(1.15, 0, 0);
-      head.traverse((node) => {
-        if (node.isMesh && node.material && node.material.color) node.material.color.set(0x2a2024);
-      });
-      bob.add(handle, head);
-    } else bob = cloneDrawn(gltfs.pendulum);
-    const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 6), new THREE.MeshToonMaterial({ color: 0x1e2440, gradientMap: TOON_MAP }));
-    scene.add(bob, rope);
-    return { bob, rope };
+    const group = cloneDrawn(gltfs.pendulum);
+    const scale = p.len / 4.3;
+    group.scale.setScalar(scale);
+    group.position.set(p.x, p.y - p.len, p.z);
+    group.userData.arm = group.getObjectByName("HammerArm");
+    scene.add(group);
+    return { group, arm: group.userData.arm };
   });
 
   const sweepMeshes = course.sweepers.map((s) => {
-    if ((s.zone === "meadow" || s.zone === "canyon") && meadow.saw) {
-      const group = meadowProp(meadow.saw, TOON_MAP, 0.3, true);
-      group.position.set(s.x, s.y + 0.85, s.z);
-      scene.add(group);
-      return group;
-    }
     const group = cloneDrawn(gltfs.sweeper);
-    const sc = s.scale || (s.full ? 1.15 : 1);
-    group.scale.set(sc, sc, sc);
-    const bar = group.getObjectByName("SweeperBar");
-    if (bar && bar.material && bar.material.color) bar.material.color.set(s.full ? 0xff7a1a : 0xff6b6b);
+    const span = (s.halfLen || 3.2) * 2;
+    const scale = span / 7.5;
+    group.scale.setScalar(scale);
+    group.position.set(s.x, s.y - 0.75 * scale, s.z);
+    playClip(group, gltfs.sweeper, "spin", true);
     scene.add(group);
     return group;
   });
+  for (const pad of course.floors) {
+    const chunk = course.chunks[pad.chunk];
+    if (!chunk || !chunk.fragile || !gltfs.crumble) continue;
+    const tile = cloneDrawn(gltfs.crumble);
+    tile.scale.setScalar((pad.rx * 2) / 2);
+    tile.position.set(pad.x, pad.y, pad.z);
+    tile.userData.baseY = pad.y;
+    tile.userData.crack = tile.getObjectByName("CrackCore");
+    scene.add(tile);
+    chunk.tile = tile;
+    if (chunk.mesh) chunk.mesh.visible = false;
+  }
   const spinnerRings = course.spinners.map((s) => telRing(s.x, s.y, s.z, (s.len || 1.6) * 0.7));
   const sweepRings = course.sweepers.map((s) => telRing(s.x, s.y, s.z, 1.5));
   const pendRings = course.pendulums.map((p) => telRing(p.x, p.y - p.len, p.z, 1.2));
@@ -1624,11 +1661,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (!mesh) continue;
       if (chunk.state === "gone") {
         mesh.visible = false;
+        if (chunk.tile) chunk.tile.visible = false;
         chunk.dirty = false;
         continue;
       }
-      mesh.visible = true;
-      mesh.material = chunk.state === "cracking" ? crackMat : terrainMat;
+      mesh.visible = !chunk.tile;
+      mesh.material = chunk.state === "cracking" ? crackMat : floorMat;
+      if (chunk.tile) {
+        const wobble = chunk.state === "cracking" ? Math.sin(race.time * 18 + chunk.jitter * 9) * 0.06 : 0;
+        chunk.tile.visible = chunk.state !== "gone";
+        chunk.tile.position.y = chunk.tile.userData.baseY + (chunk.fallY || 0) + wobble;
+        const crack = chunk.tile.userData.crack;
+        if (crack && crack.material) crack.material.emissiveIntensity = chunk.state === "cracking" ? 1 : 0.35;
+      }
       const wobble = chunk.state === "cracking" ? Math.sin(race.time * 18 + chunk.jitter * 9) * 0.045 : 0;
       mesh.position.y = (chunk.fallY || 0) + wobble;
       if (chunk.state === "falling" && chunk.dirty && !chunk.spawned) {
@@ -1710,16 +1755,46 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     for (let i = 0; i < race.pendulums.length; i++) {
       const p = race.pendulums[i];
       const vis = pendMeshes[i];
-      vis.bob.position.set(p.bobX, p.bobY, p.bobZ);
-      vis.rope.position.set((p.x + p.bobX) / 2, (p.y + p.bobY) / 2, p.z);
-      vis.rope.scale.y = p.len;
-      vis.rope.lookAt(p.bobX, p.bobY, p.bobZ);
+      const ang = Math.atan2(p.bobX - p.x, p.y - p.bobY);
+      if (vis.arm) vis.arm.rotation.z = ang;
     }
     for (let i = 0; i < race.sweepers.length; i++) {
       const s = race.sweepers[i];
-      const blade = s.zone === "meadow" || s.zone === "canyon";
-      sweepMeshes[i].position.set(s.x, s.y + (blade ? 0.75 : 0), s.z);
-      if (blade) sweepMeshes[i].rotation.z = race.time * 2.4;
+      const scale = sweepMeshes[i].scale.x || 1;
+      sweepMeshes[i].position.set(s.x, s.y - 0.75 * scale, s.z);
+      if (sweepMeshes[i].userData.mixer) sweepMeshes[i].userData.mixer.update(dt);
+    }
+    for (let i = 0; i < bumperMeshes.length; i++) {
+      const mesh = bumperMeshes[i];
+      const bumper = course.bumpers[i];
+      const action = mesh.userData.action;
+      if (mesh.userData.mixer) mesh.userData.mixer.update(dt);
+      if (!action || !bumper) continue;
+      let hit = false;
+      for (const racer of race.racers) {
+        if (racer.flail < 0.15) continue;
+        if (Math.hypot(racer.pos.x - bumper.x, racer.pos.z - bumper.z) < cfg.bumperRadius + 0.4) hit = true;
+      }
+      if (hit && !mesh.userData.pulsed) {
+        action.reset();
+        action.paused = false;
+        action.play();
+        mesh.userData.pulsed = true;
+      }
+      if (!hit) mesh.userData.pulsed = false;
+    }
+    for (let i = 0; i < padMeshes.length; i++) {
+      const mesh = padMeshes[i];
+      const pad = course.pads[i];
+      if (mesh.userData.mixer) mesh.userData.mixer.update(dt);
+      const action = mesh.userData.action;
+      if (action && pad && pad.pulse > 0.2 && !mesh.userData.boing) {
+        action.reset();
+        action.paused = false;
+        action.play();
+        mesh.userData.boing = true;
+      }
+      if (pad && pad.pulse <= 0.05) mesh.userData.boing = false;
     }
     for (let i = 0; i < race.rollers.length; i++) {
       const r = race.rollers[i];

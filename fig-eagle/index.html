@@ -15,7 +15,7 @@
 <style>
 :root{
   --bg:#f7f6f3;--card:#ffffff;--ink:#000000;--muted:#242424;
-  --teal:#2c7b7a;--good:#37ca37;--bad:#e93d3d;--track:#f0f0f0;
+  --teal:#2c7b7a;--good:#37ca37;--bad:#e93d3d;--calm:#188bf6;--track:#f0f0f0;
   --line:rgba(44,123,122,.28);
   --serif:Fraunces,Georgia,"Times New Roman",serif;
   --sans:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;
@@ -30,22 +30,43 @@ a{color:var(--teal);text-decoration:none}
 :focus-visible{outline:2px solid var(--teal);outline-offset:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .app{position:relative;z-index:1;height:100dvh;display:flex;flex-direction:column;border-top:4px solid var(--teal)}
+.app:before{content:"";pointer-events:none;position:fixed;inset:0;z-index:4;box-shadow:inset 0 0 0 0 transparent}
+.app.mode-alert{border-top-color:var(--bad)}
+.app.mode-alert:before{box-shadow:inset 0 0 90px rgba(233,61,61,.38);animation:vignette 1.1s ease-in-out infinite}
+.app.mode-calm{border-top-color:var(--calm)}
+.app.mode-calm:before{box-shadow:inset 0 0 70px rgba(24,139,246,.2)}
+.app.mode-win{border-top-color:var(--good)}
+.app.mode-win:before{box-shadow:inset 0 0 80px rgba(55,202,55,.32)}
+@keyframes vignette{50%{box-shadow:inset 0 0 28px rgba(233,61,61,.18)}}
 .top{flex:none;display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap;min-height:44px;padding:6px 12px;background:#fff;border-bottom:1px solid var(--line)}
 .logo{height:40px;width:auto;display:block}
 .livepill{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:3px 8px;background:rgba(55,202,55,.16);color:#146814;border:1px solid var(--good);font-size:10px;font-weight:800;letter-spacing:.12em}
 .livepill.wait,.livepill.stale,.livepill.down{background:rgba(233,61,61,.12);color:var(--bad);border-color:var(--bad)}
 .gdot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
+.livepill.live .gdot{animation:blink 1.3s ease-in-out infinite}
+@keyframes blink{50%{opacity:.25}}
 .sysline{font-size:13px;font-weight:700}
 .asof,.next,.clock{color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
-.clock{margin-left:auto;font-variant-numeric:tabular-nums}
-.nav{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border-bottom:1px solid var(--line)}
-.nav button{border:1px solid var(--teal);background:#fff;color:var(--teal);border-radius:999px;min-height:34px;padding:0 14px;font-weight:700;font-size:13px}
-.nav button.on{color:#fff;background:#000;border-color:#000}
-.helpbtn{margin-left:auto;width:34px;padding:0}
+.timer{margin-left:auto;text-align:right;min-width:108px}
+.timer b{display:block;font-family:var(--serif);font-weight:650;font-size:26px;line-height:.9;font-variant-numeric:tabular-nums}
+.timer span{display:block;font-size:10px;font-weight:800;letter-spacing:.04em;color:var(--muted);max-width:220px}
+.nav{flex:none;display:flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.pad{border:1px solid #000;background:#fff;color:#000;border-radius:12px;min-height:44px;padding:0 12px;font-weight:800;font-size:12px;letter-spacing:.04em;box-shadow:0 3px 0 #000;transform:translateY(0)}
+.pad:hover{transform:translateY(1px);box-shadow:0 2px 0 #000}
+.pad:active{transform:translateY(3px);box-shadow:0 0 0 #000}
+.pad.on,.nav button.on{color:#fff;background:#000;border-color:#000}
+.pads{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.status{flex:none;display:flex;align-items:center;gap:8px;padding:7px 12px;font-weight:800;font-size:14px;border-bottom:1px solid var(--line);background:#fff}
+.status svg{width:18px;height:18px;flex:none}
+.status .txt{min-width:0}
+.status.alert{background:rgba(233,61,61,.12);color:#8d1c1c;border-color:var(--bad)}
+.status.calm{background:rgba(24,139,246,.12);color:#0b4f93;border-color:var(--calm)}
+.status.win{background:rgba(55,202,55,.16);color:#146814;border-color:var(--good)}
+.status.wait{color:var(--muted)}
 .stage{flex:1;min-height:0;position:relative}
 .stage.scroll{overflow:auto}
 .stage.lock{overflow:hidden}
-.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.12fr) minmax(300px,.9fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
+.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(260px,.78fr) minmax(340px,1.22fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
 .col{min-width:0;min-height:0;display:flex;flex-direction:column;gap:8px}
 .play:has(.banner){gap:6px;padding:6px 10px}
 .play:has(.banner) .col{gap:6px}
@@ -66,6 +87,8 @@ a{color:var(--teal);text-decoration:none}
 .sub{color:var(--muted);font-size:12px}
 .meter{height:14px;border-radius:99px;background:var(--track);overflow:hidden;margin-top:6px;border:1px solid var(--line)}
 .meter i{display:block;height:100%;width:0;background:var(--good);transition:width .6s ease}
+.meter.bad i{background:var(--bad);animation:pacepulse 1.15s ease-in-out infinite}
+@keyframes pacepulse{50%{transform:scaleX(1.02);filter:brightness(1.25)}}
 .meter.bad{background:rgba(233,61,61,.16)}
 .meter.full{background:var(--good)}
 .mrow{display:flex;justify-content:space-between;gap:8px;margin-top:4px;font-size:12px;font-weight:700}
@@ -86,12 +109,15 @@ a{color:var(--teal);text-decoration:none}
 .wtick.promise span{left:50%;transform:translateX(-50%)}
 .wtick.goal span{right:0}
 .race{display:flex;flex-direction:column;min-height:0;height:100%}
-.pass{font-family:var(--serif);font-weight:560;font-size:clamp(22px,3.2vh,32px);line-height:1.05;margin-top:2px}
+.pass{font-family:var(--serif);font-weight:560;font-size:clamp(26px,4vh,40px);line-height:1.02;margin-top:2px}
 .shead,.srow{display:grid;grid-template-columns:28px minmax(0,1.4fr) auto auto;gap:8px;align-items:center}
 .shead{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:0 8px}
 .slist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:6px}
-.srow{padding:6px 8px;border-radius:10px}
-.srow.you{background:rgba(233,61,61,.1);box-shadow:inset 3px 0 0 var(--bad)}
+.srow{padding:6px 8px;border-radius:10px;opacity:.62}
+.srow.near{opacity:1;background:rgba(24,139,246,.08);box-shadow:inset 3px 0 0 var(--calm)}
+.srow.moved{animation:rowpop .45s ease}
+@keyframes rowpop{from{transform:translateX(-10px)}to{transform:none}}
+.srow.you{background:rgba(233,61,61,.1);box-shadow:inset 3px 0 0 var(--bad);opacity:1}
 .srow.you.ahead{background:rgba(55,202,55,.14);box-shadow:inset 3px 0 0 var(--good)}
 .rk{font-variant-numeric:tabular-nums;font-weight:800;display:flex;align-items:center;gap:2px}
 .arr{width:10px;height:10px}
@@ -121,7 +147,9 @@ a{color:var(--teal);text-decoration:none}
 .score{height:100%;min-height:0;display:flex;flex-direction:column;padding:10px 12px;gap:8px}
 .scoretop{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .tabs{display:flex;gap:4px}
-.tab{border:1px solid var(--teal);background:#fff;color:var(--teal);border-radius:999px;min-height:34px;padding:0 12px;font-weight:800;font-size:13px}
+.tab{border:1px solid #000;background:#fff;color:#000;border-radius:12px;min-height:44px;padding:0 12px;font-weight:800;font-size:13px;box-shadow:0 3px 0 #000}
+.tab:hover{transform:translateY(1px);box-shadow:0 2px 0 #000}
+.tab:active{transform:translateY(3px);box-shadow:0 0 0 #000}
 .tab.on{color:#fff;background:#000;border-color:#000}
 .behind{margin:0 12px 12px;border:1px solid var(--line);border-radius:16px;background:#fff}
 .behind summary{cursor:pointer;padding:12px 14px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:12px;color:var(--teal);list-style:none}
@@ -130,24 +158,38 @@ a{color:var(--teal);text-decoration:none}
 .src-list li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid rgba(44,123,122,.15);font-size:13px}
 .fail{max-width:520px;margin:8vh auto;text-align:center}
 .fail h2{font-family:var(--serif);font-weight:560;font-size:32px}
-.btn{border:0;border-radius:999px;min-height:40px;padding:0 16px;font-weight:800;background:#000;color:#fff}
+.btn{border:1px solid #000;border-radius:12px;min-height:44px;padding:0 18px;font-weight:800;background:#000;color:#fff;box-shadow:0 4px 0 #146814}
+.btn:hover{transform:translateY(1px);box-shadow:0 3px 0 #146814}
+.btn:active{transform:translateY(4px);box-shadow:0 0 0 #146814}
+.btn.ghost{background:#fff;color:#000;box-shadow:0 4px 0 #000}
 .banner{padding:8px 10px;border-radius:10px;background:rgba(55,202,55,.16);color:#146814;border:1px solid var(--good);font-weight:800}
 .guide{position:fixed;inset:0;z-index:30;background:rgba(247,246,243,.9);display:grid;place-items:center;padding:16px}
 .guide article{width:min(560px,100%);background:#fff;border:2px solid var(--teal);border-radius:18px;padding:18px}
 .guide h2{font-family:var(--serif);font-weight:560;font-size:34px;margin:4px 0}
 .guide p{margin-top:8px;color:var(--muted)}
-.guide .row{display:flex;justify-content:flex-end;margin-top:14px}
+.guide .row{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.brief b.big{font-family:var(--serif);font-size:42px;line-height:.9;display:block}
+.coach{position:absolute;left:10px;right:10px;bottom:10px;z-index:8;background:#fff;border:2px solid #000;border-radius:16px;box-shadow:0 6px 0 #000;padding:10px 12px;max-width:560px}
+.coach p{margin-top:4px}
+.coach .row{display:flex;justify-content:flex-end;gap:8px;margin-top:8px}
 footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
 .emptyviz{min-height:80px;display:grid;place-items:center;color:var(--muted);border:1px dashed var(--line);border-radius:12px}
 @media (max-width:820px){
-  .top{padding:calc(6px + env(safe-area-inset-top)) 10px 6px}
-  .logo{height:32px}
-  .clock{margin-left:0}
-  .play{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr) auto;gap:6px;padding:6px}
+  .sysline,.asof,.next,.top>a{display:none}
+  .top{padding:calc(4px + env(safe-area-inset-top)) 10px 4px;flex-wrap:nowrap;align-items:center}
+  .logo{height:26px}
+  .timer{margin-left:auto;min-width:0}
+  .timer b{font-size:20px}
+  .timer span{max-width:46vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pads{margin-left:0}
+  .pad,.tab{min-height:36px;padding:0 8px;font-size:11px}
+  .status{padding:5px 10px;font-size:13px}
+  .play{grid-template-columns:1fr;grid-template-rows:minmax(188px,1.25fr) auto auto;gap:6px;padding:6px}
   .money,.long,.race{grid-column:1}
-  .money{grid-row:1}
-  .race{grid-row:2;height:auto}
+  .race{grid-row:1;height:auto;overflow:hidden}
+  .money{grid-row:2}
   .long{grid-row:3}
+  .pass{font-size:18px;margin:0}
   .play .extra,.play .fine,.play .wtrack{display:none}
   .play .card{padding:6px 8px}
   .play .sub,.play .assume,#goal-line{font-size:11px;margin-top:2px}
@@ -158,13 +200,23 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .chip b{font-size:18px}
   .line-in{flex-wrap:nowrap}
   .line-in input{width:72px;padding:4px 6px}
-  .pass{font-size:18px;margin:0}
   .srow{padding:2px 6px}
-  .slist{gap:2px;margin-top:2px}
+  .slist{gap:2px;margin-top:2px;overflow:hidden}
   .split{grid-template-columns:1fr}
   .shead{display:none}
   .score{height:auto}
-  .slist{overflow:visible}
+}
+@media (max-height:840px) and (min-width:821px){
+  .top{padding:4px 12px}
+  .nav,.status{padding:4px 12px}
+  .dollars{font-size:48px}
+  .who h2{font-size:24px}
+  .play{gap:6px;padding:6px 8px}
+  .play .card{padding:8px 10px}
+  .chip{padding:4px 6px}
+  .chip b{font-size:20px}
+  .meter{height:10px;margin-top:4px}
+  .wtrack{margin-bottom:16px}
 }
 @media (max-height:720px){
   .dollars{font-size:36px}
@@ -176,9 +228,10 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
 @media (max-width:820px) and (max-height:740px){
   .top{padding:4px 8px;gap:2px 8px;min-height:0}
   .nav{padding:4px 8px}
-  .nav button,.helpbtn{min-height:28px}
+  .pad,.tab{min-height:32px;box-shadow:0 2px 0 #000}
   .play{gap:4px;padding:4px}
-  .play .meter{display:none}
+  .play .meter,.play .long{display:none}
+  .play{grid-template-rows:minmax(176px,1.35fr) auto}
   .play .card{padding:4px 6px}
   .who h2{font-size:18px}
   .dollars{font-size:28px}
@@ -200,14 +253,20 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     <span class="asof" id="asof">As of no data</span>
     <span class="next" id="next">Reading</span>
     <a href="../command-center/">Command Center</a>
-    <div class="clock"><span id="clock">CT</span></div>
+    <div class="timer" id="timerbox"><b id="timer">--:--</b><span id="timer-sub">Dial clock</span></div>
   </header>
   <nav class="nav" aria-label="Game">
-    <button type="button" data-view="play" class="on">Play</button>
-    <button type="button" data-view="board">Scoreboard</button>
-    <button type="button" data-view="stats">Stats</button>
-    <button type="button" class="helpbtn" data-help aria-label="The incentive">?</button>
+    <button type="button" class="pad on" data-view="play">PLAY</button>
+    <button type="button" class="pad" data-view="board">SCOREBOARD</button>
+    <button type="button" class="pad" data-view="stats">STATS</button>
+    <div class="pads">
+      <button type="button" class="pad" data-shift id="shiftbtn">START SHIFT</button>
+      <button type="button" class="pad" data-refresh>REFRESH</button>
+      <button type="button" class="pad" data-sound id="soundbtn" aria-pressed="false">SOUND OFF</button>
+      <button type="button" class="pad" data-help>GUIDE</button>
+    </div>
   </nav>
+  <div class="status wait" id="status" role="status"><span id="status-ico"></span><span class="txt" id="status-text">Reading the feed. Missing numbers stay blank.</span></div>
   <main class="stage lock" id="stage">
     <p class="sub" style="padding:16px">Reading the live feed from GHL. Missing numbers stay blank. Nothing here is filled in as zero.</p>
   </main>
@@ -216,7 +275,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
 (function () {
   var SB_URL = 'https://udkbnlpnfyjuwlstfxhr.supabase.co';
   var SB_KEY = 'sb_publishable_lwmiHRxf1Hdf2Z4b_aJkjg_ck7u1ms4';
-  var REFRESH_MS = 5 * 60 * 1000;
+  var REFRESH_MS = 60 * 1000;
   var BLOCKS = [[11, 13], [15, 18]];
   var PACE_RATE = 30;
   var BONUS = 50;
@@ -226,14 +285,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var AVG_KEY = 'fe-avg-deal';
   var GOAL_KEY = 'fe-income-goal';
   var sb = null;
-  var state = { row: null, fetchedAt: null, error: '', stale: false, period: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, rendered: false, fineOpen: false, guide: false, animated: false };
+  var SOUND_KEY = 'fe-sound';
+  var audioCtx = null;
+  var state = { row: null, fetchedAt: null, error: '', stale: false, period: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1 };
   try {
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'stats' || hash === 'pace' || hash === 'trend') state.view = 'stats';
     if (hash === 'board') state.view = 'board';
     if (hash === 'today' || hash === 'week' || hash === 'month') { state.view = 'board'; state.period = hash; }
-    state.guide = localStorage.getItem(GUIDE_KEY) !== '1';
-  } catch (e) { state.guide = true; }
+  } catch (e) {}
 
   function num(v) {
     if (typeof v === 'number') return isFinite(v) ? v : null;
@@ -438,7 +498,152 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (!row.data || typeof row.data !== 'object' || Array.isArray(row.data)) throw new Error('The scoreboard payload is empty.');
     return row;
   }
+  function dayKey() {
+    var y = ctYMD(new Date().toISOString());
+    return y ? y.key : '';
+  }
+  function storeGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function storeSet(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+  function shiftOn() { return storeGet('fe-shift-' + dayKey()) === '1'; }
+  function coachDone() { return storeGet('fe-coach-' + dayKey()) === '1'; }
+  function debriefDone() { return storeGet('fe-debrief-' + dayKey()) === '1'; }
+  function soundOn() { return storeGet(SOUND_KEY) === '1'; }
   function kpiOf(data) { return num(data && data.targets && data.targets.sets); }
+  function ctParts(date) {
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(date);
+      var o = {};
+      parts.forEach(function (p) { o[p.type] = p.value; });
+      var h = Number(o.hour), m = Number(o.minute), s = Number(o.second);
+      if (!isFinite(h) || !isFinite(m) || !isFinite(s)) return null;
+      return { h: h, m: m, s: s, sec: h * 3600 + m * 60 + s };
+    } catch (e) { return null; }
+  }
+  function fmtDur(sec) {
+    if (sec == null || !isFinite(sec)) return 'no data';
+    sec = Math.max(0, Math.floor(sec));
+    var h = Math.floor(sec / 3600);
+    var m = Math.floor((sec % 3600) / 60);
+    var s = sec % 60;
+    if (h > 0) return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+    return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+  }
+  function schedule(parts) {
+    if (!parts) return { phase: 'unknown', label: 'no data', sub: 'Clock unavailable', remain: null, toClose: null, block: '' };
+    var t = parts.sec;
+    var close = 18 * 3600;
+    var blocks = [{ start: 11 * 3600, end: 13 * 3600, name: '11 AM to 1 PM' }, { start: 15 * 3600, end: 18 * 3600, name: '3 PM to 6 PM' }];
+    if (t >= close) return { phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '' };
+    var i;
+    for (i = 0; i < blocks.length; i++) {
+      if (t >= blocks[i].start && t < blocks[i].end) {
+        return { phase: 'in', label: fmtDur(close - t), sub: 'Until 6 PM. Now ' + blocks[i].name, remain: close - t, toClose: close - t, block: blocks[i].name };
+      }
+    }
+    var next = null;
+    for (i = 0; i < blocks.length; i++) if (t < blocks[i].start) { next = blocks[i]; break; }
+    if (!next) return { phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '' };
+    return { phase: 'wait', label: fmtDur(next.start - t), sub: 'Next block ' + next.name, remain: next.start - t, toClose: close - t, block: next.name };
+  }
+  function modeOf(data, row, sched) {
+    if (!data) return 'wait';
+    var kpi = kpiOf(data);
+    var sets = row ? num(row.sets) : null;
+    if (kpi != null && sets != null && sets + 0.05 >= kpi) return 'win';
+    if (sched && sched.phase === 'over') return 'calm';
+    var delta = num(data.computed && data.computed.dials_vs_pace);
+    var behind = delta != null && delta < -0.05;
+    var table = onTable(data, row);
+    var money = table && table.dollars != null && table.dollars > 0.5;
+    var late = sched && sched.toClose != null && sched.toClose > 0 && sched.toClose <= 3600;
+    if (behind || (money && late)) return 'alert';
+    return 'calm';
+  }
+  function statusText(data, row, sched, mode) {
+    if (state.paused) return 'Shift paused. The clock is still running.';
+    if (!data) return state.error ? state.error : 'Reading the feed. Missing numbers stay blank.';
+    var table = onTable(data, row);
+    var delta = num(data.computed && data.computed.dials_vs_pace);
+    var sets = row ? num(row.sets) : null;
+    if (mode === 'win') return 'KPI is met. Bonus earned ' + (sets == null ? 'no data' : fmtMoney(sets * BONUS)) + '. Protect the lead.';
+    if (mode === 'alert') {
+      var bits = [];
+      if (delta != null && delta < -0.05) bits.push('Behind pace: ' + fmtCount(Math.abs(delta)) + ' dials.');
+      if (table && table.dollars != null && table.dollars > 0.5) bits.push(fmtMoney(table.dollars) + ' on the table.');
+      if (!bits.length) bits.push('Under an hour left.');
+      bits.push('Dial now.');
+      return bits.join(' ');
+    }
+    if (sched && sched.phase === 'over') return 'Blocks are over. Read the debrief, then set tomorrow.';
+    if (sched && sched.phase === 'wait') return 'Next block is ' + (sched.block || 'no data') + '. Be at the dialer when it opens.';
+    if (delta == null) return 'Pace: no data. ' + (table && table.note ? table.note : '');
+    if (Math.abs(delta) < 0.05) return 'On pace. ' + (table && table.dollars > 0.5 ? (fmtMoney(table.dollars) + ' still pays before 6 PM.') : 'Hold the block.');
+    if (delta > 0) return 'Ahead by ' + fmtCount(delta) + ' dials. ' + (table && table.note ? table.note : 'Keep the block.');
+    return (table && table.note) || 'Stay on the block.';
+  }
+  function modeIcon(mode) {
+    if (mode === 'alert') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 3.4 2.7 20.2h18.6L12 3.4z"/><path fill="currentColor" d="M11 9.2h2v5.2h-2zM11 16.2h2v2h-2z"/></svg>';
+    if (mode === 'win') return '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" d="M5 12.5l4.2 4.2L19 7"/></svg>';
+    return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>';
+  }
+  function ensureAudio() {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    if (!audioCtx) audioCtx = new AC();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function blip(freq, when, dur, type, gainV) {
+    if (!audioCtx) return;
+    var o = audioCtx.createOscillator();
+    var g = audioCtx.createGain();
+    o.type = type || 'square';
+    o.frequency.setValueAtTime(freq, when);
+    g.gain.setValueAtTime(Math.max(0.0001, gainV), when);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start(when); o.stop(when + dur + 0.02);
+  }
+  function playClick() {
+    if (!soundOn()) return;
+    var c = ensureAudio(); if (!c) return;
+    blip(240, c.currentTime, 0.045, 'square', 0.04);
+  }
+  function playCoin() {
+    if (!soundOn()) return;
+    var c = ensureAudio(); if (!c) return;
+    blip(880, c.currentTime, 0.08, 'square', 0.05);
+    blip(1320, c.currentTime + 0.09, 0.12, 'square', 0.05);
+  }
+  function playFanfare() {
+    if (!soundOn()) return;
+    var c = ensureAudio(); if (!c) return;
+    [523, 659, 784, 1046].forEach(function (f, i) { blip(f, c.currentTime + i * 0.11, 0.12, 'square', 0.045); });
+  }
+  function playSiren() {
+    if (!soundOn()) return;
+    var c = ensureAudio(); if (!c) return;
+    blip(640, c.currentTime, 0.16, 'sawtooth', 0.035);
+    blip(420, c.currentTime + 0.18, 0.16, 'sawtooth', 0.035);
+  }
+  function playTick() {
+    if (!soundOn()) return;
+    var c = ensureAudio(); if (!c) return;
+    blip(1480, c.currentTime, 0.025, 'square', 0.025);
+  }
+  function noteMoney(data) {
+    if (!data) return;
+    var row = findMe(data, 'today');
+    var sets = row ? num(row.sets) : null;
+    var earned = sets == null ? null : sets * BONUS;
+    var kpi = kpiOf(data);
+    if (state.seenEarned != null && earned != null && earned > state.seenEarned + 0.5) playCoin();
+    state.seenEarned = earned;
+    if (soundOn() && kpi != null && sets != null && sets + 0.05 >= kpi && storeGet('fe-fanfare-' + dayKey()) !== '1') {
+      playFanfare();
+      storeSet('fe-fanfare-' + dayKey(), '1');
+    }
+  }
   function dayOpen(now) { return now != null && now < 18; }
   function moneyEl(n) {
     var v = num(n);
@@ -559,7 +764,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var map = {};
     list.forEach(function (row, i) { if (row && row.name) map[String(row.name).trim().toLowerCase()] = i + 1; });
     try { localStorage.setItem(key, JSON.stringify(map)); } catch (e) {}
-    return (prev && typeof prev === 'object' && !Array.isArray(prev)) ? prev : null;
+    state.rankPrev = (prev && typeof prev === 'object' && !Array.isArray(prev)) ? prev : null;
+    return state.rankPrev;
   }
   function arrowSvg(prev, name, rank) {
     if (!prev) return '';
@@ -616,8 +822,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var gap = gapLine(list, meName(data));
     var prev = arrowsFor('today', list);
     var move = table.note;
-    return '<section class="play"><div class="col">' + levelBanner(lvl, textOr(c.level_name)) +
-      '<section class="card"><p class="kicker">The incentive</p><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div>' +
+    return '<section class="play"><div class="col money">' + levelBanner(lvl, textOr(c.level_name)) +
+      '<section class="card" data-spot="earned"><p class="kicker">The incentive</p><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div>' +
       '<p class="kicker">Earned today</p><p class="dollars ' + earnedClass + '">' + (earned == null ? 'no data' : moneyEl(earned)) + '</p>' +
       '<p class="sub">Bonus earned, commission paid when deals close.</p><p class="sub extra">' + (lvl == null ? 'Money is the score.' : ('Level ' + fmtCount(lvl) + ' ' + textOr(c.level_name) + '. Money is the score.')) + '</p>' +
       (fill == null ? '' : '<div class="meter ' + meterClass + '" role="img" aria-label="Bonus earned against today\'s KPI"><i data-fill="' + fill.toFixed(2) + '"></i></div>') +
@@ -629,7 +835,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       '<section class="card"><div class="line-in"><label for="avg-deal">Avg deal cash</label><input id="avg-deal" inputmode="decimal" placeholder="Blank" value="' + (avg == null ? '' : esc(String(avg))) + '" aria-label="Average deal cash collected, an assumption">' +
       '<label for="month-goal">Month goal</label><input id="month-goal" inputmode="decimal" placeholder="Blank" value="' + (goalSet == null ? '' : esc(String(goalSet))) + '" aria-label="Personal monthly income goal"></div>' +
       '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section></div>' +
-      '<section class="card race"><p class="kicker">Competition' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Today, ranked by sets, then dials. Dollars show on your row only.</p>' +
+      '<section class="card race" data-spot="race"><p class="kicker">The race' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Neighborhood view. The name above you is the next win. Today, ranked by sets, then dials. Dollars show on your row only.</p>' +
       '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, kpi, true) + '</div></section>' +
       '<section class="card bars long"><p class="kicker">Week bonus</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + '. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + '.</span></p>' + weekBar +
       '<p class="kicker">Month</p>' + monthHtml + '<p class="src fine">$50 bonus per outbound set. 5% of outbound cash and 3% of intercept cash are commission, not included here. Source GHL. ' + esc(asOfText(state.row)) + '</p></section></section>';
@@ -637,12 +843,17 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function boardRows(data, list, prev, target, dollars) {
     var me = meName(data);
     if (!list.length) return '<p class="sub">No setters in this period.</p>';
+    var meIdx = -1;
+    list.forEach(function (row, i) { if (sameName(row && row.name, me)) meIdx = i; });
     return list.map(function (row, i) {
       var you = sameName(row && row.name, me);
       var sets = num(row && row.sets);
       var cls = toneSets(sets, target);
       var pay = (you && dollars && sets != null) ? (' ' + fmtMoney(sets * BONUS)) : '';
-      return '<div class="srow' + (you ? ' you' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + (pay ? (' <b class="' + (sets > 0.5 ? 'good' : 'bad') + '">' + esc(pay) + '</b>') : '') + '</span><span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
+      var old = prev ? num(prev[String(row && row.name || '').trim().toLowerCase()]) : null;
+      var moved = old != null && old !== i + 1;
+      var near = meIdx >= 0 && Math.abs(i - meIdx) <= 1;
+      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + (pay ? (' <b class="' + (sets > 0.5 ? 'good' : 'bad') + '">' + esc(pay) + '</b>') : '') + '</span><span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
     }).join('');
   }
   function boardHtml(data) {
@@ -734,10 +945,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var hit = sets != null && promise != null && sets + 0.05 >= promise;
     var days = data && data.my_daily;
     var kpi = kpiOf(data);
+    var todayKey = ctYMD(data && data.generated_iso);
+    var openNow = dayOpen(num(data && data.now_hour));
     var dayHtml = !Array.isArray(days) ? '<p class="sub">Your days: no data</p>' : '<ul class="days">' + days.map(function (d) {
       var s = num(d && d.sets);
       var cls = toneSets(s, kpi);
-      return '<li><b>' + esc(shortDay(d && d.day)) + '</b><span class="' + cls + '">' + esc(fmtCount(s)) + ' sets</span><span>' + esc(fmtCount(d && d.dials)) + ' dials</span><span>' + esc(s == null || kpi == null ? '' : fmtMoney(Math.max(0, kpi - s) * BONUS) + ' short') + '</span></li>';
+      var gapMoney = (s == null || kpi == null) ? null : Math.max(0, kpi - s) * BONUS;
+      var isToday = todayKey && String(d && d.day || '') === todayKey.key;
+      var tag = gapMoney == null || gapMoney < 0.5 ? '' : (isToday && openNow ? (fmtMoney(gapMoney) + ' on the table') : (fmtMoney(gapMoney) + ' short'));
+      return '<li><b>' + esc(shortDay(d && d.day)) + '</b><span class="' + cls + '">' + esc(fmtCount(s)) + ' sets</span><span>' + esc(fmtCount(d && d.dials)) + ' dials</span><span>' + esc(tag) + '</span></li>';
     }).join('') + '</ul>';
     return '<section class="panel"><p class="kicker">Week</p><h2>Sets against Promise and Goal</h2><p class="caption ' + (hit ? 'good' : 'bad') + '">' + esc((sets == null ? 'Sets: no data' : fmtCount(sets) + ' sets, ' + fmtMoney(sets == null ? null : sets * BONUS)) + '. Promise ' + (promise == null ? 'no data' : fmtCount(promise)) + '. Goal ' + (goal == null ? 'no data' : fmtCount(goal)) + '.') + '</p>' + dayHtml + '<p class="src">A day is green at the daily KPI and red under it. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
   }
@@ -781,17 +997,75 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     return '<details class="behind" id="fine"' + (state.fineOpen ? ' open' : '') + '><summary>How this board counts</summary><div class="inn"><p>Sets are inferred from bookings after a setter\'s call. Talk time includes voicemails. Source GHL, refreshed hourly during dial blocks.</p><p class="sub">Bonus math is $50 times outbound sets. Opportunity lost is $50 for each set short of the daily KPI on past days in the feed. Commission percents are the pay plan. They are not added unless you type an average deal size, and then only the 5% outbound figure, labeled as an assumption.</p>' + (meMissing(data) ? '<p class="sub">Feed name: no data. This board is Cristian\'s.</p>' : '') + countHtml + '</div></details><footer class="site">Fig &amp; Eagle Command Center. Read only. <a href="../command-center/">Command Center</a></footer>';
   }
   function guideHtml() {
-    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 bonus. The daily KPI is the sets target in the feed. Three sets is $150. Green means the money is earned, still on the table, or you are ahead. Red means it is behind, missed, or already lost.</p><p>Commission is separate: 5% of cash collected on outbound, and 3% on intercept. This board does not know cash collected. Type an average deal size to see the 5% outbound upside. That number is an assumption. Intercept sets are not in the feed, so the 3% is not estimated.</p><p>The board ranks the team by sets, then dials. Your dollar figure is yours alone. The pass line is the sets between you and the person above. Opportunity lost adds $50 for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
+    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 bonus. The daily KPI is the sets target in the feed. Three sets is $150. Green means the money is earned, still on the table, or you are ahead. Red means it is behind, missed, or already lost.</p><p>Commission is separate: 5% of cash collected on outbound, and 3% on intercept. This board does not know cash collected. Type an average deal size to see the 5% outbound upside. That number is an assumption. Intercept sets are not in the feed, so the 3% is not estimated.</p><p>The board ranks the team by sets, then dials. Your dollar figure is yours alone. The pass line is the sets between you and the person above. The highlighted rows are that neighborhood. Opportunity lost adds $50 for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open. Sound stays off until you tap SOUND ON.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
   }
   function failHtml() {
     return '<section class="card fail"><p class="kicker">Feed</p><h2>The scoreboard did not load</h2><p class="sub">No numbers on this page until the read succeeds. Nothing here is filled in as zero.</p><p class="bad">' + esc(state.error || 'The read failed.') + '</p><button type="button" class="btn" data-retry>Try again</button></section>';
   }
+  function briefHtml(data, row, sched, gap) {
+    var kpi = kpiOf(data);
+    var sets = row ? num(row.sets) : null;
+    var pot = kpi == null ? null : kpi * BONUS;
+    var earned = sets == null ? null : sets * BONUS;
+    var table = onTable(data, row);
+    return '<div class="guide" id="brief" role="dialog" aria-labelledby="brief-title"><article class="brief"><p class="kicker">Scorecard of the day</p><h2 id="brief-title">' + esc(meName(data)) + '</h2><b class="big ' + (earned != null && earned > 0.5 ? 'good' : 'bad') + '">' + esc(earned == null ? 'no data' : fmtMoney(earned)) + '</b><p>Target ' + esc(pot == null ? 'no data' : fmtMoney(pot)) + (kpi == null ? '' : (' at ' + fmtCount(kpi) + ' sets')) + '. On the table ' + esc(table.dollars == null ? 'no data' : fmtMoney(table.dollars)) + '.</p><p>Time: ' + esc(sched.label) + '. ' + esc(sched.sub) + '.</p><p class="' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p>' + esc(table.note || 'One plan: catch the name above you.') + '</p><div class="row"><button type="button" class="btn ghost" data-shift="skip">Skip brief</button><button type="button" class="btn" data-shift="start">START SHIFT</button></div></article></div>';
+  }
+  function debriefHtml(data, row) {
+    var sets = row ? num(row.sets) : null;
+    var earned = sets == null ? null : sets * BONUS;
+    var lost = lostInfo(data);
+    var prev = state.rankPrev;
+    var me = meName(data).trim().toLowerCase();
+    var list = ranked((periodOf(data, 'today') || {}).rows || []);
+    var nowRank = null;
+    list.forEach(function (r, i) { if (sameName(r && r.name, meName(data))) nowRank = i + 1; });
+    var rankLine = 'No earlier rank is saved on this browser.';
+    if (prev && nowRank != null) {
+      var old = num(prev[me]);
+      if (old == null) rankLine = 'You were not on the last saved board.';
+      else if (old === nowRank) rankLine = 'Rank held at ' + nowRank + '.';
+      else if (old > nowRank) rankLine = 'Rank up, from ' + old + ' to ' + nowRank + '.';
+      else rankLine = 'Rank down, from ' + old + ' to ' + nowRank + '.';
+    }
+    var kpi = kpiOf(data);
+    var feedNow = num(data && data.now_hour);
+    var todayLine = '';
+    if (sets != null && kpi != null && (feedNow == null || dayOpen(feedNow))) {
+      var short = Math.max(0, kpi - sets);
+      todayLine = short < 0.05
+        ? 'Today met the KPI in the latest feed.'
+        : ('Today is ' + fmtCount(short) + ' sets short of the KPI, ' + fmtMoney(short * BONUS) + '. The feed still has the day open, so this is not added to opportunity lost.');
+    }
+    return '<div class="guide" id="debrief" role="dialog" aria-labelledby="debrief-title"><article><p class="kicker">End of day</p><h2 id="debrief-title">Debrief</h2><b class="big ' + (earned != null && earned > 0.5 ? 'good' : 'bad') + '">' + esc(earned == null ? 'no data' : fmtMoney(earned)) + '</b><p>Bonus earned, commission paid when deals close.</p><p class="' + (lost.dollars > 0.5 ? 'bad' : '') + '">Opportunity lost ' + esc(lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '. ' + esc(lost.note) + '</p>' + (todayLine ? ('<p>' + esc(todayLine) + '</p>') : '') + '<p>' + esc(rankLine) + '</p><div class="row"><button type="button" class="btn" data-debrief="close">See the board</button></div></article></div>';
+  }
+  function coachHtml(gap) {
+    var steps = [
+      'The race. ' + gap.text + ' That gap is the win. The highlighted rows are the neighborhood: the name above you, you, and the name below.',
+      'The score. Green is money earned or still on the table. Red is money missed or a pace you are behind. Dollars stay on your row only.',
+      'The order. The banner is the one next action. The clock is the time left in today\'s blocks, or the time until the next block.'
+    ];
+    var i = Math.max(0, Math.min(steps.length - 1, state.coachStep || 0));
+    var last = i === steps.length - 1;
+    return '<div class="coach" id="coach" role="dialog" aria-labelledby="coach-title"><p class="kicker" id="coach-title">Step ' + (i + 1) + ' of ' + steps.length + '</p><p>' + esc(steps[i]) + '</p><div class="row"><button type="button" class="btn ghost" data-coach="skip">Skip</button><button type="button" class="btn" data-coach="next">' + (last ? 'Done' : 'Next') + '</button></div></div>';
+  }
+  function pauseHtml(sched) {
+    return '<div class="guide" id="pause" role="dialog" aria-labelledby="pause-title"><article><p class="kicker">Paused</p><h2 id="pause-title">Shift paused</h2><b class="big">' + esc(sched.label) + '</b><p>Time is still running. ' + esc(sched.sub) + '. Alerts stay quiet until you resume.</p><div class="row"><button type="button" class="btn" data-shift="resume">RESUME</button></div></article></div>';
+  }
   function stageHtml() {
-    if (!state.row) return failHtml();
+    if (!state.row) return failHtml() + (state.guide ? guideHtml() : '');
     var data = state.row.data;
     var row = findMe(data, 'today');
     var body = state.view === 'board' ? boardHtml(data) : (state.view === 'stats' ? statsHtml(data, row) : playHtml(data, row));
-    return body + (state.guide ? guideHtml() : '');
+    var sched = schedule(ctParts(new Date()));
+    var list = ranked((periodOf(data, 'today') || {}).rows || []);
+    var gap = gapLine(list, meName(data));
+    var extra = '';
+    if (sched.phase === 'over' && !debriefDone()) extra += debriefHtml(data, row);
+    else if (sched.phase !== 'over' && !shiftOn()) extra += briefHtml(data, row, sched, gap);
+    else if (!state.paused && state.view === 'play' && shiftOn() && !coachDone()) extra += coachHtml(gap);
+    if (state.paused) extra += pauseHtml(sched);
+    if (state.guide) extra += guideHtml();
+    return body + extra;
   }
   function paintNav() {
     document.querySelectorAll('[data-view]').forEach(function (btn) { btn.classList.toggle('on', btn.getAttribute('data-view') === state.view); });
@@ -823,9 +1097,39 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     requestAnimationFrame(frame);
   }
+  function paintLive() {
+    var parts = ctParts(new Date());
+    var sched = schedule(parts);
+    var timer = document.getElementById('timer');
+    var sub = document.getElementById('timer-sub');
+    if (timer) timer.textContent = sched.label === 'no data' ? 'no data' : sched.label;
+    if (sub) sub.textContent = sched.sub + (parts ? (' · ' + ctClock(new Date())) : '');
+    var data = state.row && state.row.data;
+    var row = data ? findMe(data, 'today') : null;
+    var mode = modeOf(data, row, sched);
+    var app = document.querySelector('.app');
+    if (app) app.className = 'app' + (mode === 'wait' ? '' : (' mode-' + mode));
+    var bar = document.getElementById('status');
+    if (bar) {
+      bar.className = 'status ' + mode;
+      var ico = document.getElementById('status-ico');
+      var txt = document.getElementById('status-text');
+      if (ico) ico.innerHTML = modeIcon(mode);
+      if (txt) txt.textContent = statusText(data, row, sched, mode);
+    }
+    var shift = document.getElementById('shiftbtn');
+    if (shift) shift.textContent = state.paused ? 'RESUME' : (shiftOn() ? 'PAUSE' : 'START SHIFT');
+    var sound = document.getElementById('soundbtn');
+    if (sound) { var on = soundOn(); sound.textContent = on ? 'SOUND ON' : 'SOUND OFF'; sound.setAttribute('aria-pressed', on ? 'true' : 'false'); sound.classList.toggle('on', on); }
+    if (soundOn() && !state.paused && sched.toClose > 0 && sched.toClose <= 600 && sched.phase === 'in' && parts && parts.sec !== state.lastTick) {
+      state.lastTick = parts.sec;
+      playTick();
+    }
+    if (mode === 'alert' && state.lastMode !== 'alert' && soundOn() && !state.paused && state.booted) playSiren();
+    state.lastMode = mode;
+  }
   function paintChrome() {
-    var clock = document.getElementById('clock');
-    if (clock) clock.textContent = ctClock(new Date());
+    paintLive();
     var mode = !state.booted ? 'wait' : (state.row && state.stale ? 'stale' : (state.row ? 'live' : 'down'));
     var pill = document.getElementById('livepill');
     if (pill) { pill.className = 'livepill ' + mode; var t = document.getElementById('pillt'); if (t) t.textContent = mode === 'live' ? 'LIVE' : mode === 'stale' ? 'STALE' : mode === 'down' ? 'DOWN' : 'WAIT'; }
@@ -882,7 +1186,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       state.fetchedAt = new Date().toISOString();
       state.nextAt = Date.now() + REFRESH_MS;
       state.booted = true;
+      var fresh = findMe(state.row.data, 'today');
+      var freshSets = fresh ? num(fresh.sets) : null;
+      var freshEarned = freshSets == null ? null : freshSets * BONUS;
+      if (state.seenEarned == null || (freshEarned != null && state.seenEarned != null && freshEarned > state.seenEarned + 0.5)) state.animated = false;
       render();
+      noteMoney(state.row.data);
     } catch (err) {
       state.error = errText(err);
       state.stale = !!state.row;
@@ -905,7 +1214,32 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (next && next !== state.period) { state.period = next; state.view = 'board'; render(); }
       return;
     }
+    if (e.target.closest && e.target.closest('[data-refresh]')) { playClick(); load(); return; }
+    if (e.target.closest && e.target.closest('[data-sound]')) {
+      var turningOn = !soundOn();
+      storeSet(SOUND_KEY, turningOn ? '1' : '0');
+      if (turningOn) { state.lastMode = ''; ensureAudio(); if (state.row) noteMoney(state.row.data); }
+      paintLive();
+      return;
+    }
+    var shift = e.target.closest && e.target.closest('[data-shift]');
+    if (shift) {
+      playClick();
+      var act = shift.getAttribute('data-shift') || '';
+      if (state.paused || act === 'resume') { state.paused = false; render(); return; }
+      if (!shiftOn() || act === 'start' || act === 'skip') { storeSet('fe-shift-' + dayKey(), '1'); state.coachStep = 0; state.paused = false; render(); return; }
+      state.paused = true; render(); return;
+    }
+    if (e.target.closest && e.target.closest('[data-coach="skip"]')) { playClick(); storeSet('fe-coach-' + dayKey(), '1'); render(); return; }
+    if (e.target.closest && e.target.closest('[data-coach="next"]')) {
+      playClick();
+      state.coachStep = (state.coachStep || 0) + 1;
+      if (state.coachStep >= 3) storeSet('fe-coach-' + dayKey(), '1');
+      render(); return;
+    }
+    if (e.target.closest && e.target.closest('[data-debrief]')) { playClick(); storeSet('fe-debrief-' + dayKey(), '1'); render(); return; }
     if (e.target.closest && e.target.closest('[data-help]')) {
+      playClick();
       state.guide = true;
       if (!document.getElementById('guide')) document.getElementById('stage').insertAdjacentHTML('beforeend', guideHtml());
       return;

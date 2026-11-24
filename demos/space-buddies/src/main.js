@@ -7,7 +7,8 @@ import { createAudio } from "./audio.js";
 import { cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
 import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
-import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
+import { hideControls, hudStatus, placeLabel, resultBoard, showCoach } from "./place.js";
+import { detailOn, loadAccess, saveAccess } from "./look.js";
 import { botWish } from "./bot.js";
 import { cineDuration, skipCine } from "./cine.js";
 
@@ -184,6 +185,7 @@ function boot() {
 const modelPromise = boot().then((w) => {
   world = w;
   world.resize();
+  paintAccess();
 });
 const audioPromise = audio.load();
 
@@ -483,6 +485,32 @@ function paintAudio() {
     muteRow.className = "sb-btn sb-btn--block " + (prefs.muted ? "sb-btn--secondary" : "sb-btn--danger");
   }
   if (window.SBUI) window.SBUI.setHapticsMuted(!prefs.haptics);
+  paintAccess();
+}
+
+function paintAccess() {
+  const prefs = loadAccess(localStorage);
+  const weak = world ? world.weak : false;
+  const low = detailOn(prefs, weak);
+  const detailBtn = document.getElementById("set-detail");
+  const outlineBtn = document.getElementById("set-outline");
+  const shakeBtn = document.getElementById("set-shake");
+  if (detailBtn) {
+    detailBtn.textContent = low ? "LOW DETAIL ON" : "LOW DETAIL OFF";
+    detailBtn.className = "sb-btn sb-btn--block " + (low ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  if (outlineBtn) {
+    outlineBtn.textContent = prefs.safeOutline ? "SAFE OUTLINE ON" : "SAFE OUTLINE OFF";
+    outlineBtn.className = "sb-btn sb-btn--block " + (prefs.safeOutline ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  if (shakeBtn) {
+    shakeBtn.textContent = prefs.reduceShake ? "LESS SHAKE ON" : "LESS SHAKE OFF";
+    shakeBtn.className = "sb-btn sb-btn--block " + (prefs.reduceShake ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  if (!world) return;
+  if (world.setDetail) world.setDetail(low);
+  if (world.setSafeOutline) world.setSafeOutline(prefs.safeOutline);
+  if (world.setReduceShake) world.setReduceShake(prefs.reduceShake);
 }
 
 function openSettings(e) {
@@ -545,6 +573,31 @@ document.getElementById("set-haptics").addEventListener("pointerdown", (e) => {
   const prefs = audio.prefs();
   audio.setHaptics(!prefs.haptics);
   paintAudio();
+});
+document.getElementById("set-detail").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const prefs = loadAccess(localStorage);
+  const low = detailOn(prefs, world ? world.weak : false);
+  prefs.detail = low ? "full" : "low";
+  saveAccess(localStorage, prefs);
+  paintAccess();
+});
+document.getElementById("set-outline").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const prefs = loadAccess(localStorage);
+  prefs.safeOutline = !prefs.safeOutline;
+  saveAccess(localStorage, prefs);
+  paintAccess();
+});
+document.getElementById("set-shake").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const prefs = loadAccess(localStorage);
+  prefs.reduceShake = !prefs.reduceShake;
+  saveAccess(localStorage, prefs);
+  paintAccess();
 });
 document.getElementById("set-mute").addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -857,6 +910,24 @@ function updateHud(dt) {
       at: new Date().toISOString(),
     });
     fillPodium(race);
+    const board = resultBoard(race);
+    const placeLine = document.getElementById("result-place");
+    if (placeLine) placeLine.textContent = "YOU PLACED " + board.place;
+    const names = document.getElementById("result-names");
+    if (names) {
+      names.replaceChildren();
+      for (const name of board.names) {
+        const li = document.createElement("li");
+        li.textContent = name;
+        if (name === "YOU") li.className = "you";
+        names.appendChild(li);
+      }
+      if (board.extra) {
+        const li = document.createElement("li");
+        li.textContent = "+" + board.extra;
+        names.appendChild(li);
+      }
+    }
     const ran = clock(race.time || 0);
     const left = clock(Math.max(0, (race.roundSeconds || cfg.raceSeconds) - (race.time || 0)));
     const fell = (race.fallers || []).slice(-3).join(", ");

@@ -10,6 +10,7 @@ import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
 import { BUDDY_CLIPS, ROOT_LOCK, isRootPositionTrack, lockRootPosition } from "./clips.js";
+import { planetLook } from "./look.js";
 import { collapseShot, flyoverShot, launchShot } from "./cine.js";
 
 const MODELS = {
@@ -350,6 +351,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   scene.add(hemi, sun, sun.target);
   let lightTier = highTier ? 2 : 0;
   let lowFps = 0;
+  let lowDetail = !!weakGpu;
+  const outlineMats = [];
 
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(380, 18, 12),
@@ -361,16 +364,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         top: { value: new THREE.Color(0x5cc8ff) },
         mid: { value: new THREE.Color(0x9fe8ff) },
         bot: { value: new THREE.Color(0x8ed7b0) },
+        sunGain: { value: 1 },
       },
       vertexShader: "varying vec3 vP; void main(){ vP=position; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; void main(){ vec3 n=normalize(vP); float h=n.y; vec3 c=mix(bot, mid, smoothstep(-0.15, 0.0, h)); c=mix(c, top, smoothstep(-0.02, 0.16, h)); float sun=smoothstep(0.14, 0.0, length(n.xz-vec2(-0.32,0.12))); c+=vec3(1.0,0.86,0.48)*sun*smoothstep(0.0,0.2,h); gl_FragColor=vec4(c,1.0); }",
+      fragmentShader: "varying vec3 vP; uniform vec3 top; uniform vec3 mid; uniform vec3 bot; uniform float sunGain; void main(){ vec3 n=normalize(vP); float h=n.y; vec3 c=mix(bot, mid, smoothstep(-0.15, 0.0, h)); c=mix(c, top, smoothstep(-0.02, 0.16, h)); float sun=smoothstep(0.14, 0.0, length(n.xz-vec2(-0.32,0.12))); c+=vec3(1.0,0.86,0.48)*sun*smoothstep(0.0,0.2,h)*sunGain; gl_FragColor=vec4(c,1.0); }",
     })
   );
   sky.userData.skipCam = true;
   scene.add(sky);
   const heavens = new THREE.Group();
   const starPositions = [];
-  for (let i = 0; i < 180; i++) {
+  for (let i = 0; i < 520; i++) {
     const theta = Math.random() * Math.PI * 2;
     const phi = Math.acos(Math.random() * 0.65 + 0.15);
     const radius = 260;
@@ -444,12 +448,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
   heavens.userData.skipCam = true;
   scene.add(heavens);
-  const planetSky = [
-    { top: new THREE.Color(0x5cc8ff), mid: new THREE.Color(0xb8f0ff), bot: new THREE.Color(0x7fd88a) },
-    { top: new THREE.Color(0x6678f2), mid: new THREE.Color(0xffc4ea), bot: new THREE.Color(0xd9d4ff) },
-    { top: new THREE.Color(0x241536), mid: new THREE.Color(0x6d52c8), bot: new THREE.Color(0x3a2458) },
-  ];
   const skyScratch = { top: new THREE.Color(), mid: new THREE.Color(), bot: new THREE.Color() };
+  const palScratch = { top: new THREE.Color(), mid: new THREE.Color(), bot: new THREE.Color() };
   const distantGroups = [new THREE.Group(), new THREE.Group(), new THREE.Group()];
   const scenic = new THREE.Group();
   scenic.userData.skipCam = true;
@@ -1165,7 +1165,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (node.isMesh) meshes.push(node);
     });
     for (const node of meshes) {
-      const shell = new THREE.Mesh(node.geometry, new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide }));
+      const shellMat = new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide });
+      outlineMats.push(shellMat);
+      const shell = new THREE.Mesh(node.geometry, shellMat);
       shell.userData.hull = true;
       shell.castShadow = false;
       shell.scale.setScalar(1 + (amount || 0.04));
@@ -1538,6 +1540,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   const state = {
     yaw: 0,
+    reduceShake: false,
     pitch: cfg.defaultPitch,
     autoWait: 0,
     portrait: true,
@@ -1585,6 +1588,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   function burst(x, y, z, color, gentle) {
+    if (lowDetail) return;
     for (const bit of confetti) {
       if (bit.alive) continue;
       bit.alive = true;
@@ -2033,7 +2037,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
     }
 
-    if ((race.popConfetti || (race.phase === "results" && race.result === "escaped")) && !confettiOn) {
+    if (!lowDetail && (race.popConfetti || (race.phase === "results" && race.result === "escaped")) && !confettiOn) {
       confettiOn = true;
       race.popConfetti = 0;
       const p = visuals[0].group;
@@ -2094,14 +2098,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
     }
     const skyNow = zoneSky(race.zoneId || "meadow");
-    const pal = planetSky[(state.planet - 1) % planetSky.length];
-    skyScratch.top.setHex(skyNow.top).lerp(pal.top, 0.62);
-    skyScratch.mid.setHex(skyNow.mid).lerp(pal.mid, 0.62);
-    skyScratch.bot.setHex(skyNow.bot || skyNow.mid).lerp(pal.bot, 0.62);
+    const pal = planetLook(state.planet);
+    const night = state.planet === 3;
+    const mix = night ? 0.96 : 0.62;
+    palScratch.top.setHex(pal.top);
+    palScratch.mid.setHex(pal.mid);
+    palScratch.bot.setHex(pal.bot);
+    skyScratch.top.setHex(skyNow.top).lerp(palScratch.top, mix);
+    skyScratch.mid.setHex(skyNow.mid).lerp(palScratch.mid, mix);
+    skyScratch.bot.setHex(skyNow.bot || skyNow.mid).lerp(palScratch.bot, mix);
     sky.material.uniforms.top.value.copy(skyScratch.top);
     sky.material.uniforms.mid.value.copy(skyScratch.mid);
     sky.material.uniforms.bot.value.copy(skyScratch.bot);
-    scene.fog.color.setHex(skyNow.fog);
+    if (sky.material.uniforms.sunGain) sky.material.uniforms.sunGain.value = night ? 0 : 1;
+    scene.fog.color.setHex(night ? pal.fog : skyNow.fog);
     scene.fog.near = Math.max(58, skyNow.near);
     scene.fog.far = skyNow.far;
     scenic.position.x = -camera.position.x * 0.05;
@@ -2128,10 +2138,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     sky.position.copy(camera.position);
     heavens.position.copy(camera.position);
     planet.rotation.y = (race.time || 0) * 0.08;
-    const night = state.planet === 3 || race.zoneId === "canyon" || race.zoneId === "climb";
-    stars.material.opacity = state.planet === 3 ? 0.9 : night ? 0.4 : 0.14;
-    puffMat.color.setHex(state.planet === 3 ? 0x6a588c : state.planet === 2 ? 0xffe4f6 : 0xffffff);
-    puffMat.opacity = state.planet === 3 ? 0.45 : 0.92;
+    const starNight = state.planet === 3 || race.zoneId === "canyon" || race.zoneId === "climb";
+    stars.material.opacity = state.planet === 3 ? 1 : starNight ? 0.4 : 0.14;
+    stars.material.size = state.planet === 3 ? 3.4 : 2.2;
+    planet.visible = state.planet !== 3 && !lowDetail;
+    planetRing.visible = planet.visible;
+    puffMat.color.setHex(state.planet === 3 ? 0x12182c : state.planet === 2 ? 0xffe4f6 : 0xffffff);
+    puffMat.opacity = state.planet === 3 ? 0.0 : 0.92;
+    for (const puff of cloudPuffs) puff.visible = state.planet !== 3 && !lowDetail;
     for (let i = 0; i < cloudPuffs.length; i++) cloudPuffs[i].position.x += Math.sin((race.time || 0) * 0.2 + i) * 0.03;
     for (let i = 0; i < flags.length; i++) flags[i].rotation.y = Math.sin((race.time || 0) * 2.2 + i) * 0.45;
     for (let i = 0; i < spectatorShips.length; i++) spectatorShips[i].position.x += Math.sin((race.time || 0) * 0.3 + i) * 0.02;
@@ -2501,7 +2515,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     tx = solved.x;
     ty = cameraAboveFloor(solved.y, floorBase);
     tz = solved.z;
-    const sh = (race.shake || 0) * 0.18;
+    const sh = (race.shake || 0) * 0.18 * (state.reduceShake ? 0.12 : 1);
     if (sh > 0.01 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       tx += (Math.random() - 0.5) * sh;
       ty += (Math.random() - 0.5) * sh * 0.5;
@@ -2734,19 +2748,32 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     },
     applyLook,
     showPlanetHazards,
-    setTheme(planet) {
-      state.planet = Math.max(1, Math.min(3, planet || 1));
-      distantGroups.forEach((group, i) => { group.visible = i === state.planet - 1; });
-      const themes = [
-        { sky: 0xc7f0ff, ground: 0x7dcc62, sun: 0xfff3c4 },
-        { sky: 0xffc2a1, ground: 0xc45a32, sun: 0xffe0b0 },
-        { sky: 0xb7d6ff, ground: 0x6aa0d8, sun: 0xf4f7ff },
-      ];
-      const t = themes[(Math.max(1, planet) - 1) % themes.length];
-      hemi.color.set(t.sky);
-      hemi.groundColor.set(t.ground);
-      sun.color.set(t.sun);
+    setTheme(n) {
+      state.planet = Math.max(1, Math.min(3, n || 1));
+      distantGroups.forEach((group, i) => { group.visible = !lowDetail && i === state.planet - 1; });
+      const look = planetLook(state.planet);
+      const night = state.planet === 3;
+      hemi.color.setHex(look.hemi);
+      hemi.groundColor.setHex(look.ground);
+      hemi.intensity = night ? 0.22 : 0.6;
+      sun.color.setHex(look.sun);
+      sun.intensity = night ? 0.32 : 1.15;
+      scenic.visible = !lowDetail;
+      for (const shiplet of spectatorShips) shiplet.visible = !lowDetail;
     },
+    get weak() { return weakGpu; },
+    setDetail(on) {
+      lowDetail = !!on;
+      scenic.visible = !lowDetail;
+      distantGroups.forEach((group, i) => { group.visible = !lowDetail && i === state.planet - 1; });
+      for (const shiplet of spectatorShips) shiplet.visible = !lowDetail;
+      for (const puff of cloudPuffs) puff.visible = state.planet !== 3 && !lowDetail;
+    },
+    setSafeOutline(on) {
+      const color = on ? 0xffe14a : 0x1e2440;
+      for (const mat of outlineMats) mat.color.setHex(color);
+    },
+    setReduceShake(on) { state.reduceShake = !!on; },
     setPost(on) { postOn = !!on && !weakGpu; },
     setDpr(next) {
       dpr = next;

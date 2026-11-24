@@ -24,6 +24,19 @@ export function showCoach(phase, seated, zoneId, time, auto, paused) {
   return phase === "race" && zoneId === "meadow" && time < 8;
 }
 
+export function resultBoard(race) {
+  const list = (race && race.racers) || [];
+  const made = list.filter((r) => r && (r.qualified || r.seated));
+  made.sort((a, b) => (b.pos.z || 0) - (a.pos.z || 0));
+  const names = made.slice(0, 8).map((r) => (r.isPlayer ? "YOU" : "BUDDY"));
+  return {
+    place: placeLabel(race && race.player, list),
+    names,
+    count: made.length,
+    extra: Math.max(0, made.length - names.length),
+  };
+}
+
 export function placeLabel(player, racers) {
   if (player && player.seated && player.seatIndex >= 0) return "SEAT " + (player.seatIndex + 1);
   let ahead = 0;

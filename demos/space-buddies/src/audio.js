@@ -30,6 +30,11 @@ const SFX = {
   last: ["sfx_last_seat_alert", 0.8],
   crack: ["sfx_ground_crack", 0.75],
   escaped: ["jingle_escaped", 0.85],
+  checkpoint: ["sfx_checkpoint", 0.7],
+  tick: ["sfx_timer_warning", 0.6],
+  tickFinal: ["sfx_timer_warning_final", 0.7],
+  pauseOpen: ["ui_pause_open", 0.55],
+  pauseClose: ["ui_pause_close", 0.55],
 };
 
 const DUCK = { qualify: true, go: true, launch: true, eliminated: true, escaped: true };

@@ -1,13 +1,13 @@
 import { COLORS, resolveConfig } from "./config.js";
-import { createCourse, groundAt, courseScale } from "./course.js";
+import { createCourse, groundAt, courseScale, solidStart } from "./course.js";
 import { recordRun } from "./board.js";
 import { createRace, paceCollapse, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
-import { cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
+import { audioAudible, cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
 import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
-import { hideControls, hudStatus, placeLabel, resultBoard, showCoach } from "./place.js";
+import { hideControls, hudStatus, placeLabel, resultBoard, resultReason, showCoach } from "./place.js";
 import { detailOn, loadAccess, saveAccess } from "./look.js";
 import { botWish } from "./bot.js";
 import { cineDuration, skipCine } from "./cine.js";
@@ -85,13 +85,13 @@ const PLANS = [
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
   ],
   [
-    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, seconds: 54, startZ: Z(176), finishZ: Z(258), gate: gate(258, 3.3, 5.5) },
+    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, seconds: 72, startZ: Z(176), finishZ: Z(264), gate: gate(264, 3.3, 12) },
     { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, seconds: 42, startZ: Z(300), finishZ: Z(356), gate: gate(356, 8, 4.5) },
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(250), ship: true },
   ],
   [
     { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, seconds: 50, startZ: Z(22), kind: "survival" },
-    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, seconds: 40, startZ: Z(176), kind: "crown", crown: { x: 0, z: Z(210), y: 5.6, r: 3.4 } },
+    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, seconds: 56, startZ: Z(176), kind: "crown", crown: { x: 0, z: Z(210), y: 5.6, r: 4.4 } },
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
   ],
 ];
@@ -226,7 +226,11 @@ function begin() {
     get feel() { return race.feel; },
     view: () => (world.view ? world.view() : null),
     sees: (x, y, z) => (world.sees ? world.sees(x, y, z) : true),
+    project: (x, y, z) => (world.project ? world.project(x, y, z) : null),
+    flat: () => (world.frameFlat ? world.frameFlat() : 0),
     ground: (x, z) => groundAt(course, x, z),
+    get dpr() { return world && world.dpr; },
+    get post() { return world && world.post; },
     supports: (x, y, z) => {
       let under = null;
       let through = null;
@@ -279,12 +283,17 @@ function applyRound() {
   race.time = 0;
   const fullSeconds = p.seconds || cfg.raceSeconds;
   race.roundSeconds = cfg.quick ? Math.max(18, Math.round(fullSeconds * 0.62)) : fullSeconds;
-  const endZ = p.gate ? p.gate.z : (p.ship ? course.ship.z - 12 : p.startZ + 70);
-  const pace = paceCollapse(p.startZ, endZ, race.roundSeconds, cfg.quick ? 2.5 : 6);
+  const startZ = solidStart(course, p.startZ, p.kind === "survival" ? 26 : 3.6);
+  p.startZ = startZ;
+  const endZ = p.gate ? p.gate.z : (p.ship ? course.ship.z - 12 : startZ + (p.kind === "survival" ? 28 : 70));
+  const span = Math.max(12, endZ - (startZ - 8));
+  const threat = !cfg.quick && race.kind === "gate" ? span / (span / (cfg.maxSpeed * 0.92) + 8) : 0;
+  const pace = paceCollapse(startZ, endZ, race.roundSeconds, cfg.quick ? 2.5 : 3, threat);
   race.collapseZ = pace.collapseZ;
   race.collapseStop = pace.collapseStop;
   race.collapseSpeed = pace.collapseSpeed * (planet === 3 ? 1.18 : planet === 2 ? 1.06 : 1);
-  race.windMul = planet === 2 ? 1.45 : planet === 3 ? 0.85 : 1;
+  race.cfg.collapseDelay = cfg.quick ? 2.5 : (race.kind === "gate" && planet === 1 ? 2 : 5);
+  race.windMul = planet === 2 ? 1.12 : planet === 3 ? 0.85 : 1;
   race.planetN = planet;
   if (planet === 2) {
     for (const roller of race.rollers) roller.speed *= roller.planetTuned ? 1 : 1.3;
@@ -299,7 +308,7 @@ function applyRound() {
     for (const pdl of race.pendulums) pdl.planetTuned = true;
   }
   if (world && world.showPlanetHazards) world.showPlanetHazards(planet);
-  const g = groundAt(course, 0, p.startZ);
+  const g = groundAt(course, 0, startZ);
   const y = g ? g.y : 0;
   race.racers.forEach((r, i) => {
     const keep = !alive || alive.has(r.id);
@@ -311,9 +320,15 @@ function applyRound() {
       return;
     }
     r.eliminated = false;
-    r.pos.x = ((i % 5) - 2) * 1.7;
-    r.pos.z = p.startZ + Math.floor(i / 5) * 1.2;
-    r.pos.y = y;
+    if (race.kind === "survival") {
+      r.pos.x = i % 2 === 0 ? -2.2 : 2.2;
+      r.pos.z = startZ + Math.floor(i / 2) * 3.2;
+    } else {
+      r.pos.x = ((i % 5) - 2) * 1.7;
+      r.pos.z = startZ + Math.floor(i / 5) * 1.2;
+    }
+    const foot = groundAt(course, r.pos.x, r.pos.z);
+    r.pos.y = foot ? foot.y : y;
     r.vel.x = 0;
     r.vel.y = 0;
     r.vel.z = 0;
@@ -464,6 +479,7 @@ function paintAudio() {
   const icon = muteBtn.querySelector("img");
   if (icon) icon.src = muteIcon(prefs);
   muteBtn.setAttribute("aria-label", muteLabel(prefs));
+  muteBtn.setAttribute("aria-pressed", audioAudible(prefs) ? "false" : "true");
   const musicBtn = document.getElementById("set-music");
   const sfxBtn = document.getElementById("set-sfx");
   const hapBtn = document.getElementById("set-haptics");
@@ -529,6 +545,7 @@ function togglePause() {
   paused = !paused;
   pauseMenu.hidden = !paused;
   if (paused) tutor.hidden = true;
+  audio.play(paused ? "pauseOpen" : "pauseClose");
   audio.setHeld(paused);
 }
 pauseBtn.addEventListener("pointerdown", (e) => {
@@ -722,7 +739,12 @@ function clock(seconds) {
 }
 
 function fillPodium(race) {
+  const seated = race.racers.some((r) => r.seated);
   const rows = race.racers.slice().sort((a, b) => {
+    if (seated) {
+      const seat = (r) => (r.seated && r.seatIndex >= 0 ? r.seatIndex : 80);
+      if (seat(a) !== seat(b)) return seat(a) - seat(b);
+    }
     const score = (r) => (r.seated ? 4000 : 0) + (r.qualified ? 2000 : 0) + (r.eliminated ? -1000 : 0) + r.pos.z;
     return score(b) - score(a);
   });
@@ -785,7 +807,15 @@ function updateHud(dt) {
   const remain = race.phase === "countdown" ? limit : Math.max(0, limit - race.time);
   const label = clock(remain);
   if (timerNum && timerNum.textContent !== label) timerNum.textContent = label;
-  timerEl.classList.toggle("is-low", race.phase === "race" && remain <= 15);
+  const lowTime = race.phase === "race" && remain <= 10;
+  timerEl.classList.toggle("is-low", lowTime);
+  if (lowTime) {
+    const sec = Math.ceil(remain);
+    if (sec !== race.warnSec && sec <= 10 && sec >= 1) {
+      race.warnSec = sec;
+      audio.play(sec <= 3 ? "tickFinal" : "tick");
+    }
+  } else race.warnSec = 0;
 
   const placeText = placeLabel(race.player, race.racers);
   if (placeText !== race.placeHold) {
@@ -933,8 +963,11 @@ function updateHud(dt) {
     const fell = (race.fallers || []).slice(-3).join(", ");
     resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + (race.coins || 0) + " COINS · PLANET " + planet;
     if (fell && kind === "out") resultSub.textContent = fell + " FELL";
+    const reason = document.getElementById("result-reason");
+    if (reason) reason.textContent = resultReason(race);
   }
   if (!showEnd) shownResult = false;
+  if (hud) hud.hidden = !started || !!showEnd;
 }
 
 function handleEvents() {
@@ -1108,8 +1141,10 @@ function frame(now) {
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
 window.addEventListener("resize", () => world && world.resize());
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && audio.ctx) audio.ctx.suspend();
-  else if (audio.ctx) audio.ctx.resume();
+  if (document.hidden) {
+    if (audio.ctx) audio.ctx.suspend();
+    if (started && race && (race.phase === "race" || race.phase === "countdown") && !paused) togglePause();
+  } else if (audio.ctx) audio.ctx.resume();
 });
 
 requestAnimationFrame(frame);

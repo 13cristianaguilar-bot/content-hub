@@ -71,12 +71,12 @@ export function launchShot(t, dur, ship) {
   const lift = Math.max(0, (k - 0.42) / 0.58);
   const ease = smooth(lift);
   return {
-    x: ship.x + lerp(8, 14, ease),
-    y: ship.y + lerp(2.4, 12, ease),
-    z: ship.z + lerp(-11, 18, ease),
-    lx: ship.x + lerp(0, 0, ease),
-    ly: ship.y + lerp(1.4, 6, ease),
-    lz: ship.z + lerp(-2, 0, ease),
+    x: ship.x + lerp(7, 12, ease),
+    y: ship.y + lerp(5.2, 14, ease),
+    z: ship.z + lerp(-18, 20, ease),
+    lx: ship.x,
+    ly: ship.y + lerp(3.6, 8, ease),
+    lz: ship.z - 1,
     boarding: board < 1,
   };
 }

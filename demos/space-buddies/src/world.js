@@ -4,7 +4,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
 import { cameraAboveFloor, cameraFloor } from "./sim.js";
-import { backOffView, clearSpheres } from "./occlude.js";
+import { backOffView, cameraBuried, clearSpheres } from "./occlude.js";
 import { spectateFrame } from "./spectate.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
@@ -22,7 +22,8 @@ const MODELS = {
   platform: "assets/models/obstacle_moving_platform.glb",
   lava: "assets/models/obstacle_lava_pool.glb",
   chunk: "assets/models/obstacle_falling_chunk.glb",
-  ship: "assets/escape_ship_web.glb",
+  ship: "assets/escape_ship_rocket.glb",
+  coin: "assets/models/collectible_star_coin.glb",
   roller: "assets/models/enemy_roller.glb",
   hopper: "assets/models/enemy_hopper.glb",
   flyer: "assets/models/enemy_flyer.glb",
@@ -218,7 +219,7 @@ function dressAuthored(root) {
   root.traverse((obj) => {
     if (!obj.isMesh || !obj.material) return;
     const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-    const glow = /Crack|Glow|Core/.test(obj.name || "");
+    const glow = /Crack|Glow|Core|Thruster|Flame/.test((obj.name || "") + ((src && src.name) || ""));
     const mat = new THREE.MeshToonMaterial({
       color: 0xffffff,
       vertexColors: true,
@@ -296,6 +297,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     antialias: false,
     alpha: false,
     powerPreference: "high-performance",
+    preserveDrawingBuffer: new URLSearchParams(location.search).has("occlude"),
   });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   textureAniso = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
@@ -514,12 +516,13 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   await Promise.all([
     ...keys.map((key) => new Promise((resolve, reject) => {
       loader.load(MODELS[key], (gltf) => {
-        if (key === "ship") {
-          bakeFit(gltf.scene, 6.6);
+        if (key === "ship" || key === "coin") {
+          dressAuthored(gltf.scene);
           gltf.scene.traverse((obj) => {
-            if (!obj.isMesh || !obj.material) return;
-            const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-            obj.material = shipMat(src);
+            if (obj.material) {
+              const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+              mats.forEach((mat) => { if (mat) mat.fog = false; });
+            }
           });
         } else if (AUTHORED.has(key)) {
           dressAuthored(gltf.scene);
@@ -709,22 +712,25 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   let coinMesh = null;
   let coinGlow = null;
   const coinDummy = new THREE.Object3D();
-  if (course.coins && course.coins.length) {
-    const coinGeo = new THREE.CylinderGeometry(0.32, 0.32, 0.08, 12);
-    const coinMat = new THREE.MeshToonMaterial({ color: 0xffd23f, emissive: 0xffd23f, emissiveIntensity: 0.55, gradientMap: TOON_MAP });
-    coinMesh = new THREE.InstancedMesh(coinGeo, coinMat, course.coins.length);
-    const glowMat = new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending });
-    coinGlow = new THREE.InstancedMesh(new THREE.CircleGeometry(0.7, 12), glowMat, course.coins.length);
-    course.coins.forEach((c, i) => {
-      coinDummy.position.set(c.x, c.y, c.z);
-      coinDummy.rotation.x = Math.PI / 2;
-      coinDummy.updateMatrix();
-      coinMesh.setMatrixAt(i, coinDummy.matrix);
-      coinGlow.setMatrixAt(i, coinDummy.matrix);
+  const coinParts = [];
+  if (course.coins && course.coins.length && gltfs.coin) {
+    gltfs.coin.scene.updateWorldMatrix(true, true);
+    gltfs.coin.scene.traverse((obj) => {
+      if (!obj.isMesh) return;
+      const geo = obj.geometry.clone();
+      geo.applyMatrix4(obj.matrixWorld);
+      const mat = obj.material && obj.material.clone ? obj.material.clone() : new THREE.MeshToonMaterial({ color: 0xffd23f, vertexColors: true, gradientMap: TOON_MAP });
+      mat.fog = false;
+      const mesh = new THREE.InstancedMesh(geo, mat, course.coins.length);
+      const ink = new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide, fog: false });
+      const shell = new THREE.InstancedMesh(geo, ink, course.coins.length);
+      mesh.frustumCulled = false;
+      shell.frustumCulled = false;
+      mesh.userData.bloom = true;
+      scene.add(mesh, shell);
+      coinParts.push({ mesh, shell });
     });
-    coinMesh.userData.bloom = true;
-    if (coinGlow) coinGlow.userData.bloom = true;
-    scene.add(coinMesh, coinGlow);
+    coinMesh = coinParts[0] && coinParts[0].mesh;
   }
 
   const doorMeshes = [];
@@ -930,19 +936,56 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     chevrons.add(mark);
   }
   scene.add(chevrons);
-  const flame = new THREE.Mesh(
-    new THREE.ConeGeometry(0.85, 2.2, 8),
-    new THREE.MeshBasicMaterial({ color: 0xffd23f })
+  for (const clip of gltfs.ship.animations || []) {
+    clip.tracks = clip.tracks.filter((track) => !(track.name.startsWith("ShipBody") && track.name.endsWith("position")));
+  }
+  const shipMixer = new THREE.AnimationMixer(ship);
+  const idleClip = (gltfs.ship.animations || []).find((clip) => clip.name === "idle");
+  const launchClip = (gltfs.ship.animations || []).find((clip) => clip.name === "launch");
+  const shipIdle = idleClip ? shipMixer.clipAction(idleClip) : null;
+  const shipLaunch = launchClip ? shipMixer.clipAction(launchClip) : null;
+  if (shipIdle) {
+    shipIdle.setLoop(THREE.LoopRepeat, Infinity);
+    shipIdle.play();
+  }
+  if (shipLaunch) {
+    shipLaunch.setLoop(THREE.LoopOnce, 1);
+    shipLaunch.clampWhenFinished = true;
+    shipLaunch.play();
+    shipLaunch.paused = true;
+  }
+  ship.userData.mixer = shipMixer;
+  const thruster = ship.getObjectByName("ThrusterFlame");
+  const plume = new THREE.Mesh(
+    new THREE.ConeGeometry(0.42, 1.8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffd23f, transparent: true, opacity: 0.92, depthWrite: false })
   );
-  flame.rotation.x = Math.PI;
-  flame.position.y = 0.15;
-  flame.visible = false;
-  const flame2 = flame.clone();
-  flame2.material = new THREE.MeshBasicMaterial({ color: 0xff6b6b });
-  flame2.scale.setScalar(0.55);
-  flame.add(flame2);
-  flame.position.set(0, 0.15, -1.4);
-  ship.add(flame);
+  plume.rotation.x = Math.PI;
+  plume.position.y = -0.2;
+  plume.visible = false;
+  const plumeCore = plume.clone();
+  plumeCore.material = new THREE.MeshBasicMaterial({ color: 0xff6b6b, transparent: true, opacity: 0.85, depthWrite: false });
+  plumeCore.scale.setScalar(0.55);
+  plume.add(plumeCore);
+  if (thruster) thruster.add(plume);
+  else ship.add(plume);
+  const smokeRing = new THREE.Mesh(
+    new THREE.TorusGeometry(1.15, 0.16, 6, 18),
+    new THREE.MeshBasicMaterial({ color: 0xfff6e8, transparent: true, opacity: 0, depthWrite: false })
+  );
+  smokeRing.rotation.x = Math.PI / 2;
+  smokeRing.visible = false;
+  scene.add(smokeRing);
+  const launchTrail = [];
+  for (let i = 0; i < 8; i++) {
+    const puff = new THREE.Mesh(
+      new THREE.SphereGeometry(0.32, 6, 5),
+      new THREE.MeshBasicMaterial({ color: 0xfff6e8, transparent: true, opacity: 0, depthWrite: false })
+    );
+    puff.visible = false;
+    scene.add(puff);
+    launchTrail.push(puff);
+  }
 
   const lava = new THREE.Mesh(
     new THREE.CircleGeometry(14, 40),
@@ -1527,15 +1570,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   const confetti = [];
-  const confColors = [0xffd23f, 0xff6b6b, 0x5fe3b0, 0xff8fd1, 0x5cc8ff];
-  for (let i = 0; i < 70; i++) {
+  const puffGeo = new THREE.SphereGeometry(0.16, 6, 5);
+  const sparkGeo = new THREE.OctahedronGeometry(0.14, 0);
+  for (let i = 0; i < 56; i++) {
+    const star = i >= 44;
     const mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.16, 0.22),
-      new THREE.MeshBasicMaterial({ color: confColors[i % confColors.length], side: THREE.DoubleSide })
+      star ? sparkGeo : puffGeo,
+      new THREE.MeshBasicMaterial({ color: 0xfff6e8, transparent: true, opacity: 1, depthWrite: false })
     );
     mesh.visible = false;
     scene.add(mesh);
-    confetti.push({ mesh, v: new THREE.Vector3(), alive: false });
+    confetti.push({ mesh, v: new THREE.Vector3(), alive: false, life: 0, max: 0.32, star });
   }
 
   const state = {
@@ -1587,16 +1632,26 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
   }
 
-  function burst(x, y, z, color, gentle) {
+  function burst(x, y, z, color, gentle, star) {
     if (lowDetail) return;
     for (const bit of confetti) {
-      if (bit.alive) continue;
+      if (bit.alive || bit.star !== !!star) continue;
       bit.alive = true;
+      bit.life = bit.max = gentle ? 0.32 : 0.45;
       bit.mesh.visible = true;
       bit.mesh.position.set(x, y, z);
+      bit.mesh.scale.set(1, star ? 1 : 0.4, star ? 1 : 1);
       if (color) bit.mesh.material.color.setHex(color);
-      bit.v.set((Math.random() - 0.5) * (gentle ? 1.2 : 4), (gentle ? 0.6 : 2) + Math.random() * (gentle ? 1.2 : 3), (Math.random() - 0.5) * (gentle ? 1.2 : 4));
+      bit.mesh.material.opacity = 0.9;
+      bit.v.set((Math.random() - 0.5) * (gentle ? 0.8 : 1.6), gentle ? 0.4 : 1.2, (Math.random() - 0.5) * (gentle ? 0.8 : 1.6));
       break;
+    }
+  }
+  function puffRing(x, y, z, color) {
+    if (lowDetail) return;
+    for (let n = 0; n < 7; n++) {
+      const a = (n / 7) * Math.PI * 2;
+      burst(x + Math.cos(a) * 0.45, y, z + Math.sin(a) * 0.45, color || 0xfff3df, true, false);
     }
   }
 
@@ -1738,26 +1793,36 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         obj.rotation.set(Math.abs(face) > 1 ? p.tilt || 0 : 0, 0, Math.abs(face) > 1 ? 0 : -(p.tilt || 0));
       }
     }
-    if (coinMesh) {
+    if (coinParts.length) {
       for (let i = 0; i < race.course.coins.length; i++) {
         const c = race.course.coins[i];
-        if (c.got) coinDummy.scale.set(0, 0, 0);
-        else {
-          coinDummy.scale.set(1, 1, 1);
-          coinDummy.position.set(c.x, c.y + Math.sin(race.time * 3 + i) * 0.15, c.z);
+        let scale = 1;
+        if (c.got) {
+          if (c.pop == null) c.pop = 0.3;
+          c.pop = Math.max(0, c.pop - dt);
+          scale = c.pop > 0.18 ? 1.35 : (c.pop / 0.18);
         }
-        coinDummy.rotation.set(Math.PI / 2, 0, race.time * 2.2);
+        coinDummy.position.set(c.x, c.y + Math.sin((race.time || 0) * 6.2 + i) * 0.08, c.z);
+        coinDummy.rotation.set(0.6, (race.time || 0) * Math.PI * 2, 0);
+        coinDummy.scale.setScalar(scale);
         coinDummy.updateMatrix();
-        coinMesh.setMatrixAt(i, coinDummy.matrix);
-        if (coinGlow) coinGlow.setMatrixAt(i, coinDummy.matrix);
+        const shellDummy = coinDummy.clone();
+        shellDummy.scale.multiplyScalar(1.08);
+        shellDummy.updateMatrix();
+        for (const part of coinParts) {
+          part.mesh.setMatrixAt(i, coinDummy.matrix);
+          part.shell.setMatrixAt(i, shellDummy.matrix);
+        }
         if (!c.got && (i + Math.floor((race.time || 0) * 6)) % 11 === 0) {
           const dx = c.x - race.player.pos.x;
           const dz = c.z - race.player.pos.z;
-          if (dx * dx + dz * dz < 220) burst(c.x, c.y, c.z, 0xfff1a8, true);
+          if (dx * dx + dz * dz < 80) burst(c.x, c.y, c.z, 0xfff1a8, true, true);
         }
       }
-      coinMesh.instanceMatrix.needsUpdate = true;
-      if (coinGlow) coinGlow.instanceMatrix.needsUpdate = true;
+      for (const part of coinParts) {
+        part.mesh.instanceMatrix.needsUpdate = true;
+        part.shell.instanceMatrix.needsUpdate = true;
+      }
     }
     for (let i = 0; i < race.geysers.length; i++) {
       const g = race.geysers[i];
@@ -1910,12 +1975,38 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
 
     ship.position.y = race.shipY;
+    if (ship.userData.mixer) ship.userData.mixer.update(dt);
+    const launching = race.phase === "launch" || (race.phase === "results" && race.result === "escaped");
+    if (launching && shipLaunch && !ship.userData.leftPad) {
+      ship.userData.leftPad = true;
+      if (shipIdle) shipIdle.fadeOut(0.1);
+      shipLaunch.paused = false;
+      shipLaunch.reset();
+      shipLaunch.play();
+    }
+    if (!launching) ship.userData.leftPad = false;
     const active = race.phase !== "countdown";
     beacon.material.opacity = active ? 0.16 + Math.sin(race.time * 4) * 0.05 : 0.04;
-    flame.visible = race.phase === "launch" || race.phase === "results";
-    if (flame.visible) {
-      const s = 0.85 + Math.sin(race.launchT * 30) * 0.12;
-      flame.scale.set(s, s, s);
+    plume.visible = launching;
+    if (plume.visible) {
+      const s = 1 + Math.sin((race.launchT || 0) * 28) * 0.16;
+      plume.scale.set(s, 1.3 + Math.min(1.6, (race.launchT || 0) * 0.7), s);
+    }
+    if (launching && race.launchT < 1.15) {
+      smokeRing.visible = true;
+      const k = race.launchT / 1.15;
+      smokeRing.position.set(course.ship.x, course.ship.y + 0.15, course.ship.z);
+      smokeRing.scale.setScalar(1 + k * 3.4);
+      smokeRing.material.opacity = (1 - k) * 0.75;
+    } else smokeRing.visible = false;
+    for (let i = 0; i < launchTrail.length; i++) {
+      const puff = launchTrail[i];
+      puff.visible = launching && !lowDetail;
+      if (!puff.visible) continue;
+      const lag = (i + 1) * 0.55;
+      puff.position.set(ship.position.x, ship.position.y - lag * 0.85, ship.position.z);
+      puff.scale.setScalar(0.7 + i * 0.12);
+      puff.material.opacity = Math.max(0.08, 0.55 - i * 0.05);
     }
     ring.material.opacity = race.phase === "race" ? 0.55 + Math.sin(race.time * 5) * 0.25 : 0.2;
 
@@ -1993,7 +2084,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       if (r.flail > 0.4 && !v.starred) {
         v.starred = true;
-        for (let n = 0; n < 5; n++) burst(r.pos.x, r.pos.y + 1.55, r.pos.z, 0xfff6c8);
+        for (let n = 0; n < 4; n++) burst(r.pos.x, r.pos.y + 1.45, r.pos.z, 0xfff6c8, true, true);
       }
       if (r.flail < 0.05) v.starred = false;
       if (r.sliding > 0 && i === 0) burst(r.pos.x, r.pos.y + 0.15, r.pos.z);
@@ -2014,10 +2105,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (blade && v.accessories.heli.visible) blade.rotation.y += dt * 14;
       if (v.wasAir && r.grounded) {
         v.landUntil = (race.time || 0) + 0.2;
-        for (let n = 0; n < 4; n++) burst(r.pos.x + (n - 1.5) * 0.2, r.pos.y + 0.1, r.pos.z, 0xe7d3b0, true);
-        if (r.pos.y < 0.35) for (let n = 0; n < 4; n++) burst(r.pos.x, r.pos.y + 0.2, r.pos.z, 0x7adfff, true);
+        puffRing(r.pos.x, r.pos.y + 0.08, r.pos.z, 0xfff3df);
       }
-      if (r.diving && i === 0 && Math.random() < 0.35) burst(r.pos.x, r.pos.y + 0.2, r.pos.z, 0xf0e2c8, true);
+      if ((r.diving || r.sliding > 0) && i === 0 && Math.random() < 0.5) burst(r.pos.x, r.pos.y + 0.45, r.pos.z - 0.3, r.color || 0x7dffe0, true, false);
       v.wasAir = !r.grounded;
       let anim = "Idle";
       if (r.eliminated) anim = "Eliminated";
@@ -2043,14 +2133,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const p = visuals[0].group;
       const wp = new THREE.Vector3();
       p.getWorldPosition(wp);
-      for (let n = 0; n < 48; n++) burst(ship.position.x + (Math.random() - 0.5) * 3, ship.position.y + 2 + Math.random() * 3, ship.position.z - 2);
+      for (let n = 0; n < 8; n++) burst(ship.position.x + (Math.random() - 0.5) * 2, ship.position.y + 1.2, ship.position.z, 0xfff1a8, true, true);
     }
     for (const bit of confetti) {
       if (!bit.alive) continue;
-      bit.v.y -= 6 * dt;
+      bit.life -= dt;
+      bit.v.y -= (bit.star ? 1.5 : 0.4) * dt;
       bit.mesh.position.addScaledVector(bit.v, dt);
-      bit.mesh.rotation.z += dt * 4;
-      if (bit.mesh.position.y < course.ship.y - 1) {
+      bit.mesh.rotation.y += dt * (bit.star ? 6 : 1);
+      const k = Math.max(0, bit.life / bit.max);
+      bit.mesh.material.opacity = k;
+      const grow = bit.star ? 0.6 + (1 - k) * 0.8 : 0.35 + (1 - k) * 1.3;
+      bit.mesh.scale.setScalar(grow);
+      if (bit.life <= 0) {
         bit.alive = false;
         bit.mesh.visible = false;
       }
@@ -2237,12 +2332,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     });
     return propSpheres;
   }
+  function coursePiece(obj) {
+    let node = obj;
+    while (node) {
+      if (node.userData && (node.userData.floor || node.userData.course || node.userData.buddy || node.userData.skipCam)) return true;
+      node = node.parent;
+    }
+    return false;
+  }
   function fadeBlockers(head) {
     for (let i = 0; i < fadedProps.length; i++) {
       const entry = fadedProps[i];
-      entry.mat.opacity = entry.opacity;
-      entry.mat.transparent = entry.transparent;
-      entry.mat.depthWrite = entry.depthWrite;
+      entry.obj.material = entry.base;
     }
     fadedProps.length = 0;
     camDir.copy(head).sub(camera.position);
@@ -2250,27 +2351,42 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     if (dist < 0.35) return;
     camDir.multiplyScalar(1 / dist);
     camRay.set(camera.position, camDir);
-    camRay.far = Math.min(dist - 0.2, 5);
+    camRay.far = Math.min(dist - 0.35, 4.5);
     let hits = [];
     try { hits = camRay.intersectObjects(camSolids(), false); } catch (err) { return; }
     const seen = new Set();
     for (const hit of hits) {
-      if (hit.distance > 2.2) break;
+      if (hit.distance > 3.2) break;
       const obj = hit.object;
-      if (!obj || obj.isInstancedMesh || obj.userData.floor) continue;
+      if (!obj || obj.isInstancedMesh || seen.has(obj)) continue;
+      if (obj.userData.floor || coursePiece(obj)) continue;
+      if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
+      obj.getWorldScale(propDummy.scale);
+      const reach = obj.geometry.boundingSphere.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
+      if (reach > 2.4) continue;
       const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-      if (!mat || seen.has(mat)) continue;
-      seen.add(mat);
-      fadedProps.push({
-        mat,
-        opacity: mat.opacity,
-        transparent: mat.transparent,
-        depthWrite: mat.depthWrite,
-      });
-      mat.transparent = true;
-      mat.opacity = 0.2;
-      mat.depthWrite = false;
+      if (!mat || mat === floorMat || mat === terrainMat || mat === crackMat) continue;
+      seen.add(obj);
+      const fadeMat = mat.clone();
+      fadeMat.transparent = true;
+      fadeMat.opacity = 0.18;
+      fadeMat.depthWrite = false;
+      fadedProps.push({ obj, base: obj.material });
+      obj.material = fadeMat;
     }
+  }
+  function liftAboveCourse(pos) {
+    let y = pos.y;
+    const pads = course.floors || [];
+    for (let i = 0; i < pads.length; i++) {
+      const pad = pads[i];
+      if (!pad || !pad.rx || !pad.rz) continue;
+      const nx = (pos.x - pad.x) / pad.rx;
+      const nz = (pos.z - pad.z) / pad.rz;
+      if (nx * nx + nz * nz > 1) continue;
+      if (y < pad.y + 1.25) y = pad.y + 1.25;
+    }
+    return y;
   }
   function solveCamera(head, want) {
     try {
@@ -2328,7 +2444,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const o = look.overview;
       const head = new THREE.Vector3(o.lx, o.ly + 1.2, o.lz);
       const cleared = backOffView(clearSpheres({ x: o.x, y: o.y, z: o.z }, propBounds(), head), { x: o.lx, y: o.ly, z: o.lz }, propBounds());
-      camera.position.set(cleared.x, cleared.y, cleared.z);
+      const spot = { x: cleared.x, y: liftAboveCourse(cleared), z: cleared.z };
+      if (cameraBuried(spot, course.floors, []) === "terrain") camera.position.set(o.x, liftAboveCourse({ x: o.x, y: o.y, z: o.z }), o.z);
+      else camera.position.set(spot.x, spot.y, spot.z);
       camera.lookAt(o.lx, o.ly, o.lz);
       fadeBlockers(head);
       return;
@@ -2386,11 +2504,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       let ly;
       let lz;
       if (race.result === "escaped") {
-        tx = ship.position.x + 12;
-        ty = Math.max(ship.position.y + 7, (groundAtSafe(ship.position.x, ship.position.z) || ship.position.y) + 4);
-        tz = ship.position.z + 14;
+        const wide = state.portrait ? 2.8 : 1.35;
+        tx = ship.position.x + 18 * wide;
+        ty = ship.position.y + 3.2 * wide;
+        tz = ship.position.z + 7 * wide;
         lx = ship.position.x;
-        ly = ship.position.y + 2.2;
+        ly = ship.position.y + 1.2;
         lz = ship.position.z;
       } else {
         tx = player.pos.x - 6;
@@ -2441,7 +2560,25 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       camera.position.x = damp(camera.position.x, aimX, 4.5, dt);
       camera.position.y = damp(camera.position.y, aimY, 4.5, dt);
       camera.position.z = damp(camera.position.z, aimZ, 4.5, dt);
+      const watchers = [];
+      for (const racer of race.racers) {
+        if (racer.seated) continue;
+        watchers.push({ x: racer.pos.x, y: racer.pos.y + 0.9, z: racer.pos.z, r: 1.15 });
+      }
+      const watchHead = new THREE.Vector3(focus.pos.x, focus.pos.y + 1.4, focus.pos.z + 3);
+      const offBodies = clearSpheres(camera.position, watchers, watchHead);
+      camera.position.set(offBodies.x, liftAboveCourse(offBodies), offBodies.z);
       camera.lookAt(frame.look.x, frame.look.y, frame.look.z);
+      camera.updateMatrixWorld(true);
+      const leadClip = new THREE.Vector4(focus.pos.x, focus.pos.y + 1.2, focus.pos.z, 1);
+      leadClip.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+      const leadX = leadClip.x / (leadClip.w || 1);
+      const leadY = leadClip.y / (leadClip.w || 1);
+      if (!(leadClip.w > 0.5 && Math.abs(leadX) < 0.9 && Math.abs(leadY) < 0.92)) {
+        camera.position.set(frame.x, liftAboveCourse({ x: frame.x, y: frame.y, z: frame.z }), frame.z);
+        camera.lookAt(frame.look.x, frame.look.y, frame.look.z);
+        camera.updateMatrixWorld(true);
+      }
       const floorY = floor == null ? focus.pos.y : floor;
       state.spectate = {
         back: Math.hypot(frame.x - focus.pos.x, frame.z - focus.pos.z),
@@ -2456,7 +2593,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       return;
     }
     if (dragging) {
-      const sens = look.mouse ? cfg.mouseSens : cfg.lookSens;
+      const mag = Math.hypot(look.lookDx || 0, look.lookDy || 0);
+      const small = mag < 6 ? 0.28 : mag < 14 ? 0.55 : 1;
+      const sens = (look.mouse ? cfg.mouseSens : cfg.lookSens) * small;
       state.yaw += look.lookDx * sens;
       state.pitch = Math.max(cfg.minPitch, Math.min(cfg.maxPitch, state.pitch + look.lookDy * sens));
       state.autoWait = cfg.autoFollowDelay;
@@ -2465,7 +2604,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     } else {
       const h = Math.hypot(player.vel.x, player.vel.z);
       if (h > 1.15) state.yaw = dampAngle(state.yaw, Math.atan2(player.vel.x, player.vel.z), cfg.autoYaw, dt);
-      state.pitch = damp(state.pitch, cfg.defaultPitch, cfg.autoPitch, dt);
+      state.pitch = damp(state.pitch, cfg.defaultPitch, cfg.autoPitch * 3.2, dt);
     }
     const zoom = look && look.zoom ? look.zoom : 1;
     const behind = Math.max(cfg.camNear || 5, Math.min(cfg.camFar || 12, (state.portrait ? cfg.camDistPortrait : cfg.camDist) * zoom));
@@ -2520,17 +2659,41 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       tx += (Math.random() - 0.5) * sh;
       ty += (Math.random() - 0.5) * sh * 0.5;
     }
-    const spring = 5.5;
+    const spring = cfg.camLerp || 7.5;
     camera.position.x = damp(camera.position.x, tx, spring, dt);
     camera.position.y = damp(camera.position.y, ty, spring, dt);
     camera.position.z = damp(camera.position.z, tz, spring, dt);
     const camFloor = groundAtSafe(camera.position.x, camera.position.z);
     camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(camFloor, state.lastFloor, 0));
     const aim = { x: player.pos.x, y: player.pos.y + 1.7, z: player.pos.z + Math.cos(state.yaw) * 5 };
-    const freed = backOffView(clearSpheres(camera.position, propBounds(), new THREE.Vector3(headX, headY, headZ)), aim, propBounds());
-    camera.position.set(freed.x, freed.y, freed.z);
+    const bodies = [];
+    for (const racer of race.racers) {
+      if (racer.seated) continue;
+      bodies.push({ x: racer.pos.x, y: racer.pos.y + 0.9, z: racer.pos.z, r: 1.15 });
+    }
+    const crowd = bodies.concat(propBounds());
+    const beforePush = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+    const freed = backOffView(clearSpheres(camera.position, crowd, new THREE.Vector3(headX, headY, headZ)), aim, crowd);
+    const buried = cameraBuried(freed, course.floors, []);
+    if (buried === "terrain") {
+      camera.position.set(beforePush.x, liftAboveCourse(beforePush), beforePush.z);
+    } else {
+      camera.position.set(freed.x, freed.y, freed.z);
+    }
+    camera.position.y = liftAboveCourse(camera.position);
     camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(camFloor, state.lastFloor, 0));
     camera.lookAt(player.pos.x, player.pos.y + 1.7, player.pos.z + Math.cos(state.yaw) * 5);
+    camera.updateMatrixWorld(true);
+    const selfClip = new THREE.Vector4(player.pos.x, player.pos.y + 1.1, player.pos.z, 1);
+    selfClip.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+    const selfX = selfClip.x / (selfClip.w || 1);
+    const selfY = selfClip.y / (selfClip.w || 1);
+    if (!(selfClip.w > 0.5 && Math.abs(selfX) < 1.02 && Math.abs(selfY) < 1.02)) {
+      const snap = { x: player.pos.x, y: player.pos.y + 5.2, z: player.pos.z - 8 };
+      camera.position.set(snap.x, liftAboveCourse(snap), snap.z);
+      camera.lookAt(player.pos.x, player.pos.y + 1.3, player.pos.z + 4);
+      camera.updateMatrixWorld(true);
+    }
     fadeBlockers(new THREE.Vector3(headX, headY, headZ));
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }
@@ -2605,7 +2768,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     for (let i = 0; i < seatMats.length; i++) paintSeat(i, null);
     ship.position.y = course.ship.y;
-    flame.visible = false;
+    plume.visible = false;
+    smokeRing.visible = false;
+    ship.userData.leftPad = false;
     state.yaw = 0;
     state.pitch = cfg.defaultPitch;
   }
@@ -2781,9 +2946,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     },
     setLow() {
       applyLightTier(0);
-      setPost(false);
-      setDpr(0.75);
+      postOn = false;
+      dpr = 0.75;
+      resize();
     },
+    get dpr() { return dpr; },
+    get post() { return postOn; },
     noteFps(fps) {
       if (!(fps > 0)) return window.__sbLight;
       if (fps < 55) lowFps++;
@@ -2794,6 +2962,43 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       window.__sbLight = { tier: lightTier, shadows: sun.castShadow, map: sun.shadow.mapSize.x, fps };
       return window.__sbLight;
+    },
+    frameFlat() {
+      try {
+        const gl = renderer.getContext();
+        const w = gl.drawingBufferWidth;
+        const h = gl.drawingBufferHeight;
+        if (w < 8 || h < 8) return 0;
+        const pix = new Uint8Array(4);
+        const buckets = new Map();
+        let n = 0;
+        let max = 0;
+        const sx = Math.max(8, Math.floor(w / 16));
+        const sy = Math.max(8, Math.floor(h / 22));
+        for (let y = sy; y < h - sy; y += sy) {
+          for (let x = sx; x < w - sx; x += sx) {
+            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pix);
+            const key = (pix[0] >> 4) + ":" + (pix[1] >> 4) + ":" + (pix[2] >> 4);
+            const next = (buckets.get(key) || 0) + 1;
+            buckets.set(key, next);
+            if (next > max) max = next;
+            n++;
+          }
+        }
+        return n ? max / n : 0;
+      } catch (err) {
+        return 0;
+      }
+    },
+    project(x, y, z) {
+      try {
+        const clip = new THREE.Vector4(x, y, z, 1);
+        clip.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+        if (!clip.w) return null;
+        return { x: clip.x / clip.w, y: clip.y / clip.w, z: clip.z / clip.w, w: clip.w };
+      } catch (err) {
+        return null;
+      }
     },
     sees(x, y, z) {
       try {

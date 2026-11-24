@@ -240,6 +240,26 @@ export function courseScale(quick) {
   return (quick ? 0.42 : 1) * COURSE_STRETCH;
 }
 
+const GRID_X = [-3.4, -1.7, 0, 1.7, 3.4];
+
+export function solidStart(course, zWant, depth) {
+  const span = depth || 3.6;
+  function holds(z) {
+    for (let dz = 0; dz <= span; dz += 1.2) {
+      for (const x of GRID_X) {
+        if (!groundAt(course, x, z + dz)) return false;
+      }
+    }
+    return true;
+  }
+  if (holds(zWant)) return zWant;
+  for (let dz = 1; dz <= 90; dz += 1) {
+    if (holds(zWant + dz)) return zWant + dz;
+    if (zWant - dz > 0 && holds(zWant - dz)) return zWant - dz;
+  }
+  return zWant;
+}
+
 export function createCourse(cfg) {
   const quick = !!cfg.quick;
   const S = courseScale(quick);
@@ -321,6 +341,7 @@ export function createCourse(cfg) {
   addBridge(2, zz(62), 10, zz(80), 0.05, 0.2, 7.2, "meadow");
   addBridge(0, zz(240), -10, zz(258), 5.2, 3.3, 6.2, "sky");
   addBridge(4, zz(236), 12, zz(264), 5.2, 3.3, 6, "sky");
+  addDisc(0, 3.3, zz(264), 16, 10, "sky");
   addBridge(0, zz(336), -3, zz(352), 6.2, 8, 5.8, "climb");
   addBridge(0, zz(292), 6, zz(306), 3.1, 3, 6.2, "ice");
   addBridge(6, zz(304), 4, zz(318), 3, 3.4, 5.4, "climb");

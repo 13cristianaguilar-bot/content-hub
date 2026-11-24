@@ -33,13 +33,14 @@ function sleep(ms) {
 function jobUrl(job) {
   const q = new URLSearchParams();
   q.set("seed", String(job.seed));
-  q.set("quick", "1");
+  if (job.quick !== false) q.set("quick", "1");
   q.set("nopost", "1");
   q.set("planet", String(job.planet || 1));
   q.set("round", String(job.round || 0));
   if (job.bot) q.set("bot", job.bot);
   if (job.qa) q.set("qa", String(job.qa));
   if (job.feel) q.set("feel", "1");
+  if (job.occlude) q.set("occlude", "1");
   if (job.low) q.set("low", "1");
   return base + "?" + q.toString();
 }
@@ -946,7 +947,157 @@ async function saveHeatmaps(browser, marks) {
   await context.close();
 }
 
+async function occludeRun() {
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--disable-dev-shm-usage"] });
+  const context = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
+  const page = await openJob(context, { name: "occlude-ship", planet: 1, round: 2, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true }, []);
+  let buried = 0;
+  let low = 0;
+  let flat = 0;
+  let hidden = 0;
+  let frames = 0;
+  let startFrames = 0;
+  let checkpointFrames = 0;
+  const deadline = Date.now() + 70000;
+  while (Date.now() < deadline) {
+    const snap = await page.evaluate(() => {
+      const sb = window.__sb;
+      if (!sb || !sb.race || !sb.view) return null;
+      const view = sb.view();
+      const cam = { x: view.cx, y: view.cy, z: view.cz };
+      const floors = sb.race.course.floors || [];
+      const player = sb.race.player;
+      let hit = "";
+      for (const pad of floors) {
+        if (!pad || !pad.rx || !pad.rz) continue;
+        const nx = (cam.x - pad.x) / pad.rx;
+        const nz = (cam.z - pad.z) / pad.rz;
+        if (nx * nx + nz * nz < 0.72 && cam.y > pad.y - 0.3 && cam.y < pad.y + 0.7) hit = "terrain";
+      }
+      if (!hit) {
+        for (const r of sb.race.racers) {
+          const dx = cam.x - r.pos.x;
+          const dy = cam.y - (r.pos.y + 0.8);
+          const dz = cam.z - r.pos.z;
+          if (dx * dx + dy * dy + dz * dz < 0.45 * 0.45) hit = "buddy";
+        }
+      }
+      const ground = sb.ground ? sb.ground(cam.x, cam.z) : null;
+      let checkpoint = false;
+      for (const cp of sb.race.course.checkpoints || []) {
+        if (Math.abs(player.pos.z - cp.z) < 14) checkpoint = true;
+      }
+      const pool = [];
+      if (!player.eliminated) pool.push(player);
+      for (const r of sb.race.racers) {
+        if (r !== player && !r.seated && !r.eliminated) pool.push(r);
+      }
+      if (!pool.length) pool.push(player);
+      let buddySeen = !sb.sees;
+      let near = null;
+      for (const r of (pool.length ? pool : [player])) {
+        const p = sb.project ? sb.project(r.pos.x, r.pos.y + 1.1, r.pos.z) : null;
+        if (p && p.w > 0 && p.z > -1 && p.z < 1 && Math.abs(p.x) < 1.05 && Math.abs(p.y) < 1.05) buddySeen = true;
+        if (p && (!near || Math.abs(p.x) + Math.abs(p.y) < Math.abs(near.x) + Math.abs(near.y))) near = p;
+      }
+      const fill = sb.flat ? sb.flat() : 0;
+      return {
+        phase: sb.race.phase,
+        hit,
+        low: ground && cam.y < ground.y + 0.4,
+        time: sb.race.time,
+        seated: !!player.seated,
+        z: player.pos.z,
+        checkpoint,
+        buddySeen,
+        near,
+        fill,
+      };
+    });
+    if (snap && snap.phase === "race") {
+      frames++;
+      if (snap.time < 2) startFrames++;
+      if (snap.checkpoint) checkpointFrames++;
+      if (snap.hit) buried++;
+      if (snap.low) low++;
+      if (snap.fill > 0.6) flat++;
+      if (!snap.buddySeen) {
+        hidden++;
+        if (hidden <= 4) console.log("off", snap.time, snap.seated, JSON.stringify(snap.near));
+      }
+    }
+    if (snap && (snap.phase === "results" || snap.phase === "launch")) break;
+    await sleep(120);
+  }
+  await browser.close();
+  const report = { frames, buried, low, flat, hidden, startFrames, checkpointFrames };
+  console.log(JSON.stringify(report));
+  if (buried || low || flat || hidden || !startFrames || !checkpointFrames) process.exitCode = 1;
+}
+
+async function modesRun() {
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--disable-dev-shm-usage"] });
+  const jobs = [];
+  for (const planet of [1, 2, 3]) {
+    for (const round of [0, 1, 2]) jobs.push({ name: "full-p" + planet + "r" + round, planet, round, seed: 7, bot: "follow", qa: 4, quick: false, viewport: PHONE, wallMs: 120000, skipLobby: true });
+  }
+  const reports = [];
+  for (const job of jobs) {
+    const context = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
+    const page = await openJob(context, job, []);
+    let aliveAt3 = null;
+    let gapAt13 = null;
+    let end = null;
+    const deadline = Date.now() + 130000;
+    while (Date.now() < deadline) {
+      const snap = await page.evaluate(() => {
+        const sb = window.__sb;
+        if (!sb || !sb.race) return null;
+        const seated = sb.race.racers.filter((r) => r.seated).length;
+        return {
+          phase: sb.race.phase,
+          time: sb.race.time,
+          alive: sb.race.racers.filter((r) => !r.eliminated).length,
+          qual: sb.race.qualCount,
+          need: sb.race.qualifyN,
+          seconds: sb.race.roundSeconds,
+          kind: sb.race.kind,
+          seated,
+          collapse: sb.race.collapseZ,
+          lead: Math.max(...sb.race.racers.map((r) => r.pos.z)),
+        };
+      });
+      if (snap && snap.phase === "race" && snap.time >= 3 && aliveAt3 == null) aliveAt3 = snap.alive;
+      if (snap && snap.phase === "race" && snap.time >= 13 && gapAt13 == null) gapAt13 = Number((snap.lead - snap.collapse).toFixed(1));
+      if (snap && snap.phase === "race" && snap.time >= 12 && snap.time < 14) snap.gap = snap.lead - snap.collapse;
+      if (snap && (snap.phase === "results" || snap.phase === "launch")) {
+        end = snap;
+        break;
+      }
+      await sleep(250);
+    }
+    const timedOut = !!(end && end.time >= (end.seconds || 99) - 1.5);
+    const filled = !!(end && end.need > 0 && end.qual >= end.need);
+    const launched = !!(end && end.phase === "launch");
+    const ok = aliveAt3 > 0 && (filled || timedOut || launched);
+    reports.push({ name: job.name, aliveAt3, gapAt13, qual: end && end.qual, need: end && end.need, time: end && Number(end.time.toFixed(1)), seconds: end && end.seconds, kind: end && end.kind, ok });
+    console.log(job.name, ok ? "ok" : "FAIL", "alive3", aliveAt3, "gap13", gapAt13, "qual", end && end.qual, "/", end && end.need, "t", end && end.time);
+    await context.close();
+  }
+  await browser.close();
+  console.log(JSON.stringify({ runs: reports.length, passed: reports.filter((r) => r.ok).length, reports }, null, 2));
+  if (reports.some((r) => !r.ok)) process.exitCode = 1;
+}
+
 async function main() {
+  if (process.argv.includes("--occlude")) {
+    await occludeRun();
+    return;
+  }
+  if (process.argv.includes("--modes")) {
+    await modesRun();
+    return;
+  }
   if (process.argv.includes("--batch2")) {
     await batch2();
     return;

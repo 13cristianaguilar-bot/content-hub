@@ -1,12 +1,12 @@
 import { resolveConfig } from "./config.js";
-import { createCourse, floorsAt } from "./course.js";
+import { createCourse, floorsAt, solidStart, courseScale, groundAt } from "./course.js";
 import { bandSpeed, botWish as racerWish, cameraAboveFloor, cameraFloor, createRace, paceCollapse, step } from "./sim.js";
 import { isSnag, isUnfair } from "./feel.js";
-import { hideControls, hudStatus, placeLabel, resultBoard, showCoach } from "./place.js";
+import { hideControls, hudStatus, placeLabel, resultBoard, resultReason, showCoach } from "./place.js";
 import { detailOn, nightRead, outlineHex, planetLook, shakeMul } from "./look.js";
 import { audioAudible, cueFor, muteIcon, muteLabel, normalizePrefs } from "./audio-prefs.js";
 import { spectateFrame } from "./spectate.js";
-import { backOffView, clearSpheres, pullOutOfSphere } from "./occlude.js";
+import { backOffView, cameraBuried, clearSpheres, pullOutOfSphere } from "./occlude.js";
 import { BUDDY_CLIPS, lockRootPosition } from "./clips.js";
 import { CINE_DUR, behindBuddy, cineDuration, collapseShot, flyoverShot, launchShot, skipCine } from "./cine.js";
 
@@ -50,12 +50,16 @@ assert(audioAudible({ muted: false, music: true, sfx: true }) === true, "sound o
 assert(audioAudible({ muted: true, music: true, sfx: true }) === false, "master mute should read as silent");
 assert(muteIcon({ muted: false, music: true, sfx: true }).endsWith("icon_unmute.svg"), "an audible game should show a plain speaker");
 assert(muteIcon({ muted: true, music: true, sfx: false }).endsWith("icon_mute.svg"), "a muted game should show a speaker with an X");
-assert(muteLabel({ muted: false, music: true, sfx: true }) === "Mute", "the audible button offers mute");
+assert(muteLabel({ muted: false, music: true, sfx: true }) === "Sound on", "the audible button says sound on");
+assert(muteLabel({ muted: true, music: true, sfx: true }) === "Sound off", "a muted button says sound off");
 assert(cueFor({ t: "tick", n: 3 }) === "count3", "countdown 3 should use the 3 beep");
 assert(cueFor({ t: "tick", n: 1 }) === "count1", "countdown 1 should use the high beep");
 assert(cueFor({ t: "go" }) === "go", "GO should use the v2 sting");
 assert(cueFor({ t: "jump" }) === "jump" && cueFor({ t: "land" }) === "land" && cueFor({ t: "dive" }) === "dive", "jump land and dive should use the pack");
 assert(cueFor({ t: "coin" }) === "collect" && cueFor({ t: "qualify" }) === "qualify", "collect and qualify should use the pack");
+assert(cueFor({ t: "checkpoint" }) === "checkpoint", "a checkpoint should chime");
+assert(cueFor({ t: "timer", final: false }) === "tick" && cueFor({ t: "timer", final: true }) === "tickFinal", "the last ten seconds should tick");
+assert(cueFor({ t: "pause", open: true }) === "pauseOpen" && cueFor({ t: "pause", open: false }) === "pauseClose", "pause should swoosh open and closed");
 assert(normalizePrefs({ music: false }).sfx === true, "turning music off should leave sfx on");
 assert(isSnag(8, 3, 0.8, false) === true, "a steered speed cut with no hit is a snag");
 assert(isSnag(8, 3, 0.8, true) === false, "a real hit is not a snag");
@@ -294,6 +298,9 @@ assert(board.place === "2ND", "the card should show your place");
 assert(board.count === 2 && board.names[0] === "BUDDY" && board.names.includes("YOU"), "the card should list who qualified");
 assert(detailOn({ detail: "auto" }, true) && !detailOn({ detail: "full" }, true), "low detail follows the GPU until the player chooses");
 assert(shakeMul({ reduceShake: true }) < 0.2 && outlineHex({ safeOutline: true }) === 0xffe14a, "the access toggles should soften shake and switch the outline");
+assert(cameraBuried({ x: 0, y: 0.2, z: 0 }, [{ x: 0, y: 0, z: 0, rx: 4, rz: 4 }], []) === "terrain", "a camera in the floor is buried");
+assert(cameraBuried({ x: 0, y: 4, z: -8 }, [{ x: 0, y: 0, z: 0, rx: 4, rz: 4 }], [{ x: 0, y: 0, z: 0 }]) === "", "a camera behind the pack is clear");
+assert(resultReason({ result: "out", time: 46, roundSeconds: 46, player: {} }) === "TIME RAN OUT", "a timer loss should say so");
 const stride = 29;
 const ia = stride;
 const ib = ia + 1;
@@ -304,5 +311,16 @@ const bx = slab.positions[ic * 3] - slab.positions[ia * 3];
 const bz = slab.positions[ic * 3 + 2] - slab.positions[ia * 3 + 2];
 const ny = az * bx - ax * bz;
 assert(ny > 0, "the floor top faces down");
+
+const full = createCourse(resolveConfig({ seed: 4 }));
+const authored = [22, 168, 176, 250, 300].map((z) => z * courseScale(false));
+for (const z of authored) {
+  const start = solidStart(full, z);
+  for (let i = 0; i < 16; i++) {
+    const x = ((i % 5) - 2) * 1.7;
+    const gz = start + Math.floor(i / 5) * 1.2;
+    assert(!!groundAt(full, x, gz), "normal grid has no floor at " + x + "," + gz);
+  }
+}
 
 console.log("qa regression tests passed", "back", back.toFixed(2), "height", open.y.toFixed(2), "overlap y", overlap.player.pos.y.toFixed(2));

@@ -62,7 +62,7 @@
         c.removeEventListener("animationend", done);
         c.remove();
       };
-      c.addEventListener("animationend", done);
+      c.addEventListener("animationend", done, { once: true });
       document.body.appendChild(c);
     }
   }

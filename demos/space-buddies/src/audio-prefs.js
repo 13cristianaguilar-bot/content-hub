@@ -43,7 +43,7 @@ export function muteIcon(prefs) {
 }
 
 export function muteLabel(prefs) {
-  return audioAudible(prefs) ? "Mute" : "Unmute";
+  return audioAudible(prefs) ? "Sound on" : "Sound off";
 }
 
 export function cueFor(event) {
@@ -62,6 +62,9 @@ export function cueFor(event) {
   if (event.t === "launch") return "launch";
   if (event.t === "escaped") return "escaped";
   if (event.t === "crack") return "crumble";
+  if (event.t === "checkpoint") return "checkpoint";
+  if (event.t === "timer") return event.final ? "tickFinal" : "tick";
+  if (event.t === "pause") return event.open ? "pauseOpen" : "pauseClose";
   return "";
 }
 

@@ -10,6 +10,7 @@
     "test:qa2": "node qa/playtest.mjs --batch2"
   },
   "dependencies": {
+    "howler": "2.2.4",
     "three": "0.170.0"
   },
   "devDependencies": {

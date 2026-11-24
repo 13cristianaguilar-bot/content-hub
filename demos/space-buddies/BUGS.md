@@ -147,9 +147,27 @@ A 2026-11-24 playtest returned to the title twice. This cycle did not reproduce 
 ## SB-16 Floors still read as flat grey discs
 
 - Severity: P2
-- Status: queued, after audio
+- Status: queued, next after audio
 
-The meadow, canyon, and sky floors are still flat discs. The style guide wants a 2-segment bevel and a cream lip on the top 8 cm. That stays queued until the audio pass ships. It is not part of the gameplay fixes.
+The meadow, canyon, and sky floors are still flat discs. The style guide wants a 2-segment bevel and a cream lip on the top 8 cm. Floors are the next pass after the audio PR.
+
+## SB-17 Mute icon, music, and settings
+
+- Severity: P1
+- Status: fixed
+
+Repro: at race start the mute icon was a speaker with an X while audio was playing. Title and locker had no music or SFX split, and iOS would not start sound until a gesture resumed the audio context.
+
+Fix: the icon is a plain speaker while anything is audible and a speaker with an X when the output is silent. The choice is saved on the phone. Title, locker, and pause open a SOUND panel with music, SFX, haptics, and mute. The first tap resumes Howler. `music_race_loop` loops during a race. Jump, land, dive, hit, collect, qualify, the 3-2-1-GO count, the ship launch, and menu tap, back, and confirm play the CC0 pack, preferring the `_v2` files.
+
+## SB-18 Pause label wraps and the coach tip stays up
+
+- Severity: P2
+- Status: fixed
+
+Repro: on the pause card, MAIN MENU broke onto two lines. The yellow coach tip stayed on screen over the paused race.
+
+Fix: the pause buttons stay on one line. The coach tip hides while the pause menu is open.
 
 ## SB-9 Obstacles hit with under half a second of warning
 

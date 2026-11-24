@@ -2,7 +2,8 @@ import { resolveConfig } from "./config.js";
 import { createCourse, floorsAt } from "./course.js";
 import { cameraAboveFloor, cameraFloor, createRace, step } from "./sim.js";
 import { isSnag, isUnfair } from "./feel.js";
-import { hideControls, hudStatus, placeLabel } from "./place.js";
+import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
+import { audioAudible, cueFor, muteIcon, muteLabel, normalizePrefs } from "./audio-prefs.js";
 import { spectateFrame } from "./spectate.js";
 
 function assert(cond, message) {
@@ -39,6 +40,19 @@ assert(cameraFloor(null, 0, -11) === 0, "a long fall must keep the last floor, n
 assert(cameraAboveFloor(-6, cameraFloor(null, 0, -11)) >= 1, "the fall camera dipped under the course");
 assert(hudStatus({ shipRound: false, kind: "gate", qualCount: 3, qualifyN: 12 }) === "QUAL 3/12", "gate rounds should not say SEATS 0/8");
 assert(hudStatus({ shipRound: true, seatsFilled: 2, cfg: { seats: 8 } }) === "SEATS 2/8", "ship rounds should count seats");
+assert(showCoach("race", false, "meadow", 1, false, false) === true, "the meadow coach should show at the start");
+assert(showCoach("race", false, "meadow", 1, false, true) === false, "the coach tip should hide while paused");
+assert(audioAudible({ muted: false, music: true, sfx: true }) === true, "sound on should read as audible");
+assert(audioAudible({ muted: true, music: true, sfx: true }) === false, "master mute should read as silent");
+assert(muteIcon({ muted: false, music: true, sfx: true }).endsWith("icon_unmute.svg"), "an audible game should show a plain speaker");
+assert(muteIcon({ muted: true, music: true, sfx: false }).endsWith("icon_mute.svg"), "a muted game should show a speaker with an X");
+assert(muteLabel({ muted: false, music: true, sfx: true }) === "Mute", "the audible button offers mute");
+assert(cueFor({ t: "tick", n: 3 }) === "count3", "countdown 3 should use the 3 beep");
+assert(cueFor({ t: "tick", n: 1 }) === "count1", "countdown 1 should use the high beep");
+assert(cueFor({ t: "go" }) === "go", "GO should use the v2 sting");
+assert(cueFor({ t: "jump" }) === "jump" && cueFor({ t: "land" }) === "land" && cueFor({ t: "dive" }) === "dive", "jump land and dive should use the pack");
+assert(cueFor({ t: "coin" }) === "collect" && cueFor({ t: "qualify" }) === "qualify", "collect and qualify should use the pack");
+assert(normalizePrefs({ music: false }).sfx === true, "turning music off should leave sfx on");
 assert(isSnag(8, 3, 0.8, false) === true, "a steered speed cut with no hit is a snag");
 assert(isSnag(8, 3, 0.8, true) === false, "a real hit is not a snag");
 assert(isSnag(8, 6, 0.8, false) === false, "a small slowdown is not a snag");

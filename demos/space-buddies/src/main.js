@@ -4,9 +4,10 @@ import { recordRun } from "./board.js";
 import { createRace, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
+import { cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
 import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
-import { hideControls, hudStatus, placeLabel } from "./place.js";
+import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
 import { botWish } from "./bot.js";
 
 const params = new URLSearchParams(location.search);
@@ -73,7 +74,6 @@ let roundIndex = Math.max(0, Math.min(2, Number(params.get("round")) || 0));
 let alive = null;
 let paused = false;
 let escWas = false;
-let stepMute = 0;
 const Z = (z) => z * courseScale(cfg.quick);
 const gate = (z, y, rx) => ({ x: 0, z: Z(z), rx: rx || 5, rz: 1.5, y });
 const PLANS = [
@@ -111,7 +111,19 @@ function reportError(err) {
 }
 window.addEventListener("error", (event) => reportError(event.error || event.message));
 window.addEventListener("unhandledrejection", (event) => reportError(event.reason));
-window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
+window.__sbAudio = () => {
+  const prefs = audio.prefs();
+  return {
+    state: audio.ctx && audio.ctx.state,
+    bed: audio.playing,
+    music: audio.musicOn,
+    muted: prefs.muted,
+    musicOn: prefs.music,
+    sfx: prefs.sfx,
+    haptics: prefs.haptics,
+    icon: muteIcon(prefs),
+  };
+};
 const input = createInput(app);
 const BEST_KEY = "space-buddies-best";
 
@@ -191,7 +203,6 @@ function begin() {
   if (world.hideBuddy) world.hideBuddy();
   audio.unlock();
   audio.startBeds(cfg.bedGain);
-  audio.play("ui_confirm", 0.55, 0);
   title.classList.add("hide");
   lobby.hidden = true;
   race.player.color = pickColor;
@@ -226,7 +237,19 @@ function begin() {
     },
     campaign: () => ({ planet, roundIndex, plan: currentPlan(), paused }),
   };
-  window.__sbAudio = () => ({ state: audio.ctx && audio.ctx.state, bed: audio.playing });
+  window.__sbAudio = () => {
+  const prefs = audio.prefs();
+  return {
+    state: audio.ctx && audio.ctx.state,
+    bed: audio.playing,
+    music: audio.musicOn,
+    muted: prefs.muted,
+    musicOn: prefs.music,
+    sfx: prefs.sfx,
+    haptics: prefs.haptics,
+    icon: muteIcon(prefs),
+  };
+};
   if (cfg.low && world.setLow) world.setLow();
   applyRound();
   pauseBtn.hidden = false;
@@ -358,10 +381,51 @@ GEAR.forEach((name, i) => {
   gearBox.appendChild(b);
 });
 
+function paintAudio() {
+  const prefs = audio.prefs();
+  const icon = muteBtn.querySelector("img");
+  if (icon) icon.src = muteIcon(prefs);
+  muteBtn.setAttribute("aria-label", muteLabel(prefs));
+  const musicBtn = document.getElementById("set-music");
+  const sfxBtn = document.getElementById("set-sfx");
+  const hapBtn = document.getElementById("set-haptics");
+  const muteRow = document.getElementById("set-mute");
+  if (musicBtn) {
+    musicBtn.textContent = prefs.music ? "MUSIC ON" : "MUSIC OFF";
+    musicBtn.className = "sb-btn sb-btn--block " + (prefs.music ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  if (sfxBtn) {
+    sfxBtn.textContent = prefs.sfx ? "SFX ON" : "SFX OFF";
+    sfxBtn.className = "sb-btn sb-btn--block " + (prefs.sfx ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  if (hapBtn) {
+    hapBtn.textContent = prefs.haptics ? "HAPTICS ON" : "HAPTICS OFF";
+    hapBtn.className = "sb-btn sb-btn--block " + (prefs.haptics ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  if (muteRow) {
+    muteRow.textContent = prefs.muted ? "UNMUTE" : "MUTE";
+    muteRow.className = "sb-btn sb-btn--block " + (prefs.muted ? "sb-btn--secondary" : "sb-btn--danger");
+  }
+  if (window.SBUI) window.SBUI.setHapticsMuted(!prefs.haptics);
+}
+
+function openSettings(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  audio.unlock();
+  const panel = document.getElementById("settings");
+  if (panel) panel.hidden = false;
+  paintAudio();
+}
+
 function togglePause() {
   if (!started || !race || race.phase === "results") return;
   paused = !paused;
   pauseMenu.hidden = !paused;
+  if (paused) tutor.hidden = true;
+  audio.setHeld(paused);
 }
 pauseBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -371,12 +435,49 @@ pauseBtn.addEventListener("pointerdown", (e) => {
 muteBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   e.stopPropagation();
-  const on = !audio.muted;
-  audio.setMuted(on);
-  const icon = muteBtn.querySelector("img");
-  if (icon) icon.src = on ? "ui/svg/icon_unmute.svg" : "ui/svg/icon_mute.svg";
-  muteBtn.setAttribute("aria-label", on ? "Unmute" : "Mute");
+  audio.unlock();
+  audio.setMuted(!audio.muted);
+  paintAudio();
 });
+document.getElementById("title-sound").addEventListener("pointerdown", openSettings);
+document.getElementById("lobby-sound").addEventListener("pointerdown", openSettings);
+document.getElementById("pause-sound").addEventListener("pointerdown", openSettings);
+document.getElementById("set-close").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById("settings").hidden = true;
+});
+document.getElementById("set-music").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.unlock();
+  const prefs = audio.prefs();
+  audio.setMusic(!prefs.music);
+  paintAudio();
+});
+document.getElementById("set-sfx").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.unlock();
+  const prefs = audio.prefs();
+  audio.setSfx(!prefs.sfx);
+  paintAudio();
+});
+document.getElementById("set-haptics").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const prefs = audio.prefs();
+  audio.setHaptics(!prefs.haptics);
+  paintAudio();
+});
+document.getElementById("set-mute").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.unlock();
+  audio.setMuted(!audio.muted);
+  paintAudio();
+});
+paintAudio();
 document.getElementById("resume").addEventListener("pointerdown", (e) => {
   e.preventDefault();
   paused = false;
@@ -435,8 +536,11 @@ document.getElementById("land").addEventListener("pointerdown", (e) => {
 function goMenu() {
   paused = false;
   pauseMenu.hidden = true;
+  document.getElementById("settings").hidden = true;
   planetEl.hidden = true;
   started = false;
+  audio.syncPhase("menu");
+  audio.setHeld(false);
   resultEl.hidden = true;
   resultEl.classList.remove("show");
   title.classList.remove("hide");
@@ -451,7 +555,6 @@ function goMenu() {
 againBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   audio.unlock();
-  audio.play("ui_confirm", 0.5, 0);
   restart();
 });
 
@@ -494,9 +597,13 @@ function fillPodium(race) {
 }
 
 document.getElementById("app").addEventListener("pointerdown", (e) => {
+  audio.unlock();
   const btn = e.target.closest("button");
   if (!btn || btn.disabled) return;
-  audio.play("ui_tap", 0.3, 0.01);
+  const id = btn.id;
+  if (id === "menu" || id === "pause-menu-btn" || id === "set-close") audio.play("back");
+  else if (id === "play" || id === "start" || id === "again" || id === "land") audio.play("confirm");
+  else audio.play("tap");
 }, true);
 if (window.SBUI) SBUI.bindPress(document.getElementById("app"));
 
@@ -554,7 +661,7 @@ function updateHud(dt) {
     else coinNum.textContent = String(coinN);
   }
 
-  const showTutor = !race.player.seated && race.phase === "race" && race.zoneId === "meadow" && race.time < 8 && !cfg.auto;
+  const showTutor = showCoach(race.phase, race.player.seated, race.zoneId, race.time, cfg.auto, paused);
   tutor.hidden = !showTutor;
   if (showTutor) {
     tutor.textContent = race.time < 2.6 ? "DRAG THE LEFT SIDE TO RUN" : race.time < 5.2 ? "DRAG THE RIGHT SIDE TO LOOK" : "JUMP AND DIVE";
@@ -675,31 +782,21 @@ function updateHud(dt) {
 function handleEvents() {
   let cracked = false;
   for (const e of race.events) {
-    if (e.t === "tick") audio.play("tick", 0.55, 0.05);
-    else if (e.t === "go") audio.play("go", 0.6, 0.05);
-    else if (e.t === "jump" && e.id === 0) audio.play("jump", 0.4, 0.05);
-    else if (e.t === "coin") audio.play("ui_tap", 0.45, 0.03);
-    else if (e.t === "glide" && e.id === 0) audio.play("jump", 0.22, 0.08);
-    else if (e.t === "grab" && e.id === 0) audio.play("bump", 0.35, 0.05);
-    else if (e.t === "qualify" && e.id === 0) {
-      audio.play("seat", 0.45, 0.05);
+    const cue = cueFor(e);
+    const skip = e.t === "crack" || (playerOnlyCue(e) && e.id !== 0) || (e.t === "land" && !(e.impact > 3));
+    if (cue && !skip) audio.play(cue);
+    if (e.t === "qualify" && e.id === 0) {
       race.slowMo = 0.45;
       race.popConfetti = (race.popConfetti || 0) + 1;
     }
-    else if (e.t === "roundwin") audio.play("escaped", 0.55, 0.1);
-    else if (e.t === "eliminated") audio.play("missed", 0.6, 0.1);
     else if (e.t === "respawn" && e.fade && fadeEl) {
       fadeEl.classList.add("on");
       setTimeout(() => fadeEl.classList.remove("on"), 200);
     }
-    else if (e.t === "land" && e.id === 0 && e.impact > 3) audio.play("land", 0.35, 0.08);
     else if (e.t === "bump") {
-      audio.play("bump", e.id === 0 ? 0.5 : 0.22, 0.06);
       if (e.id === 0 && e.big) hitStop = 0.08;
-    } else if (e.t === "dive" && e.id === 0) audio.play("jump", 0.28, 0.04);
-    else if (e.t === "crack") cracked = true;
+    } else if (e.t === "crack") cracked = true;
     else if (e.t === "seat") {
-      audio.play("seat", 0.5, 0.02);
       const dot = seatsEl.children[e.seat];
       if (dot) {
         dot.classList.add("pop");
@@ -708,22 +805,12 @@ function handleEvents() {
       if (e.id === 0) {
         showToast("SEAT " + (e.seat + 1) + " LOCKED");
       }
-    } else if (e.t === "lastseat") audio.play("last", 0.7, 0.2);
-    else if (e.t === "launch") audio.play("launch", 0.65, 0.2);
-    else if (e.t === "escaped") {
-      audio.play("escaped", 0.7, 0.2);
-      if (audio.flourish) audio.flourish("win");
-    } else if (e.t === "missed") {
-      audio.play("missed", 0.65, 0.2);
-      if (audio.flourish) audio.flourish("miss");
-    }
-    else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
+    } else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
     else if (e.t === "zone") showZone(e.name);
-    else if (e.t === "geyser") audio.play("bump", e.id === 0 ? 0.4 : 0.18, 0.08);
     else if (e.t === "error") reportError(e.message);
   }
   if (cracked && crackMute <= 0) {
-    audio.play("crack", 0.32, 0.12);
+    audio.play("crumble", 0.34);
     crackMute = 0.34;
   }
   race.events.length = 0;
@@ -773,6 +860,7 @@ function frame(now) {
   if (raw.pause && !escWas) togglePause();
   escWas = !!raw.pause;
   if (paused) {
+    tutor.hidden = true;
     try {
       world.update(race, 0, raw);
       world.render();
@@ -814,14 +902,8 @@ function frame(now) {
   }
   if (steps > clock.stepsMax) clock.stepsMax = steps;
   crackMute = Math.max(0, crackMute - dt);
-  if (race.phase === "race" && race.player.grounded && Math.hypot(race.player.vel.x, race.player.vel.z) > 2.2) {
-    stepMute -= dt;
-    if (stepMute <= 0) {
-      audio.play("land", 0.1, 0.02);
-      stepMute = 0.32;
-    }
-  }
   handleEvents();
+  audio.syncPhase(race.phase);
   const dist = race.player.pos.z - race.collapseZ;
   const rumble = race.phase === "race" ? Math.max(0, Math.min(1, 1 - dist / 36)) : (race.phase === "launch" ? 0.4 : 0);
   audio.setRumble(rumble * cfg.rumbleMax);

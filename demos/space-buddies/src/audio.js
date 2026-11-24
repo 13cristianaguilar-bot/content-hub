@@ -1,179 +1,195 @@
-const FILES = {
-  ui_tap: "assets/audio/ui_tap.mp3",
-  ui_confirm: "assets/audio/ui_confirm.mp3",
-  jump: "assets/audio/sfx_jump.mp3",
-  land: "assets/audio/sfx_land.mp3",
-  bump: "assets/audio/sfx_bump_boing.mp3",
-  tick: "assets/audio/sfx_countdown_tick.mp3",
-  go: "assets/audio/sfx_countdown_go.mp3",
-  crack: "assets/audio/sfx_ground_crack.mp3",
-  seat: "assets/audio/sfx_seat_filled.mp3",
-  last: "assets/audio/sfx_last_seat_alert.mp3",
-  launch: "assets/audio/sfx_ship_launch.mp3",
-  escaped: "assets/audio/jingle_escaped.mp3",
-  missed: "assets/audio/jingle_missed.mp3",
-  bed: "assets/audio/amb_planet_bed_loop.mp3",
-  rumble: "assets/audio/amb_collapse_rumble_loop.mp3",
+import { Howl, Howler } from "howler";
+import { loadAudioPrefs, normalizePrefs, saveAudioPrefs } from "./audio-prefs.js";
+
+const BASE = "assets/audio/";
+
+function src(name, extra) {
+  const files = [BASE + name + ".ogg", BASE + name + ".mp3"];
+  if (extra) files.splice(1, 0, BASE + name + extra);
+  return files;
+}
+
+const SFX = {
+  jump: ["sfx_jump_v2", 0.75],
+  land: ["sfx_land_v2", 0.7],
+  dive: ["sfx_dive", 0.8],
+  hit: ["sfx_hit", 0.8],
+  collect: ["sfx_collect", 0.75],
+  qualify: ["sfx_qualify", 0.85],
+  count3: ["sfx_countdown_3", 0.8],
+  count2: ["sfx_countdown_2", 0.8],
+  count1: ["sfx_countdown_1", 0.8],
+  go: ["sfx_countdown_go_v2", 0.88],
+  launch: ["sfx_ship_launch_v2", 0.8],
+  tap: ["ui_tap_v2", 0.55],
+  back: ["ui_back", 0.55],
+  confirm: ["ui_confirm_v2", 0.62],
+  eliminated: ["sfx_eliminated", 0.8],
+  crumble: ["sfx_tile_crumble", 0.72],
+  seat: ["sfx_seat_filled", 0.75],
+  last: ["sfx_last_seat_alert", 0.8],
+  crack: ["sfx_ground_crack", 0.75],
+  escaped: ["jingle_escaped", 0.85],
 };
 
-export function createAudio() {
-  const Ctx = window.AudioContext || window.webkitAudioContext;
-  const ctx = Ctx ? new Ctx({ latencyHint: "interactive" }) : null;
-  const buffers = {};
-  const last = {};
-  let master;
-  let bedGain;
-  let rumbleGain;
-  let bedSrc;
-  let rumbleSrc;
-  let wantBeds = false;
-  let bedVol = 0;
-  let muted = false;
+const DUCK = { qualify: true, go: true, launch: true, eliminated: true, escaped: true };
+const MUSIC_VOL = 0.35;
+const BED_VOL = 0.22;
 
-  if (ctx) {
-    master = ctx.createGain();
-    master.gain.value = 1;
-    master.connect(ctx.destination);
-    bedGain = ctx.createGain();
-    bedGain.gain.value = 0;
-    bedGain.connect(master);
-    rumbleGain = ctx.createGain();
-    rumbleGain.gain.value = 0;
-    rumbleGain.connect(master);
+export function createAudio() {
+  const prefs = loadAudioPrefs(window.localStorage || { getItem() { return null; }, setItem() {} });
+  const cues = {};
+  Object.keys(SFX).forEach((key) => {
+    const [name, volume] = SFX[key];
+    cues[key] = new Howl({ src: src(name), volume, preload: true });
+  });
+  const music = new Howl({
+    src: src("music_race_loop", ".m4a"),
+    loop: true,
+    volume: MUSIC_VOL,
+    html5: false,
+    preload: true,
+  });
+  const bed = new Howl({
+    src: src("amb_planet_bed_loop"),
+    loop: true,
+    volume: BED_VOL,
+    html5: false,
+    preload: true,
+  });
+  const rumble = new Howl({
+    src: src("amb_collapse_rumble_loop"),
+    loop: true,
+    volume: 0,
+    html5: false,
+    preload: true,
+  });
+  const last = {};
+  let unlocked = false;
+  let raceOn = false;
+  let held = false;
+  let duckTimer = 0;
+
+  function apply() {
+    const hearMusic = !prefs.muted && prefs.music;
+    const hearSfx = !prefs.muted && prefs.sfx;
+    music.mute(!hearMusic);
+    bed.mute(!hearMusic);
+    rumble.mute(!hearMusic);
+    Object.keys(cues).forEach((key) => cues[key].mute(!hearSfx));
+    if (window.SBUI) window.SBUI.setHapticsMuted(!prefs.haptics);
   }
 
-  async function load(onProgress) {
-    if (!ctx) return;
-    const keys = Object.keys(FILES);
-    let done = 0;
-    await Promise.all(keys.map(async (key) => {
-      const res = await fetch(FILES[key]);
-      const arr = await res.arrayBuffer();
-      buffers[key] = await ctx.decodeAudioData(arr.slice(0));
-      done++;
-      if (onProgress) onProgress(done / keys.length);
-    }));
-    if (wantBeds) startBeds(bedVol);
+  function persist(patch) {
+    Object.assign(prefs, normalizePrefs(Object.assign({}, prefs, patch)));
+    saveAudioPrefs(window.localStorage, prefs);
+    apply();
+  }
+
+  function resumeCtx() {
+    const ctx = Howler.ctx;
+    if (ctx && ctx.state === "suspended") ctx.resume();
   }
 
   function unlock() {
-    if (!ctx) return;
-    if (ctx.state === "suspended") ctx.resume();
-    const buf = ctx.createBuffer(1, 1, 22050);
-    const src = ctx.createBufferSource();
-    src.buffer = buf;
-    src.connect(ctx.destination);
-    src.start(0);
-    if (wantBeds) startBeds(bedVol);
+    unlocked = true;
+    if (!held) {
+      if (raceOn) {
+        if (!music.playing()) music.play();
+      } else if (!bed.playing()) bed.play();
+    }
+    resumeCtx();
   }
 
-  function partyBuffer() {
-    const rate = 44100;
-    const seconds = 2;
-    const count = rate * seconds;
-    const buffer = ctx.createBuffer(1, count, rate);
-    const data = buffer.getChannelData(0);
-    const kick = [0, 0.5, 1, 1.5];
-    const bass = [55, 55, 73, 65];
-    for (let i = 0; i < count; i++) {
-      const t = i / rate;
-      const beat = Math.floor(t * 2);
-      let sample = 0;
-      for (const hit of kick) {
-        const dt = t - hit;
-        if (dt >= 0 && dt < 0.12) sample += Math.sin(dt * 180) * Math.exp(-dt * 28) * 0.7;
-      }
-      const note = bass[beat % bass.length];
-      sample += Math.sin(t * note * Math.PI * 2) * 0.18 * (0.6 + 0.4 * Math.sin(t * 8));
-      if ((beat % 2) === 0) {
-        const hat = (t * 8) % 1;
-        sample += (Math.random() * 2 - 1) * Math.exp(-hat * 40) * 0.08;
-      }
-      data[i] = Math.max(-1, Math.min(1, sample));
-    }
-    return buffer;
+  function startBeds() {
+    if (raceOn || held) return;
+    if (unlocked && !bed.playing()) bed.play();
+    resumeCtx();
   }
 
-  function startBeds(bedVolume) {
-    if (!ctx) return false;
-    wantBeds = true;
-    bedVol = bedVolume;
-    if (ctx.state === "suspended") ctx.resume();
-    if (bedSrc) return true;
-    bedSrc = ctx.createBufferSource();
-    bedSrc.buffer = partyBuffer();
-    bedSrc.loop = true;
-    bedSrc.connect(bedGain);
-    bedSrc.start(0);
-    bedGain.gain.setTargetAtTime(bedVolume * 1.35, ctx.currentTime, 0.4);
-    if (buffers.rumble && !rumbleSrc) {
-      rumbleSrc = ctx.createBufferSource();
-      rumbleSrc.buffer = buffers.rumble;
-      rumbleSrc.loop = true;
-      rumbleSrc.connect(rumbleGain);
-      rumbleSrc.start(0);
+  function syncPhase(phase) {
+    const racing = phase === "race" || phase === "launch";
+    if (racing === raceOn) return;
+    raceOn = racing;
+    if (held || !unlocked) return;
+    if (racing) {
+      if (bed.playing()) bed.pause();
+      if (!music.playing()) music.play();
+      music.volume(MUSIC_VOL);
+    } else {
+      if (music.playing()) music.pause();
+      if (!bed.playing()) bed.play();
     }
-    return true;
+  }
+
+  function setHeld(on) {
+    held = !!on;
+    if (held) {
+      if (music.playing()) music.pause();
+      if (bed.playing()) bed.pause();
+      if (rumble.playing()) rumble.pause();
+      return;
+    }
+    if (!unlocked) return;
+    if (raceOn) {
+      if (!music.playing()) music.play();
+    } else if (!bed.playing()) bed.play();
   }
 
   function setRumble(value) {
-    if (!rumbleGain || !ctx) return;
-    rumbleGain.gain.setTargetAtTime(Math.max(0, Math.min(0.5, value)), ctx.currentTime, 0.2);
+    const vol = Math.max(0, Math.min(0.3, value || 0));
+    rumble.volume(vol);
+    if (!unlocked || held || !raceOn) return;
+    if (vol > 0.02 && !rumble.playing()) rumble.play();
+    if (vol <= 0.02 && rumble.playing()) rumble.pause();
   }
 
-  function flourish(kind) {
-    if (!ctx || !master) return;
-    const notes = kind === "win" ? [523, 659, 784, 1046] : [440, 349, 262];
-    notes.forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = kind === "win" ? "triangle" : "sawtooth";
-      osc.frequency.value = freq;
-      const start = ctx.currentTime + i * 0.09;
-      gain.gain.setValueAtTime(0.0001, start);
-      gain.gain.exponentialRampToValueAtTime(kind === "win" ? 0.07 : 0.05, start + 0.03);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.32);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(start);
-      osc.stop(start + 0.34);
-    });
-  }
-
-  function setMuted(on) {
-    muted = !!on;
-    if (master) master.gain.setTargetAtTime(muted ? 0 : 1, ctx.currentTime, 0.05);
-  }
-
-  function setZone(id) {
-    if (!bedSrc) return;
-    const rate = { meadow: 1, canyon: 0.9, sky: 1.08, ice: 0.84, climb: 1.02, ship: 1.12 }[id] || 1;
-    bedSrc.playbackRate.value = rate;
-  }
-
-  function play(name, volume = 0.5, gap = 0.07) {
-    if (bedGain && ctx && !muted) {
-      bedGain.gain.cancelScheduledValues(ctx.currentTime);
-      bedGain.gain.setTargetAtTime(bedVol * 0.28, ctx.currentTime, 0.02);
-      bedGain.gain.setTargetAtTime(bedVol * 1.35, ctx.currentTime + 0.35, 0.18);
-    }
-    if (!ctx || !buffers[name] || muted) return;
-    const now = ctx.currentTime;
+  function play(name, gap = 0.05) {
+    const cue = cues[name];
+    if (!cue) return;
+    const now = Howler.ctx ? Howler.ctx.currentTime : performance.now() / 1000;
     if (last[name] && now - last[name] < gap) return;
     last[name] = now;
-    const src = ctx.createBufferSource();
-    const gain = ctx.createGain();
-    gain.gain.value = volume;
-    src.buffer = buffers[name];
-    src.connect(gain);
-    gain.connect(master);
-    src.start(0);
+    cue.play();
+    if (DUCK[name] && prefs.music && !prefs.muted) {
+      music.fade(music.volume() || MUSIC_VOL, 0.12, 120);
+      clearTimeout(duckTimer);
+      duckTimer = setTimeout(() => {
+        if (!prefs.muted && prefs.music) music.fade(0.12, MUSIC_VOL, 280);
+      }, 700);
+    }
   }
 
+  function load() {
+    const all = [music, bed, rumble].concat(Object.keys(cues).map((key) => cues[key]));
+    return Promise.all(all.map((howl) => new Promise((resolve) => {
+      if (howl.state() === "loaded") resolve();
+      else {
+        howl.once("load", () => resolve());
+        howl.once("loaderror", () => resolve());
+      }
+    })));
+  }
+
+  apply();
+
   return {
-    load, unlock, startBeds, setRumble, setMuted, setZone, play, flourish,
-    get ctx() { return ctx; },
-    get muted() { return muted; },
-    get playing() { return !!bedSrc; },
+    load,
+    unlock,
+    startBeds,
+    syncPhase,
+    setHeld,
+    setRumble,
+    play,
+    setMuted(on) { persist({ muted: !!on }); },
+    setMusic(on) { persist({ music: !!on }); },
+    setSfx(on) { persist({ sfx: !!on }); },
+    setHaptics(on) { persist({ haptics: !!on }); },
+    prefs() { return Object.assign({}, prefs); },
+    setZone() {},
+    get ctx() { return Howler.ctx || null; },
+    get muted() { return prefs.muted; },
+    get playing() { return music.playing() || bed.playing(); },
+    get musicOn() { return music.playing(); },
   };
 }

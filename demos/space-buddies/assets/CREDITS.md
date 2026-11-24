@@ -5,7 +5,7 @@ Course contact shading is baked in the game from the floor vertices and nearby b
 
 Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated). The playable Buddy is `assets/space_buddy_rigged.glb`: one skinned mesh, 20 bones, and named clips (Idle, Run, Jump, Fall, Land, Dive, Grab, Tumble, Celebrate, Eliminated, Emote). Root motion stays in place. The escape ship is `assets/escape_ship_web.glb`.
 
-The zone music bed is an original procedural party loop written for this demo. Countdown, qualify, eliminated, and escape stingers are the existing files in `assets/audio/`.
+Race music, menu bed, and sound effects in `assets/audio/` are procedural cues dedicated to the public domain under CC0 1.0. Where a `_v2` file exists, the game plays that one. `music_race_loop` is the race loop (OGG, MP3, and M4A). Playback uses Howler.js 2.2.4 (MIT). The older placeholder names that were already in the folder were left in place.
 
 UI display type is Lilita One by Juan Montoreano, and body type is Fredoka by the Indian Type Foundry. Both are used under the SIL Open Font License 1.1. The license texts are `ui/fonts/LilitaOne-OFL.txt` and `ui/fonts/Fredoka-OFL.txt`.
 

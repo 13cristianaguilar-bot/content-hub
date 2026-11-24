@@ -178,4 +178,37 @@ assert(left === 8, "survival did not shrink the field, alive " + left);
 assert(survival.phase === "results", "survival did not end when 8 remained");
 assert(survival.player.qualified === false, "the fallen player was marked qualified");
 
+const slab = course.chunks[0];
+let topY = -99;
+let botY = 99;
+for (let i = 1; i < slab.positions.length; i += 3) {
+  topY = Math.max(topY, slab.positions[i]);
+  botY = Math.min(botY, slab.positions[i]);
+}
+let topG = 0;
+let topN = 0;
+let cream = 0;
+for (let i = 0; i < slab.positions.length; i += 3) {
+  const y = slab.positions[i + 1];
+  if (y > topY - 0.02) {
+    topG += slab.colors[i + 1];
+    topN++;
+  }
+  const dy = topY - y;
+  if (dy > 0.05 && dy < 0.2 && slab.colors[i] > 0.9 && slab.colors[i + 1] > 0.9) cream++;
+}
+assert(botY < topY - 0.3, "the meadow slab has no bevel thickness, " + topY + " " + botY);
+assert(topN > 0 && topG / topN > 0.7, "the meadow top is still grey, g " + (topG / Math.max(1, topN)));
+assert(cream > 10, "the cream lip is missing");
+const stride = 29;
+const ia = stride;
+const ib = ia + 1;
+const ic = ia + stride;
+const ax = slab.positions[ib * 3] - slab.positions[ia * 3];
+const az = slab.positions[ib * 3 + 2] - slab.positions[ia * 3 + 2];
+const bx = slab.positions[ic * 3] - slab.positions[ia * 3];
+const bz = slab.positions[ic * 3 + 2] - slab.positions[ia * 3 + 2];
+const ny = az * bx - ax * bz;
+assert(ny > 0, "the floor top faces down");
+
 console.log("qa regression tests passed", "back", back.toFixed(2), "height", open.y.toFixed(2), "overlap y", overlap.player.pos.y.toFixed(2));

@@ -1,20 +1,26 @@
 // Open kingdoms. Each zone is a wide plaza or a set of islands with
 // three routes, not a single race ribbon.
 
-const CANDY = {
-  meadow: { a: [0.5, 0.85, 0.54], b: [1, 0.91, 0.76], rim: [0.31, 0.68, 0.38] },
-  canyon: { a: [1, 0.72, 0.47], b: [1, 0.88, 0.69], rim: [0.88, 0.48, 0.29] },
-  sky: { a: [0.55, 0.42, 1], b: [1, 0.82, 0.25], rim: [0.4, 0.27, 0.88] },
-  ice: { a: [0.24, 0.78, 1], b: [0.76, 0.69, 1], rim: [0.24, 0.42, 1] },
-  climb: { a: [1, 0.82, 0.25], b: [1, 0.48, 0.1], rim: [0.49, 0.4, 0.66] },
-  ship: { a: [1, 0.82, 0.25], b: [1, 0.42, 0.42], rim: [0.78, 0.2, 0.28] },
+const CREAM = [1, 0.965, 0.898];
+const GROUND = {
+  meadow: { top: [0.306, 0.788, 0.416], side: [0.220, 0.557, 0.286] },
+  canyon: { top: [1, 0.604, 0.290], side: [0.780, 0.373, 0.196] },
+  sky: { top: [0.890, 0.925, 1], side: [0.620, 0.710, 0.980] },
+  ice: { top: [0.780, 0.925, 1], side: [0.420, 0.730, 0.920] },
+  climb: { top: [0.640, 0.520, 0.820], side: [0.400, 0.310, 0.580] },
+  ship: { top: [0.420, 0.440, 0.720], side: [0.240, 0.250, 0.460] },
 };
 
-function floorColor(zone, t, x, z) {
-  const c = CANDY[zone] || CANDY.meadow;
-  if (t > 0.58) return c.rim;
-  const alt = Math.sin(x * 0.31 + z * 0.23) > 0;
-  return alt ? c.b : c.a;
+function mix3(a, b, t) {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+function slabPaint(zone, key) {
+  const g = GROUND[zone] || GROUND.meadow;
+  if (key === "side") return g.side;
+  if (key === "cream") return CREAM;
+  if (key === "mix") return mix3(g.top, CREAM, 0.55);
+  return g.top;
 }
 
 function lerp(a, b, t) {
@@ -42,33 +48,51 @@ function zoneAt(zones, z) {
   return id;
 }
 
-function discGeometry(cx, y, cz, rx, rz, zone, hex) {
-  const rings = 4;
-  const seg = 18;
+function discGeometry(cx, y, cz, rx, rz, zone) {
+  const bevel = Math.min(0.09, Math.min(rx, rz) * 0.16);
+  const lip = 0.08;
+  const skirt = 0.26;
+  const seg = rx < 3 ? 14 : 28;
+  const rings = [
+    { frac: 0, dy: 0, key: "top" },
+    { frac: 0.34, dy: 0, key: "top" },
+    { frac: 0.68, dy: 0, key: "top" },
+    { inset: bevel, dy: 0, key: "top" },
+    { inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
+    { inset: 0, dy: -bevel, key: "cream" },
+    { inset: 0, dy: -bevel - lip, key: "cream" },
+    { inset: 0, dy: -bevel - lip - skirt, key: "side" },
+  ];
   const positions = [];
   const colors = [];
   const indices = [];
   const stride = seg + 1;
-  for (let r = 0; r <= rings; r++) {
-    const t = r / rings;
-    const drop = t > 0.58 ? (t - 0.58) * 1.35 : 0;
+  for (let r = 0; r < rings.length; r++) {
+    const ring = rings[r];
+    const radX = ring.frac != null ? ring.frac * (rx - bevel) : Math.max(0.15, rx - ring.inset);
+    const radZ = ring.frac != null ? ring.frac * (rz - bevel) : Math.max(0.15, rz - ring.inset);
     for (let s = 0; s <= seg; s++) {
       const a = (s / seg) * Math.PI * 2;
-      const wob = 1 + Math.sin(a * 3 + cx * 0.2 + cz * 0.05) * 0.05;
-      const wx = cx + Math.cos(a) * rx * t * wob;
-      const wz = cz + Math.sin(a) * rz * t * wob;
-      positions.push(wx, y - drop, wz);
-      const paint = floorColor(zone, hex ? Math.max(t, t > 0.45 ? 0.7 : t) : t, wx, wz);
+      const wx = cx + Math.cos(a) * radX;
+      const wz = cz + Math.sin(a) * radZ;
+      positions.push(wx, y + ring.dy, wz);
+      const paint = slabPaint(zone, ring.key);
       colors.push(paint[0], paint[1], paint[2]);
     }
   }
-  for (let r = 0; r < rings; r++) {
+  for (let r = 0; r < rings.length - 1; r++) {
     for (let s = 0; s < seg; s++) {
       const a = r * stride + s;
       const b = a + stride;
-      indices.push(a, b, a + 1, a + 1, b, b + 1);
+      indices.push(a, a + 1, b, a + 1, b + 1, b);
     }
   }
+  const bottom = positions.length / 3;
+  positions.push(cx, y - bevel - lip - skirt, cz);
+  const paint = slabPaint(zone, "side");
+  colors.push(paint[0] * 0.86, paint[1] * 0.86, paint[2] * 0.86);
+  const base = (rings.length - 1) * stride;
+  for (let s = 0; s < seg; s++) indices.push(bottom, base + s + 1, base + s);
   return {
     positions: new Float32Array(positions),
     colors: new Float32Array(colors),
@@ -77,8 +101,24 @@ function discGeometry(cx, y, cz, rx, rz, zone, hex) {
 }
 
 function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
-  const candy = CANDY[zone] || CANDY.meadow;
-  const steps = 10;
+  const bevel = Math.min(0.08, width * 0.14);
+  const lip = 0.08;
+  const skirt = 0.26;
+  const steps = 8;
+  const across = [
+    { side: -1, inset: 0, dy: -(bevel + lip + skirt), key: "side" },
+    { side: -1, inset: 0, dy: -(bevel + lip), key: "side" },
+    { side: -1, inset: 0, dy: -bevel, key: "cream" },
+    { side: -1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
+    { side: -1, inset: bevel, dy: 0, key: "top" },
+    { side: 0, inset: 0, dy: 0, key: "top" },
+    { side: 1, inset: bevel, dy: 0, key: "top" },
+    { side: 1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
+    { side: 1, inset: 0, dy: -bevel, key: "cream" },
+    { side: 1, inset: 0, dy: -(bevel + lip), key: "side" },
+    { side: 1, inset: 0, dy: -(bevel + lip + skirt), key: "side" },
+  ];
+  const cols = across.length;
   const positions = [];
   const colors = [];
   const indices = [];
@@ -92,19 +132,26 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
     const x = lerp(x0, x1, t);
     const z = lerp(z0, z1, t);
     const y = lerp(y0, y1, t);
-    const alt = i % 2 === 0 ? candy.a : candy.b;
-    for (let side = -1; side <= 1; side++) {
-      const edge = side !== 0;
-      const o = edge ? width * 0.5 * side : 0;
-      positions.push(x + px * o, y - (edge ? 0.22 : 0), z + pz * o);
-      const paint = edge ? candy.rim : alt;
+    for (let c = 0; c < cols; c++) {
+      const p = across[c];
+      const o = p.side * (width * 0.5 - p.inset);
+      const wx = x + px * o;
+      const wz = z + pz * o;
+      positions.push(wx, y + p.dy, wz);
+      const paint = slabPaint(zone, p.key);
       colors.push(paint[0], paint[1], paint[2]);
     }
   }
   for (let i = 0; i < steps; i++) {
-    const a = i * 3;
-    indices.push(a, a + 3, a + 1, a + 1, a + 3, a + 4);
-    indices.push(a + 1, a + 4, a + 2, a + 2, a + 4, a + 5);
+    for (let c = 0; c < cols - 1; c++) {
+      const a = i * cols + c;
+      const b = a + cols;
+      indices.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+    const a = i * cols;
+    const b = a + cols;
+    const r = a + cols - 1;
+    indices.push(a, b, r, r, b, b + cols - 1);
   }
   return {
     positions: new Float32Array(positions),
@@ -209,7 +256,7 @@ export function createCourse(cfg) {
   const openDoor = Math.floor(rnd() * 3);
 
   function addDisc(x, y, z, rx, rz, zone, extra) {
-    const idx = makeChunk(chunks, zone, z - rz, z + rz, discGeometry(x, y, z, rx, rz, zone, extra && extra.hex));
+    const idx = makeChunk(chunks, zone, z - rz, z + rz, discGeometry(x, y, z, rx, rz, zone));
     const pad = { x, y, z, rx, rz, zone, chunk: idx, conveyX: extra && extra.conveyX };
     floors.push(pad);
     if (extra && extra.fragile) chunks[idx].fragile = true;

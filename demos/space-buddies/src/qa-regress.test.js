@@ -5,6 +5,7 @@ import { isSnag, isUnfair } from "./feel.js";
 import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
 import { audioAudible, cueFor, muteIcon, muteLabel, normalizePrefs } from "./audio-prefs.js";
 import { spectateFrame } from "./spectate.js";
+import { backOffView, clearSpheres, pullOutOfSphere } from "./occlude.js";
 
 function assert(cond, message) {
   if (!cond) {
@@ -195,11 +196,17 @@ for (let i = 0; i < slab.positions.length; i += 3) {
     topN++;
   }
   const dy = topY - y;
-  if (dy > 0.05 && dy < 0.2 && slab.colors[i] > 0.9 && slab.colors[i + 1] > 0.9) cream++;
+  if (dy > 0.12 && dy < 0.7 && slab.colors[i] > 0.9 && slab.colors[i + 1] > 0.9) cream++;
 }
-assert(botY < topY - 0.3, "the meadow slab has no bevel thickness, " + topY + " " + botY);
+assert(botY < topY - 0.45, "the meadow slab lip is still too thin, " + topY + " " + botY);
 assert(topN > 0 && topG / topN > 0.7, "the meadow top is still grey, g " + (topG / Math.max(1, topN)));
 assert(cream > 10, "the cream lip is missing");
+const inside = pullOutOfSphere({ x: 0, y: 1, z: 0 }, { x: 0, y: 1, z: 0 }, 2.2, { x: 0, y: 1.2, z: 8 });
+assert(inside && inside.z > 2.2, "a camera inside a prop should come out on the buddy's side");
+const clear = clearSpheres({ x: 1, y: 1, z: 1 }, [{ x: 0, y: 1, z: 0, r: 3 }], { x: 6, y: 1, z: 0 });
+assert(clear.x > 2.5, "overlapping props should release the camera");
+const backed = backOffView({ x: 0, y: 2, z: 0 }, { x: 0, y: 1, z: 6 }, [{ x: 0, y: 1.2, z: 1.4, r: 0.9 }]);
+assert(backed.z < -0.5, "a prop against the lens should push the camera back");
 const stride = 29;
 const ia = stride;
 const ib = ia + 1;

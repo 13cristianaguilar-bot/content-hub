@@ -192,6 +192,15 @@ Repro: every heat used the full-course 180 second clock, so a short gate never f
 
 Fix: each plan entry has its own seconds, and the collapse front starts just behind that start and arrives at the gate near the end of the clock. Trailing bots speed up a little and leaders ease off, never above the top bot cap. Bots steer to the crown, the ship, or a nearby gate, sidestep pendulums, and dive on flat runs. Bumpers and sweepers stay on planet 1, with a dark outline. Planet 2 pushes the wind, ferries, and rollers. Planet 3 speeds the collapse and the ice cracks, and swings the pendulums wider. Course trim sits outside the pad and stays muted.
 
+## SB-22 Camera, banner, launch, and the results card
+
+- Severity: P1
+- Status: fixed
+
+Repro: the follow spring ignored camLerp, a small look drag could tip the camera into the ground, and the zone banner could sit on the mute and pause buttons. The results card left the race HUD up, jammed podium names together, and never said why a round ended. `?low` called setPost before it existed. The ship was the grey web hull and coins were plain discs.
+
+Fix: the camera uses camLerp, eases pitch back faster, and is pushed out of Buddies and props. Occluders in front of the lens fade. The zone banner sits under the tools row and ignores taps. The results card hides the race HUD, spaces the podium, and adds a reason line. Mute exposes aria-pressed and Sound on / Sound off. `?low` sets dpr 0.75 with post off. The candy rocket, star coin, checkpoint chime, timer ticks, and pause swooshes are in. A ship-run occlusion sample found 0 buried frames.
+
 ## SB-21 Planet 3 reads as dusk, and the results card hides the field
 
 - Severity: P2

@@ -24,6 +24,14 @@ export function showCoach(phase, seated, zoneId, time, auto, paused) {
   return phase === "race" && zoneId === "meadow" && time < 8;
 }
 
+export function resultReason(race) {
+  if (!race || race.result === "qualified" || race.result === "escaped") return "";
+  const limit = race.roundSeconds || (race.cfg && race.cfg.raceSeconds) || 0;
+  if (race.shipRound && race.player && !race.player.seated) return "SHIP SEATS FILLED";
+  if (limit && (race.time || 0) >= limit - 0.08) return "TIME RAN OUT";
+  return "FELL OFF THE PLANET";
+}
+
 export function resultBoard(race) {
   const list = (race && race.racers) || [];
   const made = list.filter((r) => r && (r.qualified || r.seated));

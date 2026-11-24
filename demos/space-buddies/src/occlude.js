@@ -1,5 +1,22 @@
 // Pull a camera that has ended up inside a prop back to the buddy's side of that prop.
 
+export function cameraBuried(cam, floors, buddies) {
+  if (!cam) return "";
+  for (const pad of floors || []) {
+    if (!pad || !pad.rx || !pad.rz) continue;
+    const nx = (cam.x - pad.x) / pad.rx;
+    const nz = (cam.z - pad.z) / pad.rz;
+    if (nx * nx + nz * nz < 0.72 && cam.y > pad.y - 0.3 && cam.y < pad.y + 0.7) return "terrain";
+  }
+  for (const buddy of buddies || []) {
+    const dx = cam.x - buddy.x;
+    const dy = cam.y - (buddy.y + 0.8);
+    const dz = cam.z - buddy.z;
+    if (dx * dx + dy * dy + dz * dz < 0.45 * 0.45) return "buddy";
+  }
+  return "";
+}
+
 export function pullOutOfSphere(cam, center, radius, head, pad = 0.5) {
   const dx = cam.x - center.x;
   const dy = cam.y - center.y;

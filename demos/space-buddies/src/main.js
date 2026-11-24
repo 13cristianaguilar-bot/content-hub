@@ -4,10 +4,10 @@ import { recordRun } from "./board.js";
 import { createRace, paceCollapse, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
-import { cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
+import { audioAudible, cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
 import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
-import { hideControls, hudStatus, placeLabel, resultBoard, showCoach } from "./place.js";
+import { hideControls, hudStatus, placeLabel, resultBoard, resultReason, showCoach } from "./place.js";
 import { detailOn, loadAccess, saveAccess } from "./look.js";
 import { botWish } from "./bot.js";
 import { cineDuration, skipCine } from "./cine.js";
@@ -227,6 +227,8 @@ function begin() {
     view: () => (world.view ? world.view() : null),
     sees: (x, y, z) => (world.sees ? world.sees(x, y, z) : true),
     ground: (x, z) => groundAt(course, x, z),
+    get dpr() { return world && world.dpr; },
+    get post() { return world && world.post; },
     supports: (x, y, z) => {
       let under = null;
       let through = null;
@@ -464,6 +466,7 @@ function paintAudio() {
   const icon = muteBtn.querySelector("img");
   if (icon) icon.src = muteIcon(prefs);
   muteBtn.setAttribute("aria-label", muteLabel(prefs));
+  muteBtn.setAttribute("aria-pressed", audioAudible(prefs) ? "false" : "true");
   const musicBtn = document.getElementById("set-music");
   const sfxBtn = document.getElementById("set-sfx");
   const hapBtn = document.getElementById("set-haptics");
@@ -529,6 +532,7 @@ function togglePause() {
   paused = !paused;
   pauseMenu.hidden = !paused;
   if (paused) tutor.hidden = true;
+  audio.play(paused ? "pauseOpen" : "pauseClose");
   audio.setHeld(paused);
 }
 pauseBtn.addEventListener("pointerdown", (e) => {
@@ -785,7 +789,15 @@ function updateHud(dt) {
   const remain = race.phase === "countdown" ? limit : Math.max(0, limit - race.time);
   const label = clock(remain);
   if (timerNum && timerNum.textContent !== label) timerNum.textContent = label;
-  timerEl.classList.toggle("is-low", race.phase === "race" && remain <= 15);
+  const lowTime = race.phase === "race" && remain <= 10;
+  timerEl.classList.toggle("is-low", lowTime);
+  if (lowTime) {
+    const sec = Math.ceil(remain);
+    if (sec !== race.warnSec && sec <= 10 && sec >= 1) {
+      race.warnSec = sec;
+      audio.play(sec <= 3 ? "tickFinal" : "tick");
+    }
+  } else race.warnSec = 0;
 
   const placeText = placeLabel(race.player, race.racers);
   if (placeText !== race.placeHold) {
@@ -933,8 +945,11 @@ function updateHud(dt) {
     const fell = (race.fallers || []).slice(-3).join(", ");
     resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + (race.coins || 0) + " COINS · PLANET " + planet;
     if (fell && kind === "out") resultSub.textContent = fell + " FELL";
+    const reason = document.getElementById("result-reason");
+    if (reason) reason.textContent = resultReason(race);
   }
   if (!showEnd) shownResult = false;
+  if (hud) hud.hidden = !started || !!showEnd;
 }
 
 function handleEvents() {

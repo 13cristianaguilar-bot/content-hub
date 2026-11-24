@@ -395,7 +395,7 @@ button { font-family: inherit; touch-action: manipulation; }
   text-align: center;
   box-shadow: 0 18px 40px rgba(30, 36, 64, 0.25);
 }
-.kicker { font-size: 13px; letter-spacing: 0.14em; font-weight: 700; margin: 0 0 8px; }
+.kicker { font-size: 16px; letter-spacing: 0.08em; font-weight: 700; margin: 0 0 8px; }
 .banner {
   margin: 0 auto 12px;
   border: 4px solid var(--ink);
@@ -440,7 +440,7 @@ button { font-family: inherit; touch-action: manipulation; }
   text-shadow: 0 6px 0 var(--ink);
 }
 .sub { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
-.time { font-size: 14px; margin: 0 0 14px; font-weight: 600; }
+.time { font-size: 16px; margin: 0 0 14px; font-weight: 600; }
 #again {
   width: 100%;
   min-height: 58px;
@@ -483,7 +483,7 @@ button { font-family: inherit; touch-action: manipulation; }
           <div id="seats-label" class="sb-seats__label">SEATS 0/8</div>
         </div>
         <div class="sb-hud__tools">
-          <button id="mute" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="mute" data-haptic="light" aria-label="Mute"><img src="ui/svg/icon_unmute.svg" alt=""></button>
+          <button id="mute" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="mute" data-haptic="light" aria-label="Sound on" aria-pressed="false"><img src="ui/svg/icon_unmute.svg" alt=""></button>
           <button id="pause" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="pause" data-haptic="light" aria-label="Pause"><img src="ui/svg/icon_pause.svg" alt=""></button>
         </div>
       </div>
@@ -552,6 +552,7 @@ button { font-family: inherit; touch-action: manipulation; }
         <div class="pod p1"><b>1</b><span id="pod-1">—</span></div>
         <div class="pod p3"><b>3</b><span id="pod-3">—</span></div>
       </div>
+      <p id="result-reason" class="sub"></p>
       <p id="result-place" class="sub">YOU PLACED —</p>
       <ul id="result-names"></ul>
       <p id="result-sub" class="sub">SEAT 1 OF 8</p>
@@ -564,12 +565,12 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=74"></script>
+<script src="game.js?v=75"></script>
 <style>
 #cine-skip { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; pointer-events: auto; }
 #settings .sb-card { max-height: calc(100vh - 36px); overflow: auto; }
 #result-names { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; list-style: none; padding: 0; margin: 6px 0 8px; }
-#result-names li { background: #e7f6ff; color: #1e2440; border-radius: 999px; padding: 2px 8px; font-size: 12px; font-weight: 700; }
+#result-names li { background: #e7f6ff; color: #1e2440; border-radius: 999px; padding: 2px 8px; font-size: 16px; font-weight: 700; }
 #result-names li.you { background: #ffe56a; }
 #result-place { font-weight: 700; }
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
@@ -609,7 +610,8 @@ button { font-family: inherit; touch-action: manipulation; }
 #knob.sb-stick__knob { background: url("ui/svg/joystick_knob.svg") center/contain no-repeat; box-shadow: none; }
 #hud.sb-hud[hidden] { display: none !important; }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; }
-.pod { width: 78px; border: 4px solid #1e2440; border-radius: 16px 16px 8px 8px; background: #fff6e5; padding: 8px 4px; text-align: center; }
+.pod { width: 86px; border: 4px solid #1e2440; border-radius: 16px 16px 8px 8px; background: #fff6e5; padding: 8px 6px; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+.pod b, .pod span { display: block; font-size: 16px; line-height: 1.1; }
 .pod.p1 { height: 108px; background: #ffd23f; order: 2; }
 .pod.p2 { height: 78px; order: 1; background: #cfd8f0; }
 .pod.p3 { height: 64px; order: 3; background: #ff9a5c; }
@@ -635,8 +637,12 @@ button { font-family: inherit; touch-action: manipulation; }
 #aboard { position: absolute; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 6; display: grid; gap: 10px; }
 #aboard[hidden] { display: none !important; }
 #aboard-copy { margin: 0; text-align: center; color: #fff; font: 400 22px/1.2 "Lilita One", sans-serif; text-shadow: 0 3px 0 #1e2440; }
-#zone { top: calc(var(--sb-safe-t, 12px) + 148px); max-width: 72vw; }
-#toast { top: calc(var(--sb-safe-t, 12px) + 198px); max-width: 72vw; }
+#zone, #toast { pointer-events: none; z-index: 2; }
+#zone { top: calc(var(--sb-safe-t, 12px) + 188px); max-width: 72vw; }
+#toast { top: calc(var(--sb-safe-t, 12px) + 236px); max-width: 72vw; }
+#timer.is-low { animation: timerPulse 0.45s steps(2, end) infinite; }
+#timer.is-low b { color: #ff6b6b; }
+@keyframes timerPulse { 50% { transform: scale(1.06); } }
 #round-name { background: transparent; pointer-events: none; }
 .round-banner { position: relative; width: min(92vw, 440px); }
 .round-banner .sb-banner { width: 100%; }

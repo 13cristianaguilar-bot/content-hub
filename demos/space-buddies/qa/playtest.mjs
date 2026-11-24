@@ -946,7 +946,58 @@ async function saveHeatmaps(browser, marks) {
   await context.close();
 }
 
+async function occludeRun() {
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--disable-dev-shm-usage"] });
+  const context = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
+  const page = await openJob(context, { name: "occlude-ship", planet: 1, round: 2, seed: 4, bot: "follow", qa: 4, feel: true, viewport: PHONE, wallMs: 70000, skipLobby: true }, []);
+  let buried = 0;
+  let low = 0;
+  let frames = 0;
+  const deadline = Date.now() + 70000;
+  while (Date.now() < deadline) {
+    const snap = await page.evaluate(() => {
+      const sb = window.__sb;
+      if (!sb || !sb.race || !sb.view) return null;
+      const view = sb.view();
+      const cam = { x: view.cx, y: view.cy, z: view.cz };
+      const floors = sb.race.course.floors || [];
+      let hit = "";
+      for (const pad of floors) {
+        if (!pad || !pad.rx || !pad.rz) continue;
+        const nx = (cam.x - pad.x) / pad.rx;
+        const nz = (cam.z - pad.z) / pad.rz;
+        if (nx * nx + nz * nz < 0.72 && cam.y > pad.y - 0.3 && cam.y < pad.y + 0.7) hit = "terrain";
+      }
+      if (!hit) {
+        for (const r of sb.race.racers) {
+          const dx = cam.x - r.pos.x;
+          const dy = cam.y - (r.pos.y + 0.8);
+          const dz = cam.z - r.pos.z;
+          if (dx * dx + dy * dy + dz * dz < 0.45 * 0.45) hit = "buddy";
+        }
+      }
+      const ground = sb.ground ? sb.ground(cam.x, cam.z) : null;
+      return { phase: sb.race.phase, hit, low: ground && cam.y < ground.y + 0.4, time: sb.race.time };
+    });
+    if (snap && snap.phase === "race") {
+      frames++;
+      if (snap.hit) buried++;
+      if (snap.low) low++;
+    }
+    if (snap && (snap.phase === "results" || snap.phase === "launch")) break;
+    await sleep(120);
+  }
+  await browser.close();
+  const report = { frames, buried, low };
+  console.log(JSON.stringify(report));
+  if (buried || low) process.exitCode = 1;
+}
+
 async function main() {
+  if (process.argv.includes("--occlude")) {
+    await occludeRun();
+    return;
+  }
   if (process.argv.includes("--batch2")) {
     await batch2();
     return;

@@ -6,6 +6,7 @@ import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
 import { audioAudible, cueFor, muteIcon, muteLabel, normalizePrefs } from "./audio-prefs.js";
 import { spectateFrame } from "./spectate.js";
 import { backOffView, clearSpheres, pullOutOfSphere } from "./occlude.js";
+import { BUDDY_CLIPS, lockRootPosition } from "./clips.js";
 
 function assert(cond, message) {
   if (!cond) {
@@ -207,6 +208,9 @@ const clear = clearSpheres({ x: 1, y: 1, z: 1 }, [{ x: 0, y: 1, z: 0, r: 3 }], {
 assert(clear.x > 2.5, "overlapping props should release the camera");
 const backed = backOffView({ x: 0, y: 2, z: 0 }, { x: 0, y: 1, z: 6 }, [{ x: 0, y: 1.2, z: 1.4, r: 0.9 }]);
 assert(backed.z < -0.5, "a prop against the lens should push the camera back");
+assert(BUDDY_CLIPS.jump === "Jump" && BUDDY_CLIPS.dive === "Dive" && BUDDY_CLIPS.tumble === "Tumble", "buddy clips should map onto the sim names");
+const locked = lockRootPosition([0, 0, 0, 0, 0.4, 1.2, 0.2, 0.1, -0.4]);
+assert(locked[3] === 0 && locked[4] === 0 && locked[5] === 0 && locked[6] === 0, "jump root motion should stay at the first sample");
 const stride = 29;
 const ia = stride;
 const ib = ia + 1;

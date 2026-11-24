@@ -508,7 +508,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   const dressing = buildDressing(scene, course, TOON_MAP);
   const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
-  terrainMat.onBeforeCompile = (shader) => plasticShader(shader, { floors: true });
+  terrainMat.customProgramCacheKey = () => "sb-crust";
+  terrainMat.onBeforeCompile = (shader) => plasticShader(shader, {});
+  const floorMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
+  floorMat.customProgramCacheKey = () => "sb-floor";
+  floorMat.onBeforeCompile = (shader) => plasticShader(shader, { floors: true });
   const crackMat = new THREE.MeshToonMaterial({
     vertexColors: true,
     color: 0xffd0b0,
@@ -528,7 +532,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     geo.setAttribute("color", new THREE.BufferAttribute(chunk.colors, 3));
     geo.setIndex(new THREE.BufferAttribute(chunk.indices, 1));
     geo.computeVertexNormals();
-    const mesh = new THREE.Mesh(geo, terrainMat);
+    const mesh = new THREE.Mesh(geo, floorMat);
     mesh.frustumCulled = true;
     mesh.receiveShadow = true;
     scene.add(mesh);

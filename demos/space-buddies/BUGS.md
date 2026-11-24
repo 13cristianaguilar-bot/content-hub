@@ -147,9 +147,11 @@ A 2026-11-24 playtest returned to the title twice. This cycle did not reproduce 
 ## SB-16 Floors still read as flat grey discs
 
 - Severity: P2
-- Status: queued, next after audio
+- Status: fixed
 
-The meadow, canyon, and sky floors are still flat discs. The style guide wants a 2-segment bevel and a cream lip on the top 8 cm. Floors are the next pass after the audio PR.
+The meadow, canyon, and sky floors were thin discs. Downward normals and a two-color checker made them read as flat grey.
+
+Fix: each pad is a slab with a 2-segment bevel (about 9 cm) and a cream lip on the top 8 cm of the side. The top uses the zone ground color with a soft speckle, and the side uses the ground side color. The walk height is unchanged. No extra shadow map.
 
 ## SB-17 Mute icon, music, and settings
 

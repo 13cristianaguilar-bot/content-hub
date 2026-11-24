@@ -9,9 +9,10 @@ import { spectateFrame } from "./spectate.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
 import { EXTRA_MODELS, MEADOW_MODELS, meadowProp, placeMeadowDressing, tickFoliage } from "./meadow.js";
+import { BUDDY_CLIPS, ROOT_LOCK, isRootPositionTrack, lockRootPosition } from "./clips.js";
 
 const MODELS = {
-  buddy: "assets/space_buddy_rigged.glb",
+  buddy: "assets/space_buddy_lowpoly.glb",
   bumper: "assets/models/obstacle_bumper.glb",
   spinner: "assets/models/obstacle_spinner.glb",
   pad: "assets/models/obstacle_jump_pad.glb",
@@ -164,12 +165,14 @@ function buddyMat(src, hex) {
   const mat = new THREE.MeshStandardMaterial({
     map,
     color: 0xffffff,
+    vertexColors: true,
     roughness: 1,
     metalness: 0,
     emissive: 0x000000,
     emissiveIntensity: 0,
     name: "BuddyHue",
   });
+  mat.customProgramCacheKey = () => "buddy-hue-" + hex;
   mat.transparent = false;
   mat.depthWrite = true;
   mat.opacity = 1;
@@ -1381,10 +1384,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     });
     outlineOf(model, 0.025);
     let headBone = null;
-    model.traverse((obj) => { if (obj.isBone && obj.name === "head") headBone = obj; });
+    let hasAntenna = false;
+    model.traverse((obj) => {
+      if (!obj.isBone) return;
+      if (obj.name === "head") headBone = obj;
+      if (obj.name === "antenna.L" || obj.name === "antenna.R") hasAntenna = true;
+    });
     const antennas = [];
     const lids = [];
-    if (headBone) {
+    if (headBone && !hasAntenna) {
       const antMat = new THREE.MeshToonMaterial({ color: colorHex, gradientMap: TOON_MAP });
       for (const side of [-1, 1]) {
         const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.26, 5), antMat);
@@ -1406,16 +1414,33 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const clipNames = ["Idle", "Run", "Jump", "Fall", "Land", "Dive", "Grab", "Tumble", "Celebrate", "Eliminated", "Emote"];
     const looping = new Set(["Idle", "Run", "Fall", "Grab", "Tumble", "Celebrate"]);
     for (const clip of buddyGltf.animations) {
-      if (!clipNames.includes(clip.name)) continue;
-      const action = mixer.clipAction(clip);
-      if (looping.has(clip.name)) action.setLoop(THREE.LoopRepeat, Infinity);
+      const mapped = BUDDY_CLIPS[clip.name] || (clipNames.includes(clip.name) ? clip.name : "");
+      if (!mapped || actions[mapped]) continue;
+      const source = ROOT_LOCK.has(mapped) ? clip.clone() : clip;
+      if (ROOT_LOCK.has(mapped)) {
+        for (const track of source.tracks) {
+          if (!isRootPositionTrack(track.name)) continue;
+          const locked = lockRootPosition(track.values);
+          for (let v = 0; v < track.values.length; v++) track.values[v] = locked[v];
+        }
+      }
+      const action = mixer.clipAction(source);
+      if (looping.has(mapped)) action.setLoop(THREE.LoopRepeat, Infinity);
       else {
         action.setLoop(THREE.LoopOnce, 1);
         action.clampWhenFinished = true;
       }
       action.play();
-      action.setEffectiveWeight(clip.name === "Idle" ? 1 : 0);
-      actions[clip.name] = action;
+      action.setEffectiveWeight(mapped === "Idle" ? 1 : 0);
+      actions[mapped] = action;
+    }
+    if (actions.Jump && !actions.Fall) {
+      const fall = mixer.clipAction(actions.Jump.getClip().clone());
+      fall.setLoop(THREE.LoopOnce, 1);
+      fall.clampWhenFinished = true;
+      fall.play();
+      fall.setEffectiveWeight(0);
+      actions.Fall = fall;
     }
     const hasClips = clipNames.some((name) => actions[name]);
     const accessories = addBuddyGear(model);

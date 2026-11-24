@@ -561,7 +561,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=69"></script>
+<script src="game.js?v=70"></script>
 <style>
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
 .sb-hud__top { left: 12px; right: 12px; }
@@ -626,6 +626,8 @@ button { font-family: inherit; touch-action: manipulation; }
 #aboard { position: absolute; left: 16px; right: 16px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 6; display: grid; gap: 10px; }
 #aboard[hidden] { display: none !important; }
 #aboard-copy { margin: 0; text-align: center; color: #fff; font: 400 22px/1.2 "Lilita One", sans-serif; text-shadow: 0 3px 0 #1e2440; }
+#zone { top: calc(var(--sb-safe-t, 12px) + 148px); max-width: 72vw; }
+#toast { top: calc(var(--sb-safe-t, 12px) + 198px); max-width: 72vw; }
 #round-name { background: transparent; pointer-events: none; }
 .round-banner { position: relative; width: min(92vw, 440px); }
 .round-banner .sb-banner { width: 100%; }

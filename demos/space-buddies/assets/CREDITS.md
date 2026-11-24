@@ -3,7 +3,7 @@
 Course contact shading is baked in the game from the floor vertices and nearby blockers. It is not a downloaded lightmap. The sun is one real-time shadow-mapped directional light plus a hemisphere fill. No extra art file was added for that pass.
 
 
-Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated). The playable Buddy is `assets/space_buddy_rigged.glb`: one skinned mesh, 20 bones, and named clips (Idle, Run, Jump, Fall, Land, Dive, Grab, Tumble, Celebrate, Eliminated, Emote). Root motion stays in place. The escape ship is `assets/escape_ship_web.glb`.
+Space Buddy and escape ship models generated with Tencent HY 3D (AI-generated). The playable Buddy is `assets/space_buddy_lowpoly.glb`: one skinned mesh, 2,924 triangles, 10 bones, and clips idle, run, jump, dive, tumble, and celebrate. Root translation on jump, dive, and tumble is zeroed so the sim owns the motion. Suit colors still come from the player tint. The escape ship is `assets/escape_ship_web.glb`.
 
 Race music, menu bed, and sound effects in `assets/audio/` are procedural cues dedicated to the public domain under CC0 1.0. Where a `_v2` file exists, the game plays that one. `music_race_loop` is the race loop (OGG, MP3, and M4A). Playback uses Howler.js 2.2.4 (MIT). The older placeholder names that were already in the folder were left in place.
 

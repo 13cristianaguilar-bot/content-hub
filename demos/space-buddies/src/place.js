@@ -19,6 +19,11 @@ export function hudStatus(race) {
   return "QUAL " + (race.qualCount || 0) + "/" + (race.qualifyN || 8);
 }
 
+export function showCoach(phase, seated, zoneId, time, auto, paused) {
+  if (paused || seated || auto) return false;
+  return phase === "race" && zoneId === "meadow" && time < 8;
+}
+
 export function placeLabel(player, racers) {
   if (player && player.seated && player.seatIndex >= 0) return "SEAT " + (player.seatIndex + 1);
   let ahead = 0;

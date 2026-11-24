@@ -483,7 +483,7 @@ button { font-family: inherit; touch-action: manipulation; }
           <div id="seats-label" class="sb-seats__label">SEATS 0/8</div>
         </div>
         <div class="sb-hud__tools">
-          <button id="mute" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="mute" data-haptic="light" aria-label="Mute"><img src="ui/svg/icon_mute.svg" alt=""></button>
+          <button id="mute" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="mute" data-haptic="light" aria-label="Mute"><img src="ui/svg/icon_unmute.svg" alt=""></button>
           <button id="pause" class="sb-btn sb-btn--secondary sb-btn--round" type="button" data-ui="pause" data-haptic="light" aria-label="Pause"><img src="ui/svg/icon_pause.svg" alt=""></button>
         </div>
       </div>
@@ -524,6 +524,7 @@ button { font-family: inherit; touch-action: manipulation; }
       <p class="blurb">16 buddies. 8 seats. The planet is falling apart.</p>
       <p class="keys">Left side runs. Right side looks. Jump and dive with the right thumb.</p>
       <p class="keys">Keyboard: WASD, drag to look, Space, Shift.</p>
+      <button id="title-sound" class="sb-btn sb-btn--secondary sb-btn--block" type="button" data-haptic="light">SOUND</button>
     </div>
   </div>
   <div id="lobby" hidden>
@@ -533,10 +534,12 @@ button { font-family: inherit; touch-action: manipulation; }
       <div id="colors" data-ui="colors"></div>
       <div id="gear" data-ui="hats"></div>
       <button id="start" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-ui="start" data-haptic="medium">START RACE</button>
+      <button id="lobby-sound" class="sb-btn sb-btn--secondary sb-btn--block" type="button" data-haptic="light">SOUND</button>
     </div>
   </div>
   <div id="round-name" hidden><div class="round-banner"><img class="sb-banner" alt="" src="ui/svg/banner_round_blank.svg"><p class="kicker" id="round-kicker">PLANET 1</p><h1 id="round-title" class="sb-outline-text">ROUND 1</h1><p class="sub" id="round-sub">Qualify</p></div></div>
-  <div id="pause-menu" hidden><div class="sb-panel sb-card"><p class="sb-kicker">PAUSED</p><button id="resume" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-haptic="medium">RESUME</button><button id="restart" class="sb-btn sb-btn--secondary sb-btn--lg sb-btn--block" type="button" data-haptic="light">RESTART</button><button id="pause-menu-btn" class="sb-btn sb-btn--danger sb-btn--lg sb-btn--block" type="button" data-haptic="light">MAIN MENU</button></div></div>
+  <div id="pause-menu" hidden><div class="sb-panel sb-card"><p class="sb-kicker">PAUSED</p><button id="resume" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-haptic="medium">RESUME</button><button id="restart" class="sb-btn sb-btn--secondary sb-btn--lg sb-btn--block" type="button" data-haptic="light">RESTART</button><button id="pause-sound" class="sb-btn sb-btn--secondary sb-btn--block" type="button" data-haptic="light">SOUND</button><button id="pause-menu-btn" class="sb-btn sb-btn--danger sb-btn--lg sb-btn--block" type="button" data-haptic="light">MAIN MENU</button></div></div>
+  <div id="settings" hidden><div class="sb-panel sb-card"><p class="sb-kicker">SOUND</p><button id="set-music" class="sb-btn sb-btn--primary sb-btn--block" type="button" data-haptic="light">MUSIC ON</button><button id="set-sfx" class="sb-btn sb-btn--primary sb-btn--block" type="button" data-haptic="light">SFX ON</button><button id="set-haptics" class="sb-btn sb-btn--primary sb-btn--block" type="button" data-haptic="light">HAPTICS ON</button><button id="set-mute" class="sb-btn sb-btn--danger sb-btn--block" type="button" data-haptic="medium">MUTE</button><button id="set-close" class="sb-btn sb-btn--secondary sb-btn--block" type="button" data-haptic="light">CLOSE</button></div></div>
   <div id="planet" hidden><div class="sb-panel sb-card"><p class="sb-kicker">ESCAPE SHIP</p><img class="sb-banner" alt="Next planet" src="ui/svg/banner_next_planet.svg"><div class="sb-map" id="planet-map" data-ui="map"><button class="planet-dot" type="button" data-planet="1"><img class="node" alt="Meadow" src="ui/svg/map_node_cleared.svg"></button><img class="dots" alt="" src="ui/svg/map_path_dots.svg"><button class="planet-dot" type="button" data-planet="2"><img class="node" alt="Sky" src="ui/svg/map_node_current.svg"></button><img class="dots" alt="" src="ui/svg/map_path_dots.svg"><button class="planet-dot" type="button" data-planet="3"><img class="node" alt="Storm" src="ui/svg/map_node_locked.svg"></button></div><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-haptic="medium">LAND</button></div></div>
   <div id="result" hidden>
     <div class="card">
@@ -558,7 +561,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=58"></script>
+<script src="game.js?v=59"></script>
 <style>
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
 .sb-hud__top { left: 12px; right: 12px; }
@@ -576,8 +579,20 @@ button { font-family: inherit; touch-action: manipulation; }
 #jump.sb-action { width: 128px; height: 132px; right: calc(var(--sb-safe-r) + 6px); bottom: calc(var(--sb-safe-b) + 14px); }
 #dive.sb-action { width: 92px; height: 96px; right: calc(var(--sb-safe-r) + 130px); bottom: calc(var(--sb-safe-b) + 6px); }
 #grab.sb-action { width: 92px; height: 96px; right: calc(var(--sb-safe-r) + 30px); bottom: calc(var(--sb-safe-b) + 146px); }
-#pause-menu .sb-card { width: min(320px, calc(100% - 32px)); display: grid; gap: 12px; }
-#pause-menu .sb-btn { min-height: 64px; }
+#pause-menu .sb-card, #settings .sb-card { width: min(360px, calc(100% - 24px)); display: grid; gap: 10px; }
+#pause-menu .sb-btn, #settings .sb-btn, #title-sound, #lobby-sound {
+  min-height: 64px;
+  white-space: nowrap;
+  font-size: 26px;
+  letter-spacing: 0.02em;
+  padding: 0 16px 3px;
+}
+#settings {
+  position: fixed; inset: 0; z-index: 12; display: grid; place-items: center;
+  background: rgba(30, 36, 64, 0.45); padding: 16px;
+}
+#settings[hidden] { display: none !important; }
+#title-sound, #lobby-sound { margin-top: 10px; width: 100%; }
 #jump.sb-action { background-image: url("ui/svg/action_jump.svg"); }
 #dive.sb-action { background-image: url("ui/svg/action_dive.svg"); }
 #grab.sb-action { background-image: url("ui/svg/action_grab.svg"); }

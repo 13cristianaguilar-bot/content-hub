@@ -4,7 +4,7 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import * as SkeletonUtils from "three/addons/utils/SkeletonUtils.js";
 import { groundAt } from "./course.js";
 import { cameraAboveFloor, cameraFloor } from "./sim.js";
-import { backOffView, clearSpheres } from "./occlude.js";
+import { backOffView, cameraBuried, clearSpheres } from "./occlude.js";
 import { spectateFrame } from "./spectate.js";
 import { buildDressing, makeToonTexture, zoneSky } from "./dress.js";
 import { plasticShader } from "./plastic.js";
@@ -297,6 +297,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     antialias: false,
     alpha: false,
     powerPreference: "high-performance",
+    preserveDrawingBuffer: new URLSearchParams(location.search).has("occlude"),
   });
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   textureAniso = Math.max(1, Math.min(8, renderer.capabilities.getMaxAnisotropy()));
@@ -2331,12 +2332,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     });
     return propSpheres;
   }
+  function coursePiece(obj) {
+    let node = obj;
+    while (node) {
+      if (node.userData && (node.userData.floor || node.userData.course || node.userData.buddy || node.userData.skipCam)) return true;
+      node = node.parent;
+    }
+    return false;
+  }
   function fadeBlockers(head) {
     for (let i = 0; i < fadedProps.length; i++) {
       const entry = fadedProps[i];
-      entry.mat.opacity = entry.opacity;
-      entry.mat.transparent = entry.transparent;
-      entry.mat.depthWrite = entry.depthWrite;
+      entry.obj.material = entry.base;
     }
     fadedProps.length = 0;
     camDir.copy(head).sub(camera.position);
@@ -2344,27 +2351,42 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     if (dist < 0.35) return;
     camDir.multiplyScalar(1 / dist);
     camRay.set(camera.position, camDir);
-    camRay.far = Math.min(dist - 0.2, 5);
+    camRay.far = Math.min(dist - 0.35, 4.5);
     let hits = [];
     try { hits = camRay.intersectObjects(camSolids(), false); } catch (err) { return; }
     const seen = new Set();
     for (const hit of hits) {
-      if (hit.distance > 6) break;
+      if (hit.distance > 3.2) break;
       const obj = hit.object;
-      if (!obj || obj.isInstancedMesh || obj.userData.floor) continue;
+      if (!obj || obj.isInstancedMesh || seen.has(obj)) continue;
+      if (obj.userData.floor || coursePiece(obj)) continue;
+      if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
+      obj.getWorldScale(propDummy.scale);
+      const reach = obj.geometry.boundingSphere.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
+      if (reach > 2.4) continue;
       const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
-      if (!mat || seen.has(mat)) continue;
-      seen.add(mat);
-      fadedProps.push({
-        mat,
-        opacity: mat.opacity,
-        transparent: mat.transparent,
-        depthWrite: mat.depthWrite,
-      });
-      mat.transparent = true;
-      mat.opacity = 0.2;
-      mat.depthWrite = false;
+      if (!mat || mat === floorMat || mat === terrainMat || mat === crackMat) continue;
+      seen.add(obj);
+      const fadeMat = mat.clone();
+      fadeMat.transparent = true;
+      fadeMat.opacity = 0.18;
+      fadeMat.depthWrite = false;
+      fadedProps.push({ obj, base: obj.material });
+      obj.material = fadeMat;
     }
+  }
+  function liftAboveCourse(pos) {
+    let y = pos.y;
+    const pads = course.floors || [];
+    for (let i = 0; i < pads.length; i++) {
+      const pad = pads[i];
+      if (!pad || !pad.rx || !pad.rz) continue;
+      const nx = (pos.x - pad.x) / pad.rx;
+      const nz = (pos.z - pad.z) / pad.rz;
+      if (nx * nx + nz * nz > 1) continue;
+      if (y < pad.y + 1.25) y = pad.y + 1.25;
+    }
+    return y;
   }
   function solveCamera(head, want) {
     try {
@@ -2422,7 +2444,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const o = look.overview;
       const head = new THREE.Vector3(o.lx, o.ly + 1.2, o.lz);
       const cleared = backOffView(clearSpheres({ x: o.x, y: o.y, z: o.z }, propBounds(), head), { x: o.lx, y: o.ly, z: o.lz }, propBounds());
-      camera.position.set(cleared.x, cleared.y, cleared.z);
+      const spot = { x: cleared.x, y: liftAboveCourse(cleared), z: cleared.z };
+      if (cameraBuried(spot, course.floors, []) === "terrain") camera.position.set(o.x, liftAboveCourse({ x: o.x, y: o.y, z: o.z }), o.z);
+      else camera.position.set(spot.x, spot.y, spot.z);
       camera.lookAt(o.lx, o.ly, o.lz);
       fadeBlockers(head);
       return;
@@ -2480,11 +2504,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       let ly;
       let lz;
       if (race.result === "escaped") {
-        tx = ship.position.x + 12;
-        ty = Math.max(ship.position.y + 7, (groundAtSafe(ship.position.x, ship.position.z) || ship.position.y) + 4);
-        tz = ship.position.z + 14;
+        const wide = state.portrait ? 2.8 : 1.35;
+        tx = ship.position.x + 18 * wide;
+        ty = ship.position.y + 3.2 * wide;
+        tz = ship.position.z + 7 * wide;
         lx = ship.position.x;
-        ly = ship.position.y + 2.2;
+        ly = ship.position.y + 1.2;
         lz = ship.position.z;
       } else {
         tx = player.pos.x - 6;
@@ -2535,7 +2560,25 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       camera.position.x = damp(camera.position.x, aimX, 4.5, dt);
       camera.position.y = damp(camera.position.y, aimY, 4.5, dt);
       camera.position.z = damp(camera.position.z, aimZ, 4.5, dt);
+      const watchers = [];
+      for (const racer of race.racers) {
+        if (racer.seated) continue;
+        watchers.push({ x: racer.pos.x, y: racer.pos.y + 0.9, z: racer.pos.z, r: 1.15 });
+      }
+      const watchHead = new THREE.Vector3(focus.pos.x, focus.pos.y + 1.4, focus.pos.z + 3);
+      const offBodies = clearSpheres(camera.position, watchers, watchHead);
+      camera.position.set(offBodies.x, liftAboveCourse(offBodies), offBodies.z);
       camera.lookAt(frame.look.x, frame.look.y, frame.look.z);
+      camera.updateMatrixWorld(true);
+      const leadClip = new THREE.Vector4(focus.pos.x, focus.pos.y + 1.2, focus.pos.z, 1);
+      leadClip.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+      const leadX = leadClip.x / (leadClip.w || 1);
+      const leadY = leadClip.y / (leadClip.w || 1);
+      if (!(leadClip.w > 0.5 && Math.abs(leadX) < 0.9 && Math.abs(leadY) < 0.92)) {
+        camera.position.set(frame.x, liftAboveCourse({ x: frame.x, y: frame.y, z: frame.z }), frame.z);
+        camera.lookAt(frame.look.x, frame.look.y, frame.look.z);
+        camera.updateMatrixWorld(true);
+      }
       const floorY = floor == null ? focus.pos.y : floor;
       state.spectate = {
         back: Math.hypot(frame.x - focus.pos.x, frame.z - focus.pos.z),
@@ -2626,12 +2669,31 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     const bodies = [];
     for (const racer of race.racers) {
       if (racer.seated) continue;
-      bodies.push({ x: racer.pos.x, y: racer.pos.y + 0.8, z: racer.pos.z, r: 0.9 });
+      bodies.push({ x: racer.pos.x, y: racer.pos.y + 0.9, z: racer.pos.z, r: 1.15 });
     }
-    const freed = backOffView(clearSpheres(camera.position, bodies.concat(propBounds()), new THREE.Vector3(headX, headY, headZ)), aim, bodies.concat(propBounds()));
-    camera.position.set(freed.x, freed.y, freed.z);
+    const crowd = bodies.concat(propBounds());
+    const beforePush = { x: camera.position.x, y: camera.position.y, z: camera.position.z };
+    const freed = backOffView(clearSpheres(camera.position, crowd, new THREE.Vector3(headX, headY, headZ)), aim, crowd);
+    const buried = cameraBuried(freed, course.floors, []);
+    if (buried === "terrain") {
+      camera.position.set(beforePush.x, liftAboveCourse(beforePush), beforePush.z);
+    } else {
+      camera.position.set(freed.x, freed.y, freed.z);
+    }
+    camera.position.y = liftAboveCourse(camera.position);
     camera.position.y = cameraAboveFloor(camera.position.y, cameraFloor(camFloor, state.lastFloor, 0));
     camera.lookAt(player.pos.x, player.pos.y + 1.7, player.pos.z + Math.cos(state.yaw) * 5);
+    camera.updateMatrixWorld(true);
+    const selfClip = new THREE.Vector4(player.pos.x, player.pos.y + 1.1, player.pos.z, 1);
+    selfClip.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+    const selfX = selfClip.x / (selfClip.w || 1);
+    const selfY = selfClip.y / (selfClip.w || 1);
+    if (!(selfClip.w > 0.5 && Math.abs(selfX) < 1.02 && Math.abs(selfY) < 1.02)) {
+      const snap = { x: player.pos.x, y: player.pos.y + 5.2, z: player.pos.z - 8 };
+      camera.position.set(snap.x, liftAboveCourse(snap), snap.z);
+      camera.lookAt(player.pos.x, player.pos.y + 1.3, player.pos.z + 4);
+      camera.updateMatrixWorld(true);
+    }
     fadeBlockers(new THREE.Vector3(headX, headY, headZ));
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }
@@ -2900,6 +2962,43 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       window.__sbLight = { tier: lightTier, shadows: sun.castShadow, map: sun.shadow.mapSize.x, fps };
       return window.__sbLight;
+    },
+    frameFlat() {
+      try {
+        const gl = renderer.getContext();
+        const w = gl.drawingBufferWidth;
+        const h = gl.drawingBufferHeight;
+        if (w < 8 || h < 8) return 0;
+        const pix = new Uint8Array(4);
+        const buckets = new Map();
+        let n = 0;
+        let max = 0;
+        const sx = Math.max(8, Math.floor(w / 16));
+        const sy = Math.max(8, Math.floor(h / 22));
+        for (let y = sy; y < h - sy; y += sy) {
+          for (let x = sx; x < w - sx; x += sx) {
+            gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pix);
+            const key = (pix[0] >> 4) + ":" + (pix[1] >> 4) + ":" + (pix[2] >> 4);
+            const next = (buckets.get(key) || 0) + 1;
+            buckets.set(key, next);
+            if (next > max) max = next;
+            n++;
+          }
+        }
+        return n ? max / n : 0;
+      } catch (err) {
+        return 0;
+      }
+    },
+    project(x, y, z) {
+      try {
+        const clip = new THREE.Vector4(x, y, z, 1);
+        clip.applyMatrix4(camera.matrixWorldInverse).applyMatrix4(camera.projectionMatrix);
+        if (!clip.w) return null;
+        return { x: clip.x / clip.w, y: clip.y / clip.w, z: clip.z / clip.w, w: clip.w };
+      } catch (err) {
+        return null;
+      }
     },
     sees(x, y, z) {
       try {

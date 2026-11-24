@@ -6,8 +6,9 @@ export function spectateFrame(focus, time, floorY, racers) {
   const radius = 13;
   const base = floorY == null || !Number.isFinite(floorY) ? focus.y : floorY;
   let y = Math.max(base + 11, focus.y + 9.5);
-  const x = focus.x + Math.sin(ang) * radius;
-  const z = focus.z - Math.cos(ang) * radius;
+  const sway = Math.sin(ang) * 4;
+  const x = focus.x + sway;
+  const z = focus.z - Math.sqrt(radius * radius - sway * sway);
   const crowd = racers || [];
   for (let i = 0; i < crowd.length; i++) {
     const r = crowd[i];

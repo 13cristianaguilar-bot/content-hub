@@ -1,5 +1,5 @@
 import { resolveConfig } from "./config.js";
-import { createCourse, floorsAt } from "./course.js";
+import { createCourse, floorsAt, solidStart, courseScale, groundAt } from "./course.js";
 import { bandSpeed, botWish as racerWish, cameraAboveFloor, cameraFloor, createRace, paceCollapse, step } from "./sim.js";
 import { isSnag, isUnfair } from "./feel.js";
 import { hideControls, hudStatus, placeLabel, resultBoard, resultReason, showCoach } from "./place.js";
@@ -311,5 +311,16 @@ const bx = slab.positions[ic * 3] - slab.positions[ia * 3];
 const bz = slab.positions[ic * 3 + 2] - slab.positions[ia * 3 + 2];
 const ny = az * bx - ax * bz;
 assert(ny > 0, "the floor top faces down");
+
+const full = createCourse(resolveConfig({ seed: 4 }));
+const authored = [22, 168, 176, 250, 300].map((z) => z * courseScale(false));
+for (const z of authored) {
+  const start = solidStart(full, z);
+  for (let i = 0; i < 16; i++) {
+    const x = ((i % 5) - 2) * 1.7;
+    const gz = start + Math.floor(i / 5) * 1.2;
+    assert(!!groundAt(full, x, gz), "normal grid has no floor at " + x + "," + gz);
+  }
+}
 
 console.log("qa regression tests passed", "back", back.toFixed(2), "height", open.y.toFixed(2), "overlap y", overlap.player.pos.y.toFixed(2));

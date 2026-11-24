@@ -806,14 +806,15 @@ export function bandSpeed(race, r) {
   return Math.min(cap, base * mul);
 }
 
-export function paceCollapse(startZ, endZ, seconds, delay) {
+export function paceCollapse(startZ, endZ, seconds, delay, minSpeed) {
   const from = startZ - 8;
   const stop = endZ;
   const chase = Math.max(8, seconds - delay);
+  const span = Math.max(0, stop - from);
   return {
     collapseZ: from,
     collapseStop: stop,
-    collapseSpeed: Math.max(0.8, (stop - from) / chase),
+    collapseSpeed: Math.max(0.8, span / chase, minSpeed || 0),
   };
 }
 
@@ -840,12 +841,13 @@ export function botWish(race, r, dt) {
     r.wp++;
   }
   let target = wps[Math.min(r.wp, wps.length - 1)];
+  let heldCrown = false;
   if (race.kind === "crown" && race.crown) {
     const c = race.crown;
-    const held = (r.pos.x - c.x) ** 2 + (r.pos.z - c.z) ** 2 < c.r * c.r;
+    heldCrown = (r.pos.x - c.x) ** 2 + (r.pos.z - c.z) ** 2 < (c.r * 0.72) ** 2;
     target = {
-      x: c.x + (held ? Math.cos(r.id) * 1.1 : 0),
-      z: c.z + (held ? Math.sin(r.id) * 1.1 : 0),
+      x: c.x + (heldCrown ? Math.cos(r.id) * 0.45 : 0),
+      z: c.z + (heldCrown ? Math.sin(r.id) * 0.45 : 0),
       y: c.y || target.y,
       gap: false,
     };
@@ -855,12 +857,13 @@ export function botWish(race, r, dt) {
   } else if (race.kind === "gate" && race.gate && race.gate.z - r.pos.z < 22) {
     target = { x: race.gate.x || 0, z: race.gate.z, y: race.gate.y || target.y, gap: false };
   } else if (race.kind === "survival") {
-    target = { x: target.x * 0.35, z: Math.max(target.z, race.collapseZ + 14), y: target.y, gap: false };
+    const wobble = Math.sin(race.time * 0.6 + r.id) * 1.1;
+    target = { x: ((r.id % 4) - 1.5) * 2.1 + wobble, z: r.pos.z, y: r.pos.y, gap: false };
   }
-  const spread = ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.4 : 0.85);
+  const spread = heldCrown ? 0 : ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.4 : 0.85);
   let tx = target.x + spread;
   if (target.gap) tx = target.x;
-  for (const pad of race.course.pads) {
+  if (!heldCrown) for (const pad of race.course.pads) {
     const nearTarget = (pad.x - target.x) ** 2 + (pad.z - target.z) ** 2 < 36;
     const nearMe = (pad.x - r.pos.x) ** 2 + (pad.z - r.pos.z) ** 2 < 49;
     if (nearTarget && nearMe) tx = pad.x;
@@ -927,7 +930,7 @@ export function botWish(race, r, dt) {
       dx += (r.pos.x >= bobX ? 1 : -1) * 3.6 * p.skill;
     }
   }
-  if (r.pos.z < race.collapseZ + 7) dz += 4;
+  if (race.kind !== "survival" && r.pos.z < race.collapseZ + 7) dz += 4;
 
   const mag = Math.hypot(dx, dz) || 1;
   dx /= mag;
@@ -958,14 +961,14 @@ export function botWish(race, r, dt) {
   }
 
   let grab = false;
-  if (race.rand() < 0.45 * dt) {
+  if (!heldCrown && race.rand() < 0.45 * dt) {
     for (const o of race.racers) {
       if (o !== r && !o.seated && Math.hypot(o.pos.x - r.pos.x, o.pos.z - r.pos.z) < 1.6) grab = true;
     }
   }
   let dive = false;
   const flat = Math.abs((ty || r.pos.y) - r.pos.y) < 0.45;
-  if (r.grounded && flat && dz > 0.55 && r.diveCd <= 0 && race.rand() < 0.22 * dt * (p.skill || 0.5)) dive = true;
+  if (!heldCrown && r.grounded && flat && dz > 0.55 && r.diveCd <= 0 && race.rand() < 0.22 * dt * (p.skill || 0.5)) dive = true;
   return { x: dx, z: dz, jump, dive, grab };
 }
 
@@ -990,6 +993,12 @@ function separate(race) {
         d = Math.hypot(dx, dz);
       }
       if (d >= min) continue;
+      if (race.kind === "crown" && race.crown) {
+        const c = race.crown;
+        const aIn = (a.pos.x - c.x) ** 2 + (a.pos.z - c.z) ** 2 <= c.r * c.r;
+        const bIn = (b.pos.x - c.x) ** 2 + (b.pos.z - c.z) ** 2 <= c.r * c.r;
+        if (aIn && bIn) continue;
+      }
       const nx = dx / d;
       const nz = dz / d;
       const push = (min - d) * 0.35;
@@ -1374,7 +1383,8 @@ function updateCollapse(race, dt) {
   for (const chunk of race.course.chunks) {
     if (chunk.zone === "ship" || chunk.gap) continue;
     if (chunk.state === "solid") {
-      if (race.collapseZ > chunk.z0) {
+      const passed = race.kind === "survival" ? race.collapseZ > chunk.z1 - 1 : race.collapseZ > chunk.z0;
+      if (passed) {
         chunk.state = "cracking";
         chunk.crackT = (cfg.crackTime + chunk.jitter * 0.35) * (race.planetN === 3 ? 0.62 : 1);
         chunk.dirty = true;
@@ -1544,6 +1554,13 @@ function finishRound(race) {
 
 function checkSurvival(race) {
   if (race.kind !== "survival" || race.phase !== "race") return;
+  for (const r of race.racers) {
+    if (r.eliminated || r.qualified) continue;
+    if (r.pos.z < race.collapseZ - 0.3) {
+      r.eliminated = true;
+      race.events.push({ t: "fall", id: r.id });
+    }
+  }
   const alive = race.racers.filter((r) => !r.eliminated && !r.qualified);
   if (alive.length > race.qualifyN) return;
   if (alive.length === 0) {
@@ -1574,9 +1591,16 @@ function checkCrown(race, dt) {
     }
   }
   race.crownHolder = holder ? holder.id : -1;
+  const reach = c.r * c.r;
   for (const r of race.racers) {
-    if (r === holder) r.crownT = (r.crownT || 0) + dt;
-    else r.crownT = Math.max(0, (r.crownT || 0) - dt * 0.35);
+    if (r.eliminated || r.qualified) continue;
+    const inside = (r.pos.x - c.x) ** 2 + (r.pos.z - c.z) ** 2 <= reach && Math.abs(r.pos.y - (c.y || 0)) < 2.6;
+    if (inside) {
+      r.crownT = (r.crownT || 0) + dt;
+      r.vel.x *= 0.55;
+      r.vel.z *= 0.55;
+    }
+    else r.crownT = Math.max(0, (r.crownT || 0) - dt * 0.12);
     if ((r.crownT || 0) >= 5 && !r.qualified && !r.eliminated) {
       r.qualified = true;
       r.crownT = 0;

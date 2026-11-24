@@ -294,15 +294,6 @@ export function placeMeadowDressing(scene, course, gradientMap, gltfs) {
     const s = 4.6;
     hero.scale.setScalar(s);
     hero.position.set(hub.x, -box.min.y * s, hub.z);
-    const shells = [];
-    hero.traverse((obj) => {
-      if (obj.isMesh) shells.push(obj);
-    });
-    for (const obj of shells) {
-      const shell = new THREE.Mesh(obj.geometry, new THREE.MeshBasicMaterial({ color: 0x1e2440, side: THREE.BackSide }));
-      shell.scale.setScalar(1.045);
-      obj.add(shell);
-    }
     const spots = [[0.22, 1.28, 0.05], [-0.18, 1.22, 0.2], [0.05, 1.32, -0.22], [0.28, 1.18, -0.12]];
     spots.forEach((p, i) => {
       const dot = gltfs.mushroomTall.scene.clone(true);

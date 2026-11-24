@@ -359,7 +359,8 @@ button { font-family: inherit; touch-action: manipulation; }
 #tutor {
   position: absolute;
   left: 50%;
-  bottom: calc(150px + env(safe-area-inset-bottom));
+  top: calc(var(--sb-safe-t, 12px) + 118px);
+  bottom: auto;
   transform: translateX(-50%);
   z-index: 4;
   background: var(--sun);
@@ -370,7 +371,7 @@ button { font-family: inherit; touch-action: manipulation; }
   box-shadow: 0 6px 0 #e0b428;
   pointer-events: none;
   text-align: center;
-  max-width: 86vw;
+  max-width: 68vw;
 }
 .seat.pop { animation: pop 0.35s cubic-bezier(.2,1.4,.4,1); }
 @keyframes bob { 50% { transform: translateY(-5px); } }
@@ -535,7 +536,7 @@ button { font-family: inherit; touch-action: manipulation; }
     </div>
   </div>
   <div id="round-name" hidden><div class="round-banner"><img class="sb-banner" alt="" src="ui/svg/banner_round_blank.svg"><p class="kicker" id="round-kicker">PLANET 1</p><h1 id="round-title" class="sb-outline-text">ROUND 1</h1><p class="sub" id="round-sub">Qualify</p></div></div>
-  <div id="pause-menu" hidden><div class="card"><p class="kicker">PAUSED</p><button id="resume" type="button">RESUME</button><button id="restart" type="button">RESTART</button><button id="pause-menu-btn" type="button">MAIN MENU</button></div></div>
+  <div id="pause-menu" hidden><div class="sb-panel sb-card"><p class="sb-kicker">PAUSED</p><button id="resume" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-haptic="medium">RESUME</button><button id="restart" class="sb-btn sb-btn--secondary sb-btn--lg sb-btn--block" type="button" data-haptic="light">RESTART</button><button id="pause-menu-btn" class="sb-btn sb-btn--danger sb-btn--lg sb-btn--block" type="button" data-haptic="light">MAIN MENU</button></div></div>
   <div id="planet" hidden><div class="sb-panel sb-card"><p class="sb-kicker">ESCAPE SHIP</p><img class="sb-banner" alt="Next planet" src="ui/svg/banner_next_planet.svg"><div class="sb-map" id="planet-map" data-ui="map"><button class="planet-dot" type="button" data-planet="1"><img class="node" alt="Meadow" src="ui/svg/map_node_cleared.svg"></button><img class="dots" alt="" src="ui/svg/map_path_dots.svg"><button class="planet-dot" type="button" data-planet="2"><img class="node" alt="Sky" src="ui/svg/map_node_current.svg"></button><img class="dots" alt="" src="ui/svg/map_path_dots.svg"><button class="planet-dot" type="button" data-planet="3"><img class="node" alt="Storm" src="ui/svg/map_node_locked.svg"></button></div><p class="sub" id="planet-sub">A new sky. A new hazard.</p><button id="land" class="sb-btn sb-btn--primary sb-btn--lg sb-btn--block" type="button" data-haptic="medium">LAND</button></div></div>
   <div id="result" hidden>
     <div class="card">
@@ -557,7 +558,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=57"></script>
+<script src="game.js?v=58"></script>
 <style>
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
 .sb-hud__top { left: 12px; right: 12px; }
@@ -566,15 +567,17 @@ button { font-family: inherit; touch-action: manipulation; }
 #seats.sb-seats__row { gap: 1px; }
 #seats.sb-seats__row img { width: 18px; height: 18px; }
 #hud .sb-hud__tools { gap: 6px; }
-#hud .sb-hud__tools .sb-btn--round { width: 40px; height: 40px; min-width: 40px; min-height: 40px; padding: 0; }
+#hud .sb-hud__tools .sb-btn--round { width: 48px; height: 48px; min-width: 48px; min-height: 48px; padding: 0; }
 #controls.sb-controls { position: fixed; left: 0; right: 0; top: 0; bottom: 0; width: auto; height: auto; }
-#stick.sb-stick { left: calc(var(--sb-safe-l) + 8px); right: auto; top: auto; bottom: calc(var(--sb-safe-b) + 18px); width: 136px; height: 136px; transform: none; background-color: transparent; box-shadow: none; }
+#stick.sb-stick { left: calc(var(--sb-safe-l) + 8px); right: auto; top: auto; bottom: calc(var(--sb-safe-b) + 18px); width: 128px; height: 128px; transform: none; background-color: transparent; box-shadow: none; }
 #stick.sb-stick.float { bottom: auto; transform: translate(-50%, -50%); }
-#knob.sb-stick__knob { width: 68px; height: 68px; margin: -34px 0 0 -34px; transform: translate(var(--kx, 0px), var(--ky, 0px)); box-shadow: none; }
+#knob.sb-stick__knob { width: 64px; height: 64px; margin: -32px 0 0 -32px; transform: translate(var(--kx, 0px), var(--ky, 0px)); box-shadow: none; }
 #jump.sb-action, #dive.sb-action, #grab.sb-action { left: auto; top: auto; border-radius: 0; background-color: transparent; box-shadow: none; color: transparent; background-repeat: no-repeat; background-position: center; background-size: contain; }
-#jump.sb-action { width: 118px; height: 122px; right: calc(var(--sb-safe-r) + 8px); bottom: calc(var(--sb-safe-b) + 16px); }
-#dive.sb-action { width: 86px; height: 90px; right: calc(var(--sb-safe-r) + 118px); bottom: calc(var(--sb-safe-b) + 8px); }
-#grab.sb-action { width: 86px; height: 90px; right: calc(var(--sb-safe-r) + 22px); bottom: calc(var(--sb-safe-b) + 132px); }
+#jump.sb-action { width: 128px; height: 132px; right: calc(var(--sb-safe-r) + 6px); bottom: calc(var(--sb-safe-b) + 14px); }
+#dive.sb-action { width: 92px; height: 96px; right: calc(var(--sb-safe-r) + 130px); bottom: calc(var(--sb-safe-b) + 6px); }
+#grab.sb-action { width: 92px; height: 96px; right: calc(var(--sb-safe-r) + 30px); bottom: calc(var(--sb-safe-b) + 146px); }
+#pause-menu .sb-card { width: min(320px, calc(100% - 32px)); display: grid; gap: 12px; }
+#pause-menu .sb-btn { min-height: 64px; }
 #jump.sb-action { background-image: url("ui/svg/action_jump.svg"); }
 #dive.sb-action { background-image: url("ui/svg/action_dive.svg"); }
 #grab.sb-action { background-image: url("ui/svg/action_grab.svg"); }

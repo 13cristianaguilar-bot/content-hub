@@ -91,6 +91,66 @@ Repro: on a 390-wide screen the follow camera looked at the Buddy's shoulders, s
 
 Fix: the follow camera sits higher (5.1 m portrait, 5.3 m landscape) and looks 5 m down the line. The same runs then counted 14.
 
+## SB-10 Survival falls respawn instead of eliminating
+
+- Severity: P1
+- Status: fixed
+- Seed: 4, planet 3
+
+Repro: in a survival round, drop the player about 20 m. The body came back to a floor, `eliminated` stayed false, and all 16 racers stayed in the round.
+
+Fix: a void, lava, or long air-stuck fall in survival marks that racer out and the round ends when 8 remain. The result card lists who fell. Other round types still respawn.
+
+## SB-11 The follow camera follows a long fall under the floor
+
+- Severity: P1
+- Status: fixed
+
+Repro: force a long drop. The camera used the falling body as the floor once the pad query came back empty, so it sat near y -6 and clipped a slab.
+
+Fix: the camera keeps the last real floor and stays at least 1 m above it.
+
+## SB-12 HUD clock, planet, seats, and rank
+
+- Severity: P1
+- Status: fixed
+
+Repro: gate rounds showed SEATS 0/8 the whole heat. The result card counted the elapsed time up from zero, so a photo could read TIME 0:51 while the HUD countdown still said 2:10. The rank badge flipped every time two racers crossed.
+
+Fix: gate and crown rounds show QUAL n/target, survival shows ALIVE n/16, and only the ship round says SEATS. The result card writes the final elapsed time and the time left immediately, plus the planet number. The rank badge waits 0.4 s before it changes.
+
+## SB-13 Pause buttons and the coach tip
+
+- Severity: P1
+- Status: fixed
+
+Repro: pause actions were about 22 px tall. The meadow tip sat on top of DIVE and GRAB. Mute and pause were 40 px.
+
+Fix: pause uses kit buttons at least 64 px tall. The tip sits under the top HUD. Jump is 128×132, Dive and Grab are 92×96, and mute and pause are 48 px, with the kit safe-area insets.
+
+## SB-14 Giant mushroom ink hull
+
+- Severity: P2
+- Status: fixed
+
+Repro: the meadow landmark mushroom, scaled up several times, wore a 4.5% backface hull. On a low-poly cap that reads as a jagged offset black edge.
+
+Fix: the landmark no longer gets an ink hull. Buddy and ship hulls stay.
+
+## SB-15 Title screen returned mid-session
+
+- Severity: P2
+- Status: explained
+
+A 2026-11-24 playtest returned to the title twice. This cycle did not reproduce a client reset across full rounds, pause, and restarts. PR 136 merged during that playtest and GitHub Pages republished the live build a few seconds later. A reload of the page is the likely cause. No further code change.
+
+## SB-16 Floors still read as flat grey discs
+
+- Severity: P2
+- Status: queued, after audio
+
+The meadow, canyon, and sky floors are still flat discs. The style guide wants a 2-segment bevel and a cream lip on the top 8 cm. That stays queued until the audio pass ships. It is not part of the gameplay fixes.
+
 ## SB-9 Obstacles hit with under half a second of warning
 
 - Severity: P2

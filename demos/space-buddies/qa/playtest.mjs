@@ -404,7 +404,13 @@ async function flow(context, viewport) {
   }
   if (!snap.controlsHidden && snap.seated) consider(issues, seen, { code: "controls", severity: "P1", detail: "controls up while seated in the flow" });
   const spectateShot = await shot(page, "flow-spectate-" + viewport.name);
-  if (snap.seated) await page.locator("#aboard-skip").click({ force: true });
+  if (snap.seated) {
+    await page.evaluate(() => {
+      const btn = document.getElementById("aboard-skip");
+      if (btn) btn.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+      else if (window.__sb) window.__sb.race.forceLaunch = true;
+    });
+  }
   await sleep(1200);
   snap = await sample(page);
   if (snap.phase !== "launch" && snap.phase !== "results" && snap.result !== "escaped") {

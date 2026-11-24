@@ -7,6 +7,46 @@
   },
   "reports": [
     {
+      "name": "feel-p1-r2-s2",
+      "planet": 1,
+      "round": 2,
+      "seed": 334,
+      "result": "escaped",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 12,
+        "lands": 11,
+        "falls": 2,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -14,
+            "z": 192.9,
+            "kind": "fall"
+          },
+          {
+            "x": 0,
+            "z": 243.9,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 3,
+        "unseen": 1,
+        "near": 14
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 2.0499,
+        "big": 135,
+        "stepsMax": 24
+      }
+    },
+    {
       "name": "feel-p1-r0-s0",
       "planet": 1,
       "round": 0,
@@ -24,54 +64,14 @@
       },
       "extra": {
         "clips": 0,
-        "blocked": 6,
-        "unseen": 3,
-        "near": 10
-      },
-      "issues": [],
-      "clock": {
-        "maxWall": 3.3832,
-        "big": 130,
-        "stepsMax": 24
-      }
-    },
-    {
-      "name": "feel-p1-r2-s2",
-      "planet": 1,
-      "round": 2,
-      "seed": 334,
-      "result": "escaped",
-      "feel": {
-        "snags": 0,
-        "unfair": 0,
-        "missed": 0,
-        "jumps": 11,
-        "lands": 10,
-        "falls": 2,
-        "dies": 0,
-        "marks": [
-          {
-            "x": -14,
-            "z": 193.5,
-            "kind": "fall"
-          },
-          {
-            "x": 0,
-            "z": 243.9,
-            "kind": "fall"
-          }
-        ]
-      },
-      "extra": {
-        "clips": 0,
-        "blocked": 2,
+        "blocked": 7,
         "unseen": 2,
-        "near": 11
+        "near": 12
       },
       "issues": [],
       "clock": {
-        "maxWall": 2.7332,
-        "big": 133,
+        "maxWall": 2.4332,
+        "big": 138,
         "stepsMax": 24
       }
     },
@@ -93,43 +93,14 @@
       },
       "extra": {
         "clips": 0,
-        "blocked": 17,
+        "blocked": 18,
         "unseen": 0,
         "near": 8
       },
       "issues": [],
       "clock": {
-        "maxWall": 4.4498,
-        "big": 143,
-        "stepsMax": 24
-      }
-    },
-    {
-      "name": "feel-p1-r0-s3",
-      "planet": 1,
-      "round": 0,
-      "seed": 341,
-      "result": "qualified",
-      "feel": {
-        "snags": 0,
-        "unfair": 0,
-        "missed": 0,
-        "jumps": 2,
-        "lands": 1,
-        "falls": 0,
-        "dies": 0,
-        "marks": []
-      },
-      "extra": {
-        "clips": 0,
-        "blocked": 8,
-        "unseen": 0,
-        "near": 11
-      },
-      "issues": [],
-      "clock": {
-        "maxWall": 1.75,
-        "big": 139,
+        "maxWall": 9.782900000000001,
+        "big": 134,
         "stepsMax": 24
       }
     },
@@ -151,14 +122,43 @@
       },
       "extra": {
         "clips": 0,
-        "blocked": 25,
-        "unseen": 7,
-        "near": 16
+        "blocked": 28,
+        "unseen": 6,
+        "near": 15
       },
       "issues": [],
       "clock": {
-        "maxWall": 3.6498999999999997,
-        "big": 130,
+        "maxWall": 4.049900000000001,
+        "big": 134,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p1-r0-s3",
+      "planet": 1,
+      "round": 0,
+      "seed": 341,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 2,
+        "lands": 1,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 9,
+        "unseen": 0,
+        "near": 14
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 3.8497999999999997,
+        "big": 140,
         "stepsMax": 24
       }
     },
@@ -196,14 +196,43 @@
       },
       "extra": {
         "clips": 0,
-        "blocked": 18,
+        "blocked": 19,
         "unseen": 0,
-        "near": 3
+        "near": 4
       },
       "issues": [],
       "clock": {
-        "maxWall": 6.9665,
-        "big": 119,
+        "maxWall": 6.2498000000000005,
+        "big": 113,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p3-r0-s0",
+      "planet": 3,
+      "round": 0,
+      "seed": 360,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 0,
+        "lands": 0,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 0,
+        "unseen": 0,
+        "near": 1
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 5.433,
+        "big": 48,
         "stepsMax": 24
       }
     },
@@ -231,8 +260,8 @@
       },
       "issues": [],
       "clock": {
-        "maxWall": 3.9665,
-        "big": 92,
+        "maxWall": 5.5498,
+        "big": 86,
         "stepsMax": 24
       }
     },
@@ -246,34 +275,34 @@
         "snags": 0,
         "unfair": 0,
         "missed": 0,
-        "jumps": 9,
+        "jumps": 10,
         "lands": 6,
         "falls": 5,
         "dies": 0,
         "marks": [
           {
-            "x": -14,
-            "z": 193.6,
-            "kind": "fall"
-          },
-          {
             "x": 14,
             "z": 189.9,
             "kind": "fall"
           },
           {
-            "x": 14,
-            "z": 189.9,
+            "x": -8,
+            "z": 232.3,
             "kind": "fall"
           },
           {
-            "x": 14,
-            "z": 189.9,
+            "x": -8,
+            "z": 232.3,
             "kind": "fall"
           },
           {
-            "x": -6,
-            "z": 231.4,
+            "x": -8,
+            "z": 232.3,
+            "kind": "fall"
+          },
+          {
+            "x": -8,
+            "z": 232.3,
             "kind": "fall"
           }
         ]
@@ -282,52 +311,41 @@
         "clips": 0,
         "blocked": 3,
         "unseen": 0,
-        "near": 6
+        "near": 5
       },
       "issues": [],
       "clock": {
-        "maxWall": 3.5165,
-        "big": 134,
+        "maxWall": 3.2499000000000002,
+        "big": 120,
         "stepsMax": 24
       }
     },
     {
-      "name": "feel-p3-r0-s0",
+      "name": "feel-p3-r0-s3",
       "planet": 3,
       "round": 0,
-      "seed": 360,
-      "result": "out",
+      "seed": 381,
+      "result": "qualified",
       "feel": {
         "snags": 0,
         "unfair": 0,
         "missed": 0,
-        "jumps": 22,
-        "lands": 21,
-        "falls": 2,
+        "jumps": 0,
+        "lands": 0,
+        "falls": 0,
         "dies": 0,
-        "marks": [
-          {
-            "x": -14,
-            "z": 193.2,
-            "kind": "fall"
-          },
-          {
-            "x": -2,
-            "z": 198.2,
-            "kind": "fall"
-          }
-        ]
+        "marks": []
       },
       "extra": {
         "clips": 0,
-        "blocked": 2,
-        "unseen": 1,
-        "near": 11
+        "blocked": 0,
+        "unseen": 0,
+        "near": 2
       },
       "issues": [],
       "clock": {
-        "maxWall": 7.5998,
-        "big": 132,
+        "maxWall": 5.333200000000001,
+        "big": 52,
         "stepsMax": 24
       }
     },
@@ -342,7 +360,7 @@
         "unfair": 0,
         "missed": 0,
         "jumps": 13,
-        "lands": 9,
+        "lands": 11,
         "falls": 5,
         "dies": 0,
         "marks": [
@@ -367,22 +385,22 @@
             "kind": "fall"
           },
           {
-            "x": 0,
-            "z": 145.1,
+            "x": 4.9,
+            "z": 148.6,
             "kind": "fall"
           }
         ]
       },
       "extra": {
         "clips": 0,
-        "blocked": 2,
-        "unseen": 2,
-        "near": 16
+        "blocked": 5,
+        "unseen": 3,
+        "near": 13
       },
       "issues": [],
       "clock": {
-        "maxWall": 6.0497,
-        "big": 129,
+        "maxWall": 4.0164,
+        "big": 132,
         "stepsMax": 24
       }
     },
@@ -396,8 +414,8 @@
         "snags": 0,
         "unfair": 0,
         "missed": 0,
-        "jumps": 11,
-        "lands": 10,
+        "jumps": 12,
+        "lands": 11,
         "falls": 2,
         "dies": 0,
         "marks": [
@@ -415,59 +433,14 @@
       },
       "extra": {
         "clips": 0,
-        "blocked": 2,
-        "unseen": 1,
-        "near": 14
-      },
-      "issues": [],
-      "clock": {
-        "maxWall": 6.2665,
-        "big": 130,
-        "stepsMax": 24
-      }
-    },
-    {
-      "name": "feel-p3-r0-s3",
-      "planet": 3,
-      "round": 0,
-      "seed": 381,
-      "result": "out",
-      "feel": {
-        "snags": 0,
-        "unfair": 0,
-        "missed": 0,
-        "jumps": 23,
-        "lands": 20,
-        "falls": 3,
-        "dies": 0,
-        "marks": [
-          {
-            "x": 14,
-            "z": 189.9,
-            "kind": "fall"
-          },
-          {
-            "x": 14,
-            "z": 189.9,
-            "kind": "fall"
-          },
-          {
-            "x": 6,
-            "z": 210.7,
-            "kind": "fall"
-          }
-        ]
-      },
-      "extra": {
-        "clips": 0,
-        "blocked": 5,
+        "blocked": 3,
         "unseen": 0,
-        "near": 11
+        "near": 12
       },
       "issues": [],
       "clock": {
-        "maxWall": 5.983,
-        "big": 111,
+        "maxWall": 6.6164000000000005,
+        "big": 118,
         "stepsMax": 24
       }
     },
@@ -486,7 +459,7 @@
         46.01666666666534,
         46.01666666666534
       ],
-      "growth": -4146387
+      "growth": 6585844
     },
     {
       "name": "touch-edges",
@@ -515,8 +488,8 @@
       "planet": 1,
       "result": null,
       "clock": {
-        "maxWall": 1.8,
-        "big": 68,
+        "maxWall": 1.7166,
+        "big": 71,
         "stepsMax": 6
       },
       "feel": {
@@ -537,30 +510,8 @@
       "planet": 2,
       "result": null,
       "clock": {
-        "maxWall": 1.7832999999999999,
-        "big": 59,
-        "stepsMax": 6
-      },
-      "feel": {
-        "snags": 0,
-        "unfair": 0,
-        "missed": 0,
-        "jumps": 5,
-        "lands": 5,
-        "falls": 0,
-        "dies": 0,
-        "marks": []
-      },
-      "issues": [],
-      "low": true
-    },
-    {
-      "name": "throttle-p3",
-      "planet": 3,
-      "result": null,
-      "clock": {
-        "maxWall": 1.7332999999999996,
-        "big": 59,
+        "maxWall": 1.7832000000000003,
+        "big": 77,
         "stepsMax": 6
       },
       "feel": {
@@ -575,13 +526,35 @@
       },
       "issues": [],
       "low": true
+    },
+    {
+      "name": "throttle-p3",
+      "planet": 3,
+      "result": null,
+      "clock": {
+        "maxWall": 1.8166999999999998,
+        "big": 63,
+        "stepsMax": 6
+      },
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 5,
+        "lands": 5,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "issues": [],
+      "low": true
     }
   ],
   "marks": {
     "1": [
       {
         "x": -14,
-        "z": 193.5,
+        "z": 192.9,
         "kind": "fall"
       },
       {
@@ -607,42 +580,32 @@
         "kind": "fall"
       },
       {
-        "x": -14,
-        "z": 193.6,
-        "kind": "fall"
-      },
-      {
         "x": 14,
         "z": 189.9,
         "kind": "fall"
       },
       {
-        "x": 14,
-        "z": 189.9,
+        "x": -8,
+        "z": 232.3,
         "kind": "fall"
       },
       {
-        "x": 14,
-        "z": 189.9,
+        "x": -8,
+        "z": 232.3,
         "kind": "fall"
       },
       {
-        "x": -6,
-        "z": 231.4,
+        "x": -8,
+        "z": 232.3,
+        "kind": "fall"
+      },
+      {
+        "x": -8,
+        "z": 232.3,
         "kind": "fall"
       }
     ],
     "3": [
-      {
-        "x": -14,
-        "z": 193.2,
-        "kind": "fall"
-      },
-      {
-        "x": -2,
-        "z": 198.2,
-        "kind": "fall"
-      },
       {
         "x": -4,
         "z": 133.9,
@@ -664,8 +627,8 @@
         "kind": "fall"
       },
       {
-        "x": 0,
-        "z": 145.1,
+        "x": 4.9,
+        "z": 148.6,
         "kind": "fall"
       },
       {
@@ -676,21 +639,6 @@
       {
         "x": 0,
         "z": 243.9,
-        "kind": "fall"
-      },
-      {
-        "x": 14,
-        "z": 189.9,
-        "kind": "fall"
-      },
-      {
-        "x": 14,
-        "z": 189.9,
-        "kind": "fall"
-      },
-      {
-        "x": 6,
-        "z": 210.7,
         "kind": "fall"
       }
     ]

@@ -179,6 +179,12 @@ export function cameraAboveFloor(camY, floorY) {
   return camY < min ? min : camY;
 }
 
+export function cameraFloor(sampled, last, playerY) {
+  if (sampled != null && Number.isFinite(sampled)) return sampled;
+  if (last != null && Number.isFinite(last)) return last;
+  return playerY > 0 ? playerY : 0;
+}
+
 function platformSurface(p, x, z) {
   if (p.axis !== "seesaw") return p.y;
   const face = p.face || 0;
@@ -322,6 +328,25 @@ function findRespawnTile(race, r) {
     return { x: pad.x, y: pad.y, z: pad.z };
   }
   return null;
+}
+
+function missFooting(race, r) {
+  if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {
+    r.eliminated = true;
+    if (!race.fallers) race.fallers = [];
+    race.fallers.push(r.isPlayer ? "YOU" : "BUDDY");
+    r.vel.x = 0;
+    r.vel.y = 0;
+    r.vel.z = 0;
+    r.grounded = false;
+    race.events.push({ t: "fallout", id: r.id, name: r.isPlayer ? "YOU" : "BUDDY" });
+    if (r.isPlayer && race.feel) {
+      race.feel.dies++;
+      pushMark(race.feel, r.pos.x, r.pos.z, "die");
+    }
+    return;
+  }
+  doRespawn(race, r);
 }
 
 function doRespawn(race, r) {
@@ -710,10 +735,10 @@ function integrate(race, r, wish, dt) {
 
   const under = groundAt(race.course, r.pos.x, r.pos.z);
   const courseY = under ? under.y : (r.lastSafe ? r.lastSafe.y : 0);
-  if (r.pos.y < cfg.voidY || r.pos.y < courseY - 15) doRespawn(race, r);
+  if (r.pos.y < cfg.voidY || r.pos.y < courseY - 15) missFooting(race, r);
   const lava = race.course.lava;
   if (r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1 && r.pos.y < race.lavaY + 0.2 && !r.seated) {
-    doRespawn(race, r);
+    missFooting(race, r);
   }
 
   const hsp = hypot(r.vel.x, r.vel.z);
@@ -742,7 +767,7 @@ function integrate(race, r, wish, dt) {
   else r.airStuck = (r.airStuck || 0) + dt;
   if (r.airStuck > 3) {
     r.airStuck = 0;
-    doRespawn(race, r);
+    missFooting(race, r);
   }
   shoveFree(race, r);
   noteTunnel(race, r);
@@ -1448,7 +1473,11 @@ function finishRound(race) {
 function checkSurvival(race) {
   if (race.kind !== "survival" || race.phase !== "race") return;
   const alive = race.racers.filter((r) => !r.eliminated && !r.qualified);
-  if (alive.length > race.qualifyN || alive.length === 0) return;
+  if (alive.length > race.qualifyN) return;
+  if (alive.length === 0) {
+    finishRound(race);
+    return;
+  }
   for (const r of alive) {
     r.qualified = true;
     race.qualCount++;

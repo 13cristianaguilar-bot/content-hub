@@ -183,6 +183,15 @@ Repro: a bumper, spinner, sweeper, pendulum, roller, or hopper could connect in 
 
 Fix: each of those hazards shows a ground ring and holds the hit until it has been armed for 0.55 s. Buddy-to-buddy bumps are not scored as obstacle hits. The batch 2 harness then reported 0 unfair hits.
 
+## SB-19 Rounds shared one timer, one hazard set, and one bot pace
+
+- Severity: P1
+- Status: fixed
+
+Repro: every heat used the full-course 180 second clock, so a short gate never felt the collapse. Bots held a fixed speed order and never aimed at the crown, the ship, or the gate. Decor on the pads used the same loud colors as the hazards, and planets 2 and 3 only changed the sky.
+
+Fix: each plan entry has its own seconds, and the collapse front starts just behind that start and arrives at the gate near the end of the clock. Trailing bots speed up a little and leaders ease off, never above the top bot cap. Bots steer to the crown, the ship, or a nearby gate, sidestep pendulums, and dive on flat runs. Bumpers and sweepers stay on planet 1, with a dark outline. Planet 2 pushes the wind, ferries, and rollers. Planet 3 speeds the collapse and the ice cracks, and swings the pendulums wider. Course trim sits outside the pad and stays muted.
+
 ## Batch 2
 
 `npm run test:qa2` adds feel totals, a per-planet heatmap, a 4x CPU throttle with the low-GPU profile, touch edges (multi-touch, a stick dragged off screen, jump during dive, pinch while moving, address bar show and hide), a 10-round session, and the eliminated path through the podium on every planet.

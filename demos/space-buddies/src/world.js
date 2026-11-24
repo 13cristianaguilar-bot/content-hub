@@ -1007,17 +1007,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
   }
   const toyColors = {
-    meadow: [0x3de88a, 0xff5fa2, 0xffd23f],
-    canyon: [0xff6a4a, 0xffd23f, 0xff8fd1],
-    sky: [0xff7ad1, 0xc9a0ff, 0x7ad0ff],
-    ice: [0x3ec8ff, 0xe8fbff, 0x4a78ff],
-    climb: [0xffc23a, 0xff7a2a, 0xff5fa2],
-    ship: [0xffd23f, 0xff8fd1, 0x5fe3b0],
+    meadow: [0x9bb5a4, 0xb7c3b4, 0xaeb6c2],
+    canyon: [0xc4a090, 0xb7a48c, 0xcbb3b0],
+    sky: [0xc4b6d4, 0xb9c0d4, 0xc9c3d2],
+    ice: [0xb7d0dc, 0xd5e4ea, 0xb9c6d8],
+    climb: [0xd2c0a4, 0xc9b09a, 0xd4c2b4],
+    ship: [0xd8d0b8, 0xd4c4cc, 0xc9d4c4],
   };
   const trimSpots = [];
   for (const pad of course.floors || []) {
     if (pad.rx < 2.2 || pad.zone === "ship") continue;
-    const rings = pad.rx > 8 ? [0.42, 0.78] : [0.78];
+    const rings = [1.16];
     const count = Math.max(3, Math.round((pad.rx + pad.rz) / 5));
     for (const radius of rings) {
       for (let n = 0; n < count; n++) {
@@ -1046,10 +1046,10 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const palette = toyColors[s.zone] || toyColors.meadow;
       color.setHex(palette[i % palette.length]);
       mesh.setColorAt(i, color);
-      dummy.position.set(s.x, s.y + (s.kind === 4 ? 2.1 : s.kind === 2 ? 0.9 : 0.55), s.z);
+      dummy.position.set(s.x, s.y + 0.08, s.z);
       dummy.rotation.set(s.kind === 1 ? Math.PI / 2 : 0, s.spin, 0);
-      const sc = s.kind === 5 ? 1.3 : 1;
-      dummy.scale.setScalar(sc);
+      const sc = 0.55;
+      dummy.scale.set(sc, sc * 0.35, sc);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
     });
@@ -1146,6 +1146,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
   const spinnerRings = course.spinners.map((s) => telRing(s.x, s.y, s.z, (s.len || 1.6) * 0.7));
   const sweepRings = course.sweepers.map((s) => telRing(s.x, s.y, s.z, 1.5));
+  for (const mesh of bumperMeshes) outlineOf(mesh, 0.05);
+  for (const mesh of sweepMeshes) outlineOf(mesh, 0.045);
+  for (const vis of pendMeshes) if (vis.group) outlineOf(vis.group, 0.04);
+  let hazardPlanet = 1;
+  function showPlanetHazards(n) {
+    hazardPlanet = n || 1;
+    bumperMeshes.forEach((mesh) => { mesh.visible = hazardPlanet === 1; });
+    sweepMeshes.forEach((mesh) => { mesh.visible = hazardPlanet === 1; });
+  }
   const pendRings = course.pendulums.map((p) => telRing(p.x, p.y - p.len, p.z, 1.2));
   const rollerRings = course.rollers.map((r) => telRing(r.x, r.y, r.z, 1.3));
 
@@ -1598,11 +1607,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   function paintTelegraphs(race) {
     const bumps = race.course.bumpers || [];
-    for (let i = 0; i < bumperRings.length; i++) showRing(bumperRings[i], bumps[i] && bumps[i].glow || 0);
+    const meadowHazards = (race.planetN || hazardPlanet) === 1;
+    for (let i = 0; i < bumperRings.length; i++) showRing(bumperRings[i], meadowHazards ? (bumps[i] && bumps[i].glow || 0) : 0);
     for (let i = 0; i < spinnerRings.length; i++) showRing(spinnerRings[i], race.spinners[i] && race.spinners[i].glow || 0);
     for (let i = 0; i < sweepRings.length; i++) {
       const s = race.sweepers[i];
-      showRing(sweepRings[i], s && s.glow || 0, s && s.x, s && s.y, s && s.z);
+      showRing(sweepRings[i], meadowHazards ? (s && s.glow || 0) : 0, s && s.x, s && s.y, s && s.z);
     }
     for (let i = 0; i < pendRings.length; i++) {
       const p = race.pendulums[i];
@@ -1761,11 +1771,13 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     for (let i = 0; i < race.sweepers.length; i++) {
       const s = race.sweepers[i];
       const scale = sweepMeshes[i].scale.x || 1;
+      sweepMeshes[i].visible = (race.planetN || hazardPlanet) === 1;
       sweepMeshes[i].position.set(s.x, s.y - 0.75 * scale, s.z);
       if (sweepMeshes[i].userData.mixer) sweepMeshes[i].userData.mixer.update(dt);
     }
     for (let i = 0; i < bumperMeshes.length; i++) {
       const mesh = bumperMeshes[i];
+      mesh.visible = (race.planetN || hazardPlanet) === 1;
       const bumper = course.bumpers[i];
       const action = mesh.userData.action;
       if (mesh.userData.mixer) mesh.userData.mixer.update(dt);
@@ -2689,6 +2701,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       };
     },
     applyLook,
+    showPlanetHazards,
     setTheme(planet) {
       state.planet = Math.max(1, Math.min(3, planet || 1));
       distantGroups.forEach((group, i) => { group.visible = i === state.planet - 1; });

@@ -563,9 +563,9 @@ function integrate(race, r, wish, dt) {
   }
 
   const wind = inWind(race, r);
-  const windX = wind ? wind.ax * cfg.windPush : 0;
+  const windX = wind ? wind.ax * cfg.windPush * (race.windMul || 1) : 0;
   const rate = r.controlLock > 0 ? 8 : r.onIce ? (hypot(wish.x, wish.z) > 0.1 ? cfg.iceAccel : cfg.iceFriction) : (hypot(wish.x, wish.z) > 0.08 ? cfg.accel : cfg.friction);
-  const maxSp = cfg.maxSpeed * (r.profile.speed || 1);
+  const maxSp = cfg.maxSpeed * bandSpeed(race, r);
 
   if (r.sliding > 0) {
     r.sliding -= dt;
@@ -789,7 +789,35 @@ function noteTunnel(race, r) {
   }
 }
 
-function botWish(race, r, dt) {
+export function bandSpeed(race, r) {
+  const base = (r.profile && r.profile.speed) || 1;
+  if (!race || r.isPlayer || !race.cfg) return base;
+  const cap = race.cfg.botSpeeds ? race.cfg.botSpeeds[0] : base;
+  const pack = race.racers.filter((o) => o && !o.eliminated && !o.seated && !o.qualified);
+  if (pack.length < 3) return Math.min(cap, base);
+  const zs = pack.map((o) => o.pos.z).sort((a, b) => a - b);
+  const mid = zs[Math.floor(zs.length / 2)];
+  const gap = r.pos.z - mid;
+  let mul = 1;
+  if (gap < -6) mul = 1.14;
+  else if (gap < -2) mul = 1.07;
+  else if (gap > 8) mul = 0.88;
+  else if (gap > 3.5) mul = 0.94;
+  return Math.min(cap, base * mul);
+}
+
+export function paceCollapse(startZ, endZ, seconds, delay) {
+  const from = startZ - 8;
+  const stop = endZ;
+  const chase = Math.max(8, seconds - delay);
+  return {
+    collapseZ: from,
+    collapseStop: stop,
+    collapseSpeed: Math.max(0.8, (stop - from) / chase),
+  };
+}
+
+export function botWish(race, r, dt) {
   const empty = { x: 0, z: 0, jump: false, dive: false };
   if (r.wait > 0) {
     r.wait -= dt;
@@ -811,7 +839,24 @@ function botWish(race, r, dt) {
     if (ddx * ddx + ddz * ddz > 9) break;
     r.wp++;
   }
-  const target = wps[Math.min(r.wp, wps.length - 1)];
+  let target = wps[Math.min(r.wp, wps.length - 1)];
+  if (race.kind === "crown" && race.crown) {
+    const c = race.crown;
+    const held = (r.pos.x - c.x) ** 2 + (r.pos.z - c.z) ** 2 < c.r * c.r;
+    target = {
+      x: c.x + (held ? Math.cos(r.id) * 1.1 : 0),
+      z: c.z + (held ? Math.sin(r.id) * 1.1 : 0),
+      y: c.y || target.y,
+      gap: false,
+    };
+  } else if (race.shipRound && race.course.ship) {
+    const ship = race.course.ship;
+    target = { x: ship.x, z: ship.z - 4, y: ship.y, gap: false };
+  } else if (race.kind === "gate" && race.gate && race.gate.z - r.pos.z < 22) {
+    target = { x: race.gate.x || 0, z: race.gate.z, y: race.gate.y || target.y, gap: false };
+  } else if (race.kind === "survival") {
+    target = { x: target.x * 0.35, z: Math.max(target.z, race.collapseZ + 14), y: target.y, gap: false };
+  }
   const spread = ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.4 : 0.85);
   let tx = target.x + spread;
   if (target.gap) tx = target.x;
@@ -875,6 +920,14 @@ function botWish(race, r, dt) {
       dx += (r.pos.x >= roller.x ? 1 : -1) * 2;
     }
   }
+  for (const pdl of race.pendulums || []) {
+    const dzp = pdl.z - r.pos.z;
+    const bobX = pdl.bobX == null ? pdl.x : pdl.bobX;
+    if (dzp > -1 && dzp < 8 && Math.abs(bobX - r.pos.x) < 2.6) {
+      dx += (r.pos.x >= bobX ? 1 : -1) * 3.6 * p.skill;
+    }
+  }
+  if (r.pos.z < race.collapseZ + 7) dz += 4;
 
   const mag = Math.hypot(dx, dz) || 1;
   dx /= mag;
@@ -910,7 +963,10 @@ function botWish(race, r, dt) {
       if (o !== r && !o.seated && Math.hypot(o.pos.x - r.pos.x, o.pos.z - r.pos.z) < 1.6) grab = true;
     }
   }
-  return { x: dx, z: dz, jump, dive: false, grab };
+  let dive = false;
+  const flat = Math.abs((ty || r.pos.y) - r.pos.y) < 0.45;
+  if (r.grounded && flat && dz > 0.55 && r.diveCd <= 0 && race.rand() < 0.22 * dt * (p.skill || 0.5)) dive = true;
+  return { x: dx, z: dz, jump, dive, grab };
 }
 
 function separate(race) {
@@ -987,11 +1043,22 @@ function armHazard(race, r, hazard) {
   return age >= TELEGRAPH;
 }
 
+function hazardShown(race, kind) {
+  const planetN = race.planetN || 1;
+  if (kind === "bumper" || kind === "sweeper") return planetN === 1;
+  return true;
+}
+
 function hazards(race, dt) {
   const cfg = race.cfg;
   for (const s of race.spinners) s.angle += s.spin * dt;
 
   for (const b of race.course.bumpers) {
+    if (!hazardShown(race, "bumper")) {
+      b.glow = 0;
+      b.armedAt = null;
+      continue;
+    }
     b.glow = 0;
     let crowded = false;
     for (const r of race.racers) {
@@ -1117,6 +1184,11 @@ function hazards(race, dt) {
   }
 
   for (const sw of race.sweepers) {
+    if (!hazardShown(race, "sweeper")) {
+      sw.glow = 0;
+      sw.armedAt = null;
+      continue;
+    }
     const nextX = sw.originX + Math.sin(race.time * sw.speed + sw.z) * sw.amp;
     let threaten = false;
     for (const r of race.racers) {
@@ -1293,8 +1365,8 @@ function movePlatforms(race, dt) {
 function updateCollapse(race, dt) {
   const cfg = race.cfg;
   if (race.time < cfg.collapseDelay) return;
-  const stop = race.course.ship.z - 18;
-  const hurry = 1 + Math.min(2.4, (race.time || 0) / 45);
+  const stop = race.collapseStop != null ? race.collapseStop : race.course.ship.z - 18;
+  const hurry = race.roundSeconds ? 1 : 1 + Math.min(2.4, (race.time || 0) / 45);
   race.collapseZ += race.collapseSpeed * hurry * dt;
   if (race.collapseZ > stop) race.collapseZ = stop;
   race.lavaY = cfg.lavaStartY + race.time * cfg.lavaRisePerSec;
@@ -1304,7 +1376,7 @@ function updateCollapse(race, dt) {
     if (chunk.state === "solid") {
       if (race.collapseZ > chunk.z0) {
         chunk.state = "cracking";
-        chunk.crackT = cfg.crackTime + chunk.jitter * 0.35;
+        chunk.crackT = (cfg.crackTime + chunk.jitter * 0.35) * (race.planetN === 3 ? 0.62 : 1);
         chunk.dirty = true;
         cracked = true;
       }
@@ -1689,10 +1761,10 @@ export function step(race, dt, input) {
     }
     if (race.phase === "race" && race.shipRound && race.forceLaunch && race.player.seated) {
       beginLaunch(race);
-    } else if (race.phase === "race" && race.shipRound && (race.seatsFilled >= cfg.seats || race.time >= cfg.raceSeconds)) {
+    } else if (race.phase === "race" && race.shipRound && (race.seatsFilled >= cfg.seats || race.time >= (race.roundSeconds || cfg.raceSeconds))) {
       if (race.player.seated) beginLaunch(race);
       else eliminate(race);
-    } else if (race.phase === "race" && !race.shipRound && race.time >= cfg.raceSeconds) {
+    } else if (race.phase === "race" && !race.shipRound && race.time >= (race.roundSeconds || cfg.raceSeconds)) {
       race.phase = "results";
       race.result = race.player.qualified ? "qualified" : "out";
       if (!race.player.qualified) race.player.seated = false;

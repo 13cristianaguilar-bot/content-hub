@@ -1,5 +1,6 @@
 import { COLORS } from "./config.js";
 import { floorsAt, groundAt } from "./course.js";
+import { emptyFeel, isSnag, isUnfair, pushMark } from "./feel.js";
 
 function mulberry32(seed) {
   let a = seed >>> 0;
@@ -130,6 +131,7 @@ export function createRace(course, cfg, seed = 1) {
     shake: 0,
     activated: false,
     zoneId: "meadow",
+    feel: cfg.feel ? emptyFeel() : null,
   };
   const span = Math.max(30, course.ship.z - course.zones[0].z0);
   race.collapseSpeed = span / Math.max(8, cfg.collapseArrive - cfg.collapseDelay);
@@ -346,7 +348,14 @@ function doRespawn(race, r) {
   r.markX = spot.x;
   r.markZ = spot.z;
   race.events.push({ t: "respawn", id: r.id, fade: r.isPlayer });
-  if (r.isPlayer) race.shake = Math.max(race.shake, 0.3);
+  if (r.isPlayer) {
+    race.shake = Math.max(race.shake, 0.3);
+    if (race.feel) {
+      race.feel.falls++;
+      pushMark(race.feel, spot.x, spot.z, "fall");
+      r.jumpArm = 0;
+    }
+  }
 }
 
 function pound(race, r) {
@@ -516,6 +525,7 @@ function integrate(race, r, wish, dt) {
     if (r.grounded) {
       r.sliding = cfg.diveDashTime;
       r.diveCd = cfg.diveCooldown;
+      if (wish.jump) r.buffer = Math.max(r.buffer, cfg.diveDashTime + 0.08);
       race.events.push({ t: "dive", id: r.id });
     } else {
       r.vel.y = -cfg.diveFall;
@@ -564,6 +574,10 @@ function integrate(race, r, wish, dt) {
     r.ungroundT = cfg.ungroundTime;
     jumped = true;
     race.events.push({ t: "jump", id: r.id });
+    if (r.isPlayer && race.feel) {
+      r.jumpArm = race.time;
+      race.feel.jumps++;
+    }
   }
 
   let g = cfg.gravity;
@@ -595,6 +609,9 @@ function integrate(race, r, wish, dt) {
   const wasGrounded = r.grounded;
   const prevX = r.pos.x;
   const prevZ = r.pos.z;
+  const speedBefore = hypot(r.vel.x, r.vel.z);
+  const intoX = r.vel.x;
+  const intoZ = r.vel.z;
   const travel = Math.hypot(r.vel.x, r.vel.z) * dt;
   const slices = Math.max(1, Math.min(4, Math.ceil(travel / 0.42)));
   const hdt = dt / slices;
@@ -603,6 +620,22 @@ function integrate(race, r, wish, dt) {
     r.pos.z += r.vel.z * hdt;
     resolveSolids(race, r);
   }
+  const speedAfter = hypot(r.vel.x, r.vel.z);
+  if (r.isPlayer && race.feel && r.grounded && r.sliding <= 0) {
+    const wishMag = hypot(wish.x, wish.z);
+    const along = wishMag > 0.2 && speedBefore > 0 ? (wish.x * intoX + wish.z * intoZ) / (wishMag * speedBefore) : 0;
+    const hitRecently = r.hitAt != null && race.time - r.hitAt < 0.25;
+    if (isSnag(speedBefore, speedAfter, along, hitRecently)) {
+      race.feel.snags++;
+      pushMark(race.feel, r.pos.x, r.pos.z, "snag");
+    }
+  }
+  if (r.isPlayer && race.feel) {
+    const ahead = hazardAhead(race, r);
+    if (ahead != null && ahead < 7) {
+      if (r.warnT == null) r.warnT = race.time;
+    } else if (ahead == null || ahead > 10) r.warnT = null;
+  }
   const nextY = r.pos.y + r.vel.y * dt;
 
   if (r.ungroundT > 0 || jumped) {
@@ -610,7 +643,9 @@ function integrate(race, r, wish, dt) {
     r.grounded = false;
     r.platformId = null;
   } else {
-    const gnd = sampleGround(race, r.pos.x, r.pos.z, r.pos.y, nextY);
+    const fromY = Math.max(r.pos.y, nextY);
+    const toY = Math.min(r.pos.y, nextY);
+    const gnd = sampleGround(race, r.pos.x, r.pos.z, fromY, toY);
     if (gnd && r.vel.y <= 0.85) {
       const impact = -r.vel.y;
       const wasAir = !r.grounded;
@@ -627,6 +662,10 @@ function integrate(race, r, wish, dt) {
         if (r.wasDiving && impact > 8) pound(race, r);
       }
       r.wasDiving = false;
+      if (r.isPlayer && race.feel && r.jumpArm) {
+        race.feel.lands++;
+        r.jumpArm = 0;
+      }
       if (gnd.tile && !gnd.tile.fragile) r.lastSafe = { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
       if (gnd.tile && gnd.tile.chunk && gnd.tile.state === "solid" && gnd.tile.fragile && !gnd.tile.chunk.stepped) {
         gnd.tile.chunk.stepped = true;
@@ -647,6 +686,19 @@ function integrate(race, r, wish, dt) {
       r.platformId = null;
       r.groundTile = null;
       r.onIce = false;
+      if (r.isPlayer && race.feel && r.jumpArm && race.time - r.jumpArm > 0.35 && r.vel.y < -1) {
+        const lip = sampleGround(race, r.pos.x, r.pos.z, r.pos.y + 0.2, r.pos.y);
+        const tile = lip && lip.tile;
+        if (tile && tile.rx && r.pos.y < lip.y - 0.9 && r.pos.y > lip.y - 2.2) {
+          const nx = (r.pos.x - tile.px) / tile.rx;
+          const nz = (r.pos.z - tile.pz) / tile.rz;
+          if (nx * nx + nz * nz < 0.35) {
+            race.feel.missed++;
+            pushMark(race.feel, r.pos.x, r.pos.z, "miss");
+            r.jumpArm = 0;
+          }
+        }
+      }
     }
   }
 
@@ -1262,11 +1314,46 @@ function shoveCrates(race) {
   }
 }
 
+function hazardAhead(race, r) {
+  let best = null;
+  const groups = [race.course.bumpers, race.spinners, race.sweepers, race.pendulums];
+  for (let g = 0; g < groups.length; g++) {
+    const list = groups[g];
+    if (!list) continue;
+    for (let i = 0; i < list.length; i++) {
+      const o = list[i];
+      const dz = (o.z || 0) - r.pos.z;
+      if (dz < -1 || dz > 16) continue;
+      const d = Math.hypot((o.x || 0) - r.pos.x, dz);
+      if (best == null || d < best) best = d;
+    }
+  }
+  return best;
+}
+
+function notePlayerHits(race, from) {
+  if (!race.feel) return;
+  for (let i = from; i < race.events.length; i++) {
+    const e = race.events[i];
+    if (e.t !== "bump" || e.id !== race.player.id) continue;
+    race.player.hitAt = race.time;
+    const age = race.player.warnT == null ? null : race.time - race.player.warnT;
+    if (isUnfair(age)) {
+      race.feel.unfair++;
+      pushMark(race.feel, race.player.pos.x, race.player.pos.z, "unfair");
+    }
+  }
+}
+
 function eliminate(race) {
   race.phase = "results";
   race.result = "out";
   race.player.seated = false;
   race.events.push({ t: "eliminated" });
+  if (race.feel) {
+    race.feel.dies++;
+    pushMark(race.feel, race.player.pos.x, race.player.pos.z, "die");
+  }
 }
 
 function inFinishGate(race, r) {
@@ -1445,6 +1532,7 @@ export function step(race, dt, input) {
   }
 
   if (race.phase === "race") {
+    const ev0 = race.events.length;
     race.activated = true;
     race.time += dt;
     if (race.seatCine > 0) race.seatCine -= dt;
@@ -1495,6 +1583,7 @@ export function step(race, dt, input) {
     checkQualify(race);
     checkSurvival(race);
     checkCrown(race, dt);
+    notePlayerHits(race, ev0);
     const playerZone = zoneAt(race, race.player.pos.z);
     if (playerZone && playerZone !== race.zoneId) {
       race.zoneId = playerZone;

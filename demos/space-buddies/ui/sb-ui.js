@@ -57,7 +57,12 @@
       c.style.setProperty("--rot", (Math.random() * 1080 - 540) + "deg");
       c.style.setProperty("--t", (1.8 + Math.random() * 1.4) + "s");
       c.style.animationDelay = (Math.random() * 0.35) + "s, 0s";
-      c.addEventListener("animationend", function (e) { if (e.animationName === "sb-confetti-fall") this.remove(); });
+      var done = function (e) {
+        if (e.animationName !== "sb-confetti-fall") return;
+        c.removeEventListener("animationend", done);
+        c.remove();
+      };
+      c.addEventListener("animationend", done);
       document.body.appendChild(c);
     }
   }
@@ -67,8 +72,9 @@
       if (!b) return;
       b.classList.add("is-pressed");
       haptic(b.getAttribute("data-haptic") || "light");
-      var up = function () { b.classList.remove("is-pressed"); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); };
-      window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+      var up = function () { b.classList.remove("is-pressed"); };
+      window.addEventListener("pointerup", up, { once: true });
+      window.addEventListener("pointercancel", up, { once: true });
     }, { passive: true });
   }
   window.SBUI = { haptic: haptic, countUp: countUp, slam: slam, wipe: wipe, confetti: confetti, bindPress: bindPress, setHapticsMuted: function (m) { muted = !!m; } };

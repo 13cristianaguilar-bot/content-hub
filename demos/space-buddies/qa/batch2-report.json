@@ -1,0 +1,701 @@
+{
+  "summary": {
+    "runs": 20,
+    "passed": 20,
+    "failed": 0,
+    "passRate": 1
+  },
+  "reports": [
+    {
+      "name": "feel-p1-r1-s1",
+      "planet": 1,
+      "round": 1,
+      "seed": 327,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 2,
+        "lands": 2,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 27,
+        "unseen": 0,
+        "near": 12
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 4.2832,
+        "big": 141,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p1-r0-s0",
+      "planet": 1,
+      "round": 0,
+      "seed": 320,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 2,
+        "lands": 1,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 7,
+        "unseen": 3,
+        "near": 16
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 3.4997999999999996,
+        "big": 142,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p1-r2-s2",
+      "planet": 1,
+      "round": 2,
+      "seed": 334,
+      "result": "escaped",
+      "feel": {
+        "snags": 0,
+        "unfair": 1,
+        "missed": 0,
+        "jumps": 9,
+        "lands": 8,
+        "falls": 4,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -9.8,
+            "z": 143.3,
+            "kind": "unfair"
+          },
+          {
+            "x": -14,
+            "z": 192.3,
+            "kind": "fall"
+          },
+          {
+            "x": -14,
+            "z": 193.5,
+            "kind": "fall"
+          },
+          {
+            "x": 6,
+            "z": 210.7,
+            "kind": "fall"
+          },
+          {
+            "x": 0,
+            "z": 243.9,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 5,
+        "unseen": 2,
+        "near": 17
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 17.999299999999998,
+        "big": 146,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p2-r0-s0",
+      "planet": 2,
+      "round": 0,
+      "seed": 340,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 1,
+        "missed": 0,
+        "jumps": 3,
+        "lands": 2,
+        "falls": 1,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -9.7,
+            "z": 143.7,
+            "kind": "unfair"
+          },
+          {
+            "x": -7,
+            "z": 143.5,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 9,
+        "unseen": 2,
+        "near": 17
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 9.383,
+        "big": 90,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p1-r0-s3",
+      "planet": 1,
+      "round": 0,
+      "seed": 341,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 2,
+        "lands": 1,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 12,
+        "unseen": 0,
+        "near": 20
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 7.7164,
+        "big": 139,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p2-r1-s1",
+      "planet": 2,
+      "round": 1,
+      "seed": 347,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 8,
+        "lands": 4,
+        "falls": 3,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -8,
+            "z": 232.4,
+            "kind": "fall"
+          },
+          {
+            "x": -8,
+            "z": 232.4,
+            "kind": "fall"
+          },
+          {
+            "x": -8,
+            "z": 232.4,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 27,
+        "unseen": 0,
+        "near": 5
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 11.982800000000001,
+        "big": 136,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p2-r0-s3",
+      "planet": 2,
+      "round": 0,
+      "seed": 361,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 2,
+        "lands": 2,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 7,
+        "unseen": 0,
+        "near": 20
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 9.1329,
+        "big": 86,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p2-r2-s2",
+      "planet": 2,
+      "round": 2,
+      "seed": 354,
+      "result": "escaped",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 6,
+        "lands": 6,
+        "falls": 2,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -14,
+            "z": 193.6,
+            "kind": "fall"
+          },
+          {
+            "x": 14,
+            "z": 189.9,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 0,
+        "unseen": 0,
+        "near": 7
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 9.366299999999999,
+        "big": 140,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p3-r0-s0",
+      "planet": 3,
+      "round": 0,
+      "seed": 360,
+      "result": "out",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 23,
+        "lands": 22,
+        "falls": 1,
+        "dies": 0,
+        "marks": [
+          {
+            "x": 14,
+            "z": 189.9,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 4,
+        "unseen": 1,
+        "near": 21
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 9.5996,
+        "big": 140,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p3-r2-s2",
+      "planet": 3,
+      "round": 2,
+      "seed": 374,
+      "result": "escaped",
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 12,
+        "lands": 11,
+        "falls": 2,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -14,
+            "z": 192.8,
+            "kind": "fall"
+          },
+          {
+            "x": 0,
+            "z": 243.9,
+            "kind": "fall"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 4,
+        "unseen": 0,
+        "near": 19
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 9.649599999999998,
+        "big": 133,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p3-r1-s1",
+      "planet": 3,
+      "round": 1,
+      "seed": 367,
+      "result": "qualified",
+      "feel": {
+        "snags": 0,
+        "unfair": 1,
+        "missed": 0,
+        "jumps": 12,
+        "lands": 9,
+        "falls": 4,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -4,
+            "z": 133.9,
+            "kind": "fall"
+          },
+          {
+            "x": -4,
+            "z": 133.9,
+            "kind": "fall"
+          },
+          {
+            "x": -4,
+            "z": 133.9,
+            "kind": "fall"
+          },
+          {
+            "x": -6,
+            "z": 134.9,
+            "kind": "fall"
+          },
+          {
+            "x": 1.7,
+            "z": 144.2,
+            "kind": "unfair"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 12,
+        "unseen": 6,
+        "near": 26
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 7.149700000000001,
+        "big": 147,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "feel-p3-r0-s3",
+      "planet": 3,
+      "round": 0,
+      "seed": 381,
+      "result": "out",
+      "feel": {
+        "snags": 0,
+        "unfair": 1,
+        "missed": 0,
+        "jumps": 24,
+        "lands": 23,
+        "falls": 0,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -10.3,
+            "z": 143.3,
+            "kind": "unfair"
+          }
+        ]
+      },
+      "extra": {
+        "clips": 0,
+        "blocked": 1,
+        "unseen": 0,
+        "near": 16
+      },
+      "issues": [],
+      "clock": {
+        "maxWall": 9.933,
+        "big": 139,
+        "stepsMax": 24
+      }
+    },
+    {
+      "name": "long-session",
+      "issues": [],
+      "resets": [
+        46.01666666666534,
+        46.01666666666534,
+        46.01666666666534,
+        26.466666666666445,
+        46.01666666666534,
+        46.01666666666534,
+        46.01666666666534,
+        46.01666666666534,
+        46.01666666666534,
+        46.01666666666534
+      ],
+      "growth": -10260710
+    },
+    {
+      "name": "touch-edges",
+      "issues": []
+    },
+    {
+      "name": "eliminated-p1",
+      "planet": 1,
+      "result": "out",
+      "issues": []
+    },
+    {
+      "name": "eliminated-p2",
+      "planet": 2,
+      "result": "out",
+      "issues": []
+    },
+    {
+      "name": "eliminated-p3",
+      "planet": 3,
+      "result": "out",
+      "issues": []
+    },
+    {
+      "name": "throttle-p1",
+      "planet": 1,
+      "result": null,
+      "clock": {
+        "maxWall": 2.6333,
+        "big": 190,
+        "stepsMax": 6
+      },
+      "feel": {
+        "snags": 0,
+        "unfair": 0,
+        "missed": 0,
+        "jumps": 5,
+        "lands": 5,
+        "falls": 0,
+        "dies": 0,
+        "marks": []
+      },
+      "issues": [],
+      "low": true
+    },
+    {
+      "name": "throttle-p2",
+      "planet": 2,
+      "result": null,
+      "clock": {
+        "maxWall": 2.7165,
+        "big": 190,
+        "stepsMax": 6
+      },
+      "feel": {
+        "snags": 0,
+        "unfair": 1,
+        "missed": 0,
+        "jumps": 5,
+        "lands": 5,
+        "falls": 0,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -7.8,
+            "z": 100.6,
+            "kind": "unfair"
+          }
+        ]
+      },
+      "issues": [],
+      "low": true
+    },
+    {
+      "name": "throttle-p3",
+      "planet": 3,
+      "result": null,
+      "clock": {
+        "maxWall": 2.5332,
+        "big": 189,
+        "stepsMax": 6
+      },
+      "feel": {
+        "snags": 0,
+        "unfair": 1,
+        "missed": 0,
+        "jumps": 5,
+        "lands": 5,
+        "falls": 0,
+        "dies": 0,
+        "marks": [
+          {
+            "x": -7.8,
+            "z": 100.6,
+            "kind": "unfair"
+          }
+        ]
+      },
+      "issues": [],
+      "low": true
+    }
+  ],
+  "marks": {
+    "1": [
+      {
+        "x": -9.8,
+        "z": 143.3,
+        "kind": "unfair"
+      },
+      {
+        "x": -14,
+        "z": 192.3,
+        "kind": "fall"
+      },
+      {
+        "x": -14,
+        "z": 193.5,
+        "kind": "fall"
+      },
+      {
+        "x": 6,
+        "z": 210.7,
+        "kind": "fall"
+      },
+      {
+        "x": 0,
+        "z": 243.9,
+        "kind": "fall"
+      }
+    ],
+    "2": [
+      {
+        "x": -9.7,
+        "z": 143.7,
+        "kind": "unfair"
+      },
+      {
+        "x": -7,
+        "z": 143.5,
+        "kind": "fall"
+      },
+      {
+        "x": -8,
+        "z": 232.4,
+        "kind": "fall"
+      },
+      {
+        "x": -8,
+        "z": 232.4,
+        "kind": "fall"
+      },
+      {
+        "x": -8,
+        "z": 232.4,
+        "kind": "fall"
+      },
+      {
+        "x": -14,
+        "z": 193.6,
+        "kind": "fall"
+      },
+      {
+        "x": 14,
+        "z": 189.9,
+        "kind": "fall"
+      }
+    ],
+    "3": [
+      {
+        "x": 14,
+        "z": 189.9,
+        "kind": "fall"
+      },
+      {
+        "x": -14,
+        "z": 192.8,
+        "kind": "fall"
+      },
+      {
+        "x": 0,
+        "z": 243.9,
+        "kind": "fall"
+      },
+      {
+        "x": -4,
+        "z": 133.9,
+        "kind": "fall"
+      },
+      {
+        "x": -4,
+        "z": 133.9,
+        "kind": "fall"
+      },
+      {
+        "x": -4,
+        "z": 133.9,
+        "kind": "fall"
+      },
+      {
+        "x": -6,
+        "z": 134.9,
+        "kind": "fall"
+      },
+      {
+        "x": 1.7,
+        "z": 144.2,
+        "kind": "unfair"
+      },
+      {
+        "x": -10.3,
+        "z": 143.3,
+        "kind": "unfair"
+      }
+    ]
+  }
+}

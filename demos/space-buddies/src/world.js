@@ -1910,6 +1910,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (seeThrough) continue;
       stop = hit.distance;
     }
+    if (stop < dist - 1.5) state.camBlocked = true;
     if (stop > dist - 0.2) return want;
     camHead.copy(head).addScaledVector(camDir, Math.max(0.9, stop - 0.45));
     return camHead.clone();
@@ -1928,6 +1929,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       return;
     }
     state.spectate = null;
+    state.camBlocked = false;
     const dragging = !!(look && (look.looking || Math.abs(look.lookDx) + Math.abs(look.lookDy) > 0));
     const baseFov = state.portrait ? cfg.fovPortrait : cfg.fovLandscape;
     const kick = race.player && (race.player.diving || race.player.boost > 0) ? 7 : 0;
@@ -2118,7 +2120,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     camera.position.z = damp(camera.position.z, tz, spring, dt);
     const camFloor = groundAtSafe(player.pos.x, player.pos.z);
     camera.position.y = cameraAboveFloor(camera.position.y, camFloor == null ? player.pos.y : camFloor);
-    camera.lookAt(player.pos.x, player.pos.y + 1.15, player.pos.z + Math.cos(state.yaw) * 1.4);
+    camera.lookAt(player.pos.x, player.pos.y + 1.7, player.pos.z + Math.cos(state.yaw) * 5);
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }
 
@@ -2330,6 +2332,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         solidName,
         fogNear: scene.fog ? scene.fog.near : 0,
         spectate: state.spectate,
+        blocked: !!state.camBlocked,
       };
     },
     applyLook,
@@ -2348,6 +2351,21 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     setDpr(next) {
       dpr = next;
       resize();
+    },
+    setLow() {
+      renderer.shadowMap.enabled = false;
+      if (sun.shadow) sun.shadow.mapSize.set(256, 256);
+      setPost(false);
+      setDpr(0.75);
+    },
+    sees(x, y, z) {
+      try {
+        camHead.set(x, y, z);
+        camHead.project(camera);
+        return camHead.z < 1 && Math.abs(camHead.x) < 1.05 && Math.abs(camHead.y) < 1.05;
+      } catch (err) {
+        return true;
+      }
     },
     get yaw() { return state.yaw; },
     get canvas() { return canvas; },

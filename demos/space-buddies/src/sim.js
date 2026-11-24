@@ -1784,7 +1784,8 @@ export function step(race, dt, input) {
       if (race.player.waveT > 0.7 && race.player.waveT < 2.2) race.player.emote = "cheer";
       if (race.player.waveT >= 2.2) race.player.emote = "idle";
     }
-    if (race.phase === "launch" && race.launchT > 1.25) race.phase = "results";
+    const launchHold = race.holdLaunch > 0 ? race.holdLaunch : 1.25;
+    if (race.phase === "launch" && race.launchT > launchHold) race.phase = "results";
     if (race.shake > 0) race.shake = Math.max(0, race.shake - dt * 0.7);
   }
 }

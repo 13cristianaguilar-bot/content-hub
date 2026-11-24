@@ -9,6 +9,7 @@ import { createInput } from "./input.js";
 import { cameraWish } from "./steer.js";
 import { hideControls, hudStatus, placeLabel, showCoach } from "./place.js";
 import { botWish } from "./bot.js";
+import { cineDuration, skipCine } from "./cine.js";
 
 const params = new URLSearchParams(location.search);
 const cfg = resolveConfig({
@@ -135,6 +136,10 @@ let started = false;
 let pending = false;
 let toastTimer = 0;
 let introLeft = 0;
+let cine = null;
+let afterCine = null;
+let cineArm = 0;
+const cineOn = !cfg.auto && !params.get("bot") && !params.get("qa");
 let hitStop = 0;
 const steer = { x: 0, z: 0 };
 let qualityDropped = false;
@@ -208,7 +213,7 @@ function begin() {
   race.player.color = pickColor;
   saveLook();
   if (world.applyLook) world.applyLook(pickColor, pickGear);
-  introLeft = cfg.auto || params.get("bot") ? 0.2 : 3.3;
+  introLeft = cineOn ? 0 : 0.2;
   hud.hidden = false;
   controls.hidden = true;
   tutor.hidden = true;
@@ -316,6 +321,8 @@ function applyRound() {
   race.seatsFilled = 0;
   if (race.seats) race.seats = race.seats.map(() => null);
   if (world.setTheme) world.setTheme(planet);
+  race.holdLaunch = cineOn ? cineDuration("launch") : 0;
+  race.opened = roundIndex === 0 && cineOn;
   if (audio.setZone) audio.setZone(p.ship ? "ship" : (p.startZ > 250 ? "ice" : p.startZ > 150 ? "sky" : p.startZ > 80 ? "canyon" : "meadow"));
   paintMap(planet);
   roundKicker.textContent = "PLANET " + planet;
@@ -325,6 +332,46 @@ function applyRound() {
   const roundBanner = roundEl.querySelector(".sb-banner");
   if (window.SBUI && roundBanner) SBUI.slam(roundBanner);
   setTimeout(() => { roundEl.hidden = true; }, 1400);
+  if (roundIndex === 0) playCine("flyover");
+}
+
+function roundFocus() {
+  const p = currentPlan();
+  if (p.gate) return { x: p.gate.x || 0, y: p.gate.y || 1, z: p.gate.z };
+  if (p.crown) return { x: p.crown.x, y: p.crown.y || 1, z: p.crown.z };
+  if (p.ship && course.ship) return { x: course.ship.x, y: course.ship.y, z: course.ship.z };
+  return { x: 0, y: 1, z: p.startZ + 70 };
+}
+
+function playCine(kind, then) {
+  if (!cineOn) {
+    if (then) then();
+    return;
+  }
+  const chip = document.getElementById("cine-skip");
+  cine = { kind, t: 0, dur: cineDuration(kind), focus: roundFocus() };
+  afterCine = then || null;
+  cineArm = performance.now();
+  if (chip) chip.hidden = false;
+  controls.hidden = true;
+  if (countdownEl) countdownEl.hidden = true;
+}
+
+function finishCine() {
+  const next = afterCine;
+  cine = null;
+  afterCine = null;
+  const chip = document.getElementById("cine-skip");
+  if (chip) chip.hidden = true;
+  if (next) next();
+}
+
+function advanceCine(dt) {
+  if (!cine) return false;
+  cine.t += dt;
+  if (cine.t < cine.dur) return true;
+  cine.t = cine.dur;
+  return false;
 }
 
 function armAudio() {
@@ -360,6 +407,13 @@ playBtn.addEventListener("click", (e) => {
   audio.unlock();
   if (pending && ready) begin();
 });
+app.addEventListener("pointerdown", (e) => {
+  if (!cine) return;
+  if (performance.now() - cineArm < 280) return;
+  if (e.target.closest("#pause, #mute, #pause-menu, #settings")) return;
+  skipCine(cine);
+  if (cine.kind === "launch" && race) race.launchT = Math.max(race.launchT || 0, race.holdLaunch || cine.dur);
+}, true);
 document.getElementById("aboard-skip").addEventListener("pointerdown", (e) => {
   e.preventDefault();
   if (race && race.player.seated && race.phase === "race") race.forceLaunch = true;
@@ -522,9 +576,7 @@ menuBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   goMenu();
 });
-nextRoundBtn.addEventListener("pointerdown", (e) => {
-  e.preventDefault();
-  e.stopPropagation();
+function commitNextRound() {
   const ids = new Set(race.racers.filter((r) => r.qualified).map((r) => r.id));
   alive = ids;
   roundIndex += 1;
@@ -534,6 +586,13 @@ nextRoundBtn.addEventListener("pointerdown", (e) => {
   if (cfg.auto) race.player.useAI = true;
   applyRound();
   controls.hidden = false;
+}
+nextRoundBtn.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  if (cine) return;
+  resultEl.hidden = true;
+  playCine("collapse", commitNextRound);
 });
 nextPlanetBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -543,8 +602,7 @@ nextPlanetBtn.addEventListener("pointerdown", (e) => {
   paintMap(planet + 1);
   planetEl.hidden = false;
 });
-document.getElementById("land").addEventListener("pointerdown", (e) => {
-  e.preventDefault();
+function commitLand() {
   planet += 1;
   roundIndex = 0;
   alive = null;
@@ -554,6 +612,12 @@ document.getElementById("land").addEventListener("pointerdown", (e) => {
   if (cfg.auto) race.player.useAI = true;
   applyRound();
   controls.hidden = false;
+}
+document.getElementById("land").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  if (cine) return;
+  planetEl.hidden = true;
+  playCine("collapse", commitLand);
 });
 function goMenu() {
   paused = false;
@@ -739,7 +803,7 @@ function updateHud(dt) {
     if (zoneTimer <= 0) zoneEl.hidden = true;
   }
 
-  const showEnd = race.phase === "results";
+  const showEnd = race.phase === "results" && !(cine && cine.kind === "collapse");
   const aboard = document.getElementById("aboard");
   const waiting = started && race.player.seated && race.phase === "race";
   controls.hidden = hideControls(race.phase, race.player.seated, started, race.player.eliminated);
@@ -862,6 +926,29 @@ function frame(now) {
     world.render();
     return;
   }
+  if (cine && cine.kind !== "launch") {
+    const playing = advanceCine(dt);
+    tutor.hidden = true;
+    controls.hidden = true;
+    try {
+      world.update(race, dt, { cine, lookDx: 0, lookDy: 0, looking: false });
+      world.render();
+      updateHud(dt);
+    } catch (err) {
+      reportError(err);
+    }
+    if (countdownEl) countdownEl.hidden = true;
+    tutor.hidden = true;
+    controls.hidden = true;
+    if (!playing) finishCine();
+    if (cine && cine.kind !== "launch") return;
+    if (playing) return;
+  }
+  if (cine && cine.kind === "launch") {
+    if (!advanceCine(dt)) finishCine();
+  } else if (cineOn && race.phase === "launch" && !cine) {
+    playCine("launch");
+  }
   if (introLeft > 0) {
     introLeft -= dt;
     try {
@@ -936,6 +1023,7 @@ function frame(now) {
     if (world.setPost && params.get("post") !== "1") world.setPost(false);
   }
   if (window.__sbOverview) raw.overview = window.__sbOverview;
+  if (cine) raw.cine = cine;
   race.interp = acc;
   try {
     world.update(race, dt, raw);

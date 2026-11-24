@@ -493,6 +493,7 @@ button { font-family: inherit; touch-action: manipulation; }
   <div id="tutor" hidden>DRAG THE LEFT SIDE TO RUN</div>
   <div id="zone" hidden>MEADOW</div>
   <div id="toast" hidden>CHECKPOINT</div>
+  <button id="cine-skip" class="sb-btn sb-btn--secondary" type="button" hidden>TAP TO SKIP</button>
   <div id="countdown" hidden>
     <div>
       <div id="count-num">3</div>
@@ -561,8 +562,9 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-<script src="game.js?v=72"></script>
+<script src="game.js?v=73"></script>
 <style>
+#cine-skip { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; pointer-events: auto; }
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
 .sb-hud__top { left: 12px; right: 12px; }
 .sb-hud__right { max-width: 168px; min-width: 0; }

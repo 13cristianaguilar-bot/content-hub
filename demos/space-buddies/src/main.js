@@ -1,7 +1,7 @@
 import { COLORS, resolveConfig } from "./config.js";
 import { createCourse, groundAt, courseScale } from "./course.js";
 import { recordRun } from "./board.js";
-import { createRace, resetRace, step } from "./sim.js";
+import { createRace, paceCollapse, resetRace, step } from "./sim.js";
 import { createWorld } from "./world.js";
 import { createAudio } from "./audio.js";
 import { cueFor, muteIcon, muteLabel, playerOnlyCue } from "./audio-prefs.js";
@@ -78,19 +78,19 @@ const Z = (z) => z * courseScale(cfg.quick);
 const gate = (z, y, rx) => ({ x: 0, z: Z(z), rx: rx || 5, rz: 1.5, y });
 const PLANS = [
   [
-    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, startZ: Z(22), finishZ: Z(158), gate: gate(158, 0.25, 5) },
-    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, startZ: Z(168), finishZ: Z(236), gate: gate(236, 5.2, 5) },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: Z(22), ship: true },
+    { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, seconds: 72, startZ: Z(22), finishZ: Z(158), gate: gate(158, 0.25, 5) },
+    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, seconds: 48, startZ: Z(168), finishZ: Z(236), gate: gate(236, 5.2, 5) },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
   ],
   [
-    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, startZ: Z(176), finishZ: Z(258), gate: gate(258, 3.3, 5.5) },
-    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, startZ: Z(300), finishZ: Z(356), gate: gate(356, 8, 4.5) },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: Z(250), ship: true },
+    { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, seconds: 54, startZ: Z(176), finishZ: Z(258), gate: gate(258, 3.3, 5.5) },
+    { name: "THE CLIMB", sub: "8 QUALIFY", qualify: 8, seconds: 42, startZ: Z(300), finishZ: Z(356), gate: gate(356, 8, 4.5) },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(250), ship: true },
   ],
   [
-    { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, startZ: Z(22), kind: "survival" },
-    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, startZ: Z(176), kind: "crown", crown: { x: 0, z: Z(210), y: 5.6, r: 3.4 } },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, startZ: Z(22), ship: true },
+    { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, seconds: 50, startZ: Z(22), kind: "survival" },
+    { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, seconds: 40, startZ: Z(176), kind: "crown", crown: { x: 0, z: Z(210), y: 5.6, r: 3.4 } },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
   ],
 ];
 function currentPlan() {
@@ -270,6 +270,28 @@ function applyRound() {
   race.countCue = -1;
   race.result = null;
   race.time = 0;
+  const fullSeconds = p.seconds || cfg.raceSeconds;
+  race.roundSeconds = cfg.quick ? Math.max(18, Math.round(fullSeconds * 0.62)) : fullSeconds;
+  const endZ = p.gate ? p.gate.z : (p.ship ? course.ship.z - 12 : p.startZ + 70);
+  const pace = paceCollapse(p.startZ, endZ, race.roundSeconds, cfg.quick ? 2.5 : 6);
+  race.collapseZ = pace.collapseZ;
+  race.collapseStop = pace.collapseStop;
+  race.collapseSpeed = pace.collapseSpeed * (planet === 3 ? 1.18 : planet === 2 ? 1.06 : 1);
+  race.windMul = planet === 2 ? 1.45 : planet === 3 ? 0.85 : 1;
+  race.planetN = planet;
+  if (planet === 2) {
+    for (const roller of race.rollers) roller.speed *= roller.planetTuned ? 1 : 1.3;
+    for (const plat of race.platforms) {
+      if (plat.axis === "x" && !plat.planetTuned) plat.amp *= 1.18;
+      plat.planetTuned = true;
+    }
+    for (const roller of race.rollers) roller.planetTuned = true;
+  }
+  if (planet === 3) {
+    for (const pdl of race.pendulums) pdl.amp = Math.min(1.25, pdl.amp * (pdl.planetTuned ? 1 : 1.18));
+    for (const pdl of race.pendulums) pdl.planetTuned = true;
+  }
+  if (world && world.showPlanetHazards) world.showPlanetHazards(planet);
   const g = groundAt(course, 0, p.startZ);
   const y = g ? g.y : 0;
   race.racers.forEach((r, i) => {
@@ -642,7 +664,8 @@ function showZone(name) {
 let shownResult = false;
 
 function updateHud(dt) {
-  const remain = race.phase === "countdown" ? cfg.raceSeconds : Math.max(0, cfg.raceSeconds - race.time);
+  const limit = race.roundSeconds || cfg.raceSeconds;
+  const remain = race.phase === "countdown" ? limit : Math.max(0, limit - race.time);
   const label = clock(remain);
   if (timerNum && timerNum.textContent !== label) timerNum.textContent = label;
   timerEl.classList.toggle("is-low", race.phase === "race" && remain <= 15);
@@ -771,7 +794,7 @@ function updateHud(dt) {
     });
     fillPodium(race);
     const ran = clock(race.time || 0);
-    const left = clock(Math.max(0, cfg.raceSeconds - (race.time || 0)));
+    const left = clock(Math.max(0, (race.roundSeconds || cfg.raceSeconds) - (race.time || 0)));
     const fell = (race.fallers || []).slice(-3).join(", ");
     resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + (race.coins || 0) + " COINS · PLANET " + planet;
     if (fell && kind === "out") resultSub.textContent = fell + " FELL";
@@ -829,7 +852,7 @@ function frame(now) {
   if (!frame.lastWall) frame.lastWall = now;
   if (now - frame.lastWall >= 500) {
     fps = frames / ((now - frame.lastWall) / 1000);
-    if (world.noteFps) world.noteFps(fps);
+    if (world && world.noteFps) world.noteFps(fps);
     frames = 0;
     frame.lastWall = now;
   }

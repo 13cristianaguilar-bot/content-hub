@@ -151,7 +151,12 @@ a{color:var(--teal);text-decoration:none}
 .srow.you.ahead{background:rgba(55,202,55,.14);box-shadow:inset 3px 0 0 var(--good)}
 .rk{font-variant-numeric:tabular-nums;font-weight:800;display:flex;align-items:center;gap:2px}
 .arr{width:10px;height:10px}
-.nm{font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm{font-weight:750;min-width:0}
+.nm-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prior{display:block;margin-top:0;font-style:normal;font-size:10px;line-height:1.15;font-weight:700;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow:has(.prior){padding:2px 8px}
+.slist:has(.prior){gap:2px}
+.play:has(.prior) .pass{font-size:clamp(20px,3vh,28px)}
 .you-tag{margin-left:6px;font-style:normal;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:#fff;background:#000;border-radius:999px;padding:1px 5px}
 .sets,.dials{font-variant-numeric:tabular-nums;font-weight:800;text-align:right}
 .sheet{padding:12px;display:grid;gap:12px}
@@ -216,6 +221,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .status{padding:5px 10px;font-size:13px}
   .play{grid-template-columns:1fr;grid-template-rows:auto auto minmax(220px,1fr) auto;gap:4px;padding:6px}
   .lens .tab{min-height:32px;box-shadow:0 2px 0 #000}
+  .play:has(.prior) .weekbox{display:none}
+  .play:has(.prior) .pass{font-size:15px}
+  .srow:has(.prior){padding:1px 6px}
   .lens,.hero,.money,.long,.race{grid-column:1}
   .lens{grid-row:1}
   .hero{grid-row:2;grid-template-columns:84px minmax(0,1fr);padding:6px 8px}
@@ -604,6 +612,48 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     } else if (source === 'snapshot') note = shortDay(key) + ' team board is the latest snapshot, which is still that day. As of ' + when + '.';
     else if (mine) note = 'Your ' + shortDay(key) + ' totals are in the feed. The team board for that day is not. Nothing below is filled in as zero.';
     return { key: key, rows: rows, mine: mine, source: source || (mine ? 'mine' : 'none'), note: note };
+  }
+  function freshTodayBoard(data) {
+    var yest = yesterdayPack(data);
+    var weekRows = ((periodOf(data, 'week') || {}).rows) || [];
+    var by = {};
+    function slot(name) {
+      var k = String(name || '').trim().toLowerCase();
+      if (!k) return null;
+      if (!by[k]) by[k] = { name: String(name).trim(), sets: 0, dials: 0, ySets: null, yDials: null, wSets: null, wDials: null, fresh: true };
+      return by[k];
+    }
+    weekRows.forEach(function (r) {
+      var s = slot(r && r.name);
+      if (!s) return;
+      s.wSets = num(r.sets);
+      s.wDials = num(r.dials);
+    });
+    (yest.rows || []).forEach(function (r) {
+      var s = slot(r && r.name);
+      if (!s) return;
+      s.ySets = num(r.sets);
+      s.yDials = num(r.dials);
+    });
+    var list = Object.keys(by).map(function (k) { return by[k]; });
+    list.sort(function (a, b) {
+      if (a.wSets == null && b.wSets == null) return String(a.name).localeCompare(String(b.name));
+      if (a.wSets == null) return 1;
+      if (b.wSets == null) return -1;
+      if (b.wSets !== a.wSets) return b.wSets - a.wSets;
+      if (a.wDials == null && b.wDials == null) return String(a.name).localeCompare(String(b.name));
+      if (a.wDials == null) return 1;
+      if (b.wDials == null) return -1;
+      if (b.wDials !== a.wDials) return b.wDials - a.wDials;
+      return String(a.name).localeCompare(String(b.name));
+    });
+    return list;
+  }
+  function weekGap(data) {
+    var weekList = ranked(((periodOf(data, 'week') || {}).rows) || []);
+    if (!weekList.length) return { text: 'This week: no team rows in the feed.', ahead: false, rank: null };
+    var gap = gapLine(weekList, meName(data));
+    return { text: 'This week: ' + gap.text, ahead: gap.ahead, rank: gap.rank };
   }
   function lensBar() {
     function btn(key, name) {
@@ -1134,10 +1184,10 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var goalLine = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
     var yest = lens === 'yesterday' ? yesterdayPack(data) : null;
     var weekPeriod = periodOf(data, 'week');
-    var list = lens === 'yesterday' ? ranked(yest && yest.rows || []) : (lens === 'week' ? ranked((weekPeriod && weekPeriod.rows) || []) : (freshDay ? [] : ranked((periodOf(data, 'today') || {}).rows || [])));
-    var emptyText = freshDay ? 'No team rows for today yet. Yesterday is on the Yesterday tab.' : (lens === 'yesterday' && yest ? yest.note : 'No rows for this view.');
-    var gap = list.length ? gapLine(list, meName(data)) : { text: emptyText, ahead: false, rank: null };
-    var prev = list.length ? arrowsFor(lens === 'week' ? 'week' : (lens === 'yesterday' ? 'yesterday' : 'today'), list) : null;
+    var list = lens === 'yesterday' ? ranked(yest && yest.rows || []) : (lens === 'week' ? ranked((weekPeriod && weekPeriod.rows) || []) : (freshDay ? freshTodayBoard(data) : ranked((periodOf(data, 'today') || {}).rows || [])));
+    var emptyText = lens === 'yesterday' && yest ? yest.note : 'No rows for this view.';
+    var gap = freshDay ? weekGap(data) : (list.length ? gapLine(list, meName(data)) : { text: emptyText, ahead: false, rank: null });
+    var prev = (!freshDay && list.length) ? arrowsFor(lens === 'week' ? 'week' : (lens === 'yesterday' ? 'yesterday' : 'today'), list) : null;
     var view = blockView(new Date(), clockData(data), todayRow(data));
     var wall = ctYMD(new Date());
     var thanks = wall && wall.y === 2026 && wall.m === 11 && wall.d >= 23 && wall.d <= 27;
@@ -1193,7 +1243,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var hero = '<section class="hero ' + view.tone + '" data-spot="block" data-lens="' + lens + '"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="#f0f0f0" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money">' + moneyHtml + '</div>' + (lensNote ? ('<p class="lens-note" id="lens-note">' + esc(lensNote) + '</p>') : '') + '</div></section>';
     var rowsHtml = list.length ? boardRows(data, list, prev, raceTarget, true) : ('<p class="sub">' + esc(emptyText) + '</p>');
     return '<section class="play">' + lensBar() + hero + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
-      '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.</p>' +
+      '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">' + (freshDay ? 'Today is 0 until the feed has today. Yday and Wk are the snapshot. Est. is sets times $50. Ordered by this week.' : 'Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.') + '</p>' +
       '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section></section>';
   }
   function boardRows(data, list, prev, target, dollars) {
@@ -1210,7 +1260,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var old = prev ? num(prev[String(row && row.name || '').trim().toLowerCase()]) : null;
       var moved = old != null && old !== i + 1;
       var near = meIdx >= 0 && Math.abs(i - meIdx) <= 1;
-      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + esc(est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
+      function priorBit(label, value) {
+        if (value == null) return label + ' no data';
+        return label + ' ' + fmtCount(value) + ' ' + fmtMoney(value * BONUS);
+      }
+      var prior = row && row.fresh ? ('<i class="prior">' + esc(priorBit('Yday', row.ySets) + ' · ' + priorBit('Wk', row.wSets)) + '</i>') : '';
+      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + esc(est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
     }).join('');
   }
   function boardModel(data) {
@@ -1230,15 +1285,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var yest = yesterdayPack(data);
       return { key: 'yesterday', label: yest.key ? ('Yesterday, ' + shortDay(yest.key)) : 'Yesterday', rows: yest.rows || [], target: kpi, emptyText: yest.note, rule: 'daily KPI' };
     }
-    if (data && !feedIsCurrent(data)) return { key: 'today', label: 'Today', rows: [], target: kpi, emptyText: staleNote(data) + ' No team rows for today yet.', rule: 'daily KPI' };
+    if (data && !feedIsCurrent(data)) return { key: 'today', fresh: true, label: 'Today. ' + staleNote(data), rows: freshTodayBoard(data), target: kpi, emptyText: 'No names in yesterday or this week, so today has no roster.', rule: 'daily KPI' };
     var today = periodOf(data, 'today');
     return { key: 'today', label: (today && today.label) || 'Today', rows: (today && today.rows) || [], target: kpi, emptyText: 'No rows for today.', rule: 'daily KPI' };
   }
   function boardHtml(data) {
     var model = boardModel(data);
-    var list = ranked(model.rows);
-    var gap = list.length ? gapLine(list, meName(data)) : { text: model.emptyText, ahead: false, rank: null };
-    var prev = list.length ? arrowsFor(model.key, list) : null;
+    var list = model.fresh ? (model.rows || []) : ranked(model.rows);
+    var gap = model.fresh ? (list.length ? weekGap(data) : { text: model.emptyText, ahead: false, rank: null }) : (list.length ? gapLine(list, meName(data)) : { text: model.emptyText, ahead: false, rank: null });
+    var prev = (!model.fresh && list.length) ? arrowsFor(model.key, list) : null;
     function tab(key, name, lensKey) {
       var on = lensKey ? (state.period !== 'month' && state.lens === lensKey) : state.period === 'month';
       var attr = lensKey ? (' data-lens="' + lensKey + '"') : ' data-period="month"';
@@ -1246,7 +1301,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     var rowsHtml = list.length ? boardRows(data, list, prev, model.target, true) : ('<p class="sub">' + esc(model.emptyText) + '</p>');
     return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(model.label) + '</p></div><div class="tabs">' + tab('today', 'Today', 'today') + tab('yesterday', 'Yesterday', 'yesterday') + tab('week', 'This Week', 'week') + tab('month', 'Month', '') + '</div></div>' +
-      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Est. is sets times $50, not cash collected.</p>' +
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. Est. is sets times $50, not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Est. is sets times $50, not cash collected.')) + '</p>' +
       '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>';
   }
   function actualSeries(hours, now, x0) {
@@ -1435,8 +1490,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var row = todayRow(data);
     var body = state.view === 'board' ? boardHtml(data) : (state.view === 'stats' ? statsHtml(data, findMe(data, 'today')) : playHtml(data, row));
     var sched = schedule();
-    var list = feedIsCurrent(data) ? ranked((periodOf(data, 'today') || {}).rows || []) : [];
-    var gap = list.length ? gapLine(list, meName(data)) : { text: 'Today\'s board has no rows yet.', ahead: false, rank: null };
+    var list = feedIsCurrent(data) ? ranked((periodOf(data, 'today') || {}).rows || []) : freshTodayBoard(data);
+    var gap = feedIsCurrent(data) ? (list.length ? gapLine(list, meName(data)) : { text: 'Today\'s board has no rows yet.', ahead: false, rank: null }) : weekGap(data);
     var extra = '';
     if (sched.phase === 'over' && !debriefDone()) extra += debriefHtml(data, row);
     else if (sched.phase !== 'over' && !shiftOn()) extra += briefHtml(data, row, sched, gap);

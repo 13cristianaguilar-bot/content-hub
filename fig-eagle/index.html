@@ -66,8 +66,11 @@ a{color:var(--teal);text-decoration:none}
 .stage{flex:1;min-height:0;position:relative}
 .stage.scroll{overflow:auto}
 .stage.lock{overflow:hidden}
-.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
-.hero{grid-column:1 / -1;grid-row:1;display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px 14px;align-items:center;padding:8px 12px 8px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;position:relative;overflow:hidden}
+.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
+.lens{grid-column:1 / -1;grid-row:1;display:flex;gap:6px}
+.lens .tab{flex:1}
+.lens-note{margin:4px 0 0;font-size:12px;font-weight:700;color:var(--muted)}
+.hero{grid-column:1 / -1;grid-row:2;display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px 14px;align-items:center;padding:8px 12px 8px 14px;background:#fff;border:1px solid var(--line);border-radius:18px;position:relative;overflow:hidden}
 .hero:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--teal)}
 .hero.bad:before{background:var(--bad)}
 .hero.good:before{background:var(--good)}
@@ -98,9 +101,9 @@ a{color:var(--teal);text-decoration:none}
 .play:has(.banner) .col{gap:6px}
 .play:has(.banner) .card{padding:8px 10px}
 .play:has(.banner) .wtrack{margin-bottom:16px}
-.money{grid-column:1;grid-row:2;min-height:0;overflow:hidden}
-.long{grid-column:1;grid-row:2}
-.race{grid-column:2;grid-row:2}
+.money{grid-column:1;grid-row:3;min-height:0;overflow:hidden}
+.long{grid-column:1;grid-row:3}
+.race{grid-column:2;grid-row:3}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
 .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
 .who{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -211,16 +214,18 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pads{margin-left:0}
   .pad,.tab{min-height:36px;padding:0 8px;font-size:11px}
   .status{padding:5px 10px;font-size:13px}
-  .play{grid-template-columns:1fr;grid-template-rows:auto minmax(248px,1fr) auto;gap:6px;padding:6px}
-  .hero,.money,.long,.race{grid-column:1}
-  .hero{grid-row:1;grid-template-columns:84px minmax(0,1fr);padding:6px 8px}
+  .play{grid-template-columns:1fr;grid-template-rows:auto auto minmax(220px,1fr) auto;gap:4px;padding:6px}
+  .lens .tab{min-height:32px;box-shadow:0 2px 0 #000}
+  .lens,.hero,.money,.long,.race{grid-column:1}
+  .lens{grid-row:1}
+  .hero{grid-row:2;grid-template-columns:84px minmax(0,1fr);padding:6px 8px}
   .ringwrap,.ring{width:80px;height:80px}
   .ring-mid b{font-size:14px}
   .hero-title{font-size:18px}
   .hero-commit,.hero-pace{font-size:11px}
   .hero-money b{font-size:22px}
-  .race{grid-row:2;height:auto;overflow:hidden}
-  .money{grid-row:3}
+  .race{grid-row:3;height:auto;overflow:hidden}
+  .money{grid-row:4}
   .long{display:none}
   .pass{font-size:18px;margin:0}
   .play .extra,.play .fine,.play .wtrack,.play .commit-note,.play .line-in,.play .assume,#goal-line,.play .weekbox .src,.play .phone-hide,.play .monthline{display:none}
@@ -267,7 +272,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pad,.tab{min-height:32px;box-shadow:0 2px 0 #000}
   .play{gap:4px;padding:4px}
   .play .meter,.play .long,.play .weekbox,.play .commit-note{display:none}
-  .play{grid-template-rows:auto minmax(150px,1fr)}
+  .play{grid-template-rows:auto auto minmax(150px,1fr)}
   .money{display:none}
   .play .card{padding:4px 6px}
   .who h2{font-size:18px}
@@ -324,12 +329,13 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var sb = null;
   var SOUND_KEY = 'fe-sound';
   var audioCtx = null;
-  var state = { row: null, fetchedAt: null, error: '', stale: false, period: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1 };
+  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1 };
   try {
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'stats' || hash === 'pace' || hash === 'trend') state.view = 'stats';
     if (hash === 'board') state.view = 'board';
-    if (hash === 'today' || hash === 'week' || hash === 'month') { state.view = 'board'; state.period = hash; }
+    if (hash === 'yesterday') { state.view = 'board'; state.lens = 'yesterday'; state.period = 'yesterday'; }
+    if (hash === 'today' || hash === 'week' || hash === 'month') { state.view = 'board'; state.period = hash; if (hash !== 'month') state.lens = hash; }
   } catch (e) {}
 
   function num(v) {
@@ -471,6 +477,141 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       return { y: Number(o.year), m: Number(o.month), d: Number(o.day), key: o.year + '-' + o.month + '-' + o.day };
     } catch (e) { return null; }
   }
+  function wallKey(date) {
+    var y = ctYMD(date || new Date());
+    return y ? y.key : null;
+  }
+  function shiftKey(key, days) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''));
+    if (!m) return null;
+    var dt = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]) + days));
+    return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0') + '-' + String(dt.getUTCDate()).padStart(2, '0');
+  }
+  function dowOfKey(key) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(key || ''));
+    if (!m) return null;
+    return new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3]))).getUTCDay();
+  }
+  function prevWorkKey(key) {
+    var k = key;
+    for (var i = 0; i < 6; i++) {
+      k = shiftKey(k, -1);
+      var dow = dowOfKey(k);
+      if (dow != null && dow !== 0 && dow !== 6) return k;
+    }
+    return null;
+  }
+  function feedKey(data) {
+    var y = ctYMD(data && data.generated_iso);
+    return y ? y.key : null;
+  }
+  function feedIsCurrent(data) {
+    var f = feedKey(data), w = wallKey();
+    return !!(f && w && f === w);
+  }
+  function wallHour() {
+    var p = ctParts(new Date());
+    if (!p) return null;
+    return p.h + (p.m / 60) + (p.s / 3600);
+  }
+  function shortWhen(iso) {
+    var d = iso ? new Date(iso) : null;
+    if (!d || isNaN(d.getTime())) return null;
+    try {
+      var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', weekday: 'short', hour: 'numeric', minute: '2-digit', hour12: true }).formatToParts(d);
+      var o = {};
+      parts.forEach(function (p) { if (p.type !== 'literal') o[p.type] = p.value; });
+      if (!o.weekday || !o.hour || !o.minute) return null;
+      return o.weekday + ' ' + o.hour + ':' + o.minute + ' ' + (o.dayPeriod || '') + ' CT';
+    } catch (e) { return null; }
+  }
+  function staleNote(data) {
+    if (!data || feedIsCurrent(data)) return '';
+    return 'Feed last updated ' + (shortWhen(data.generated_iso) || asOfText({ data: data })) + ', waiting for today\'s first refresh.';
+  }
+  function freshTodayRow(data) {
+    return { name: meName(data), sets: 0, dials: 0, connects: 0, talk_min: 0, answered: 0 };
+  }
+  function todayRow(data) {
+    if (!data) return null;
+    if (feedIsCurrent(data)) return findMe(data, 'today');
+    return freshTodayRow(data);
+  }
+  function clockData(data) {
+    if (!data || feedIsCurrent(data)) return data;
+    var copy = {};
+    for (var k in data) if (Object.prototype.hasOwnProperty.call(data, k)) copy[k] = data[k];
+    copy.my_hourly_today = [];
+    copy.now_hour = wallHour();
+    if (data.computed) {
+      copy.computed = {};
+      for (var c in data.computed) if (Object.prototype.hasOwnProperty.call(data.computed, c)) copy.computed[c] = data.computed[c];
+      copy.computed.dials_vs_pace = null;
+    }
+    return copy;
+  }
+  function liveDelta(data) {
+    if (!data || !feedIsCurrent(data)) return null;
+    return num(data.computed && data.computed.dials_vs_pace);
+  }
+  function mineDaily(data, key) {
+    var days = data && data.my_daily;
+    if (!Array.isArray(days) || !key) return null;
+    for (var i = 0; i < days.length; i++) if (days[i] && String(days[i].day) === key) return days[i];
+    return null;
+  }
+  function historyBoard(data, key) {
+    var days = data && data.history && Array.isArray(data.history.days) ? data.history.days : null;
+    if (days) {
+      for (var i = 0; i < days.length; i++) if (days[i] && String(days[i].day) === key && Array.isArray(days[i].rows)) return days[i].rows;
+    }
+    var by = data && data.periods && data.periods.by_day && data.periods.by_day[key];
+    if (by && Array.isArray(by.rows)) return by.rows;
+    return null;
+  }
+  function snapshotBoard(payload, key) {
+    if (!payload || feedKey(payload) !== key) return null;
+    var p = periodOf(payload, 'today');
+    return (p && Array.isArray(p.rows)) ? p.rows : null;
+  }
+  function yesterdayPack(data) {
+    var key = prevWorkKey(wallKey());
+    var empty = { key: key, rows: null, mine: null, source: 'none', note: 'Yesterday: no data' };
+    if (!data || !key) return empty;
+    var rows = historyBoard(data, key);
+    var source = rows ? 'history' : '';
+    var arch = state.archives && state.archives[key];
+    if (!rows && arch && arch.data) {
+      rows = snapshotBoard(arch.data, key);
+      if (rows) source = 'archive';
+    }
+    if (!rows) {
+      rows = snapshotBoard(data, key);
+      if (rows) source = 'snapshot';
+    }
+    var mine = mineDaily(data, key) || (arch && arch.data ? mineDaily(arch.data, key) : null);
+    if (!mine && rows) {
+      for (var i = 0; i < rows.length; i++) if (rows[i] && sameName(rows[i].name, meName(data))) mine = rows[i];
+    }
+    var when = shortWhen(data.generated_iso) || 'the last refresh';
+    var note = 'No ' + shortDay(key) + ' row in the feed.';
+    if (source === 'history') note = shortDay(key) + ' team board is in the feed history.';
+    else if (source === 'archive') {
+      var same = state.row && arch && String(arch.generated_at || '') === String(state.row.generated_at || '');
+      note = same
+        ? (shortDay(key) + ' is the latest snapshot, saved as row ' + key + '. As of ' + when + '. No newer day has been written.')
+        : (shortDay(key) + ' team board is the saved scoreboard row for that day.');
+    } else if (source === 'snapshot') note = shortDay(key) + ' team board is the latest snapshot, which is still that day. As of ' + when + '.';
+    else if (mine) note = 'Your ' + shortDay(key) + ' totals are in the feed. The team board for that day is not. Nothing below is filled in as zero.';
+    return { key: key, rows: rows, mine: mine, source: source || (mine ? 'mine' : 'none'), note: note };
+  }
+  function lensBar() {
+    function btn(key, name) {
+      var on = state.period !== 'month' && (state.lens || 'today') === key;
+      return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-lens="' + key + '" role="tab" aria-selected="' + (on ? 'true' : 'false') + '">' + name + '</button>';
+    }
+    return '<div class="lens" role="tablist" aria-label="Day">' + btn('today', 'Today') + btn('yesterday', 'Yesterday') + btn('week', 'This Week') + '</div>';
+  }
   function weekdaysInMonth(y, m) {
     var n = 0;
     var last = new Date(Date.UTC(y, m, 0)).getUTCDate();
@@ -514,6 +655,25 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (e && e.name === 'AbortError') throw new Error('The read timed out.');
       throw e;
     } finally { if (timer) clearTimeout(timer); }
+  }
+  async function fetchDatedRows() {
+    var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 20000) : null;
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/fig_eagle_scoreboard?id=neq.latest&select=' + encodeURIComponent('id,generated_at,data'), {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, Accept: 'application/json' }, cache: 'no-store', signal: ctrl ? ctrl.signal : undefined
+      });
+      if (!res.ok) return {};
+      var rows = await res.json();
+      var out = {};
+      if (!Array.isArray(rows)) return out;
+      rows.forEach(function (r) {
+        if (!r || !/^\d{4}-\d{2}-\d{2}$/.test(String(r.id)) || !r.data || typeof r.data !== 'object') return;
+        out[String(r.id)] = { generated_at: r.generated_at, data: r.data };
+      });
+      return out;
+    } catch (e) { return {}; }
+    finally { if (timer) clearTimeout(timer); }
   }
   async function fetchRow() {
     var clientErr = null;
@@ -683,7 +843,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     return pack({ phase: 'wait', label: fmtDur(next.start - t), sub: 'Next block ' + next.name, remain: next.start - t, toClose: close - t, block: next.name, progress: Math.max(0, Math.min(1, (next.start - t) / gapDur)), tone: 'calm', kicker: 'Next block · Block ' + next.n + ' of 2', title: next.clock, commit: commitLine(next), pace: (next.n === 2 ? ('Block 1 is closed. ' + potW.note) : 'Be at the dialer when this block opens.'), pot: potW.dollars, potNote: potW.note, heroTime: fmtDur(next.start - t), heroUnit: 'OPENS IN', focus: next.n });
   }
   function schedule() {
-    return blockView(new Date(), state.row && state.row.data, state.row ? findMe(state.row.data, 'today') : null);
+    var data = state.row && state.row.data;
+    return blockView(new Date(), clockData(data), data ? todayRow(data) : null);
   }
   function modeOf(data, row, sched) {
     if (!data) return 'wait';
@@ -691,7 +852,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var sets = row ? num(row.sets) : null;
     if (kpi != null && sets != null && sets + 0.05 >= kpi) return 'win';
     if (sched && (sched.phase === 'over' || sched.phase === 'off')) return 'calm';
-    var delta = num(data.computed && data.computed.dials_vs_pace);
+    var delta = liveDelta(data);
     var behind = delta != null && delta < -0.05;
     var table = onTable(data, row);
     var money = table && table.dollars != null && table.dollars > 0.5;
@@ -703,7 +864,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (state.paused) return 'Shift paused. The clock is still running.';
     if (!data) return state.error ? state.error : 'Reading the feed. Missing numbers stay blank.';
     var table = onTable(data, row);
-    var delta = num(data.computed && data.computed.dials_vs_pace);
+    var delta = liveDelta(data);
     var sets = row ? num(row.sets) : null;
     if (mode === 'win') return 'KPI is met. Bonus earned ' + (sets == null ? 'no data' : fmtMoney(sets * BONUS)) + '. Protect the lead.';
     if (mode === 'alert') {
@@ -716,7 +877,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     if (sched && sched.phase === 'off') return 'No dial block today. Next commitment is Monday, 11:00 AM CT.';
     if (sched && sched.phase === 'over') return 'Blocks are over. Read the debrief, then set tomorrow.';
-    if (sched && sched.phase === 'wait') return 'Next block is ' + (sched.block || 'no data') + '. Be at the dialer when it opens.';
+    if (sched && sched.phase === 'wait') {
+      var fresh = data && !feedIsCurrent(data);
+      var money = table && table.dollars != null && table.dollars > 0.5 ? (' ' + fmtMoney(table.dollars) + ' on the table.') : '';
+      return (fresh ? 'New day. ' : '') + 'Next block is ' + (sched.block || 'no data') + '.' + money;
+    }
     if (delta == null) return 'Pace: no data. ' + (table && table.note ? table.note : '');
     if (Math.abs(delta) < 0.05) return 'On pace. ' + (table && table.dollars > 0.5 ? (fmtMoney(table.dollars) + ' still pays before 6 PM.') : 'Hold the block.');
     if (delta > 0) return 'Ahead by ' + fmtCount(delta) + ' dials. ' + (table && table.note ? table.note : 'Keep the block.');
@@ -774,7 +939,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   }
   function noteMoney(data) {
     if (!data) return;
-    var row = findMe(data, 'today');
+    var row = todayRow(data);
     var sets = row ? num(row.sets) : null;
     var earned = sets == null ? null : sets * BONUS;
     var kpi = kpiOf(data);
@@ -796,12 +961,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function lostInfo(data) {
     var kpi = kpiOf(data);
     var days = data && data.my_daily;
-    var today = ctYMD(data && data.generated_iso);
+    var today = wallKey();
     if (kpi == null || !Array.isArray(days) || !today) return { dollars: null, note: 'Opportunity lost: no data' };
     var bits = [], dollars = 0, seen = 0;
     days.forEach(function (d) {
       var key = String(d && d.day || '');
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || key >= today.key) return;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || key >= today) return;
       var sets = num(d && d.sets);
       if (sets == null) { bits.push(shortDay(key) + ' no data'); return; }
       seen++;
@@ -810,7 +975,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (short > 0) bits.push(shortDay(key) + ' ' + fmtCount(short) + ' short');
     });
     if (!seen && !bits.length) return { dollars: null, note: 'No past days in the feed.' };
-    var now = num(data.now_hour);
+    var now = feedIsCurrent(data) ? num(data.now_hour) : null;
     if (now != null && !dayOpen(now)) {
       var row = findMe(data, 'today');
       var todaySets = row ? num(row.sets) : null;
@@ -826,7 +991,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function onTable(data, row) {
     var kpi = kpiOf(data);
     var sets = row ? num(row.sets) : null;
-    var now = num(data && data.now_hour);
+    var now = !data ? null : (feedIsCurrent(data) ? num(data.now_hour) : wallHour());
     if (kpi == null || sets == null || now == null) return { dollars: null, note: 'no data' };
     if (!dayOpen(now)) return { dollars: 0, note: sets + 0.05 >= kpi ? 'KPI is met' : 'Blocks are over', open: false, met: sets + 0.05 >= kpi };
     var left = Math.max(0, kpi - sets);
@@ -887,12 +1052,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var mine = num(list[0].sets), below = list[1] ? num(list[1].sets) : null;
       if (mine == null) return { text: 'You are 1st. Sets: no data.', ahead: true, rank: 1 };
       if (below == null || mine - below < 0.05) return { text: 'You lead this board.', ahead: true, rank: 1 };
-      return { text: 'You lead by ' + fmtCount(mine - below) + ' sets. ' + fmtMoney((mine - below) * BONUS) + ' estimated.', ahead: true, rank: 1 };
+      return { text: 'You lead by ' + fmtCount(mine - below) + ' ' + (Math.abs(mine - below - 1) < 0.05 ? 'set' : 'sets') + '. ' + fmtMoney((mine - below) * BONUS) + ' estimated.', ahead: true, rank: 1 };
     }
     var above = list[idx - 1];
     var as = num(above.sets), ms = num(list[idx].sets);
     if (as == null || ms == null) return { text: 'Sets to pass ' + textOr(above.name) + ': no data.', ahead: false, rank: idx + 1 };
-    if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' sets to pass ' + textOr(above.name) + '. ' + fmtMoney((as - ms) * BONUS) + ' estimated.', ahead: false, rank: idx + 1 };
+      if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' ' + (Math.abs(as - ms - 1) < 0.05 ? 'set' : 'sets') + ' to pass ' + textOr(above.name) + '. ' + fmtMoney((as - ms) * BONUS) + ' estimated.', ahead: false, rank: idx + 1 };
     var ad = num(above.dials), md = num(list[idx].dials);
     if (ad == null || md == null) return { text: 'Tied on sets with ' + textOr(above.name) + '. Dials: no data.', ahead: false, rank: idx + 1 };
     if (ad - md > 0.05) return { text: 'Tied on sets. ' + fmtCount(ad - md) + ' dials to pass ' + textOr(above.name) + '.', ahead: false, rank: idx + 1 };
@@ -921,6 +1086,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     return s + 0.05 >= t ? 'good' : 'bad';
   }
   function playHtml(data, row) {
+    var lens = state.lens || 'today';
+    var freshDay = lens === 'today' && data && !feedIsCurrent(data);
+    if (lens === 'today') row = todayRow(data);
     var c = (data && data.computed) || {};
     var kpi = kpiOf(data);
     var sets = row ? num(row.sets) : null;
@@ -939,6 +1107,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var delta = num(c.dials_vs_pace);
     var paceClass = delta == null ? '' : (delta < -0.05 ? 'bad' : 'good');
     var paceText = delta == null ? 'Pace: no data' : (Math.abs(delta) < 0.05 ? 'On pace' : (delta < 0 ? (fmtCount(Math.abs(delta)) + ' dials behind') : (fmtCount(delta) + ' dials ahead')));
+    if (freshDay) {
+      var wh = wallHour();
+      paceClass = (wh != null && wh >= 11) ? 'bad' : 'good';
+      paceText = (wh != null && wh >= 11) ? '0 dials logged today. The feed has no hourly row yet.' : '0 dials today. The block has not opened.';
+    }
     var week = findMe(data, 'week');
     var weekSets = week ? num(week.sets) : num(data.my_week_sets);
     var promise = num(data.promise), goal = num(data.goal);
@@ -959,12 +1132,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var goalSet = setting(GOAL_KEY);
     var monthBonus = month && month.sets != null ? month.sets * BONUS : null;
     var goalLine = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
-    var list = ranked((periodOf(data, 'today') || {}).rows || []);
-    var gap = gapLine(list, meName(data));
-    var prev = arrowsFor('today', list);
-    var view = blockView(new Date(), data, row);
-    var ymd = ctYMD(data && data.generated_iso);
-    var thanks = ymd && ymd.y === 2026 && ymd.m === 11 && ymd.d >= 23 && ymd.d <= 27;
+    var yest = lens === 'yesterday' ? yesterdayPack(data) : null;
+    var weekPeriod = periodOf(data, 'week');
+    var list = lens === 'yesterday' ? ranked(yest && yest.rows || []) : (lens === 'week' ? ranked((weekPeriod && weekPeriod.rows) || []) : (freshDay ? [] : ranked((periodOf(data, 'today') || {}).rows || [])));
+    var emptyText = freshDay ? 'No team rows for today yet. Yesterday is on the Yesterday tab.' : (lens === 'yesterday' && yest ? yest.note : 'No rows for this view.');
+    var gap = list.length ? gapLine(list, meName(data)) : { text: emptyText, ahead: false, rank: null };
+    var prev = list.length ? arrowsFor(lens === 'week' ? 'week' : (lens === 'yesterday' ? 'yesterday' : 'today'), list) : null;
+    var view = blockView(new Date(), clockData(data), todayRow(data));
+    var wall = ctYMD(new Date());
+    var thanks = wall && wall.y === 2026 && wall.m === 11 && wall.d >= 23 && wall.d <= 27;
     var potClass = view.pot == null ? '' : (view.pot > 0.5 ? 'bad' : 'good');
     var planNote = (view.commits[0].plan.setsFeed && view.commits[0].plan.dialsFeed && view.commits[0].plan.talkFeed) ? 'Split of today\'s KPI by block length, 2 hours then 3. Edit a block if the calendar promise is different.' : 'A target was missing in the feed, so that piece starts from the daily default (3 sets, 150 dials, 2 hours) until you edit it.';
     function field(block, prefix, label, value) {
@@ -973,17 +1149,52 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var editors = view.commits.map(function (b) {
       return '<div class="cline' + (view.focus === b.n ? ' on' : '') + '"><b>Block ' + b.n + '</b>' + field(b, 's', 'Sets', b.sets) + field(b, 'd', 'Dials', b.dials) + field(b, 't', 'Min', b.talk) + '</div>';
     }).join('');
-    var hero = '<section class="hero ' + view.tone + '" data-spot="block"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="#f0f0f0" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money"><div><span>Earned today</span><b class="' + earnedClass + (earned != null && earned < 0.5 ? ' urgent' : '') + '" id="earned-now">' + esc(earned == null ? 'no data' : fmtMoney(earned)) + '</b></div><div><span>On the table</span><b class="' + tableClass + '">' + esc(table.dollars == null ? 'no data' : fmtMoney(table.dollars)) + '</b></div><div><span>Potentially lost</span><b class="' + potClass + '" id="pot-lost">' + esc(view.pot == null ? 'no data' : fmtMoney(view.pot)) + '</b></div></div></div></section>';
-    return '<section class="play">' + hero + '<div class="col money">' + levelBanner(lvl, textOr(c.level_name)) +
-      '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div><p class="kicker">Calendar promise</p><p class="sub commit-note">' + esc(planNote) + '</p>' + editors +
+    function moneyCell(label, value, cls, id) {
+      return '<div><span>' + esc(label) + '</span><b class="' + cls + '"' + (id ? (' id="' + id + '"') : '') + '>' + esc(value) + '</b></div>';
+    }
+    var moneyHtml = moneyCell('Earned today', earned == null ? 'no data' : fmtMoney(earned), earnedClass + (earned != null && earned < 0.5 ? ' urgent' : ''), 'earned-now') + moneyCell('On the table', table.dollars == null ? 'no data' : fmtMoney(table.dollars), tableClass, '') + moneyCell('Potentially lost', view.pot == null ? 'no data' : fmtMoney(view.pot), potClass, 'pot-lost');
+    var lensNote = freshDay ? staleNote(data) : '';
+    var raceKicker = 'The race';
+    var raceTarget = kpi;
+    var leftCard = '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div><p class="kicker">Calendar promise</p><p class="sub commit-note">' + esc(planNote) + '</p>' + editors +
       '<p class="sub phone-hide">Opportunity lost <b class="' + lostClass + '">' + esc(lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '</b>. ' + esc(lost.note) + '</p>' +
       '<p class="sub phone-hide">Dial pace <b class="' + paceClass + '">' + esc(paceText) + '</b>. ' + esc(table.note) + '</p>' +
       '<div class="line-in"><label for="avg-deal">Avg deal cash</label><input id="avg-deal" inputmode="decimal" placeholder="Blank" value="' + (avg == null ? '' : esc(String(avg))) + '" aria-label="Average deal cash collected, an assumption"><label for="month-goal">Month goal</label><input id="month-goal" inputmode="decimal" placeholder="Blank" value="' + (goalSet == null ? '' : esc(String(goalSet))) + '" aria-label="Personal monthly income goal"></div>' +
-      '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section>' +
-      '<section class="card bars weekbox"><p class="kicker">' + (thanks ? 'Thanksgiving week' : 'Week bonus') + '</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + ' at ' + (promise == null ? 'no data' : fmtCount(promise)) + ' sets. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + ' at ' + (goal == null ? 'no data' : fmtCount(goal)) + ' sets.</span></p>' + weekBar +
-      '<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div></section></div>' +
-      '<section class="card race" data-spot="race"><p class="kicker">The race' + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, kpi, true) + '</div></section></section>';
+      '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section>';
+    if (lens === 'yesterday' && yest) {
+      var mine = yest.mine;
+      var ySets = mine ? num(mine.sets) : null;
+      var yDials = mine ? num(mine.dials) : null;
+      var yTalk = mine ? num(mine.talk_min) : null;
+      var yConvo = mine ? num(mine.connects) : null;
+      var yEarned = ySets == null ? null : ySets * BONUS;
+      var blocks = commitments(data);
+      var promised = 0;
+      blocks.forEach(function (b) { if (b.sets != null) promised += b.sets; });
+      var yLost = ySets == null ? null : Math.max(0, promised - ySets) * BONUS;
+      var yEarnedCls = yEarned == null ? '' : (yEarned > 0.5 ? 'good' : 'bad');
+      var yLostCls = yLost == null ? '' : (yLost > 0.5 ? 'bad' : 'good');
+      moneyHtml = moneyCell('Earned yesterday', yEarned == null ? 'no data' : fmtMoney(yEarned), yEarnedCls + (yEarned != null && yEarned < 0.5 ? ' urgent' : ''), '') + moneyCell('Lost vs commitment', yLost == null ? 'no data' : fmtMoney(yLost), yLostCls, '') + moneyCell('Dials', yDials == null ? 'no data' : fmtCount(yDials), '', '');
+      lensNote = yest.note;
+      raceKicker = 'Yesterday';
+      raceTarget = kpi;
+      leftCard = '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><p class="kicker">' + esc(yest.key ? shortDay(yest.key) : 'Yesterday') + '</p></div><p class="sub">' + esc(yDials == null ? 'Dials: no data' : (fmtCount(yDials) + ' dials')) + '. ' + esc(yConvo == null ? 'Connects: no data' : (fmtCount(yConvo) + ' connects')) + '. ' + esc(yTalk == null ? 'Talk time: no data' : (fmtCount(yTalk) + ' min talk')) + '.</p><p class="sub">' + esc(ySets == null ? 'Sets: no data' : (fmtCount(ySets) + ' sets, ' + fmtMoney(yEarned) + ' earned.')) + '</p><p class="sub ' + yLostCls + '">' + esc(yLost == null ? 'Lost vs commitment: no data' : (fmtMoney(yLost) + ' lost vs ' + fmtCount(promised) + ' sets committed.')) + '</p></section>';
+    } else if (lens === 'week') {
+      var wCls = weekPay == null ? '' : (weekHit ? 'good' : 'bad');
+      moneyHtml = moneyCell('Earned this week', weekPay == null ? 'no data' : fmtMoney(weekPay), wCls + (weekPay != null && weekPay < 0.5 ? ' urgent' : ''), '') + moneyCell('Promise', promisePay == null ? 'no data' : fmtMoney(promisePay), '', '') + moneyCell('Goal', goalPay == null ? 'no data' : fmtMoney(goalPay), '', '');
+      var cover = (weekPeriod && weekPeriod.label) ? weekPeriod.label : 'This week';
+      lensNote = cover + (feedIsCurrent(data) ? '' : '. Today is not in this snapshot yet.');
+      raceKicker = 'This week';
+      raceTarget = promise;
+      leftCard = '';
+    }
+    var weekCard = '<section class="card bars weekbox"><p class="kicker">' + (thanks ? 'Thanksgiving week' : 'Week bonus') + '</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + ' at ' + (promise == null ? 'no data' : fmtCount(promise)) + ' sets. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + ' at ' + (goal == null ? 'no data' : fmtCount(goal)) + ' sets.</span></p>' + weekBar + (lens === 'week' && !feedIsCurrent(data) ? '<p class="sub">Totals stop at the last refresh. Today is not in the feed yet.</p>' : '') +
+      (lens === 'week' ? ('<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div>') : '') + '</section>';
+    var hero = '<section class="hero ' + view.tone + '" data-spot="block" data-lens="' + lens + '"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="#f0f0f0" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money">' + moneyHtml + '</div>' + (lensNote ? ('<p class="lens-note" id="lens-note">' + esc(lensNote) + '</p>') : '') + '</div></section>';
+    var rowsHtml = list.length ? boardRows(data, list, prev, raceTarget, true) : ('<p class="sub">' + esc(emptyText) + '</p>');
+    return '<section class="play">' + lensBar() + hero + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
+      '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section></section>';
   }
   function boardRows(data, list, prev, target, dollars) {
     var me = meName(data);
@@ -1002,20 +1213,41 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + esc(est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
     }).join('');
   }
-  function boardHtml(data) {
-    var p = periodOf(data, state.period);
-    var list = ranked(p && p.rows);
-    var gap = gapLine(list, meName(data));
-    var prev = arrowsFor(state.period, list);
+  function boardModel(data) {
     var kpi = kpiOf(data);
-    var target = state.period === 'week' ? num(data.promise) : (state.period === 'month' ? (kpi != null && p && num(p.workdays) != null ? kpi * num(p.workdays) : null) : kpi);
-    function tab(key, name) {
-      var on = state.period === key;
-      return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-period="' + key + '">' + name + '</button>';
+    var lens = state.period === 'month' ? 'month' : (state.lens || 'today');
+    if (lens === 'month') {
+      var month = periodOf(data, 'month');
+      return { key: 'month', label: (month && month.label) || 'This month', rows: (month && month.rows) || [], target: (kpi != null && month && num(month.workdays) != null) ? kpi * num(month.workdays) : null, emptyText: 'No rows for this month.', rule: 'KPI pace for the workdays so far' };
     }
-    return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(p && p.label ? p.label : 'no data') + '</p></div><div class="tabs">' + tab('today', 'Today') + tab('week', 'Week') + tab('month', 'Month') + '</div></div>' +
-      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">Ranked by sets, then dials. Green sets are at the ' + (state.period === 'week' ? 'promise' : (state.period === 'month' ? 'KPI pace for the workdays so far' : 'daily KPI')) + '. Est. is sets times $50, not cash collected.</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + boardRows(data, list, prev, target, true) + '</div></section>';
+    if (lens === 'week') {
+      var week = periodOf(data, 'week');
+      var label = (week && week.label) || 'This week';
+      if (data && !feedIsCurrent(data)) label += '. Today is not in this snapshot yet.';
+      return { key: 'week', label: label, rows: (week && week.rows) || [], target: num(data && data.promise), emptyText: 'No rows for this week.', rule: 'promise' };
+    }
+    if (lens === 'yesterday') {
+      var yest = yesterdayPack(data);
+      return { key: 'yesterday', label: yest.key ? ('Yesterday, ' + shortDay(yest.key)) : 'Yesterday', rows: yest.rows || [], target: kpi, emptyText: yest.note, rule: 'daily KPI' };
+    }
+    if (data && !feedIsCurrent(data)) return { key: 'today', label: 'Today', rows: [], target: kpi, emptyText: staleNote(data) + ' No team rows for today yet.', rule: 'daily KPI' };
+    var today = periodOf(data, 'today');
+    return { key: 'today', label: (today && today.label) || 'Today', rows: (today && today.rows) || [], target: kpi, emptyText: 'No rows for today.', rule: 'daily KPI' };
+  }
+  function boardHtml(data) {
+    var model = boardModel(data);
+    var list = ranked(model.rows);
+    var gap = list.length ? gapLine(list, meName(data)) : { text: model.emptyText, ahead: false, rank: null };
+    var prev = list.length ? arrowsFor(model.key, list) : null;
+    function tab(key, name, lensKey) {
+      var on = lensKey ? (state.period !== 'month' && state.lens === lensKey) : state.period === 'month';
+      var attr = lensKey ? (' data-lens="' + lensKey + '"') : ' data-period="month"';
+      return '<button type="button" class="tab' + (on ? ' on' : '') + '"' + attr + '>' + name + '</button>';
+    }
+    var rowsHtml = list.length ? boardRows(data, list, prev, model.target, true) : ('<p class="sub">' + esc(model.emptyText) + '</p>');
+    return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(model.label) + '</p></div><div class="tabs">' + tab('today', 'Today', 'today') + tab('yesterday', 'Yesterday', 'yesterday') + tab('week', 'This Week', 'week') + tab('month', 'Month', '') + '</div></div>' +
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Est. is sets times $50, not cash collected.</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>';
   }
   function actualSeries(hours, now, x0) {
     if (!Array.isArray(hours) || now == null) return null;
@@ -1080,7 +1312,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var delta = fed != null ? fed : ((logged != null && chartPace != null) ? logged - chartPace : null);
     var behind = delta != null && delta < -0.05;
     var when = now == null ? '' : (' at ' + fmtHour(now) + ' CT');
-    var caption = delta == null ? 'Pace: no data.' : (Math.abs(delta) < 0.05 ? ('You are on the pace target' + when + '.') : (behind ? ('You are ' + fmtCount(Math.abs(delta)) + ' dials behind where you need to be' + when + '.') : ('You are ' + fmtCount(delta) + ' dials ahead of the pace target' + when + '.')));
+    var caption = !feedIsCurrent(data) ? ('This chart is the last snapshot (' + (shortWhen(data && data.generated_iso) || 'earlier') + '), not today.') : (delta == null ? 'Pace: no data.' : (Math.abs(delta) < 0.05 ? ('You are on the pace target' + when + '.') : (behind ? ('You are ' + fmtCount(Math.abs(delta)) + ' dials behind where you need to be' + when + '.') : ('You are ' + fmtCount(delta) + ' dials ahead of the pace target' + when + '.'))));
     var big = delta == null ? 'no data' : (Math.abs(delta) < 0.05 ? 'On pace' : fmtCount(Math.abs(delta)));
     return '<section class="panel" id="pace"><p class="kicker">Dial pace</p><h2>Where you should be by this hour</h2><p class="caption ' + (behind ? 'bad' : 'good') + '">' + esc(caption) + '</p><p class="pacefig"><b class="' + (behind ? 'bad' : 'good') + '">' + esc(big) + '</b></p><p class="sub">' + esc((logged == null ? 'Dials logged: no data' : fmtCount(logged) + ' dials logged') + ' · pace target ' + (num(c.pace_target_dials) == null ? 'no data' : fmtCount(c.pace_target_dials))) + '</p>' + paceSvg(data && data.my_hourly_today, now, behind) + '<ul class="legend"><li><i class="' + (behind ? '' : 'good') + '"></i>Dials logged, ' + (behind ? 'behind' : 'on pace or ahead') + '</li><li><i class="dash"></i>30 per hour target</li><li><i class="shade"></i>Dial block</li></ul><p class="src">Vertical axis: dials. Horizontal axis: hour CT. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
   }
@@ -1091,7 +1323,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var hit = sets != null && promise != null && sets + 0.05 >= promise;
     var days = data && data.my_daily;
     var kpi = kpiOf(data);
-    var todayKey = ctYMD(data && data.generated_iso);
+    var todayKey = ctYMD(new Date());
     var openNow = dayOpen(num(data && data.now_hour));
     var dayHtml = !Array.isArray(days) ? '<p class="sub">Your days: no data</p>' : '<ul class="days">' + days.map(function (d) {
       var s = num(d && d.sets);
@@ -1200,11 +1432,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function stageHtml() {
     if (!state.row) return failHtml() + (state.guide ? guideHtml() : '');
     var data = state.row.data;
-    var row = findMe(data, 'today');
-    var body = state.view === 'board' ? boardHtml(data) : (state.view === 'stats' ? statsHtml(data, row) : playHtml(data, row));
-    var sched = schedule(ctParts(new Date()));
-    var list = ranked((periodOf(data, 'today') || {}).rows || []);
-    var gap = gapLine(list, meName(data));
+    var row = todayRow(data);
+    var body = state.view === 'board' ? boardHtml(data) : (state.view === 'stats' ? statsHtml(data, findMe(data, 'today')) : playHtml(data, row));
+    var sched = schedule();
+    var list = feedIsCurrent(data) ? ranked((periodOf(data, 'today') || {}).rows || []) : [];
+    var gap = list.length ? gapLine(list, meName(data)) : { text: 'Today\'s board has no rows yet.', ahead: false, rank: null };
     var extra = '';
     if (sched.phase === 'over' && !debriefDone()) extra += debriefHtml(data, row);
     else if (sched.phase !== 'over' && !shiftOn()) extra += briefHtml(data, row, sched, gap);
@@ -1251,7 +1483,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (timer) timer.textContent = sched.label === 'no data' ? 'no data' : sched.label;
     if (sub) sub.textContent = sched.sub + (parts ? (' · ' + ctClock(new Date())) : '');
     var data = state.row && state.row.data;
-    var row = data ? findMe(data, 'today') : null;
+    var row = data ? todayRow(data) : null;
     var mode = modeOf(data, row, sched);
     var app = document.querySelector('.app');
     if (app) app.className = 'app' + (mode === 'wait' ? '' : (' mode-' + mode));
@@ -1314,7 +1546,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (!state.rendered) { state.rendered = true; document.body.setAttribute('data-ready', ''); }
     var sum = document.getElementById('livesum');
     if (sum && state.row) {
-      var row = findMe(state.row.data, 'today');
+      var row = todayRow(state.row.data);
       var sets = row ? num(row.sets) : null;
       sum.textContent = meName(state.row.data) + '. Earned today ' + (sets == null ? 'no data' : fmtMoney(sets * BONUS)) + '. As of ' + asOfText(state.row) + '.';
     }
@@ -1331,7 +1563,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   }
   function refreshMoneyCopy() {
     if (!state.row) return;
-    var row = findMe(state.row.data, 'today');
+    var row = todayRow(state.row.data);
     var sets = row ? num(row.sets) : null;
     var line = document.getElementById('commission-line');
     if (line) line.textContent = commissionText(sets);
@@ -1349,11 +1581,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     paintChrome();
     try {
       state.row = normalize(await fetchRow());
+      state.archives = await fetchDatedRows();
       state.error = ''; state.stale = false;
       state.fetchedAt = new Date().toISOString();
       state.nextAt = Date.now() + REFRESH_MS;
       state.booted = true;
-      var fresh = findMe(state.row.data, 'today');
+      var fresh = todayRow(state.row.data);
       var freshSets = fresh ? num(fresh.sets) : null;
       var freshEarned = freshSets == null ? null : freshSets * BONUS;
       if (state.seenEarned == null || (freshEarned != null && state.seenEarned != null && freshEarned > state.seenEarned + 0.5)) state.animated = false;
@@ -1370,11 +1603,23 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   window.addEventListener('hashchange', function () {
     var h = (location.hash || '').replace('#', '');
     if (h === 'play' || h === 'board' || h === 'stats') { if (h !== state.view) setView(h); }
-    else if (h === 'today' || h === 'week' || h === 'month') { state.view = 'board'; state.period = h; render(); }
+    else if (h === 'yesterday') { state.view = 'board'; state.lens = 'yesterday'; state.period = 'yesterday'; render(); }
+    else if (h === 'today' || h === 'week' || h === 'month') { state.view = 'board'; state.period = h; if (h !== 'month') state.lens = h; render(); }
   });
   document.body.addEventListener('click', function (e) {
     var view = e.target.closest && e.target.closest('[data-view]');
     if (view) { setView(view.getAttribute('data-view')); return; }
+    var lensBtn = e.target.closest && e.target.closest('[data-lens]');
+    if (lensBtn) {
+      playClick();
+      var nextLens = lensBtn.getAttribute('data-lens');
+      if (nextLens === 'today' || nextLens === 'yesterday' || nextLens === 'week') {
+        state.lens = nextLens;
+        state.period = nextLens;
+        render();
+      }
+      return;
+    }
     var tab = e.target.closest && e.target.closest('[data-period]');
     if (tab) {
       var next = tab.getAttribute('data-period');

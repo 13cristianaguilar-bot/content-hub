@@ -316,6 +316,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   let dpr = Math.min(window.devicePixelRatio || 1, cfg.dprCap);
   const forced = new URLSearchParams(location.search).get("dpr");
   if (forced) dpr = Math.max(0.75, Math.min(2, Number(forced) || dpr));
+  if (new URLSearchParams(location.search).has("low")) dpr = 0.75;
 
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(0x9fe8ff, cfg.fogNear, cfg.fogFar);
@@ -364,6 +365,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   let lightTier = highTier ? 2 : 0;
   let lowFps = 0;
   let lowDetail = !!weakGpu;
+  let lowLock = params.has("low");
   const outlineMats = [];
 
   const sky = new THREE.Mesh(
@@ -691,6 +693,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         const x = pad.x + Math.sin(ang) * rad;
         const z = pad.z + Math.cos(ang) * rad * 0.42;
         if (!clearOfLine(x, z)) continue;
+        if (z < pad.z - 1.2 && Math.abs(x - pad.x) < 5.5) continue;
         const lift = name === "CloudPuff" ? 1.7 : name === "CloudPlatform" ? 0.15 : 0;
         if (!byName.has(name)) byName.set(name, []);
         byName.get(name).push({ x, y: pad.y + lift, z, rot: ang });
@@ -714,6 +717,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         const x = pad.x + Math.sin(ang) * rad;
         const z = pad.z + Math.cos(ang) * rad * 0.35;
         if (!clearOfLine(x, z)) continue;
+        if (z < pad.z - 1.2 && Math.abs(x - pad.x) < 5.5) continue;
         spots.push({ x, y: pad.y, z, rot: ang });
         placed++;
       }
@@ -2759,12 +2763,12 @@ function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
     if (dist < 0.35) return;
     camDir.multiplyScalar(1 / dist);
     camRay.set(camera.position, camDir);
-    camRay.far = Math.min(dist - 0.35, 4.5);
+    camRay.far = Math.min(dist - 0.2, 14);
     let hits = [];
     try { hits = camRay.intersectObjects(camSolids(), false); } catch (err) { return; }
     const seen = new Set();
     for (const hit of hits) {
-      if (hit.distance > 3.2) break;
+      if (hit.distance > dist - 0.4) break;
       const obj = hit.object;
       if (!obj || obj.isInstancedMesh || seen.has(obj)) continue;
       if (obj.userData.floor || coursePiece(obj)) continue;
@@ -2879,7 +2883,8 @@ function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
       camera.fov += (nextFov - camera.fov) * Math.min(1, dt * 7);
       camera.updateProjectionMatrix();
     }
-    if (race.phase === "countdown" && !race.opened) {
+    if (race.shipRound && (race.phase === "countdown" || (look && look.intro > 0))) state.snap = 1;
+    if (race.phase === "countdown" && !race.opened && !race.shipRound) {
       const span = cfg.countdownBeats + cfg.goHold;
       const k = Math.max(0, Math.min(1, (race.countClock || 0) / span));
       const ease = k * k * (3 - 2 * k);
@@ -2892,7 +2897,7 @@ function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
       camera.lookAt(player.pos.x, player.pos.y + 1.2, player.pos.z + 8 + ahead * ease);
       return;
     }
-    if (look && look.intro > 0) {
+    if (look && look.intro > 0 && !race.shipRound) {
       const k = 1 - Math.max(0, Math.min(1, look.intro / 3.3));
       const ease = k * k * (3 - 2 * k);
       const dist = state.portrait ? cfg.camDistPortrait : cfg.camDist;
@@ -3020,6 +3025,7 @@ function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
       camera.updateMatrixWorld(true);
       state.snap = 0;
       state.push = null;
+      state.prevBack = Math.hypot(camera.position.x - player.pos.x, camera.position.z - player.pos.z);
       fadeBlockers(new THREE.Vector3(player.pos.x, player.pos.y + 1.2, player.pos.z));
       return;
     }
@@ -3155,6 +3161,17 @@ function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
       camera.updateMatrixWorld(true);
     }
     fadeBlockers(new THREE.Vector3(headX, headY, headZ));
+    const backDx = camera.position.x - player.pos.x;
+    const backDz = camera.position.z - player.pos.z;
+    const backNow = Math.hypot(backDx, backDz);
+    if (state.prevBack == null) state.prevBack = backNow;
+    if (backNow > 0.2 && Math.abs(backNow - state.prevBack) > 2.4) {
+      const eased = state.prevBack + Math.sign(backNow - state.prevBack) * 2.4;
+      const scale = eased / backNow;
+      camera.position.x = player.pos.x + backDx * scale;
+      camera.position.z = player.pos.z + backDz * scale;
+    }
+    state.prevBack = Math.hypot(camera.position.x - player.pos.x, camera.position.z - player.pos.z);
     fadePlayer(Math.hypot(camera.position.x - player.pos.x, camera.position.y - (player.pos.y + 1.1), camera.position.z - player.pos.z));
   }
 
@@ -3421,10 +3438,11 @@ function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
     setReduceShake(on) { state.reduceShake = !!on; },
     setPost(on) { postOn = !!on && !weakGpu; },
     setDpr(next) {
-      dpr = next;
+      dpr = lowLock ? Math.min(next, 0.75) : next;
       resize();
     },
     setLow() {
+      lowLock = true;
       applyLightTier(0);
       postOn = false;
       dpr = 0.75;

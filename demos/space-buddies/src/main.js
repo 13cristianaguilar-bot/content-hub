@@ -800,12 +800,19 @@ function clock(seconds) {
 
 function fillPodium(race) {
   const escaped = race.result === "escaped" || (race.shipRound && race.racers.some((r) => r.seated));
-  const rows = race.racers.slice().filter((r) => (escaped ? r.seated && r.seatIndex >= 0 : race.result !== "out" || !r.isPlayer));
-  rows.sort((a, b) => {
+  const rows = [];
+  const seen = new Set();
+  const pool = race.racers.filter((r) => (escaped ? r.seated && r.seatIndex >= 0 : race.result !== "out" || !r.isPlayer));
+  pool.sort((a, b) => {
     if (escaped) return a.seatIndex - b.seatIndex;
     const score = (r) => (r.seated ? 4000 : 0) + (r.qualified ? 2000 : 0) + (r.eliminated ? -1000 : 0) + r.pos.z;
     return score(b) - score(a);
   });
+  for (const r of pool) {
+    if (seen.has(r.id)) continue;
+    seen.add(r.id);
+    rows.push(r);
+  }
   for (let i = 0; i < 3; i++) {
     const el = document.getElementById("pod-" + (i + 1));
     const r = rows[i];
@@ -1279,7 +1286,10 @@ function frame(now) {
     }
     tutor.hidden = true;
     controls.hidden = true;
-    if (introLeft <= 0) controls.hidden = false;
+    if (introLeft <= 0) {
+      controls.hidden = false;
+      if (world.snapBehind) world.snapBehind();
+    }
     return;
   }
   const raw = input.read();
@@ -1344,7 +1354,7 @@ function frame(now) {
   const dist = race.player.pos.z - race.collapseZ;
   const rumble = race.phase === "race" ? Math.max(0, Math.min(1, 1 - dist / 36)) : (race.phase === "launch" ? 0.4 : 0);
   audio.setRumble(rumble * cfg.rumbleMax);
-  if (!qualityDropped && !params.get("dpr") && fps > 0 && fps < 24 && race.time > 5 && world.setDpr) {
+  if (!cfg.low && !qualityDropped && !params.get("dpr") && fps > 0 && fps < 24 && race.time > 5 && world.setDpr) {
     qualityDropped = true;
     world.setDpr(1);
     if (world.setPost && params.get("post") !== "1") world.setPost(false);

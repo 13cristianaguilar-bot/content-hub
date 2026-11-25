@@ -574,8 +574,11 @@ function missFooting(race, r) {
   if (r.isPlayer) race.events.push({ t: "fall", id: r.id });
   if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {
     r.eliminated = true;
+    r.fell = true;
     if (!race.fallers) race.fallers = [];
-    race.fallers.push(r.isPlayer ? "YOU" : "BUDDY");
+    if (r.isPlayer) {
+      if (!race.fallers.includes("YOU")) race.fallers.push("YOU");
+    } else race.fallers.push("BUDDY");
     r.vel.x = 0;
     r.vel.y = 0;
     r.vel.z = 0;
@@ -623,6 +626,26 @@ function nearestSolid(race, x, z) {
   return best;
 }
 
+function stableRespawn(race, spot) {
+  if (!spot) return spot;
+  const on = groundAt(race.course, spot.x, spot.z);
+  const convey = on && on.conveyX;
+  const rim = on && on.ice && on.rx && ((spot.x - on.px) ** 2) / (on.rx * on.rx) + ((spot.z - on.pz) ** 2) / (on.rz * on.rz) > 0.2;
+  if (on && !convey && !rim) return { x: on.ice ? on.px : spot.x, y: on.y, z: on.ice ? on.pz : spot.z };
+  let best = null;
+  const floors = race.course.floors || [];
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    if (pad.conveyX || pad.zone === "ship") continue;
+    const chunk = race.course.chunks[pad.chunk];
+    if (!chunk || chunk.state === "falling" || chunk.state === "gone" || chunk.fragile) continue;
+    if (pad.z > spot.z + 6) continue;
+    const d = Math.abs(pad.z - spot.z) + Math.abs(pad.x - spot.x) * 0.35 + (pad.zone === "ice" ? 8 : 0);
+    if (!best || d < best.d) best = { d, x: pad.x, y: pad.y, z: pad.z };
+  }
+  return best || (on ? { x: on.px || spot.x, y: on.y, z: on.pz || spot.z } : spot);
+}
+
 function doRespawn(race, r) {
   const now = race.time || 0;
   const again = r.respawnAt != null && now - r.respawnAt < 2;
@@ -653,6 +676,7 @@ function doRespawn(race, r) {
     }
     spot = clampBeforeGate(race, r.pos.z, spot);
   }
+  spot = stableRespawn(race, spot);
   if (!spot) return;
   r.pos.x = spot.x;
   r.pos.y = spot.y + 0.2;
@@ -1011,9 +1035,12 @@ function integrate(race, r, wish, dt) {
         race.feel.lands++;
         r.jumpArm = 0;
       }
-      if (gnd.tile && !gnd.tile.fragile) {
-        r.lastSafe = { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
-        r.firmSafe = { x: r.pos.x, y: gnd.y, z: r.pos.z };
+      if (gnd.tile && !gnd.tile.fragile && !gnd.tile.conveyX) {
+        const spot = gnd.tile.ice
+          ? { x: gnd.tile.px, y: gnd.y, z: gnd.tile.pz }
+          : { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
+        r.lastSafe = spot;
+        r.firmSafe = { x: spot.x, y: gnd.y, z: spot.z };
         r.voidTries = 0;
       }
       if (gnd.tile && gnd.tile.chunk && gnd.tile.state === "solid" && gnd.tile.fragile && !gnd.tile.chunk.stepped) {
@@ -1602,9 +1629,9 @@ function hazards(race, dt) {
       if (sw.armedAt != null && race.time - sw.armedAt < TELEGRAPH) continue;
       if (Math.abs(r.pos.z - sw.z) > 1.15) continue;
       if (Math.abs(r.pos.x - sw.x) > bar + 0.35) continue;
-      const feet = r.pos.y - (sw.y - sw.height);
-      const top = r.sliding > 0 ? cfg.slideHeight : 1.35;
-      if (feet > top || r.pos.y + 0.2 < sw.y - 0.35) continue;
+      const bodyTop = r.pos.y + (r.sliding > 0 ? cfg.slideHeight : 1.2);
+      if (bodyTop < sw.y - 0.45) continue;
+      if (r.pos.y > sw.y + 0.55) continue;
       if (r.sliding > 0 && sw.height > 0.8) continue;
       const dir = Math.cos(race.time * sw.speed + sw.z) >= 0 ? 1 : -1;
       knock(race, r, dir * 8, 3.5, 3.2);
@@ -1990,6 +2017,11 @@ function checkSurvival(race) {
     if (r.eliminated || r.qualified) continue;
     if (r.pos.z < race.collapseZ - 0.3) {
       r.eliminated = true;
+      r.fell = true;
+      if (!race.fallers) race.fallers = [];
+      if (r.isPlayer) {
+        if (!race.fallers.includes("YOU")) race.fallers.push("YOU");
+      } else race.fallers.push("BUDDY");
       race.events.push({ t: "fall", id: r.id });
     }
   }
@@ -2091,6 +2123,7 @@ function board(race) {
   for (const item of ready) {
     if (race.seatsFilled >= cfg.seats) break;
     const r = item.r;
+    if (race.seats.indexOf(r.id) >= 0) continue;
     const seat = race.seatsFilled;
     race.seats[seat] = r.id;
     race.seatsFilled++;

@@ -54,6 +54,9 @@ a{color:var(--teal);text-decoration:none}
 .pad{border:1px solid #000;background:#fff;color:#000;border-radius:12px;min-height:44px;padding:0 12px;font-weight:800;font-size:12px;letter-spacing:.04em;box-shadow:0 3px 0 #000;transform:translateY(0)}
 .pad:hover{transform:translateY(1px);box-shadow:0 2px 0 #000}
 .pad:active{transform:translateY(3px);box-shadow:0 0 0 #000}
+.pad:disabled{cursor:wait;opacity:.72}
+.pad[aria-busy="true"]::after{content:"";display:inline-block;width:10px;height:10px;margin-left:6px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;vertical-align:-1px;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 .pad.on,.nav button.on{color:#fff;background:#000;border-color:#000}
 .pads{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .status{flex:none;display:flex;align-items:center;gap:8px;padding:7px 12px;font-weight:800;font-size:14px;border-bottom:1px solid var(--line);background:#fff}
@@ -337,7 +340,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var sb = null;
   var SOUND_KEY = 'fe-sound';
   var audioCtx = null;
-  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1 };
+  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, livePull: false, liveNote: '', liveError: '', rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1 };
   try {
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'stats' || hash === 'pace' || hash === 'trend') state.view = 'stats';
@@ -725,6 +728,26 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     } catch (e) { return {}; }
     finally { if (timer) clearTimeout(timer); }
   }
+  async function triggerLiveRefresh() {
+    var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 35000) : null;
+    try {
+      var res = await fetch(SB_URL + '/functions/v1/fig-eagle-refresh', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: '{}',
+        cache: 'no-store',
+        signal: ctrl ? ctrl.signal : undefined
+      });
+      if (!res.ok) throw new Error('Live refresh failed.');
+      var payload = await res.json();
+      if (!payload || !payload.ok || !payload.row) throw new Error('Live refresh did not return a row.');
+      return payload;
+    } catch (e) {
+      if (e && e.name === 'AbortError') throw new Error('The live refresh timed out.');
+      throw e;
+    } finally { if (timer) clearTimeout(timer); }
+  }
   async function fetchRow() {
     var clientErr = null;
     try {
@@ -911,6 +934,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     return 'calm';
   }
   function statusText(data, row, sched, mode) {
+    if (data && state.liveError) return state.liveError;
     if (state.paused) return 'Shift paused. The clock is still running.';
     if (!data) return state.error ? state.error : 'Reading the feed. Missing numbers stay blank.';
     var table = onTable(data, row);
@@ -1554,6 +1578,18 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (shift) shift.textContent = state.paused ? 'RESUME' : (shiftOn() ? 'PAUSE' : 'START SHIFT');
     var sound = document.getElementById('soundbtn');
     if (sound) { var on = soundOn(); sound.textContent = on ? 'SOUND ON' : 'SOUND OFF'; sound.setAttribute('aria-pressed', on ? 'true' : 'false'); sound.classList.toggle('on', on); }
+    var refresh = document.querySelector('[data-refresh]');
+    if (refresh) {
+      if (state.livePull) {
+        refresh.disabled = true;
+        refresh.setAttribute('aria-busy', 'true');
+        refresh.textContent = 'Pulling from GHL...';
+      } else {
+        refresh.disabled = false;
+        refresh.removeAttribute('aria-busy');
+        refresh.textContent = state.liveNote || 'REFRESH';
+      }
+    }
     var arc = document.getElementById('ring-arc');
     if (arc && sched.progress != null) {
       var circ = 2 * Math.PI * 40;
@@ -1630,14 +1666,25 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       goal.textContent = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
     }
   }
-  async function load() {
+  async function load(forceLive) {
     if (state.inflight) return;
     state.inflight = true;
+    state.livePull = !!forceLive;
     paintChrome();
     try {
-      state.row = normalize(await fetchRow());
+      var live = null;
+      if (forceLive) {
+        live = await triggerLiveRefresh();
+        state.row = normalize(live.row);
+      } else state.row = normalize(await fetchRow());
       state.archives = await fetchDatedRows();
       state.error = ''; state.stale = false;
+      state.liveError = '';
+      if (forceLive) {
+        var wait = Math.round(Number(live && live.cooldown_remaining_sec));
+        var stamp = ctClock(new Date((state.row.data && state.row.data.generated_iso) || state.row.generated_at || Date.now()));
+        state.liveNote = (live && live.cached) ? ('Just refreshed, try again in ' + (isFinite(wait) && wait >= 0 ? wait : 60) + 's') : ('Live as of ' + stamp);
+      }
       state.fetchedAt = new Date().toISOString();
       state.nextAt = Date.now() + REFRESH_MS;
       state.booted = true;
@@ -1650,10 +1697,14 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     } catch (err) {
       state.error = errText(err);
       state.stale = !!state.row;
+      if (forceLive) {
+        state.liveNote = '';
+        state.liveError = state.row ? 'Live refresh failed. Showing the last read.' : state.error;
+      }
       state.nextAt = Date.now() + REFRESH_MS;
       state.booted = true;
       render();
-    } finally { state.inflight = false; paintChrome(); }
+    } finally { state.inflight = false; state.livePull = false; paintChrome(); }
   }
   window.addEventListener('hashchange', function () {
     var h = (location.hash || '').replace('#', '');
@@ -1681,7 +1732,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (next && next !== state.period) { state.period = next; state.view = 'board'; render(); }
       return;
     }
-    if (e.target.closest && e.target.closest('[data-refresh]')) { playClick(); load(); return; }
+    if (e.target.closest && e.target.closest('[data-refresh]')) { playClick(); load(true); return; }
     if (e.target.closest && e.target.closest('[data-sound]')) {
       var turningOn = !soundOn();
       storeSet(SOUND_KEY, turningOn ? '1' : '0');
@@ -1755,9 +1806,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   paintNav();
   setInterval(function () {
     paintChrome();
-    if (state.booted && !state.inflight && state.nextAt && Date.now() >= state.nextAt) load();
+    if (state.booted && !state.inflight && state.nextAt && Date.now() >= state.nextAt) load(false);
   }, 1000);
-  load();
+  load(false);
 })();
 </script>
 </body>

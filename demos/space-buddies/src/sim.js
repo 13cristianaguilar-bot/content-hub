@@ -85,7 +85,9 @@ export function createRace(course, cfg, seed = 1) {
       wait: i === 0 ? 0 : (spot.row || 0) * 0.42 + rand() * 0.55,
       stumble: 0,
       wp: 0,
-      routeId: i % 3,
+      routeId: (i + (seed % 3)) % 3,
+      lane: [-2.6, 1.9, -0.7, 2.5, 0.3, -1.8, 1.2][(i + (seed % 7)) % 7],
+      laneSign: (i + seed) % 2 === 0 ? 1 : -1,
     });
   }
 
@@ -375,16 +377,34 @@ function findRespawnTile(race, r) {
 }
 
 function keepOnRim(race, r) {
-  if (r.seated || r.eliminated || r.ungroundT > 0) return;
+  if (r.seated || r.eliminated) return;
+  if (r.ungroundT > 0 && r.vel.y > 3) return;
   if (spotOnFloor(race, r.pos.x, r.pos.z)) return;
   const floors = race.course.floors || [];
   let best = null;
   let bestLip = 1e9;
+  let bridge = false;
   for (let i = 0; i < floors.length; i++) {
     const pad = floors[i];
-    if (pad.rx < 10 || pad.rz < 8) continue;
-    if (pad.zone !== "meadow" && pad.zone !== "canyon") continue;
+    if (pad.zone === "ship") continue;
+    const chunk = race.course.chunks[pad.chunk];
+    if (!chunk || chunk.fragile || chunk.state === "falling" || chunk.state === "gone") continue;
     if (Math.abs(r.pos.y - pad.y) > 1.5) continue;
+    if (pad.bridge) {
+      if (pad.zone === "sky") continue;
+      const dx = r.pos.x - pad.x;
+      const dz = r.pos.z - pad.z;
+      const along = dx * pad.ax + dz * pad.az;
+      if (Math.abs(along) > pad.rz * 1.15) continue;
+      const lat = Math.hypot(dx - pad.ax * along, dz - pad.az * along);
+      const lip = lat - pad.rx;
+      if (lip < 0 || lip > 1.7 || lip >= bestLip) continue;
+      bestLip = lip;
+      best = pad;
+      bridge = true;
+      continue;
+    }
+    if (pad.rx < 4 || pad.rz < 4 || pad.zone === "sky") continue;
     const nx = (r.pos.x - pad.x) / pad.rx;
     const nz = (r.pos.z - pad.z) / pad.rz;
     const len = Math.hypot(nx, nz);
@@ -393,9 +413,29 @@ function keepOnRim(race, r) {
     if (lip < bestLip) {
       bestLip = lip;
       best = pad;
+      bridge = false;
     }
   }
-  if (!best || bestLip > 0.9) return;
+  if (!best || bestLip > 1.7) return;
+  if (bridge) {
+    const dx = r.pos.x - best.x;
+    const dz = r.pos.z - best.z;
+    const along = dx * best.ax + dz * best.az;
+    const lx = dx - best.ax * along;
+    const lz = dz - best.az * along;
+    const lat = Math.hypot(lx, lz) || 1;
+    const keep = best.rx * 0.94;
+    r.pos.x = best.x + best.ax * along + (lx / lat) * keep;
+    r.pos.z = best.z + best.az * along + (lz / lat) * keep;
+    const ox = lx / lat;
+    const oz = lz / lat;
+    const outV = r.vel.x * ox + r.vel.z * oz;
+    if (outV > 0) {
+      r.vel.x -= ox * outV;
+      r.vel.z -= oz * outV;
+    }
+    return;
+  }
   const nx = (r.pos.x - best.x) / best.rx;
   const nz = (r.pos.z - best.z) / best.rz;
   const len = Math.hypot(nx, nz) || 1;
@@ -411,11 +451,79 @@ function keepOnRim(race, r) {
   }
 }
 
+function pullOnto(race, r) {
+  if (r.seated || r.eliminated || race.kind === "survival") return false;
+  if (race.time - (r.hazardAt || -99) < 2) return false;
+  if (race.collapseZ != null && r.pos.z < race.collapseZ + 3) return false;
+  const lava = race.course && race.course.lava;
+  if (lava && r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1) return false;
+  const floors = race.course.floors || [];
+  let best = null;
+  let bestLip = 1e9;
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    if (pad.zone === "ship" || pad.zone === "sky") continue;
+    const chunk = race.course.chunks[pad.chunk];
+    if (!chunk || chunk.fragile || chunk.state === "falling" || chunk.state === "gone") continue;
+    if (pad.bridge) {
+      const dx = r.pos.x - pad.x;
+      const dz = r.pos.z - pad.z;
+      const along = dx * pad.ax + dz * pad.az;
+      if (Math.abs(along) > pad.rz) continue;
+      const lat = Math.hypot(dx - pad.ax * along, dz - pad.az * along);
+      const lip = lat - pad.rx;
+      if (lip > 4.8 || lip >= bestLip) continue;
+      bestLip = lip;
+      best = { pad, bridge: true, along, lat, dx, dz };
+    } else if (pad.rx >= 3.5 && pad.rz >= 3.5) {
+      const nx = (r.pos.x - pad.x) / pad.rx;
+      const nz = (r.pos.z - pad.z) / pad.rz;
+      const len = Math.hypot(nx, nz);
+      const lip = (len - 1) * Math.min(pad.rx, pad.rz);
+      if (lip > 3.4 || lip >= bestLip) continue;
+      bestLip = lip;
+      best = { pad, bridge: false, len, nx, nz };
+    }
+  }
+  if (!best) return false;
+  const pad = best.pad;
+  if (best.bridge && best.lat > pad.rx) {
+    const lx = best.dx - pad.ax * best.along;
+    const lz = best.dz - pad.az * best.along;
+    const lat = best.lat || 1;
+    const keep = pad.rx * 0.92;
+    r.pos.x = pad.x + pad.ax * best.along + (lx / lat) * keep;
+    r.pos.z = pad.z + pad.az * best.along + (lz / lat) * keep;
+  } else if (!best.bridge && best.len > 1) {
+    const scale = 0.96 / best.len;
+    r.pos.x = pad.x + best.nx * pad.rx * scale;
+    r.pos.z = pad.z + best.nz * pad.rz * scale;
+  }
+  r.pos.y = pad.y;
+  r.vel.y = 0;
+  r.vel.x *= 0.35;
+  r.vel.z *= 0.35;
+  r.grounded = true;
+  r.rescue = 0.35;
+  return true;
+}
+
 function missFooting(race, r) {
+  if (pullOnto(race, r)) return;
   if (!race.edgeFalls) race.edgeFalls = { total: 0, bare: 0 };
   const lava = race.course && race.course.lava;
   const inLava = lava && r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1;
-  if (inLava || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
+  let floorGone = false;
+  const floors = race.course.floors || [];
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    const nx = (r.pos.x - pad.x) / pad.rx;
+    const nz = (r.pos.z - pad.z) / pad.rz;
+    if (nx * nx + nz * nz > 1.4) continue;
+    const chunk = race.course.chunks[pad.chunk];
+    if (chunk && (chunk.state === "falling" || chunk.state === "gone" || chunk.state === "cracking")) floorGone = true;
+  }
+  if (inLava || floorGone || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
   race.edgeFalls.total++;
   if (!(race.time - (r.hazardAt || -99) < 2)) race.edgeFalls.bare++;
   if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {
@@ -987,13 +1095,14 @@ export function botWish(race, r, dt) {
     const wobble = Math.sin(race.time * 0.6 + r.id) * 1.1;
     target = { x: ((r.id % 4) - 1.5) * 2.1 + wobble, z: r.pos.z, y: r.pos.y, gap: false };
   }
-  const spread = heldCrown ? 0 : ((r.id % 5) - 2) * (r.pos.y > 5.5 ? 0.4 : 0.85);
+  const lane = heldCrown ? 0 : (r.lane == null ? ((r.id % 5) - 2) * 0.85 : r.lane);
+  const spread = r.pos.y > 5.5 ? lane * 0.55 : lane;
   let tx = target.x + spread;
   if (target.gap) tx = target.x;
   if (!heldCrown) for (const pad of race.course.pads) {
     const nearTarget = (pad.x - target.x) ** 2 + (pad.z - target.z) ** 2 < 36;
     const nearMe = (pad.x - r.pos.x) ** 2 + (pad.z - r.pos.z) ** 2 < 49;
-    if (nearTarget && nearMe) tx = pad.x;
+    if (nearTarget && nearMe && Math.abs(tx - pad.x) > 2.2) tx = pad.x + Math.max(-1.1, Math.min(1.1, lane * 0.35));
   }
   let tz = target.z;
   let ty = target.y;
@@ -1021,10 +1130,12 @@ export function botWish(race, r, dt) {
   let dz = tz - r.pos.z;
   if (inWind(race, r)) dx -= 2.4 * p.skill;
 
+  const prefer = r.laneSign || 1;
   for (const s of race.spinners) {
     const dzs = s.z - r.pos.z;
     if (dzs > -0.2 && dzs < 7 && Math.abs(s.x - r.pos.x) < 2.2) {
-      dx += (r.pos.x >= s.x ? 1 : -1) * 3.2 * p.skill;
+      const side = Math.abs(r.pos.x - s.x) > 1.5 ? (r.pos.x >= s.x ? 1 : -1) : prefer;
+      dx += side * 3.2 * p.skill;
     }
   }
   for (const sw of race.sweepers) {
@@ -1033,7 +1144,8 @@ export function botWish(race, r, dt) {
       if (sw.full && p.skill > 0.4) {
         // Jump the low bar.
       } else {
-        dx += (r.pos.x >= sw.x ? 1 : -1) * 3 * p.skill;
+        const side = Math.abs(r.pos.x - sw.x) > 1.5 ? (r.pos.x >= sw.x ? 1 : -1) : prefer;
+        dx += side * 3 * p.skill;
       }
     }
   }
@@ -1041,7 +1153,8 @@ export function botWish(race, r, dt) {
     if (!g.warn && !g.hot) continue;
     const dzg = g.z - r.pos.z;
     if (dzg > -0.5 && dzg < 7 && Math.abs(g.x - r.pos.x) < 2.4) {
-      dx += (r.pos.x >= g.x ? 1 : -1) * 4.2 * p.skill;
+      const side = Math.abs(r.pos.x - g.x) > 1.5 ? (r.pos.x >= g.x ? 1 : -1) : prefer;
+      dx += side * 4.2 * p.skill;
     }
   }
   for (const roller of race.rollers) {
@@ -1054,7 +1167,17 @@ export function botWish(race, r, dt) {
     const dzp = pdl.z - r.pos.z;
     const bobX = pdl.bobX == null ? pdl.x : pdl.bobX;
     if (dzp > -1 && dzp < 8 && Math.abs(bobX - r.pos.x) < 2.6) {
-      dx += (r.pos.x >= bobX ? 1 : -1) * 3.6 * p.skill;
+      const side = Math.abs(r.pos.x - bobX) > 1.5 ? (r.pos.x >= bobX ? 1 : -1) : prefer;
+      dx += side * 3.6 * p.skill;
+    }
+  }
+  if (!heldCrown) {
+    for (const o of race.racers) {
+      if (o === r || o.seated || o.eliminated) continue;
+      const odx = r.pos.x - o.pos.x;
+      const odz = r.pos.z - o.pos.z;
+      const d2 = odx * odx + odz * odz;
+      if (d2 < 1.6 && d2 > 0.04) dx += (odx / Math.sqrt(d2)) * 0.7;
     }
   }
   if (race.kind !== "survival" && r.pos.z < race.collapseZ + 7) dz += 4;

@@ -288,7 +288,9 @@ export function createCourse(cfg) {
     const gapT = opts && opts.gap;
     const idx = makeChunk(chunks, zone, Math.min(z0, z1), Math.max(z0, z1), bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone));
     const pads = [];
-    const span = Math.hypot(x1 - x0, z1 - z0);
+    const span = Math.hypot(x1 - x0, z1 - z0) || 1;
+    const ax = (x1 - x0) / span;
+    const az = (z1 - z0) / span;
     const n = Math.max(4, Math.ceil(span / Math.max(2.2, width * 0.5)));
     for (let i = 0; i <= n; i++) {
       const t = i / n;
@@ -302,6 +304,9 @@ export function createCourse(cfg) {
         zone,
         chunk: idx,
         conveyX: opts && opts.conveyX,
+        bridge: true,
+        ax,
+        az,
       };
       floors.push(pad);
       pads.push(pad);

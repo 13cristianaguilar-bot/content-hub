@@ -764,6 +764,9 @@ function fillPodium(race) {
     el.textContent = r.isPlayer ? "YOU" : "BUDDY";
     el.style.color = "#1e2440";
   }
+  if (world && world.showPodium) {
+    world.showPodium(rows.slice(0, 3).map((r) => ({ id: r.id, you: !!r.isPlayer })));
+  }
 }
 
 document.getElementById("app").addEventListener("pointerdown", (e) => {

@@ -82,7 +82,7 @@ export const CONFIG = {
   spinnerPush: 9.5,
   spinnerUp: 4.2,
   spinnerHit: 0.58,
-  spinnerMinY: 0.55,
+  spinnerMinY: -0.45,
   spinnerMaxY: 1.45,
   spinnerCooldown: 0.45,
 

@@ -35,6 +35,8 @@ const SFX = {
   tickFinal: ["sfx_timer_warning_final", 0.7],
   pauseOpen: ["ui_pause_open", 0.55],
   pauseClose: ["ui_pause_close", 0.55],
+  tutorPrompt: ["ui_tutor_prompt", 0.5],
+  tutorDone: ["ui_tutor_done", 0.5],
   fall: ["sfx_fall_whistle", 0.7],
   respawn: ["sfx_respawn_pop", 0.65],
 };
@@ -192,12 +194,14 @@ export function createAudio() {
     }
   }
 
-  function play(name, gap = 0.05) {
+  function play(name, gap = 0.05, gain = 1) {
     const cue = cues[name];
     if (!cue) return;
     const now = Howler.ctx ? Howler.ctx.currentTime : performance.now() / 1000;
     if (last[name] && now - last[name] < gap) return;
     last[name] = now;
+    const base = (SFX[name] && SFX[name][1]) || 0.8;
+    cue.volume(base * Math.max(0, Math.min(1, gain)));
     cue.play();
     if (DUCK[name] && prefs.music && !prefs.muted) {
       music.fade(music.volume() || MUSIC_VOL, 0.12, 120);
@@ -229,6 +233,14 @@ export function createAudio() {
     setHeld,
     setRumble,
     play,
+    duckFor(ms) {
+      if (!(prefs.music && !prefs.muted)) return;
+      music.fade(music.volume() || MUSIC_VOL, 0.08, 80);
+      clearTimeout(duckTimer);
+      duckTimer = setTimeout(() => {
+        if (!prefs.muted && prefs.music) music.fade(0.08, MUSIC_VOL, 360);
+      }, ms || 1600);
+    },
     setMuted(on) { persist({ muted: !!on }); },
     setMusic(on) { persist({ music: !!on }); },
     setSfx(on) { persist({ sfx: !!on }); },

@@ -800,12 +800,19 @@ function clock(seconds) {
 
 function fillPodium(race) {
   const escaped = race.result === "escaped" || (race.shipRound && race.racers.some((r) => r.seated));
-  const rows = race.racers.slice().filter((r) => (escaped ? r.seated && r.seatIndex >= 0 : race.result !== "out" || !r.isPlayer));
-  rows.sort((a, b) => {
+  const rows = [];
+  const seen = new Set();
+  const pool = race.racers.filter((r) => (escaped ? r.seated && r.seatIndex >= 0 : race.result !== "out" || !r.isPlayer));
+  pool.sort((a, b) => {
     if (escaped) return a.seatIndex - b.seatIndex;
     const score = (r) => (r.seated ? 4000 : 0) + (r.qualified ? 2000 : 0) + (r.eliminated ? -1000 : 0) + r.pos.z;
     return score(b) - score(a);
   });
+  for (const r of pool) {
+    if (seen.has(r.id)) continue;
+    seen.add(r.id);
+    rows.push(r);
+  }
   for (let i = 0; i < 3; i++) {
     const el = document.getElementById("pod-" + (i + 1));
     const r = rows[i];
@@ -823,7 +830,7 @@ document.getElementById("app").addEventListener("pointerdown", (e) => {
   const btn = e.target.closest("button");
   if (!btn || btn.disabled) return;
   const id = btn.id;
-  if (id === "resume" || id === "pause") return;
+  if (id === "resume" || id === "pause" || id === "jump" || id === "dive" || id === "grab") return;
   if (id === "menu" || id === "pause-menu-btn" || id === "set-close") audio.play("back");
   else if (id === "play" || id === "start" || id === "again" || id === "land") audio.play("confirm");
   else audio.play("tap");
@@ -918,12 +925,10 @@ function updateHud(dt) {
     }
   }
   if (race.hintT > 0) race.hintT -= dt;
-  const showTutor = showCoach(race.phase, race.player.seated, race.zoneId, race.time, cfg.auto, paused);
+  const showTutor = showCoach(race.phase, race.player.seated, race.zoneId, race.time, cfg.auto, paused) && coachLine();
   tutor.hidden = !(showTutor || race.hintT > 0);
   if (race.hintT > 0) tutor.textContent = race.hint;
-  else if (showTutor) {
-    tutor.textContent = race.time < 2.6 ? "DRAG THE LEFT SIDE TO RUN" : race.time < 5.2 ? "DRAG THE RIGHT SIDE TO LOOK" : "JUMP AND DIVE";
-  }
+  else if (showTutor) tutor.textContent = coachLine();
 
   const prog = Math.max(0, Math.min(1, race.player.pos.z / course.ship.z));
   progressEl.parentElement.style.setProperty("--p", Math.round(prog * 100) + "%");
@@ -1086,12 +1091,91 @@ function updateHud(dt) {
   }
 }
 
+const COACH_KEY = "space-buddies-coach";
+const COACH_STEPS = [
+  { id: "move", text: "DRAG THE LEFT SIDE TO RUN" },
+  { id: "look", text: "DRAG THE RIGHT SIDE TO LOOK" },
+  { id: "jump", text: "JUMP AND DIVE" },
+];
+const coachSave = (() => {
+  try { return JSON.parse(localStorage.getItem(COACH_KEY) || "{}"); } catch (err) { return {}; }
+})();
+let coachIdle = 0;
+let coachShown = "";
+
+function coachLine() {
+  if (coachSave.gaveUp || params.get("bot")) return "";
+  const step = COACH_STEPS.find((s) => !coachSave[s.id]);
+  if (!step) return "";
+  if (coachShown !== step.id) {
+    coachShown = step.id;
+    coachIdle = 0;
+    audio.play("tutorPrompt", 0.2);
+  }
+  return step.text;
+}
+
+function noteCoach(kind) {
+  if (coachSave[kind] || coachSave.gaveUp || params.get("bot")) return;
+  const step = COACH_STEPS.find((s) => !coachSave[s.id]);
+  if (!step || step.id !== kind) return;
+  coachSave[kind] = true;
+  coachShown = "";
+  coachIdle = 0;
+  audio.play("tutorDone", 0.2);
+  try { localStorage.setItem(COACH_KEY, JSON.stringify(coachSave)); } catch (err) { /* private mode */ }
+}
+
+function tickCoach(dt, raw) {
+  if (!race || !race.player || !showCoach(race.phase, race.player.seated, race.zoneId, race.time, cfg.auto, paused)) return;
+  if (!coachLine()) return;
+  coachIdle += dt;
+  if (coachIdle > 12) {
+    coachSave.gaveUp = true;
+    coachShown = "";
+    return;
+  }
+  if (Math.hypot(raw.stickX || 0, raw.stickY || 0) > 0.22) noteCoach("move");
+  if (Math.abs(raw.lookDx || 0) > 4 || Math.abs(raw.lookDy || 0) > 4) noteCoach("look");
+  if (raw.jump) noteCoach("jump");
+}
+
+function hapticFeel(e) {
+  if (!window.SBUI || !navigator.vibrate) return;
+  if (e.t === "jump" && e.id === 0) window.SBUI.haptic("light");
+  else if (e.t === "land" && e.id === 0 && e.impact > 3) window.SBUI.haptic("light");
+  else if (e.t === "dive" && e.id === 0) window.SBUI.haptic("light");
+  else if (e.t === "bump" && e.id === 0) window.SBUI.haptic("medium");
+  else if (e.t === "coin") window.SBUI.haptic("light");
+  else if (e.t === "qualify" && e.id === 0) window.SBUI.haptic("success");
+  else if (e.t === "eliminated") window.SBUI.haptic("fail");
+  else if (e.t === "go") window.SBUI.haptic("medium");
+  else if (e.t === "fall" && e.id === 0) window.SBUI.haptic("medium");
+}
+
 function handleEvents() {
   let cracked = false;
+  const launchNow = race.events.some((e) => e.t === "launch");
   for (const e of race.events) {
     const cue = cueFor(e);
-    const skip = e.t === "crack" || (playerOnlyCue(e) && e.id !== 0) || (e.t === "land" && !(e.impact > 3));
-    if (cue && !skip) audio.play(cue);
+    let gain = 1;
+    let skip = e.t === "crack" || e.t === "drop" || (playerOnlyCue(e) && e.id !== 0) || (e.t === "land" && !(e.impact > 3));
+    if (e.t === "bump" && e.id !== 0 && e.x != null && race.player) {
+      const dist = Math.hypot(e.x - race.player.pos.x, e.z - race.player.pos.z);
+      if (dist > 20) skip = true;
+      else gain = Math.max(0.18, 1 - dist / 20);
+    }
+    if (e.t === "launch") {
+      skip = true;
+      audio.duckFor(2200);
+      setTimeout(() => audio.play("launch"), 520);
+    }
+    if (e.t === "escaped" && launchNow) {
+      skip = true;
+      setTimeout(() => audio.play("escaped"), 1550);
+    }
+    if (cue && !skip) audio.play(cue, 0.05, gain);
+    hapticFeel(e);
     if (e.t === "qualify" && e.id === 0) {
       race.slowMo = 0.45;
       race.popConfetti = (race.popConfetti || 0) + 1;
@@ -1102,8 +1186,14 @@ function handleEvents() {
     }
     else if (e.t === "bump") {
       if (e.id === 0 && e.big) hitStop = 0.08;
-    } else if (e.t === "crack") cracked = true;
-    else if (e.t === "seat") {
+    } else if (e.t === "crack") {
+      if (e.x == null || !race.player) continue;
+      const dist = Math.hypot(e.x - race.player.pos.x, e.z - race.player.pos.z);
+      if (dist < 18) cracked = true;
+    } else if (e.t === "drop") {
+      const dist = e.z == null || !race.player ? 0 : Math.abs(e.z - race.player.pos.z);
+      if (dist < 20) audio.play("crack", 0.45);
+    } else if (e.t === "seat") {
       const dot = seatsEl.children[e.seat];
       if (dot) {
         dot.classList.add("pop");
@@ -1115,7 +1205,6 @@ function handleEvents() {
     } else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
     else if (e.t === "heatfull") showToast("QUALIFICATION OVER");
     else if (e.t === "qualify") race.gateCheer = 0.5;
-    else if (e.t === "fall" && e.id === 0 && window.SBUI && navigator.vibrate) window.SBUI.haptic("medium");
     else if (e.t === "respawn" && e.id === 0 && world.snapBehind) world.snapBehind();
     else if (e.t === "zone") showZone(e.name);
     else if (e.t === "error") reportError(e.message);
@@ -1197,10 +1286,14 @@ function frame(now) {
     }
     tutor.hidden = true;
     controls.hidden = true;
-    if (introLeft <= 0) controls.hidden = false;
+    if (introLeft <= 0) {
+      controls.hidden = false;
+      if (world.snapBehind) world.snapBehind();
+    }
     return;
   }
   const raw = input.read();
+  if (race.phase === "race" && !paused) tickCoach(dt, raw);
   if (window.__sbStick) {
     raw.stickX = window.__sbStick.x;
     raw.stickY = window.__sbStick.y;
@@ -1261,7 +1354,7 @@ function frame(now) {
   const dist = race.player.pos.z - race.collapseZ;
   const rumble = race.phase === "race" ? Math.max(0, Math.min(1, 1 - dist / 36)) : (race.phase === "launch" ? 0.4 : 0);
   audio.setRumble(rumble * cfg.rumbleMax);
-  if (!qualityDropped && !params.get("dpr") && fps > 0 && fps < 24 && race.time > 5 && world.setDpr) {
+  if (!cfg.low && !qualityDropped && !params.get("dpr") && fps > 0 && fps < 24 && race.time > 5 && world.setDpr) {
     qualityDropped = true;
     world.setDpr(1);
     if (world.setPost && params.get("post") !== "1") world.setPost(false);

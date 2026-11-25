@@ -62,6 +62,7 @@ assert(cueFor({ t: "checkpoint" }) === "checkpoint", "a checkpoint should chime"
 assert(cueFor({ t: "fall" }) === "fall" && cueFor({ t: "respawn" }) === "respawn", "a fall and a respawn should have their own cues");
 assert(resultReason({ result: "out", time: 20, roundSeconds: 72, qualifyN: 12, closedBy: "full", qualCount: 12, player: { pos: { y: 0.25 } } }) === "ALL 12 SPOTS FILLED", "a full heat should say the spots filled");
 assert(resultReason({ result: "out", time: 20, roundSeconds: 72, player: { pos: { y: -20 } } }) === "FELL OFF THE PLANET", "a real fall should still say so");
+assert(resultReason({ result: "out", kind: "survival", qualifyN: 8, closedBy: "full", qualCount: 8, time: 18, roundSeconds: 50, fallers: ["BUDDY", "YOU"], player: { eliminated: true, fell: true, pos: { y: -6 } } }) === "FELL OFF THE PLANET", "a survival fall should not say the spots filled");
 assert(cueFor({ t: "timer", final: false }) === "tick" && cueFor({ t: "timer", final: true }) === "tickFinal", "the last ten seconds should tick");
 assert(cueFor({ t: "pause", open: true }) === "pauseOpen" && cueFor({ t: "pause", open: false }) === "pauseClose", "pause should swoosh open and closed");
 assert(normalizePrefs({ music: false }).sfx === true, "turning music off should leave sfx on");

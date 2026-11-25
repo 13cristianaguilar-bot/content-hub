@@ -4,7 +4,7 @@
 const CREAM = [1, 0.995, 0.94];
 const GROUND = {
   meadow: { top: [0.306, 0.788, 0.416], side: [0.220, 0.557, 0.286] },
-  canyon: { top: [1, 0.604, 0.290], side: [0.780, 0.373, 0.196] },
+  canyon: { top: [1, 0.878, 0.690], side: [0.780, 0.373, 0.196], path: [1, 0.878, 0.690] },
   sky: { top: [1, 1, 1], side: [0.788, 0.839, 1], path: [1, 0.824, 0.247] },
   ice: { top: [0.780, 0.925, 1], side: [0.420, 0.730, 0.920] },
   climb: { top: [0.640, 0.520, 0.820], side: [0.400, 0.310, 0.580] },
@@ -113,7 +113,7 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
     { side: -1, inset: 0, dy: -bevel, key: "cream" },
     { side: -1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
     { side: -1, inset: bevel, dy: 0, key: "cream" },
-    { side: 0, inset: 0, dy: 0, key: zone === "sky" ? "path" : "top" },
+    { side: 0, inset: 0, dy: 0, key: zone === "sky" || zone === "canyon" ? "path" : "top" },
     { side: 1, inset: bevel, dy: 0, key: "cream" },
     { side: 1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
     { side: 1, inset: 0, dy: -bevel, key: "cream" },

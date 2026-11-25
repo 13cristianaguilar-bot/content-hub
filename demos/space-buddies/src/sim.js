@@ -212,7 +212,7 @@ function crackUnder(race, r) {
     chunk.crackT = race.cfg.fragileCrack;
     chunk.dirty = true;
     r.hazardAt = race.time;
-    race.events.push({ t: "crack" });
+    race.events.push({ t: "crack", x: pad.x, z: pad.z });
     return;
   }
 }
@@ -320,7 +320,7 @@ function knock(race, r, ix, iz, iy) {
   r.knockCd = race.cfg.knockCooldown;
   r.sliding = 0;
   r.hazardAt = race.time;
-  race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
+  race.events.push({ t: "bump", id: r.id, big: true, obstacle: true, x: r.pos.x, z: r.pos.z });
   if (r.isPlayer) race.shake = Math.max(race.shake, 0.72);
 }
 
@@ -574,8 +574,11 @@ function missFooting(race, r) {
   if (r.isPlayer) race.events.push({ t: "fall", id: r.id });
   if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {
     r.eliminated = true;
+    r.fell = true;
     if (!race.fallers) race.fallers = [];
-    race.fallers.push(r.isPlayer ? "YOU" : "BUDDY");
+    if (r.isPlayer) {
+      if (!race.fallers.includes("YOU")) race.fallers.push("YOU");
+    } else race.fallers.push("BUDDY");
     r.vel.x = 0;
     r.vel.y = 0;
     r.vel.z = 0;
@@ -623,6 +626,26 @@ function nearestSolid(race, x, z) {
   return best;
 }
 
+function stableRespawn(race, spot) {
+  if (!spot) return spot;
+  const on = groundAt(race.course, spot.x, spot.z);
+  const convey = on && on.conveyX;
+  const rim = on && on.ice && on.rx && ((spot.x - on.px) ** 2) / (on.rx * on.rx) + ((spot.z - on.pz) ** 2) / (on.rz * on.rz) > 0.2;
+  if (on && !convey && !rim) return { x: on.ice ? on.px : spot.x, y: on.y, z: on.ice ? on.pz : spot.z };
+  let best = null;
+  const floors = race.course.floors || [];
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    if (pad.conveyX || pad.zone === "ship") continue;
+    const chunk = race.course.chunks[pad.chunk];
+    if (!chunk || chunk.state === "falling" || chunk.state === "gone" || chunk.fragile) continue;
+    if (pad.z > spot.z + 6) continue;
+    const d = Math.abs(pad.z - spot.z) + Math.abs(pad.x - spot.x) * 0.35 + (pad.zone === "ice" ? 8 : 0);
+    if (!best || d < best.d) best = { d, x: pad.x, y: pad.y, z: pad.z };
+  }
+  return best || (on ? { x: on.px || spot.x, y: on.y, z: on.pz || spot.z } : spot);
+}
+
 function doRespawn(race, r) {
   const now = race.time || 0;
   const again = r.respawnAt != null && now - r.respawnAt < 2;
@@ -653,6 +676,7 @@ function doRespawn(race, r) {
     }
     spot = clampBeforeGate(race, r.pos.z, spot);
   }
+  spot = stableRespawn(race, spot);
   if (!spot) return;
   r.pos.x = spot.x;
   r.pos.y = spot.y + 0.2;
@@ -705,7 +729,7 @@ function pound(race, r) {
       o.ungroundT = 0.06;
     }
   }
-  race.events.push({ t: "bump", id: r.id, big: true });
+  race.events.push({ t: "bump", id: r.id, big: true, x: r.pos.x, z: r.pos.z });
 }
 
 function resolveSolids(race, r) {
@@ -1011,9 +1035,12 @@ function integrate(race, r, wish, dt) {
         race.feel.lands++;
         r.jumpArm = 0;
       }
-      if (gnd.tile && !gnd.tile.fragile) {
-        r.lastSafe = { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
-        r.firmSafe = { x: r.pos.x, y: gnd.y, z: r.pos.z };
+      if (gnd.tile && !gnd.tile.fragile && !gnd.tile.conveyX) {
+        const spot = gnd.tile.ice
+          ? { x: gnd.tile.px, y: gnd.y, z: gnd.tile.pz }
+          : { x: gnd.tile.x, y: gnd.y, z: r.pos.z };
+        r.lastSafe = spot;
+        r.firmSafe = { x: spot.x, y: gnd.y, z: spot.z };
         r.voidTries = 0;
       }
       if (gnd.tile && gnd.tile.chunk && gnd.tile.state === "solid" && gnd.tile.fragile && !gnd.tile.chunk.stepped) {
@@ -1021,7 +1048,7 @@ function integrate(race, r, wish, dt) {
         gnd.tile.chunk.state = "cracking";
         gnd.tile.chunk.crackT = cfg.fragileCrack;
         gnd.tile.chunk.dirty = true;
-        race.events.push({ t: "crack" });
+        race.events.push({ t: "crack", x: gnd.tile.x, z: gnd.tile.z });
         r.hazardAt = race.time;
       }
       crackUnder(race, r);
@@ -1395,7 +1422,7 @@ function separate(race) {
         a.bumpCd = cfg.bumpCooldown;
         b.bumpCd = cfg.bumpCooldown;
         const who = a.isPlayer ? a.id : b.isPlayer ? b.id : a.id;
-        race.events.push({ t: "bump", id: who });
+        race.events.push({ t: "bump", id: who, x: (a.pos.x + b.pos.x) * 0.5, z: (a.pos.z + b.pos.z) * 0.5 });
       }
     }
   }
@@ -1455,7 +1482,7 @@ function hazards(race, dt) {
         r.bumpCd = cfg.bumperCooldown;
         r.controlLock = Math.max(r.controlLock, 0.12);
         r.hazardAt = race.time;
-        race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
+        race.events.push({ t: "bump", id: r.id, big: true, obstacle: true, x: r.pos.x, z: r.pos.z });
         if (r.isPlayer) race.shake = Math.max(race.shake, 0.28);
       }
     }
@@ -1602,9 +1629,9 @@ function hazards(race, dt) {
       if (sw.armedAt != null && race.time - sw.armedAt < TELEGRAPH) continue;
       if (Math.abs(r.pos.z - sw.z) > 1.15) continue;
       if (Math.abs(r.pos.x - sw.x) > bar + 0.35) continue;
-      const feet = r.pos.y - (sw.y - sw.height);
-      const top = r.sliding > 0 ? cfg.slideHeight : 1.35;
-      if (feet > top || r.pos.y + 0.2 < sw.y - 0.35) continue;
+      const bodyTop = r.pos.y + (r.sliding > 0 ? cfg.slideHeight : 1.2);
+      if (bodyTop < sw.y - 0.45) continue;
+      if (r.pos.y > sw.y + 0.55) continue;
       if (r.sliding > 0 && sw.height > 0.8) continue;
       const dir = Math.cos(race.time * sw.speed + sw.z) >= 0 ? 1 : -1;
       knock(race, r, dir * 8, 3.5, 3.2);
@@ -1757,7 +1784,6 @@ function updateCollapse(race, dt) {
   race.collapseZ += race.collapseSpeed * hurry * dt;
   if (race.collapseZ > stop) race.collapseZ = stop;
   race.lavaY = cfg.lavaStartY + race.time * cfg.lavaRisePerSec;
-  let cracked = false;
   for (const chunk of race.course.chunks) {
     if (chunk.zone === "ship" || chunk.gap) continue;
     if (chunk.state === "solid") {
@@ -1766,7 +1792,8 @@ function updateCollapse(race, dt) {
         chunk.state = "cracking";
         chunk.crackT = (cfg.crackTime + chunk.jitter * 0.35) * (race.planetN === 3 ? 0.62 : 1);
         chunk.dirty = true;
-        cracked = true;
+        const mid = (chunk.z0 + chunk.z1) * 0.5;
+        if (Math.abs(race.player.pos.z - mid) < 18) race.events.push({ t: "crack", x: race.player.pos.x, z: mid });
       }
     } else if (chunk.state === "cracking") {
       chunk.crackT -= dt;
@@ -1774,6 +1801,7 @@ function updateCollapse(race, dt) {
       if (chunk.crackT <= 0) {
         chunk.state = "falling";
         chunk.fallT = cfg.fallTime;
+        race.events.push({ t: "drop", z: (chunk.z0 + chunk.z1) * 0.5 });
         const mid = (chunk.z0 + chunk.z1) * 0.5;
         const pz = race.player.pos.z - mid;
         if (pz * pz < 420) race.shake = Math.max(race.shake, 0.42);
@@ -1788,7 +1816,6 @@ function updateCollapse(race, dt) {
     }
     if (chunk.ice) chunk.tilt = Math.sin(race.time * 1.35 + chunk.jitter * 8) * 0.22;
   }
-  if (cracked) race.events.push({ t: "crack" });
 }
 
 function tryGrab(race, r) {
@@ -1990,6 +2017,11 @@ function checkSurvival(race) {
     if (r.eliminated || r.qualified) continue;
     if (r.pos.z < race.collapseZ - 0.3) {
       r.eliminated = true;
+      r.fell = true;
+      if (!race.fallers) race.fallers = [];
+      if (r.isPlayer) {
+        if (!race.fallers.includes("YOU")) race.fallers.push("YOU");
+      } else race.fallers.push("BUDDY");
       race.events.push({ t: "fall", id: r.id });
     }
   }
@@ -2091,6 +2123,7 @@ function board(race) {
   for (const item of ready) {
     if (race.seatsFilled >= cfg.seats) break;
     const r = item.r;
+    if (race.seats.indexOf(r.id) >= 0) continue;
     const seat = race.seatsFilled;
     race.seats[seat] = r.id;
     race.seatsFilled++;

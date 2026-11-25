@@ -1043,6 +1043,7 @@ async function occludeRun() {
   const context = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
   const jobs = [
     { name: "occlude-sky", planet: 2, round: 0, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 90000, skipLobby: true },
+    { name: "occlude-round2", planet: 1, round: 1, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true },
     { name: "occlude-survival", planet: 3, round: 0, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true },
     { name: "occlude-ship", planet: 1, round: 2, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true },
   ];

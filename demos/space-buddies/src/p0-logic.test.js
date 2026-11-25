@@ -116,6 +116,62 @@ hit("pendulum", () => {
 const pad = course.pads[0];
 hit("jump-pad", () => raceAt(pad.x, pad.y, pad.z), (race) => race.player.vel.y > 8);
 
+let spinnerKnocks = 0;
+for (const spinner of course.spinners) {
+  const ground = groundAt(course, spinner.x, spinner.z);
+  assert(ground, "spinner has no floor");
+  for (const along of [0.35, 0.62, 0.84]) {
+    const race = raceAt(spinner.x, ground.y, spinner.z);
+    const bar = race.spinners.find((s) => Math.abs(s.z - spinner.z) < 0.2 && Math.abs(s.x - spinner.x) < 0.2);
+    bar.angle = 0;
+    bar.armedAt = -2;
+    bar.len = spinner.len;
+    race.player.pos.x = spinner.x + bar.len * along;
+    race.player.pos.y = ground.y;
+    race.player.pos.z = spinner.z;
+    race.player.grounded = true;
+    race.player.invuln = 0;
+    race.player.spinCd = 0;
+    race.time = 2;
+    step(race, dt, idle);
+    const knocked = race.player.flail > 0.1 || Math.hypot(race.player.vel.x, race.player.vel.z) > 4;
+    assert(knocked, "grounded spinner contact missed at " + spinner.zone + " along " + along);
+    spinnerKnocks++;
+  }
+}
+assert(spinnerKnocks >= 12, "expected 12 grounded spinner knocks, got " + spinnerKnocks);
+console.log("hazard spinner-grounded", spinnerKnocks, "ok");
+hazards++;
+
+const clearSpin = course.spinners[0];
+const clearGround = groundAt(course, clearSpin.x, clearSpin.z);
+const clearRace = raceAt(clearSpin.x + clearSpin.len * 0.5, clearGround.y + 1.85, clearSpin.z);
+const clearBar = clearRace.spinners[0];
+clearBar.angle = 0;
+clearBar.armedAt = -2;
+clearRace.player.grounded = false;
+clearRace.player.vel.y = 0;
+clearRace.player.invuln = 0;
+clearRace.player.spinCd = 0;
+clearRace.time = 2;
+step(clearRace, dt, idle);
+assert(clearRace.player.flail < 0.1 && Math.hypot(clearRace.player.vel.x, clearRace.player.vel.z) < 4, "a jump over the spinner was still knocked");
+console.log("hazard spinner-jump-clear ok");
+
+const sweeperGround = groundAt(course, sweeper.originX, sweeper.z);
+hit("sweeper-grounded", () => {
+  const race = raceAt(sweeper.originX, sweeperGround.y, sweeper.z);
+  const bar = race.sweepers[0];
+  bar.originX = sweeper.originX;
+  bar.amp = 0;
+  bar.x = sweeper.originX;
+  bar.armedAt = -2;
+  race.player.pos.y = sweeperGround.y;
+  race.player.grounded = true;
+  race.time = 2;
+  return race;
+}, (race) => race.player.flail > 0.1 || Math.hypot(race.player.vel.x, race.player.vel.z) > 4);
+
 const roller = course.rollers[0];
 hit("roller", () => {
   const race = raceAt(roller.x, roller.y, roller.z);
@@ -267,5 +323,26 @@ step(heat, dt, idle);
 assert(heat.qualCount === 8, "a full heat qualified " + heat.qualCount);
 assert(heat.phase === "results", "a full heat kept running");
 assert(heat.player.qualified === false, "a player behind the pack was qualified after the heat closed");
+
+const convey = course.floors.find((pad) => pad.conveyX && pad.zone === "ice");
+assert(convey, "the ice slide has no moving pad");
+const iceFall = raceAt(convey.x + convey.rx * 0.92, convey.y - 8, convey.z);
+iceFall.player.grounded = false;
+iceFall.player.vel.y = -20;
+iceFall.player.lastSafe = { x: convey.x + convey.rx * 0.9, y: convey.y, z: convey.z };
+iceFall.player.firmSafe = { x: convey.x + convey.rx * 0.9, y: convey.y, z: convey.z };
+iceFall.collapseZ = -80;
+let iceLanded = false;
+for (let i = 0; i < 90 && !iceLanded; i++) {
+  step(iceFall, dt, idle);
+  iceLanded = iceFall.events.some((e) => e.t === "respawn" && e.id === 0) || iceFall.player.grounded;
+}
+assert(iceLanded, "the ice fall never respawned");
+const iceSpot = groundAt(course, iceFall.player.pos.x, iceFall.player.pos.z);
+assert(iceSpot && !iceSpot.conveyX, "ice respawn landed on a moving pad");
+const still = iceFall.player.pos.y;
+for (let i = 0; i < 70; i++) step(iceFall, dt, idle);
+assert(iceFall.player.pos.y > still - 1.2, "ice respawn dropped again, y " + iceFall.player.pos.y.toFixed(2));
+console.log("ice respawn stable y", iceFall.player.pos.y.toFixed(2));
 
 console.log("p0 logic ok", "floors", landed, "hazards", hazards, "respawns", respawns, "path", path.length);

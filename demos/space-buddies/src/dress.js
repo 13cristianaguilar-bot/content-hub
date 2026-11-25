@@ -208,20 +208,7 @@ export function buildDressing(scene, course, gradientMap) {
     scene.add(new THREE.Mesh(geo, mat));
     lavaMats.push(mat);
   }
-  if (course.crater) {
-    const crater = course.crater;
-    const geo = new THREE.CircleGeometry(crater.r, 36);
-    const mat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ vec2 p=vUv-0.5; float r=length(p); float flow=fract(r*4.0-uTime*0.32); float ang=sin(atan(p.y,p.x)*5.0+uTime*0.8); float body=smoothstep(0.48,0.08,r); float streak=smoothstep(0.05,0.95,flow); vec3 col=mix(vec3(0.45,0.08,0.02), vec3(1.0,0.42,0.05), streak*0.65); col+=vec3(1.0,0.28,0.02)*ang*0.08*body; if(body<0.04) discard; gl_FragColor=vec4(col,1.0); }",
-    });
-    const mesh = new THREE.Mesh(geo, mat);
-    mesh.rotation.x = -Math.PI / 2;
-    mesh.position.set(crater.x, crater.y, crater.z);
-    scene.add(mesh);
-    lavaMats.push(mat);
-  } else {
+  if (!course.crater) {
     lavaChannel(1);
     lavaChannel(-1);
   }

@@ -23,7 +23,7 @@ export function hudStatus(race) {
 
 export function showCoach(phase, seated, zoneId, time, auto, paused) {
   if (paused || seated || auto) return false;
-  return phase === "race" && zoneId === "meadow" && time < 8;
+  return phase === "race" && zoneId === "meadow" && time < 70;
 }
 
 export function resultReason(race) {
@@ -42,6 +42,9 @@ export function resultReason(race) {
     if (timedOut && filled < seats) return "TIME RAN OUT · " + filled + " OF " + seats + " SEATS";
     return "SHIP SEATS FILLED";
   }
+  const named = race.fallers || [];
+  const fellOff = named.includes("YOU") || (race.player && (race.player.fell || (race.player.pos && race.player.pos.y < -4)));
+  if (race.result === "out" && fellOff) return "FELL OFF THE PLANET";
   if (timedOut) return "TIME RAN OUT";
   if (race.closedBy === "full" && race.qualifyN) return "ALL " + race.qualifyN + " SPOTS FILLED";
   return "FELL OFF THE PLANET";

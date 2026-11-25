@@ -81,7 +81,7 @@ const gate = (z, y, rx) => ({ x: 0, z: Z(z), rx: rx || 5, rz: 1.5, y });
 const PLANS = [
   [
     { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, seconds: 72, startZ: Z(22), finishZ: Z(158), gate: gate(158, 0.25, 5) },
-    { name: "ROUND 2", sub: "8 QUALIFY", qualify: 8, seconds: 48, startZ: Z(168), finishZ: Z(236), gate: gate(236, 5.2, 5) },
+    { name: "ROUND 2", sub: "ROLLER RAMP", qualify: 8, seconds: 52, startZ: Z(148), finishZ: Z(236), gate: gate(236, 5.2, 5), mix: "rollers" },
     { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
   ],
   [
@@ -308,7 +308,7 @@ function applyRound() {
     for (const pdl of race.pendulums) pdl.amp = Math.min(1.25, pdl.amp * (pdl.planetTuned ? 1 : 1.18));
     for (const pdl of race.pendulums) pdl.planetTuned = true;
   }
-  if (world && world.showPlanetHazards) world.showPlanetHazards(planet);
+  if (world && world.showPlanetHazards) world.showPlanetHazards(planet, p.mix);
   const g = groundAt(course, 0, startZ);
   const y = g ? g.y : 0;
   race.racers.forEach((r, i) => {
@@ -1028,6 +1028,7 @@ function handleEvents() {
       }
     } else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
     else if (e.t === "heatfull") showToast("QUALIFICATION OVER");
+    else if (e.t === "qualify") race.gateCheer = 0.5;
     else if (e.t === "respawn" && e.id === 0 && world.snapBehind) world.snapBehind();
     else if (e.t === "zone") showZone(e.name);
     else if (e.t === "error") reportError(e.message);
@@ -1203,10 +1204,8 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     hiddenAt = performance.now();
     if (audio.ctx) audio.ctx.suspend();
-  } else {
-    hiddenAt = 0;
-    if (audio.ctx) audio.ctx.resume();
-  }
+    pauseForRealHide();
+  } else if (audio.ctx) audio.ctx.resume();
 });
 window.addEventListener("pagehide", () => {
   hiddenAt = performance.now();

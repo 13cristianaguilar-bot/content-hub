@@ -22,6 +22,8 @@ const MODELS = {
   platform: "assets/models/obstacle_moving_platform.glb",
   lava: "assets/models/obstacle_lava_pool.glb",
   chunk: "assets/models/obstacle_falling_chunk.glb",
+  debris: "assets/models/collapse_debris_set.glb",
+  arch: "assets/models/finish_gate_arch.glb",
   ship: "assets/escape_ship_rocket.glb",
   coin: "assets/models/collectible_star_coin.glb",
   roller: "assets/models/enemy_roller.glb",
@@ -781,15 +783,30 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.add(mesh);
   }
 
-  const debrisGeo = partsOf(gltfs.chunk.scene)[0].geom;
-  const debrisMat = new THREE.MeshLambertMaterial({ color: 0xb9a3d9 });
+  const debrisNames = ["DebrisLarge", "DebrisMedium", "DebrisSmall", "DebrisPebbles"];
+  const debrisAnims = gltfs.debris.animations || [];
+  const shakeClip = debrisAnims.find((clip) => clip.name === "shake");
+  const tumbleClip = debrisAnims.find((clip) => clip.name === "tumble");
   const debris = [];
   for (let i = 0; i < 24; i++) {
-    const mesh = new THREE.Mesh(debrisGeo, debrisMat);
+    const named = gltfs.debris.scene.getObjectByName(debrisNames[i % debrisNames.length]);
+    const mesh = named ? named.clone(true) : gltfs.debris.scene.clone(true);
+    mesh.position.set(0, 0, 0);
     mesh.visible = false;
-    mesh.scale.setScalar(0.85);
+    mesh.traverse((node) => {
+      if (!node.isMesh || !node.material) return;
+      node.material = node.material.clone();
+      node.material.fog = false;
+      if (node.material.emissive) node.material.emissiveIntensity = Math.max(node.material.emissiveIntensity || 0, 0.6);
+    });
     scene.add(mesh);
-    debris.push({ mesh, active: false, vy: 0, life: 0 });
+    const mixer = shakeClip || tumbleClip ? new THREE.AnimationMixer(mesh) : null;
+    const shake = mixer && shakeClip ? mixer.clipAction(shakeClip) : null;
+    const tumble = mixer && tumbleClip ? mixer.clipAction(tumbleClip) : null;
+    debris.push({ mesh, mixer, shake, tumble, active: false, mode: "", vy: 0, life: 0, chunk: null });
+  }
+  function takeDebris() {
+    return debris.find((bit) => !bit.active) || null;
   }
 
   function cloneDrawn(gltf) {
@@ -882,6 +899,42 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   });
   outlineOf(ship, 0.05);
   scene.add(ship);
+  const curbCream = new THREE.MeshToonMaterial({ color: 0xfff6e5, gradientMap: TOON_MAP });
+  const curbCoral = new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP });
+  for (const pad of course.floors) {
+    if (pad.rx < 10 || pad.rz < 8) continue;
+    if (pad.zone !== "canyon" && pad.zone !== "sky" && pad.zone !== "meadow") continue;
+    const posts = 6;
+    for (const side of [-1, 1]) {
+      for (let i = 0; i < posts; i++) {
+        const along = (i / (posts - 1) - 0.5) * pad.rz * 1.4;
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.85, 0.38), side < 0 ? curbCream : curbCoral);
+        post.position.set(pad.x + side * (pad.rx + 0.35), pad.y + 0.42, pad.z + along);
+        post.castShadow = false;
+        scene.add(post);
+      }
+    }
+  }
+  const archGates = [];
+  if (gltfs.arch) {
+    const idleClip = (gltfs.arch.animations || []).find((clip) => clip.name === "idle");
+    const cheerClip = (gltfs.arch.animations || []).find((clip) => clip.name === "cheer");
+    for (const gate of course.gates || []) {
+      const root = gltfs.arch.scene.clone(true);
+      const foot = groundAt(course, 0, gate.z);
+      root.position.set(0, foot ? foot.y : gate.y, gate.z);
+      root.scale.set((gate.rx * 2) / 10, 1, 1);
+      root.traverse((node) => {
+        if (node.isMesh && node.material) node.material = node.material.clone();
+      });
+      scene.add(root);
+      const mixer = new THREE.AnimationMixer(root);
+      const idle = idleClip ? mixer.clipAction(idleClip) : null;
+      const cheer = cheerClip ? mixer.clipAction(cheerClip) : null;
+      if (idle) idle.play();
+      archGates.push({ mixer, idle, cheer, z: gate.z });
+    }
+  }
   const sockets = [];
   const seatMats = [];
   const shipBox = new THREE.Box3().setFromObject(ship);
@@ -1211,10 +1264,14 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   for (const mesh of sweepMeshes) outlineOf(mesh, 0.045);
   for (const vis of pendMeshes) if (vis.group) outlineOf(vis.group, 0.04);
   let hazardPlanet = 1;
-  function showPlanetHazards(n) {
+  let hazardMix = "";
+  function showPlanetHazards(n, mix) {
     hazardPlanet = n || 1;
-    bumperMeshes.forEach((mesh) => { mesh.visible = hazardPlanet === 1; });
-    sweepMeshes.forEach((mesh) => { mesh.visible = hazardPlanet === 1; });
+    hazardMix = mix || "";
+    const sweepOn = hazardPlanet === 1 && hazardMix !== "rollers";
+    bumperMeshes.forEach((mesh) => { mesh.visible = sweepOn; });
+    sweepMeshes.forEach((mesh) => { mesh.visible = sweepOn; });
+    rollerMeshes.forEach((mesh) => { mesh.visible = hazardMix === "rollers" || hazardPlanet !== 1; });
   }
   const pendRings = course.pendulums.map((p) => telRing(p.x, p.y - p.len, p.z, 1.2));
   const rollerRings = course.rollers.map((r) => telRing(r.x, r.y, r.z, 1.3));
@@ -1774,34 +1831,85 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       }
       const wobble = chunk.state === "cracking" ? Math.sin(race.time * 18 + chunk.jitter * 9) * 0.045 : 0;
       mesh.position.y = (chunk.fallY || 0) + wobble;
+      if (chunk.state === "cracking" && crackMat.emissive) {
+        crackMat.emissive.setHex(0xff7a1a);
+        crackMat.emissiveIntensity = 0.6 + Math.abs(Math.sin(race.time * 8)) * 0.4;
+      }
+      const cz = (chunk.z0 + chunk.z1) * 0.5;
+      const cy = (chunk.positions && chunk.positions[1]) || 3;
+      if (chunk.state === "cracking" && !chunk.shaken) {
+        chunk.shaken = true;
+        for (let n = 0; n < 2; n++) {
+          const bit = takeDebris();
+          if (!bit) break;
+          bit.active = true;
+          bit.mode = "shake";
+          bit.chunk = chunk;
+          bit.life = 4;
+          bit.vy = 0;
+          bit.mesh.visible = true;
+          bit.mesh.position.set((n - 0.5) * 1.4, cy + 0.2, cz);
+          if (bit.shake) bit.shake.reset().play();
+        }
+      }
       if (chunk.state === "falling" && chunk.dirty && !chunk.spawned) {
         chunk.spawned = true;
-        const bit = debris.find((d) => !d.active);
-        if (bit) {
-          bit.active = true;
-          bit.life = 1.4;
-          bit.vy = 0.6;
-          bit.mesh.visible = true;
-          const cz = (chunk.z0 + chunk.z1) * 0.5;
-          bit.mesh.position.set((Math.random() - 0.5) * 6, (chunk.positions && chunk.positions[1]) || 4, cz);
-          bit.mesh.rotation.set(0, Math.random(), 0);
-          burst(bit.mesh.position.x, bit.mesh.position.y, cz, 0xd7c4a4);
-          burst(bit.mesh.position.x + 0.4, bit.mesh.position.y + 0.2, cz, 0xd7c4a4);
+        for (const bit of debris) {
+          if (bit.chunk !== chunk || bit.mode !== "shake") continue;
+          bit.mode = "tumble";
+          bit.life = 1.6;
+          bit.vy = 1.2 + Math.random();
+          if (bit.shake) bit.shake.stop();
+          if (bit.tumble) bit.tumble.reset().play();
         }
+        const want = lowDetail ? 2 : 4;
+        let spawned = 0;
+        while (spawned < want) {
+          const bit = takeDebris();
+          if (!bit) break;
+          bit.active = true;
+          bit.mode = "tumble";
+          bit.chunk = chunk;
+          bit.life = 1.6;
+          bit.vy = 1.2 + Math.random();
+          bit.mesh.visible = true;
+          bit.mesh.position.set((Math.random() - 0.5) * 5, cy + spawned * 0.3, cz + (Math.random() - 0.5) * 2);
+          bit.mesh.rotation.set(Math.random(), Math.random(), Math.random());
+          if (bit.tumble) bit.tumble.reset().play();
+          spawned++;
+        }
+        burst(0, cy, cz, 0xfff6e5);
+        burst(0.6, cy + 0.2, cz, 0xfff6e5);
       }
       chunk.dirty = false;
     }
 
     for (const bit of debris) {
       if (!bit.active) continue;
+      if (bit.mode === "shake" && bit.chunk) {
+        bit.mesh.position.y = ((bit.chunk.positions && bit.chunk.positions[1]) || 3) + 0.2 + Math.sin(race.time * 18) * 0.04;
+        if (bit.mixer) bit.mixer.update(dt);
+        continue;
+      }
+      if (bit.mixer) bit.mixer.update(dt);
+      bit.mesh.rotation.x += dt * 2.4;
       bit.vy -= 12 * dt;
       bit.mesh.position.y += bit.vy * dt;
-      bit.mesh.rotation.x += dt;
       bit.life -= dt;
       if (bit.life <= 0) {
         bit.active = false;
+        bit.mode = "";
+        bit.chunk = null;
         bit.mesh.visible = false;
       }
+    }
+    if (race.gateCheer > 0) race.gateCheer = Math.max(0, race.gateCheer - dt);
+    for (const arch of archGates) {
+      const show = !!(race.gate && Math.abs(race.gate.z - arch.z) < 3);
+      arch.mixer.getRoot().visible = show;
+      if (!show) continue;
+      arch.mixer.update(dt);
+      if (race.gateCheer > 0.35 && arch.cheer && !arch.cheer.isRunning()) arch.cheer.reset().play();
     }
 
     for (let i = 0; i < race.spinners.length; i++) {
@@ -2633,19 +2741,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     if (dragging) {
       const mag = Math.hypot(look.lookDx || 0, look.lookDy || 0);
-      const small = mag < 6 ? 0.28 : mag < 14 ? 0.55 : 1;
+      const small = mag < 10 ? 0.12 : mag < 24 ? 0.4 : 1;
       const sens = (look.mouse ? cfg.mouseSens : cfg.lookSens) * small;
       const yawStep = Math.max(-0.42, Math.min(0.42, look.lookDx * sens));
       const pitchStep = Math.max(-0.28, Math.min(0.28, look.lookDy * sens));
       state.yaw += yawStep;
       state.pitch = Math.max(cfg.minPitch, Math.min(cfg.maxPitch, state.pitch + pitchStep));
-      state.autoWait = cfg.autoFollowDelay;
+      state.autoWait = Math.min(cfg.autoFollowDelay, 0.28);
     } else if (state.autoWait > 0) {
       state.autoWait -= dt;
     } else {
       const h = Math.hypot(player.vel.x, player.vel.z);
       if (h > 1.15) state.yaw = dampAngle(state.yaw, Math.atan2(player.vel.x, player.vel.z), cfg.autoYaw, dt);
-      state.pitch = damp(state.pitch, cfg.defaultPitch, cfg.autoPitch * 3.2, dt);
+      state.pitch = damp(state.pitch, cfg.defaultPitch, cfg.camLerp || cfg.autoPitch, dt);
     }
     const zoom = look && look.zoom ? look.zoom : 1;
     const behind = Math.max(cfg.camNear || 5, Math.min(cfg.camFar || 12, (state.portrait ? cfg.camDistPortrait : cfg.camDist) * zoom));

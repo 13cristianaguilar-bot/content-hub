@@ -24,6 +24,10 @@ const MODELS = {
   chunk: "assets/models/obstacle_falling_chunk.glb",
   debris: "assets/models/collapse_debris_set.glb",
   arch: "assets/models/finish_gate_arch.glb",
+  meadowSet: "assets/models/prop_set_meadow.glb",
+  canyonSet: "assets/models/prop_set_canyon.glb",
+  iceSet: "assets/models/prop_set_ice.glb",
+  skySet: "assets/models/prop_set_sky.glb",
   ship: "assets/escape_ship_rocket.glb",
   coin: "assets/models/collectible_star_coin.glb",
   roller: "assets/models/enemy_roller.glb",
@@ -615,6 +619,71 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
 
   const dressing = buildDressing(scene, course, TOON_MAP);
+  const propMixers = [];
+  const zoneSets = [
+    { key: "meadowSet", zone: "meadow", names: ["MushroomTall", "MushroomPair", "Flower", "CloverBush"], clip: "sway" },
+    { key: "canyonSet", zone: "canyon", names: ["Boulder", "MesaStack", "MintSucculent", "Pebbles"], clip: "" },
+    { key: "iceSet", zone: "ice", names: ["IceShards", "SnowMound", "IcePillar"], clip: "shimmer" },
+    { key: "skySet", zone: "sky", names: ["CloudPuff", "StarLamp", "CloudPlatform"], clip: "bob" },
+  ];
+  function clearOfLine(x, z) {
+    const routes = course.routes || [];
+    for (let i = 0; i < routes.length; i++) {
+      const route = routes[i];
+      for (let k = 0; k < route.length; k++) {
+        const dx = route[k].x - x;
+        const dz = route[k].z - z;
+        if (dx * dx + dz * dz < 20) return false;
+      }
+    }
+    return true;
+  }
+  for (const set of zoneSets) {
+    const gltf = gltfs[set.key];
+    if (!gltf) continue;
+    const pads = course.floors.filter((pad) => pad.zone === set.zone && !pad.bridge && pad.rx >= 6);
+    let placed = 0;
+    for (let p = 0; p < pads.length && placed < 8; p++) {
+      const pad = pads[p];
+      const angles = [1.25, -1.25, 2.2];
+      for (let a = 0; a < angles.length && placed < 8; a++) {
+        const name = set.names[placed % set.names.length];
+        const src = gltf.scene.getObjectByName(name);
+        if (!src) continue;
+        const ang = angles[a] + p * 0.2;
+        const rad = pad.rx * 0.74;
+        const x = pad.x + Math.sin(ang) * rad;
+        const z = pad.z + Math.cos(ang) * rad * 0.42;
+        if (!clearOfLine(x, z)) continue;
+        const obj = src.clone(true);
+        obj.position.set(0, 0, 0);
+        obj.rotation.y = ang;
+        obj.traverse((node) => {
+          if (!node.isMesh) return;
+          node.frustumCulled = true;
+          node.castShadow = false;
+          if (node.material) {
+            node.material = node.material.clone();
+            node.material.vertexColors = true;
+          }
+        });
+        const lift = name === "CloudPuff" ? 1.7 : name === "CloudPlatform" ? 0.15 : 0;
+        obj.position.set(x, pad.y + lift, z);
+        scene.add(obj);
+        if (set.clip) {
+          const clip = (gltf.animations || []).find((item) => item.name === set.clip);
+          if (clip) {
+            const mixer = new THREE.AnimationMixer(obj);
+            const action = mixer.clipAction(clip);
+            action.setLoop(THREE.LoopRepeat, Infinity);
+            action.play();
+            propMixers.push(mixer);
+          }
+        }
+        placed++;
+      }
+    }
+  }
   const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
   terrainMat.customProgramCacheKey = () => "sb-crust";
   terrainMat.onBeforeCompile = (shader) => plasticShader(shader, {});
@@ -913,6 +982,34 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         post.castShadow = false;
         scene.add(post);
       }
+    }
+  }
+  const bridgeSeen = new Set();
+  for (const pad of course.floors) {
+    if (pad.bridge) {
+      if (bridgeSeen.has(pad.chunk)) continue;
+      bridgeSeen.add(pad.chunk);
+      const mates = course.floors.filter((other) => other.chunk === pad.chunk && other.bridge);
+      const step = Math.max(1, Math.ceil(mates.length / 6));
+      for (let i = 0; i < mates.length; i += step) {
+        const bit = mates[i];
+        const sideX = -bit.az;
+        const sideZ = bit.ax;
+        for (const side of [-1, 1]) {
+          const post = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.62, 0.32), side < 0 ? curbCream : curbCoral);
+          post.position.set(bit.x + side * sideX * (bit.rx + 0.22), bit.y + 0.31, bit.z + side * sideZ * (bit.rx + 0.22));
+          post.castShadow = false;
+          scene.add(post);
+        }
+      }
+      continue;
+    }
+    if (pad.rx < 4 || pad.rx >= 10 || pad.zone === "ship") continue;
+    for (const side of [-1, 1]) {
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.62, 0.32), side < 0 ? curbCream : curbCoral);
+      post.position.set(pad.x + side * (pad.rx + 0.28), pad.y + 0.31, pad.z);
+      post.castShadow = false;
+      scene.add(post);
     }
   }
   const archGates = [];
@@ -1650,6 +1747,94 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     visuals.push({ group, model, mixer, actions, hasClips, shadow, tag, current: "Idle", docked: false, accessories, pick, dusted: false, starred: false, mixAcc: 0, wasAir: false, landUntil: 0, antennas, lids, splashed: false });
   }
 
+  let podiumRenderer = null;
+  let podiumScene = null;
+  let podiumCam = null;
+  const podiumMixers = [];
+  const podiumSlots = [];
+  const podiumCanvas = document.getElementById("podium-stage");
+  const podiumColors = ["#7DFFC4", "#FFE56A", "#FF9FE0", "#A78BFF", "#7AD8FF", "#9AEE6A", "#E4C6FF", "#FFD09A", "#6C8CFF", "#4EE0C8", "#FF7AB8", "#D6F06A", "#B4C8FF", "#FFC44A", "#FFA090", "#9AE4FF"];
+  if (podiumCanvas && buddyGltf) {
+    podiumRenderer = new THREE.WebGLRenderer({ canvas: podiumCanvas, antialias: false, alpha: true });
+    podiumRenderer.setPixelRatio(1);
+    podiumRenderer.setSize(320, 150, false);
+    podiumRenderer.outputColorSpace = THREE.SRGBColorSpace;
+    podiumScene = new THREE.Scene();
+    podiumCam = new THREE.PerspectiveCamera(30, 320 / 150, 0.1, 40);
+    podiumCam.position.set(0, 2.15, 6.4);
+    podiumCam.lookAt(0, 1.05, 0);
+    podiumScene.add(new THREE.HemisphereLight(0x9fd4ff, 0xffc48a, 0.6));
+    const podiumKey = new THREE.DirectionalLight(0xfff0c2, 1.1);
+    podiumKey.position.set(-2.5, 5, 3);
+    podiumScene.add(podiumKey);
+    const steps = [
+      { x: -1.45, h: 0.42, c: 0xc5cfe6 },
+      { x: 0, h: 0.72, c: 0xffd23f },
+      { x: 1.45, h: 0.28, c: 0xd4894a },
+    ];
+    for (let s = 0; s < steps.length; s++) {
+      const step = steps[s];
+      const box = new THREE.Mesh(
+        new THREE.BoxGeometry(1.2, step.h, 1.05),
+        new THREE.MeshToonMaterial({ color: step.c, gradientMap: TOON_MAP })
+      );
+      box.position.set(step.x, step.h * 0.5, 0);
+      podiumScene.add(box);
+      const model = SkeletonUtils.clone(buddyGltf.scene);
+      model.traverse((obj) => {
+        if (!obj.isMesh || !obj.material) return;
+        const src = Array.isArray(obj.material) ? obj.material[0] : obj.material;
+        obj.material = buddyMat(src, podiumColors[0]);
+        obj.frustumCulled = true;
+        obj.castShadow = false;
+      });
+      const mixer = new THREE.AnimationMixer(model);
+      const clip = (buddyGltf.animations || []).find((item) => item.name === "celebrate");
+      if (clip) {
+        const action = mixer.clipAction(clip);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.play();
+      }
+      const group = new THREE.Group();
+      group.add(model);
+      group.position.set(step.x, step.h, 0);
+      group.visible = false;
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(0.42, 0.58, 16),
+        new THREE.MeshBasicMaterial({ color: 0xffd23f, side: THREE.DoubleSide, depthWrite: false })
+      );
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.y = 0.04;
+      ring.visible = false;
+      group.add(ring);
+      podiumScene.add(group);
+      podiumMixers.push(mixer);
+      podiumSlots.push({ group, model, ring });
+    }
+  }
+  function showPodium(places) {
+    const order = [1, 0, 2];
+    for (let slot = 0; slot < podiumSlots.length; slot++) {
+      const bit = podiumSlots[slot];
+      const place = places && places[order[slot]];
+      if (!place) {
+        bit.group.visible = false;
+        continue;
+      }
+      bit.group.visible = true;
+      bit.ring.visible = !!place.you;
+      const hex = podiumColors[(place.id || 0) % podiumColors.length];
+      bit.model.traverse((obj) => {
+        if (!obj.isMesh || !obj.material || !obj.material.userData) return;
+        const tint = obj.material.userData.tint;
+        if (tint && tint.set) tint.set(hex);
+        const shader = obj.material.userData.shader;
+        if (shader && shader.uniforms && shader.uniforms.uTint) shader.uniforms.uTint.value.set(hex);
+      });
+    }
+    if (podiumRenderer && podiumScene && podiumCam) podiumRenderer.render(podiumScene, podiumCam);
+  }
+
   const confetti = [];
   const puffGeo = new THREE.SphereGeometry(0.16, 6, 5);
   const sparkGeo = new THREE.OctahedronGeometry(0.14, 0);
@@ -2298,6 +2483,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     beacon.visible = race.phase !== "launch" && race.phase !== "results" && race.seatCine <= 0;
     dressing.update(race, dt);
+    for (let i = 0; i < propMixers.length; i++) propMixers[i].update(dt);
+    if (podiumRenderer && race.phase === "results") {
+      for (let i = 0; i < podiumMixers.length; i++) podiumMixers[i].update(dt);
+      podiumRenderer.render(podiumScene, podiumCam);
+    }
     tickFoliage(race.time || 0);
     for (let i = 0; i < clouds.length; i++) {
       const cloud = clouds[i];
@@ -3099,6 +3289,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     applyLook,
     snapBehind,
     showPlanetHazards,
+    showPodium,
     setTheme(n) {
       state.planet = Math.max(1, Math.min(3, n || 1));
       distantGroups.forEach((group, i) => { group.visible = !lowDetail && i === state.planet - 1; });
@@ -3106,9 +3297,9 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const night = state.planet === 3;
       hemi.color.setHex(look.hemi);
       hemi.groundColor.setHex(look.ground);
-      hemi.intensity = night ? 0.55 : 0.6;
+      hemi.intensity = 0.6;
       sun.color.setHex(look.sun);
-      sun.intensity = night ? 0.7 : 1.15;
+      sun.intensity = night ? 1.05 : 1.12;
       scenic.visible = !lowDetail;
       for (const shiplet of spectatorShips) shiplet.visible = !lowDetail;
     },

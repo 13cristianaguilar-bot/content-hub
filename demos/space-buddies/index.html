@@ -68,7 +68,7 @@ button { font-family: inherit; touch-action: manipulation; }
 #hud {
   position: absolute;
   left: 0; right: 0; top: 0;
-  padding: calc(10px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 0 calc(12px + env(safe-area-inset-left));
+  padding: var(--sb-safe-t, 12px) var(--sb-safe-r, 12px) 0 var(--sb-safe-l, 12px);
   display: grid;
   grid-template-columns: auto 1fr auto;
   gap: 8px 10px;
@@ -299,7 +299,7 @@ button { font-family: inherit; touch-action: manipulation; }
   background: #7fd4ff;
 }
 #title.hide { opacity: 0; pointer-events: none; transition: opacity 0.25s ease; }
-#keyart { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 12%; }
+#keyart { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center top; background: #7fd4ff; }
 .title-ui {
   margin-top: auto;
   position: relative;
@@ -376,7 +376,7 @@ button { font-family: inherit; touch-action: manipulation; }
 .seat.pop { animation: pop 0.35s cubic-bezier(.2,1.4,.4,1); }
 @keyframes bob { 50% { transform: translateY(-5px); } }
 .blurb { color: white; font-size: 15px; margin: 12px 0 0; font-weight: 600; }
-.keys { color: rgba(255,255,255,0.9); font-size: 13px; margin: 6px 0 0; font-weight: 600; }
+.keys { color: rgba(255,255,255,0.9); font-size: 15px; margin: 6px 0 0; font-weight: 600; font-family: Fredoka, "Trebuchet MS", sans-serif; }
 #result {
   position: absolute;
   inset: 0;
@@ -548,6 +548,7 @@ button { font-family: inherit; touch-action: manipulation; }
       <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
       <img id="result-banner" class="sb-banner" alt="" src="ui/svg/banner_qualified.svg">
       <h1 id="result-title" class="banner" hidden>YOU ESCAPED!</h1>
+      <canvas id="podium-stage" width="320" height="150" aria-hidden="true"></canvas>
       <div class="podium" data-ui="podium">
         <div class="pod p2"><b>2</b><span id="pod-2">—</span></div>
         <div class="pod p1"><b>1</b><span id="pod-1">—</span></div>
@@ -566,7 +567,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-    <script src="game.js?v=90"></script>
+    <script src="game.js?v=91"></script>
 <style>
 #cine-skip { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; pointer-events: auto; }
 #settings .sb-card { max-height: calc(100vh - 36px); overflow: auto; }
@@ -575,7 +576,7 @@ button { font-family: inherit; touch-action: manipulation; }
 #result-names li.you { background: #ffe56a; }
 #result-place { font-weight: 700; }
 #hud.sb-hud { display: block; position: fixed; inset: 0; padding: 0; pointer-events: none; overflow: visible; }
-.sb-hud__top { left: 12px; right: 12px; }
+.sb-hud__top { left: var(--sb-safe-l, 12px); right: var(--sb-safe-r, 12px); top: var(--sb-safe-t, 12px); }
 .sb-hud__right { max-width: 168px; min-width: 0; }
 .sb-seats { padding: 4px 6px 5px; }
 #seats.sb-seats__row { gap: 1px; }
@@ -610,12 +611,13 @@ button { font-family: inherit; touch-action: manipulation; }
 #stick.sb-stick { background: url("ui/svg/joystick_base.svg") center/contain no-repeat; box-shadow: none; }
 #knob.sb-stick__knob { background: url("ui/svg/joystick_knob.svg") center/contain no-repeat; box-shadow: none; }
 #hud.sb-hud[hidden] { display: none !important; }
+#podium-stage { display: block; width: min(100%, 320px); height: 150px; margin: 0 auto 4px; }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; }
-.pod { width: 86px; border: 4px solid #1e2440; border-radius: 16px 16px 8px 8px; background: #fff6e5; padding: 8px 6px; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px; }
+.pod { width: 86px; border: 3px solid #1e2440; border-radius: 12px; background: #fff6e5; padding: 4px 6px; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
 .pod b, .pod span { display: block; font-size: 16px; line-height: 1.1; }
-.pod.p1 { height: 108px; background: #ffd23f; order: 2; }
-.pod.p2 { height: 78px; order: 1; background: #cfd8f0; }
-.pod.p3 { height: 64px; order: 3; background: #ff9a5c; }
+.pod.p1 { background: #ffd23f; order: 2; }
+.pod.p2 { order: 1; background: #cfd8f0; }
+.pod.p3 { order: 3; background: #e0a06a; }
 #lobby { background: none; align-items: end; padding: 12px 12px calc(14px + env(safe-area-inset-bottom)); }
 #lobby .sb-card { padding: 12px 14px 14px; gap: 8px; width: min(94vw, 360px); }
 #lobby .sub { font-size: 15px; margin: 0; line-height: 1.25; }

@@ -72,9 +72,13 @@
       if (!b) return;
       b.classList.add("is-pressed");
       haptic(b.getAttribute("data-haptic") || "light");
-      var up = function () { b.classList.remove("is-pressed"); };
-      window.addEventListener("pointerup", up, { once: true });
-      window.addEventListener("pointercancel", up, { once: true });
+      var up = function () {
+        b.classList.remove("is-pressed");
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+      };
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
     }, { passive: true });
   }
   window.SBUI = { haptic: haptic, countUp: countUp, slam: slam, wipe: wipe, confetti: confetti, bindPress: bindPress, setHapticsMuted: function (m) { muted = !!m; } };

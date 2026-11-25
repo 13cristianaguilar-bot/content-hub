@@ -1695,11 +1695,20 @@ function checkQualify(race) {
   for (const r of race.racers) {
     if (r.qualified || r.eliminated || r.seated || r.rescue > 0) continue;
     if (!inFinishGate(race, r)) continue;
+    if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) break;
     r.qualified = true;
     race.qualCount++;
     race.events.push({ t: "qualify", id: r.id });
   }
-  if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) finishRound(race);
+  if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) closeHeat(race);
+}
+
+function closeHeat(race) {
+  for (const r of race.racers) {
+    if (!r.qualified && !r.seated) r.eliminated = true;
+  }
+  race.events.push({ t: "heatfull" });
+  finishRound(race);
 }
 
 function board(race) {

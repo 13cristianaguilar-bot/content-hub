@@ -16,7 +16,9 @@ export function hudStatus(race) {
     const alive = (race.racers || []).filter((r) => !r.eliminated).length;
     return "ALIVE " + alive + "/" + (race.racers || []).length;
   }
-  return "QUAL " + (race.qualCount || 0) + "/" + (race.qualifyN || 8);
+  const need = race.qualifyN || 0;
+  const got = need ? Math.min(race.qualCount || 0, need) : 0;
+  return "QUAL " + got + "/" + need;
 }
 
 export function showCoach(phase, seated, zoneId, time, auto, paused) {

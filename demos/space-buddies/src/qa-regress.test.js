@@ -43,6 +43,7 @@ assert(hideControls("race", false, true, true) === true, "an eliminated racer sh
 assert(cameraFloor(null, 0, -11) === 0, "a long fall must keep the last floor, not the body");
 assert(cameraAboveFloor(-6, cameraFloor(null, 0, -11)) >= 1, "the fall camera dipped under the course");
 assert(hudStatus({ shipRound: false, kind: "gate", qualCount: 3, qualifyN: 12 }) === "QUAL 3/12", "gate rounds should not say SEATS 0/8");
+assert(hudStatus({ shipRound: false, kind: "gate", qualCount: 14, qualifyN: 8 }) === "QUAL 8/8", "the qualifier count should stop at its target");
 assert(hudStatus({ shipRound: true, seatsFilled: 2, cfg: { seats: 8 } }) === "SEATS 2/8", "ship rounds should count seats");
 assert(showCoach("race", false, "meadow", 1, false, false) === true, "the meadow coach should show at the start");
 assert(showCoach("race", false, "meadow", 1, false, true) === false, "the coach tip should hide while paused");

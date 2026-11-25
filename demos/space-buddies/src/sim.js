@@ -212,7 +212,7 @@ function crackUnder(race, r) {
     chunk.crackT = race.cfg.fragileCrack;
     chunk.dirty = true;
     r.hazardAt = race.time;
-    race.events.push({ t: "crack" });
+    race.events.push({ t: "crack", x: pad.x, z: pad.z });
     return;
   }
 }
@@ -320,7 +320,7 @@ function knock(race, r, ix, iz, iy) {
   r.knockCd = race.cfg.knockCooldown;
   r.sliding = 0;
   r.hazardAt = race.time;
-  race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
+  race.events.push({ t: "bump", id: r.id, big: true, obstacle: true, x: r.pos.x, z: r.pos.z });
   if (r.isPlayer) race.shake = Math.max(race.shake, 0.72);
 }
 
@@ -705,7 +705,7 @@ function pound(race, r) {
       o.ungroundT = 0.06;
     }
   }
-  race.events.push({ t: "bump", id: r.id, big: true });
+  race.events.push({ t: "bump", id: r.id, big: true, x: r.pos.x, z: r.pos.z });
 }
 
 function resolveSolids(race, r) {
@@ -1021,7 +1021,7 @@ function integrate(race, r, wish, dt) {
         gnd.tile.chunk.state = "cracking";
         gnd.tile.chunk.crackT = cfg.fragileCrack;
         gnd.tile.chunk.dirty = true;
-        race.events.push({ t: "crack" });
+        race.events.push({ t: "crack", x: gnd.tile.x, z: gnd.tile.z });
         r.hazardAt = race.time;
       }
       crackUnder(race, r);
@@ -1395,7 +1395,7 @@ function separate(race) {
         a.bumpCd = cfg.bumpCooldown;
         b.bumpCd = cfg.bumpCooldown;
         const who = a.isPlayer ? a.id : b.isPlayer ? b.id : a.id;
-        race.events.push({ t: "bump", id: who });
+        race.events.push({ t: "bump", id: who, x: (a.pos.x + b.pos.x) * 0.5, z: (a.pos.z + b.pos.z) * 0.5 });
       }
     }
   }
@@ -1455,7 +1455,7 @@ function hazards(race, dt) {
         r.bumpCd = cfg.bumperCooldown;
         r.controlLock = Math.max(r.controlLock, 0.12);
         r.hazardAt = race.time;
-        race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
+        race.events.push({ t: "bump", id: r.id, big: true, obstacle: true, x: r.pos.x, z: r.pos.z });
         if (r.isPlayer) race.shake = Math.max(race.shake, 0.28);
       }
     }
@@ -1757,7 +1757,6 @@ function updateCollapse(race, dt) {
   race.collapseZ += race.collapseSpeed * hurry * dt;
   if (race.collapseZ > stop) race.collapseZ = stop;
   race.lavaY = cfg.lavaStartY + race.time * cfg.lavaRisePerSec;
-  let cracked = false;
   for (const chunk of race.course.chunks) {
     if (chunk.zone === "ship" || chunk.gap) continue;
     if (chunk.state === "solid") {
@@ -1766,7 +1765,8 @@ function updateCollapse(race, dt) {
         chunk.state = "cracking";
         chunk.crackT = (cfg.crackTime + chunk.jitter * 0.35) * (race.planetN === 3 ? 0.62 : 1);
         chunk.dirty = true;
-        cracked = true;
+        const mid = (chunk.z0 + chunk.z1) * 0.5;
+        if (Math.abs(race.player.pos.z - mid) < 18) race.events.push({ t: "crack", x: race.player.pos.x, z: mid });
       }
     } else if (chunk.state === "cracking") {
       chunk.crackT -= dt;
@@ -1774,6 +1774,7 @@ function updateCollapse(race, dt) {
       if (chunk.crackT <= 0) {
         chunk.state = "falling";
         chunk.fallT = cfg.fallTime;
+        race.events.push({ t: "drop", z: (chunk.z0 + chunk.z1) * 0.5 });
         const mid = (chunk.z0 + chunk.z1) * 0.5;
         const pz = race.player.pos.z - mid;
         if (pz * pz < 420) race.shake = Math.max(race.shake, 0.42);
@@ -1788,7 +1789,6 @@ function updateCollapse(race, dt) {
     }
     if (chunk.ice) chunk.tilt = Math.sin(race.time * 1.35 + chunk.jitter * 8) * 0.22;
   }
-  if (cracked) race.events.push({ t: "crack" });
 }
 
 function tryGrab(race, r) {

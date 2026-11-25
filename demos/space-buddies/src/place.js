@@ -23,7 +23,7 @@ export function hudStatus(race) {
 
 export function showCoach(phase, seated, zoneId, time, auto, paused) {
   if (paused || seated || auto) return false;
-  return phase === "race" && zoneId === "meadow" && time < 8;
+  return phase === "race" && zoneId === "meadow" && time < 70;
 }
 
 export function resultReason(race) {

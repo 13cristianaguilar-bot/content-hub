@@ -62,6 +62,8 @@ export function cueFor(event) {
   if (event.t === "launch") return "launch";
   if (event.t === "escaped") return "escaped";
   if (event.t === "crack") return "crumble";
+  if (event.t === "drop") return "crack";
+  if (event.t === "tutor") return event.done ? "tutorDone" : "tutorPrompt";
   if (event.t === "checkpoint") return "checkpoint";
   if (event.t === "fall") return "fall";
   if (event.t === "respawn") return "respawn";

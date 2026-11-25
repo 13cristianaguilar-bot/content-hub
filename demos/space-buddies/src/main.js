@@ -82,7 +82,7 @@ const PLANS = [
   [
     { name: "ROUND 1", sub: "12 QUALIFY", qualify: 12, seconds: 72, startZ: Z(22), finishZ: Z(158), gate: gate(158, 0.25, 5) },
     { name: "ROUND 2", sub: "ROLLER RAMP", qualify: 8, seconds: 52, startZ: Z(148), finishZ: Z(236), gate: gate(236, 5.2, 5), mix: "rollers" },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(170), ship: true },
   ],
   [
     { name: "SKY HEAT", sub: "12 QUALIFY", qualify: 12, seconds: 72, startZ: Z(176), finishZ: Z(264), gate: gate(264, 3.3, 12) },
@@ -92,7 +92,7 @@ const PLANS = [
   [
     { name: "SURVIVAL", sub: "LAST 8 STANDING", qualify: 8, seconds: 50, startZ: Z(22), kind: "survival" },
     { name: "CROWN", sub: "HOLD THE CROWN", qualify: 8, seconds: 56, startZ: Z(176), kind: "crown", crown: { x: 0, z: Z(210), y: 5.6, r: 4.4 } },
-    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(22), ship: true },
+    { name: "FINAL", sub: "8 SEATS ON THE SHIP", qualify: 8, seconds: 64, startZ: Z(170), ship: true },
   ],
 ];
 function currentPlan() {
@@ -747,6 +747,11 @@ function goMenu() {
 againBtn.addEventListener("pointerdown", (e) => {
   e.preventDefault();
   audio.unlock();
+  if (planet >= 3 && race && race.result === "escaped") {
+    planet = 1;
+    roundIndex = 0;
+    alive = null;
+  }
   restart();
 });
 
@@ -943,9 +948,10 @@ function updateHud(dt) {
     resultEl.classList.toggle("miss", kind === "missed" || kind === "out");
     resultEl.classList.toggle("win", kind === "qualified" || kind === "escaped");
     resultKicker.textContent = "PLANET " + planet + " · " + currentPlan().name;
+    const finale = planet >= 3 && kind === "escaped";
     nextRoundBtn.hidden = kind !== "qualified";
-    nextPlanetBtn.hidden = kind !== "escaped";
-    againBtn.hidden = kind === "qualified" || kind === "escaped";
+    nextPlanetBtn.hidden = kind !== "escaped" || finale;
+    againBtn.hidden = (kind === "qualified" || kind === "escaped") && !finale;
     const banner = document.getElementById("result-banner");
     if (kind === "qualified") {
       resultTitle.textContent = "YOU QUALIFIED!";
@@ -953,8 +959,9 @@ function updateHud(dt) {
       if (banner) banner.src = "ui/svg/banner_qualified.svg";
       if (window.SBUI) SBUI.confetti(48);
     } else if (kind === "escaped") {
-      resultTitle.textContent = "YOU ESCAPED!";
-      resultSub.textContent = "SEAT " + (race.player.seatIndex + 1) + " OF 8";
+      resultTitle.textContent = planet >= 3 ? "SHOW COMPLETE!" : "YOU ESCAPED!";
+      resultSub.textContent = planet >= 3 ? "YOU FINISHED ALL 3 PLANETS" : "SEAT " + (race.player.seatIndex + 1) + " OF 8";
+      if (planet >= 3) againBtn.textContent = "PLAY AGAIN";
       if (banner) banner.src = "ui/svg/banner_escaped.svg";
       if (window.SBUI) SBUI.confetti(60);
       career.planets = Math.max(career.planets, planet);

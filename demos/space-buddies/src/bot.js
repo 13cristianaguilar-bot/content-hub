@@ -52,6 +52,10 @@ export function botWish(race, mode) {
   const p = race.player;
   if (!p || p.seated || p.eliminated) return none;
   if (mode === "still") return none;
+  if (mode === "hold") {
+    const t = race.time || 0;
+    return { x: 0, z: 1, jump: (t % 0.7) < 0.12, dive: false, grab: false, holdJump: false };
+  }
   if (mode === "spam") {
     const t = race.time || 0;
     return { x: 0, z: 0, jump: Math.floor(t * 7) % 2 === 0, dive: Math.floor(t * 5) % 2 === 0, grab: false, holdJump: false };
@@ -75,6 +79,28 @@ export function botWish(race, mode) {
   } else if (race.kind === "crown" && race.crown) {
     tx = race.crown.x;
     tz = race.crown.z;
+  } else if (race.kind === "survival" && race.survival) {
+    const s = race.survival;
+    tx = s.x + 12;
+    tz = p.pos.x < 9 ? s.z - 4 : s.z + 12;
+  }
+  let gateDive = false;
+  const bars = (race.course && race.course.sweepers) || [];
+  for (let i = 0; i < bars.length; i++) {
+    const sw = bars[i];
+    if (!sw || !sw.gateBar) continue;
+    const dzb = sw.z - p.pos.z;
+    if (dzb > 1.0 && dzb < 5.5) gateDive = true;
+  }
+  if (race.kind !== "survival") {
+    const holes = (race.course && race.course.holes) || [];
+    for (let i = 0; i < holes.length; i++) {
+      const h = holes[i];
+      if (h.z - p.pos.z > 0.4 && h.z - p.pos.z < 14) {
+        const side = h.side || 1;
+        tx = h.x + side * (h.rx + 1.6);
+      }
+    }
   }
   let dx = tx - p.pos.x;
   let dz = tz - p.pos.z;
@@ -92,12 +118,12 @@ export function botWish(race, mode) {
   const obs = obstacleAhead(race, p);
   const rise = (point.y || 0) - p.pos.y;
   const boarding = race.shipRound && ship && Math.abs(p.pos.x - ship.x) < 5 && p.pos.z > ship.z - 10 && p.pos.z < ship.z + 1;
-  const jump = !boarding && (!!(point.gap) || rise > 0.55 || !!(obs && obs.kind !== "bar") || stalled);
+  const jump = !boarding && !gateDive && (!!(point.gap) || rise > 0.55 || !!(obs && obs.kind !== "bar") || stalled);
   return {
     x: wish.x,
     z: wish.z,
     jump,
-    dive: !!(obs && obs.kind === "bar"),
+    dive: gateDive || !!(obs && obs.kind === "bar"),
     grab: false,
     holdJump: false,
   };

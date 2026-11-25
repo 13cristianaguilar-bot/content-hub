@@ -162,6 +162,8 @@ export function resetRace(race, seed) {
   }
   const next = createRace(race.course, race.cfg, seed || ((race.seed + 17) >>> 0));
   Object.assign(race, next);
+  race.fallers = [];
+  race.finishOrder = [];
   return race;
 }
 
@@ -237,6 +239,17 @@ function sweepGround(race, r, y0, y1) {
   return best && Math.min(y0, y1) <= best.y + 0.08 ? best : null;
 }
 
+function inHole(course, x, z) {
+  const holes = (course && course.holes) || [];
+  for (let i = 0; i < holes.length; i++) {
+    const h = holes[i];
+    const nx = (x - h.x) / h.rx;
+    const nz = (z - h.z) / h.rz;
+    if (nx * nx + nz * nz <= 1) return true;
+  }
+  return false;
+}
+
 function sampleGround(race, x, z, y, nextY) {
   let best = null;
   const plats = race.platforms;
@@ -249,7 +262,7 @@ function sampleGround(race, x, z, y, nextY) {
     if (!canStep(y, nextY, top)) continue;
     if (!best || top >= best.y) best = { y: top, platformId: i, tile: null };
   }
-  const tiles = floorsAt(race.course, x, z);
+  const tiles = inHole(race.course, x, z) ? [] : floorsAt(race.course, x, z);
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i];
     if (tile && walkable(tile) && canStep(y, nextY, tile.y)) {
@@ -260,7 +273,7 @@ function sampleGround(race, x, z, y, nextY) {
 }
 
 function supportNear(race, x, z, y) {
-  const tiles = floorsAt(race.course, x, z);
+  const tiles = inHole(race.course, x, z) ? [] : floorsAt(race.course, x, z);
   for (let i = 0; i < tiles.length; i++) {
     const tile = tiles[i];
     if (tile && walkable(tile) && Math.abs(tile.y - y) < 1.4) return true;
@@ -324,6 +337,7 @@ function ageLocks(r, dt) {
 }
 
 function spotOnFloor(race, x, z) {
+  if (inHole(race.course, x, z)) return null;
   const floors = race.course.floors || [];
   let best = null;
   for (let i = 0; i < floors.length; i++) {
@@ -455,6 +469,7 @@ function keepOnRim(race, r) {
 
 function pullOnto(race, r) {
   if (r.seated || r.eliminated || race.kind === "survival") return false;
+  if (inHole(race.course, r.pos.x, r.pos.z)) return false;
   if (race.time - (r.hazardAt || -99) < 2) return false;
   if (race.collapseZ != null && r.pos.z < race.collapseZ + 3) return false;
   const lava = race.course && race.course.lava;
@@ -554,6 +569,21 @@ function missFooting(race, r) {
   doRespawn(race, r);
 }
 
+function clampBeforeGate(race, z0, spot) {
+  if (!spot) return spot;
+  const bars = race.sweepers || [];
+  for (let i = 0; i < bars.length; i++) {
+    const sw = bars[i];
+    if (!sw.gateBar) continue;
+    if (z0 < sw.z - 1 && spot.z > sw.z - 1) {
+      const z = sw.z - 4.2;
+      const under = groundAt(race.course, 0, z);
+      return { x: 0, y: under ? under.y : spot.y, z };
+    }
+  }
+  return spot;
+}
+
 function nearestSolid(race, x, z) {
   const floors = race.course.floors || [];
   let best = null;
@@ -589,6 +619,7 @@ function doRespawn(race, r) {
   } else {
     spot = { x: spot.x, y: under.y, z: spot.z };
   }
+  spot = clampBeforeGate(race, r.pos.z, spot);
   r.pos.x = spot.x;
   r.pos.y = spot.y + 0.2;
   r.pos.z = spot.z;
@@ -777,7 +808,16 @@ function integrate(race, r, wish, dt) {
   if (wish.jump) r.buffer = cfg.jumpBuffer;
   else r.buffer = Math.max(0, r.buffer - dt);
 
-  if (wish.dive && r.diveCd <= 0) {
+  let gateDive = false;
+  if (wish.dive && r.grounded && race.sweepers) {
+    for (let i = 0; i < race.sweepers.length; i++) {
+      const sw = race.sweepers[i];
+      if (!sw.gateBar) continue;
+      const dz = sw.z - r.pos.z;
+      if (dz > -1 && dz < 7) gateDive = true;
+    }
+  }
+  if (wish.dive && (r.diveCd <= 0 || gateDive)) {
     const mag = hypot(wish.x, wish.z);
     if (mag > 0.15) {
       r.dashX = wish.x / mag;
@@ -1103,7 +1143,9 @@ export function botWish(race, r, dt) {
     target = { x: race.gate.x || 0, z: race.gate.z, y: race.gate.y || target.y, gap: false };
   } else if (race.kind === "survival") {
     const wobble = Math.sin(race.time * 0.6 + r.id) * 1.1;
-    target = { x: ((r.id % 4) - 1.5) * 2.1 + wobble, z: r.pos.z, y: r.pos.y, gap: false };
+    const sx = ((r.id % 4) - 1.5) * 2.1 + wobble;
+    const sz = r.pos.z;
+    target = { x: sx, z: sz, y: r.pos.y, gap: false };
   }
   const lane = heldCrown ? 0 : (r.lane == null ? ((r.id % 5) - 2) * 0.85 : r.lane);
   const spread = r.pos.y > 5.5 ? lane * 0.55 : lane;
@@ -1227,6 +1269,11 @@ export function botWish(race, r, dt) {
     }
   }
   let dive = false;
+  for (const sw of race.sweepers) {
+    if (!sw.gateBar) continue;
+    const dzg = sw.z - r.pos.z;
+    if (dzg > 1.1 && dzg < 5.2 && r.grounded && r.diveCd <= 0) dive = true;
+  }
   const flat = Math.abs((ty || r.pos.y) - r.pos.y) < 0.45;
   if (!heldCrown && r.grounded && flat && dz > 0.55 && r.diveCd <= 0 && race.rand() < 0.22 * dt * (p.skill || 0.5)) dive = true;
   return { x: dx, z: dz, jump, dive, grab };
@@ -1312,7 +1359,8 @@ function armHazard(race, r, hazard) {
   return age >= TELEGRAPH;
 }
 
-function hazardShown(race, kind) {
+function hazardShown(race, kind, hazard) {
+  if (hazard && hazard.gateBar) return true;
   const planetN = race.planetN || 1;
   if (kind === "bumper" || kind === "sweeper") return planetN === 1;
   return true;
@@ -1454,7 +1502,7 @@ function hazards(race, dt) {
   }
 
   for (const sw of race.sweepers) {
-    if (!hazardShown(race, "sweeper")) {
+    if (!hazardShown(race, "sweeper", sw)) {
       sw.glow = 0;
       sw.armedAt = null;
       continue;
@@ -1478,7 +1526,27 @@ function hazards(race, dt) {
     }
     const bar = sw.halfLen || 3.2;
     for (const r of race.racers) {
-      if (r.seated || r.invuln > 0 || r.knockCd > 0) continue;
+      if (r.seated) continue;
+      if (sw.gateBar) {
+        if (race.kind !== "gate") continue;
+        const dz = sw.z - r.pos.z;
+        if (dz <= -1.6) r.gateSlide = false;
+        if (dz > -1.6 && dz < 7 && (r.sliding > 0 || r.diving)) r.gateSlide = true;
+        if (r.gateSlide && dz > -1.6 && dz < 8) {
+          r.sliding = Math.max(r.sliding, 0.12);
+          r.diving = false;
+          continue;
+        }
+        if (dz > 0 && dz < 2.6 && Math.abs(r.pos.x - sw.x) < bar + 0.35) {
+          r.vel.x = 0;
+          r.vel.y = Math.min(r.vel.y, 0);
+          r.vel.z = -6;
+          r.pos.z = sw.z - 3.2;
+          r.grounded = true;
+        }
+        continue;
+      }
+      if (r.invuln > 0 || r.knockCd > 0) continue;
       if (sw.armedAt != null && race.time - sw.armedAt < TELEGRAPH) continue;
       if (Math.abs(r.pos.z - sw.z) > 1.15) continue;
       if (Math.abs(r.pos.x - sw.x) > bar + 0.35) continue;
@@ -1810,6 +1878,60 @@ function finishRound(race) {
   race.events.push({ t: race.player.qualified ? "roundwin" : "eliminated" });
 }
 
+function updateSurvival(race, dt) {
+  if (race.kind !== "survival" || race.phase !== "race" || !race.survival) return;
+  const s = race.survival;
+  const gear = 1 + Math.floor((race.time || 0) / 10);
+  s.speed = 0.65 + gear * 0.4;
+  s.angle += s.speed * dt;
+  const hx = Math.cos(s.angle) * s.len;
+  const hz = Math.sin(s.angle) * s.len;
+  for (const r of race.racers) {
+    if (r.eliminated || r.qualified || r.seated || r.invuln > 0 || r.knockCd > 0) continue;
+    const px = r.pos.x - s.x;
+    const pz = r.pos.z - s.z;
+    const along = (px * hx + pz * hz) / (s.len * s.len || 1);
+    const t = Math.max(-1, Math.min(1, along));
+    const dx = px - hx * t;
+    const dz = pz - hz * t;
+    if (dx * dx + dz * dz > 1.15 * 1.15) continue;
+    if (Math.abs(r.pos.y - s.y) > 1.7) continue;
+    const mag = Math.hypot(px, pz) || 1;
+    knock(race, r, (px / mag) * 14, (pz / mag) * 14, 3.6);
+    r.hazardAt = race.time;
+  }
+  if (s.nextDrop == null) s.nextDrop = 8;
+  if (race.time < s.nextDrop) return;
+  s.nextDrop += 7;
+  const floors = race.course.floors || [];
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    if (!pad.survivalTile) continue;
+    const chunk = race.course.chunks[pad.chunk];
+    if (!chunk || chunk.state !== "solid") continue;
+    chunk.fragile = true;
+    chunk.stepped = true;
+    chunk.state = "cracking";
+    chunk.crackT = 0.85;
+    chunk.dirty = true;
+    if (!s.pending) s.pending = [];
+    s.pending.push({ x: pad.x, z: pad.z, rx: pad.rx + 0.2, rz: pad.rz + 0.2, at: race.time + 0.9 });
+    for (const r of race.racers) {
+      if (r.eliminated) continue;
+      if (Math.hypot(r.pos.x - pad.x, r.pos.z - pad.z) < pad.rx + 0.4) r.hazardAt = race.time;
+    }
+    break;
+  }
+  if (s.pending) {
+    const holes = race.course.holes || (race.course.holes = []);
+    s.pending = s.pending.filter((h) => {
+      if (race.time < h.at) return true;
+      holes.push(h);
+      return false;
+    });
+  }
+}
+
 function checkSurvival(race) {
   if (race.kind !== "survival" || race.phase !== "race") return;
   for (const r of race.racers) {
@@ -1828,6 +1950,8 @@ function checkSurvival(race) {
   for (const r of alive) {
     r.qualified = true;
     race.qualCount++;
+    if (!race.finishOrder) race.finishOrder = [];
+    race.finishOrder.push(r.id);
     race.events.push({ t: "qualify", id: r.id });
   }
   finishRound(race);
@@ -1855,14 +1979,17 @@ function checkCrown(race, dt) {
     const inside = (r.pos.x - c.x) ** 2 + (r.pos.z - c.z) ** 2 <= reach && Math.abs(r.pos.y - (c.y || 0)) < 2.6;
     if (inside) {
       r.crownT = (r.crownT || 0) + dt;
-      r.vel.x *= 0.55;
-      r.vel.z *= 0.55;
+      r.vel.x *= race.cfg.quick ? 0.72 : 0.55;
+      r.vel.z *= race.cfg.quick ? 0.72 : 0.55;
     }
-    else r.crownT = Math.max(0, (r.crownT || 0) - dt * 0.12);
-    if ((r.crownT || 0) >= 5 && !r.qualified && !r.eliminated) {
+    else r.crownT = Math.max(0, (r.crownT || 0) - dt * (race.cfg.quick ? 0.04 : 0.12));
+    const holdNeed = race.cfg.quick ? 4.2 : 5;
+    if ((r.crownT || 0) >= holdNeed && !r.qualified && !r.eliminated) {
       r.qualified = true;
       r.crownT = 0;
       race.qualCount++;
+      if (!race.finishOrder) race.finishOrder = [];
+      race.finishOrder.push(r.id);
       race.events.push({ t: "qualify", id: r.id });
     }
   }
@@ -1879,6 +2006,8 @@ function checkQualify(race) {
     if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) break;
     r.qualified = true;
     race.qualCount++;
+    if (!race.finishOrder) race.finishOrder = [];
+    race.finishOrder.push(r.id);
     race.events.push({ t: "qualify", id: r.id });
   }
   if (race.qualifyN > 0 && race.qualCount >= race.qualifyN) closeHeat(race);
@@ -2040,6 +2169,7 @@ export function step(race, dt, input) {
         if (!r.eliminated && !r.seated) r.vel.x += gust * dt;
       }
     }
+    updateSurvival(race, dt);
     checkQualify(race);
     checkSurvival(race);
     checkCrown(race, dt);

@@ -325,6 +325,11 @@ export function createCourse(cfg) {
 
   // Meadow plaza. A giant mushroom sits in the middle so you walk around it.
   addDisc(0, 0, zz(40), 24, 24, "meadow");
+  for (let i = 0; i < 8; i++) {
+    const a = (i / 8) * Math.PI * 2;
+    const tile = addDisc(Math.cos(a) * 7.5, 0.04, zz(30) + Math.sin(a) * 7.5, 1.35, 1.35, "meadow");
+    tile.survivalTile = true;
+  }
   addDisc(0, 2.6, zz(40), 1.8, 1.8, "meadow");
   addDisc(-16, 0.2, zz(28), 7, 7, "meadow");
   addDisc(16, 0.8, zz(52), 6, 6, "meadow");
@@ -516,6 +521,8 @@ export function createCourse(cfg) {
     { ...at(44, 0, 1.15), originX: 0, amp: 6, speed: 0.85, halfLen: 3.2, height: 1.05, full: false, radius: 1.15, scale: 1.7 },
     { ...at(108, -16, 1.15), originX: -16, amp: 4.5, speed: 1.05, halfLen: 2.6, height: 1.05, full: true, radius: 1.05, scale: 1.55 },
     { ...at(268, -14, 4.15), originX: -14, amp: 4, speed: 1.1, halfLen: 2.4, height: 1, full: false, radius: 1, scale: 1.45 },
+    { ...at(152, 0, 0.7), originX: 0, amp: 1.5, speed: 0.85, halfLen: 18, height: 1.15, full: false, radius: 1.2, scale: 1.8, gateBar: true },
+    { ...at(180, 0, 4.45), originX: 0, amp: 1.5, speed: 0.85, halfLen: 18, height: 1.15, full: false, radius: 1.2, scale: 1.8, gateBar: true },
   ];
   const pendulums = [
     { ...at(68, 8, 4.6), len: 3.2, amp: 1.05, speed: 1.15, phase: rnd(), radius: 0.95 },
@@ -590,6 +597,10 @@ export function createCourse(cfg) {
     doors,
     checkpoints,
     gates,
+    holes: [
+      { x: -6, z: zz(154), rx: 6, rz: 2.2, side: 1 },
+      { x: 5, z: zz(182), rx: 4.2, rz: 1.6, side: -1 },
+    ],
     waypoints: routes[0],
     routes,
     openDoor,

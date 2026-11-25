@@ -49,7 +49,7 @@ export function flyoverShot(t, dur, far, player) {
   const behind = behindBuddy(player);
   const from = {
     x: far.x + 4,
-    y: (far.y || 0) + 16,
+    y: (far.y || 0) + 24,
     z: far.z + 12,
     lx: far.x,
     ly: (far.y || 0) + 2,

@@ -218,11 +218,17 @@ for (let i = 0; i < 240 * 60; i++) {
   const dx = target.x - p.pos.x;
   const dz = target.z - p.pos.z;
   const mag = Math.hypot(dx, dz) || 1;
+  let gateDive = false;
+  for (const sw of route.sweepers || []) {
+    if (!sw.gateBar) continue;
+    const dzb = sw.z - p.pos.z;
+    if (dzb > 0.8 && dzb < 6) gateDive = true;
+  }
   step(route, dt, {
     x: dx / mag,
     z: Math.max(0.15, dz) / mag,
-    jump: p.grounded && target.y > p.pos.y + 0.55 && mag < 8,
-    dive: false,
+    jump: !gateDive && p.grounded && target.y > p.pos.y + 0.55 && mag < 8,
+    dive: gateDive,
     grab: false,
     holdJump: false,
   });

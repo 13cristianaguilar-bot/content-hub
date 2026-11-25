@@ -29,6 +29,7 @@ const MODELS = {
   iceSet: "assets/models/prop_set_ice.glb",
   skySet: "assets/models/prop_set_sky.glb",
   crystal: "assets/models/prop_crystal_cluster.glb",
+  beacon: "assets/models/prop_landing_beacon.glb",
   ship: "assets/escape_ship_rocket.glb",
   coin: "assets/models/collectible_star_coin.glb",
   roller: "assets/models/enemy_roller.glb",
@@ -1005,6 +1006,33 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   });
   outlineOf(ship, 0.05);
   scene.add(ship);
+  if (gltfs.beacon) {
+    const blink = (gltfs.beacon.animations || []).find((clip) => clip.name === "blink");
+    const spots = [[-4.2, -3.2], [4.2, -3.2], [-3.4, 2.4], [3.4, 2.4]];
+    for (let i = 0; i < spots.length; i++) {
+      const mark = gltfs.beacon.scene.clone(true);
+      mark.position.set(course.ship.x + spots[i][0], course.ship.y, course.ship.z + spots[i][1]);
+      mark.rotation.y = i * 1.2;
+      mark.traverse((node) => {
+        if (!node.isMesh) return;
+        node.castShadow = false;
+        node.frustumCulled = true;
+        if (node.material) {
+          node.material = node.material.clone();
+          node.material.vertexColors = true;
+          node.material.fog = false;
+        }
+      });
+      scene.add(mark);
+      if (blink) {
+        const mixer = new THREE.AnimationMixer(mark);
+        const action = mixer.clipAction(blink);
+        action.setLoop(THREE.LoopRepeat, Infinity);
+        action.play();
+        propMixers.push(mixer);
+      }
+    }
+  }
   const curbCream = new THREE.MeshToonMaterial({ color: 0xfff6e5, gradientMap: TOON_MAP });
   const curbCoral = new THREE.MeshToonMaterial({ color: 0xff6b6b, gradientMap: TOON_MAP });
   for (const pad of course.floors) {
@@ -1404,7 +1432,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     hazardMix = mix || "";
     const sweepOn = hazardPlanet === 1 && hazardMix !== "rollers";
     bumperMeshes.forEach((mesh) => { mesh.visible = sweepOn; });
-    sweepMeshes.forEach((mesh) => { mesh.visible = sweepOn; });
+    sweepMeshes.forEach((mesh, i) => { mesh.visible = sweepOn || !!(course.sweepers[i] && course.sweepers[i].gateBar); });
     rollerMeshes.forEach((mesh) => { mesh.visible = hazardMix === "rollers" || hazardPlanet !== 1; });
   }
   const pendRings = course.pendulums.map((p) => telRing(p.x, p.y - p.len, p.z, 1.2));
@@ -2199,7 +2227,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     for (let i = 0; i < race.sweepers.length; i++) {
       const s = race.sweepers[i];
       const scale = sweepMeshes[i].scale.x || 1;
-      sweepMeshes[i].visible = (race.planetN || hazardPlanet) === 1;
+      sweepMeshes[i].visible = (race.planetN || hazardPlanet) === 1 || !!s.gateBar;
       sweepMeshes[i].position.set(s.x, s.y - 0.75 * scale, s.z);
       if (sweepMeshes[i].userData.mixer) sweepMeshes[i].userData.mixer.update(dt);
     }
@@ -2643,15 +2671,18 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     scene.traverse((obj) => {
       if (!obj.isMesh || !obj.geometry || !obj.matrixWorld) return;
       let node = obj;
+      let decor = false;
       while (node) {
-        if (node.userData && (node.userData.decor || node.userData.buddy || node.userData.skipCam)) return;
+        if (node.userData && (node.userData.buddy || node.userData.skipCam)) return;
+        if (node.userData && node.userData.decor) decor = true;
         node = node.parent;
       }
       if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
       obj.getWorldScale(scale);
       if (obj.userData.floor) return;
       const reach = obj.geometry.boundingSphere.radius * Math.max(Math.abs(scale.x), Math.abs(scale.y), Math.abs(scale.z));
-      if (reach < 0.4 || reach > 14) return;
+      if (decor && reach < 1.8) return;
+      if (reach < 0.4 || reach > 28) return;
       list.push(obj);
     });
     camBlockers = list;
@@ -2679,7 +2710,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
           obj.getMatrixAt(i, propDummy.matrix);
           propDummy.matrix.decompose(propDummy.position, propDummy.quaternion, propDummy.scale);
           const r = bs.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
-          if (r < 0.4 || r > 7) continue;
+          if (r < 0.35 || r > 28) continue;
           propSpheres.push({ x: propDummy.position.x, y: propDummy.position.y, z: propDummy.position.z, r });
         }
         return;
@@ -2688,7 +2719,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       const center = bs.center.clone().applyMatrix4(obj.matrixWorld);
       obj.getWorldScale(propDummy.scale);
       const r = bs.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
-      if (r < 0.4 || r > 7) return;
+      if (r < 0.35 || r > 28) return;
       propSpheres.push({ x: center.x, y: center.y, z: center.z, r });
     });
     return propSpheres;
@@ -2698,6 +2729,34 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     while (node) {
       if (node.userData && (node.userData.floor || node.userData.course || node.userData.buddy || node.userData.skipCam)) return true;
       node = node.parent;
+    }
+    return false;
+  }
+  const insideBox = new THREE.Box3();
+  const insidePoint = new THREE.Vector3();
+  const insideMatrix = new THREE.Matrix4();
+  function cameraInside(pos) {
+    insidePoint.set(pos.x, pos.y, pos.z);
+    const solids = camSolids();
+    for (let i = 0; i < solids.length; i++) {
+      const obj = solids[i];
+      if (!obj.geometry) continue;
+      if (!obj.geometry.boundingBox) obj.geometry.computeBoundingBox();
+      if (obj.isInstancedMesh) {
+        obj.updateWorldMatrix(true, false);
+        for (let n = 0; n < obj.count; n++) {
+          obj.getMatrixAt(n, propDummy.matrix);
+          insideMatrix.multiplyMatrices(obj.matrixWorld, propDummy.matrix);
+          insideBox.copy(obj.geometry.boundingBox).applyMatrix4(insideMatrix);
+          insideBox.expandByScalar(-0.3);
+          if (insideBox.containsPoint(insidePoint)) return true;
+        }
+        continue;
+      }
+      obj.updateWorldMatrix(true, false);
+      insideBox.copy(obj.geometry.boundingBox).applyMatrix4(obj.matrixWorld);
+      insideBox.expandByScalar(-0.3);
+      if (insideBox.containsPoint(insidePoint)) return true;
     }
     return false;
   }
@@ -2724,7 +2783,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (!obj.geometry.boundingSphere) obj.geometry.computeBoundingSphere();
       obj.getWorldScale(propDummy.scale);
       const reach = obj.geometry.boundingSphere.radius * Math.max(propDummy.scale.x, propDummy.scale.y, propDummy.scale.z);
-      if (reach > 2.4) continue;
+      if (reach > 26) continue;
       const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
       if (!mat || mat === floorMat || mat === terrainMat || mat === crackMat) continue;
       seen.add(obj);
@@ -2788,6 +2847,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
 
   function updateCamera(race, dt, look) {
     const player = race.player;
+    state.insideProp = false;
     if (look && look.cine) {
       const cine = look.cine;
       const player = race.player;
@@ -2796,8 +2856,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       else if (cine.kind === "launch") shot = launchShot(cine.t, cine.dur, ship.position);
       else if (cine.kind === "collapse") shot = collapseShot(cine.t, cine.dur, player.pos);
       if (shot) {
-        camera.position.set(shot.x, shot.y, shot.z);
+        const head = new THREE.Vector3(shot.lx, shot.ly + 1.2, shot.lz);
+        const spheres = propBounds();
+        let spot = clearSpheres({ x: shot.x, y: shot.y, z: shot.z }, spheres, head);
+        spot = backOffView(spot, { x: shot.lx, y: shot.ly, z: shot.lz }, spheres);
+        spot = clearSpheres(spot, spheres, head);
+        spot.y = Math.max(spot.y, liftAboveCourse(spot));
+        for (let n = 0; n < 10 && cameraInside(spot); n++) spot.y += 1.6;
+        camera.position.set(spot.x, spot.y, spot.z);
         camera.lookAt(shot.lx, shot.ly, shot.lz);
+        state.insideProp = cameraInside(camera.position);
+        fadeBlockers(head);
         return;
       }
     }
@@ -3321,6 +3390,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         fogNear: scene.fog ? scene.fog.near : 0,
         spectate: state.spectate,
         blocked: !!state.camBlocked,
+        insideProp: !!state.insideProp,
       };
     },
     applyLook,

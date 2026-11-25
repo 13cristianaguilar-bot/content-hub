@@ -287,12 +287,13 @@ function applyRound() {
   p.startZ = startZ;
   const endZ = p.gate ? p.gate.z : (p.ship ? course.ship.z - 12 : startZ + (p.kind === "survival" ? 28 : 70));
   const span = Math.max(12, endZ - (startZ - 8));
-  const threat = !cfg.quick && race.kind === "gate" ? span / (span / (cfg.maxSpeed * 0.92) + 8) : 0;
-  const pace = paceCollapse(startZ, endZ, race.roundSeconds, cfg.quick ? 2.5 : 3, threat);
+  const tail = cfg.maxSpeed * (planet === 1 && race.kind === "gate" ? 0.72 : 0.7);
+  const threat = !cfg.quick && race.kind === "gate" ? Math.max(span / (span / (cfg.maxSpeed * 0.92) + 6), tail) : 0;
+  const pace = paceCollapse(startZ, endZ, race.roundSeconds, cfg.quick ? 2.5 : 2, threat);
   race.collapseZ = pace.collapseZ;
   race.collapseStop = pace.collapseStop;
-  race.collapseSpeed = pace.collapseSpeed * (planet === 3 ? 1.18 : planet === 2 ? 1.06 : 1);
-  race.cfg.collapseDelay = cfg.quick ? 2.5 : (race.kind === "gate" && planet === 1 ? 2 : 5);
+  race.collapseSpeed = pace.collapseSpeed * (planet === 3 ? 1.12 : planet === 2 ? 1.04 : 1);
+  race.cfg.collapseDelay = cfg.quick ? 2.5 : (race.kind === "gate" ? 1.2 : 4);
   race.windMul = planet === 2 ? 1.12 : planet === 3 ? 0.85 : 1;
   race.planetN = planet;
   if (planet === 2) {
@@ -643,7 +644,6 @@ document.getElementById("restart").addEventListener("pointerdown", (e) => {
   alive = null;
   roundIndex = 0;
   restart();
-  applyRound();
 });
 document.getElementById("pause-menu-btn").addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -730,6 +730,8 @@ function restart() {
   race.player.color = pickColor;
   if (world.applyLook) world.applyLook(pickColor, pickGear);
   world.reset();
+  applyRound();
+  if (world.snapBehind) world.snapBehind();
   resultEl.hidden = true;
   resultEl.classList.remove("show");
   countdownEl.hidden = false;
@@ -1025,6 +1027,8 @@ function handleEvents() {
         showToast("SEAT " + (e.seat + 1) + " LOCKED");
       }
     } else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
+    else if (e.t === "heatfull") showToast("QUALIFICATION OVER");
+    else if (e.t === "respawn" && e.id === 0 && world.snapBehind) world.snapBehind();
     else if (e.t === "zone") showZone(e.name);
     else if (e.t === "error") reportError(e.message);
   }

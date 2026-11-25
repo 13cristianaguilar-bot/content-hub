@@ -233,4 +233,25 @@ for (let i = 0; i < 240 * 60; i++) {
 }
 assert(arrived, "a scripted run did not reach the ship");
 
+const heat = raceAt(0, 1, 400);
+heat.kind = "gate";
+heat.qualifyN = 8;
+heat.gate = { x: 0, z: 20, rx: 30, rz: 4, y: 1 };
+heat.finishZ = 20;
+heat.player.pos.z = 0;
+heat.player.qualified = false;
+for (const r of heat.racers) {
+  if (r.isPlayer) continue;
+  r.pos.z = 19.2;
+  r.pos.y = 1;
+  r.vel.z = 80;
+  r.grounded = true;
+  r.rescue = 0;
+  r.invuln = 0;
+}
+step(heat, dt, idle);
+assert(heat.qualCount === 8, "a full heat qualified " + heat.qualCount);
+assert(heat.phase === "results", "a full heat kept running");
+assert(heat.player.qualified === false, "a player behind the pack was qualified after the heat closed");
+
 console.log("p0 logic ok", "floors", landed, "hazards", hazards, "respawns", respawns, "path", path.length);

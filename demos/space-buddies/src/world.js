@@ -28,6 +28,7 @@ const MODELS = {
   canyonSet: "assets/models/prop_set_canyon.glb",
   iceSet: "assets/models/prop_set_ice.glb",
   skySet: "assets/models/prop_set_sky.glb",
+  crystal: "assets/models/prop_crystal_cluster.glb",
   ship: "assets/escape_ship_rocket.glb",
   coin: "assets/models/collectible_star_coin.glb",
   roller: "assets/models/enemy_roller.glb",
@@ -679,6 +680,42 @@ export async function createWorld(canvas, course, cfg, onProgress) {
             action.play();
             propMixers.push(mixer);
           }
+        }
+        placed++;
+      }
+    }
+  }
+  if (gltfs.crystal) {
+    const shimmer = (gltfs.crystal.animations || []).find((clip) => clip.name === "shimmer");
+    for (const zone of ["sky", "ice"]) {
+      const pads = course.floors.filter((pad) => pad.zone === zone && !pad.bridge && pad.rx >= 6);
+      let placed = 0;
+      for (let p = 0; p < pads.length && placed < 4; p++) {
+        const pad = pads[p];
+        const ang = p % 2 === 0 ? 1.4 : -1.4;
+        const rad = pad.rx * 0.78;
+        const x = pad.x + Math.sin(ang) * rad;
+        const z = pad.z + Math.cos(ang) * rad * 0.35;
+        if (!clearOfLine(x, z)) continue;
+        const obj = gltfs.crystal.scene.clone(true);
+        obj.position.set(x, pad.y, z);
+        obj.rotation.y = ang;
+        obj.traverse((node) => {
+          if (!node.isMesh) return;
+          node.frustumCulled = true;
+          node.castShadow = false;
+          if (node.material) {
+            node.material = node.material.clone();
+            node.material.vertexColors = true;
+          }
+        });
+        scene.add(obj);
+        if (shimmer) {
+          const mixer = new THREE.AnimationMixer(obj);
+          const action = mixer.clipAction(shimmer);
+          action.setLoop(THREE.LoopRepeat, Infinity);
+          action.play();
+          propMixers.push(mixer);
         }
         placed++;
       }

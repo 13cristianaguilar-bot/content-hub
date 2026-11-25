@@ -398,7 +398,8 @@ function keepOnRim(race, r) {
       if (Math.abs(along) > pad.rz * 1.15) continue;
       const lat = Math.hypot(dx - pad.ax * along, dz - pad.az * along);
       const lip = lat - pad.rx;
-      if (lip < 0 || lip > 1.7 || lip >= bestLip) continue;
+      const reach = pad.zone === "meadow" ? 8.5 : 1.7;
+      if (lip < 0 || lip > reach || lip >= bestLip) continue;
       bestLip = lip;
       best = pad;
       bridge = true;
@@ -416,7 +417,7 @@ function keepOnRim(race, r) {
       bridge = false;
     }
   }
-  if (!best || bestLip > 1.7) return;
+  if (!best || bestLip > (best.bridge && best.zone === "meadow" ? 8.5 : 1.7)) return;
   if (bridge) {
     const dx = r.pos.x - best.x;
     const dz = r.pos.z - best.z;
@@ -472,7 +473,8 @@ function pullOnto(race, r) {
       if (Math.abs(along) > pad.rz) continue;
       const lat = Math.hypot(dx - pad.ax * along, dz - pad.az * along);
       const lip = lat - pad.rx;
-      if (lip > 4.8 || lip >= bestLip) continue;
+      const reach = pad.zone === "meadow" ? 8.5 : 4.8;
+      if (lip > reach || lip >= bestLip) continue;
       bestLip = lip;
       best = { pad, bridge: true, along, lat, dx, dz };
     } else if (pad.rx >= 3.5 && pad.rz >= 3.5) {
@@ -523,7 +525,13 @@ function missFooting(race, r) {
     const chunk = race.course.chunks[pad.chunk];
     if (chunk && (chunk.state === "falling" || chunk.state === "gone" || chunk.state === "cracking")) floorGone = true;
   }
-  if (inLava || floorGone || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
+  let inGap = false;
+  const gaps = (race.course && race.course.gaps) || [];
+  for (let g = 0; g < gaps.length; g++) {
+    const gap = gaps[g];
+    if ((r.pos.x - gap.x) ** 2 + (r.pos.z - gap.z) ** 2 < gap.r * gap.r) inGap = true;
+  }
+  if (inLava || floorGone || inGap || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
   race.edgeFalls.total++;
   if (!(race.time - (r.hazardAt || -99) < 2)) race.edgeFalls.bare++;
   if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {

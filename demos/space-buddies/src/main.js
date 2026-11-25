@@ -488,17 +488,19 @@ function paintAudio() {
   if (icon) icon.src = muteIcon(prefs);
   muteBtn.setAttribute("aria-label", muteLabel(prefs));
   muteBtn.setAttribute("aria-pressed", audioAudible(prefs) ? "false" : "true");
-  const musicBtn = document.getElementById("set-music");
-  const sfxBtn = document.getElementById("set-sfx");
   const hapBtn = document.getElementById("set-haptics");
   const muteRow = document.getElementById("set-mute");
-  if (musicBtn) {
-    musicBtn.textContent = prefs.music ? "MUSIC ON" : "MUSIC OFF";
-    musicBtn.className = "sb-btn sb-btn--block " + (prefs.music ? "sb-btn--primary" : "sb-btn--secondary");
+  for (const id of ["set-music", "pause-music"]) {
+    const btn = document.getElementById(id);
+    if (!btn) continue;
+    btn.textContent = prefs.music ? "MUSIC ON" : "MUSIC OFF";
+    btn.className = "sb-btn sb-btn--block " + (prefs.music ? "sb-btn--primary" : "sb-btn--secondary");
   }
-  if (sfxBtn) {
-    sfxBtn.textContent = prefs.sfx ? "SFX ON" : "SFX OFF";
-    sfxBtn.className = "sb-btn sb-btn--block " + (prefs.sfx ? "sb-btn--primary" : "sb-btn--secondary");
+  for (const id of ["set-sfx", "pause-sfx"]) {
+    const btn = document.getElementById(id);
+    if (!btn) continue;
+    btn.textContent = prefs.sfx ? "SFX ON" : "SFX OFF";
+    btn.className = "sb-btn sb-btn--block " + (prefs.sfx ? "sb-btn--primary" : "sb-btn--secondary");
   }
   if (hapBtn) {
     hapBtn.textContent = prefs.haptics ? "HAPTICS ON" : "HAPTICS OFF";
@@ -531,6 +533,12 @@ function paintAccess() {
     shakeBtn.textContent = prefs.reduceShake ? "LESS SHAKE ON" : "LESS SHAKE OFF";
     shakeBtn.className = "sb-btn sb-btn--block " + (prefs.reduceShake ? "sb-btn--primary" : "sb-btn--secondary");
   }
+  const motionBtn = document.getElementById("pause-motion");
+  if (motionBtn) {
+    motionBtn.textContent = prefs.reduceShake ? "REDUCE MOTION ON" : "REDUCE MOTION OFF";
+    motionBtn.className = "sb-btn sb-btn--block " + (prefs.reduceShake ? "sb-btn--primary" : "sb-btn--secondary");
+  }
+  document.documentElement.classList.toggle("sb-reduce-motion", !!prefs.reduceShake);
   if (!world) return;
   if (world.setDetail) world.setDetail(low);
   if (world.setSafeOutline) world.setSafeOutline(prefs.safeOutline);
@@ -570,7 +578,28 @@ muteBtn.addEventListener("pointerdown", (e) => {
 });
 document.getElementById("title-sound").addEventListener("pointerdown", openSettings);
 document.getElementById("lobby-sound").addEventListener("pointerdown", openSettings);
-document.getElementById("pause-sound").addEventListener("pointerdown", openSettings);
+document.getElementById("pause-music").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.unlock();
+  audio.setMusic(!audio.prefs().music);
+  paintAudio();
+});
+document.getElementById("pause-sfx").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  audio.unlock();
+  audio.setSfx(!audio.prefs().sfx);
+  paintAudio();
+});
+document.getElementById("pause-motion").addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const prefs = loadAccess(localStorage);
+  prefs.reduceShake = !prefs.reduceShake;
+  saveAccess(localStorage, prefs);
+  paintAccess();
+});
 document.getElementById("set-close").addEventListener("pointerdown", (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -748,12 +777,10 @@ function clock(seconds) {
 }
 
 function fillPodium(race) {
-  const seated = race.racers.some((r) => r.seated);
-  const rows = race.racers.slice().sort((a, b) => {
-    if (seated) {
-      const seat = (r) => (r.seated && r.seatIndex >= 0 ? r.seatIndex : 80);
-      if (seat(a) !== seat(b)) return seat(a) - seat(b);
-    }
+  const escaped = race.result === "escaped" || (race.shipRound && race.racers.some((r) => r.seated));
+  const rows = race.racers.slice().filter((r) => (escaped ? r.seated && r.seatIndex >= 0 : race.result !== "out" || !r.isPlayer));
+  rows.sort((a, b) => {
+    if (escaped) return a.seatIndex - b.seatIndex;
     const score = (r) => (r.seated ? 4000 : 0) + (r.qualified ? 2000 : 0) + (r.eliminated ? -1000 : 0) + r.pos.z;
     return score(b) - score(a);
   });
@@ -957,7 +984,11 @@ function updateHud(dt) {
     if (placeLine) {
       const earned = kind === "qualified" || kind === "escaped";
       placeLine.hidden = !earned;
-      placeLine.textContent = earned ? "YOU PLACED " + board.place : "";
+      if (kind === "escaped" && race.player && race.player.seatIndex >= 0) {
+        placeLine.textContent = "YOU TOOK SEAT " + (race.player.seatIndex + 1);
+      } else {
+        placeLine.textContent = earned ? "YOU PLACED " + board.place : "";
+      }
     }
     const names = document.getElementById("result-names");
     if (names) {
@@ -977,7 +1008,8 @@ function updateHud(dt) {
     const ran = clock(race.time || 0);
     const left = clock(Math.max(0, (race.roundSeconds || cfg.raceSeconds) - (race.time || 0)));
     const fell = (race.fallers || []).slice(-3).join(", ");
-    resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + (race.coins || 0) + " COINS · PLANET " + planet;
+    const coins = race.coins || 0;
+    resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + coins + (coins === 1 ? " COIN" : " COINS") + " · PLANET " + planet;
     if (fell && kind === "out") resultSub.textContent = fell + " FELL";
     const reason = document.getElementById("result-reason");
     if (reason) reason.textContent = resultReason(race);

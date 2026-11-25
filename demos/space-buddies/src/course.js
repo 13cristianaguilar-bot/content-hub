@@ -268,6 +268,7 @@ export function createCourse(cfg) {
   const zones = zonesFor(len);
   const chunks = [];
   const floors = [];
+  const gaps = [];
   const seed = cfg.seed || 1;
   let rng = seed >>> 0;
   const rnd = () => {
@@ -291,6 +292,14 @@ export function createCourse(cfg) {
     const span = Math.hypot(x1 - x0, z1 - z0) || 1;
     const ax = (x1 - x0) / span;
     const az = (z1 - z0) / span;
+    if (gapT) {
+      gaps.push({
+        x: lerp(x0, x1, gapT),
+        z: lerp(z0, z1, gapT),
+        y: lerp(y0, y1, gapT),
+        r: width,
+      });
+    }
     const n = Math.max(4, Math.ceil(span / Math.max(2.2, width * 0.5)));
     for (let i = 0; i <= n; i++) {
       const t = i / n;
@@ -557,6 +566,7 @@ export function createCourse(cfg) {
     stations,
     chunks,
     floors,
+    gaps,
     tiles,
     islands,
     blockers,

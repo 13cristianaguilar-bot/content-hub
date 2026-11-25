@@ -239,6 +239,18 @@ function sweepGround(race, r, y0, y1) {
   return best && Math.min(y0, y1) <= best.y + 0.08 ? best : null;
 }
 
+function inDiveHole(course, x, z) {
+  const holes = (course && course.holes) || [];
+  for (let i = 0; i < holes.length; i++) {
+    const h = holes[i];
+    if (!h.dive) continue;
+    const nx = (x - h.x) / h.rx;
+    const nz = (z - h.z) / h.rz;
+    if (nx * nx + nz * nz <= 1) return true;
+  }
+  return false;
+}
+
 function inHole(course, x, z) {
   const holes = (course && course.holes) || [];
   for (let i = 0; i < holes.length; i++) {
@@ -390,9 +402,16 @@ function findRespawnTile(race, r) {
   return null;
 }
 
+function crownDisc(race, pad) {
+  if (race.kind !== "crown" || !race.crown || !pad || pad.zone !== "sky") return false;
+  const c = race.crown;
+  return Math.hypot(pad.x - c.x, pad.z - c.z) < 4 && Math.abs(pad.y - (c.y || 0)) < 1.4;
+}
+
 function keepOnRim(race, r) {
   if (r.seated || r.eliminated) return;
   if (r.ungroundT > 0 && r.vel.y > 3) return;
+  if (inDiveHole(race.course, r.pos.x, r.pos.z)) return;
   if (spotOnFloor(race, r.pos.x, r.pos.z)) return;
   const floors = race.course.floors || [];
   let best = null;
@@ -419,7 +438,8 @@ function keepOnRim(race, r) {
       bridge = true;
       continue;
     }
-    if (pad.rx < 4 || pad.rz < 4 || (pad.zone === "sky" && race.kind !== "gate")) continue;
+    if (pad.rx < 4 || pad.rz < 4) continue;
+    if (pad.zone === "sky" && race.kind !== "gate" && !crownDisc(race, pad)) continue;
     const nx = (r.pos.x - pad.x) / pad.rx;
     const nz = (r.pos.z - pad.z) / pad.rz;
     const len = Math.hypot(nx, nz);
@@ -548,9 +568,10 @@ function missFooting(race, r) {
     const gap = gaps[g];
     if ((r.pos.x - gap.x) ** 2 + (r.pos.z - gap.z) ** 2 < gap.r * gap.r) inGap = true;
   }
-  if (inLava || floorGone || inGap || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
+  if (inLava || floorGone || inGap || race.kind === "crown" || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
   race.edgeFalls.total++;
   if (!(race.time - (r.hazardAt || -99) < 2)) race.edgeFalls.bare++;
+  if (r.isPlayer) race.events.push({ t: "fall", id: r.id });
   if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {
     r.eliminated = true;
     if (!race.fallers) race.fallers = [];
@@ -608,18 +629,31 @@ function doRespawn(race, r) {
   r.respawnAt = now;
   if (again) r.voidTries = (r.voidTries || 0) + 1;
   else r.voidTries = 0;
-  let spot = r.voidTries > 0 && r.firmSafe ? r.firmSafe : findRespawnTile(race, r);
-  if (!spot || r.voidTries > 1) spot = r.firmSafe || nearestSolid(race, r.pos.x, r.pos.z);
-  if (!spot) spot = nearestSolid(race, 0, r.pos.z || 0);
-  if (!spot) return;
-  const under = groundAt(race.course, spot.x, spot.z);
-  if (!under) {
-    const solid = nearestSolid(race, spot.x, spot.z);
-    if (solid) spot = solid;
+  let spot = null;
+  const onRing = race.kind === "crown" && race.crown && Math.hypot(r.pos.x - race.crown.x, r.pos.z - race.crown.z) < (race.crown.r || 4) + 8;
+  if (onRing) {
+    const c = race.crown;
+    const ang = (r.id || 1) * 0.85;
+    const rad = Math.min(2.2, (c.r || 4) * 0.5);
+    const x = c.x + Math.cos(ang) * rad;
+    const z = c.z + Math.sin(ang) * rad;
+    const foot = groundAt(race.course, x, z);
+    spot = { x, y: foot ? foot.y : (c.y || 0), z };
   } else {
-    spot = { x: spot.x, y: under.y, z: spot.z };
+    spot = r.voidTries > 0 && r.firmSafe ? r.firmSafe : findRespawnTile(race, r);
+    if (!spot || r.voidTries > 1) spot = r.firmSafe || nearestSolid(race, r.pos.x, r.pos.z);
+    if (!spot) spot = nearestSolid(race, 0, r.pos.z || 0);
+    if (!spot) return;
+    const under = groundAt(race.course, spot.x, spot.z);
+    if (!under) {
+      const solid = nearestSolid(race, spot.x, spot.z);
+      if (solid) spot = solid;
+    } else {
+      spot = { x: spot.x, y: under.y, z: spot.z };
+    }
+    spot = clampBeforeGate(race, r.pos.z, spot);
   }
-  spot = clampBeforeGate(race, r.pos.z, spot);
+  if (!spot) return;
   r.pos.x = spot.x;
   r.pos.y = spot.y + 0.2;
   r.pos.z = spot.z;
@@ -815,6 +849,14 @@ function integrate(race, r, wish, dt) {
       if (!sw.gateBar) continue;
       const dz = sw.z - r.pos.z;
       if (dz > -1 && dz < 7) gateDive = true;
+    }
+  }
+  if (wish.dive && r.grounded && race.course && race.course.holes) {
+    for (let i = 0; i < race.course.holes.length; i++) {
+      const h = race.course.holes[i];
+      if (!h.dive) continue;
+      const dz = h.z - r.pos.z;
+      if (dz > -1 && dz < 8) gateDive = true;
     }
   }
   if (wish.dive && (r.diveCd <= 0 || gateDive)) {
@@ -1274,6 +1316,16 @@ export function botWish(race, r, dt) {
     const dzg = sw.z - r.pos.z;
     if (dzg > 1.1 && dzg < 5.2 && r.grounded && r.diveCd <= 0) dive = true;
   }
+  const holes = (race.course && race.course.holes) || [];
+  for (let i = 0; i < holes.length; i++) {
+    const h = holes[i];
+    if (!h.dive) continue;
+    const edge = h.z - h.rz - r.pos.z;
+    if (edge > 2.2 && edge < 4.4 && r.grounded && r.diveCd <= 0) dive = true;
+    if (edge > 0.2 && edge < 1.4 && r.grounded) jump = true;
+  }
+  const shelf = groundAt(race.course, r.pos.x, r.pos.z + 1.15);
+  if (shelf && shelf.y > r.pos.y + 1.35 && shelf.y < r.pos.y + 2.15) grab = true;
   const flat = Math.abs((ty || r.pos.y) - r.pos.y) < 0.45;
   if (!heldCrown && r.grounded && flat && dz > 0.55 && r.diveCd <= 0 && race.rand() < 0.22 * dt * (p.skill || 0.5)) dive = true;
   return { x: dx, z: dz, jump, dive, grab };
@@ -1864,7 +1916,7 @@ function inFinishGate(race, r) {
   const halfW = g.rx || 4.5;
   const halfD = g.rz || 1.4;
   if (Math.abs(r.pos.x - g.x) > halfW) return false;
-  if (Math.abs(r.pos.y - (g.y == null ? 0 : g.y)) > 1.7) return false;
+  if (Math.abs(r.pos.y - (g.y == null ? 0 : g.y)) > 2.8) return false;
   const prev = r.prevZ == null ? r.pos.z : r.prevZ;
   const crossed = prev < g.z && r.pos.z >= g.z - 0.15;
   const inSlab = r.pos.z >= g.z - halfD && r.pos.z <= g.z + halfD && prev < g.z;
@@ -2014,6 +2066,7 @@ function checkQualify(race) {
 }
 
 function closeHeat(race) {
+  race.closedBy = "full";
   for (const r of race.racers) {
     if (!r.qualified && !r.seated) r.eliminated = true;
   }

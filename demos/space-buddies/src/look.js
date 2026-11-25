@@ -4,7 +4,7 @@ export const ACCESS_KEY = "space-buddies-access";
 
 export const PLANET_SKY = [
   { top: 0x5cc8ff, mid: 0xb8f0ff, bot: 0x7fd88a, fog: 0xcff4ff, hemi: 0xc7f0ff, ground: 0x7dcc62, sun: 0xfff3c4 },
-  { top: 0x6678f2, mid: 0xffc4ea, bot: 0xd9d4ff, fog: 0xffd0ea, hemi: 0xffc2a1, ground: 0xc45a32, sun: 0xffe0b0 },
+  { top: 0x7a8cff, mid: 0xffd6f2, bot: 0xc9d6ff, fog: 0xeadcff, hemi: 0xfff4ea, ground: 0xc9d6ff, sun: 0xfff3c4 },
   { top: 0x2b1b4d, mid: 0x8c6bff, bot: 0x4a3a7a, fog: 0x4a3a7a, hemi: 0x6a5a9a, ground: 0x363a6e, sun: 0xc8b6ff },
 ];
 

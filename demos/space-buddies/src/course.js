@@ -5,7 +5,7 @@ const CREAM = [1, 0.995, 0.94];
 const GROUND = {
   meadow: { top: [0.306, 0.788, 0.416], side: [0.220, 0.557, 0.286] },
   canyon: { top: [1, 0.604, 0.290], side: [0.780, 0.373, 0.196] },
-  sky: { top: [0.890, 0.925, 1], side: [0.620, 0.710, 0.980] },
+  sky: { top: [1, 1, 1], side: [0.788, 0.839, 1], path: [1, 0.824, 0.247] },
   ice: { top: [0.780, 0.925, 1], side: [0.420, 0.730, 0.920] },
   climb: { top: [0.640, 0.520, 0.820], side: [0.400, 0.310, 0.580] },
   ship: { top: [0.420, 0.440, 0.720], side: [0.240, 0.250, 0.460] },
@@ -18,6 +18,7 @@ function mix3(a, b, t) {
 function slabPaint(zone, key) {
   const g = GROUND[zone] || GROUND.meadow;
   if (key === "side") return g.side;
+  if (key === "path") return g.path || g.top;
   if (key === "cream") return CREAM;
   if (key === "mix") return mix3(g.top, CREAM, 0.55);
   return g.top;
@@ -112,7 +113,7 @@ function bridgeGeometry(x0, z0, x1, z1, y0, y1, width, zone) {
     { side: -1, inset: 0, dy: -bevel, key: "cream" },
     { side: -1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
     { side: -1, inset: bevel, dy: 0, key: "cream" },
-    { side: 0, inset: 0, dy: 0, key: "top" },
+    { side: 0, inset: 0, dy: 0, key: zone === "sky" ? "path" : "top" },
     { side: 1, inset: bevel, dy: 0, key: "cream" },
     { side: 1, inset: bevel * 0.5, dy: -bevel * 0.5, key: "mix" },
     { side: 1, inset: 0, dy: -bevel, key: "cream" },
@@ -381,6 +382,8 @@ export function createCourse(cfg) {
   }
 
   // Climb spirals around a tower, then the ship deck.
+  addDisc(0, 3.05, zz(309), 3.2, 1.1, "climb");
+  addDisc(0, 4.9, zz(310.9), 3.2, 1.1, "climb");
   addDisc(0, 3, zz(312), 12, 10, "climb");
   addDisc(-14, 4.4, zz(326), 6, 6, "climb");
   addDisc(0, 6.2, zz(334), 6, 5, "climb");
@@ -598,6 +601,7 @@ export function createCourse(cfg) {
     checkpoints,
     gates,
     holes: [
+      { x: 0, z: zz(132), rx: 8, rz: 3.2, dive: true },
       { x: -6, z: zz(154), rx: 6, rz: 2.2, side: 1 },
       { x: 5, z: zz(182), rx: 4.2, rz: 1.6, side: -1 },
     ],

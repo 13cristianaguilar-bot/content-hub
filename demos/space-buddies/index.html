@@ -556,7 +556,7 @@ button { font-family: inherit; touch-action: manipulation; }
       <p id="result-kicker" class="kicker">SPACE BUDDIES</p>
       <img id="result-banner" class="sb-banner" alt="" src="ui/svg/banner_qualified.svg">
       <h1 id="result-title" class="banner" hidden>YOU ESCAPED!</h1>
-      <canvas id="podium-stage" width="320" height="150" aria-hidden="true"></canvas>
+      <canvas id="podium-stage" width="320" height="190" aria-hidden="true"></canvas>
       <div class="podium" data-ui="podium">
         <div class="pod p2"><b>2</b><span id="pod-2">—</span></div>
         <div class="pod p1"><b>1</b><span id="pod-1">—</span></div>
@@ -575,7 +575,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-    <script src="game.js?v=99"></script>
+    <script src="game.js?v=100"></script>
 <style>
 #cine-skip { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; pointer-events: auto; }
 #settings .sb-card { max-height: calc(100vh - 36px); overflow: auto; }
@@ -619,7 +619,7 @@ button { font-family: inherit; touch-action: manipulation; }
 #stick.sb-stick { background: url("ui/svg/joystick_base.svg") center/contain no-repeat; box-shadow: none; }
 #knob.sb-stick__knob { background: url("ui/svg/joystick_knob.svg") center/contain no-repeat; box-shadow: none; }
 #hud.sb-hud[hidden] { display: none !important; }
-#podium-stage { display: block; width: min(100%, 320px); height: 150px; margin: 0 auto 4px; }
+#podium-stage { display: block; width: min(100%, 320px); height: 190px; margin: 0 auto 4px; }
 .podium { display: flex; align-items: flex-end; justify-content: center; gap: 8px; }
 .pod { width: 86px; border: 3px solid #1e2440; border-radius: 12px; background: #fff6e5; padding: 4px 6px; text-align: center; display: flex; flex-direction: column; justify-content: flex-end; gap: 2px; }
 .pod b, .pod span { display: block; font-size: 16px; line-height: 1.1; }

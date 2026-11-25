@@ -73,7 +73,7 @@
       var b = e.target.closest("[data-haptic], .sb-btn, .sb-action");
       if (!b) return;
       b.classList.add("is-pressed");
-      haptic(b.getAttribute("data-haptic") || "light");
+      if (b.id === "jump" || b.id === "dive" || b.id === "grab") return;
       var up = function () {
         b.classList.remove("is-pressed");
         window.removeEventListener("pointerup", up);

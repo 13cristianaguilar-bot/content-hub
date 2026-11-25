@@ -21,6 +21,8 @@ const MODELS = {
   pad: "assets/models/obstacle_jump_pad.glb",
   platform: "assets/models/obstacle_moving_platform.glb",
   lava: "assets/models/obstacle_lava_pool.glb",
+  lavaPool: "assets/models/hazard_lava_pool.glb",
+  podium: "assets/models/results_podium.glb",
   chunk: "assets/models/obstacle_falling_chunk.glb",
   debris: "assets/models/collapse_debris_set.glb",
   arch: "assets/models/finish_gate_arch.glb",
@@ -921,7 +923,19 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     return obj;
   }
 
-  function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
+  function showVertexColors(root) {
+  root.traverse((obj) => {
+    if (!obj.isMesh || !obj.material || !obj.geometry || !obj.geometry.attributes.color) return;
+    obj.material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      vertexColors: true,
+      toneMapped: false,
+      side: THREE.DoubleSide,
+    });
+  });
+}
+
+function placeProp(gltf, x, y, z, rotY = 0, scl = 1) {
     const obj = gltf.scene.clone(true);
     obj.position.set(x, y, z);
     obj.rotation.y = rotY;
@@ -959,9 +973,21 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     return obj;
   });
   padMeshes.forEach((obj) => { obj.userData.base = obj.scale.x || 1; });
-  const lavaDecals = [];
-  if (course.crater) {
-    lavaDecals.push(placeProp(gltfs.lava, course.crater.x, course.crater.y, course.crater.z, 0, course.crater.r / 3));
+  let lava = null;
+  if (course.crater && gltfs.lavaPool) {
+    const scl = (course.crater.r * 2) / 6.7;
+    lava = placeProp(gltfs.lavaPool, course.crater.x, course.crater.y, course.crater.z, 0, scl);
+    showVertexColors(lava);
+    const clip = (gltfs.lavaPool.animations || []).find((item) => item.name === "churn");
+    if (clip) {
+      const mixer = new THREE.AnimationMixer(lava);
+      const action = mixer.clipAction(clip);
+      action.setLoop(THREE.LoopRepeat, Infinity);
+      action.play();
+      lava.userData.mixer = mixer;
+    }
+  } else if (course.crater) {
+    lava = placeProp(gltfs.lava, course.crater.x, course.crater.y, course.crater.z, 0, course.crater.r / 3);
   }
   const spinnerObjs = course.spinners.map((s) => {
     if ((s.zone === "meadow" || s.zone === "canyon") && meadow.saw) {
@@ -1215,18 +1241,6 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     launchTrail.push(puff);
   }
 
-  const lava = new THREE.Mesh(
-    new THREE.CircleGeometry(14, 40),
-    new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 } },
-      vertexShader: "varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }",
-      fragmentShader: "uniform float uTime; varying vec2 vUv; void main(){ vec2 uv=vUv+vec2(uTime*0.03,-uTime*0.02); float d=length(vUv-0.5)*2.0; float n=sin(uv.x*22.0+uTime)*sin(uv.y*19.0-uTime*0.8); n+=sin((uv.x*2.0+uv.y)*16.0+uTime*1.4)*0.65; float hotMask=smoothstep(0.15,0.72,n*0.5+0.5); vec3 crust=vec3(0.18,0.03,0.03); vec3 hot=vec3(1.0,0.82,0.18); vec3 c=mix(crust, hot, hotMask); c=mix(c, crust, smoothstep(0.48,0.9,d)); c+=vec3(1.0,0.35,0.05)*smoothstep(0.5,0.75,d)*(1.0-smoothstep(0.82,1.0,d)); gl_FragColor=vec4(c,1.0); }",
-    })
-  );
-  lava.rotation.x = -Math.PI / 2;
-  lava.position.set(0, cfg.lavaStartY, (course.lava.z0 + course.lava.z1) / 2);
-  lava.userData.bloom = true;
-  scene.add(lava);
   let trimTick = 0;
   const crownMesh = new THREE.Mesh(
     new THREE.ConeGeometry(0.28, 0.36, 5),
@@ -1234,63 +1248,20 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   );
   crownMesh.visible = false;
   scene.add(crownMesh);
-  if (course.crater) {
-    const glow = new THREE.Mesh(
-      new THREE.CircleGeometry(course.crater.r * 1.35, 20),
-      new THREE.MeshBasicMaterial({ color: 0xffb15a, transparent: true, opacity: 0.12, depthWrite: false, blending: THREE.AdditiveBlending })
-    );
-    glow.rotation.x = -Math.PI / 2;
-    glow.scale.setScalar(0.72);
-    glow.position.set(course.crater.x, course.crater.y + 0.2, course.crater.z);
-    scene.add(glow);
-  }
-  const bubbleGeo = new THREE.SphereGeometry(0.28, 8, 6);
-  const bubbleMat = new THREE.MeshBasicMaterial({ color: 0xffe0a0, transparent: true, opacity: 0.55, depthWrite: false });
-  const bubbles = [];
-  const lavaMidZ = (course.lava.z0 + course.lava.z1) / 2;
-  for (let i = 0; i < 22; i++) {
-    const mesh = new THREE.Mesh(bubbleGeo, bubbleMat);
-    const ang = (i / 22) * Math.PI * 2;
-    const rad = 3 + (i % 5) * 2.2;
-    mesh.position.set(Math.cos(ang) * rad, cfg.lavaStartY + 0.4, lavaMidZ + Math.sin(ang) * rad);
-    mesh.userData.decor = true;
-    mesh.userData.base = mesh.position.clone();
-    mesh.userData.speed = 0.6 + (i % 4) * 0.25;
-    mesh.userData.phase = i * 0.7;
-    scene.add(mesh);
-    bubbles.push(mesh);
-  }
-  const shimmerMat = new THREE.MeshBasicMaterial({ color: 0xffb060, transparent: true, opacity: 0.18, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
-  const shimmers = [];
-  for (let i = 0; i < 8; i++) {
-    const mesh = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.4), shimmerMat);
-    mesh.position.set(-10 + i * 3, cfg.lavaStartY + 1.1, lavaMidZ + ((i % 2) - 0.5) * 8);
-    scene.add(mesh);
-    shimmers.push(mesh);
-  }
-  const skyZone = (course.zones || []).find((z) => z.id === "sky");
-  if (skyZone) {
-    const puffMat = new THREE.MeshBasicMaterial({ color: 0xfff4fb, transparent: true, opacity: 0.9, depthWrite: false });
-    for (let i = 0; i < 7; i++) {
-      const puff = new THREE.Mesh(new THREE.SphereGeometry(7 + (i % 3) * 2, 10, 8), puffMat);
-      puff.scale.y = 0.28;
-      puff.position.set(-16 + (i % 4) * 10, 1.1, skyZone.z0 + 12 + i * ((skyZone.z1 - skyZone.z0) / 8));
-      scene.add(puff);
-    }
-  }
   const toyColors = {
-    meadow: [0x9bb5a4, 0xb7c3b4, 0xaeb6c2],
-    canyon: [0xc4a090, 0xb7a48c, 0xcbb3b0],
-    sky: [0xc4b6d4, 0xb9c0d4, 0xc9c3d2],
-    ice: [0xb7d0dc, 0xd5e4ea, 0xb9c6d8],
-    climb: [0xd2c0a4, 0xc9b09a, 0xd4c2b4],
-    ship: [0xd8d0b8, 0xd4c4cc, 0xc9d4c4],
+    meadow: [0xfff6e5, 0x7dffc4, 0xffe56a],
+    canyon: [0xffe0b0, 0xffb877, 0xe07a4a],
+    sky: [0xfff6e5, 0xc4b6ff, 0xffd23f],
+    ice: [0xfff6e5, 0xb7e4ff, 0x7ad8ff],
+    climb: [0xfff6e5, 0xd2a0e8, 0xff9fe0],
+    ship: [0xfff6e5, 0xffd09a, 0x9ae4ff],
   };
   const trimSpots = [];
   for (const pad of course.floors || []) {
     if (pad.rx < 2.2 || pad.zone === "ship") continue;
-    const rings = [1.16];
-    const count = Math.max(3, Math.round((pad.rx + pad.rz) / 5));
+    const rings = [0.88];
+    const count = Math.max(3, Math.round((pad.rx + pad.rz) / 6));
+    const kinds = [0, 1, 3];
     for (const radius of rings) {
       for (let n = 0; n < count; n++) {
         const a = (n / count) * Math.PI * 2 + pad.z * 0.07 + radius;
@@ -1299,7 +1270,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
           y: pad.y,
           z: pad.z + Math.sin(a) * pad.rz * radius,
           zone: pad.zone,
-          kind: (n + Math.floor(pad.z + radius * 10)) % 6,
+          kind: kinds[(n + Math.floor(pad.z)) % kinds.length],
           spin: n,
         });
       }
@@ -1331,14 +1302,12 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     mesh.userData.spots = list;
     return mesh;
   }
-  const pillarMesh = toyMesh(new THREE.CylinderGeometry(0.28, 0.34, 1.5, 8), trimSpots, [0]);
-  const arrowMesh = toyMesh(new THREE.ConeGeometry(0.38, 0.9, 5), trimSpots, [1]);
-  const bumperMesh = toyMesh(new THREE.SphereGeometry(0.42, 8, 6), trimSpots, [2]);
-  const starMesh = toyMesh(new THREE.OctahedronGeometry(0.38, 0), trimSpots, [3]);
+  const pillarMesh = toyMesh(new THREE.CylinderGeometry(0.16, 0.2, 0.42, 6), trimSpots, [0]);
+  const arrowMesh = toyMesh(new THREE.ConeGeometry(0.14, 0.28, 5), trimSpots, [1]);
+  const starMesh = toyMesh(new THREE.OctahedronGeometry(0.12, 0), trimSpots, [3]);
   if (starMesh) starMesh.userData.bloom = true;
-  const balloonMesh = toyMesh(new THREE.SphereGeometry(0.36, 8, 6), trimSpots, [4]);
-  const standMesh = toyMesh(new THREE.BoxGeometry(1.1, 0.7, 0.55), trimSpots, [5]);
-  void pillarMesh; void arrowMesh; void bumperMesh; void standMesh;
+  const balloonMesh = null;
+  void pillarMesh; void arrowMesh;
   if (trimSpots.length) {
     const contacts = new THREE.InstancedMesh(
       new THREE.CircleGeometry(0.55, 8),
@@ -1813,34 +1782,41 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   let podiumCam = null;
   const podiumMixers = [];
   const podiumSlots = [];
+  let podiumRoot = null;
   const podiumCanvas = document.getElementById("podium-stage");
   const podiumColors = ["#7DFFC4", "#FFE56A", "#FF9FE0", "#A78BFF", "#7AD8FF", "#9AEE6A", "#E4C6FF", "#FFD09A", "#6C8CFF", "#4EE0C8", "#FF7AB8", "#D6F06A", "#B4C8FF", "#FFC44A", "#FFA090", "#9AE4FF"];
   if (podiumCanvas && buddyGltf) {
     podiumRenderer = new THREE.WebGLRenderer({ canvas: podiumCanvas, antialias: false, alpha: true });
     podiumRenderer.setPixelRatio(1);
-    podiumRenderer.setSize(320, 150, false);
+    podiumRenderer.setSize(320, 190, false);
     podiumRenderer.outputColorSpace = THREE.SRGBColorSpace;
     podiumScene = new THREE.Scene();
-    podiumCam = new THREE.PerspectiveCamera(30, 320 / 150, 0.1, 40);
-    podiumCam.position.set(0, 2.15, 6.4);
-    podiumCam.lookAt(0, 1.05, 0);
+    podiumCam = new THREE.PerspectiveCamera(32, 320 / 190, 0.1, 40);
+    podiumCam.position.set(0, 1.35, 5.05);
+    podiumCam.lookAt(0, 0.62, 0);
     podiumScene.add(new THREE.HemisphereLight(0x9fd4ff, 0xffc48a, 0.6));
     const podiumKey = new THREE.DirectionalLight(0xfff0c2, 1.1);
     podiumKey.position.set(-2.5, 5, 3);
     podiumScene.add(podiumKey);
-    const steps = [
-      { x: -1.45, h: 0.42, c: 0xc5cfe6 },
-      { x: 0, h: 0.72, c: 0xffd23f },
-      { x: 1.45, h: 0.28, c: 0xd4894a },
+    const tiers = [
+      { name: "Podium2", h: 0.80 },
+      { name: "Podium1", h: 1.10 },
+      { name: "Podium3", h: 0.55 },
     ];
-    for (let s = 0; s < steps.length; s++) {
-      const step = steps[s];
-      const box = new THREE.Mesh(
-        new THREE.BoxGeometry(1.2, step.h, 1.05),
-        new THREE.MeshToonMaterial({ color: step.c, gradientMap: TOON_MAP })
-      );
-      box.position.set(step.x, step.h * 0.5, 0);
-      podiumScene.add(box);
+    if (gltfs.podium) {
+      podiumRoot = gltfs.podium.scene.clone(true);
+      showVertexColors(podiumRoot);
+      podiumRoot.rotation.y = Math.PI;
+      const second = podiumRoot.getObjectByName("Podium2");
+      const third = podiumRoot.getObjectByName("Podium3");
+      if (second) second.position.x = 1.3;
+      if (third) third.position.x = -1.3;
+      podiumRoot.userData.rise = 2;
+      podiumScene.add(podiumRoot);
+    }
+    for (let s = 0; s < tiers.length; s++) {
+      const step = tiers[s];
+      const anchor = podiumRoot ? podiumRoot.getObjectByName(step.name) : null;
       const model = SkeletonUtils.clone(buddyGltf.scene);
       model.traverse((obj) => {
         if (!obj.isMesh || !obj.material) return;
@@ -1857,9 +1833,15 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         action.play();
       }
       const group = new THREE.Group();
+      model.rotation.y = Math.PI;
       group.add(model);
-      group.position.set(step.x, step.h, 0);
+      group.position.y = step.h;
       group.visible = false;
+      if (anchor) anchor.add(group);
+      else {
+        group.position.x = s === 0 ? -1.3 : s === 2 ? 1.3 : 0;
+        podiumScene.add(group);
+      }
       const ring = new THREE.Mesh(
         new THREE.RingGeometry(0.42, 0.58, 16),
         new THREE.MeshBasicMaterial({ color: 0xffd23f, side: THREE.DoubleSide, depthWrite: false })
@@ -1868,7 +1850,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       ring.position.y = 0.04;
       ring.visible = false;
       group.add(ring);
-      podiumScene.add(group);
+      if (!anchor) podiumScene.add(group);
       podiumMixers.push(mixer);
       podiumSlots.push({ group, model, ring });
     }
@@ -1893,6 +1875,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         if (shader && shader.uniforms && shader.uniforms.uTint) shader.uniforms.uTint.value.set(hex);
       });
     }
+    if (podiumRoot) podiumRoot.userData.rise = 0;
     if (podiumRenderer && podiumScene && podiumCam) podiumRenderer.render(podiumScene, podiumCam);
   }
 
@@ -2299,41 +2282,33 @@ export async function createWorld(canvas, course, cfg, onProgress) {
       if (flyerEyes) flyerEyes.scale.y = Math.sin(race.time * 3 + i) > 0.97 ? 0.15 : 1;
     }
 
-    lava.position.y = race.lavaY;
+    if (lava) {
+      const floorY = course.crater ? course.crater.y : cfg.lavaStartY;
+      lava.position.y = Math.max(floorY, race.lavaY || floorY);
+      if (lava.userData.mixer) lava.userData.mixer.update(dt);
+    }
     const goal = race.shipRound || !race.gate ? course.ship : race.gate;
     if (goal) {
       goalBeam.position.set(goal.x || 0, (goal.y || 0) + 16, goal.z || 0);
       goalBeam.scale.y = 1 + Math.sin((race.time || 0) * 3) * 0.04;
     }
     chevrons.visible = race.phase === "race" || race.phase === "countdown";
-    if (lava.material.uniforms && lava.material.uniforms.uTime) lava.material.uniforms.uTime.value = race.time || 0;
+    if (lava && lava.material && lava.material.uniforms && lava.material.uniforms.uTime) lava.material.uniforms.uTime.value = race.time || 0;
     for (const mat of liquids) mat.uniforms.uTime.value = race.time || 0;
-    if (Math.random() < 0.45) burst(lava.position.x + (Math.random() - 0.5) * 8, lava.position.y + 0.4, lava.position.z + (Math.random() - 0.5) * 8, 0xff8a2a, true);
+    if (lava && Math.random() < 0.45) burst(lava.position.x + (Math.random() - 0.5) * 8, lava.position.y + 0.4, lava.position.z + (Math.random() - 0.5) * 8, 0xff8a2a, true);
     if (race.kind === "survival" && Math.random() < 0.5) burst(race.player.pos.x + (Math.random() - 0.5) * 6, race.player.pos.y + 1.2, race.player.pos.z + 2, 0xe7f6ff, true);
     if (race.kind === "crown" && race.crown && race.phase === "race") {
       crownMesh.visible = true;
       crownMesh.position.set(race.crown.x, (race.crown.y || 0) + 2.2 + Math.sin((race.time || 0) * 3) * 0.12, race.crown.z);
       crownMesh.rotation.y = race.time || 0;
     } else crownMesh.visible = false;
-    for (let i = 0; i < bubbles.length; i++) {
-      const b = bubbles[i];
-      const rise = ((race.time * b.userData.speed + b.userData.phase) % 2.4);
-      b.position.y = b.userData.base.y + rise;
-      b.position.x = b.userData.base.x + Math.sin(race.time * 1.4 + b.userData.phase) * 0.25;
-      b.scale.setScalar(0.45 + rise * 0.35);
-    }
-    for (let i = 0; i < shimmers.length; i++) {
-      shimmers[i].position.y = cfg.lavaStartY + 1.05 + Math.sin(race.time * 2 + i) * 0.2;
-      shimmers[i].rotation.z = Math.sin(race.time + i) * 0.15;
-      shimmers[i].lookAt(camera.position);
-    }
     trimTick = (trimTick + 1) % 2;
     if (starMesh && trimTick === 0) {
       const spots = starMesh.userData.spots || [];
       const dummy = new THREE.Object3D();
       for (let i = 0; i < spots.length; i++) {
         const s = spots[i];
-        dummy.position.set(s.x, s.y + 1.15, s.z);
+        dummy.position.set(s.x, s.y + 0.16, s.z);
         dummy.rotation.set(0.5, race.time * 1.6 + s.spin, 0.2);
         dummy.updateMatrix();
         starMesh.setMatrixAt(i, dummy.matrix);
@@ -2547,6 +2522,23 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     for (let i = 0; i < propMixers.length; i++) propMixers[i].update(dt);
     if (podiumRenderer && race.phase === "results") {
       for (let i = 0; i < podiumMixers.length; i++) podiumMixers[i].update(dt);
+      if (podiumRoot) {
+        const t = podiumRoot.userData.rise = Math.min(2, (podiumRoot.userData.rise || 0) + dt);
+        const steps = [
+          { name: "Podium3", delay: 0 },
+          { name: "Podium2", delay: 0.16 },
+          { name: "Podium1", delay: 0.32 },
+        ];
+        for (let i = 0; i < steps.length; i++) {
+          const node = podiumRoot.getObjectByName(steps[i].name);
+          if (!node) continue;
+          const u = Math.min(1, Math.max(0, (t - steps[i].delay) / 0.34));
+          const ease = 1 - Math.pow(1 - u, 3);
+          let y = 0.02 + 0.98 * ease;
+          if (steps[i].name === "Podium1" && u >= 1) y = 1 + Math.sin(t * 6.2) * 0.025;
+          node.scale.set(1, y, 1);
+        }
+      }
       podiumRenderer.render(podiumScene, podiumCam);
     }
     tickFoliage(race.time || 0);

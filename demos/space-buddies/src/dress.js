@@ -84,32 +84,6 @@ export function buildDressing(scene, course, gradientMap) {
   }
 
   const chunk = new THREE.IcosahedronGeometry(0.9, 0);
-  const rock = new THREE.IcosahedronGeometry(0.55, 0);
-  inst(rock, makeToon(0xe0a15a, gradientMap), picks.climb, (d, t, i) => {
-    d.position.set(t.x, t.y + 0.4, t.z);
-    d.rotation.set(0.2, i, 0);
-    d.scale.setScalar(0.7);
-  });
-
-  const scaffold = new THREE.BoxGeometry(0.16, 1.6, 0.16);
-  const light = new THREE.SphereGeometry(0.12, 6, 6);
-
-  inst(scaffold, makeToon(0xfff6e5, gradientMap), picks.climb.filter((_, i) => i % 2 === 0), (d, t) => {
-    d.position.set(t.x, t.y + 0.8, t.z);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(1, 1, 1);
-  });
-  inst(rock, makeToon(0x8a5a3a, gradientMap), picks.climb.filter((_, i) => i % 3 === 0), (d, t, i) => {
-    d.position.set(t.x, t.y + 0.3, t.z + 0.6);
-    d.rotation.set(0.4, i, 0.2);
-    d.scale.setScalar(0.55);
-  });
-  const warnMat = new THREE.MeshToonMaterial({ color: 0xff6b6b, emissive: 0xff6b6b, emissiveIntensity: 0.7, gradientMap });
-  inst(light, warnMat, picks.climb.filter((_, i) => i % 2 === 0), (d, t) => {
-    d.position.set(t.x, t.y + 1.7, t.z);
-    d.rotation.set(0, 0, 0);
-    d.scale.set(1, 1, 1);
-  });
 
   function organicBlob() {
     const geo = new THREE.IcosahedronGeometry(1, 1);
@@ -274,6 +248,7 @@ export function buildDressing(scene, course, gradientMap) {
     const side = i % 2 === 0 ? -1 : 1;
     let zone = course.zones[0].id;
     for (const item of course.zones) if (z >= item.z0) zone = item.id;
+    if (zone === "canyon" || zone === "ice" || zone === "climb") continue;
     floats.push({
       x: side * (14 + hash(i) * 8),
       y: 6 + hash(i + 3) * 8,

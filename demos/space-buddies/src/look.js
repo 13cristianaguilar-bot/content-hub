@@ -37,7 +37,13 @@ export function normalizeAccess(raw) {
 
 export function loadAccess(storage) {
   try {
-    return normalizeAccess(JSON.parse(storage.getItem(ACCESS_KEY) || "{}"));
+    const raw = storage.getItem(ACCESS_KEY);
+    if (!raw) {
+      const base = defaultAccess();
+      if (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches) base.reduceShake = true;
+      return base;
+    }
+    return normalizeAccess(JSON.parse(raw));
   } catch (err) {
     return defaultAccess();
   }

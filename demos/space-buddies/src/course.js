@@ -529,6 +529,12 @@ export function createCourse(cfg) {
     { kind: "mushroom", x: 0, y: 0, z: zz(40) },
     { kind: "tower", x: 0, y: 5.6, z: zz(210) },
   ];
+  const gates = [
+    { name: "canyon", z: zz(158), y: 0.25, rx: 5 },
+    { name: "sky", z: zz(236), y: 5.2, rx: 5 },
+    { name: "heat", z: zz(264), y: 3.3, rx: 12 },
+    { name: "climb", z: zz(356), y: 8, rx: 4.5 },
+  ];
   const checkpoints = ["meadow", "canyon", "sky", "ice", "climb"].map((id) => {
     const zone = zones.find((z) => z.id === id);
     return { x: 0, y: 0, z: zone.z0 + 8, name: zone.name, row: 0 };
@@ -568,6 +574,7 @@ export function createCourse(cfg) {
     landmarks,
     doors,
     checkpoints,
+    gates,
     waypoints: routes[0],
     routes,
     openDoor,

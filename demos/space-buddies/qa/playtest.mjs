@@ -1065,6 +1065,7 @@ async function modesRun() {
           seated,
           collapse: sb.race.collapseZ,
           lead: Math.max(...sb.race.racers.map((r) => r.pos.z)),
+          edgeFalls: sb.race.edgeFalls || null,
         };
       });
       if (snap && snap.phase === "race" && snap.time >= 3 && aliveAt3 == null) aliveAt3 = snap.alive;
@@ -1081,7 +1082,7 @@ async function modesRun() {
     const launched = !!(end && end.phase === "launch");
     const ok = aliveAt3 > 0 && (filled || timedOut || launched);
     reports.push({ name: job.name, aliveAt3, gapAt13, qual: end && end.qual, need: end && end.need, time: end && Number(end.time.toFixed(1)), seconds: end && end.seconds, kind: end && end.kind, ok });
-    console.log(job.name, ok ? "ok" : "FAIL", "alive3", aliveAt3, "gap13", gapAt13, "qual", end && end.qual, "/", end && end.need, "t", end && end.time);
+    console.log(job.name, ok ? "ok" : "FAIL", "alive3", aliveAt3, "gap13", gapAt13, "qual", end && end.qual, "/", end && end.need, "t", end && end.time, "falls", end && end.edgeFalls);
     await context.close();
   }
   await browser.close();

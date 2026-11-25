@@ -207,6 +207,7 @@ function crackUnder(race, r) {
     chunk.state = "cracking";
     chunk.crackT = race.cfg.fragileCrack;
     chunk.dirty = true;
+    r.hazardAt = race.time;
     race.events.push({ t: "crack" });
     return;
   }
@@ -291,6 +292,7 @@ function knock(race, r, ix, iz, iy) {
   r.controlLock = Math.min(1.4, Math.max(r.controlLock, race.cfg.stunTime));
   r.knockCd = race.cfg.knockCooldown;
   r.sliding = 0;
+  r.hazardAt = race.time;
   race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
   if (r.isPlayer) race.shake = Math.max(race.shake, 0.72);
 }
@@ -372,7 +374,50 @@ function findRespawnTile(race, r) {
   return null;
 }
 
+function keepOnRim(race, r) {
+  if (r.seated || r.eliminated || r.ungroundT > 0) return;
+  if (spotOnFloor(race, r.pos.x, r.pos.z)) return;
+  const floors = race.course.floors || [];
+  let best = null;
+  let bestLip = 1e9;
+  for (let i = 0; i < floors.length; i++) {
+    const pad = floors[i];
+    if (pad.rx < 10 || pad.rz < 8) continue;
+    if (pad.zone !== "meadow" && pad.zone !== "canyon") continue;
+    if (Math.abs(r.pos.y - pad.y) > 1.5) continue;
+    const nx = (r.pos.x - pad.x) / pad.rx;
+    const nz = (r.pos.z - pad.z) / pad.rz;
+    const len = Math.hypot(nx, nz);
+    if (len < 1) continue;
+    const lip = (len - 1) * Math.min(pad.rx, pad.rz);
+    if (lip < bestLip) {
+      bestLip = lip;
+      best = pad;
+    }
+  }
+  if (!best || bestLip > 0.9) return;
+  const nx = (r.pos.x - best.x) / best.rx;
+  const nz = (r.pos.z - best.z) / best.rz;
+  const len = Math.hypot(nx, nz) || 1;
+  const scale = 0.98 / len;
+  r.pos.x = best.x + nx * best.rx * scale;
+  r.pos.z = best.z + nz * best.rz * scale;
+  const ox = nx / len;
+  const oz = nz / len;
+  const outV = r.vel.x * ox + r.vel.z * oz;
+  if (outV > 0) {
+    r.vel.x -= ox * outV;
+    r.vel.z -= oz * outV;
+  }
+}
+
 function missFooting(race, r) {
+  if (!race.edgeFalls) race.edgeFalls = { total: 0, bare: 0 };
+  const lava = race.course && race.course.lava;
+  const inLava = lava && r.pos.z > lava.z0 && r.pos.z < lava.z1 && r.pos.x > lava.x0 && r.pos.x < lava.x1;
+  if (inLava || (race.collapseZ != null && r.pos.z < race.collapseZ + 4)) r.hazardAt = race.time;
+  race.edgeFalls.total++;
+  if (!(race.time - (r.hazardAt || -99) < 2)) race.edgeFalls.bare++;
   if (race.kind === "survival" && race.phase === "race" && !r.eliminated && !r.qualified && !r.seated) {
     r.eliminated = true;
     if (!race.fallers) race.fallers = [];
@@ -720,6 +765,7 @@ function integrate(race, r, wish, dt) {
     r.pos.x += r.vel.x * hdt;
     r.pos.z += r.vel.z * hdt;
     resolveSolids(race, r);
+    if (wasGrounded) keepOnRim(race, r);
   }
   const speedAfter = hypot(r.vel.x, r.vel.z);
   if (r.isPlayer && race.feel && r.grounded && r.sliding <= 0) {
@@ -776,6 +822,7 @@ function integrate(race, r, wish, dt) {
         gnd.tile.chunk.crackT = cfg.fragileCrack;
         gnd.tile.chunk.dirty = true;
         race.events.push({ t: "crack" });
+        r.hazardAt = race.time;
       }
       crackUnder(race, r);
     } else if (wasGrounded && r.pos.z < 50 && r.vel.y <= 0.6 && spotOnFloor(race, r.pos.x, r.pos.z)) {
@@ -1174,6 +1221,7 @@ function hazards(race, dt) {
         r.flail = 0.4;
         r.bumpCd = cfg.bumperCooldown;
         r.controlLock = Math.max(r.controlLock, 0.12);
+        r.hazardAt = race.time;
         race.events.push({ t: "bump", id: r.id, big: true, obstacle: true });
         if (r.isPlayer) race.shake = Math.max(race.shake, 0.28);
       }

@@ -27,7 +27,13 @@ export function showCoach(phase, seated, zoneId, time, auto, paused) {
 }
 
 export function resultReason(race) {
-  if (!race || race.result === "qualified" || race.result === "escaped") return "";
+  if (!race) return "";
+  if (race.result === "escaped") return "YOU BOARDED THE SHIP";
+  if (race.result === "qualified") {
+    if (race.kind === "crown") return "YOU HELD THE CROWN";
+    if (race.kind === "survival") return "YOU WERE IN THE LAST 8";
+    return "YOU CROSSED THE FINISH";
+  }
   const limit = race.roundSeconds || (race.cfg && race.cfg.raceSeconds) || 0;
   if (race.shipRound && race.player && !race.player.seated) return "SHIP SEATS FILLED";
   if (limit && (race.time || 0) >= limit - 0.08) return "TIME RAN OUT";

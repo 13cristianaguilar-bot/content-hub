@@ -35,6 +35,8 @@ const SFX = {
   tickFinal: ["sfx_timer_warning_final", 0.7],
   pauseOpen: ["ui_pause_open", 0.55],
   pauseClose: ["ui_pause_close", 0.55],
+  fall: ["sfx_fall_whistle", 0.7],
+  respawn: ["sfx_respawn_pop", 0.65],
 };
 
 const DUCK = { qualify: true, go: true, launch: true, eliminated: true, escaped: true };
@@ -74,6 +76,36 @@ export function createAudio() {
   let raceOn = false;
   let held = false;
   let duckTimer = 0;
+  let bedLive = false;
+  let musicLive = false;
+  let rumbleLive = false;
+  let rumbleVol = 0;
+
+  function ensureLoop(howl, live) {
+    if (live.on) return;
+    howl.stop();
+    howl.play();
+    live.on = true;
+  }
+  const bedFlag = { on: false };
+  const musicFlag = { on: false };
+  const rumbleFlag = { on: false };
+  function ensureBed() {
+    ensureLoop(bed, bedFlag);
+    bedLive = bedFlag.on;
+  }
+  function ensureMusic() {
+    ensureLoop(music, musicFlag);
+    musicLive = musicFlag.on;
+  }
+  function ensureRumble() {
+    ensureLoop(rumble, rumbleFlag);
+    rumbleLive = rumbleFlag.on;
+  }
+  function stopLoop(howl, flag) {
+    howl.stop();
+    flag.on = false;
+  }
 
   function apply() {
     const hearMusic = !prefs.muted && prefs.music;
@@ -99,16 +131,15 @@ export function createAudio() {
   function unlock() {
     unlocked = true;
     if (!held) {
-      if (raceOn) {
-        if (!music.playing()) music.play();
-      } else if (!bed.playing()) bed.play();
+      if (raceOn) ensureMusic();
+      else ensureBed();
     }
     resumeCtx();
   }
 
   function startBeds() {
     if (raceOn || held) return;
-    if (unlocked && !bed.playing()) bed.play();
+    if (unlocked) ensureBed();
     resumeCtx();
   }
 
@@ -118,35 +149,47 @@ export function createAudio() {
     raceOn = racing;
     if (held || !unlocked) return;
     if (racing) {
-      if (bed.playing()) bed.pause();
-      if (!music.playing()) music.play();
+      stopLoop(bed, bedFlag);
+      bedLive = false;
+      ensureMusic();
       music.volume(MUSIC_VOL);
     } else {
-      if (music.playing()) music.pause();
-      if (!bed.playing()) bed.play();
+      stopLoop(music, musicFlag);
+      musicLive = false;
+      stopLoop(rumble, rumbleFlag);
+      rumbleLive = false;
+      ensureBed();
     }
   }
 
   function setHeld(on) {
     held = !!on;
     if (held) {
-      if (music.playing()) music.pause();
-      if (bed.playing()) bed.pause();
-      if (rumble.playing()) rumble.pause();
+      stopLoop(music, musicFlag);
+      stopLoop(bed, bedFlag);
+      stopLoop(rumble, rumbleFlag);
+      musicLive = false;
+      bedLive = false;
+      rumbleLive = false;
       return;
     }
     if (!unlocked) return;
     if (raceOn) {
-      if (!music.playing()) music.play();
-    } else if (!bed.playing()) bed.play();
+      ensureMusic();
+      music.volume(MUSIC_VOL);
+      if (rumbleVol > 0.02) ensureRumble();
+    } else ensureBed();
   }
 
   function setRumble(value) {
-    const vol = Math.max(0, Math.min(0.3, value || 0));
-    rumble.volume(vol);
+    rumbleVol = Math.max(0, Math.min(0.3, value || 0));
+    rumble.volume(rumbleVol);
     if (!unlocked || held || !raceOn) return;
-    if (vol > 0.02 && !rumble.playing()) rumble.play();
-    if (vol <= 0.02 && rumble.playing()) rumble.pause();
+    if (rumbleVol > 0.02) ensureRumble();
+    else {
+      stopLoop(rumble, rumbleFlag);
+      rumbleLive = false;
+    }
   }
 
   function play(name, gap = 0.05) {
@@ -195,6 +238,17 @@ export function createAudio() {
     get ctx() { return Howler.ctx || null; },
     get muted() { return prefs.muted; },
     get playing() { return music.playing() || bed.playing(); },
-    get musicOn() { return music.playing(); },
+    get musicOn() { return musicLive || music.playing(); },
+    get bedOn() { return bedLive || bed.playing(); },
+    get rumbleOn() { return rumbleLive || rumble.playing(); },
+    bedInstances() {
+      const sounds = bed._sounds || [];
+      let n = 0;
+      for (let i = 0; i < sounds.length; i++) {
+        const sound = sounds[i];
+        if (sound && sound._paused === false && sound._ended === false) n++;
+      }
+      return n;
+    },
   };
 }

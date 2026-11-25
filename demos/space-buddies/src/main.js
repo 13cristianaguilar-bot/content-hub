@@ -254,6 +254,9 @@ function begin() {
     state: audio.ctx && audio.ctx.state,
     bed: audio.playing,
     music: audio.musicOn,
+    bedOn: audio.bedOn,
+    rumbleOn: audio.rumbleOn,
+    beds: audio.bedInstances ? audio.bedInstances() : 0,
     muted: prefs.muted,
     musicOn: prefs.music,
     sfx: prefs.sfx,
@@ -673,8 +676,12 @@ document.getElementById("set-mute").addEventListener("pointerdown", (e) => {
 paintAudio();
 document.getElementById("resume").addEventListener("pointerdown", (e) => {
   e.preventDefault();
+  e.stopPropagation();
+  if (!paused) return;
   paused = false;
   pauseMenu.hidden = true;
+  audio.play("pauseClose");
+  audio.setHeld(false);
 });
 document.getElementById("restart").addEventListener("pointerdown", (e) => {
   e.preventDefault();
@@ -816,6 +823,7 @@ document.getElementById("app").addEventListener("pointerdown", (e) => {
   const btn = e.target.closest("button");
   if (!btn || btn.disabled) return;
   const id = btn.id;
+  if (id === "resume" || id === "pause") return;
   if (id === "menu" || id === "pause-menu-btn" || id === "set-close") audio.play("back");
   else if (id === "play" || id === "start" || id === "again" || id === "land") audio.play("confirm");
   else audio.play("tap");
@@ -858,7 +866,11 @@ let shownResult = false;
 
 function updateHud(dt) {
   const limit = race.roundSeconds || cfg.raceSeconds;
-  const remain = race.phase === "countdown" ? limit : Math.max(0, limit - race.time);
+  let remain = race.phase === "countdown" ? limit : Math.max(0, limit - race.time);
+  if (race.phase === "race") {
+    if (race.shownRemain == null || remain <= race.shownRemain + 0.001) race.shownRemain = remain;
+    else remain = race.shownRemain;
+  } else race.shownRemain = null;
   const label = clock(remain);
   if (timerNum && timerNum.textContent !== label) timerNum.textContent = label;
   const lowTime = race.phase === "race" && remain <= 10;
@@ -885,9 +897,31 @@ function updateHud(dt) {
     else coinNum.textContent = String(coinN);
   }
 
+  const seenHint = (window.__sbHints = window.__sbHints || {});
+  if (race.phase === "race" && race.player && !race.player.seated) {
+    const holes = (race.course && race.course.holes) || [];
+    for (let i = 0; i < holes.length && !seenHint.dive; i++) {
+      const h = holes[i];
+      if (!h.dive) continue;
+      const dzh = h.z - race.player.pos.z;
+      if (dzh > 0.4 && dzh < 8 && Math.abs(h.x - race.player.pos.x) < h.rx + 2) {
+        seenHint.dive = true;
+        race.hint = "DIVE ACROSS THE GAP";
+        race.hintT = 2.6;
+      }
+    }
+    const shelf = groundAt(course, race.player.pos.x, race.player.pos.z + 1.3);
+    if (!seenHint.grab && shelf && shelf.y > race.player.pos.y + 1.35 && shelf.y < race.player.pos.y + 2.15) {
+      seenHint.grab = true;
+      race.hint = "GRAB THE LEDGE";
+      race.hintT = 2.6;
+    }
+  }
+  if (race.hintT > 0) race.hintT -= dt;
   const showTutor = showCoach(race.phase, race.player.seated, race.zoneId, race.time, cfg.auto, paused);
-  tutor.hidden = !showTutor;
-  if (showTutor) {
+  tutor.hidden = !(showTutor || race.hintT > 0);
+  if (race.hintT > 0) tutor.textContent = race.hint;
+  else if (showTutor) {
     tutor.textContent = race.time < 2.6 ? "DRAG THE LEFT SIDE TO RUN" : race.time < 5.2 ? "DRAG THE RIGHT SIDE TO LOOK" : "JUMP AND DIVE";
   }
 
@@ -1081,6 +1115,7 @@ function handleEvents() {
     } else if (e.t === "checkpoint" && e.name && e.name !== "START") showToast("CHECKPOINT");
     else if (e.t === "heatfull") showToast("QUALIFICATION OVER");
     else if (e.t === "qualify") race.gateCheer = 0.5;
+    else if (e.t === "fall" && e.id === 0 && window.SBUI && navigator.vibrate) window.SBUI.haptic("medium");
     else if (e.t === "respawn" && e.id === 0 && world.snapBehind) world.snapBehind();
     else if (e.t === "zone") showZone(e.name);
     else if (e.t === "error") reportError(e.message);

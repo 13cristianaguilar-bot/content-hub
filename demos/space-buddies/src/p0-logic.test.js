@@ -224,12 +224,20 @@ for (let i = 0; i < 240 * 60; i++) {
     const dzb = sw.z - p.pos.z;
     if (dzb > 0.8 && dzb < 6) gateDive = true;
   }
+  let diveGap = false;
+  for (const h of route.course.holes || []) {
+    if (!h.dive) continue;
+    const dzh = h.z - p.pos.z;
+    if (dzh > 0.4 && dzh < 8) diveGap = true;
+  }
+  const shelf = groundAt(route.course, p.pos.x, p.pos.z + 1.15);
+  const grab = !!(shelf && shelf.y > p.pos.y + 1.35 && shelf.y < p.pos.y + 2.15);
   step(route, dt, {
     x: dx / mag,
     z: Math.max(0.15, dz) / mag,
-    jump: !gateDive && p.grounded && target.y > p.pos.y + 0.55 && mag < 8,
-    dive: gateDive,
-    grab: false,
+    jump: diveGap || (!gateDive && p.grounded && target.y > p.pos.y + 0.55 && mag < 8),
+    dive: gateDive || diveGap,
+    grab,
     holdJump: false,
   });
   if (Math.hypot(p.pos.x - course.ship.x, p.pos.z - course.ship.z) < 6) {

@@ -123,7 +123,7 @@ function scatter(scene, gltf, gradientMap, spots, override, wind) {
   const dummy = new THREE.Object3D();
   for (const part of parts) {
     const mesh = new THREE.InstancedMesh(part.geom, part.mat, spots.length);
-    mesh.frustumCulled = false;
+    mesh.frustumCulled = true;
     spots.forEach((spot, i) => {
       const s = spot.s;
       dummy.position.set(spot.x, (spot.y || 0) + lift * s, spot.z);

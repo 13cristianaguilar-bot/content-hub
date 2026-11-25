@@ -1,5 +1,7 @@
 // Scripted player for the playtest harness. Wish is world-space, same as the sim steer.
 
+import { groundAt } from "./course.js";
+
 function clampWish(x, z) {
   const mag = Math.hypot(x, z);
   if (mag > 1) {
@@ -85,6 +87,8 @@ export function botWish(race, mode) {
     tz = p.pos.x < 9 ? s.z - 4 : s.z + 12;
   }
   let gateDive = false;
+  let diveGap = false;
+  let gapJump = false;
   const bars = (race.course && race.course.sweepers) || [];
   for (let i = 0; i < bars.length; i++) {
     const sw = bars[i];
@@ -96,7 +100,12 @@ export function botWish(race, mode) {
     const holes = (race.course && race.course.holes) || [];
     for (let i = 0; i < holes.length; i++) {
       const h = holes[i];
-      if (h.z - p.pos.z > 0.4 && h.z - p.pos.z < 14) {
+      const ahead = h.z - p.pos.z;
+      const edge = ahead - h.rz;
+      if (h.dive && edge > 2.2 && edge < 4.4) diveGap = true;
+      if (h.dive && edge > 0.2 && edge < 1.4) gapJump = true;
+      if (h.dive) continue;
+      if (ahead > 0.4 && ahead < 14) {
         const side = h.side || 1;
         tx = h.x + side * (h.rx + 1.6);
       }
@@ -118,13 +127,15 @@ export function botWish(race, mode) {
   const obs = obstacleAhead(race, p);
   const rise = (point.y || 0) - p.pos.y;
   const boarding = race.shipRound && ship && Math.abs(p.pos.x - ship.x) < 5 && p.pos.z > ship.z - 10 && p.pos.z < ship.z + 1;
-  const jump = !boarding && !gateDive && (!!(point.gap) || rise > 0.55 || !!(obs && obs.kind !== "bar") || stalled);
+  const shelf = groundAt(race.course, p.pos.x, p.pos.z + 1.15);
+  const grab = !!(shelf && shelf.y > p.pos.y + 1.35 && shelf.y < p.pos.y + 2.15);
+  const jump = !boarding && !gateDive && (gapJump || !!(point.gap) || rise > 0.55 || !!(obs && obs.kind !== "bar") || stalled);
   return {
     x: wish.x,
     z: wish.z,
     jump,
-    dive: gateDive || !!(obs && obs.kind === "bar"),
-    grab: false,
+    dive: gateDive || diveGap || !!(obs && obs.kind === "bar"),
+    grab,
     holdJump: false,
   };
 }

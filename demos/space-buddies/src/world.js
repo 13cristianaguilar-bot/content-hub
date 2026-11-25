@@ -640,54 +640,68 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     }
     return true;
   }
+  function instanceCopies(src, spots) {
+    if (!src || !spots.length) return;
+    const buckets = new Map();
+    for (let i = 0; i < spots.length; i++) {
+      const spot = spots[i];
+      const probe = src.clone(true);
+      probe.position.set(spot.x, spot.y, spot.z);
+      probe.rotation.y = spot.rot || 0;
+      probe.updateWorldMatrix(true, true);
+      probe.traverse((node) => {
+        if (!node.isMesh || !node.geometry) return;
+        const key = node.geometry.uuid;
+        let bucket = buckets.get(key);
+        if (!bucket) {
+          const raw = Array.isArray(node.material) ? node.material[0] : node.material;
+          const material = raw ? raw.clone() : new THREE.MeshToonMaterial({ gradientMap: TOON_MAP });
+          material.vertexColors = true;
+          bucket = { geom: node.geometry, material, matrices: [] };
+          buckets.set(key, bucket);
+        }
+        bucket.matrices.push(node.matrixWorld.clone());
+      });
+    }
+    buckets.forEach((bucket) => {
+      const mesh = new THREE.InstancedMesh(bucket.geom, bucket.material, bucket.matrices.length);
+      for (let i = 0; i < bucket.matrices.length; i++) mesh.setMatrixAt(i, bucket.matrices[i]);
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.castShadow = false;
+      mesh.frustumCulled = true;
+      mesh.computeBoundingSphere();
+      scene.add(mesh);
+    });
+  }
   for (const set of zoneSets) {
     const gltf = gltfs[set.key];
     if (!gltf) continue;
     const pads = course.floors.filter((pad) => pad.zone === set.zone && !pad.bridge && pad.rx >= 6);
+    const byName = new Map();
     let placed = 0;
     for (let p = 0; p < pads.length && placed < 8; p++) {
       const pad = pads[p];
       const angles = [1.25, -1.25, 2.2];
       for (let a = 0; a < angles.length && placed < 8; a++) {
         const name = set.names[placed % set.names.length];
-        const src = gltf.scene.getObjectByName(name);
-        if (!src) continue;
         const ang = angles[a] + p * 0.2;
         const rad = pad.rx * 0.74;
         const x = pad.x + Math.sin(ang) * rad;
         const z = pad.z + Math.cos(ang) * rad * 0.42;
         if (!clearOfLine(x, z)) continue;
-        const obj = src.clone(true);
-        obj.position.set(0, 0, 0);
-        obj.rotation.y = ang;
-        obj.traverse((node) => {
-          if (!node.isMesh) return;
-          node.frustumCulled = true;
-          node.castShadow = false;
-          if (node.material) {
-            node.material = node.material.clone();
-            node.material.vertexColors = true;
-          }
-        });
         const lift = name === "CloudPuff" ? 1.7 : name === "CloudPlatform" ? 0.15 : 0;
-        obj.position.set(x, pad.y + lift, z);
-        scene.add(obj);
-        if (set.clip) {
-          const clip = (gltf.animations || []).find((item) => item.name === set.clip);
-          if (clip) {
-            const mixer = new THREE.AnimationMixer(obj);
-            const action = mixer.clipAction(clip);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.play();
-            propMixers.push(mixer);
-          }
-        }
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name).push({ x, y: pad.y + lift, z, rot: ang });
         placed++;
       }
     }
+    byName.forEach((spots, name) => {
+      const src = gltf.scene.getObjectByName(name);
+      if (src) instanceCopies(src, spots);
+    });
   }
   if (gltfs.crystal) {
-    const shimmer = (gltfs.crystal.animations || []).find((clip) => clip.name === "shimmer");
+    const spots = [];
     for (const zone of ["sky", "ice"]) {
       const pads = course.floors.filter((pad) => pad.zone === zone && !pad.bridge && pad.rx >= 6);
       let placed = 0;
@@ -698,29 +712,11 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         const x = pad.x + Math.sin(ang) * rad;
         const z = pad.z + Math.cos(ang) * rad * 0.35;
         if (!clearOfLine(x, z)) continue;
-        const obj = gltfs.crystal.scene.clone(true);
-        obj.position.set(x, pad.y, z);
-        obj.rotation.y = ang;
-        obj.traverse((node) => {
-          if (!node.isMesh) return;
-          node.frustumCulled = true;
-          node.castShadow = false;
-          if (node.material) {
-            node.material = node.material.clone();
-            node.material.vertexColors = true;
-          }
-        });
-        scene.add(obj);
-        if (shimmer) {
-          const mixer = new THREE.AnimationMixer(obj);
-          const action = mixer.clipAction(shimmer);
-          action.setLoop(THREE.LoopRepeat, Infinity);
-          action.play();
-          propMixers.push(mixer);
-        }
+        spots.push({ x, y: pad.y, z, rot: ang });
         placed++;
       }
     }
+    instanceCopies(gltfs.crystal.scene, spots);
   }
   const terrainMat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: TOON_MAP, side: THREE.DoubleSide });
   terrainMat.customProgramCacheKey = () => "sb-crust";
@@ -868,7 +864,7 @@ export async function createWorld(canvas, course, cfg, onProgress) {
   }
   const capMat = new THREE.MeshToonMaterial({ color: 0xe23b4a, gradientMap: TOON_MAP });
   const stemMat = new THREE.MeshToonMaterial({ color: 0xf4e2c4, gradientMap: TOON_MAP });
-  const stoneMat = new THREE.MeshToonMaterial({ color: 0x6f7c9a, gradientMap: TOON_MAP });
+  const stoneMat = new THREE.MeshToonMaterial({ color: 0x8c6bff, gradientMap: TOON_MAP });
   for (const mark of course.landmarks || []) {
     if (mark.kind === "mushroom") {
       // The meadow landmark is the CC0 mushroom placed with the other meadow props.
@@ -3299,14 +3295,17 @@ export async function createWorld(canvas, course, cfg, onProgress) {
     for (const v of visuals) v.group.visible = true;
   }
 
+  let frameStats = { calls: 0, triangles: 0 };
   function render() {
     if (!postOn) {
       renderer.setRenderTarget(null);
       renderer.render(scene, camera);
+      frameStats = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
       return;
     }
     renderer.setRenderTarget(sceneTarget);
     renderer.render(scene, camera);
+    frameStats = { calls: renderer.info.render.calls, triangles: renderer.info.render.triangles };
     const mask = camera.layers.mask;
     camera.layers.set(1);
     const shadows = renderer.shadowMap.enabled;
@@ -3391,6 +3390,8 @@ export async function createWorld(canvas, course, cfg, onProgress) {
         spectate: state.spectate,
         blocked: !!state.camBlocked,
         insideProp: !!state.insideProp,
+        draws: frameStats.calls,
+        triangles: frameStats.triangles,
       };
     },
     applyLook,

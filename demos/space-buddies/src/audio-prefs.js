@@ -63,6 +63,8 @@ export function cueFor(event) {
   if (event.t === "escaped") return "escaped";
   if (event.t === "crack") return "crumble";
   if (event.t === "checkpoint") return "checkpoint";
+  if (event.t === "fall") return "fall";
+  if (event.t === "respawn") return "respawn";
   if (event.t === "timer") return event.final ? "tickFinal" : "tick";
   if (event.t === "pause") return event.open ? "pauseOpen" : "pauseClose";
   return "";
@@ -70,5 +72,5 @@ export function cueFor(event) {
 
 export function playerOnlyCue(event) {
   if (!event) return false;
-  return event.t === "jump" || event.t === "land" || event.t === "dive" || event.t === "grab" || event.t === "qualify";
+  return event.t === "jump" || event.t === "land" || event.t === "dive" || event.t === "grab" || event.t === "qualify" || event.t === "fall" || event.t === "respawn";
 }

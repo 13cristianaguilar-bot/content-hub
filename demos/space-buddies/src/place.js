@@ -43,6 +43,7 @@ export function resultReason(race) {
     return "SHIP SEATS FILLED";
   }
   if (timedOut) return "TIME RAN OUT";
+  if (race.closedBy === "full" && race.qualifyN) return "ALL " + race.qualifyN + " SPOTS FILLED";
   return "FELL OFF THE PLANET";
 }
 

@@ -37,7 +37,9 @@
     })(t0);
   }
   function slam(el) {
-    el.hidden = false; el.classList.remove("is-in"); void el.offsetWidth; el.classList.add("is-in");
+    el.hidden = false;
+    if (document.documentElement.classList.contains("sb-reduce-motion")) return;
+    el.classList.remove("is-in"); void el.offsetWidth; el.classList.add("is-in");
     setTimeout(function () { var r = document.getElementById("app") || document.body; r.classList.remove("sb-shake"); void r.offsetWidth; r.classList.add("sb-shake"); haptic("heavy"); }, 280);
   }
   function wipe(midFn) {

@@ -40,9 +40,12 @@
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html.sb-reduce-motion .sb-banner,
+html.sb-reduce-motion .sb-banner.is-in,
+html.sb-reduce-motion .sb-shake,
 html.sb-reduce-motion #play,
 html.sb-reduce-motion #round-title,
 html.sb-reduce-motion #zone,
+html.sb-reduce-motion #last-banner,
 html.sb-reduce-motion #toast { animation: none !important; }
 html, body {
   margin: 0;
@@ -572,7 +575,7 @@ button { font-family: inherit; touch-action: manipulation; }
   </div>
 </div>
 <script src="ui/sb-ui.js"></script>
-    <script src="game.js?v=93"></script>
+    <script src="game.js?v=95"></script>
 <style>
 #cine-skip { position: fixed; left: 50%; bottom: calc(28px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 30; pointer-events: auto; }
 #settings .sb-card { max-height: calc(100vh - 36px); overflow: auto; }

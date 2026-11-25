@@ -947,10 +947,8 @@ async function saveHeatmaps(browser, marks) {
   await context.close();
 }
 
-async function occludeRun() {
-  const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--disable-dev-shm-usage"] });
-  const context = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
-  const page = await openJob(context, { name: "occlude-ship", planet: 1, round: 2, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true }, []);
+async function occludeJob(context, job) {
+  const page = await openJob(context, job, []);
   let buried = 0;
   let low = 0;
   let flat = 0;
@@ -958,7 +956,8 @@ async function occludeRun() {
   let frames = 0;
   let startFrames = 0;
   let checkpointFrames = 0;
-  const deadline = Date.now() + 70000;
+  let inside = 0;
+  const deadline = Date.now() + (job.wallMs || 70000);
   while (Date.now() < deadline) {
     const snap = await page.evaluate(() => {
       const sb = window.__sb;
@@ -1012,8 +1011,10 @@ async function occludeRun() {
         buddySeen,
         near,
         fill,
+        inside: !!(view && view.insideProp),
       };
     });
+    if (snap && (snap.phase === "countdown" || snap.phase === "race") && snap.inside) inside++;
     if (snap && snap.phase === "race") {
       frames++;
       if (snap.time < 2) startFrames++;
@@ -1023,16 +1024,34 @@ async function occludeRun() {
       if (snap.fill > 0.6) flat++;
       if (!snap.buddySeen) {
         hidden++;
-        if (hidden <= 4) console.log("off", snap.time, snap.seated, JSON.stringify(snap.near));
+        if (hidden <= 4) console.log(job.name, "off", snap.time, snap.seated, JSON.stringify(snap.near));
       }
     }
     if (snap && (snap.phase === "results" || snap.phase === "launch")) break;
     await sleep(120);
   }
-  await browser.close();
-  const report = { frames, buried, low, flat, hidden, startFrames, checkpointFrames };
+  await page.close();
+  const report = { name: job.name, frames, buried, low, flat, hidden, inside, startFrames, checkpointFrames };
   console.log(JSON.stringify(report));
-  if (buried || low || flat || hidden || !startFrames || !checkpointFrames) process.exitCode = 1;
+  if (buried || low || flat || hidden || inside || !startFrames) return false;
+  if (job.round === 2 && !checkpointFrames) return false;
+  return true;
+}
+
+async function occludeRun() {
+  const browser = await chromium.launch({ channel: "chrome", headless: true, args: ["--disable-dev-shm-usage"] });
+  const context = await browser.newContext({ ...contextOptions(PHONE), serviceWorkers: "block" });
+  const jobs = [
+    { name: "occlude-sky", planet: 2, round: 0, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 90000, skipLobby: true },
+    { name: "occlude-survival", planet: 3, round: 0, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true },
+    { name: "occlude-ship", planet: 1, round: 2, seed: 4, bot: "follow", qa: 4, feel: true, occlude: true, viewport: PHONE, wallMs: 70000, skipLobby: true },
+  ];
+  let ok = true;
+  for (const job of jobs) {
+    if (!await occludeJob(context, job)) ok = false;
+  }
+  await browser.close();
+  if (!ok) process.exitCode = 1;
 }
 
 async function modesRun() {

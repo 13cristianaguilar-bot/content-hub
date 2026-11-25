@@ -322,8 +322,11 @@ function applyRound() {
     }
     r.eliminated = false;
     if (race.kind === "survival") {
-      r.pos.x = i % 2 === 0 ? -2.2 : 2.2;
-      r.pos.z = startZ + Math.floor(i / 2) * 3.2;
+      const count = race.racers.length;
+      const radius = Math.max(7.2, (count * 2.4) / (2 * Math.PI));
+      const ang = Math.PI + (i / count) * Math.PI * 2;
+      r.pos.x = Math.sin(ang) * radius;
+      r.pos.z = startZ + 8 + Math.cos(ang) * radius;
     } else {
       r.pos.x = ((i % 5) - 2) * 1.7;
       r.pos.z = startZ + Math.floor(i / 5) * 1.2;
@@ -344,6 +347,11 @@ function applyRound() {
     while (r.wp < route.length - 1 && route[r.wp].z < r.pos.z - 4) r.wp++;
   });
   race.seatsFilled = 0;
+  race.fallers = [];
+  race.finishOrder = [];
+  if (race.kind === "survival") {
+    race.survival = { x: 0, z: startZ + 8, y, angle: 0.4, len: 7.2, speed: 0.7, nextDrop: 8 };
+  } else race.survival = null;
   if (race.seats) race.seats = race.seats.map(() => null);
   if (world.setTheme) world.setTheme(planet);
   race.holdLaunch = cineOn ? cineDuration("launch") : 0;
@@ -364,12 +372,14 @@ function roundFocus() {
   const p = currentPlan();
   if (p.gate) return { x: p.gate.x || 0, y: p.gate.y || 1, z: p.gate.z };
   if (p.crown) return { x: p.crown.x, y: p.crown.y || 1, z: p.crown.z };
+  if (p.kind === "survival") return { x: 0, y: 1, z: p.startZ + 8 };
   if (p.ship && course.ship) return { x: course.ship.x, y: course.ship.y, z: course.ship.z };
   return { x: 0, y: 1, z: p.startZ + 70 };
 }
 
 function playCine(kind, then) {
-  if (!cineOn) {
+  const watchFlyover = params.get("occlude") === "1" && kind === "flyover";
+  if (!cineOn && !watchFlyover) {
     if (then) then();
     return;
   }
@@ -1014,7 +1024,7 @@ function updateHud(dt) {
     }
     const ran = clock(race.time || 0);
     const left = clock(Math.max(0, (race.roundSeconds || cfg.raceSeconds) - (race.time || 0)));
-    const fell = (race.fallers || []).slice(-3).join(", ");
+    const fell = (race.fallers || []).join(", ");
     const coins = race.coins || 0;
     resultTime.textContent = "TIME " + ran + " · LEFT " + left + " · " + coins + (coins === 1 ? " COIN" : " COINS") + " · PLANET " + planet;
     if (fell && kind === "out") resultSub.textContent = fell + " FELL";
@@ -1031,7 +1041,7 @@ function updateHud(dt) {
     const dz = ship.z - race.player.pos.z;
     const seen = world.project ? world.project(ship.x, ship.y + 2, ship.z) : null;
     const onScreen = !!(seen && seen.w > 0 && Math.abs(seen.x) < 0.92 && Math.abs(seen.y) < 0.92);
-    const show = started && race.phase === "race" && !paused && !onScreen && dx * dx + dz * dz > 64;
+    const show = started && race.shipRound && race.phase === "race" && !paused && !onScreen && dx * dx + dz * dz > 64;
     arrow.hidden = !show;
     if (show) {
       const fwd = dx * -Math.sin(yaw) + dz * Math.cos(yaw);

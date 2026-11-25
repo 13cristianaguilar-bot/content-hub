@@ -46,28 +46,43 @@ export function resultReason(race) {
   return "FELL OFF THE PLANET";
 }
 
+function ordinal(n) {
+  const suffix = n === 1 ? "ST" : n === 2 ? "ND" : n === 3 ? "RD" : "TH";
+  return n + suffix;
+}
+
 export function resultBoard(race) {
   const list = (race && race.racers) || [];
   const made = list.filter((r) => r && (r.qualified || r.seated));
-  made.sort((a, b) => (b.pos.z || 0) - (a.pos.z || 0));
+  const order = (race && race.finishOrder) || [];
+  made.sort((a, b) => {
+    if (a.seated && b.seated && a.seatIndex >= 0 && b.seatIndex >= 0 && a.seatIndex !== b.seatIndex) return a.seatIndex - b.seatIndex;
+    const ia = order.indexOf(a.id);
+    const ib = order.indexOf(b.id);
+    if (ia >= 0 || ib >= 0) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    return (b.pos.z || 0) - (a.pos.z || 0);
+  });
   const names = made.slice(0, 8).map((r) => (r.isPlayer ? "YOU" : "BUDDY"));
   return {
-    place: placeLabel(race && race.player, list),
+    place: placeLabel(race && race.player, list, race),
     names,
     count: made.length,
     extra: Math.max(0, made.length - names.length),
   };
 }
 
-export function placeLabel(player, racers) {
+export function placeLabel(player, racers, race) {
   if (player && player.seated && player.seatIndex >= 0) return "SEAT " + (player.seatIndex + 1);
+  const order = race && race.finishOrder;
+  if (order && player && player.qualified) {
+    const at = order.indexOf(player.id);
+    if (at >= 0) return ordinal(at + 1);
+  }
   let ahead = 0;
   const list = racers || [];
   for (let i = 0; i < list.length; i++) {
     const r = list[i];
     if (r !== player && !r.seated && r.pos.z > player.pos.z + 0.4) ahead++;
   }
-  const n = ahead + 1;
-  const suffix = n === 1 ? "ST" : n === 2 ? "ND" : n === 3 ? "RD" : "TH";
-  return n + suffix;
+  return ordinal(ahead + 1);
 }

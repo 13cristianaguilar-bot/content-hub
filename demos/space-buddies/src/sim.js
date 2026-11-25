@@ -391,21 +391,21 @@ function keepOnRim(race, r) {
     if (!chunk || chunk.fragile || chunk.state === "falling" || chunk.state === "gone") continue;
     if (Math.abs(r.pos.y - pad.y) > 1.5) continue;
     if (pad.bridge) {
-      if (pad.zone === "sky") continue;
+      if (pad.zone === "sky" && race.kind !== "gate") continue;
       const dx = r.pos.x - pad.x;
       const dz = r.pos.z - pad.z;
       const along = dx * pad.ax + dz * pad.az;
       if (Math.abs(along) > pad.rz * 1.15) continue;
       const lat = Math.hypot(dx - pad.ax * along, dz - pad.az * along);
       const lip = lat - pad.rx;
-      const reach = pad.zone === "meadow" ? 8.5 : 1.7;
+      const reach = pad.zone === "meadow" || pad.zone === "sky" ? 8.5 : 1.7;
       if (lip < 0 || lip > reach || lip >= bestLip) continue;
       bestLip = lip;
       best = pad;
       bridge = true;
       continue;
     }
-    if (pad.rx < 4 || pad.rz < 4 || pad.zone === "sky") continue;
+    if (pad.rx < 4 || pad.rz < 4 || (pad.zone === "sky" && race.kind !== "gate")) continue;
     const nx = (r.pos.x - pad.x) / pad.rx;
     const nz = (r.pos.z - pad.z) / pad.rz;
     const len = Math.hypot(nx, nz);
@@ -417,7 +417,8 @@ function keepOnRim(race, r) {
       bridge = false;
     }
   }
-  if (!best || bestLip > (best.bridge && best.zone === "meadow" ? 8.5 : 1.7)) return;
+  const rimReach = !best ? 0 : best.bridge && (best.zone === "meadow" || best.zone === "sky") ? 8.5 : 1.7;
+  if (!best || bestLip > rimReach) return;
   if (bridge) {
     const dx = r.pos.x - best.x;
     const dz = r.pos.z - best.z;
@@ -463,7 +464,7 @@ function pullOnto(race, r) {
   let bestLip = 1e9;
   for (let i = 0; i < floors.length; i++) {
     const pad = floors[i];
-    if (pad.zone === "ship" || pad.zone === "sky") continue;
+    if (pad.zone === "ship" || (pad.zone === "sky" && race.kind !== "gate")) continue;
     const chunk = race.course.chunks[pad.chunk];
     if (!chunk || chunk.fragile || chunk.state === "falling" || chunk.state === "gone") continue;
     if (pad.bridge) {
@@ -473,7 +474,7 @@ function pullOnto(race, r) {
       if (Math.abs(along) > pad.rz) continue;
       const lat = Math.hypot(dx - pad.ax * along, dz - pad.az * along);
       const lip = lat - pad.rx;
-      const reach = pad.zone === "meadow" ? 8.5 : 4.8;
+      const reach = pad.zone === "meadow" || pad.zone === "sky" ? 8.5 : 4.8;
       if (lip > reach || lip >= bestLip) continue;
       bestLip = lip;
       best = { pad, bridge: true, along, lat, dx, dz };
@@ -482,7 +483,8 @@ function pullOnto(race, r) {
       const nz = (r.pos.z - pad.z) / pad.rz;
       const len = Math.hypot(nx, nz);
       const lip = (len - 1) * Math.min(pad.rx, pad.rz);
-      if (lip > 3.4 || lip >= bestLip) continue;
+      const discReach = pad.zone === "sky" ? 6 : 3.4;
+      if (lip > discReach || lip >= bestLip) continue;
       bestLip = lip;
       best = { pad, bridge: false, len, nx, nz };
     }

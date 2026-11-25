@@ -302,6 +302,7 @@ assert(shakeMul({ reduceShake: true }) < 0.2 && outlineHex({ safeOutline: true }
 assert(cameraBuried({ x: 0, y: 0.2, z: 0 }, [{ x: 0, y: 0, z: 0, rx: 4, rz: 4 }], []) === "terrain", "a camera in the floor is buried");
 assert(cameraBuried({ x: 0, y: 4, z: -8 }, [{ x: 0, y: 0, z: 0, rx: 4, rz: 4 }], [{ x: 0, y: 0, z: 0 }]) === "", "a camera behind the pack is clear");
 assert(resultReason({ result: "out", time: 46, roundSeconds: 46, player: {} }) === "TIME RAN OUT", "a timer loss should say so");
+assert(resultReason({ result: "out", shipRound: true, time: 64, roundSeconds: 64, seatsFilled: 3, player: { seated: false }, cfg: { seats: 8 } }) === "TIME RAN OUT · 3 OF 8 SEATS", "a ship timeout should name the clock and the seats");
 const stride = 29;
 const ia = stride;
 const ib = ia + 1;

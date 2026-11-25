@@ -35,8 +35,14 @@ export function resultReason(race) {
     return "YOU CROSSED THE FINISH";
   }
   const limit = race.roundSeconds || (race.cfg && race.cfg.raceSeconds) || 0;
-  if (race.shipRound && race.player && !race.player.seated) return "SHIP SEATS FILLED";
-  if (limit && (race.time || 0) >= limit - 0.08) return "TIME RAN OUT";
+  const timedOut = !!(limit && (race.time || 0) >= limit - 0.08);
+  if (race.shipRound && race.player && !race.player.seated) {
+    const filled = race.seatsFilled || 0;
+    const seats = (race.cfg && race.cfg.seats) || 8;
+    if (timedOut && filled < seats) return "TIME RAN OUT · " + filled + " OF " + seats + " SEATS";
+    return "SHIP SEATS FILLED";
+  }
+  if (timedOut) return "TIME RAN OUT";
   return "FELL OFF THE PLANET";
 }
 

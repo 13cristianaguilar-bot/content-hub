@@ -69,7 +69,7 @@ a{color:var(--teal);text-decoration:none}
 .stage{flex:1;min-height:0;position:relative}
 .stage.scroll{overflow:auto}
 .stage.lock{overflow:hidden}
-.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
+.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto auto auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
 .lens{grid-column:1 / -1;grid-row:1;display:flex;gap:6px}
 .lens .tab{flex:1}
 .lens-note{margin:4px 0 0;font-size:12px;font-weight:700;color:var(--muted)}
@@ -104,9 +104,15 @@ a{color:var(--teal);text-decoration:none}
 .play:has(.banner) .col{gap:6px}
 .play:has(.banner) .card{padding:8px 10px}
 .play:has(.banner) .wtrack{margin-bottom:16px}
-.money{grid-column:1;grid-row:3;min-height:0;overflow:hidden}
-.long{grid-column:1;grid-row:3}
-.race{grid-column:2;grid-row:3}
+.paycard{grid-column:1 / -1;grid-row:3;padding:5px 10px}
+.paytop{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.paywhen{font-family:var(--serif);font-weight:650;font-size:18px;line-height:1;color:#000}
+.paygrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:2px 16px;align-items:start}
+.paycard p{margin:0;font-size:12px;font-weight:700;line-height:1.25}
+.paycard .challenge{margin-top:4px;padding:3px 8px;border:1px dashed var(--teal);border-radius:8px;color:#000;font-weight:800}
+.money{grid-column:1;grid-row:4;min-height:0;overflow:hidden}
+.long{grid-column:1;grid-row:4}
+.race{grid-column:2;grid-row:4}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
 .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
 .who{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -222,7 +228,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pads{margin-left:0}
   .pad,.tab{min-height:36px;padding:0 8px;font-size:11px}
   .status{padding:5px 10px;font-size:13px}
-  .play{grid-template-columns:1fr;grid-template-rows:auto auto minmax(220px,1fr) auto;gap:4px;padding:6px}
+  .play{grid-template-columns:1fr;grid-template-rows:auto auto auto minmax(180px,1fr) auto;gap:4px;padding:6px}
+  .paycard{grid-row:3;padding:4px 8px}
+  .paygrid{grid-template-columns:1fr;gap:1px}
+  .paywhen{font-size:15px}
+  .paycard p{font-size:11px}
   .lens .tab{min-height:32px;box-shadow:0 2px 0 #000}
   .play:has(.prior) .weekbox{display:none}
   .play:has(.prior) .pass{font-size:15px}
@@ -235,11 +245,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .hero-title{font-size:18px}
   .hero-commit,.hero-pace{font-size:11px}
   .hero-money b{font-size:22px}
-  .race{grid-row:3;height:auto;overflow:hidden}
-  .money{grid-row:4}
+  .race{grid-row:4;height:auto;overflow:hidden}
+  .money{grid-row:5}
   .long{display:none}
   .pass{font-size:18px;margin:0}
-  .play .extra,.play .fine,.play .wtrack,.play .commit-note,.play .line-in,.play .assume,#goal-line,.play .weekbox .src,.play .phone-hide,.play .monthline{display:none}
+  .play .extra,.play .fine,.play .wtrack,.play .commit-note,.play .line-in,.play .assume,#goal-line,.play .weekbox,.play .phone-hide,.play .monthline{display:none}
   .cline{flex-wrap:nowrap}
   .cline input{width:46px;padding:2px 4px;font-size:14px}
   .who h2{font-size:18px}
@@ -262,10 +272,17 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .nav,.status{padding:4px 12px}
   .dollars{font-size:48px}
   .who h2{font-size:24px}
-  .play{gap:6px;padding:6px 8px}
+  .play{gap:4px;padding:6px 8px}
+  .paycard{padding:4px 10px}
+  .ringwrap,.ring{width:92px;height:92px}
+  .hero{grid-template-columns:100px minmax(0,1fr);padding:6px 10px}
+  .srow{padding:3px 8px}
+  .slist{gap:2px;margin-top:2px}
+  .pass{font-size:clamp(22px,3.2vh,32px)}
   .play .card{padding:6px 8px}
   .wtrack{margin-bottom:8px}
   .play .weekbox .src{margin-top:2px}
+  .play .commit-note,#goal-line{display:none}
   .chip{padding:4px 6px}
   .chip b{font-size:20px}
   .meter{height:10px;margin-top:4px}
@@ -283,7 +300,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pad,.tab{min-height:32px;box-shadow:0 2px 0 #000}
   .play{gap:4px;padding:4px}
   .play .meter,.play .long,.play .weekbox,.play .commit-note{display:none}
-  .play{grid-template-rows:auto auto minmax(150px,1fr)}
+  .play{grid-template-rows:auto auto auto minmax(120px,1fr)}
+  .paycard .whatif{display:none}
   .money{display:none}
   .play .card{padding:4px 6px}
   .who h2{font-size:18px}
@@ -333,6 +351,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var PACE_RATE = 30;
   var BONUS = 50;
   var OUTBOUND_CUT = 0.05;
+  // Edit this when the bonus challenge details are set.
+  var BONUS_CHALLENGE = '$1,000 bonus challenge running now (details TBD)';
+  var PAY_SETS_A_DAY = 3;
   var GUIDE_KEY = 'fe-guide-money';
   var LEVEL_KEY = 'fe-level';
   var AVG_KEY = 'fe-avg-deal';
@@ -1159,6 +1180,59 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (s == null || t == null) return '';
     return s + 0.05 >= t ? 'good' : 'bad';
   }
+  function nextPayday(date) {
+    var y = ctYMD(date || new Date());
+    if (!y) return null;
+    var ty = y.y, tm = y.m;
+    if (y.d !== 1) {
+      tm += 1;
+      if (tm > 12) { tm = 1; ty += 1; }
+    }
+    var days = Math.round((Date.UTC(ty, tm - 1, 1) - Date.UTC(y.y, y.m - 1, y.d)) / 86400000);
+    var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return { days: days, label: months[tm - 1] + ' 1', today: days === 0 };
+  }
+  function paydayText(date) {
+    var pay = nextPayday(date);
+    if (!pay) return 'Next payday: no data';
+    if (pay.today) return 'Payday is today';
+    return 'Next payday ' + pay.label + '. ' + pay.days + (pay.days === 1 ? ' day' : ' days');
+  }
+  function remainingWeekdays(date) {
+    var y = ctYMD(date || new Date());
+    if (!y) return null;
+    var last = new Date(Date.UTC(y.y, y.m, 0)).getUTCDate();
+    var n = 0;
+    for (var day = y.d + 1; day <= last; day++) {
+      var wd = new Date(Date.UTC(y.y, y.m - 1, day)).getUTCDay();
+      if (wd !== 0 && wd !== 6) n++;
+    }
+    return n;
+  }
+  function monthSetCount(data) {
+    var me = data && data.me;
+    if (me == null || String(me).trim() === '') return null;
+    var rows = data.periods && data.periods.month && data.periods.month.rows;
+    if (!Array.isArray(rows)) return null;
+    for (var i = 0; i < rows.length; i++) {
+      if (rows[i] && sameName(rows[i].name, me)) return num(rows[i].sets);
+    }
+    return null;
+  }
+  function payHtml(data) {
+    var sets = monthSetCount(data);
+    var booked = sets == null
+      ? 'Sets this month: no data.'
+      : (fmtCount(sets) + (Math.abs(sets - 1) < 0.05 ? ' set' : ' sets') + ' this month. $50 x ' + fmtCount(sets) + ' = ' + fmtMoney(sets * BONUS) + ' from booked leads.');
+    var left = remainingWeekdays(new Date());
+    var extra = left == null ? '' : '<p class="sub whatif">At ' + PAY_SETS_A_DAY + ' sets a day for the rest of the month: +' + fmtMoney(left * PAY_SETS_A_DAY * BONUS) + '</p>';
+    return '<section class="card paycard" data-spot="pay"><div class="paygrid"><div><p class="kicker">Pay</p>' +
+      '<p class="sub">Paid once a month on the 1st. 5% of cash collected on outbound. 3% on inbound and triage. $50 per booked qualified lead. Plus bonuses.</p>' +
+      '<p class="challenge">' + esc(BONUS_CHALLENGE) + '</p></div><div><p class="paywhen" id="pay-when">' + esc(paydayText(new Date())) + '</p>' +
+      '<p class="sub">' + esc(booked) + '</p>' +
+      '<p class="sub">Plus 5% of cash collected on your outbound sets that close (not tracked yet).</p>' +
+      extra + '</div></div></section>';
+  }
   function playHtml(data, row) {
     var lens = state.lens || 'today';
     var freshDay = lens === 'today' && data && !feedIsCurrent(data);
@@ -1266,7 +1340,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       (lens === 'week' ? ('<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div>') : '') + '</section>';
     var hero = '<section class="hero ' + view.tone + '" data-spot="block" data-lens="' + lens + '"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="#f0f0f0" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money">' + moneyHtml + '</div>' + (lensNote ? ('<p class="lens-note" id="lens-note">' + esc(lensNote) + '</p>') : '') + '</div></section>';
     var rowsHtml = list.length ? boardRows(data, list, prev, raceTarget, true) : ('<p class="sub">' + esc(emptyText) + '</p>');
-    return '<section class="play">' + lensBar() + hero + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
+    return '<section class="play">' + lensBar() + hero + payHtml(data) + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
       '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">' + (freshDay ? 'Today is 0 until the feed has today. Yday and Wk are the snapshot. Est. is sets times $50. Ordered by this week.' : 'Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.') + '</p>' +
       '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section></section>';
   }
@@ -1557,6 +1631,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function paintLive() {
     var parts = ctParts(new Date());
     var sched = schedule(parts);
+    var payWhen = document.getElementById('pay-when');
+    if (payWhen) payWhen.textContent = paydayText(new Date());
     var timer = document.getElementById('timer');
     var sub = document.getElementById('timer-sub');
     if (timer) timer.textContent = sched.label === 'no data' ? 'no data' : sched.label;

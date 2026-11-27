@@ -68,8 +68,8 @@ a{color:var(--teal);text-decoration:none}
 .status.wait{color:var(--muted)}
 .stage{flex:1;min-height:0;position:relative}
 .stage.scroll{overflow:auto}
-.stage.lock{overflow:hidden}
-.play{height:100%;min-height:0;overflow:hidden;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto auto auto minmax(0,1fr);gap:8px;padding:8px 10px;box-sizing:border-box}
+.stage.lock{overflow:auto}
+.play{height:auto;min-height:100%;overflow:visible;display:grid;grid-template-columns:minmax(250px,.76fr) minmax(360px,1.24fr);grid-template-rows:auto auto auto auto auto auto;gap:8px;padding:8px 10px;box-sizing:border-box}
 .lens{grid-column:1 / -1;grid-row:1;display:flex;gap:6px}
 .lens .tab{flex:1}
 .lens-note{margin:4px 0 0;font-size:12px;font-weight:700;color:var(--muted)}
@@ -104,15 +104,38 @@ a{color:var(--teal);text-decoration:none}
 .play:has(.banner) .col{gap:6px}
 .play:has(.banner) .card{padding:8px 10px}
 .play:has(.banner) .wtrack{margin-bottom:16px}
-.paycard{grid-column:1 / -1;grid-row:3;padding:5px 10px}
+.meterbar{grid-column:1 / -1;grid-row:3}
+.paycard{grid-column:1 / -1;grid-row:5;padding:8px 10px}
+.dayboard{grid-column:1 / -1;grid-row:6;display:grid;gap:8px}
 .paytop{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
 .paywhen{font-family:var(--serif);font-weight:650;font-size:18px;line-height:1;color:#000}
 .paygrid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:2px 16px;align-items:start}
 .paycard p{margin:0;font-size:12px;font-weight:700;line-height:1.25}
-.paycard .challenge{margin-top:4px;padding:3px 8px;border:1px dashed var(--teal);border-radius:8px;color:#000;font-weight:800}
-.money{grid-column:1;grid-row:4;min-height:0;overflow:hidden}
+.paygrid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(180px,.7fr) minmax(200px,.8fr);gap:8px 14px}
+.stack{display:flex;height:14px;border-radius:99px;overflow:hidden;background:var(--track);border:1px solid var(--line);margin-top:4px}
+.stack i{display:block;height:100%}
+.stack .sql{background:var(--teal)}
+.stack .comm{background:var(--good)}
+.ladder{display:grid;gap:6px;margin-top:8px}
+.lrow{display:grid;grid-template-columns:64px minmax(0,1fr) 92px;gap:6px;align-items:center;font-size:12px;font-weight:800}
+.lrow b{display:block;height:16px;border-radius:6px;background:var(--teal);min-width:4px}
+.lrow.mark b{background:var(--good)}
+.lrow.on b{outline:2px solid #000}
+.step{display:flex;align-items:center;gap:6px;margin-top:4px}
+.step button,.tog button{border:1px solid #000;background:#fff;border-radius:8px;min-height:32px;padding:0 8px;font-weight:800}
+.tog{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.tog button.on{background:#000;color:#fff}
+.funnel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}
+.funnel .chip b{font-size:16px}
+.qrow{display:grid;grid-template-columns:minmax(0,1.2fr) auto auto auto 72px;gap:6px;align-items:center;padding:4px 0;border-top:1px solid rgba(44,123,122,.15);font-size:12px}
+.qrow input{width:72px;border:1px solid var(--teal);border-radius:8px;padding:4px 6px;font-weight:700}
+.banner.bad{background:rgba(233,61,61,.12);color:#8d1c1c;border-color:var(--bad)}
+.meterfigs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.meterfigs span,.meterfigs b{display:block}
+.meterfigs b{font-family:var(--serif);font-weight:650;font-size:28px;line-height:.9}
+.money{grid-column:1;grid-row:4;min-height:0;overflow:visible}
 .long{grid-column:1;grid-row:4}
-.race{grid-column:2;grid-row:4}
+.race{grid-column:2;grid-row:4;height:auto;min-height:220px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:10px 12px;min-width:0}
 .kicker{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--teal);font-weight:800}
 .who{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
@@ -146,12 +169,12 @@ a{color:var(--teal);text-decoration:none}
 .wtick span{position:absolute;top:20px;font-size:10px;font-weight:700;color:var(--muted);white-space:nowrap;text-transform:uppercase}
 .wtick.promise span{left:50%;transform:translateX(-50%)}
 .wtick.goal span{right:0}
-.race{display:flex;flex-direction:column;min-height:0;height:100%}
+.race{display:flex;flex-direction:column;min-height:220px;height:auto;overflow:visible}
 .pass{font-family:var(--serif);font-weight:560;font-size:clamp(26px,4vh,40px);line-height:1.02;margin-top:2px}
 .shead,.srow{display:grid;grid-template-columns:26px minmax(0,1.3fr) auto auto auto;gap:6px;align-items:center}
 .est{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:12px}
 .shead{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:0 8px}
-.slist{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:4px;margin-top:6px}
+.slist{flex:none;min-height:0;overflow:visible;display:flex;flex-direction:column;gap:4px;margin-top:6px}
 .srow{padding:6px 8px;border-radius:10px;opacity:.62}
 .srow.near{opacity:1;background:rgba(24,139,246,.08);box-shadow:inset 3px 0 0 var(--calm)}
 .srow.moved{animation:rowpop .45s ease}
@@ -228,9 +251,16 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pads{margin-left:0}
   .pad,.tab{min-height:36px;padding:0 8px;font-size:11px}
   .status{padding:5px 10px;font-size:13px}
-  .play{grid-template-columns:1fr;grid-template-rows:auto auto auto minmax(180px,1fr) auto;gap:4px;padding:6px}
-  .paycard{grid-row:3;padding:4px 8px}
-  .paygrid{grid-template-columns:1fr;gap:1px}
+  .play{grid-template-columns:1fr;grid-template-rows:auto auto auto auto auto auto auto;gap:4px;padding:6px;height:auto}
+  .meterbar{grid-row:3}
+  .race{grid-row:4;height:auto;min-height:0}
+  .paycard{grid-row:5;padding:4px 8px}
+  .dayboard{grid-row:6}
+  .money{grid-row:7}
+  .paygrid,.funnel,.meterfigs{grid-template-columns:1fr}
+  .qrow{grid-template-columns:1fr 1fr}
+  .lrow{grid-template-columns:52px minmax(0,1fr) 78px;font-size:11px}
+  .meterfigs b{font-size:24px}
   .paywhen{font-size:15px}
   .paycard p{font-size:11px}
   .lens .tab{min-height:32px;box-shadow:0 2px 0 #000}
@@ -245,8 +275,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .hero-title{font-size:18px}
   .hero-commit,.hero-pace{font-size:11px}
   .hero-money b{font-size:22px}
-  .race{grid-row:4;height:auto;overflow:hidden}
-  .money{grid-row:5}
+  .race{grid-row:4;height:auto;overflow:visible}
   .long{display:none}
   .pass{font-size:18px;margin:0}
   .play .extra,.play .fine,.play .wtrack,.play .commit-note,.play .line-in,.play .assume,#goal-line,.play .weekbox,.play .phone-hide,.play .monthline{display:none}
@@ -262,7 +291,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .line-in{flex-wrap:nowrap}
   .line-in input{width:72px;padding:4px 6px}
   .srow{padding:2px 6px}
-  .slist{gap:2px;margin-top:2px;overflow:hidden}
+  .slist{gap:2px;margin-top:2px;overflow:visible}
   .split{grid-template-columns:1fr}
   .shead{display:none}
   .score{height:auto}
@@ -300,9 +329,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .pad,.tab{min-height:32px;box-shadow:0 2px 0 #000}
   .play{gap:4px;padding:4px}
   .play .meter,.play .long,.play .weekbox,.play .commit-note{display:none}
-  .play{grid-template-rows:auto auto auto minmax(120px,1fr)}
   .paycard .whatif{display:none}
-  .money{display:none}
   .play .card{padding:4px 6px}
   .who h2{font-size:18px}
   .dollars{font-size:28px}
@@ -349,11 +376,19 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var REFRESH_MS = 60 * 1000;
   var BLOCKS = [[11, 13], [15, 18]];
   var PACE_RATE = 30;
-  var BONUS = 50;
+  var SQL = 50;
+  var BONUS = SQL;
+  var AVG_CASH = 5150;
+  var SHOW_RATE = 0.37;
+  var CLOSE_RATE = 0.80;
+  var CLOSE_RATE_ONE = 0;
+  var COMMISSION = 0.05;
+  var WORKDAYS = 21;
+  var DAY_GOAL = 4;
+  var DAY_GOAL_15 = 6;
   var OUTBOUND_CUT = 0.05;
-  // Edit this when the bonus challenge details are set.
-  var BONUS_CHALLENGE = '$1,000 bonus challenge running now (details TBD)';
-  var PAY_SETS_A_DAY = 3;
+  var GHL_LOC = 'TFjAchoN7yuxbz4BUdqd';
+  var FLAG_KEY = 'fe-set-flags';
   var GUIDE_KEY = 'fe-guide-money';
   var LEVEL_KEY = 'fe-level';
   var AVG_KEY = 'fe-avg-deal';
@@ -361,7 +396,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var sb = null;
   var SOUND_KEY = 'fe-sound';
   var audioCtx = null;
-  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, livePull: false, liveNote: '', liveError: '', rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1 };
+  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, livePull: false, liveNote: '', liveError: '', rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1, paySets: 4, payBoth: true, eodBusy: false };
   try {
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'stats' || hash === 'pace' || hash === 'trend') state.view = 'stats';
@@ -748,6 +783,45 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       return out;
     } catch (e) { return {}; }
     finally { if (timer) clearTimeout(timer); }
+  }
+  async function fetchEod() {
+    var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function () { ctrl.abort(); }, 15000) : null;
+    try {
+      var res = await fetch(SB_URL + '/rest/v1/fig_eagle_eod?select=day,submitted,submitted_at&order=day.desc&limit=40', {
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, Accept: 'application/json' }, cache: 'no-store', signal: ctrl ? ctrl.signal : undefined
+      });
+      if (!res.ok) return null;
+      var rows = await res.json();
+      return Array.isArray(rows) ? rows : null;
+    } catch (e) { return null; }
+    finally { if (timer) clearTimeout(timer); }
+  }
+  async function markEod() {
+    if (state.eodBusy) return;
+    state.eodBusy = true;
+    render();
+    try {
+      var res = await fetch(SB_URL + '/functions/v1/fig-eagle-refresh', {
+        method: 'POST',
+        headers: { apikey: SB_KEY, Authorization: 'Bearer ' + SB_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ action: 'eod', day: wallKey() }),
+        cache: 'no-store'
+      });
+      var payload = await res.json();
+      if (!res.ok || !payload || !payload.ok || !payload.eod) throw new Error('EOD flag did not save.');
+      if (state.row && state.row.data) {
+        var list = Array.isArray(state.row.data.eod) ? state.row.data.eod.slice() : [];
+        var key = String(payload.eod.day).slice(0, 10);
+        var found = false;
+        list.forEach(function (r) { if (String(r.day).slice(0, 10) === key) { r.submitted = true; found = true; } });
+        if (!found) list.unshift({ day: key, submitted: true, submitted_at: new Date().toISOString() });
+        state.row.data.eod = list;
+      }
+      state.liveError = '';
+    } catch (e) {
+      state.liveError = 'EOD flag did not save.';
+    } finally { state.eodBusy = false; render(); }
   }
   async function triggerLiveRefresh() {
     var ctrl = typeof AbortController === 'function' ? new AbortController() : null;
@@ -1219,19 +1293,249 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     return null;
   }
+  function pct(v) {
+    if (v == null || !isFinite(v)) return 'no data';
+    return Math.round(v * 100) + '%';
+  }
+  function closeNow() { return state.payBoth === false ? CLOSE_RATE_ONE : CLOSE_RATE; }
+  function commissionEach(rate) { return SHOW_RATE * rate * AVG_CASH * COMMISSION; }
+  function valueEach(rate) { return SQL + commissionEach(rate); }
+  function monthAt(perDay, rate) { return perDay * WORKDAYS * valueEach(rate); }
+  function moneyOf(sets, rate) {
+    if (sets == null) return null;
+    return { bonus: sets * SQL, est: sets * commissionEach(rate), total: sets * valueEach(rate) };
+  }
+  function sumRows(rows) {
+    var o = { dials: 0, convos: 0, sets: 0, shows: 0, n: 0 };
+    (rows || []).forEach(function (r) {
+      if (num(r && r.dials) == null && num(r && r.sets) == null) return;
+      o.n++;
+      o.dials += num(r.dials) || 0;
+      o.convos += num(r.connects) || 0;
+      o.sets += num(r.sets) || 0;
+      o.shows += num(r.shows) || 0;
+    });
+    return o.n ? o : null;
+  }
+  function paceRates(data) {
+    function pack(row, label) {
+      if (!row) return null;
+      var d = num(row.dials), c = num(row.connects), s = num(row.sets);
+      if (d == null || s == null || s < 0.05) return null;
+      return { dialsPerSet: d / s, convosPerSet: c == null ? null : c / s, label: label, source: 'GHL ' + label };
+    }
+    var own = pack(findMe(data, 'week'), 'your week') || pack(findMe(data, 'month'), 'your month');
+    if (own) return own;
+    var team = sumRows((periodOf(data, 'week') || {}).rows);
+    if (!team || team.sets < 0.05) return { dialsPerSet: null, label: 'no rate in the feed', source: 'no data' };
+    return { dialsPerSet: team.dials / team.sets, convosPerSet: team.convos / team.sets, label: 'team week', source: 'GHL team week' };
+  }
+  function setStreak(data) {
+    var rows = ((data && data.my_daily) || []).filter(function (d) { return d && d.day; }).slice().sort(function (a, b) { return a.day < b.day ? -1 : 1; });
+    var today = wallKey();
+    var n = 0;
+    for (var i = rows.length - 1; i >= 0; i--) {
+      var sets = num(rows[i].sets);
+      if (sets == null) break;
+      if (rows[i].day === today && sets + 0.05 < 3) continue;
+      if (sets + 0.05 >= 3) n++;
+      else break;
+    }
+    return { n: n, days: rows.length };
+  }
+  function eodToday(data) {
+    var key = wallKey();
+    var rows = (data && data.eod) || [];
+    for (var i = 0; i < rows.length; i++) if (String(rows[i].day).slice(0, 10) === key && rows[i].submitted) return true;
+    return false;
+  }
+  function eodLate() {
+    var p = ctParts(new Date());
+    if (!p) return false;
+    var dow = ctDow(new Date());
+    if (dow == null || dow === 0 || dow === 6) return false;
+    return p.h + p.m / 60 >= 18.5;
+  }
+  function loadFlags() {
+    try {
+      var o = JSON.parse(storeGet(FLAG_KEY) || 'null');
+      return (o && typeof o === 'object') ? o : {};
+    } catch (e) { return {}; }
+  }
+  function flagOf(id) {
+    var all = loadFlags();
+    return all[id] || {};
+  }
+  function setFlag(id, key, value) {
+    var all = loadFlags();
+    all[id] = all[id] || {};
+    all[id][key] = value;
+    storeSet(FLAG_KEY, JSON.stringify(all));
+  }
+  function shortWhen(v) {
+    if (!v) return '';
+    var d = new Date(v);
+    if (!isFinite(d.getTime())) return String(v);
+    try { return new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(d); }
+    catch (e) { return String(v); }
+  }
+  function ghlLink(id) {
+    if (!id) return 'https://app.gohighlevel.com/v2/location/' + GHL_LOC + '/conversations';
+    return 'https://app.gohighlevel.com/v2/location/' + GHL_LOC + '/conversations/conversations/' + encodeURIComponent(id);
+  }
+  function meterHtml(data) {
+    var rate = closeNow();
+    function cell(label, sets, src) {
+      var m = moneyOf(sets, rate);
+      var total = m ? m.total : null;
+      return '<div><span>' + esc(label) + '</span><b class="count" data-kind="money" data-n="' + (total == null ? '' : String(total)) + '">' + esc(total == null ? 'no data' : fmtMoney(total)) + '</b><span class="sub">' + esc(sets == null ? 'Sets: no data' : (fmtCount(sets) + ' sets x $' + SQL + ' + est. ' + fmtMoney(m.est))) + '. ' + esc(src) + '</span></div>';
+    }
+    var today = todayRow(data);
+    var week = findMe(data, 'week');
+    var month = findMe(data, 'month');
+    return '<section class="card meterbar"><p class="kicker">Live money</p><div class="meterfigs">' +
+      cell('Today', today ? num(today.sets) : null, 'GHL sets. Commission est.') +
+      cell('This week', week ? num(week.sets) : null, 'GHL sets. Commission est.') +
+      cell('This month', month ? num(month.sets) : null, 'GHL sets. Commission est.') +
+      '</div><p class="src">Refreshed ' + esc(asOfText(state.row)) + '. Commission uses show ' + pct(SHOW_RATE) + ' and close ' + pct(rate) + (state.payBoth === false ? ' (one parent).' : ' (both parents, one week of calls).') + ' Avg cash $' + AVG_CASH.toLocaleString('en-US') + ' is the Nov median, mostly Mentor Family Live. Estimate, not cash collected.</p></section>';
+  }
   function payHtml(data) {
+    var rate = closeNow();
+    var each = valueEach(rate);
+    var comm = commissionEach(rate);
+    var sqlW = each > 0 ? Math.round(SQL / each * 100) : 100;
     var sets = monthSetCount(data);
-    var booked = sets == null
-      ? 'Sets this month: no data.'
-      : (fmtCount(sets) + (Math.abs(sets - 1) < 0.05 ? ' set' : ' sets') + ' this month. $50 x ' + fmtCount(sets) + ' = ' + fmtMoney(sets * BONUS) + ' from booked leads.');
-    var left = remainingWeekdays(new Date());
-    var extra = left == null ? '' : '<p class="sub whatif">At ' + PAY_SETS_A_DAY + ' sets a day for the rest of the month: +' + fmtMoney(left * PAY_SETS_A_DAY * BONUS) + '</p>';
-    return '<section class="card paycard" data-spot="pay"><div class="paygrid"><div><p class="kicker">Pay</p>' +
-      '<p class="sub">Paid once a month on the 1st. 5% of cash collected on outbound. 3% on inbound and triage. $50 per booked qualified lead. Plus bonuses.</p>' +
-      '<p class="challenge">' + esc(BONUS_CHALLENGE) + '</p></div><div><p class="paywhen" id="pay-when">' + esc(paydayText(new Date())) + '</p>' +
+    var booked = sets == null ? 'Sets this month: no data.' : (fmtCount(sets) + (Math.abs(sets - 1) < 0.05 ? ' set' : ' sets') + ' this month. $50 x ' + fmtCount(sets) + ' = ' + fmtMoney(sets * SQL) + ' from booked leads.');
+    var scale = Math.max(monthAt(DAY_GOAL_15, CLOSE_RATE), 16000);
+    var days = [3, 4, 5, 6];
+    var bars = days.map(function (d) {
+      var dollars = monthAt(d, rate);
+      var w = scale > 0 ? Math.max(4, Math.round(dollars / scale * 100)) : 4;
+      var mark = d === DAY_GOAL || d === DAY_GOAL_15;
+      var on = d === state.paySets;
+      return '<div class="lrow' + (mark ? ' mark' : '') + (on ? ' on' : '') + '"><span>' + d + '/day</span><b style="width:' + w + '%"></b><span>' + fmtMoney(dollars) + '</span></div>';
+    }).join('');
+    var picked = monthAt(state.paySets, rate);
+    return '<section class="card paycard" data-spot="pay"><p class="kicker">Money math</p><div class="paygrid"><div>' +
+      '<p>pay = sets x $50 + sets x show x close x avg cash x 5%.</p>' +
+      '<p class="paywhen">~' + fmtMoney(each) + ' per set</p>' +
+      '<p class="sub">$' + SQL + ' SQL + ~' + fmtMoney(comm) + ' commission est.</p>' +
+      '<div class="stack" aria-hidden="true"><i class="sql" style="width:' + sqlW + '%"></i><i class="comm" style="width:' + (100 - sqlW) + '%"></i></div>' +
+      '<p class="paywhen" id="pay-when">' + esc(paydayText(new Date())) + '</p>' +
       '<p class="sub">' + esc(booked) + '</p>' +
-      '<p class="sub">Plus 5% of cash collected on your outbound sets that close (not tracked yet).</p>' +
-      extra + '</div></div></section>';
+      '<p class="sub">Plus 5% of cash collected on your outbound sets that close (not tracked yet).</p></div><div>' +
+      '<p class="sub">Month pay at ' + WORKDAYS + ' weekdays. Bars are scaled to the $15k line. 4/day and 6/day are marked.</p>' +
+      '<div class="ladder">' + bars + '</div>' +
+      '<p class="sub">4/day clears $10k. 6/day clears $15k. Highlighted bars.</p></div><div>' +
+      '<p>Sets per day</p><div class="step"><button type="button" data-pay="dec" aria-label="Fewer sets per day">-</button><b>' + state.paySets + '</b><button type="button" data-pay="inc" aria-label="More sets per day">+</button><span>' + fmtMoney(picked) + '/mo</span></div>' +
+      '<div class="tog"><button type="button" data-pay="both"' + (state.payBoth !== false ? ' class="on"' : '') + '>Both parents 80%</button><button type="button" data-pay="one"' + (state.payBoth === false ? ' class="on"' : '') + '>One parent 0%</button></div>' +
+      '<p class="sub">' + (state.payBoth === false ? 'Close rate 0% with one parent. Commission drops out. Pay is the $50 only.' : '80% close is Justin, Nov 5, when both parents are on the call. One week only.') + '</p>' +
+      '</div></div>' +
+      '<p class="sub"><b>$1,000 cash race.</b> First setter to $100k cash collected by the 15th, at least $50k from outbound. Fallback: $100k from outbound by month end. First place only. December target: about 6 sets/day through Dec 15.</p>' +
+      '<p class="sub"><b>November $1k show-rate race.</b> Your show rate at least 70% and your closers at least 60%. Ends Nov 30.</p>' +
+      '<p class="src">Intercepts do not count as sets and do not earn $50. Inbound and triage pay 3%, no $50. Missing 4 EODs in a row withholds pay. 5 is fireable. Paid on the 1st. Show ' + pct(SHOW_RATE) + ' is team MTD, Justin Nov 23. Better pods are about 43%. Avg cash $' + AVG_CASH.toLocaleString('en-US') + ' (median $5,000). Estimate.</p></section>';
+  }
+  function dayHtml(data) {
+    var today = todayRow(data);
+    var sets = today ? num(today.sets) : null;
+    var left = sets == null ? null : Math.max(0, DAY_GOAL - sets);
+    var rates = paceRates(data);
+    var dialsNeed = (left == null || rates.dialsPerSet == null) ? null : Math.ceil(left * rates.dialsPerSet);
+    var weekRows = (periodOf(data, 'week') || {}).rows || [];
+    var me = findMe(data, 'week');
+    var team = sumRows(weekRows);
+    function stepRate(part, whole) {
+      var a = num(part), b = num(whole);
+      if (a == null || b == null || b < 0.05) return null;
+      return a / b;
+    }
+    var steps = [
+      { name: 'Dials', mine: me ? num(me.dials) : null, team: team ? team.dials : null },
+      { name: 'Convos', mine: me ? num(me.connects) : null, team: team ? team.convos : null },
+      { name: 'Sets', mine: me ? num(me.sets) : null, team: team ? team.sets : null },
+      { name: 'Shows', mine: me ? num(me.shows) : null, team: team ? team.shows : null },
+      { name: 'Closes', mine: null, team: null }
+    ];
+    var top = null;
+    weekRows.forEach(function (r) {
+      var rate = stepRate(r && r.sets, r && r.connects);
+      if (rate == null) return;
+      if (!top || rate > top.rate) top = { name: r.name, rate: rate };
+    });
+    var mineSet = me ? stepRate(me.sets, me.connects) : null;
+    var teamSet = team ? stepRate(team.sets, team.convos) : null;
+    var pairs = [
+      { name: 'dial to convo', mine: me ? stepRate(me.connects, me.dials) : null, team: team ? stepRate(team.convos, team.dials) : null },
+      { name: 'convo to set', mine: mineSet, team: teamSet },
+      { name: 'set to show', mine: me ? stepRate(me.shows, me.sets) : null, team: team ? stepRate(team.shows, team.sets) : null }
+    ];
+    var worst = null;
+    pairs.forEach(function (p) {
+      if (p.mine == null || p.team == null || p.team < 0.001) return;
+      var ratio = p.mine / p.team;
+      if (!worst || ratio < worst.ratio) worst = { name: p.name, ratio: ratio, mine: p.mine, team: p.team };
+    });
+    var weak = worst
+      ? ('Work on this tomorrow: ' + worst.name + ' is ' + pct(worst.mine) + ' vs the team at ' + pct(worst.team) + (worst.name === 'convo to set' && top ? (' and ' + top.name + ' at ' + pct(top.rate)) : '') + '.')
+      : 'No step has both your rate and a team rate yet.';
+    var funnel = steps.map(function (s, i) {
+      var prev = i > 0 ? steps[i - 1] : null;
+      var mineRate = prev ? stepRate(s.mine, prev.mine) : null;
+      var teamRate = prev ? stepRate(s.team, prev.team) : null;
+      var note = i === 0 ? 'GHL count' : (i === 4 ? 'Estimate, not in the feed' : (i === 3 && (teamRate == null || teamRate < 0.001) ? 'GHL, none recorded' : (mineRate == null ? 'GHL' : ('You ' + pct(mineRate) + ' vs team ' + (teamRate == null ? 'no data' : pct(teamRate))))));
+      var value = s.mine;
+      if (i === 4 && me && num(me.sets) != null) value = num(me.sets) * SHOW_RATE * closeNow();
+      return '<div class="chip"><span>' + esc(s.name) + '</span><b>' + esc(value == null ? 'no data' : (i === 4 ? ('~' + fmtCount(value)) : fmtCount(value))) + '</b><span>' + esc(note) + '</span></div>';
+    }).join('');
+    var desk = (data && data.desk) || {};
+    var flags = loadFlags();
+    var quality = (desk.sets || []).map(function (s) {
+      var f = flags[s.id] || {};
+      function yn(key) {
+        var v = f[key];
+        return '<button type="button" data-flag="' + key + '" data-id="' + esc(s.id) + '">' + (v === true ? 'Y' : (v === false ? 'N' : 'Set')) + '</button>';
+      }
+      var ghlShow = s.showed === true ? 'GHL showed' : ('GHL ' + (s.status || 'status no data'));
+      return '<div class="qrow"><span>' + esc(s.calendar || 'Set') + ' ' + esc(shortWhen(s.start)) + ' ' + esc(ghlShow) + '</span><span>Parents ' + yn('parents') + '</span><span>Showed ' + yn('showed') + '</span><span>Closed ' + yn('closed') + '</span><input data-cash="' + esc(s.id) + '" inputmode="decimal" placeholder="Cash" value="' + (f.cash == null ? '' : esc(String(f.cash))) + '" aria-label="Cash collected, manual"></div>';
+    }).join('');
+    if (!quality) quality = '<p class="sub">' + ((today && num(today.sets) > 0) ? (fmtCount(today.sets) + (Math.abs(num(today.sets) - 1) < 0.05 ? ' set' : ' sets') + ' today. The appointment rows are not in this snapshot yet.') : 'No sets attributed to you today. Earlier sets stay in the month total.') + '</p>';
+    var points = weekRows.map(function (r) {
+      return { name: r.name, sets: num(r.sets), pts: num(r.sets) == null ? null : num(r.sets) * 2 };
+    }).filter(function (r) { return r.pts != null; }).sort(function (a, b) { return b.pts - a.pts || String(a.name).localeCompare(String(b.name)); });
+    var mePts = null, lead = points[0] || null;
+    points.forEach(function (r, i) { if (sameName(r.name, meName(data))) mePts = { rank: i + 1, sets: r.sets, pts: r.pts }; });
+    var gapSets = (mePts && lead && !sameName(lead.name, meName(data))) ? Math.max(0, lead.sets - mePts.sets) : 0;
+    var streak = setStreak(data);
+    var late = eodLate() && !eodToday(data);
+    var unread = desk.unread;
+    var queue = '';
+    if (!data || !data.desk) queue = '<p class="sub">Queue detail is not in this snapshot yet. Refresh to pull appointments and unread conversations. Callbacks are not in this refresh. Phone numbers are not stored on this public page.</p>';
+    else {
+      var bits = [];
+      bits.push('<p class="sub">Callbacks due: no data. Tasks are not in this refresh.</p>');
+      if (unread == null) bits.push('<p class="sub">Hot replies: no data. The unread read failed.</p>');
+      else bits.push('<p class="sub">Hot replies: ' + fmtCount(unread.count) + ' unread. Source GHL.</p>' + (unread.items || []).map(function (c) {
+        return '<p class="sub"><a href="' + esc(ghlLink(c.id)) + '">Open in GHL</a> ' + esc(c.kind || 'conversation') + ' ' + esc(shortWhen(c.at)) + '</p>';
+      }).join(''));
+      var upcoming = (desk.upcoming || []).filter(function (a) { return String(a.status || '').toLowerCase() !== 'cancelled'; });
+      bits.push('<p class="sub">Next 48h on the sales calendars, confirm in GHL. Source GHL. Cancelled rows are left off this list.</p>' + upcoming.map(function (a) {
+        return '<p class="sub">' + esc(a.calendar || 'Appointment') + ' ' + esc(shortWhen(a.start)) + ' ' + esc(a.status || 'status no data') + '. <a href="' + esc('https://app.gohighlevel.com/v2/location/' + GHL_LOC + '/calendars/appointments') + '">Calendar</a></p>';
+      }).join('') );
+      if (!upcoming.length) bits.push('<p class="sub">No appointments in the next 48h on the sales calendars.</p>');
+      bits.push('<p class="sub">No-shows to rebook. Source GHL.</p>' + ((desk.noshows || []).length ? (desk.noshows || []).map(function (a) {
+        return '<p class="sub">' + esc(a.calendar || 'No-show') + ' ' + esc(shortWhen(a.start)) + '</p>';
+      }).join('') : '<p class="sub">None in this refresh.</p>'));
+      queue = bits.join('');
+    }
+    return '<div class="dayboard">' +
+      (late ? '<p class="banner bad">EOD is not marked submitted. It is after 6:30 PM CT. 4 missed in a row withholds pay.</p>' : '') +
+      '<section class="card"><p class="kicker">Today target</p><p class="paywhen">' + esc(sets == null ? 'Sets: no data' : (fmtCount(sets) + ' booked')) + ' <span class="sub">of ' + DAY_GOAL + '/day. ' + esc(left == null ? 'Left: no data' : (fmtCount(left) + ' sets left')) + '. ' + esc(dialsNeed == null ? 'Dials to close the gap: no data' : (fmtCount(dialsNeed) + ' dials at ' + rates.label)) + '.</span></p><p class="src">' + esc(rates.source) + '. 4 sets/day is the $10k pace. 6 sets/day is the $15k pace. ' + esc(asOfText(state.row)) + '</p></section>' +
+      '<section class="card"><p class="kicker">Funnel this week</p><div class="funnel">' + funnel + '</div><p>' + esc(weak) + '</p><p class="src">Dials, convos (connected calls of at least 60 seconds), sets, and shows are GHL. Closes are sets x ' + pct(SHOW_RATE) + ' x ' + pct(closeNow()) + ', estimate. Team convo to set ' + (teamSet == null ? 'no data' : pct(teamSet)) + '. ' + esc(asOfText(state.row)) + '</p></section>' +
+      '<section class="card"><p class="kicker">Set quality</p><p class="sub">Both parents, showed, closed, and cash are manual unless the appointment status already says showed. GHL is read only.</p>' + quality + '<p class="src">Appointments on the Family calendars, attributed to your user. Source GHL. Flags stay in this browser.</p></section>' +
+      '<section class="card"><p class="kicker">Races</p><p>' + esc(mePts ? ('You are #' + mePts.rank + ' on weekly points from sets (' + fmtCount(mePts.pts) + ' pts, ' + fmtCount(mePts.sets) + (Math.abs(mePts.sets - 1) < 0.05 ? ' set' : ' sets') + ').') : 'Your week points: no data.') + ' ' + esc(lead ? ('Leader ' + lead.name + '. Gap ' + fmtCount(gapSets) + (Math.abs(gapSets - 1) < 0.05 ? ' set' : ' sets') + '.') : '') + '</p><p class="sub">Outbound set = 2 pts. $25k cash = 1 pt, cash not in the feed so those points are no data. Mon to Mon uses the week rows.</p><p class="sub">December $1k cash race: cash collected is no data, so there is no cash standing yet. First to $100k by the 15th with at least $50k outbound, else $100k outbound by month end. First place only.</p><p class="src">Set points: GHL. Cash: not in the refresh.</p></section>' +
+      '<section class="card"><p class="kicker">Next actions</p>' + queue + '<p class="src">Read only. Nothing here texts or emails. ' + esc(asOfText(state.row)) + '</p></section>' +
+      '<section class="card"><p class="kicker">Streak and EOD</p><p class="paywhen">' + fmtCount(streak.n) + ' weekday' + (streak.n === 1 ? '' : 's') + ' at 3 sets or more</p><p class="sub">Counted from my_daily in the snapshot (' + fmtCount(streak.days) + ' days stored). Today still under 3 does not break it.</p><p class="sub"><button type="button" class="btn" data-eod>' + (state.eodBusy ? 'Saving EOD' : (eodToday(data) ? 'EOD submitted' : 'Mark EOD submitted')) + '</button></p><p class="src">EOD flag is Supabase, not GHL. Missed days are only the ones you leave unmarked after 6:30 PM CT. History before the first flag is no data, not a miss.</p></section>' +
+      '</div>';
   }
   function playHtml(data, row) {
     var lens = state.lens || 'today';
@@ -1340,9 +1644,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       (lens === 'week' ? ('<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div>') : '') + '</section>';
     var hero = '<section class="hero ' + view.tone + '" data-spot="block" data-lens="' + lens + '"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="40" fill="none" stroke="#f0f0f0" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money">' + moneyHtml + '</div>' + (lensNote ? ('<p class="lens-note" id="lens-note">' + esc(lensNote) + '</p>') : '') + '</div></section>';
     var rowsHtml = list.length ? boardRows(data, list, prev, raceTarget, true) : ('<p class="sub">' + esc(emptyText) + '</p>');
-    return '<section class="play">' + lensBar() + hero + payHtml(data) + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
+    return '<section class="play">' + lensBar() + hero + meterHtml(data) + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
       '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">' + (freshDay ? 'Today is 0 until the feed has today. Yday and Wk are the snapshot. Est. is sets times $50. Ordered by this week.' : 'Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.') + '</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section></section>';
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>' + payHtml(data) + dayHtml(data) + '</section>';
   }
   function boardRows(data, list, prev, target, dollars) {
     var me = meName(data);
@@ -1619,7 +1923,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var p = Math.min(1, (now - t0) / 640);
       var e = 1 - Math.pow(1 - p, 3);
       nodes.forEach(function (el) {
-        if (p >= 1) { el.textContent = el.getAttribute('data-final') || ''; return; }
+        if (p >= 1) {
+          var fin = el.getAttribute('data-final');
+          if (fin) el.textContent = fin;
+          else {
+            var done = parseFloat(el.getAttribute('data-n') || '');
+            if (isFinite(done)) el.textContent = el.getAttribute('data-kind') === 'money' ? fmtMoney(done) : fmtCount(done);
+          }
+          return;
+        }
         var n = parseFloat(el.getAttribute('data-n') || '');
         if (!isFinite(n)) return;
         el.textContent = el.getAttribute('data-kind') === 'money' ? fmtMoney(n * e) : fmtCount(n * e);
@@ -1754,6 +2066,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
         state.row = normalize(live.row);
       } else state.row = normalize(await fetchRow());
       state.archives = await fetchDatedRows();
+      var eodRows = await fetchEod();
+      if (eodRows && state.row && state.row.data) state.row.data.eod = eodRows;
       state.error = ''; state.stale = false;
       state.liveError = '';
       if (forceLive) {
@@ -1809,6 +2123,26 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       return;
     }
     if (e.target.closest && e.target.closest('[data-refresh]')) { playClick(); load(true); return; }
+    var payBtn = e.target.closest && e.target.closest('[data-pay]');
+    if (payBtn) {
+      var payAct = payBtn.getAttribute('data-pay');
+      if (payAct === 'dec') state.paySets = Math.max(1, (state.paySets || 4) - 1);
+      else if (payAct === 'inc') state.paySets = Math.min(8, (state.paySets || 4) + 1);
+      else if (payAct === 'both') state.payBoth = true;
+      else if (payAct === 'one') state.payBoth = false;
+      render();
+      return;
+    }
+    var flagBtn = e.target.closest && e.target.closest('[data-flag]');
+    if (flagBtn) {
+      var flagId = flagBtn.getAttribute('data-id');
+      var flagKey = flagBtn.getAttribute('data-flag');
+      var flagCur = flagOf(flagId)[flagKey];
+      setFlag(flagId, flagKey, flagCur === true ? false : true);
+      render();
+      return;
+    }
+    if (e.target.closest && e.target.closest('[data-eod]')) { markEod(); return; }
     if (e.target.closest && e.target.closest('[data-sound]')) {
       var turningOn = !soundOn();
       storeSet(SOUND_KEY, turningOn ? '1' : '0');
@@ -1847,6 +2181,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (e.target.closest && e.target.closest('[data-retry]')) load();
   });
   document.body.addEventListener('input', function (e) {
+    if (e.target && e.target.getAttribute && e.target.getAttribute('data-cash')) {
+      var cashId = e.target.getAttribute('data-cash');
+      var cashRaw = String(e.target.value || '').trim();
+      setFlag(cashId, 'cash', cashRaw === '' ? null : cashRaw);
+      return;
+    }
     if (e.target && e.target.getAttribute && e.target.getAttribute('data-commit')) {
       var ck = e.target.getAttribute('data-commit');
       var map = loadCommitMap();

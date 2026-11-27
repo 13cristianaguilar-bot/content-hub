@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Thumb vote">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Thumbnail vote · Joe Stolte</title>
+  <meta name="description" content="Swipe outlier podcast thumbnails for the Joe Stolte episode. Right to like, up to copy closely.">
+  <meta property="og:title" content="Thumbnail vote · Joe Stolte">
+  <meta property="og:description" content="Swipe outlier podcast thumbnails. Right to like, up to copy closely.">
+  <meta property="og:image" content="https://i.ytimg.com/vi/_ytyOMSjnTk/hqdefault.jpg">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23ce2029'/%3E%3C/svg%3E">
+  <link rel="preload" as="image" href="https://i.ytimg.com/vi/_ytyOMSjnTk/maxresdefault.jpg">
+  <style>
+    @font-face {
+      font-family: "Geist";
+      font-style: normal;
+      font-weight: 100 900;
+      font-display: swap;
+      src: url("https://cdn.jsdelivr.net/fontsource/fonts/geist:vf@5.2.8/latin-wght-normal.woff2") format("woff2");
+    }
+    :root {
+      --bg: #080808;
+      --card: #121212;
+      --ink: #ffffff;
+      --muted: #b5b5b5;
+      --dim: #8d8d8d;
+      --line: rgba(255,255,255,.1);
+      --red: #ce2029;
+      --red-hot: #e6313a;
+      --shot-h: 202px;
+      --meta-h: 188px;
+      --safe-t: env(safe-area-inset-top, 0px);
+      --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(90% 42% at 50% -8%, rgba(206,32,41,.28), transparent 58%),
+        var(--bg);
+      color: var(--ink);
+      font-family: "Geist", ui-sans-serif, system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+    button, a { font: inherit; color: inherit; }
+    button { cursor: pointer; border: 0; background: none; touch-action: manipulation; }
+    a { touch-action: manipulation; }
+    button:focus-visible, a:focus-visible {
+      outline: 2px solid var(--red-hot);
+      outline-offset: 3px;
+    }
+    .app {
+      width: min(100%, 460px);
+      height: 100%;
+      height: 100dvh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+    .view { display: flex; flex-direction: column; min-height: 0; flex: 1; justify-content: flex-start; }
+    .view[hidden] { display: none; }
+
+    .bar { height: 3px; background: #1c1c1c; flex: none; }
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, var(--red), var(--red-hot));
+      transition: width .35s ease;
+    }
+    header.top {
+      flex: none;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding: calc(10px + var(--safe-t)) 16px 8px;
+    }
+    .eyebrow {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .16em;
+      text-transform: uppercase;
+      color: var(--red-hot);
+    }
+    .count {
+      margin: 2px 0 0;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+    }
+    .count span { color: var(--dim); font-weight: 600; }
+    .picks {
+      min-height: 40px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.04);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .picks b {
+      display: none;
+      place-items: center;
+      min-width: 20px;
+      height: 20px;
+      margin-left: 6px;
+      padding: 0 6px;
+      border-radius: 999px;
+      background: var(--red);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .picks.has { border-color: rgba(230,49,58,.7); }
+    .picks.has b { display: inline-grid; }
+
+    .deck-body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+    }
+    .stage {
+      flex: 1 1 auto;
+      min-height: 0;
+      padding: 4px 16px 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+    .stage:has(#emptyDeck:not([hidden])) { flex: 1; justify-content: center; }
+    .stack {
+      position: relative;
+      width: 100%;
+      height: calc(var(--shot-h) + var(--meta-h));
+      touch-action: none;
+    }
+    .card {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      border-radius: 26px;
+      overflow: hidden;
+      background: var(--card);
+      border: 1px solid var(--line);
+      box-shadow: 0 24px 50px rgba(0,0,0,.45);
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      transform-origin: center center;
+      transition: transform .28s cubic-bezier(.2,.9,.2,1);
+    }
+    .card.front { z-index: 3; }
+    .card.back {
+      z-index: 1;
+      transform: translateY(16px) scale(.955);
+      filter: brightness(.62);
+      pointer-events: none;
+    }
+    .card.dragging { transition: none !important; }
+    .shot {
+      height: var(--shot-h);
+      flex: none;
+      position: relative;
+      background:
+        linear-gradient(180deg, #1a1a1a, #101010);
+    }
+    .shot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      background: #0c0c0c;
+      opacity: 0;
+      display: block;
+    }
+    .shot img.ready { opacity: 1; }
+    .badge {
+      position: absolute;
+      top: 12px;
+      z-index: 2;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+      font-variant-numeric: tabular-nums;
+      backdrop-filter: blur(10px);
+    }
+    .badge.rank { left: 12px; background: rgba(0,0,0,.62); color: #fff; }
+    .badge.mult { right: 12px; background: var(--red); color: #fff; }
+    .stamp {
+      position: absolute;
+      top: 46px;
+      z-index: 2;
+      padding: 4px 10px 5px;
+      border: 3px solid;
+      border-radius: 12px;
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .stamp.skip { left: 14px; color: #d7d7d7; border-color: #d7d7d7; transform: rotate(-14deg); }
+    .stamp.like { right: 14px; color: #fff; border-color: #fff; transform: rotate(14deg); }
+    .stamp.super {
+      left: 50%;
+      top: 38%;
+      color: var(--red-hot);
+      border-color: var(--red-hot);
+      background: rgba(8,8,8,.35);
+      transform: translateX(-50%) rotate(-6deg);
+    }
+    .card.show-like .stamp.like,
+    .card.show-skip .stamp.skip,
+    .card.show-super .stamp.super { opacity: 1; }
+    .meta {
+      height: var(--meta-h);
+      flex: none;
+      padding: 12px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+    .style {
+      margin: 0;
+      color: var(--red-hot);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .title {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.25;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      min-height: calc(1.25em * 3);
+    }
+    .channel {
+      margin: 0;
+      color: #e8e8e8;
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .stats {
+      margin: 2px 0 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-variant-numeric: tabular-nums;
+    }
+    .stats .x { color: #fff; font-weight: 700; }
+    .watch {
+      margin-top: auto;
+      align-self: flex-start;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(255,255,255,.45);
+      padding-bottom: 1px;
+    }
+    .miss {
+      position: absolute;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .shot.broken .miss { display: grid; }
+    .actions {
+      flex: none;
+      position: relative;
+      z-index: 4;
+      padding: 12px 16px calc(10px + var(--safe-b));
+      background: linear-gradient(180deg, rgba(8,8,8,0), var(--bg) 18px);
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr 1fr;
+      gap: 10px;
+    }
+    .act {
+      min-height: 64px;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+    }
+    .act small { font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; opacity: .75; }
+    .act span { font-size: 16px; }
+    .act:active { transform: scale(.97); }
+    .act.armed { transform: scale(1.04); }
+    .act-skip {
+      background: #161616;
+      color: #eee;
+      border: 1px solid rgba(255,255,255,.1);
+    }
+    .act-like { background: #fff; color: #111; }
+    .act-super {
+      background: linear-gradient(180deg, var(--red-hot), var(--red));
+      color: #fff;
+      box-shadow: 0 10px 28px rgba(206,32,41,.38);
+    }
+    .undo-row { display: flex; justify-content: center; margin-top: 8px; }
+    .undo, .texty {
+      min-height: 36px;
+      padding: 0 12px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .undo:disabled { opacity: .35; }
+    .hint {
+      margin: 6px 0 0;
+      text-align: center;
+      color: var(--dim);
+      font-size: 12px;
+      letter-spacing: .01em;
+    }
+    .empty {
+      margin: auto;
+      text-align: center;
+      padding: 24px 12px;
+    }
+    .empty h2 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.03em; }
+    .empty p { margin: 0 0 16px; color: var(--muted); }
+
+    .results-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+      padding: 4px 16px 20px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .lead { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+    .block { margin: 0 0 18px; }
+    .block h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--red-hot);
+    }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .tile {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-decoration: none;
+      min-width: 0;
+    }
+    .tile .frame {
+      position: relative;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #141414;
+      border: 1px solid var(--line);
+      aspect-ratio: 16/9;
+    }
+    .tile img { width: 100%; height: 100%; object-fit: contain; background: #0c0c0c; display: block; opacity: 0; }
+    .tile img.ready { opacity: 1; }
+    .tile .pill {
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      background: var(--red);
+      color: #fff;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 6px;
+      font-variant-numeric: tabular-nums;
+    }
+    .tile .who, .tile .name {
+      margin: 0;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+    }
+    .tile .who { font-size: 12px; color: #ddd; font-weight: 600; -webkit-line-clamp: 1; }
+    .tile .name { font-size: 12px; color: var(--muted); line-height: 1.3; -webkit-line-clamp: 2; }
+    .copybar {
+      flex: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 16px calc(12px + var(--safe-b));
+      background: linear-gradient(180deg, rgba(8,8,8,.2), #080808 28%);
+    }
+    .copy {
+      min-height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, var(--red-hot), var(--red));
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      box-shadow: 0 10px 28px rgba(206,32,41,.35);
+    }
+    .copy:disabled { opacity: .45; box-shadow: none; }
+    .copy.done { background: #fff; color: #111; }
+    .ghost {
+      min-height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      font-weight: 700;
+    }
+    .tools { display: flex; justify-content: center; gap: 8px; margin-top: 8px; }
+    .sheet {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      background: rgba(0,0,0,.72);
+      display: flex;
+      align-items: flex-end;
+      padding: 16px;
+    }
+    .sheet[hidden] { display: none; }
+    .sheet .panel {
+      width: 100%;
+      background: #141414;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 16px;
+    }
+    .sheet h3 { margin: 0 0 8px; }
+    .sheet p { margin: 0 0 10px; color: var(--muted); font-size: 14px; }
+    .sheet textarea {
+      width: 100%;
+      min-height: 180px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #0c0c0c;
+      color: #fff;
+      padding: 10px;
+      font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+      resize: none;
+    }
+    .toast {
+      position: absolute;
+      left: 50%;
+      top: calc(12px + var(--safe-t));
+      transform: translateX(-50%) translateY(-12px);
+      background: #fff;
+      color: #111;
+      font-weight: 700;
+      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 7;
+    }
+    .toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+    @media (max-height: 700px) {
+      .hint { display: none; }
+      .title { -webkit-line-clamp: 2; min-height: calc(1.25em * 2); }
+      :root { --meta-h: 164px; }
+      .act { min-height: 56px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .bar > span, .act, .toast { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section class="view" id="deckView">
+      <div class="bar" aria-hidden="true"><span id="barFill"></span></div>
+      <header class="top">
+        <div>
+          <p class="eyebrow">Joe Stolte</p>
+          <p class="count"><b id="pos">1</b><span> / <span id="total">143</span></span></p>
+        </div>
+        <button class="picks" id="btn-picks" type="button">Picks <b id="picksCount">0</b></button>
+      </header>
+      <div class="deck-body">
+      <div class="stage" id="stage">
+        <div class="stack" id="stack"></div>
+        <div class="empty" id="emptyDeck" hidden>
+          <h2>That's the deck.</h2>
+          <p>Every outlier thumbnail has a vote.</p>
+          <button class="copy" id="btn-see" type="button">See picks</button>
+        </div>
+      </div>
+      <div class="actions" id="actions">
+        <div class="row">
+          <button class="act act-skip" id="btn-skip" type="button">
+            <small>Left</small>
+            <span>Skip</span>
+          </button>
+          <button class="act act-super" id="btn-super" type="button">
+            <small>Up</small>
+            <span>Copy this</span>
+          </button>
+          <button class="act act-like" id="btn-like" type="button">
+            <small>Right</small>
+            <span>Like</span>
+          </button>
+        </div>
+        <div class="undo-row">
+          <button class="undo" id="btn-undo" type="button">Undo</button>
+        </div>
+        <p class="hint">Swipe the card, or use the arrow keys.</p>
+      </div>
+      </div>
+    </section>
+
+    <section class="view" id="resultsView" hidden>
+      <header class="top">
+        <div>
+          <p class="eyebrow">Joe Stolte</p>
+          <p class="count">Picks</p>
+        </div>
+        <button class="picks" id="btn-back" type="button">Keep voting</button>
+      </header>
+      <div class="results-scroll" id="resultsScroll">
+        <p class="lead" id="resultsLead"></p>
+        <div id="resultsBody"></div>
+        <div class="tools">
+          <button class="texty" id="btn-undo-results" type="button">Undo last vote</button>
+          <button class="texty" id="btn-clear" type="button">Clear votes</button>
+        </div>
+      </div>
+      <div class="copybar">
+        <button class="copy" id="btn-copy" type="button">Copy picks</button>
+      </div>
+    </section>
+
+    <div class="sheet" id="sheet" hidden>
+      <div class="panel">
+        <h3>Copy picks</h3>
+        <p>Select the list if it didn't land on the clipboard.</p>
+        <textarea id="sheetText" readonly></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="ghost" id="sheet-close" type="button">Close</button>
+          <button class="copy" id="sheet-copy" type="button">Copy</button>
+        </div>
+      </div>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+  </div>
+  <noscript>Thumbnails and voting need JavaScript.</noscript>
+  <script type="module" src="./app.js?v=20261127"></script>
+</body>
+</html>

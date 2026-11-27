@@ -121,6 +121,9 @@ a{color:var(--teal);text-decoration:none}
 .hero-money span{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;color:var(--teal)}
 .hero-money b{display:block;font-family:var(--serif);font-weight:650;font-size:clamp(26px,4.4vh,40px);line-height:.9;font-variant-numeric:tabular-nums}
 .hero-money b.urgent{animation:urgent 1.35s ease-in-out infinite}
+.hero-money .comm,.meterfigs .comm,.paycard p.comm{display:block;font-size:13px;font-weight:800;letter-spacing:0;text-transform:none;color:var(--ink);line-height:1.2}
+.hero-money .fee,.meterfigs .fee,.paycard .fee,.est .fee,.lrow .fee{display:block;font-size:11px;font-weight:700;letter-spacing:0;text-transform:none;font-style:normal;color:var(--muted);line-height:1.25}
+.est b{display:block;font-size:13px;line-height:1.1;font-weight:800}
 @keyframes urgent{50%{opacity:.45}}
 .cline{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px}
 .cline b{min-width:52px;font-size:12px}
@@ -145,7 +148,8 @@ a{color:var(--teal);text-decoration:none}
 .stack .sql{background:var(--teal)}
 .stack .comm{background:var(--good)}
 .ladder{display:grid;gap:6px;margin-top:8px}
-.lrow{display:grid;grid-template-columns:64px minmax(0,1fr) 92px;gap:6px;align-items:center;font-size:12px;font-weight:800}
+.lrow{display:grid;grid-template-columns:52px minmax(48px,1fr) minmax(0,1.3fr);gap:6px;align-items:center;font-size:12px;font-weight:800}
+.lrow span:last-child{font-weight:800;line-height:1.15}
 .lrow b{display:block;height:16px;border-radius:6px;background:var(--teal);min-width:4px}
 .lrow.mark b{background:var(--good)}
 .lrow.on b{outline:2px solid var(--edge)}
@@ -290,7 +294,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .money{grid-row:7}
   .paygrid,.funnel,.meterfigs{grid-template-columns:1fr}
   .qrow{grid-template-columns:1fr 1fr}
-  .lrow{grid-template-columns:52px minmax(0,1fr) 78px;font-size:11px}
+  .lrow{grid-template-columns:46px minmax(36px,.7fr) minmax(0,1.2fr);font-size:11px}
   .meterfigs b{font-size:24px}
   .paywhen{font-size:15px}
   .paycard p{font-size:11px}
@@ -415,15 +419,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var PACE_RATE = 30;
   var SQL = 50;
   var BONUS = SQL;
-  var AVG_CASH = 5150;
+  var AVG_DEAL_CASH = 7000;
+  var COMMISSION_RATE = 0.05;
   var SHOW_RATE = 0.37;
   var CLOSE_RATE = 0.80;
   var CLOSE_RATE_ONE = 0;
-  var COMMISSION = 0.05;
   var WORKDAYS = 21;
   var DAY_GOAL = 4;
   var DAY_GOAL_15 = 6;
-  var OUTBOUND_CUT = 0.05;
+  var OUTBOUND_CUT = COMMISSION_RATE;
   var GHL_LOC = 'TFjAchoN7yuxbz4BUdqd';
   var FLAG_KEY = 'fe-set-flags';
   var GUIDE_KEY = 'fe-guide-money';
@@ -491,6 +495,35 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (!isFinite(n) || n < 0) return null;
       return n;
     } catch (e) { return null; }
+  }
+  function closeCommission() { return AVG_DEAL_CASH * COMMISSION_RATE; }
+  function ifClosesValue() { return SQL + closeCommission(); }
+  function expectedSetValue(rate) {
+    var r = rate == null ? CLOSE_RATE : rate;
+    return SQL + SHOW_RATE * r * closeCommission();
+  }
+  function moneyPhrase(sets, lost) {
+    if (sets == null) return 'no data';
+    var full = sets * ifClosesValue();
+    var comm = sets * closeCommission();
+    var fee = sets * SQL;
+    var head = (lost && full > 0.5 ? '-' : '') + fmtMoney(full);
+    return head + (lost ? ' potential' : ' if it closes') + ' (' + fmtMoney(comm) + ' commission, ' + fmtMoney(fee) + ' set fee)';
+  }
+  function dialLostPhrase(dials, data) {
+    var rates = paceRates(data);
+    var head = 'Behind pace: ' + fmtCount(dials) + ' dials.';
+    if (!rates || rates.dialsPerSet == null || !(rates.dialsPerSet > 0)) return head + ' Potential from those dials: no data.';
+    var sets = dials / rates.dialsPerSet;
+    return head + ' About ' + moneyPhrase(sets, true) + ' at ' + rates.label + '.';
+  }
+  function pairHtml(sets, lost) {
+    if (sets == null) return '<b class="na">no data</b>';
+    var full = sets * ifClosesValue();
+    var comm = sets * closeCommission();
+    var fee = sets * SQL;
+    var big = (lost && full > 0.5 ? '-' : '') + fmtMoney(full);
+    return '<b class="deal">' + esc(big) + '</b><span class="comm">' + esc(fmtMoney(comm) + ' commission') + '</span><span class="fee">' + esc((lost ? 'potential missed · ' : 'if it closes · ') + fmtMoney(fee) + ' set fee') + '</span>';
   }
   function sameName(a, b) {
     return String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
@@ -987,11 +1020,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   }
   function potential(commits, sec, row) {
     var sets = row ? num(row.sets) : null;
-    if (sets == null) return { dollars: null, behind: false, note: 'Potentially lost needs today\'s sets.' };
+    if (sets == null) return { dollars: null, fee: null, comm: null, sets: null, behind: false, note: 'Potentially lost needs today\'s sets.' };
     var exp = expectedSets(commits, sec);
     var gap = Math.max(0, exp - sets);
-    if (gap < 0.05) return { dollars: 0, behind: false, note: 'On the set commitment. Nothing is burning.' };
-    return { dollars: gap * BONUS, behind: true, note: fmtCount(gap) + ' sets behind the clock. ' + fmtMoney(gap * BONUS) + ' potentially lost, from today\'s sets against the commitment so far.' };
+    if (gap < 0.05) return { dollars: 0, fee: 0, comm: 0, sets: 0, behind: false, note: 'On the set commitment. Nothing is burning.' };
+    return { dollars: gap * ifClosesValue(), fee: gap * SQL, comm: gap * closeCommission(), sets: gap, behind: true, note: fmtCount(gap) + ' sets behind the clock. ' + moneyPhrase(gap, true) + ', from today\'s sets against the commitment so far.' };
   }
   function commitLine(b) {
     return 'You committed: ' + fmtCount(b.sets) + ' sets, ' + fmtCount(b.dials) + ' dials, ' + fmtCount(b.talk) + ' min this block.';
@@ -1008,7 +1041,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var close = 18 * 3600;
     if (dow === 0 || dow === 6) {
       var toMon = ((dow === 6 ? 2 : 1) * 86400) - t + 11 * 3600;
-      return pack({ phase: 'off', label: fmtDur(toMon), sub: 'Next block Monday ' + commits[0].name, remain: toMon, toClose: null, block: commits[0].name, progress: 0, tone: 'calm', kicker: 'No block today', title: 'Monday ' + commits[0].clock, commit: commitLine(commits[0]), pace: 'Saturday and Sunday have no dial block.', pot: 0, potNote: 'Nothing is burning until Monday.', heroTime: fmtDur(toMon), heroUnit: 'UNTIL MON', focus: 1 });
+      return pack({ phase: 'off', label: fmtDur(toMon), sub: 'Next block Monday ' + commits[0].name, remain: toMon, toClose: null, block: commits[0].name, progress: 0, tone: 'calm', kicker: 'No block today', title: 'Monday ' + commits[0].clock, commit: commitLine(commits[0]), pace: 'Saturday and Sunday have no dial block.', pot: 0, potFee: 0, potComm: 0, potSets: 0, potNote: 'Nothing is burning until Monday.', heroTime: fmtDur(toMon), heroUnit: 'UNTIL MON', focus: 1 });
     }
     var i, b;
     for (i = 0; i < commits.length; i++) {
@@ -1023,21 +1056,26 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
         var due = b.dials * ((t - b.start) / dur);
         var bits = [];
         if (sets == null) bits.push('Sets: no data.');
-        else if (exp - sets > 0.05) bits.push('Sets behind by ' + fmtCount(exp - sets) + ' so far today.');
+        else if (exp - sets > 0.05) bits.push('Sets behind by ' + fmtCount(exp - sets) + ' so far today. ' + moneyPhrase(exp - sets, true) + '.');
         else if (sets - exp > 0.05) bits.push('Sets ahead by ' + fmtCount(sets - exp) + ' so far today.');
         else bits.push('Sets are on the commitment.');
         if (logged == null) bits.push('Dials this block: no data.');
-        else if (due - logged > 0.5) bits.push(fmtCount(due - logged) + ' dials behind this block.');
+        else if (due - logged > 0.5) {
+          var rates = paceRates(data);
+          var miss = due - logged;
+          var extra = (!rates || !(rates.dialsPerSet > 0)) ? ' Potential: no data.' : (' About ' + moneyPhrase(miss / rates.dialsPerSet, true) + ' at ' + rates.label + '.');
+          bits.push(fmtCount(miss) + ' dials behind this block.' + extra);
+        }
         else bits.push(fmtCount(Math.max(0, logged - due)) + ' dials ahead this block.');
         var behind = pot.behind || (logged != null && due - logged > 0.5);
-        return pack({ phase: 'in', label: fmtDur(close - t), sub: 'Until 6 PM. Now ' + b.name, remain: close - t, toClose: close - t, block: b.name, progress: left / dur, tone: behind ? 'bad' : 'good', kicker: 'Block ' + b.n + ' of 2 · Calendar commitment', title: b.clock, commit: commitLine(b), pace: bits.join(' '), pot: pot.dollars, potNote: pot.note, heroTime: fmtDur(left), heroUnit: 'LEFT', focus: b.n });
+        return pack({ phase: 'in', label: fmtDur(close - t), sub: 'Until 6 PM. Now ' + b.name, remain: close - t, toClose: close - t, block: b.name, progress: left / dur, tone: behind ? 'bad' : 'good', kicker: 'Block ' + b.n + ' of 2 · Calendar commitment', title: b.clock, commit: commitLine(b), pace: bits.join(' '), pot: pot.dollars, potFee: pot.fee, potComm: pot.comm, potSets: pot.sets, potNote: pot.note, heroTime: fmtDur(left), heroUnit: 'LEFT', focus: b.n });
       }
     }
     if (t >= close) {
       var done = potential(commits, t, row);
       var setsNow = row ? num(row.sets) : null;
       var goalSets = commits[0].sets + commits[1].sets;
-      return pack({ phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '', progress: 0, tone: done.behind ? 'bad' : 'good', kicker: 'Block results', title: 'Both blocks are closed', commit: 'Committed today: ' + fmtCount(goalSets) + ' sets. Logged: ' + (setsNow == null ? 'no data' : fmtCount(setsNow) + ' sets') + '.', pace: done.note, pot: done.dollars, potNote: done.note, heroTime: '00:00', heroUnit: 'CLOSED', focus: 2 });
+      return pack({ phase: 'over', label: '00:00', sub: 'Blocks are over', remain: 0, toClose: 0, block: '', progress: 0, tone: done.behind ? 'bad' : 'good', kicker: 'Block results', title: 'Both blocks are closed', commit: 'Committed today: ' + fmtCount(goalSets) + ' sets. Logged: ' + (setsNow == null ? 'no data' : fmtCount(setsNow) + ' sets') + '.', pace: done.note, pot: done.dollars, potFee: done.fee, potComm: done.comm, potSets: done.sets, potNote: done.note, heroTime: '00:00', heroUnit: 'CLOSED', focus: 2 });
     }
     var next = null;
     for (i = 0; i < commits.length; i++) if (t < commits[i].start) { next = commits[i]; break; }
@@ -1045,7 +1083,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var gapStart = next.n === 1 ? 0 : commits[0].end;
     var gapDur = Math.max(1, next.start - gapStart);
     var potW = potential(commits, t, row);
-    return pack({ phase: 'wait', label: fmtDur(next.start - t), sub: 'Next block ' + next.name, remain: next.start - t, toClose: close - t, block: next.name, progress: Math.max(0, Math.min(1, (next.start - t) / gapDur)), tone: 'calm', kicker: 'Next block · Block ' + next.n + ' of 2', title: next.clock, commit: commitLine(next), pace: (next.n === 2 ? ('Block 1 is closed. ' + potW.note) : 'Be at the dialer when this block opens.'), pot: potW.dollars, potNote: potW.note, heroTime: fmtDur(next.start - t), heroUnit: 'OPENS IN', focus: next.n });
+    return pack({ phase: 'wait', label: fmtDur(next.start - t), sub: 'Next block ' + next.name, remain: next.start - t, toClose: close - t, block: next.name, progress: Math.max(0, Math.min(1, (next.start - t) / gapDur)), tone: 'calm', kicker: 'Next block · Block ' + next.n + ' of 2', title: next.clock, commit: commitLine(next), pace: (next.n === 2 ? ('Block 1 is closed. ' + potW.note) : 'Be at the dialer when this block opens.'), pot: potW.dollars, potFee: potW.fee, potComm: potW.comm, potSets: potW.sets, potNote: potW.note, heroTime: fmtDur(next.start - t), heroUnit: 'OPENS IN', focus: next.n });
   }
   function schedule() {
     var data = state.row && state.row.data;
@@ -1072,11 +1110,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var table = onTable(data, row);
     var delta = liveDelta(data);
     var sets = row ? num(row.sets) : null;
-    if (mode === 'win') return 'KPI is met. Bonus earned ' + (sets == null ? 'no data' : fmtMoney(sets * BONUS)) + '. Protect the lead.';
+    if (mode === 'win') return 'KPI is met. ' + (sets == null ? 'Sets: no data' : moneyPhrase(sets, false)) + '. Protect the lead.';
     if (mode === 'alert') {
       var bits = [];
-      if (delta != null && delta < -0.05) bits.push('Behind pace: ' + fmtCount(Math.abs(delta)) + ' dials.');
-      if (table && table.dollars != null && table.dollars > 0.5) bits.push(fmtMoney(table.dollars) + ' on the table.');
+      if (delta != null && delta < -0.05) bits.push(dialLostPhrase(Math.abs(delta), data));
+      if (table && table.dollars != null && table.dollars > 0.5) bits.push(fmtMoney(table.dollars) + ' potential still to book.');
       if (!bits.length) bits.push('Under an hour left.');
       bits.push('Dial now.');
       return bits.join(' ');
@@ -1089,7 +1127,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       return (fresh ? 'New day. ' : '') + 'Next block is ' + (sched.block || 'no data') + '.' + money;
     }
     if (delta == null) return 'Pace: no data. ' + (table && table.note ? table.note : '');
-    if (Math.abs(delta) < 0.05) return 'On pace. ' + (table && table.dollars > 0.5 ? (fmtMoney(table.dollars) + ' still pays before 6 PM.') : 'Hold the block.');
+    if (Math.abs(delta) < 0.05) return 'On pace. ' + (table && table.dollars > 0.5 ? (fmtMoney(table.dollars) + ' potential still to book before 6 PM.') : 'Hold the block.');
     if (delta > 0) return 'Ahead by ' + fmtCount(delta) + ' dials. ' + (table && table.note ? table.note : 'Keep the block.');
     return (table && table.note) || 'Stay on the block.';
   }
@@ -1177,8 +1215,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (sets == null) { bits.push(shortDay(key) + ' no data'); return; }
       seen++;
       var short = Math.max(0, kpi - sets);
-      dollars += short * BONUS;
-      if (short > 0) bits.push(shortDay(key) + ' ' + fmtCount(short) + ' short');
+      dollars += short * ifClosesValue();
+      if (short > 0) bits.push(shortDay(key) + ' ' + fmtCount(short) + ' short, ' + moneyPhrase(short, true));
     });
     if (!seen && !bits.length) return { dollars: null, note: 'No past days in the feed.' };
     var now = feedIsCurrent(data) ? num(data.now_hour) : null;
@@ -1188,8 +1226,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       if (todaySets == null) bits.push('Today no data');
       else {
         var shortToday = Math.max(0, kpi - todaySets);
-        dollars += shortToday * BONUS;
-        if (shortToday > 0) bits.push('today ' + fmtCount(shortToday) + ' short, blocks over');
+        dollars += shortToday * ifClosesValue();
+        if (shortToday > 0) bits.push('today ' + fmtCount(shortToday) + ' short, blocks over, ' + moneyPhrase(shortToday, true));
       }
     }
     return { dollars: dollars, note: bits.length ? bits.join(', ') : 'Nothing missed on the days in the feed.' };
@@ -1198,10 +1236,10 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var kpi = kpiOf(data);
     var sets = row ? num(row.sets) : null;
     var now = !data ? null : (feedIsCurrent(data) ? num(data.now_hour) : wallHour());
-    if (kpi == null || sets == null || now == null) return { dollars: null, note: 'no data' };
-    if (!dayOpen(now)) return { dollars: 0, note: sets + 0.05 >= kpi ? 'KPI is met' : 'Blocks are over', open: false, met: sets + 0.05 >= kpi };
+    if (kpi == null || sets == null || now == null) return { dollars: null, sets: null, note: 'no data' };
+    if (!dayOpen(now)) return { dollars: 0, fee: 0, comm: 0, sets: 0, note: sets + 0.05 >= kpi ? 'KPI is met' : 'Blocks are over', open: false, met: sets + 0.05 >= kpi };
     var left = Math.max(0, kpi - sets);
-    return { dollars: left * BONUS, note: left < 0.05 ? 'KPI is met' : (fmtCount(left) + ' sets still pay before 6 PM CT'), open: true, met: left < 0.05 };
+    return { dollars: left * ifClosesValue(), fee: left * SQL, comm: left * closeCommission(), sets: left, note: left < 0.05 ? 'KPI is met' : (fmtCount(left) + ' sets still to book before 6 PM CT. ' + moneyPhrase(left, false) + '.'), open: true, met: left < 0.05 };
   }
   function monthMoney(data) {
     var kpi = kpiOf(data);
@@ -1213,16 +1251,19 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (kpi == null || sets == null || elapsed == null || !(elapsed > 0) || !today) return null;
     var total = weekdaysInMonth(today.y, today.m);
     if (!(total >= elapsed)) return null;
-    var pace = (sets / elapsed) * total * BONUS;
-    var kpiPay = kpi * total * BONUS;
-    return { pace: pace, kpiPay: kpiPay, gap: kpiPay - pace, sets: sets, elapsed: elapsed, total: total, month: today.m, year: today.y };
+    var pace = (sets / elapsed) * total * ifClosesValue();
+    var paceFee = (sets / elapsed) * total * SQL;
+    var paceExpected = (sets / elapsed) * total * expectedSetValue(CLOSE_RATE);
+    var kpiPay = kpi * total * ifClosesValue();
+    var kpiFee = kpi * total * SQL;
+    var kpiExpected = kpi * total * expectedSetValue(CLOSE_RATE);
+    return { pace: pace, paceFee: paceFee, paceExpected: paceExpected, kpiPay: kpiPay, kpiFee: kpiFee, kpiExpected: kpiExpected, gap: kpiPay - pace, sets: sets, elapsed: elapsed, total: total, month: today.m, year: today.y };
   }
   function commissionText(sets) {
+    var line = 'A close pays ' + fmtMoney(closeCommission()) + ' commission, 5% of ' + fmtMoney(AVG_DEAL_CASH) + ', plus the $50 set fee. ' + fmtMoney(ifClosesValue()) + ' if it closes. Expected per set ' + fmtMoney(expectedSetValue(CLOSE_RATE)) + ' at ' + pct(SHOW_RATE) + ' show and ' + pct(CLOSE_RATE) + ' close. Not cash collected.';
     var avg = setting(AVG_KEY);
-    if (avg == null) return 'Set your avg deal size to see commission.';
-    if (sets == null) return 'Commission upside: no data. Average deal ' + fmtMoney(avg) + ' is an assumption, not cash collected.';
-    var upside = sets * avg * OUTBOUND_CUT;
-    return fmtMoney(upside) + ' outbound commission upside on ' + fmtCount(sets) + ' set' + (Math.abs(sets) === 1 ? '' : 's') + ' at ' + fmtMoney(avg) + ' average. 5% assumption, not cash collected.';
+    if (avg == null || sets == null) return line;
+    return line + ' Typed deal ' + fmtMoney(avg) + ' would be ' + fmtMoney(avg * COMMISSION_RATE) + ' commission. The board stays on ' + fmtMoney(AVG_DEAL_CASH) + '.';
   }
   function flame(on) {
     var fill = on ? '#37ca37' : '#e93d3d';
@@ -1258,12 +1299,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var mine = num(list[0].sets), below = list[1] ? num(list[1].sets) : null;
       if (mine == null) return { text: 'You are 1st. Sets: no data.', ahead: true, rank: 1 };
       if (below == null || mine - below < 0.05) return { text: 'You lead this board.', ahead: true, rank: 1 };
-      return { text: 'You lead by ' + fmtCount(mine - below) + ' ' + (Math.abs(mine - below - 1) < 0.05 ? 'set' : 'sets') + '. ' + fmtMoney((mine - below) * BONUS) + ' estimated.', ahead: true, rank: 1 };
+      return { text: 'You lead by ' + fmtCount(mine - below) + ' ' + (Math.abs(mine - below - 1) < 0.05 ? 'set' : 'sets') + '. ' + moneyPhrase(mine - below, false) + '.', ahead: true, rank: 1 };
     }
     var above = list[idx - 1];
     var as = num(above.sets), ms = num(list[idx].sets);
     if (as == null || ms == null) return { text: 'Sets to pass ' + textOr(above.name) + ': no data.', ahead: false, rank: idx + 1 };
-      if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' ' + (Math.abs(as - ms - 1) < 0.05 ? 'set' : 'sets') + ' to pass ' + textOr(above.name) + '. ' + fmtMoney((as - ms) * BONUS) + ' estimated.', ahead: false, rank: idx + 1 };
+      if (as - ms > 0.05) return { text: fmtCount(as - ms) + ' ' + (Math.abs(as - ms - 1) < 0.05 ? 'set' : 'sets') + ' to pass ' + textOr(above.name) + '. ' + moneyPhrase(as - ms, false) + '.', ahead: false, rank: idx + 1 };
     var ad = num(above.dials), md = num(list[idx].dials);
     if (ad == null || md == null) return { text: 'Tied on sets with ' + textOr(above.name) + '. Dials: no data.', ahead: false, rank: idx + 1 };
     if (ad - md > 0.05) return { text: 'Tied on sets. ' + fmtCount(ad - md) + ' dials to pass ' + textOr(above.name) + '.', ahead: false, rank: idx + 1 };
@@ -1335,9 +1376,15 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     return Math.round(v * 100) + '%';
   }
   function closeNow() { return state.payBoth === false ? CLOSE_RATE_ONE : CLOSE_RATE; }
-  function commissionEach(rate) { return SHOW_RATE * rate * AVG_CASH * COMMISSION; }
-  function valueEach(rate) { return SQL + commissionEach(rate); }
+  function commissionEach(rate) { return SHOW_RATE * rate * closeCommission(); }
+  function valueEach(rate) { return expectedSetValue(rate); }
   function monthAt(perDay, rate) { return perDay * WORKDAYS * valueEach(rate); }
+  function monthClose(perDay) { return perDay * WORKDAYS * ifClosesValue(); }
+  function setsToClear(goal, rate) {
+    var each = expectedSetValue(rate);
+    if (!(each > 0)) return null;
+    return Math.ceil(goal / (WORKDAYS * each) - 1e-9);
+  }
   function moneyOf(sets, rate) {
     if (sets == null) return null;
     return { bonus: sets * SQL, est: sets * commissionEach(rate), total: sets * valueEach(rate) };
@@ -1423,54 +1470,68 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function meterHtml(data) {
     var rate = closeNow();
     function cell(label, sets, src) {
-      var m = moneyOf(sets, rate);
-      var total = m ? m.total : null;
-      return '<div><span>' + esc(label) + '</span><b class="count" data-kind="money" data-n="' + (total == null ? '' : String(total)) + '">' + esc(total == null ? 'no data' : fmtMoney(total)) + '</b><span class="sub">' + esc(sets == null ? 'Sets: no data' : (fmtCount(sets) + ' sets x $' + SQL + ' + est. ' + fmtMoney(m.est))) + '. ' + esc(src) + '</span></div>';
+      if (sets == null) return '<div><span>' + esc(label) + '</span><b class="na">no data</b><span class="fee">' + esc(src) + '</span></div>';
+      var full = sets * ifClosesValue();
+      return '<div><span>' + esc(label) + '</span><b class="deal count" data-kind="money" data-n="' + String(full) + '">' + esc(fmtMoney(full)) + '</b><span class="comm">' + esc(fmtMoney(sets * closeCommission()) + ' commission') + '</span><span class="fee">' + esc(fmtMoney(sets * SQL) + ' set fee · ' + src) + '</span><span class="fee">Expected ' + esc(fmtMoney(sets * expectedSetValue(rate))) + '</span></div>';
     }
     var today = todayRow(data);
+    var todaySets = today ? num(today.sets) : null;
     var week = findMe(data, 'week');
     var month = findMe(data, 'month');
+    var table = todaySets == null
+      ? '<div><span>Potential on the table</span><b class="na">no data</b></div>'
+      : '<div><span>Potential on the table</span><b class="deal count" data-kind="money" data-n="' + String(todaySets * ifClosesValue()) + '">' + esc(fmtMoney(todaySets * ifClosesValue())) + '</b><span class="comm">' + esc(fmtCount(todaySets) + (Math.abs(todaySets - 1) < 0.05 ? ' set' : ' sets') + ' today x ' + fmtMoney(ifClosesValue()) + ' if they all close') + '</span><span class="fee">' + esc(fmtMoney(todaySets * SQL) + ' set fee') + '</span></div>';
     return '<section class="card meterbar"><p class="kicker">Live money</p><div class="meterfigs">' +
-      cell('Today', today ? num(today.sets) : null, 'GHL sets. Commission est.') +
-      cell('This week', week ? num(week.sets) : null, 'GHL sets. Commission est.') +
-      cell('This month', month ? num(month.sets) : null, 'GHL sets. Commission est.') +
-      '</div><p class="src">Refreshed ' + esc(asOfText(state.row)) + '. Commission uses show ' + pct(SHOW_RATE) + ' and close ' + pct(rate) + (state.payBoth === false ? ' (one parent).' : ' (both parents, one week of calls).') + ' Avg cash $' + AVG_CASH.toLocaleString('en-US') + ' is the Nov median, mostly Mentor Family Live. Estimate, not cash collected.</p></section>';
+      table +
+      '<div><span>Expected per set</span><b class="deal">' + esc(fmtMoney(expectedSetValue(rate))) + '</b><span class="comm">' + esc(fmtMoney(closeCommission()) + ' commission if it closes') + '</span><span class="fee">Expected. ' + esc(pct(SHOW_RATE) + ' show, ' + pct(rate) + ' close. ' + fmtMoney(SQL) + ' set fee.') + '</span></div>' +
+      '<div><span>If one set closes</span><b class="deal">' + esc(fmtMoney(ifClosesValue())) + '</b><span class="comm">' + esc(fmtMoney(closeCommission()) + ' commission') + '</span><span class="fee">' + esc(fmtMoney(SQL) + ' set fee') + '</span></div>' +
+      cell('Today', todaySets, 'GHL sets') +
+      cell('This week', week ? num(week.sets) : null, 'GHL sets') +
+      cell('This month', month ? num(month.sets) : null, 'GHL sets') +
+      '</div><p class="src">A close is 5% of ' + esc(fmtMoney(AVG_DEAL_CASH)) + ', which is ' + esc(fmtMoney(closeCommission())) + ', plus the $50 set fee. ' + esc(fmtMoney(ifClosesValue())) + ' if it closes. Expected uses the show and close rates and is labeled expected. Deal cash is a constant, not cash collected. Refreshed ' + esc(asOfText(state.row)) + '.</p></section>';
   }
   function payHtml(data) {
     var rate = closeNow();
-    var each = valueEach(rate);
-    var comm = commissionEach(rate);
-    var sqlW = each > 0 ? Math.round(SQL / each * 100) : 100;
+    var each = expectedSetValue(rate);
+    var full = ifClosesValue();
+    var comm = closeCommission();
+    var sqlW = full > 0 ? Math.round(SQL / full * 100) : 100;
     var sets = monthSetCount(data);
-    var booked = sets == null ? 'Sets this month: no data.' : (fmtCount(sets) + (Math.abs(sets - 1) < 0.05 ? ' set' : ' sets') + ' this month. $50 x ' + fmtCount(sets) + ' = ' + fmtMoney(sets * SQL) + ' from booked leads.');
-    var scale = Math.max(monthAt(DAY_GOAL_15, CLOSE_RATE), 16000);
+    var booked = sets == null ? 'Sets this month: no data.' : (fmtCount(sets) + (Math.abs(sets - 1) < 0.05 ? ' set' : ' sets') + ' this month. ' + moneyPhrase(sets, false) + '. Expected ' + fmtMoney(sets * each) + '.');
+    var scale = monthClose(6);
+    var clear10 = setsToClear(10000, rate);
+    var clear15 = setsToClear(15000, rate);
     var days = [3, 4, 5, 6];
     var bars = days.map(function (d) {
-      var dollars = monthAt(d, rate);
+      var dollars = monthClose(d);
       var w = scale > 0 ? Math.max(4, Math.round(dollars / scale * 100)) : 4;
-      var mark = d === DAY_GOAL || d === DAY_GOAL_15;
+      var mark = d === clear10 || d === clear15;
       var on = d === state.paySets;
-      return '<div class="lrow' + (mark ? ' mark' : '') + (on ? ' on' : '') + '"><span>' + d + '/day</span><b style="width:' + w + '%"></b><span>' + fmtMoney(dollars) + '</span></div>';
+      return '<div class="lrow' + (mark ? ' mark' : '') + (on ? ' on' : '') + '"><span>' + d + '/day</span><b style="width:' + w + '%"></b><span>' + fmtMoney(dollars) + '<i class="fee">expected ' + fmtMoney(monthAt(d, rate)) + '</i></span></div>';
     }).join('');
-    var picked = monthAt(state.paySets, rate);
+    var picked = monthClose(state.paySets);
+    var paceLine = (clear10 == null || clear15 == null)
+      ? 'Expected pay does not clear $10k when the close rate is 0%. A close would still pay ' + fmtMoney(comm) + ' plus the $50.'
+      : (clear10 + '/day clears $10k expected. ' + clear15 + '/day clears $15k expected. Highlighted bars. The bar itself is if every set closes.');
     return '<section class="card paycard" data-spot="pay"><p class="kicker">Money math</p><div class="paygrid"><div>' +
-      '<p>pay = sets x $50 + sets x show x close x avg cash x 5%.</p>' +
-      '<p class="paywhen">~' + fmtMoney(each) + ' per set</p>' +
-      '<p class="sub">$' + SQL + ' SQL + ~' + fmtMoney(comm) + ' commission est.</p>' +
+      '<p>If it closes = $50 set fee + 5% of ' + fmtMoney(AVG_DEAL_CASH) + '. Expected = $50 + show x close x ' + fmtMoney(comm) + '.</p>' +
+      '<p class="paywhen">' + fmtMoney(full) + ' if it closes</p>' +
+      '<p class="comm">' + fmtMoney(comm) + ' commission</p>' +
+      '<p class="fee">$' + SQL + ' set fee. Expected ' + fmtMoney(each) + ' per set.</p>' +
       '<div class="stack" aria-hidden="true"><i class="sql" style="width:' + sqlW + '%"></i><i class="comm" style="width:' + (100 - sqlW) + '%"></i></div>' +
       '<p class="paywhen" id="pay-when">' + esc(paydayText(new Date())) + '</p>' +
       '<p class="sub">' + esc(booked) + '</p>' +
-      '<p class="sub">Plus 5% of cash collected on your outbound sets that close (not tracked yet).</p></div><div>' +
-      '<p class="sub">Month pay at ' + WORKDAYS + ' weekdays. Bars are scaled to the $15k line. 4/day and 6/day are marked.</p>' +
+      '<p class="sub">Cash collected is not in the feed. The commission figure uses the ' + fmtMoney(AVG_DEAL_CASH) + ' deal constant.</p></div><div>' +
+      '<p class="sub">Month if they close, ' + WORKDAYS + ' weekdays. Expected sits beside each row.</p>' +
       '<div class="ladder">' + bars + '</div>' +
-      '<p class="sub">4/day clears $10k. 6/day clears $15k. Highlighted bars.</p></div><div>' +
-      '<p>Sets per day</p><div class="step"><button type="button" data-pay="dec" aria-label="Fewer sets per day">-</button><b>' + state.paySets + '</b><button type="button" data-pay="inc" aria-label="More sets per day">+</button><span>' + fmtMoney(picked) + '/mo</span></div>' +
+      '<p class="sub">' + esc(paceLine) + '</p></div><div>' +
+      '<p>Sets per day</p><div class="step"><button type="button" data-pay="dec" aria-label="Fewer sets per day">-</button><b>' + state.paySets + '</b><button type="button" data-pay="inc" aria-label="More sets per day">+</button><span>' + fmtMoney(picked) + '/mo if they close</span></div>' +
       '<div class="tog"><button type="button" data-pay="both"' + (state.payBoth !== false ? ' class="on"' : '') + '>Both parents 80%</button><button type="button" data-pay="one"' + (state.payBoth === false ? ' class="on"' : '') + '>One parent 0%</button></div>' +
-      '<p class="sub">' + (state.payBoth === false ? 'Close rate 0% with one parent. Commission drops out. Pay is the $50 only.' : '80% close is Justin, Nov 5, when both parents are on the call. One week only.') + '</p>' +
+      '<p class="sub">' + (state.payBoth === false ? 'Expected close rate is 0% with one parent, so expected commission is $0 and expected value is the $50. A close would still pay ' + fmtMoney(comm) + ' plus the $50. The 0% is Justin, one week, one parent.' : '80% close is Justin, Nov 5, when both parents are on the call. One week only. Expected uses that rate. If it closes does not.') + '</p>' +
       '</div></div>' +
       '<p class="sub"><b>$1,000 cash race.</b> First setter to $100k cash collected by the 15th, at least $50k from outbound. Fallback: $100k from outbound by month end. First place only. December target: about 6 sets/day through Dec 15.</p>' +
       '<p class="sub"><b>November $1k show-rate race.</b> Your show rate at least 70% and your closers at least 60%. Ends Nov 30.</p>' +
-      '<p class="src">Intercepts do not count as sets and do not earn $50. Inbound and triage pay 3%, no $50. Missing 4 EODs in a row withholds pay. 5 is fireable. Paid on the 1st. Show ' + pct(SHOW_RATE) + ' is team MTD, Justin Nov 23. Better pods are about 43%. Avg cash $' + AVG_CASH.toLocaleString('en-US') + ' (median $5,000). Estimate.</p></section>';
+      '<p class="src">Intercepts do not count as sets and do not earn $50. Inbound and triage pay 3%, no $50. Missing 4 EODs in a row withholds pay. 5 is fireable. Paid on the 1st. Show ' + pct(SHOW_RATE) + ' is team MTD, Justin Nov 23. Better pods are about 43%. Deal cash ' + fmtMoney(AVG_DEAL_CASH) + '. Commission ' + fmtMoney(comm) + '. Estimate, not cash collected.</p></section>';
   }
   function dayHtml(data) {
     var today = todayRow(data);
@@ -1566,7 +1627,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     return '<div class="dayboard">' +
       (late ? '<p class="banner bad">EOD is not marked submitted. It is after 6:30 PM CT. 4 missed in a row withholds pay.</p>' : '') +
-      '<section class="card"><p class="kicker">Today target</p><p class="paywhen">' + esc(sets == null ? 'Sets: no data' : (fmtCount(sets) + ' booked')) + ' <span class="sub">of ' + DAY_GOAL + '/day. ' + esc(left == null ? 'Left: no data' : (fmtCount(left) + ' sets left')) + '. ' + esc(dialsNeed == null ? 'Dials to close the gap: no data' : (fmtCount(dialsNeed) + ' dials at ' + rates.label)) + '.</span></p><p class="src">' + esc(rates.source) + '. 4 sets/day is the $10k pace. 6 sets/day is the $15k pace. ' + esc(asOfText(state.row)) + '</p></section>' +
+      '<section class="card"><p class="kicker">Today target</p><p class="paywhen">' + esc(sets == null ? 'Sets: no data' : (fmtCount(sets) + ' booked')) + ' <span class="sub">of ' + DAY_GOAL + '/day. ' + esc(left == null ? 'Left: no data' : (fmtCount(left) + ' sets left')) + '. ' + esc(dialsNeed == null ? 'Dials to close the gap: no data' : (fmtCount(dialsNeed) + ' dials at ' + rates.label)) + '.</span></p><p class="src">' + esc(rates.source) + '. ' + (function () { var a = setsToClear(10000, CLOSE_RATE); var b = setsToClear(15000, CLOSE_RATE); return (a == null || b == null) ? 'Expected pace: no data.' : (a + ' sets/day is the $10k expected pace. ' + b + ' sets/day is the $15k expected pace.'); })() + ' A missed set is ' + esc(moneyPhrase(1, true)) + '. ' + esc(asOfText(state.row)) + '</p></section>' +
       '<section class="card"><p class="kicker">Funnel this week</p><div class="funnel">' + funnel + '</div><p>' + esc(weak) + '</p><p class="src">Dials, convos (connected calls of at least 60 seconds), sets, and shows are GHL. Closes are sets x ' + pct(SHOW_RATE) + ' x ' + pct(closeNow()) + ', estimate. Team convo to set ' + (teamSet == null ? 'no data' : pct(teamSet)) + '. ' + esc(asOfText(state.row)) + '</p></section>' +
       '<section class="card"><p class="kicker">Set quality</p><p class="sub">Both parents, showed, closed, and cash are manual unless the appointment status already says showed. GHL is read only.</p>' + quality + '<p class="src">Appointments on the Family calendars, attributed to your user. Source GHL. Flags stay in this browser.</p></section>' +
       '<section class="card"><p class="kicker">Races</p><p>' + esc(mePts ? ('You are #' + mePts.rank + ' on weekly points from sets (' + fmtCount(mePts.pts) + ' pts, ' + fmtCount(mePts.sets) + (Math.abs(mePts.sets - 1) < 0.05 ? ' set' : ' sets') + ').') : 'Your week points: no data.') + ' ' + esc(lead ? ('Leader ' + lead.name + '. Gap ' + fmtCount(gapSets) + (Math.abs(gapSets - 1) < 0.05 ? ' set' : ' sets') + '.') : '') + '</p><p class="sub">Outbound set = 2 pts. $25k cash = 1 pt, cash not in the feed so those points are no data. Mon to Mon uses the week rows.</p><p class="sub">December $1k cash race: cash collected is no data, so there is no cash standing yet. First to $100k by the 15th with at least $50k outbound, else $100k outbound by month end. First place only.</p><p class="src">Set points: GHL. Cash: not in the refresh.</p></section>' +
@@ -1581,8 +1642,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var c = (data && data.computed) || {};
     var kpi = kpiOf(data);
     var sets = row ? num(row.sets) : null;
-    var earned = (sets == null) ? null : sets * BONUS;
-    var pot = (kpi == null) ? null : kpi * BONUS;
+    var earned = (sets == null) ? null : sets * ifClosesValue();
+    var pot = (kpi == null) ? null : kpi * ifClosesValue();
     var table = onTable(data, row);
     var lost = lostInfo(data);
     var streak = num(c.streak);
@@ -1595,7 +1656,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var meterClass = fill == null ? '' : (fill >= 99.5 ? 'full' : (earned > 0.5 ? 'good' : 'bad'));
     var delta = num(c.dials_vs_pace);
     var paceClass = delta == null ? '' : (delta < -0.05 ? 'bad' : 'good');
-    var paceText = delta == null ? 'Pace: no data' : (Math.abs(delta) < 0.05 ? 'On pace' : (delta < 0 ? (fmtCount(Math.abs(delta)) + ' dials behind') : (fmtCount(delta) + ' dials ahead')));
+    var paceText = delta == null ? 'Pace: no data' : (Math.abs(delta) < 0.05 ? 'On pace' : (delta < 0 ? dialLostPhrase(Math.abs(delta), data) : (fmtCount(delta) + ' dials ahead')));
     if (freshDay) {
       var wh = wallHour();
       paceClass = (wh != null && wh >= 11) ? 'bad' : 'good';
@@ -1604,9 +1665,9 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var week = findMe(data, 'week');
     var weekSets = week ? num(week.sets) : num(data.my_week_sets);
     var promise = num(data.promise), goal = num(data.goal);
-    var weekPay = weekSets == null ? null : weekSets * BONUS;
-    var promisePay = promise == null ? null : promise * BONUS;
-    var goalPay = goal == null ? null : goal * BONUS;
+    var weekPay = weekSets == null ? null : weekSets * ifClosesValue();
+    var promisePay = promise == null ? null : promise * ifClosesValue();
+    var goalPay = goal == null ? null : goal * ifClosesValue();
     var scale = 0;
     [weekPay, promisePay, goalPay].forEach(function (n) { if (n != null && n > scale) scale = n; });
     var weekHit = weekSets != null && promise != null && weekSets + 0.05 >= promise;
@@ -1616,11 +1677,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     var weekBar = scale > 0 && weekPay != null ? '<div class="wtrack' + (weekHit ? ' hit' : '') + '"><i class="wfill" data-fill="' + Math.max(0, Math.min(100, (weekPay / scale) * 100)).toFixed(2) + '"></i>' + tick('promise', promisePay, 'Promise') + tick('goal', goalPay, 'Goal') + '</div>' : '<p class="sub">Week bonus: no data</p>';
     var month = monthMoney(data);
-    var monthHtml = !month ? '<p class="sub">Month projection: no data</p>' : '<p class="sub"><b class="' + (month.gap > 0.5 ? 'bad' : 'good') + '">' + esc(fmtMoney(month.pace)) + '</b> at this pace. <b class="good">' + esc(fmtMoney(month.kpiPay)) + '</b> at ' + esc(fmtCount(kpi)) + ' sets a day. <b class="bad">' + esc(fmtMoney(month.gap)) + '</b> opportunity cost.</p><p class="src fine">' + esc(fmtCount(month.sets)) + ' sets over ' + esc(fmtCount(month.elapsed)) + ' workdays, projected across ' + month.total + ' Mon-Fri days. Rounded to the dollar. Holidays are not in the feed.</p>';
+    var monthHtml = !month ? '<p class="sub">Month projection: no data</p>' : '<p class="sub"><b class="' + (month.gap > 0.5 ? 'bad' : 'good') + '">' + esc(fmtMoney(month.pace)) + '</b> if they close at this pace. Expected ' + esc(fmtMoney(month.paceExpected)) + '. Set fee ' + esc(fmtMoney(month.paceFee)) + '. At ' + esc(fmtCount(kpi)) + ' sets a day: <b class="good">' + esc(fmtMoney(month.kpiPay)) + '</b> if they close, expected ' + esc(fmtMoney(month.kpiExpected)) + '. <b class="bad">' + esc(fmtMoney(month.gap)) + '</b> potential gap.</p><p class="src fine">' + esc(fmtCount(month.sets)) + ' sets over ' + esc(fmtCount(month.elapsed)) + ' workdays, projected across ' + month.total + ' Mon-Fri days. If it closes uses ' + esc(fmtMoney(ifClosesValue())) + ' a set. Expected uses the show and close rates. Rounded to the dollar. Holidays are not in the feed.</p>';
     var avg = setting(AVG_KEY);
     var goalSet = setting(GOAL_KEY);
-    var monthBonus = month && month.sets != null ? month.sets * BONUS : null;
-    var goalLine = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
+    var monthCloseNow = month && month.sets != null ? month.sets * ifClosesValue() : null;
+    var goalLine = goalSet == null ? 'Set a monthly income goal to track it.' : (monthCloseNow == null ? 'Month: no data' : (moneyPhrase(month.sets, false) + '. Expected ' + fmtMoney(month.sets * expectedSetValue(CLOSE_RATE)) + ' toward your ' + fmtMoney(goalSet) + ' goal.'));
     var yest = lens === 'yesterday' ? yesterdayPack(data) : null;
     var weekPeriod = periodOf(data, 'week');
     var list = lens === 'yesterday' ? ranked(yest && yest.rows || []) : (lens === 'week' ? ranked((weekPeriod && weekPeriod.rows) || []) : (freshDay ? freshTodayBoard(data) : ranked((periodOf(data, 'today') || {}).rows || [])));
@@ -1641,12 +1702,19 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     function moneyCell(label, value, cls, id) {
       return '<div><span>' + esc(label) + '</span><b class="' + cls + '"' + (id ? (' id="' + id + '"') : '') + '>' + esc(value) + '</b></div>';
     }
-    var moneyHtml = moneyCell('Earned today', earned == null ? 'no data' : fmtMoney(earned), earnedClass + (earned != null && earned < 0.5 ? ' urgent' : ''), 'earned-now') + moneyCell('On the table', table.dollars == null ? 'no data' : fmtMoney(table.dollars), tableClass, '') + moneyCell('Potentially lost', view.pot == null ? 'no data' : fmtMoney(view.pot), potClass, 'pot-lost');
+    function richMoney(label, setCount, cls, id, lost) {
+      if (setCount == null) return '<div><span>' + esc(label) + '</span><b class="' + cls + '"' + (id ? (' id="' + id + '"') : '') + '>no data</b></div>';
+      var full = setCount * ifClosesValue();
+      var big = (lost && full > 0.5 ? '-' : '') + fmtMoney(full);
+      var tail = (lost ? 'potential · ' : 'if it closes · ') + fmtMoney(setCount * SQL) + ' set fee';
+      return '<div><span>' + esc(label) + '</span><b class="deal ' + cls + '"' + (id ? (' id="' + id + '"') : '') + '>' + esc(big) + '</b><span class="comm"' + (id ? (' id="' + id + '-comm"') : '') + '>' + esc(fmtMoney(setCount * closeCommission()) + ' commission') + '</span><span class="fee"' + (id ? (' id="' + id + '-fee"') : '') + '>' + esc(tail) + '</span></div>';
+    }
+    var moneyHtml = richMoney('Today if they close', sets, earnedClass + (earned != null && earned < 0.5 ? ' urgent' : ''), 'earned-now', false) + richMoney('Still to book', table.sets, tableClass, '', false) + richMoney('Potentially lost', view.potSets, potClass, 'pot-lost', true);
     var lensNote = freshDay ? staleNote(data) : '';
     var raceKicker = 'The race';
     var raceTarget = kpi;
     var leftCard = '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><div class="streak ' + (streak != null && streak > 0 ? 'good' : 'bad') + '">' + flame(streak != null && streak > 0) + '<span>' + (streak == null ? 'no data' : (fmtCount(streak) + (Math.abs(streak) === 1 ? ' day' : ' days'))) + '</span></div></div><p class="kicker">Calendar promise</p><p class="sub commit-note">' + esc(planNote) + '</p>' + editors +
-      '<p class="sub phone-hide">Opportunity lost <b class="' + lostClass + '">' + esc(lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '</b>. ' + esc(lost.note) + '</p>' +
+      '<p class="sub phone-hide">Opportunity lost <b class="' + lostClass + '">' + esc(lost.dollars == null ? 'no data' : ((lost.dollars > 0.5 ? '-' : '') + fmtMoney(lost.dollars) + ' potential')) + '</b>. ' + esc(lost.note) + '</p>' +
       '<p class="sub phone-hide">Dial pace <b class="' + paceClass + '">' + esc(paceText) + '</b>. ' + esc(table.note) + '</p>' +
       '<div class="line-in"><label for="avg-deal">Avg deal cash</label><input id="avg-deal" inputmode="decimal" placeholder="Blank" value="' + (avg == null ? '' : esc(String(avg))) + '" aria-label="Average deal cash collected, an assumption"><label for="month-goal">Month goal</label><input id="month-goal" inputmode="decimal" placeholder="Blank" value="' + (goalSet == null ? '' : esc(String(goalSet))) + '" aria-label="Personal monthly income goal"></div>' +
       '<p class="assume" id="commission-line">' + esc(commissionText(sets)) + '</p><p class="sub" id="goal-line">' + esc(goalLine) + '</p></section>';
@@ -1656,34 +1724,35 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var yDials = mine ? num(mine.dials) : null;
       var yTalk = mine ? num(mine.talk_min) : null;
       var yConvo = mine ? num(mine.connects) : null;
-      var yEarned = ySets == null ? null : ySets * BONUS;
+      var yEarned = ySets == null ? null : ySets * ifClosesValue();
       var blocks = commitments(data);
       var promised = 0;
       blocks.forEach(function (b) { if (b.sets != null) promised += b.sets; });
-      var yLost = ySets == null ? null : Math.max(0, promised - ySets) * BONUS;
+      var yShort = ySets == null ? null : Math.max(0, promised - ySets);
+      var yLost = yShort == null ? null : yShort * ifClosesValue();
       var yEarnedCls = yEarned == null ? '' : (yEarned > 0.5 ? 'good' : 'bad');
       var yLostCls = yLost == null ? '' : (yLost > 0.5 ? 'bad' : 'good');
-      moneyHtml = moneyCell('Earned yesterday', yEarned == null ? 'no data' : fmtMoney(yEarned), yEarnedCls + (yEarned != null && yEarned < 0.5 ? ' urgent' : ''), '') + moneyCell('Lost vs commitment', yLost == null ? 'no data' : fmtMoney(yLost), yLostCls, '') + moneyCell('Dials', yDials == null ? 'no data' : fmtCount(yDials), '', '');
+      moneyHtml = richMoney('Yesterday if they close', ySets, yEarnedCls + (yEarned != null && yEarned < 0.5 ? ' urgent' : ''), '', false) + richMoney('Lost vs commitment', yShort, yLostCls, '', true) + moneyCell('Dials', yDials == null ? 'no data' : fmtCount(yDials), '', '');
       lensNote = yest.note;
       raceKicker = 'Yesterday';
       raceTarget = kpi;
-      leftCard = '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><p class="kicker">' + esc(yest.key ? shortDay(yest.key) : 'Yesterday') + '</p></div><p class="sub">' + esc(yDials == null ? 'Dials: no data' : (fmtCount(yDials) + ' dials')) + '. ' + esc(yConvo == null ? 'Connects: no data' : (fmtCount(yConvo) + ' connects')) + '. ' + esc(yTalk == null ? 'Talk time: no data' : (fmtCount(yTalk) + ' min talk')) + '.</p><p class="sub">' + esc(ySets == null ? 'Sets: no data' : (fmtCount(ySets) + ' sets, ' + fmtMoney(yEarned) + ' earned.')) + '</p><p class="sub ' + yLostCls + '">' + esc(yLost == null ? 'Lost vs commitment: no data' : (fmtMoney(yLost) + ' lost vs ' + fmtCount(promised) + ' sets committed.')) + '</p></section>';
+      leftCard = '<section class="card"><div class="who"><h2>' + esc(meName(data)) + '</h2><p class="kicker">' + esc(yest.key ? shortDay(yest.key) : 'Yesterday') + '</p></div><p class="sub">' + esc(yDials == null ? 'Dials: no data' : (fmtCount(yDials) + ' dials')) + '. ' + esc(yConvo == null ? 'Connects: no data' : (fmtCount(yConvo) + ' connects')) + '. ' + esc(yTalk == null ? 'Talk time: no data' : (fmtCount(yTalk) + ' min talk')) + '.</p><p class="sub">' + esc(ySets == null ? 'Sets: no data' : (fmtCount(ySets) + ' sets. ' + moneyPhrase(ySets, false) + '.')) + '</p><p class="sub ' + yLostCls + '">' + esc(yShort == null ? 'Lost vs commitment: no data' : (moneyPhrase(yShort, true) + ' vs ' + fmtCount(promised) + ' sets committed.')) + '</p></section>';
     } else if (lens === 'week') {
       var wCls = weekPay == null ? '' : (weekHit ? 'good' : 'bad');
-      moneyHtml = moneyCell('Earned this week', weekPay == null ? 'no data' : fmtMoney(weekPay), wCls + (weekPay != null && weekPay < 0.5 ? ' urgent' : ''), '') + moneyCell('Promise', promisePay == null ? 'no data' : fmtMoney(promisePay), '', '') + moneyCell('Goal', goalPay == null ? 'no data' : fmtMoney(goalPay), '', '');
+      moneyHtml = richMoney('This week if they close', weekSets, wCls + (weekPay != null && weekPay < 0.5 ? ' urgent' : ''), '', false) + richMoney('Promise if they close', promise, '', '', false) + richMoney('Goal if they close', goal, '', '', false);
       var cover = (weekPeriod && weekPeriod.label) ? weekPeriod.label : 'This week';
       lensNote = cover + (feedIsCurrent(data) ? '' : '. Today is not in this snapshot yet.');
       raceKicker = 'This week';
       raceTarget = promise;
       leftCard = '';
     }
-    var weekCard = '<section class="card bars weekbox"><p class="kicker">' + (thanks ? 'Thanksgiving week' : 'Week bonus') + '</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + ' at ' + (promise == null ? 'no data' : fmtCount(promise)) + ' sets. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + ' at ' + (goal == null ? 'no data' : fmtCount(goal)) + ' sets.</span></p>' + weekBar + (lens === 'week' && !feedIsCurrent(data) ? '<p class="sub">Totals stop at the last refresh. Today is not in the feed yet.</p>' : '') +
+    var weekCard = '<section class="card bars weekbox"><p class="kicker">' + (thanks ? 'Thanksgiving week' : 'Week if they close') + '</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">if they close. Set fee ' + (weekSets == null ? 'no data' : fmtMoney(weekSets * SQL)) + '. Expected ' + (weekSets == null ? 'no data' : fmtMoney(weekSets * expectedSetValue(CLOSE_RATE))) + '. Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + ' at ' + (promise == null ? 'no data' : fmtCount(promise)) + ' sets. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + ' at ' + (goal == null ? 'no data' : fmtCount(goal)) + ' sets.</span></p>' + weekBar + (lens === 'week' && !feedIsCurrent(data) ? '<p class="sub">Totals stop at the last refresh. Today is not in the feed yet.</p>' : '') +
       (lens === 'week' ? ('<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div>') : '') + '</section>';
     var hero = '<section class="hero ' + view.tone + '" data-spot="block" data-lens="' + lens + '"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="ring-track" cx="50" cy="50" r="40" fill="none" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money">' + moneyHtml + '</div>' + (lensNote ? ('<p class="lens-note" id="lens-note">' + esc(lensNote) + '</p>') : '') + '</div></section>';
     var rowsHtml = list.length ? boardRows(data, list, prev, raceTarget, true) : ('<p class="sub">' + esc(emptyText) + '</p>');
     return '<section class="play">' + lensBar() + hero + meterHtml(data) + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
-      '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">' + (freshDay ? 'Today is 0 until the feed has today. Yday and Wk are the snapshot. Est. is sets times $50. Ordered by this week.' : 'Est. is sets times $50, not cash collected. Neighborhood rows are the name above you, you, and the name below.') + '</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>' + payHtml(data) + dayHtml(data) + '</section>';
+      '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">' + (freshDay ? 'Today is 0 until the feed has today. Yday and Wk are the snapshot. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected. Ordered by this week.' : 'If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected. Neighborhood rows are the name above you, you, and the name below.') + '</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>' + payHtml(data) + dayHtml(data) + '</section>';
   }
   function boardRows(data, list, prev, target, dollars) {
     var me = meName(data);
@@ -1694,17 +1763,17 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var you = sameName(row && row.name, me);
       var sets = num(row && row.sets);
       var cls = toneSets(sets, target);
-      var est = !dollars ? '' : (sets == null ? 'no data' : fmtMoney(sets * BONUS));
+      var est = !dollars ? '' : (sets == null ? 'no data' : ('<b>' + esc(fmtMoney(sets * ifClosesValue())) + '</b><span class="fee">' + esc(fmtMoney(sets * SQL) + ' fee') + '</span>'));
       var estCls = sets == null ? '' : (sets > 0.5 ? 'good' : 'bad');
       var old = prev ? num(prev[String(row && row.name || '').trim().toLowerCase()]) : null;
       var moved = old != null && old !== i + 1;
       var near = meIdx >= 0 && Math.abs(i - meIdx) <= 1;
       function priorBit(label, value) {
         if (value == null) return label + ' no data';
-        return label + ' ' + fmtCount(value) + ' ' + fmtMoney(value * BONUS);
+        return label + ' ' + fmtCount(value) + ' ' + fmtMoney(value * ifClosesValue());
       }
       var prior = row && row.fresh ? ('<i class="prior">' + esc(priorBit('Yday', row.ySets) + ' · ' + priorBit('Wk', row.wSets)) + '</i>') : '';
-      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + esc(est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
+      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + (sets == null ? 'no data' : est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
     }).join('');
   }
   function boardModel(data) {
@@ -1740,8 +1809,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     var rowsHtml = list.length ? boardRows(data, list, prev, model.target, true) : ('<p class="sub">' + esc(model.emptyText) + '</p>');
     return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(model.label) + '</p></div><div class="tabs">' + tab('today', 'Today', 'today') + tab('yesterday', 'Yesterday', 'yesterday') + tab('week', 'This Week', 'week') + tab('month', 'Month', '') + '</div></div>' +
-      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. Est. is sets times $50, not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Est. is sets times $50, not cash collected.')) + '</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>Est.</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>';
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. If close is sets times ' + fmtMoney(ifClosesValue()) + ', the $50 fee under it. Not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.')) + '</p>' +
+      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>';
   }
   function actualSeries(hours, now, x0) {
     if (!Array.isArray(hours) || now == null) return null;
@@ -1822,12 +1891,13 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var dayHtml = !Array.isArray(days) ? '<p class="sub">Your days: no data</p>' : '<ul class="days">' + days.map(function (d) {
       var s = num(d && d.sets);
       var cls = toneSets(s, kpi);
-      var gapMoney = (s == null || kpi == null) ? null : Math.max(0, kpi - s) * BONUS;
+      var gapSets = (s == null || kpi == null) ? null : Math.max(0, kpi - s);
+      var gapMoney = gapSets == null ? null : gapSets * ifClosesValue();
       var isToday = todayKey && String(d && d.day || '') === todayKey.key;
-      var tag = gapMoney == null || gapMoney < 0.5 ? '' : (isToday && openNow ? (fmtMoney(gapMoney) + ' on the table') : (fmtMoney(gapMoney) + ' short'));
+      var tag = gapMoney == null || gapMoney < 0.5 ? '' : (isToday && openNow ? (moneyPhrase(gapSets, false) + ' still to book') : (moneyPhrase(gapSets, true)));
       return '<li><b>' + esc(shortDay(d && d.day)) + '</b><span class="' + cls + '">' + esc(fmtCount(s)) + ' sets</span><span>' + esc(fmtCount(d && d.dials)) + ' dials</span><span>' + esc(tag) + '</span></li>';
     }).join('') + '</ul>';
-    return '<section class="panel"><p class="kicker">Week</p><h2>Sets against Promise and Goal</h2><p class="caption ' + (hit ? 'good' : 'bad') + '">' + esc((sets == null ? 'Sets: no data' : fmtCount(sets) + ' sets, ' + fmtMoney(sets == null ? null : sets * BONUS)) + '. Promise ' + (promise == null ? 'no data' : fmtCount(promise)) + '. Goal ' + (goal == null ? 'no data' : fmtCount(goal)) + '.') + '</p>' + dayHtml + '<p class="src">A day is green at the daily KPI and red under it. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
+    return '<section class="panel"><p class="kicker">Week</p><h2>Sets against Promise and Goal</h2><p class="caption ' + (hit ? 'good' : 'bad') + '">' + esc((sets == null ? 'Sets: no data' : fmtCount(sets) + ' sets. ' + moneyPhrase(sets, false) + '.') + ' Promise ' + (promise == null ? 'no data' : fmtCount(promise)) + '. Goal ' + (goal == null ? 'no data' : fmtCount(goal)) + '.') + '</p>' + dayHtml + '<p class="src">A day is green at the daily KPI and red under it. A short day is valued at ' + esc(fmtMoney(ifClosesValue())) + ' if it closes, with the $50 fee under that. GHL. ' + esc(asOfText(state.row)) + '</p></section>';
   }
   function trendBlock(data) {
     var series = data && data.team_series;
@@ -1866,10 +1936,10 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     function line(k, v) { return '<li><span>' + esc(k) + '</span><b>' + esc(textOr(v)) + '</b></li>'; }
     var counts = data && data.counts;
     var countHtml = (!counts || typeof counts !== 'object') ? '' : '<ul class="src-list">' + line('Calls read', counts.calls_fetched) + line('Sets attributed', counts.sets_attributed) + line('Appointments in window', counts.appointments_in_window) + '</ul>';
-    return '<details class="behind" id="fine"' + (state.fineOpen ? ' open' : '') + '><summary>How this board counts</summary><div class="inn"><p>Sets are inferred from bookings after a setter\'s call. Talk time includes voicemails. Source GHL, refreshed hourly during dial blocks.</p><p class="sub">Bonus math is $50 times outbound sets. Opportunity lost is $50 for each set short of the daily KPI on past days in the feed. Commission percents are the pay plan. They are not added unless you type an average deal size, and then only the 5% outbound figure, labeled as an assumption.</p>' + (meMissing(data) ? '<p class="sub">Feed name: no data. This board is Cristian\'s.</p>' : '') + countHtml + '</div></details><footer class="site">Fig &amp; Eagle Command Center. Read only. <a href="../command-center/">Command Center</a></footer>';
+    return '<details class="behind" id="fine"' + (state.fineOpen ? ' open' : '') + '><summary>How this board counts</summary><div class="inn"><p>Sets are inferred from bookings after a setter\'s call. Talk time includes voicemails. Source GHL, refreshed hourly during dial blocks.</p><p class="sub">A close is ' + fmtMoney(closeCommission()) + ' commission, 5% of ' + fmtMoney(AVG_DEAL_CASH) + ', plus the $50 set fee. ' + fmtMoney(ifClosesValue()) + ' if it closes. Expected per set is ' + fmtMoney(expectedSetValue(CLOSE_RATE)) + ' at ' + pct(SHOW_RATE) + ' show and ' + pct(CLOSE_RATE) + ' close, and it is labeled expected. Opportunity lost uses that if-it-closes figure for each set short of the daily KPI on past days in the feed. Cash collected is not in the feed. A typed deal size is a note only. The board stays on ' + fmtMoney(AVG_DEAL_CASH) + '.</p>' + (meMissing(data) ? '<p class="sub">Feed name: no data. This board is Cristian\'s.</p>' : '') + countHtml + '</div></details><footer class="site">Fig &amp; Eagle Command Center. Read only. <a href="../command-center/">Command Center</a></footer>';
   }
   function guideHtml() {
-    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 bonus. The daily KPI is the sets target in the feed. Three sets is $150. Green means the money is earned, still on the table, or you are ahead. Red means it is behind, missed, or already lost.</p><p>Commission is separate: 5% of cash collected on outbound, and 3% on intercept. This board does not know cash collected. Type an average deal size to see the 5% outbound upside. That number is an assumption. Intercept sets are not in the feed, so the 3% is not estimated.</p><p>The board ranks the team by sets, then dials. Every Est. figure is that row\'s sets times $50. It is not cash collected. The pass line is the sets, and the estimated dollars, between you and the person above. The ring is the block you committed on the calendar. Potentially lost is today\'s sets against that commitment as the clock burns. Opportunity lost adds $50 for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open. Sound stays off until you tap SOUND ON.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
+    return '<div class="guide" id="guide" role="dialog" aria-labelledby="guide-title"><article><p class="kicker">How to play</p><h2 id="guide-title">The incentive</h2><p>Each outbound set pays a $50 set fee, and a close pays ' + fmtMoney(closeCommission()) + ' commission, 5% of a ' + fmtMoney(AVG_DEAL_CASH) + ' deal. ' + fmtMoney(ifClosesValue()) + ' if it closes. Expected per set is ' + fmtMoney(expectedSetValue(CLOSE_RATE)) + ', labeled expected. The daily KPI is the sets target in the feed. A missed set is ' + moneyPhrase(1, true) + '.</p><p>Cash collected is not in the feed, so the commission is the deal constant, not a collected dollar. Inbound and triage pay 3% and no $50. Intercept sets are not in the feed.</p><p>The board ranks the team by sets, then dials. Every If close figure is that row\'s sets times ' + fmtMoney(ifClosesValue()) + ', with the $50 fee under it. It is not cash collected. The pass line is the sets, and that if-it-closes figure, between you and the person above. The ring is the block you committed on the calendar. Potentially lost is today\'s sets against that commitment as the clock burns, valued at ' + fmtMoney(ifClosesValue()) + ' a set. Opportunity lost uses the same figure for each set short of the KPI on past days in the feed. Arrows appear when a rank changes from the last time this page was open. Sound stays off until you tap SOUND ON.</p><div class="row"><button type="button" class="btn" data-guide="close">Play</button></div></article></div>';
   }
   function failHtml() {
     return '<section class="card fail"><p class="kicker">Feed</p><h2>The scoreboard did not load</h2><p class="sub">No numbers on this page until the read succeeds. Nothing here is filled in as zero.</p><p class="bad">' + esc(state.error || 'The read failed.') + '</p><button type="button" class="btn" data-retry>Try again</button></section>';
@@ -1877,14 +1947,14 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   function briefHtml(data, row, sched, gap) {
     var kpi = kpiOf(data);
     var sets = row ? num(row.sets) : null;
-    var pot = kpi == null ? null : kpi * BONUS;
-    var earned = sets == null ? null : sets * BONUS;
+    var pot = kpi == null ? null : kpi * ifClosesValue();
+    var earned = sets == null ? null : sets * ifClosesValue();
     var table = onTable(data, row);
-    return '<div class="guide" id="brief" role="dialog" aria-labelledby="brief-title"><article class="brief"><p class="kicker">Scorecard of the day</p><h2 id="brief-title">' + esc(meName(data)) + '</h2><b class="big ' + (earned != null && earned > 0.5 ? 'good' : 'bad') + '">' + esc(earned == null ? 'no data' : fmtMoney(earned)) + '</b><p>Target ' + esc(pot == null ? 'no data' : fmtMoney(pot)) + (kpi == null ? '' : (' at ' + fmtCount(kpi) + ' sets')) + '. On the table ' + esc(table.dollars == null ? 'no data' : fmtMoney(table.dollars)) + '.</p><p>Time: ' + esc(sched.label) + '. ' + esc(sched.sub) + '.</p><p class="' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p>' + esc(table.note || 'One plan: catch the name above you.') + '</p><div class="row"><button type="button" class="btn ghost" data-shift="skip">Skip brief</button><button type="button" class="btn" data-shift="start">START SHIFT</button></div></article></div>';
+    return '<div class="guide" id="brief" role="dialog" aria-labelledby="brief-title"><article class="brief"><p class="kicker">Scorecard of the day</p><h2 id="brief-title">' + esc(meName(data)) + '</h2><b class="big ' + (earned != null && earned > 0.5 ? 'good' : 'bad') + '">' + esc(sets == null ? 'no data' : fmtMoney(earned)) + '</b><p>' + esc(sets == null ? 'Sets: no data' : moneyPhrase(sets, false)) + '. Expected ' + esc(sets == null ? 'no data' : fmtMoney(sets * expectedSetValue(CLOSE_RATE))) + '. Target ' + esc(pot == null ? 'no data' : fmtMoney(pot)) + (kpi == null ? '' : (' at ' + fmtCount(kpi) + ' sets if they close')) + '. Still to book ' + esc(table.sets == null ? 'no data' : moneyPhrase(table.sets, false)) + '.</p><p>Time: ' + esc(sched.label) + '. ' + esc(sched.sub) + '.</p><p class="' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p>' + esc(table.note || 'One plan: catch the name above you.') + '</p><div class="row"><button type="button" class="btn ghost" data-shift="skip">Skip brief</button><button type="button" class="btn" data-shift="start">START SHIFT</button></div></article></div>';
   }
   function debriefHtml(data, row) {
     var sets = row ? num(row.sets) : null;
-    var earned = sets == null ? null : sets * BONUS;
+    var earned = sets == null ? null : sets * ifClosesValue();
     var lost = lostInfo(data);
     var prev = state.rankPrev;
     var me = meName(data).trim().toLowerCase();
@@ -1906,14 +1976,14 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       var short = Math.max(0, kpi - sets);
       todayLine = short < 0.05
         ? 'Today met the KPI in the latest feed.'
-        : ('Today is ' + fmtCount(short) + ' sets short of the KPI, ' + fmtMoney(short * BONUS) + '. The feed still has the day open, so this is not added to opportunity lost.');
+        : ('Today is ' + fmtCount(short) + ' sets short of the KPI, ' + moneyPhrase(short, true) + '. The feed still has the day open, so this is not added to opportunity lost.');
     }
-    return '<div class="guide" id="debrief" role="dialog" aria-labelledby="debrief-title"><article><p class="kicker">End of day</p><h2 id="debrief-title">Debrief</h2><b class="big ' + (earned != null && earned > 0.5 ? 'good' : 'bad') + '">' + esc(earned == null ? 'no data' : fmtMoney(earned)) + '</b><p>Bonus earned, commission paid when deals close.</p><p class="' + (lost.dollars > 0.5 ? 'bad' : '') + '">Opportunity lost ' + esc(lost.dollars == null ? 'no data' : fmtMoney(lost.dollars)) + '. ' + esc(lost.note) + '</p>' + (todayLine ? ('<p>' + esc(todayLine) + '</p>') : '') + '<p>' + esc(rankLine) + '</p><div class="row"><button type="button" class="btn" data-debrief="close">See the board</button></div></article></div>';
+    return '<div class="guide" id="debrief" role="dialog" aria-labelledby="debrief-title"><article><p class="kicker">End of day</p><h2 id="debrief-title">Debrief</h2><b class="big ' + (earned != null && earned > 0.5 ? 'good' : 'bad') + '">' + esc(sets == null ? 'no data' : fmtMoney(earned)) + '</b><p>' + esc(sets == null ? 'Sets: no data' : moneyPhrase(sets, false)) + '. Expected ' + esc(sets == null ? 'no data' : fmtMoney(sets * expectedSetValue(CLOSE_RATE))) + '. Commission is the deal constant until cash collected is in the feed.</p><p class="' + (lost.dollars > 0.5 ? 'bad' : '') + '">Opportunity lost ' + esc(lost.dollars == null ? 'no data' : ((lost.dollars > 0.5 ? '-' : '') + fmtMoney(lost.dollars) + ' potential')) + '. ' + esc(lost.note) + '</p>' + (todayLine ? ('<p>' + esc(todayLine) + '</p>') : '') + '<p>' + esc(rankLine) + '</p><div class="row"><button type="button" class="btn" data-debrief="close">See the board</button></div></article></div>';
   }
   function coachHtml(gap) {
     var steps = [
       'The block. The ring is the commitment on your calendar. ' + gap.text + ' The highlighted rows are the neighborhood.',
-      'The score. $0 earned stays on screen in red. Green is money still on the table. Potentially lost grows as block time burns while sets sit behind that commitment. Est. on every row is sets times $50, not cash collected.',
+      'The score. $0 if they close stays on screen in red. The big number is ' + fmtMoney(ifClosesValue()) + ' a set if it closes: ' + fmtMoney(closeCommission()) + ' commission plus the $50 set fee. Expected sits beside it and is labeled expected. Potentially lost grows as block time burns, at ' + fmtMoney(ifClosesValue()) + ' a set. If close on every row is sets times ' + fmtMoney(ifClosesValue()) + ', not cash collected.',
       'The order. The banner is the one next action. The ring is the time left in this block, or the time until the next one.'
     ];
     var i = Math.max(0, Math.min(steps.length - 1, state.coachStep || 0));
@@ -2029,7 +2099,14 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     putText('hero-commit', sched.commit || '');
     putText('hero-pace', sched.pace || '');
     var potNode = document.getElementById('pot-lost');
-    if (potNode) { potNode.textContent = sched.pot == null ? 'no data' : fmtMoney(sched.pot); potNode.className = sched.pot == null ? '' : (sched.pot > 0.5 ? 'bad' : 'good'); }
+    if (potNode) {
+      potNode.textContent = sched.pot == null ? 'no data' : ((sched.pot > 0.5 ? '-' : '') + fmtMoney(sched.pot));
+      potNode.className = 'deal ' + (sched.pot == null ? '' : (sched.pot > 0.5 ? 'bad' : 'good'));
+    }
+    var potComm = document.getElementById('pot-lost-comm');
+    if (potComm) potComm.textContent = sched.potComm == null ? '' : (fmtMoney(sched.potComm) + ' commission');
+    var potFee = document.getElementById('pot-lost-fee');
+    if (potFee) potFee.textContent = sched.potFee == null ? '' : ('potential · ' + fmtMoney(sched.potFee) + ' set fee');
     var hero = document.querySelector('.hero');
     if (hero) hero.className = 'hero ' + (sched.tone || 'calm');
     var wrap = document.querySelector('.ringwrap');
@@ -2081,7 +2158,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (sum && state.row) {
       var row = todayRow(state.row.data);
       var sets = row ? num(row.sets) : null;
-      sum.textContent = meName(state.row.data) + '. Earned today ' + (sets == null ? 'no data' : fmtMoney(sets * BONUS)) + '. As of ' + asOfText(state.row) + '.';
+      sum.textContent = meName(state.row.data) + '. Today if they close ' + (sets == null ? 'no data' : moneyPhrase(sets, false)) + '. Expected ' + (sets == null ? 'no data' : fmtMoney(sets * expectedSetValue(CLOSE_RATE))) + '. As of ' + asOfText(state.row) + '.';
     }
     paintChrome();
     requestAnimationFrame(function () { kick(stage); });
@@ -2104,8 +2181,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (goal) {
       var goalSet = setting(GOAL_KEY);
       var month = monthMoney(state.row.data);
-      var monthBonus = month && month.sets != null ? month.sets * BONUS : null;
-      goal.textContent = goalSet == null ? 'Set a monthly income goal to track it.' : (monthBonus == null ? 'Month bonus: no data' : (fmtMoney(monthBonus) + ' bonus toward your ' + fmtMoney(goalSet) + ' goal. Commission is not included.'));
+      var monthSets = month && month.sets != null ? month.sets : null;
+      goal.textContent = goalSet == null ? 'Set a monthly income goal to track it.' : (monthSets == null ? 'Month: no data' : (moneyPhrase(monthSets, false) + '. Expected ' + fmtMoney(monthSets * expectedSetValue(CLOSE_RATE)) + ' toward your ' + fmtMoney(goalSet) + ' goal.'));
     }
   }
   async function load(forceLive) {

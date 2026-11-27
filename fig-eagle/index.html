@@ -203,7 +203,13 @@ a{color:var(--teal);text-decoration:none}
 .wtick.goal span{right:0}
 .race{display:flex;flex-direction:column;min-height:220px;height:auto;overflow:visible}
 .pass{font-family:var(--serif);font-weight:560;font-size:clamp(26px,4vh,40px);line-height:1.02;margin-top:2px}
+.racehead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.boardtog .tab{min-height:32px;padding:0 10px;font-size:12px}
+.boardscroll{overflow-x:auto;max-width:100%}
 .shead,.srow{display:grid;grid-template-columns:26px minmax(0,1.3fr) auto auto auto;gap:6px;align-items:center}
+.boardscroll .shead,.boardscroll .srow{grid-template-columns:28px minmax(96px,1.2fr) 40px 76px 46px 52px 48px 64px 64px 52px;min-width:740px;gap:4px}
+.metric{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:12px;white-space:nowrap}
+.hi{color:var(--good-ink);box-shadow:inset 0 -2px 0 var(--good)}
 .est{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:12px}
 .shead{color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;padding:0 8px}
 .slist{flex:none;min-height:0;overflow:visible;display:flex;flex-direction:column;gap:4px;margin-top:6px}
@@ -211,7 +217,7 @@ a{color:var(--teal);text-decoration:none}
 .srow.near{opacity:1;background:rgba(24,139,246,.08);box-shadow:inset 3px 0 0 var(--calm)}
 .srow.moved{animation:rowpop .45s ease}
 @keyframes rowpop{from{transform:translateX(-10px)}to{transform:none}}
-.srow.you{background:rgba(233,61,61,.1);box-shadow:inset 3px 0 0 var(--bad);opacity:1}
+.srow.you{background:rgba(233,61,61,.1);box-shadow:inset 4px 0 0 var(--bad);opacity:1;outline:2px solid var(--teal);outline-offset:-2px}
 .srow.you.ahead{background:rgba(55,202,55,.14);box-shadow:inset 3px 0 0 var(--good)}
 .rk{font-variant-numeric:tabular-nums;font-weight:800;display:flex;align-items:center;gap:2px}
 .arr{width:10px;height:10px}
@@ -330,6 +336,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   .slist{gap:2px;margin-top:2px;overflow:visible}
   .split{grid-template-columns:1fr}
   .shead{display:none}
+  .boardscroll .shead{display:grid}
   .score{height:auto}
 }
 @media (max-height:840px) and (min-width:821px){
@@ -437,7 +444,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   var sb = null;
   var SOUND_KEY = 'fe-sound';
   var audioCtx = null;
-  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', view: 'play', nextAt: 0, booted: false, inflight: false, livePull: false, liveNote: '', liveError: '', rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1, paySets: 4, payBoth: true, eodBusy: false };
+  var state = { row: null, archives: {}, fetchedAt: null, error: '', stale: false, period: 'today', lens: 'today', board: 'week', view: 'play', nextAt: 0, booted: false, inflight: false, livePull: false, liveNote: '', liveError: '', rendered: false, fineOpen: false, guide: false, animated: false, paused: false, coachStep: 0, lastMode: '', seenEarned: null, rankPrev: null, lastTick: -1, paySets: 4, payBoth: true, eodBusy: false };
   try {
     var hash = (location.hash || '').replace('#', '');
     if (hash === 'stats' || hash === 'pace' || hash === 'trend') state.view = 'stats';
@@ -471,6 +478,14 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (n == null) return 'no data';
     var r = Math.round(n);
     return (r < 0 ? '-' : '') + '$' + Math.abs(r).toLocaleString('en-US');
+  }
+  function fmtHm(v) {
+    var n = num(v);
+    if (n == null) return 'no data';
+    var total = Math.round(Math.abs(n));
+    var h = Math.floor(total / 60);
+    var m = total - h * 60;
+    return (n < 0 ? '-' : '') + h + ':' + (m < 10 ? '0' : '') + m;
   }
   function fmtTalk(v) {
     var n = num(v);
@@ -1375,6 +1390,45 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     if (v == null || !isFinite(v)) return 'no data';
     return Math.round(v * 100) + '%';
   }
+  function pct1(v) {
+    if (v == null || !isFinite(v)) return 'no data';
+    var n = Math.round(v * 1000) / 10;
+    return (Math.abs(n - Math.round(n)) < 0.05 ? String(Math.round(n)) : n.toFixed(1)) + '%';
+  }
+  function rowStat(row) {
+    var dials = num(row && row.dials);
+    var convos = num(row && row.connects);
+    var sets = num(row && row.sets);
+    var talk = num(row && row.talk_min);
+    return {
+      sets: sets,
+      close: sets == null ? null : sets * ifClosesValue(),
+      dials: dials,
+      talk: talk,
+      convos: convos,
+      dialRate: (dials != null && convos != null && dials > 0.05) ? convos / dials : null,
+      setRate: (convos != null && sets != null && convos > 0.05) ? sets / convos : null,
+      avg: (talk != null && convos != null && convos > 0.05) ? talk / convos : null
+    };
+  }
+  function bestOf(list) {
+    var keys = ['sets', 'close', 'dials', 'talk', 'convos', 'dialRate', 'setRate', 'avg'];
+    var best = {};
+    keys.forEach(function (k) {
+      var max = null;
+      (list || []).forEach(function (row) {
+        var v = rowStat(row)[k];
+        if (v == null || !isFinite(v)) return;
+        if (max == null || v > max) max = v;
+      });
+      best[k] = (max != null && max > 0.0005) ? max : null;
+    });
+    return best;
+  }
+  function hiClass(v, max) {
+    if (v == null || max == null || !isFinite(v)) return '';
+    return Math.abs(v - max) < 0.0005 ? ' hi' : '';
+  }
   function closeNow() { return state.payBoth === false ? CLOSE_RATE_ONE : CLOSE_RATE; }
   function commissionEach(rate) { return SHOW_RATE * rate * closeCommission(); }
   function valueEach(rate) { return expectedSetValue(rate); }
@@ -1749,19 +1803,42 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var weekCard = '<section class="card bars weekbox"><p class="kicker">' + (thanks ? 'Thanksgiving week' : 'Week if they close') + '</p><p class="caption"><b class="' + (weekHit ? 'good' : 'bad') + '">' + (weekPay == null ? 'no data' : fmtMoney(weekPay)) + '</b> <span class="sub">if they close. Set fee ' + (weekSets == null ? 'no data' : fmtMoney(weekSets * SQL)) + '. Expected ' + (weekSets == null ? 'no data' : fmtMoney(weekSets * expectedSetValue(CLOSE_RATE))) + '. Promise ' + (promisePay == null ? 'no data' : fmtMoney(promisePay)) + ' at ' + (promise == null ? 'no data' : fmtCount(promise)) + ' sets. Goal ' + (goalPay == null ? 'no data' : fmtMoney(goalPay)) + ' at ' + (goal == null ? 'no data' : fmtCount(goal)) + ' sets.</span></p>' + weekBar + (lens === 'week' && !feedIsCurrent(data) ? '<p class="sub">Totals stop at the last refresh. Today is not in the feed yet.</p>' : '') +
       (lens === 'week' ? ('<p class="kicker monthline">Month</p><div class="monthline">' + monthHtml + '</div>') : '') + '</section>';
     var hero = '<section class="hero ' + view.tone + '" data-spot="block" data-lens="' + lens + '"><div class="ringwrap ' + view.tone + '"><svg class="ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="ring-track" cx="50" cy="50" r="40" fill="none" stroke-width="8"></circle><circle id="ring-arc" class="ring-arc" cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="8" stroke-linecap="round" transform="rotate(-90 50 50)"></circle></svg><div class="ring-mid"><b id="hero-time">' + esc(view.heroTime) + '</b><span id="hero-unit">' + esc(view.heroUnit) + '</span></div></div><div><p class="kicker" id="hero-kicker">' + esc(view.kicker) + '</p><p class="hero-title" id="hero-title">' + esc(view.title) + '</p><p class="hero-commit" id="hero-commit">' + esc(view.commit) + '</p><p class="hero-pace ' + view.tone + '" id="hero-pace">' + esc(view.pace) + '</p><div class="hero-money">' + moneyHtml + '</div>' + (lensNote ? ('<p class="lens-note" id="lens-note">' + esc(lensNote) + '</p>') : '') + '</div></section>';
-    var rowsHtml = list.length ? boardRows(data, list, prev, raceTarget, true) : ('<p class="sub">' + esc(emptyText) + '</p>');
+    var boardMode = state.board === 'today' ? 'today' : 'week';
+    var boardFresh = boardMode === 'today' && !!(data && !feedIsCurrent(data));
+    var boardList = boardMode === 'week' ? ranked((weekPeriod && weekPeriod.rows) || []) : (boardFresh ? freshTodayBoard(data) : ranked((periodOf(data, 'today') || {}).rows || []));
+    var boardGap = boardMode === 'week' ? (boardList.length ? gapLine(boardList, meName(data)) : { text: 'No rows for this week.', ahead: false, rank: null }) : (boardFresh ? weekGap(data) : (boardList.length ? gapLine(boardList, meName(data)) : { text: 'No rows for today.', ahead: false, rank: null }));
+    var boardPrev = (!boardFresh && boardList.length) ? arrowsFor(boardMode, boardList) : null;
+    var boardTarget = boardMode === 'week' ? promise : kpi;
+    var boardRowsHtml = boardList.length ? boardRows(data, boardList, boardPrev, boardTarget, true) : ('<p class="sub">' + esc(boardMode === 'week' ? 'No rows for this week.' : 'No rows for today.') + '</p>');
+    var statNote = 'Talk is total call minutes, h:mm. Convos are connected calls of at least 60 seconds. Dial to convo is convos divided by dials. Convo to set is sets divided by convos. Avg talk is talk divided by convos. The best value in each column is marked. Source GHL. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.' + (boardFresh ? ' Today is 0 sets and 0 dials until the feed has today. Talk and convos on that placeholder stay no data.' : '');
     return '<section class="play">' + lensBar() + hero + meterHtml(data) + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
-      '<section class="card race" data-spot="race"><p class="kicker">' + raceKicker + (gap.rank == null ? '' : (' · #' + gap.rank)) + '</p><p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src fine">' + (freshDay ? 'Today is 0 until the feed has today. Yday and Wk are the snapshot. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected. Ordered by this week.' : 'If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected. Neighborhood rows are the name above you, you, and the name below.') + '</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>' + payHtml(data) + dayHtml(data) + '</section>';
+      '<section class="card race" data-spot="race"><div class="racehead"><p class="kicker">' + (boardMode === 'week' ? 'This week' : 'Today') + (boardGap.rank == null ? '' : (' · #' + boardGap.rank)) + '</p>' + boardToggle() + '</div><p class="pass ' + (boardGap.ahead ? 'good' : 'bad') + '">' + esc(boardGap.text) + '</p><p class="src fine">' + statNote + '</p>' +
+      boardWrap(boardRowsHtml) + '</section>' + payHtml(data) + dayHtml(data) + '</section>';
+  }
+  function boardHead() {
+    return '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span><span>Talk</span><span>Convos</span><span>Dial to convo</span><span>Convo to set</span><span>Avg talk</span></div>';
+  }
+  function boardWrap(rowsHtml) {
+    return '<div class="boardscroll">' + boardHead() + '<div class="slist">' + rowsHtml + '</div></div>';
+  }
+  function boardToggle() {
+    var mode = state.board === 'today' ? 'today' : 'week';
+    function btn(key, name) {
+      var on = mode === key;
+      return '<button type="button" class="tab' + (on ? ' on' : '') + '" data-board="' + key + '" role="tab" aria-selected="' + (on ? 'true' : 'false') + '">' + name + '</button>';
+    }
+    return '<div class="tabs boardtog" role="tablist" aria-label="Leaderboard period">' + btn('today', 'Today') + btn('week', 'This Week') + '</div>';
   }
   function boardRows(data, list, prev, target, dollars) {
     var me = meName(data);
     if (!list.length) return '<p class="sub">No setters in this period.</p>';
+    var best = bestOf(list);
     var meIdx = -1;
     list.forEach(function (row, i) { if (sameName(row && row.name, me)) meIdx = i; });
     return list.map(function (row, i) {
       var you = sameName(row && row.name, me);
-      var sets = num(row && row.sets);
+      var st = rowStat(row);
+      var sets = st.sets;
       var cls = toneSets(sets, target);
       var est = !dollars ? '' : (sets == null ? 'no data' : ('<b>' + esc(fmtMoney(sets * ifClosesValue())) + '</b><span class="fee">' + esc(fmtMoney(sets * SQL) + ' fee') + '</span>'));
       var estCls = sets == null ? '' : (sets > 0.5 ? 'good' : 'bad');
@@ -1772,8 +1849,11 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
         if (value == null) return label + ' no data';
         return label + ' ' + fmtCount(value) + ' ' + fmtMoney(value * ifClosesValue());
       }
+      function metric(key, text) {
+        return '<span class="metric' + hiClass(st[key], best[key]) + '">' + esc(text) + '</span>';
+      }
       var prior = row && row.fresh ? ('<i class="prior">' + esc(priorBit('Yday', row.ySets) + ' · ' + priorBit('Wk', row.wSets)) + '</i>') : '';
-      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + '">' + (sets == null ? 'no data' : est) + '</span>') : '') + '<span class="dials">' + esc(fmtCount(row && row.dials)) + '</span></div>';
+      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + hiClass(st.sets, best.sets) + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + hiClass(st.close, best.close) + '">' + (sets == null ? 'no data' : est) + '</span>') : '') + '<span class="dials' + hiClass(st.dials, best.dials) + '">' + esc(fmtCount(row && row.dials)) + '</span>' + metric('talk', st.talk == null ? 'no data' : fmtHm(st.talk)) + metric('convos', st.convos == null ? 'no data' : fmtCount(st.convos)) + metric('dialRate', st.dialRate == null ? 'no data' : pct1(st.dialRate)) + metric('setRate', st.setRate == null ? 'no data' : pct1(st.setRate)) + metric('avg', st.avg == null ? 'no data' : fmtHm(st.avg)) + '</div>';
     }).join('');
   }
   function boardModel(data) {
@@ -1809,8 +1889,8 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     var rowsHtml = list.length ? boardRows(data, list, prev, model.target, true) : ('<p class="sub">' + esc(model.emptyText) + '</p>');
     return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(model.label) + '</p></div><div class="tabs">' + tab('today', 'Today', 'today') + tab('yesterday', 'Yesterday', 'yesterday') + tab('week', 'This Week', 'week') + tab('month', 'Month', '') + '</div></div>' +
-      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. If close is sets times ' + fmtMoney(ifClosesValue()) + ', the $50 fee under it. Not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.')) + '</p>' +
-      '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span></div><div class="slist">' + rowsHtml + '</div></section>';
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. Talk and convos on that placeholder stay no data. If close is sets times ' + fmtMoney(ifClosesValue()) + ', the $50 fee under it. Not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Talk is h:mm. Convos are connected calls of at least 60 seconds. The best value in each column is marked. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.')) + '</p>' +
+      boardWrap(rowsHtml) + '</section>';
   }
   function actualSeries(hours, now, x0) {
     if (!Array.isArray(hours) || now == null) return null;
@@ -2236,6 +2316,12 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
   document.body.addEventListener('click', function (e) {
     var themeBtn = e.target.closest && e.target.closest('[data-theme-choice]');
     if (themeBtn) { applyTheme(themeBtn.getAttribute('data-theme-choice')); return; }
+    var boardBtn = e.target.closest && e.target.closest('[data-board]');
+    if (boardBtn) {
+      var nextBoard = boardBtn.getAttribute('data-board');
+      if (nextBoard === 'today' || nextBoard === 'week') { state.board = nextBoard; render(); }
+      return;
+    }
     var view = e.target.closest && e.target.closest('[data-view]');
     if (view) { setView(view.getAttribute('data-view')); return; }
     var lensBtn = e.target.closest && e.target.closest('[data-lens]');

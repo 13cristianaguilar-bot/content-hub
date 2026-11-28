@@ -207,7 +207,7 @@ a{color:var(--teal);text-decoration:none}
 .boardtog .tab{min-height:32px;padding:0 10px;font-size:12px}
 .boardscroll{overflow-x:auto;max-width:100%}
 .shead,.srow{display:grid;grid-template-columns:26px minmax(0,1.3fr) auto auto auto;gap:6px;align-items:center}
-.boardscroll .shead,.boardscroll .srow{grid-template-columns:28px minmax(96px,1.2fr) 40px 76px 46px 52px 48px 64px 64px 52px;min-width:740px;gap:4px}
+.boardscroll .shead,.boardscroll .srow{grid-template-columns:28px minmax(96px,1.2fr) 40px 76px 46px 52px 48px 64px 64px 52px 58px 62px;min-width:860px;gap:4px}
 .metric{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:12px;white-space:nowrap}
 .hi{color:var(--good-ink);box-shadow:inset 0 -2px 0 var(--good)}
 .est{font-variant-numeric:tabular-nums;font-weight:800;text-align:right;font-size:12px}
@@ -486,6 +486,19 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var h = Math.floor(total / 60);
     var m = total - h * 60;
     return (n < 0 ? '-' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  }
+  function fmtMs(sec) {
+    var n = num(sec);
+    if (n == null) return 'no data';
+    var total = Math.max(0, Math.round(n));
+    var m = Math.floor(total / 60);
+    var s = total - m * 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  function avgTalkText(sec, n) {
+    if (n == null || sec == null) return 'no data';
+    if (!(Number(n) > 0)) return '-';
+    return fmtMs(Number(sec) / Number(n));
   }
   function fmtTalk(v) {
     var n = num(v);
@@ -1408,11 +1421,13 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
       convos: convos,
       dialRate: (dials != null && convos != null && dials > 0.05) ? convos / dials : null,
       setRate: (convos != null && sets != null && convos > 0.05) ? sets / convos : null,
-      avg: (talk != null && convos != null && convos > 0.05) ? talk / convos : null
+      avg: (talk != null && convos != null && convos > 0.05) ? talk / convos : null,
+      setAvg: (num(row && row.set_n) > 0 && num(row && row.set_talk_sec) != null) ? num(row.set_talk_sec) / num(row.set_n) : null,
+      qualAvg: (num(row && row.qual_n) > 0 && num(row && row.qual_talk_sec) != null) ? num(row.qual_talk_sec) / num(row.qual_n) : null
     };
   }
   function bestOf(list) {
-    var keys = ['sets', 'close', 'dials', 'talk', 'convos', 'dialRate', 'setRate', 'avg'];
+    var keys = ['sets', 'close', 'dials', 'talk', 'convos', 'dialRate', 'setRate', 'avg', 'setAvg', 'qualAvg'];
     var best = {};
     keys.forEach(function (k) {
       var max = null;
@@ -1810,13 +1825,13 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     var boardPrev = (!boardFresh && boardList.length) ? arrowsFor(boardMode, boardList) : null;
     var boardTarget = boardMode === 'week' ? promise : kpi;
     var boardRowsHtml = boardList.length ? boardRows(data, boardList, boardPrev, boardTarget, true) : ('<p class="sub">' + esc(boardMode === 'week' ? 'No rows for this week.' : 'No rows for today.') + '</p>');
-    var statNote = 'Talk is total call minutes, h:mm. Convos are connected calls of at least 60 seconds. Dial to convo is convos divided by dials. Convo to set is sets divided by convos. Avg talk is talk divided by convos. The best value in each column is marked. Source GHL. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.' + (boardFresh ? ' Today is 0 sets and 0 dials until the feed has today. Talk and convos on that placeholder stay no data.' : '');
+    var statNote = 'Talk is total call minutes, h:mm. Convos are connected calls of at least 60 seconds. Dial to convo is convos divided by dials. Convo to set is sets divided by convos. Avg talk is talk divided by convos. Set talk is the average duration of the call that booked the appointment, mm:ss. Qual talk is that average when the contact is not in DQ Finances, DQ Bad Fit, DQ Duplicate / Fake, or DNC. A dash means no sets in that column. The best value in each column is marked. Source GHL. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.' + (boardFresh ? ' Today is 0 sets and 0 dials until the feed has today. Talk, convos, and set talk on that placeholder stay no data.' : '');
     return '<section class="play">' + lensBar() + hero + meterHtml(data) + '<div class="col money">' + (lens === 'today' ? levelBanner(lvl, textOr(c.level_name)) : '') + leftCard + (lens === 'yesterday' ? '' : weekCard) + '</div>' +
       '<section class="card race" data-spot="race"><div class="racehead"><p class="kicker">' + (boardMode === 'week' ? 'This week' : 'Today') + (boardGap.rank == null ? '' : (' · #' + boardGap.rank)) + '</p>' + boardToggle() + '</div><p class="pass ' + (boardGap.ahead ? 'good' : 'bad') + '">' + esc(boardGap.text) + '</p><p class="src fine">' + statNote + '</p>' +
       boardWrap(boardRowsHtml) + '</section>' + payHtml(data) + dayHtml(data) + '</section>';
   }
   function boardHead() {
-    return '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span><span>Talk</span><span>Convos</span><span>Dial to convo</span><span>Convo to set</span><span>Avg talk</span></div>';
+    return '<div class="shead"><span>#</span><span>Name</span><span>Sets</span><span>If close</span><span>Dials</span><span>Talk</span><span>Convos</span><span>Dial to convo</span><span>Convo to set</span><span>Avg talk</span><span>Set talk</span><span>Qual talk</span></div>';
   }
   function boardWrap(rowsHtml) {
     return '<div class="boardscroll">' + boardHead() + '<div class="slist">' + rowsHtml + '</div></div>';
@@ -1853,7 +1868,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
         return '<span class="metric' + hiClass(st[key], best[key]) + '">' + esc(text) + '</span>';
       }
       var prior = row && row.fresh ? ('<i class="prior">' + esc(priorBit('Yday', row.ySets) + ' · ' + priorBit('Wk', row.wSets)) + '</i>') : '';
-      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + hiClass(st.sets, best.sets) + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + hiClass(st.close, best.close) + '">' + (sets == null ? 'no data' : est) + '</span>') : '') + '<span class="dials' + hiClass(st.dials, best.dials) + '">' + esc(fmtCount(row && row.dials)) + '</span>' + metric('talk', st.talk == null ? 'no data' : fmtHm(st.talk)) + metric('convos', st.convos == null ? 'no data' : fmtCount(st.convos)) + metric('dialRate', st.dialRate == null ? 'no data' : pct1(st.dialRate)) + metric('setRate', st.setRate == null ? 'no data' : pct1(st.setRate)) + metric('avg', st.avg == null ? 'no data' : fmtHm(st.avg)) + '</div>';
+      return '<div class="srow' + (near ? ' near' : '') + (you ? ' you' : '') + (moved ? ' moved' : '') + (you && sets != null && target != null && sets + 0.05 >= target ? ' ahead' : '') + '"><span class="rk">' + (i + 1) + arrowSvg(prev, row && row.name, i + 1) + '</span><span class="nm"><span class="nm-name">' + esc(textOr(row && row.name)) + (you ? '<i class="you-tag">You</i>' : '') + '</span>' + prior + '</span><span class="sets ' + cls + hiClass(st.sets, best.sets) + '">' + esc(sets == null ? 'no data' : fmtCount(sets)) + '</span>' + (dollars ? ('<span class="est ' + estCls + hiClass(st.close, best.close) + '">' + (sets == null ? 'no data' : est) + '</span>') : '') + '<span class="dials' + hiClass(st.dials, best.dials) + '">' + esc(fmtCount(row && row.dials)) + '</span>' + metric('talk', st.talk == null ? 'no data' : fmtHm(st.talk)) + metric('convos', st.convos == null ? 'no data' : fmtCount(st.convos)) + metric('dialRate', st.dialRate == null ? 'no data' : pct1(st.dialRate)) + metric('setRate', st.setRate == null ? 'no data' : pct1(st.setRate)) + metric('avg', st.avg == null ? 'no data' : fmtHm(st.avg)) + metric('setAvg', avgTalkText(row && row.set_talk_sec, row && row.set_n)) + metric('qualAvg', avgTalkText(row && row.qual_talk_sec, row && row.qual_n)) + '</div>';
     }).join('');
   }
   function boardModel(data) {
@@ -1889,7 +1904,7 @@ footer.site{padding:0 14px 16px;color:var(--muted);font-size:12px}
     }
     var rowsHtml = list.length ? boardRows(data, list, prev, model.target, true) : ('<p class="sub">' + esc(model.emptyText) + '</p>');
     return '<section class="score"><div class="scoretop"><div><p class="kicker">Leaderboard</p><p class="sub">' + esc(model.label) + '</p></div><div class="tabs">' + tab('today', 'Today', 'today') + tab('yesterday', 'Yesterday', 'yesterday') + tab('week', 'This Week', 'week') + tab('month', 'Month', '') + '</div></div>' +
-      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. Talk and convos on that placeholder stay no data. If close is sets times ' + fmtMoney(ifClosesValue()) + ', the $50 fee under it. Not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Talk is h:mm. Convos are connected calls of at least 60 seconds. The best value in each column is marked. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.')) + '</p>' +
+      '<p class="pass ' + (gap.ahead ? 'good' : 'bad') + '">' + esc(gap.text) + '</p><p class="src">' + (model.fresh ? 'Today is 0 sets and 0 dials until the feed has today. Yday and Wk on each row are the snapshot. The pass line and the order are this week. Talk, convos, and set talk on that placeholder stay no data. If close is sets times ' + fmtMoney(ifClosesValue()) + ', the $50 fee under it. Not cash collected.' : ('Ranked by sets, then dials. Green sets are at the ' + model.rule + '. Talk is h:mm. Convos are connected calls of at least 60 seconds. Set talk and Qual talk are mm:ss. Qual talk skips contacts in DQ Finances, DQ Bad Fit, DQ Duplicate / Fake, or DNC. A dash means no sets in that column. The best value in each column is marked. If close is sets times ' + fmtMoney(ifClosesValue()) + ': ' + fmtMoney(closeCommission()) + ' commission on a ' + fmtMoney(AVG_DEAL_CASH) + ' deal plus the $50 set fee. Not cash collected.')) + '</p>' +
       boardWrap(rowsHtml) + '</section>';
   }
   function actualSeries(hours, now, x0) {
